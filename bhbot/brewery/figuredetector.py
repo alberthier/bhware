@@ -20,9 +20,9 @@ class FigureDetector(object):
         self.enabled = False
 
 
-    def on_piece_detected(start_pose, start_distance, end_pose, end_distance, sensor, angle):
+    def on_piece_detected(self, start_pose, start_distance, end_pose, end_distance, sensor, angle):
         if (self.enabled):
-            if (sensor == SENSOR_LEFT_TOP || sensor == SENSOR_RIGHT_TOP):
+            if sensor == SENSOR_LEFT_TOP or sensor == SENSOR_RIGHT_TOP:
                 center_x = (start_pose.x + end_pose.x) / 2.0
                 min = 9999.0
                 min_idx = -1
