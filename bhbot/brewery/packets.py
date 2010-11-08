@@ -41,15 +41,11 @@ class BasePacket(object):
 
 
     def to_dict(self):
-        d = self.__dict__.copy()
-        d["TYPE"] = type(self).__name__
-        return d
+        return self.__dict__.copy()
 
 
     def from_dict(self, d):
-        d = d.copy()
-        del d["TYPE"]
-        self.__dict__ = d
+        self.__dict__ = d.copy()
 
 
 
