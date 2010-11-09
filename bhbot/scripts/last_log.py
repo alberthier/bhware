@@ -5,7 +5,7 @@ import os
 import subprocess
 
 
-if __name__ == "__main__":
+def get_last_logfile():
     brewery_root_path = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
     log_dir = os.path.join(brewery_root_path, "logs")
     index = 0
@@ -16,6 +16,11 @@ if __name__ == "__main__":
                 index += 1
             else:
                 index -= 1
-                filepath = os.path.join(log_dir, "brewerylog_{0:=#04}.py".format(index))
-                subprocess.call([filepath])
-                break
+                return os.path.join(log_dir, "brewerylog_{0:=#04}.py".format(index))
+
+
+if __name__ == "__main__":
+    path = get_last_logfile()
+    print("# file: '{0}'".format(os.path.split(path)[1]))
+    print("")
+    subprocess.call([path])

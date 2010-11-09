@@ -40,14 +40,18 @@ def close():
     log_file = None
 
 
-def log(elt):
+def log(text):
     global log_file
     if log_file == None:
         initialize()
-    if isinstance(elt, packets.BasePacket):
-        log_file.write("log.append([\"" + type(elt).__name__ + "\", " + str(elt.to_dict()) + "])\n")
-    else:
-        log_file.write("log.append(\"" + elt + "\")\n")
+    log_file.write("log.append(\"" + text + "\")\n")
+
+
+def log_packet(sender, packet):
+    global log_file
+    if log_file == None:
+        initialize()
+    log_file.write("log.append([\"" + type(packet).__name__ + "\", \"" + sender + "\", " + str(packet.to_dict()) + "])\n")
 
 
 def get_next_log_filepath():
