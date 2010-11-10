@@ -19,7 +19,7 @@ class BasePacket(object):
         if cls.FORMAT == None:
             cls.FORMAT = "!B" + format
             size = struct.calcsize(cls.FORMAT)
-            cls.FORMAT += str(BasePacket.MAX_SIZE - size) + "x"
+            cls.FORMAT += str(self.MAX_SIZE - size) + "x"
 
 
     def do_deserialize(self, buf):
@@ -75,7 +75,7 @@ class DeviceReady(BasePacket):
 
     def __init__(self):
         BasePacket.__init__(self, "B")
-        self.team = TEAM_BLUE
+        self.team = TEAM_UNKNOWN
 
 
     def deserialize(self, buf):
@@ -195,7 +195,7 @@ class Blocked(BasePacket):
     TYPE = 7
 
     def __init__(self):
-        BasePacket.__init__(self, "B")
+        BasePacket.__init__(self, "b")
         self.side = BLOCKED_FRONT
 
 
@@ -415,6 +415,7 @@ class SimulatorData(BasePacket):
 
 class TurretDetect(BasePacket):
 
+    MAX_SIZE = 32
     TYPE = 32
 
     def __init__(self):
