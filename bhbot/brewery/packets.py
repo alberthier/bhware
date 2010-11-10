@@ -235,7 +235,7 @@ class KeepAlive(BasePacket):
 
     def __init__(self):
         BasePacket.__init__(self, "fffBI")
-        self.current_pose = trajectory.Pose()
+        self.current_pose = trajectory.Pose(0.0, 0.0, 0.0)
         self.match_started = False
         self.match_time = 0
 
@@ -250,7 +250,13 @@ class KeepAlive(BasePacket):
 
 
     def serialize(self):
-        return self.do_serialize(self.current_pose.x, self.current_pose.y, self.current_pose.angle, self.match_started, self.match_time)
+        values = []
+        values.append(self.current_pose.x)
+        values.append(self.current_pose.y)
+        values.append(self.current_pose.angle)
+        values.append(int(self.match_started))
+        values.append(self.match_time)
+        return self.do_serialize(*values)
 
 
 
@@ -371,11 +377,7 @@ class Resettle(BasePacket):
 
 
     def serialize(self):
-        values = []
-        values[0] = self.axis
-        values[1] = self.position
-        values[2] = self.angle
-        return self.do_serialize(*values)
+        return self.do_serialize(self.axis, self.position, self.angle)
 
 
 
@@ -385,7 +387,7 @@ class Reinitialize(BasePacket):
     TYPE = 102
 
     def __init__(self):
-        BasePacket.__init__(self, "I")
+        BasePacket.__init__(self, "")
 
 
 
@@ -406,7 +408,7 @@ class SimulatorData(BasePacket):
 
     def serialize(self):
         values = []
-        values[0] = self.whatever
+        values.append(self.whatever)
         return self.do_serialize(*values)
 
 
@@ -417,8 +419,8 @@ class TurretDetect(BasePacket):
 
     def __init__(self):
         BasePacket.__init__(self, "hH")
-        self.mean_angle = 0.0
-        self.angular_size = 0.0
+        self.mean_angle = 0
+        self.angular_size = 0
 
 
     def deserialize(self, buf):

@@ -14,4 +14,4 @@ class StateMachineTestCase(unittest.TestCase):
         self.assertTrue(self.i == 1)
 
     def test_two(self):
-        self.assertEqual(self.i + 1, 3)
+        self.assertEqual(self.i + 1, 2)
