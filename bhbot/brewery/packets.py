@@ -19,7 +19,9 @@ class BasePacket(object):
         if cls.FORMAT == None:
             cls.FORMAT = "!B" + format
             size = struct.calcsize(cls.FORMAT)
-            cls.FORMAT += str(self.MAX_SIZE - size) + "x"
+            pad_size = self.MAX_SIZE - size
+            if pad_size != 0:
+                cls.FORMAT += str(pad_size) + "x"
 
 
     def do_deserialize(self, buf):
@@ -415,7 +417,7 @@ class SimulatorData(BasePacket):
 
 class TurretDetect(BasePacket):
 
-    MAX_SIZE = 32
+    MAX_SIZE = 5
     TYPE = 32
 
     def __init__(self):
