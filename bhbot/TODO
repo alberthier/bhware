@@ -1,1 +1,1 @@
-- intercepter SIGTERM
+- intercepter SIGTERM pour deconnecter proprement les sockets
