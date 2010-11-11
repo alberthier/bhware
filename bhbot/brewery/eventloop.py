@@ -2,11 +2,15 @@
 # encoding: utf-8
 
 import asyncore
+import os
 import socket
-import logger
+import imp
+import time
 
+import logger
 import packets
 import config
+import statemachine
 
 
 
@@ -33,14 +37,18 @@ class RobotControlDeviceChannel(asyncore.dispatcher_with_send):
     def __init__(self, eventloop):
         asyncore.dispatcher_with_send.__init__(self)
         self.eventloop = eventloop
+        self.close_requested = False
+
+
+    def setup(self):
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
-        connected = False
-        while not connected:
+        logger.log("Connecting to {0}:{1} ...".format(config.remote_ip, config.remote_port))
+        while not self.connected and not self.close_requested:
             try:
                 self.connect((config.remote_ip, config.remote_port))
-                connected = True
-            except:
-                logger.log("Unable to connect to {0}:{1}, retrying".format(config.remote_ip, config.remote_port))
+            except Exception as e:
+                logger.log("Unable to connect to {0}:{1} ({2}), retrying".format(config.remote_ip, config.remote_port, e))
+                time.sleep(1)
 
 
     def handle_connect(self):
@@ -48,7 +56,12 @@ class RobotControlDeviceChannel(asyncore.dispatcher_with_send):
 
 
     def handle_read(self):
-        eventloop.handle_read(self)
+        self.eventloop.handle_read(self)
+
+
+    def close(self):
+        asyncore.dispatcher_with_send.close(self)
+        self.close_requested = True
 
 
 
@@ -64,13 +77,11 @@ class ChannelData(object):
 
 class EventLoop(object):
 
-    def __init__(self):
+    def __init__(self, state_machine_name):
         self.channels = {}
-        if (config.serial_port_filepath != None):
-            self.channels[TurretChannel(config.serial_port_filepath, self)] = ChannelData()
-        robot_control_channel = RobotControlDeviceChannel(self)
-        self.channels[robot_control_channel] = ChannelData()
+        self.robot_control_channel = None
         self.fsm = None
+        self.state_machine_name = state_machine_name
 
 
     def handle_read(self, channel):
@@ -114,10 +125,33 @@ class EventLoop(object):
 
 
     def create_fsm(self):
-        statemachines_dir = os.path.join(os.path.dirname(__file__)), "statemachines")
-        self.fsm = None # todo
+        state_machines_dir = os.path.join(os.path.dirname(__file__), "statemachines")
+        state_machine_file = os.path.join(state_machines_dir, self.state_machine_name + ".py")
+        state_machine_module = imp.load_source(self.state_machine_name, state_machine_file)
+        for item_name in dir(state_machine_module):
+            try:
+                item = getattr(state_machine_module, item_name)
+                if issubclass(item, statemachine.StateMachine):
+                    self.fsm = item()
+                    return
+            except:
+                pass
+        logger.log("No state machine found in '{0}'".format(state_machine_file))
+        self.stop()
 
 
     def start(self):
-        asyncore.loop()
+        if (config.serial_port_filepath != None):
+            self.channels[TurretChannel(config.serial_port_filepath, self)] = ChannelData()
+        self.robot_control_channel = RobotControlDeviceChannel(self)
+        self.channels[self.robot_control_channel] = ChannelData()
+        self.robot_control_channel.setup()
+        if self.robot_control_channel.connected:
+            logger.log("Starting brewery with state machine '{0}'".format(self.state_machine_name))
+            asyncore.loop()
 
+
+    def stop(self):
+        for channel in self.channels.keys():
+            channel.close()
+        logger.close()
