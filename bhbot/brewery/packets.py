@@ -9,6 +9,7 @@ import trajectory
 
 
 
+
 class BasePacket(object):
 
     MAX_SIZE = 256
@@ -71,6 +72,7 @@ class DeviceBusy(BasePacket):
 
 
 
+
 class DeviceReady(BasePacket):
 
     TYPE = 2
@@ -108,6 +110,7 @@ class Start(BasePacket):
 
 
 
+
 class Goto(BasePacket):
 
     TYPE = 4
@@ -136,7 +139,6 @@ class Goto(BasePacket):
             else:
                 angle = None
             self.points.append(trajectory.Pose(x, y, angle))
-
 
 
     def serialize(self):
@@ -168,7 +170,6 @@ class GotoStarted(BasePacket):
 
     def __init__(self):
         BasePacket.__init__(self, "")
-
 
 
 
@@ -415,6 +416,7 @@ class SimulatorData(BasePacket):
 
 
 
+
 class TurretDetect(BasePacket):
 
     MAX_SIZE = 5
@@ -432,3 +434,14 @@ class TurretDetect(BasePacket):
 
     def serialize(self):
         return self.do_serialize(self.mean_angle, self.angular_size)
+
+
+
+
+PACKET_CLASSES = [ControllerReady, DeviceBusy, DeviceReady, Start, Goto, GotoStarted, GotoFinished, Blocked, EnableAntiBlocking, DisableAntiBlocking, KeepAlive, PositionControlConfig, Stop, Resettle, Reinitialize, SimulatorData, TurretDetect]
+
+def create_packet(buffer):
+    (type,) = struct.unpack("!B", buffer[0])
+    for packet_class in PACKET_CLASSES:
+        if packet_class.TYPE == type:
+            return packet_class()

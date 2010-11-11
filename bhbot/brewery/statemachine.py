@@ -57,7 +57,7 @@ class State(object):
         pass
 
 
-    def on_keep_alive(self, match_started, match_time):
+    def on_keep_alive(self, current_pose, match_started, match_time):
         pass
 
 
