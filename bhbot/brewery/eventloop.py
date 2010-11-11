@@ -88,21 +88,21 @@ class EventLoop(object):
                 logger.log_packet("PIC", channel_data.packet)
 
                 if isinstance(channel_data.packet, packets.DeviceBusy):
-                    self.fsm.current_state.on_device_busy()
+                    self.fsm.state.on_device_busy()
                 elif isinstance(channel_data.packet, packets.DeviceReady):
-                    self.fsm.current_state.on_device_ready(channel_data.packet.team)
+                    self.fsm.state.on_device_ready(channel_data.packet.team)
                 elif isinstance(channel_data.packet, packets.Start):
-                    self.fsm.current_state.on_start(channel_data.packet.team)
+                    self.fsm.state.on_start(channel_data.packet.team)
                 elif isinstance(channel_data.packet, packets.GotoStarted):
-                    self.fsm.current_state.on_goto_started()
+                    self.fsm.state.on_goto_started()
                 elif isinstance(channel_data.packet, packets.GotoFinished):
-                    self.fsm.current_state.on_goto_finished(channel_data.packet.reason)
+                    self.fsm.state.on_goto_finished(channel_data.packet.reason)
                 elif isinstance(channel_data.packet, packets.Blocked):
-                    self.fsm.current_state.on_blocked(channel_data.packet.side)
+                    self.fsm.state.on_blocked(channel_data.packet.side)
                 elif isinstance(channel_data.packet, packets.KeepAlive):
-                    self.fsm.current_state.on_keep_alive(channel_data.packet.current_pose, channel_data.packet.match_started, channel_data.packet.match_time)
+                    self.fsm.state.on_keep_alive(channel_data.packet.current_pose, channel_data.packet.match_started, channel_data.packet.match_time)
                 elif isinstance(channel_data.packet, packets.TurretDetect):
-                    self.fsm.current_state.on_turret_detect(channel_data.packet.mean_angle, channel_data.packet.angular_size)
+                    self.fsm.state.on_turret_detect(channel_data.packet.mean_angle, channel_data.packet.angular_size)
 
                 channel_data.packet = None
 
@@ -114,6 +114,7 @@ class EventLoop(object):
 
 
     def create_fsm(self):
+        statemachines_dir = os.path.join(os.path.dirname(__file__)), "statemachines")
         self.fsm = None # todo
 
 

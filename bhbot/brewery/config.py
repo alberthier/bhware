@@ -18,4 +18,5 @@ else:
     serial_port_filepath = None
 
 remote_port = 2000
+statemachine = "default.py"
 

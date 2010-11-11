@@ -7,22 +7,24 @@
 class StateMachine(object):
 
     def __init__(self, start_state_ctor):
-        self.current_state = start_state_ctor(self)
-        self.current_state.on_enter()
+        self.state = start_state_ctor()
+        self.state.fsm = self
+        self.state.on_enter()
 
 
 
 
 class State(object):
 
-    def __init__(self, fsm):
-        self.fsm = fsm
+    def __init__(self):
+        self.fsm = None
 
 
     def switch_to_state(self, new_state_ctor):
-        self.fsm.current_state.on_exit()
-        self.fsm.current_state = new_state_ctor(self.fsm)
-        self.fsm.current_state.on_enter()
+        self.fsm.state.on_exit()
+        self.fsm.state = new_state_ctor()
+        self.fsm.state.fsm = self.fsm
+        self.fsm.state.on_enter()
 
 
     def on_enter(self):
