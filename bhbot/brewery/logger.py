@@ -5,14 +5,13 @@ import os
 import stat
 
 import packets
+import config
+from definitions import *
 
 
 filepath = None
 log_file = None
 
-
-def __init__():
-    print "hello"
 
 def initialize():
     global filepath
@@ -45,13 +44,13 @@ def log(text):
     if log_file == None:
         initialize()
     log_file.write("log.append(\"" + text + "\")\n")
+    if config.host_device == HOST_DEVICE_PC:
+        print(text)
 
 
 def log_packet(sender, packet):
-    global log_file
-    if log_file == None:
-        initialize()
-    log_file.write("log.append([\"" + type(packet).__name__ + "\", \"" + sender + "\", " + str(packet.to_dict()) + "])\n")
+    text = "[\"" + type(packet).__name__ + "\", \"" + sender + "\", " + str(packet.to_dict()) + "]"
+    log(text)
 
 
 def get_next_log_filepath():
