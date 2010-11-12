@@ -205,6 +205,7 @@ class MainWindowController(QObject):
         QObject.__init__(self)
         global CATEGORIES
         self.ui = uic.loadUi(__file__[:-3] + ".ui")
+        self.ui.setWindowIcon(QIcon.fromTheme("text-x-generic"))
         self.ui.show()
         model = CategoriesModel(self)
         self.ui.categories.setModel(model)
