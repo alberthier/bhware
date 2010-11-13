@@ -24,6 +24,7 @@ if __name__ == "__main__":
         state_machine_name = config.state_machine
 
     signal.signal(signal.SIGINT, signal_handler)
+    signal.signal(signal.SIGTERM, signal_handler)
 
     loop = eventloop.EventLoop(state_machine_name)
     loop.start()
