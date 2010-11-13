@@ -19,13 +19,3 @@ class MainBar(QWidget, MainBar_Ui):
         self.setupUi(self)
         self.start.setIcon(QIcon.fromTheme("media-playback-start"))
         self.stop.setIcon(QIcon.fromTheme("media-playback-stop"))
-        self.start.clicked.connect(self.startGame)
-        self.stop.clicked.connect(self.stopGame)
-
-
-    def startGame(self):
-        print "Start game"
-
-
-    def stopGame(self):
-        print "Stop game"

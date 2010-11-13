@@ -23,13 +23,20 @@ class RobotView(QWidget, RobotView_Ui):
         self.setupUi(self)
 
         if team == TEAM_RED:
-            color = "#0000c9"
-        elif team == TEAM_BLUE:
             color = "#c90000"
+        elif team == TEAM_BLUE:
+            color = "#0000c9"
         palette = self.palette()
         palette.setColor(QPalette.Window, QColor(color))
         palette.setColor(QPalette.Window, QColor(color))
         palette.setColor(QPalette.Window, QColor(color))
         self.setPalette(palette)
 
+
+    def add_log(self, text):
+        self.log_view.append(text)
+
+
+    def clear(self):
+        self.log_view.clear()
 
