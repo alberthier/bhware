@@ -37,7 +37,7 @@ class RobotController(object):
 
     def stop(self):
         if self.process != None:
-            self.process.kill()
+            self.process.terminate()
             self.process.waitForFinished()
             self.process = None
             self.socket = None
