@@ -152,6 +152,7 @@ class EventLoop(object):
 
 
     def stop(self):
+        logger.log("Stopping...")
         for channel in self.channels.keys():
             channel.close()
         logger.close()

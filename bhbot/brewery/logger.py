@@ -2,6 +2,7 @@
 # encoding: utf-8
 
 import os
+import sys
 import stat
 
 import packets
@@ -45,7 +46,8 @@ def log(text):
         initialize()
     log_file.write("log.append(\"" + text + "\")\n")
     if config.host_device == HOST_DEVICE_PC:
-        print(text)
+        sys.stdout.write(text + "\n")
+        sys.stdout.flush()
 
 
 def log_packet(sender, packet):
