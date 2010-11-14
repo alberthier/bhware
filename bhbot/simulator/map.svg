@@ -1,0 +1,396 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="3500"
+   height="2600"
+   id="svg2"
+   version="1.1"
+   inkscape:version="0.48.0 r9654"
+   sodipodi:docname="map.svg">
+  <defs
+     id="defs4" />
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="0.175"
+     inkscape:cx="807.65064"
+     inkscape:cy="1362.7561"
+     inkscape:document-units="px"
+     inkscape:current-layer="layer1"
+     showgrid="false"
+     inkscape:window-width="1440"
+     inkscape:window-height="823"
+     inkscape:window-x="0"
+     inkscape:window-y="24"
+     inkscape:window-maximized="1" />
+  <metadata
+     id="metadata7">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Calque 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+     <!-- Cote rouge -->
+     <rect
+       style="fill:#c90000;stroke:none;fill-opacity:1"
+       id="maprect0001"
+       width="425"
+       height="500"
+       x="0"
+       y="0" />
+     <rect
+       style="fill:#006500;stroke:none;fill-opacity:1"
+       id="maprect0002"
+       width="425"
+       height="1678"
+       x="0"
+       y="422" />
+
+    <!-- Cadrillage principal -->
+     <rect
+       style="fill:#0000c9;stroke:none;fill-opacity:1"
+       id="maprect0003"
+       width="2150"
+       height="2100"
+       x="425"
+       y="0" />
+
+     <rect
+       style="fill:#c90000;stroke:none;fill-opacity:1"
+       id="maprect0003"
+       width="350"
+       height="350"
+       x="800"
+       y="0" />
+     <rect
+       style="fill:#c90000;stroke:none;fill-opacity:1"
+       id="maprect0003"
+       width="350"
+       height="350"
+       x="1500"
+       y="0" />
+     <rect
+       style="fill:#c90000;stroke:none;fill-opacity:1"
+       id="maprect0003"
+       width="350"
+       height="350"
+       x="2200"
+       y="0" />
+
+     <rect
+       style="fill:#c90000;stroke:none;fill-opacity:1"
+       id="maprect0003"
+       width="350"
+       height="350"
+       x="450"
+       y="350" />
+     <rect
+       style="fill:#c90000;stroke:none;fill-opacity:1"
+       id="maprect0003"
+       width="350"
+       height="350"
+       x="1150"
+       y="350" />
+     <rect
+       style="fill:#c90000;stroke:none;fill-opacity:1"
+       id="maprect0003"
+       width="350"
+       height="350"
+       x="1850"
+       y="350" />
+
+     <rect
+       style="fill:#c90000;stroke:none;fill-opacity:1"
+       id="maprect0003"
+       width="350"
+       height="350"
+       x="800"
+       y="700" />
+     <rect
+       style="fill:#c90000;stroke:none;fill-opacity:1"
+       id="maprect0003"
+       width="350"
+       height="350"
+       x="1500"
+       y="700" />
+     <rect
+       style="fill:#c90000;stroke:none;fill-opacity:1"
+       id="maprect0003"
+       width="350"
+       height="350"
+       x="2200"
+       y="700" />
+
+     <rect
+       style="fill:#c90000;stroke:none;fill-opacity:1"
+       id="maprect0003"
+       width="350"
+       height="350"
+       x="450"
+       y="1050" />
+     <rect
+       style="fill:#c90000;stroke:none;fill-opacity:1"
+       id="maprect0003"
+       width="350"
+       height="350"
+       x="1150"
+       y="1050" />
+     <rect
+       style="fill:#c90000;stroke:none;fill-opacity:1"
+       id="maprect0003"
+       width="350"
+       height="350"
+       x="1850"
+       y="1050" />
+
+     <rect
+       style="fill:#c90000;stroke:none;fill-opacity:1"
+       id="maprect0003"
+       width="350"
+       height="350"
+       x="800"
+       y="1400" />
+     <rect
+       style="fill:#c90000;stroke:none;fill-opacity:1"
+       id="maprect0003"
+       width="350"
+       height="350"
+       x="1500"
+       y="1400" />
+     <rect
+       style="fill:#c90000;stroke:none;fill-opacity:1"
+       id="maprect0003"
+       width="350"
+       height="350"
+       x="2200"
+       y="1400" />
+
+     <rect
+       style="fill:#c90000;stroke:none;fill-opacity:1"
+       id="maprect0003"
+       width="350"
+       height="350"
+       x="450"
+       y="1750" />
+     <rect
+       style="fill:#c90000;stroke:none;fill-opacity:1"
+       id="maprect0003"
+       width="350"
+       height="350"
+       x="1150"
+       y="1750" />
+     <rect
+       style="fill:#c90000;stroke:none;fill-opacity:1"
+       id="maprect0003"
+       width="350"
+       height="350"
+       x="1850"
+       y="1750" />
+
+     <!-- Cote bleu -->
+     <rect
+       style="fill:#0000c9;stroke:none;fill-opacity:1"
+       id="maprect0001"
+       width="425"
+       height="500"
+       x="2575"
+       y="0" />
+     <rect
+       style="fill:#006500;stroke:none;fill-opacity:1"
+       id="maprect0002"
+       width="425"
+       height="1678"
+       x="2575"
+       y="422" />
+
+     <!-- Bordures -->
+     <rect
+       style="fill:#000000;stroke:none;fill-opacity:1"
+       id="maprect0002"
+       width="400"
+       height="22"
+       x="0"
+       y="400" />
+     <rect
+       style="fill:#000000;stroke:none;fill-opacity:1"
+       id="maprect0002"
+       width="400"
+       height="22"
+       x="2600"
+       y="400" />
+     <rect
+       style="fill:#333333;stroke:none;fill-opacity:1"
+       id="maprect0002"
+       width="50"
+       height="2100"
+       x="400"
+       y="0" />
+     <rect
+       style="fill:#333333;stroke:none;fill-opacity:1"
+       id="maprect0002"
+       width="50"
+       height="2100"
+       x="2550"
+       y="0" />
+     <rect
+       style="fill:#333333;stroke:none;fill-opacity:1"
+       id="maprect0002"
+       width="700"
+       height="20"
+       x="450"
+       y="1750" />
+     <rect
+       style="fill:#333333;stroke:none;fill-opacity:1"
+       id="maprect0002"
+       width="20"
+       height="350"
+       x="1130"
+       y="1750" />
+     <rect
+       style="fill:#333333;stroke:none;fill-opacity:1"
+       id="maprect0002"
+       width="700"
+       height="20"
+       x="1850"
+       y="1750" />
+     <rect
+       style="fill:#333333;stroke:none;fill-opacity:1"
+       id="maprect0002"
+       width="20"
+       height="350"
+       x="1850"
+       y="1750" />
+     <rect
+       style="fill:#000000;stroke:none;fill-opacity:1"
+       id="maprect0002"
+       width="700"
+       height="120"
+       x="450"
+       y="1980" />
+     <rect
+       style="fill:#000000;stroke:none;fill-opacity:1"
+       id="maprect0002"
+       width="22"
+       height="250"
+       x="450"
+       y="1850" />
+     <rect
+       style="fill:#000000;stroke:none;fill-opacity:1"
+       id="maprect0002"
+       width="22"
+       height="250"
+       x="1128"
+       y="1850" />
+     <rect
+       style="fill:#000000;stroke:none;fill-opacity:1"
+       id="maprect0002"
+       width="700"
+       height="120"
+       x="1850"
+       y="1980" />
+     <rect
+       style="fill:#000000;stroke:none;fill-opacity:1"
+       id="maprect0002"
+       width="22"
+       height="250"
+       x="1850"
+       y="1850" />
+     <rect
+       style="fill:#000000;stroke:none;fill-opacity:1"
+       id="maprect0002"
+       width="22"
+       height="250"
+       x="2528"
+       y="1850" />
+
+     <!-- Contour -->
+     <rect
+       style="fill:#000000;stroke:none;fill-opacity:1"
+       id="maprect0002"
+       width="3044"
+       height="22"
+       x="-22"
+       y="-22" />
+     <rect
+       style="fill:#000000;stroke:none;fill-opacity:1"
+       id="maprect0002"
+       width="22"
+       height="2144"
+       x="-22"
+       y="-22" />
+     <rect
+       style="fill:#000000;stroke:none;fill-opacity:1"
+       id="maprect0002"
+       width="3044"
+       height="22"
+       x="-22"
+       y="2100" />
+     <rect
+       style="fill:#000000;stroke:none;fill-opacity:1"
+       id="maprect0002"
+       width="22"
+       height="2144"
+       x="3000"
+       y="-22" />
+
+     <!-- Bonus -->
+     <circle
+       cx="975"
+       cy="525"
+       r="50"
+       stroke="none"
+       fill="#333333" />
+     <circle
+       cx="2025"
+       cy="525"
+       r="50"
+       stroke="none"
+       fill="#333333" />
+     <circle
+       cx="975"
+       cy="1225"
+       r="50"
+       stroke="none"
+       fill="#333333" />
+     <circle
+       cx="2025"
+       cy="1225"
+       r="50"
+       stroke="none"
+       fill="#333333" />
+     <circle
+       cx="1325"
+       cy="1925"
+       r="50"
+       stroke="none"
+       fill="#333333" />
+     <circle
+       cx="1675"
+       cy="1925"
+       r="50"
+       stroke="none"
+       fill="#333333" />
+
+  </g>
+</svg>
