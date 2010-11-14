@@ -8,6 +8,7 @@ from PyQt4 import uic
 
 from mainbar import *
 
+import logviewer
 from definitions import *
 
 (RobotView_Ui, RobotView_Widget) = uic.loadUiType(os.path.join(os.path.dirname(__file__), "robotview.ui"))
@@ -34,7 +35,13 @@ class RobotView(QWidget, RobotView_Ui):
 
 
     def add_log(self, text):
-        self.log_view.append(text)
+        if text.startswith("["):
+            # this line is a packet
+            data = eval(text)
+            data[2] = logviewer.format_log_line(data[0], data[2])
+            self.log_view.append(str(data))
+        else:
+            self.log_view.append(text)
 
 
     def clear(self):

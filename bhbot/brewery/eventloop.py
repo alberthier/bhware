@@ -125,6 +125,7 @@ class EventLoop(object):
 
 
     def create_fsm(self):
+        self.send_packet(packets.ControllerReady())
         state_machines_dir = os.path.join(os.path.dirname(__file__), "statemachines")
         state_machine_file = os.path.join(state_machines_dir, self.state_machine_name + ".py")
         state_machine_module = imp.load_source(self.state_machine_name, state_machine_file)

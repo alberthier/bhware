@@ -66,17 +66,29 @@ class RobotController(object):
         if len(self.incomming_packet_buffer) >= self.incomming_packet.MAX_SIZE:
             buf = self.incomming_packet_buffer[:self.incomming_packet.MAX_SIZE]
             self.incomming_packet_buffer = self.incomming_packet_buffer[self.incomming_packet.MAX_SIZE:]
-            self.incomming_packet = None
             packet = self.incomming_packet
+            self.incomming_packet = None
             packet.deserialize(buf)
             self.on_packet(packet)
 
 
     def on_packet(self, packet):
-        print packet
-        # packet = packets.DeviceReady()
-        # packet.team = self.team
-        # self.send_packet(packet)
+        if isinstance(packet, packets.ControllerReady):
+            packet = packets.DeviceReady()
+            packet.team = self.team
+            self.send_packet(packet)
+        elif isinstance(packet, packets.Goto):
+            pass
+        elif isinstance(packet, packets.KeepAlive):
+            pass
+        elif isinstance(packet, packets.PositionControlConfig):
+            pass
+        elif isinstance(packet, packets.Stop):
+            pass
+        elif isinstance(packet, packets.Resettle):
+            pass
+        elif isinstance(packet, packets.SimulatorData):
+            pass
 
 
 

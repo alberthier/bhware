@@ -5,6 +5,7 @@ import sys
 import os
 
 sys.path.append(os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file__))), "brewery"))
+sys.path.append(os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file__))), "scripts"))
 
 from PyQt4.QtGui import *
 
