@@ -111,6 +111,7 @@ class EventLoop(object):
                 elif isinstance(channel_data.packet, packets.Blocked):
                     self.fsm.state.on_blocked(channel_data.packet.side)
                 elif isinstance(channel_data.packet, packets.KeepAlive):
+                    self.send_packet(channel_data.packet)
                     self.fsm.state.on_keep_alive(channel_data.packet.current_pose, channel_data.packet.match_started, channel_data.packet.match_time)
                 elif isinstance(channel_data.packet, packets.TurretDetect):
                     self.fsm.state.on_turret_detect(channel_data.packet.mean_angle, channel_data.packet.angular_size)
