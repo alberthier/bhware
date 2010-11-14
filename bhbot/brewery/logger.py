@@ -44,7 +44,7 @@ def log(text):
     global log_file
     if log_file == None:
         initialize()
-    log_file.write("log.append(\"" + text + "\")\n")
+    log_file.write("log.append(\"# " + text + "\")\n")
     if config.host_device == HOST_DEVICE_PC:
         sys.stdout.write(text + "\n")
         sys.stdout.flush()

@@ -125,12 +125,12 @@ class LogModel(QAbstractTableModel):
             if type(logline) == str:
                 category_index = self.get_category_index('str')
                 category_data = CATEGORIES[category_index]
-                self.log.append([index, "", category_data, logline, category_index])
+                self.log.append([index, "", category_data, logline[2:], category_index])
             elif type(logline) == list:
                 category_index = self.get_category_index(logline[0])
                 category_data = CATEGORIES[category_index]
 
-                self.log.append([index, logline[1], category_data, format_log_line(logline[0], logline[2]), category_index])
+                self.log.append([index, logline[1], category_data, str(format_packet(logline[0], logline[2]))[1:-1], category_index])
             index += 1
 
 
@@ -190,7 +190,7 @@ class MainWindowController(QObject):
 
 
 
-def format_log_line(packet_type, packet_data):
+def format_packet(packet_type, packet_data):
     if packet_type == "DeviceReady" or packet_type == "Start":
         if packet_data["team"] == TEAM_BLUE:
             packet_data["team"] = "TEAM_BLUE"
@@ -230,7 +230,7 @@ def format_log_line(packet_type, packet_data):
         elif packet_data["axis"] == AXIS_ORDINATE:
             packet_data["axis"] = "AXIS_ORDINATE"
 
-    return str(packet_data)[1:-1]
+    return packet_data
 
 
 

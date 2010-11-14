@@ -38,7 +38,7 @@ class RobotView(QWidget, RobotView_Ui):
         if text.startswith("["):
             # this line is a packet
             data = eval(text)
-            data[2] = logviewer.format_log_line(data[0], data[2])
+            data[2] = logviewer.format_packet(data[0], data[2])
             self.log_view.append(str(data))
         else:
             self.log_view.append(text)
