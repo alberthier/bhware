@@ -9,8 +9,8 @@
    xmlns="http://www.w3.org/2000/svg"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
-   width="3500"
-   height="2600"
+   width="3204"
+   height="2304"
    id="svg2"
    version="1.1"
    inkscape:version="0.48.0 r9654"
@@ -50,7 +50,8 @@
   <g
      inkscape:label="Calque 1"
      inkscape:groupmode="layer"
-     id="layer1">
+     id="layer1"
+     transform="translate(102, 102)">
      <!-- Cote rouge -->
      <rect
        style="fill:#c90000;stroke:none;fill-opacity:1"
@@ -353,6 +354,50 @@
        height="2144"
        x="3000"
        y="-22" />
+
+     <!-- Balises -->
+     <rect
+       style="fill:#000000;stroke:none;fill-opacity:1"
+       id="maprect0002"
+       width="80"
+       height="80"
+       x="-102"
+       y="-102" />
+     <rect
+       style="fill:#000000;stroke:none;fill-opacity:1"
+       id="maprect0002"
+       width="80"
+       height="80"
+       x="-102"
+       y="1010" />
+     <rect
+       style="fill:#000000;stroke:none;fill-opacity:1"
+       id="maprect0002"
+       width="80"
+       height="80"
+       x="-102"
+       y="2122" />
+     <rect
+       style="fill:#000000;stroke:none;fill-opacity:1"
+       id="maprect0002"
+       width="80"
+       height="80"
+       x="3022"
+       y="-102" />
+     <rect
+       style="fill:#000000;stroke:none;fill-opacity:1"
+       id="maprect0002"
+       width="80"
+       height="80"
+       x="3022"
+       y="1010" />
+     <rect
+       style="fill:#000000;stroke:none;fill-opacity:1"
+       id="maprect0002"
+       width="80"
+       height="80"
+       x="3022"
+       y="2122" />
 
      <!-- Bonus -->
      <circle

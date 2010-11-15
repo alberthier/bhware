@@ -10,6 +10,7 @@ from PyQt4.Qt import Qt
 from mainbar import *
 from robotview import *
 from gamecontroller import *
+from field import *
 
 from definitions import *
 
@@ -29,5 +30,8 @@ class MainWindow(QMainWindow, MainWindow_Ui):
         self.main_bar_dock.setWidget(MainBar(self))
         self.red_robot_dock.setWidget(RobotView(self, TEAM_RED))
         self.blue_robot_dock.setWidget(RobotView(self, TEAM_BLUE))
+
+        self.field_scene = FieldScene()
+        self.setCentralWidget(FieldView(self.field_scene, self))
 
         self.game_controller = GameController(self)
