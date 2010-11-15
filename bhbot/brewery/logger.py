@@ -23,6 +23,7 @@ def initialize():
         log_file.write("#!/usr/bin/env python\n")
         log_file.write("# encoding: utf-8\n\n")
         log_file.write("log = []\n\n")
+        log("Logging to '{0}'".format(os.path.split(filepath)[1]))
 
 
 def close():
