@@ -32,7 +32,7 @@ class RobotController(object):
     def setup(self):
         if self.process == None:
             self.view.clear()
-            brewery = os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file__))), "brewery", "brewery.py")
+            brewery = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))), "brewery", "brewery.py")
             self.process = QProcess()
             self.process.setReadChannelMode(QProcess.MergedChannels)
             self.process.readyRead.connect(self.read_output)
