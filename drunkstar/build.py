@@ -20,6 +20,7 @@ def download():
 
 
 def build():
+    os.chdir(BUILDROOT)
     call(["make"])
 
 
