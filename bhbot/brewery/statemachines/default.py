@@ -15,5 +15,25 @@ class DefaultStateMachine(statemachine.StateMachine):
 
 class WaitDeviceReady(statemachine.State):
 
-    def __init__(self):
-        statemachine.State.__init__(self)
+    def on_device_ready(self, team):
+        self.switch_to_state(WaitStart)
+
+
+
+
+class WaitStart(statemachine.State):
+
+    def on_start(self, team):
+        self.switch_to_state(Moving)
+
+
+
+
+class Moving(statemachine.State):
+
+    def on_enter(self):
+        self.robot.send_packet(packets.Goto())
+
+
+    def on_goto_finished(self, reason):
+        pass
