@@ -6,15 +6,17 @@ import os
 from PyQt4.QtCore import *
 
 import packets
-
+from robotview import *
 
 
 
 class RobotController(object):
 
-    def __init__(self, team, view):
+    def __init__(self, team, view, scene):
         self.team = team
         self.view = view
+        self.scene = scene
+        self.field_item = None
         self.process = None
         self.socket = None
         self.incomming_packet_buffer = ""
@@ -51,6 +53,17 @@ class RobotController(object):
         self.socket = socket
         self.socket.disconnected.connect(self.stop)
         self.socket.readyRead.connect(self.read_packet)
+        self.field_item = GraphicsRobotItem()
+        if self.team == TEAM_RED:
+            self.field_item.setPos(0.0, 50.0)
+            self.field_item.setRotation(90.0)
+            angle = -90.0
+        elif self.team == TEAM_BLUE:
+            self.field_item.setRotation(90.0)
+            self.field_item.setPos(3000.0, 50.0 + self.field_item.boundingRect().height())
+            angle = 90.0
+        self.scene.addItem(self.field_item)
+        self.field_item.robot_rotation(angle)
 
 
     def read_output(self):
@@ -91,7 +104,7 @@ class RobotController(object):
             pass
 
 
-
     def send_packet(self, packet):
         if self.is_connected():
             self.socket.write(packet.serialize())
+

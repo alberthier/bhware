@@ -3,6 +3,7 @@
 
 import os
 
+from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 from PyQt4 import uic
 
@@ -46,4 +47,26 @@ class RobotView(QWidget, RobotView_Ui):
 
     def clear(self):
         self.log_view.clear()
+
+
+
+
+
+class GraphicsRobotItem(QGraphicsItemGroup):
+
+    def __init__(self, parent = None):
+        QGraphicsItemGroup.__init__(self, parent)
+        rect = QGraphicsRectItem(self.x(), self.y(), 300, 335)
+        rect.setBrush(QColor("#777777"))
+        self.addToGroup(rect)
+
+        self.rotation_timeline = QTimeLine(2000)
+        self.rotation_animation = QGraphicsItemAnimation()
+        self.rotation_animation.setItem(self)
+        self.rotation_animation.setTimeLine(self.rotation_timeline)
+
+
+    def robot_rotation(self, angle):
+        self.rotation_animation.setRotationAt(1.0, angle)
+        self.rotation_timeline.start()
 
