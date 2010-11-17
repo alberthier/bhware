@@ -26,8 +26,6 @@ class GameController(object):
         QCoreApplication.instance().lastWindowClosed.connect(self.stop)
 
 
-
-
     def setup(self):
         if not self.red_robot.is_started():
             self.red_robot.setup()

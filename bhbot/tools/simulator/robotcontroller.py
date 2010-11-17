@@ -19,8 +19,8 @@ class RobotController(object):
         self.field_item = None
         self.process = None
         self.socket = None
-        self.incomming_packet_buffer = ""
-        self.incomming_packet = None
+        self.incoming_packet_buffer = ""
+        self.incoming_packet = None
 
 
     def is_started(self):
