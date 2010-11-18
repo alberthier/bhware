@@ -16,7 +16,8 @@ def copy_kernel():
     if not os.path.exists(boot):
         os.mkdir(boot)
     kernel = os.path.join(os.path.dirname(sys.argv[1]), "images", "uImage")
-    shutil.copy2(kernel, boot)
+    if os.path.exists(kernel):
+        shutil.copy2(kernel, boot)
 
 if __name__ == "__main__":
     copy_skeleton()
