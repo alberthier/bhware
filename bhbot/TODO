@@ -1,3 +1,0 @@
-- Optimiser la création des paquets en utilisant un tableau indexé sur les types
-- Ajouter le temps au log
-- utiliser inspect pour inspecter le contenu d'un module
