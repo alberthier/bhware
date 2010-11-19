@@ -23,6 +23,13 @@ def get_last_logfile():
 
 
 def translate_packet_data(packet_type, packet_data):
+
+    if packet_type == "DeviceReady" or packet_type == "DeviceBusy":
+        if packet_data["remote_device"] == REMOTE_DEVICE_PIC:
+            packet_data["remote_device"] = "REMOTE_DEVICE_PIC"
+        elif packet_data["remote_device"] == REMOTE_DEVICE_SIMULATOR:
+            packet_data["remote_device"] = "REMOTE_DEVICE_SIMULATOR"
+
     if packet_type == "DeviceReady" or packet_type == "Start":
         if packet_data["team"] == TEAM_BLUE:
             packet_data["team"] = "TEAM_BLUE"

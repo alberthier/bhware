@@ -17,7 +17,7 @@ if socket.gethostname() == "drunkstar":
 else:
     host_device = HOST_DEVICE_PC
     remote_ip = "127.0.0.1"
-    serial_port_filepath = None
+    serial_port_path = None
     orange_led_device_path = None
     green_led_device_path = None
 

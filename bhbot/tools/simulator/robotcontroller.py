@@ -2,6 +2,7 @@
 # encoding: utf-8
 
 import os
+import random
 
 from PyQt4.QtCore import *
 
@@ -73,23 +74,21 @@ class RobotController(object):
 
 
     def read_packet(self):
-        self.incomming_packet_buffer += self.socket.readAll()
-        if self.incomming_packet == None:
-            self.incomming_packet = packets.create_packet(self.incomming_packet_buffer)
-        if len(self.incomming_packet_buffer) >= self.incomming_packet.MAX_SIZE:
-            buf = self.incomming_packet_buffer[:self.incomming_packet.MAX_SIZE]
-            self.incomming_packet_buffer = self.incomming_packet_buffer[self.incomming_packet.MAX_SIZE:]
-            packet = self.incomming_packet
-            self.incomming_packet = None
+        self.incoming_packet_buffer += self.socket.readAll()
+        if self.incoming_packet == None:
+            self.incoming_packet = packets.create_packet(self.incoming_packet_buffer)
+        if len(self.incoming_packet_buffer) >= self.incoming_packet.MAX_SIZE:
+            buf = self.incoming_packet_buffer[:self.incoming_packet.MAX_SIZE]
+            self.incoming_packet_buffer = self.incoming_packet_buffer[self.incoming_packet.MAX_SIZE:]
+            packet = self.incoming_packet
+            self.incoming_packet = None
             packet.deserialize(buf)
             self.on_packet(packet)
 
 
     def on_packet(self, packet):
         if isinstance(packet, packets.ControllerReady):
-            packet = packets.DeviceReady()
-            packet.team = self.team
-            self.send_packet(packet)
+            self.try_device_ready()
         elif isinstance(packet, packets.Goto):
             pass
         elif isinstance(packet, packets.KeepAlive):
@@ -108,3 +107,21 @@ class RobotController(object):
         if self.is_connected():
             self.socket.write(packet.serialize())
 
+
+    def try_device_ready(self):
+        if random.choice([True, False]):
+            # OK, ready
+            self.send_ready()
+        else:
+            # Still busy
+            packet = packets.DeviceBusy()
+            packet.remote_device = REMOTE_DEVICE_SIMULATOR
+            self.send_packet(packet)
+            QTimer.singleShot(500, self.send_ready)
+
+
+    def send_ready(self):
+        packet = packets.DeviceReady()
+        packet.team = self.team
+        packet.remote_device = REMOTE_DEVICE_SIMULATOR
+        self.send_packet(packet)
