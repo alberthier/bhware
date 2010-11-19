@@ -68,7 +68,16 @@ class DeviceBusy(BasePacket):
     TYPE = 1
 
     def __init__(self):
-        BasePacket.__init__(self, "")
+        BasePacket.__init__(self, "B")
+        self.remote_device = REMOTE_DEVICE_PIC
+
+
+    def deserialize(self, buf):
+        (self.remote_device,) = self.do_deserialize(buf)
+
+
+    def serialize(self):
+        return self.do_serialize(self.remote_device)
 
 
 
@@ -78,16 +87,17 @@ class DeviceReady(BasePacket):
     TYPE = 2
 
     def __init__(self):
-        BasePacket.__init__(self, "B")
+        BasePacket.__init__(self, "BB")
         self.team = TEAM_UNKNOWN
+        self.remote_device = REMOTE_DEVICE_PIC
 
 
     def deserialize(self, buf):
-        (self.team,) = self.do_deserialize(buf)
+        (self.team, self.remote_device) = self.do_deserialize(buf)
 
 
     def serialize(self):
-        return self.do_serialize(self.team)
+        return self.do_serialize(self.team, self.remote_device)
 
 
 

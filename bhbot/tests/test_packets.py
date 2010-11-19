@@ -39,6 +39,7 @@ class DeviceBusyPacketTestCase(unittest.TestCase):
 
     def test_serialization_deserialization(self):
         packet = packets.DeviceBusy()
+        packet.remote_device = REMOTE_DEVICE_SIMULATOR
         buf = packet.serialize()
         packet2 = packets.DeviceBusy()
         packet2.deserialize(buf)
@@ -57,6 +58,7 @@ class DeviceReadyPacketTestCase(unittest.TestCase):
     def test_serialization_deserialization(self):
         packet = packets.DeviceReady()
         packet.team = TEAM_RED
+        packet.remote_device = REMOTE_DEVICE_SIMULATOR
         buf = packet.serialize()
         packet2 = packets.DeviceReady()
         packet2.deserialize(buf)
@@ -141,7 +143,7 @@ class GotoFinishedPacketTestCase(unittest.TestCase):
 
     def test_serialization_deserialization(self):
         packet = packets.GotoFinished()
-        packet.reason = REASON_QWEEN_FOUND
+        packet.reason = REASON_QUEEN_FOUND
         buf = packet.serialize()
         packet2 = packets.GotoFinished()
         packet2.deserialize(buf)
