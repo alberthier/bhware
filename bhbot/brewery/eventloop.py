@@ -11,6 +11,7 @@ import logger
 import packets
 import config
 import statemachine
+import leds
 
 
 
@@ -49,9 +50,11 @@ class RobotControlDeviceChannel(asyncore.dispatcher_with_send):
             except Exception as e:
                 logger.log("Unable to connect to {0}:{1} ({2}), retrying".format(config.remote_ip, config.remote_port, e))
                 time.sleep(1)
+                leds.orange.toggle()
 
 
     def handle_connect(self):
+        leds.orange.off()
         self.eventloop.create_fsm()
 
 
@@ -112,6 +115,7 @@ class EventLoop(object):
                     self.fsm.state.on_blocked(channel_data.packet.side)
                 elif isinstance(channel_data.packet, packets.KeepAlive):
                     self.send_packet(channel_data.packet)
+                    leds.green.heartbeat_tick()
                     self.fsm.state.on_keep_alive(channel_data.packet.current_pose, channel_data.packet.match_started, channel_data.packet.match_time)
                 elif isinstance(channel_data.packet, packets.TurretDetect):
                     self.fsm.state.on_turret_detect(channel_data.packet.mean_angle, channel_data.packet.angular_size)

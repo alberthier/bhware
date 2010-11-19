@@ -10,6 +10,7 @@ from PyQt4 import uic
 from mainbar import *
 
 import helpers
+import leds
 from definitions import *
 
 (RobotView_Ui, RobotView_Widget) = uic.loadUiType(os.path.join(os.path.dirname(__file__), "robotview.ui"))
@@ -30,9 +31,9 @@ class RobotView(QWidget, RobotView_Ui):
             color = "#0000c9"
         palette = self.palette()
         palette.setColor(QPalette.Window, QColor(color))
-        palette.setColor(QPalette.Window, QColor(color))
-        palette.setColor(QPalette.Window, QColor(color))
         self.setPalette(palette)
+
+        self.points_widget.setPalette(self.style().standardPalette())
 
 
     def add_log(self, text):
@@ -47,6 +48,17 @@ class RobotView(QWidget, RobotView_Ui):
 
     def clear(self):
         self.log_view.clear()
+
+
+    def handle_led(self, led_data):
+        color = QApplication.instance().palette().color(QPalette.Window)
+        if (led_data & leds.SimulatorLed.COLOR_ORANGE_FLAG) and (led_data & leds.SimulatorLed.COLOR_ORANGE):
+            color = QColor("#f57900")
+        elif (led_data & leds.SimulatorLed.COLOR_GREEN_FLAG) and (led_data & leds.SimulatorLed.COLOR_GREEN):
+            color = QColor("#73d216")
+        palette = self.led.palette()
+        palette.setColor(QPalette.Window, color)
+        self.led.setPalette(palette)
 
 
 

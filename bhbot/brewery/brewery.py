@@ -7,6 +7,7 @@ import eventloop
 import config
 import signal
 
+import leds
 
 loop = None
 
@@ -27,4 +28,5 @@ if __name__ == "__main__":
     signal.signal(signal.SIGTERM, signal_handler)
 
     loop = eventloop.EventLoop(state_machine_name)
+    leds.initialize(loop)
     loop.start()

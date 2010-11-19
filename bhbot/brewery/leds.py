@@ -15,6 +15,8 @@ orange = None
 
 
 def initialize(event_loop):
+    global green
+    global orange
     if config.host_device == HOST_DEVICE_ARM:
         green = HardwareLed(config.green_led_device_path)
         orange = HardwareLed(config.orange_led_device_path)
@@ -108,10 +110,10 @@ class SimulatorLed(BaseLed):
         self.event_loop = event_loop
         self.color = color
         self.packet = packets.SimulatorData()
-        if color == COLOR_ORANGE:
-            self.packet.leds |= COLOR_ORANGE_FLAG
+        if color == SimulatorLed.COLOR_ORANGE:
+            self.packet.leds |= SimulatorLed.COLOR_ORANGE_FLAG
         else:
-            self.packet.leds |= COLOR_GREEN_FLAG
+            self.packet.leds |= SimulatorLed.COLOR_GREEN_FLAG
 
 
     def is_on(self):

@@ -7,21 +7,28 @@ import random
 from PyQt4.QtCore import *
 
 import packets
+import trajectory
 from robotview import *
 
 
 
 class RobotController(object):
 
-    def __init__(self, team, view, scene):
+    def __init__(self, team, game_controller, view, scene):
         self.team = team
+        self.game_controller = game_controller
         self.view = view
         self.scene = scene
+
         self.field_item = None
         self.process = None
         self.socket = None
         self.incoming_packet_buffer = ""
         self.incoming_packet = None
+        self.robot_pose = None
+        self.keep_alive_timer = QTimer()
+        self.keep_alive_timer.setInterval(100)
+        self.keep_alive_timer.timeout.connect(self.send_keep_alive)
 
 
     def is_started(self):
@@ -34,6 +41,11 @@ class RobotController(object):
 
     def setup(self):
         if self.process == None:
+            self.field_item = None
+            self.incoming_packet_buffer = ""
+            self.incoming_packet = None
+            self.robot_pose = trajectory.Pose(0.0, 0.0, 0.0)
+
             self.view.clear()
             brewery = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))), "brewery", "brewery.py")
             self.process = QProcess()
@@ -44,6 +56,7 @@ class RobotController(object):
 
     def stop(self):
         if self.process != None:
+            self.keep_alive_timer.stop()
             self.process.terminate()
             self.process.waitForFinished()
             self.process = None
@@ -54,6 +67,8 @@ class RobotController(object):
         self.socket = socket
         self.socket.disconnected.connect(self.stop)
         self.socket.readyRead.connect(self.read_packet)
+        self.keep_alive_timer.start()
+
         self.field_item = GraphicsRobotItem()
         if self.team == TEAM_RED:
             self.field_item.setPos(0.0, 50.0)
@@ -100,7 +115,7 @@ class RobotController(object):
         elif isinstance(packet, packets.Resettle):
             pass
         elif isinstance(packet, packets.SimulatorData):
-            pass
+            self.view.handle_led(packet.leds)
 
 
     def send_packet(self, packet):
@@ -124,4 +139,12 @@ class RobotController(object):
         packet = packets.DeviceReady()
         packet.team = self.team
         packet.remote_device = REMOTE_DEVICE_SIMULATOR
+        self.send_packet(packet)
+
+
+    def send_keep_alive(self):
+        packet = packets.KeepAlive()
+        packet.current_pose = self.robot_pose
+        packet.match_started = self.game_controller.is_started
+        packet.match_time = self.game_controller.time
         self.send_packet(packet)

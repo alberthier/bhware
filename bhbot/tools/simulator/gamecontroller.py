@@ -18,12 +18,15 @@ class GameController(object):
         self.server = QTcpServer()
         self.server.newConnection.connect(self.brewery_connected)
         self.server.listen(QHostAddress.Any, config.remote_port)
-        self.red_robot = RobotController(TEAM_RED, main_window.red_robot_dock.widget(), main_window.field_scene)
-        self.blue_robot = RobotController(TEAM_BLUE, main_window.blue_robot_dock.widget(), main_window.field_scene)
+        self.red_robot = RobotController(TEAM_RED, self, main_window.red_robot_dock.widget(), main_window.field_scene)
+        self.blue_robot = RobotController(TEAM_BLUE, self, main_window.blue_robot_dock.widget(), main_window.field_scene)
         self.main_bar = main_window.main_bar_dock.widget()
         self.main_bar.start.clicked.connect(self.setup)
         self.main_bar.stop.clicked.connect(self.stop)
         QCoreApplication.instance().lastWindowClosed.connect(self.stop)
+        self.is_started = False
+        self.time = 0
+
 
 
     def setup(self):
