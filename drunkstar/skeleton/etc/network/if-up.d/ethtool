@@ -1,0 +1,3 @@
+#!/bin/sh
+
+ethtool -s eth0 autoneg off duplex full speed 10

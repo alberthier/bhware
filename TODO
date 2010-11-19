@@ -4,4 +4,8 @@ Brewery
 - utiliser inspect pour inspecter le contenu d'un module
 
 Drunkstar
-- copier proprement le kernel dans l'image (pas dans postprocess mais dans build.py sans doute)
+- maj patch led
+- vim
+- ethtool (10mb full duplex)
+- /dev/ttyUSB0 dans device_table.txt
+- setserial (en python ?)

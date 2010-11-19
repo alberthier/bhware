@@ -401,17 +401,17 @@ class SimulatorData(BasePacket):
 
     def __init__(self):
         BasePacket.__init__(self, "B")
-        self.whatever = 0
+        self.leds = 0
 
 
     def deserialize(self, buf):
         values = self.do_deserialize(buf)
-        self.whatever = values[0]
+        self.leds = values[0]
 
 
     def serialize(self):
         values = []
-        values.append(self.whatever)
+        values.append(self.leds)
         return self.do_serialize(*values)
 
 

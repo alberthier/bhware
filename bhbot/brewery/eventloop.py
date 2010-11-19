@@ -17,8 +17,8 @@ import statemachine
 
 class TurretChannel(asyncore.file_dispatcher):
 
-    def __init__(self, serial_port_filepath, eventloop):
-        asyncore.file_dispatcher.__init__(file(serial_port_filepath))
+    def __init__(self, serial_port_path, eventloop):
+        asyncore.file_dispatcher.__init__(file(serial_port_path))
         self.eventloop = eventloop
 
 
@@ -143,8 +143,8 @@ class EventLoop(object):
 
 
     def start(self):
-        if (config.serial_port_filepath != None):
-            self.channels[TurretChannel(config.serial_port_filepath, self)] = ChannelData()
+        if (config.serial_port_path != None):
+            self.channels[TurretChannel(config.serial_port_path, self)] = ChannelData()
         self.robot_control_channel = RobotControlDeviceChannel(self)
         self.channels[self.robot_control_channel] = ChannelData()
         self.robot_control_channel.setup()
