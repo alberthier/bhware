@@ -54,7 +54,7 @@ def log(text):
 def log_packet(sender, packet):
     text = "['" + type(packet).__name__ + "', '" + sender + "', " + str(packet.to_dict()) + "]"
     log_file.write("log.append(" + text + ")\n")
-    if config.host_device == HOST_DEVICE_PC and not isinstance(packet, packets.KeepAlive):
+    if config.host_device == HOST_DEVICE_PC and not isinstance(packet, packets.KeepAlive) and not isinstance(packet, packets.SimulatorData):
         sys.stdout.write(text + "\n")
         sys.stdout.flush()
 
