@@ -120,9 +120,10 @@ class EventLoop(object):
 
 
     def send_packet(self, packet):
-        logger.log_packet("ARM", packet)
-        buffer = packet.serialize()
-        self.robot_control_channel.send(buffer)
+        if self.robot_control_channel.connected:
+            logger.log_packet("ARM", packet)
+            buffer = packet.serialize()
+            self.robot_control_channel.send(buffer)
 
 
     def create_fsm(self):
