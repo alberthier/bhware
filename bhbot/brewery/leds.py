@@ -114,7 +114,6 @@ class SimulatorLed(BaseLed):
             self.packet.leds |= COLOR_GREEN_FLAG
 
 
-
     def is_on(self):
         return self.packet.leds & self.color != 0
 
@@ -125,14 +124,3 @@ class SimulatorLed(BaseLed):
         else:
             self.packet.leds &= ~self.color
         self.event_loop.send_packet(self.packet)
-
-
-
-
-if __name__ == "__main__":
-    import time
-
-    led = HardwareLed(config.orange_led_device_path)
-    while True:
-        time.sleep(1)
-        led.toggle()
