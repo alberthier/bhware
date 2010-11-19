@@ -2,6 +2,9 @@
 # encoding: utf-8
 
 import statemachine
+import packets
+import trajectory
+
 
 
 
@@ -32,7 +35,11 @@ class WaitStart(statemachine.State):
 class Moving(statemachine.State):
 
     def on_enter(self):
-        self.robot.send_packet(packets.Goto())
+        packet = packets.Goto()
+        packet.movement = MOVEMENT_MOVE
+        packet.direction = DIRECTION_FORWARD
+        packet.points.append(trajectory.Pose(1000.0, 0.0))
+        self.robot.send_packet(packet)
 
 
     def on_goto_finished(self, reason):
