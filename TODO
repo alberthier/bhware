@@ -5,7 +5,6 @@ Brewery
 
 Drunkstar
 - maj patch led
-- vim
 - ethtool (10mb full duplex)
-- /dev/ttyUSB0 dans device_table.txt
 - setserial (en python ?)
+- Ajouter de la swap
