@@ -30,7 +30,7 @@ def initialize(event_loop):
 class BaseLed(object):
 
 
-    HEARTBEAT = [True, True, False, False, True, True, False, False, False, False]
+    HEARTBEAT = [True, True, False, False, True, True, False, False, False, False, False, False]
 
 
     def __init__(self):
