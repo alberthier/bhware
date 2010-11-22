@@ -5,6 +5,8 @@ import statemachine
 import packets
 import trajectory
 
+from definitions import *
+
 
 
 
@@ -39,7 +41,7 @@ class Moving(statemachine.State):
         packet.movement = MOVEMENT_MOVE
         packet.direction = DIRECTION_FORWARD
         packet.points.append(trajectory.Pose(1000.0, 0.0))
-        self.robot.send_packet(packet)
+        self.send_packet(packet)
 
 
     def on_goto_finished(self, reason):

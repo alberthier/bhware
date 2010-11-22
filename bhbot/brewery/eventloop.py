@@ -138,6 +138,8 @@ class EventLoop(object):
         for (item_name, item_type) in inspect.getmembers(state_machine_module):
             if inspect.isclass(item_type) and issubclass(item_type, statemachine.StateMachine):
                 self.fsm = item_type()
+                self.fsm.event_loop = self
+                self.fsm.start()
                 self.send_packet(packets.ControllerReady())
                 return
         logger.log("No state machine found in '{0}'".format(state_machine_file))

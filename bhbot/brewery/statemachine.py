@@ -9,6 +9,10 @@ class StateMachine(object):
     def __init__(self, start_state_ctor):
         self.state = start_state_ctor()
         self.state.fsm = self
+        self.event_loop = None
+
+
+    def start(self):
         self.state.on_enter()
 
 
@@ -25,6 +29,10 @@ class State(object):
         self.fsm.state = new_state_ctor()
         self.fsm.state.fsm = self.fsm
         self.fsm.state.on_enter()
+
+
+    def send_packet(self, packet):
+        self.fsm.event_loop.send_packet(packet)
 
 
     def on_enter(self):
