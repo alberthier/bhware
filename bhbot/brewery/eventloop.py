@@ -5,6 +5,7 @@ import asyncore
 import os
 import socket
 import imp
+import inspect
 import time
 
 import logger
@@ -134,15 +135,11 @@ class EventLoop(object):
         state_machines_dir = os.path.join(os.path.dirname(__file__), "statemachines")
         state_machine_file = os.path.join(state_machines_dir, self.state_machine_name + ".py")
         state_machine_module = imp.load_source(self.state_machine_name, state_machine_file)
-        for item_name in dir(state_machine_module):
-            try:
-                item = getattr(state_machine_module, item_name)
-                if issubclass(item, statemachine.StateMachine):
-                    self.fsm = item()
-                    self.send_packet(packets.ControllerReady())
-                    return
-            except:
-                pass
+        for (item_name, item_type) in inspect.getmembers(state_machine_module):
+            if inspect.isclass(item_type) and issubclass(item_type, statemachine.StateMachine):
+                self.fsm = item_type()
+                self.send_packet(packets.ControllerReady())
+                return
         logger.log("No state machine found in '{0}'".format(state_machine_file))
         self.stop()
 
