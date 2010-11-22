@@ -6,7 +6,6 @@ from PyQt4.QtGui import *
 from PyQt4 import uic
 import os
 import sys
-import imp
 
 # Update PYTHONPATH
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), "common"))
