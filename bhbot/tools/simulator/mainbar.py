@@ -17,6 +17,6 @@ class MainBar(QWidget, MainBar_Ui):
         QWidget.__init__(self, parent)
         MainBar_Ui.__init__(self)
         self.setupUi(self)
-        self.start.setIcon(QIcon.fromTheme("media-playback-start"))
-        self.pause.setIcon(QIcon.fromTheme("media-playback-pause"))
+        self.reload.setIcon(QIcon.fromTheme("reload"))
+        self.start_pause.setIcon(QIcon.fromTheme("media-playback-start"))
         self.stop.setIcon(QIcon.fromTheme("media-playback-stop"))

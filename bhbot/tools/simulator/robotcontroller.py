@@ -26,9 +26,6 @@ class RobotController(object):
         self.incoming_packet_buffer = ""
         self.incoming_packet = None
         self.robot_pose = None
-        self.keep_alive_timer = QTimer()
-        self.keep_alive_timer.setInterval(100)
-        self.keep_alive_timer.timeout.connect(self.send_keep_alive)
 
 
     def is_started(self):
@@ -56,7 +53,6 @@ class RobotController(object):
 
     def stop(self):
         if self.process != None:
-            self.keep_alive_timer.stop()
             self.process.terminate()
             self.process.waitForFinished()
             self.process = None
@@ -67,7 +63,6 @@ class RobotController(object):
         self.socket = socket
         self.socket.disconnected.connect(self.stop)
         self.socket.readyRead.connect(self.read_packet)
-        self.keep_alive_timer.start()
 
         self.field_item = GraphicsRobotItem()
         if self.team == TEAM_RED:
@@ -80,6 +75,7 @@ class RobotController(object):
             angle = 90.0
         self.scene.addItem(self.field_item)
         self.field_item.robot_rotation(angle)
+        print "connected {0}, socket: {1}".format(self.team, self.socket)
 
 
     def read_output(self):
@@ -89,6 +85,7 @@ class RobotController(object):
 
 
     def read_packet(self):
+        print "read all {0}".format(self.socket)
         self.incoming_packet_buffer += self.socket.readAll()
         if self.incoming_packet == None:
             self.incoming_packet = packets.create_packet(self.incoming_packet_buffer)
@@ -145,6 +142,13 @@ class RobotController(object):
     def send_keep_alive(self):
         packet = packets.KeepAlive()
         packet.current_pose = self.robot_pose
-        packet.match_started = self.game_controller.is_started
+        packet.match_started = self.game_controller.started
         packet.match_time = self.game_controller.time
         self.send_packet(packet)
+
+
+    def send_start_signal(self):
+        packet = packets.Start()
+        packet.team = self.team
+        self.send_packet(packet)
+

@@ -15,7 +15,7 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout_3">
    <item>
-    <widget class="QPushButton" name="start">
+    <widget class="QPushButton" name="reload">
      <property name="sizePolicy">
       <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
        <horstretch>0</horstretch>
@@ -37,7 +37,7 @@
     </widget>
    </item>
    <item>
-    <widget class="QPushButton" name="pause">
+    <widget class="QPushButton" name="start_pause">
      <property name="sizePolicy">
       <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
        <horstretch>0</horstretch>
@@ -123,7 +123,7 @@
         </font>
        </property>
        <property name="text">
-        <string>90</string>
+        <string>90.0</string>
        </property>
        <property name="alignment">
         <set>Qt::AlignCenter</set>
