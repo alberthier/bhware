@@ -37,19 +37,18 @@ class GameController(object):
     def setup(self):
         if not self.start_requested and not self.setting_up:
             self.stop()
-        if not self.red_robot.is_started():
+        if not self.red_robot.is_process_started():
             self.time = 900
             self.main_bar.chronograph.setText(str(round(self.time/10.0, 1)))
             self.setting_up = True
             self.red_robot.setup()
-        elif not self.blue_robot.is_started():
+        elif not self.blue_robot.is_process_started():
             self.blue_robot.setup()
         else:
-            if self.start_requested:
-                self.start_requested = False
-                self.send_start_signal()
             self.setting_up = False
             self.keep_alive_timer.start()
+            if self.start_requested:
+                self.try_start()
 
 
     def start_pause(self):
@@ -64,7 +63,8 @@ class GameController(object):
             self.start_requested = True
             self.setup()
         elif not self.setting_up:
-            self.send_start_signal()
+            self.start_requested = True
+            self.try_start()
 
 
     def stop(self):
@@ -81,6 +81,12 @@ class GameController(object):
         self.main_bar.start_pause.setIcon(QIcon.fromTheme("media-playback-pause"))
         self.red_robot.send_start_signal()
         self.blue_robot.send_start_signal()
+
+
+    def try_start(self):
+        if self.start_requested and self.red_robot.is_ready() and self.blue_robot.is_ready():
+            self.start_requested = False
+            self.send_start_signal()
 
 
     def brewery_connected(self):

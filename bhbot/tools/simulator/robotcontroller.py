@@ -26,14 +26,19 @@ class RobotController(object):
         self.incoming_packet_buffer = ""
         self.incoming_packet = None
         self.robot_pose = None
+        self.ready = False
 
 
-    def is_started(self):
+    def is_process_started(self):
         return self.process != None
 
 
     def is_connected(self):
         return self.socket != None
+
+
+    def is_ready(self):
+        return self.ready
 
 
     def setup(self):
@@ -60,6 +65,7 @@ class RobotController(object):
             self.socket = None
             self.scene.removeItem(self.field_item)
             self.field_item = None
+            self.ready = False
 
 
     def connected(self, socket):
@@ -138,6 +144,8 @@ class RobotController(object):
         packet.team = self.team
         packet.remote_device = REMOTE_DEVICE_SIMULATOR
         self.send_packet(packet)
+        self.ready = True
+        self.game_controller.try_start()
 
 
     def send_keep_alive(self):
