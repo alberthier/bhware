@@ -53,6 +53,7 @@ class RobotController(object):
 
     def stop(self):
         if self.process != None:
+            self.socket.disconnected.disconnect(self.stop)
             self.process.terminate()
             self.process.waitForFinished()
             self.process = None
