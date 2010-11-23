@@ -5,6 +5,7 @@ import os
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
+from PyQt4.QtSvg import *
 from PyQt4 import uic
 
 from mainbar import *
@@ -63,14 +64,12 @@ class RobotView(QWidget, RobotView_Ui):
 
 
 
-
 class GraphicsRobotItem(QGraphicsItemGroup):
 
     def __init__(self, parent = None):
         QGraphicsItemGroup.__init__(self, parent)
-        rect = QGraphicsRectItem(self.x(), self.y(), 300, 335)
-        rect.setBrush(QColor("#777777"))
-        self.addToGroup(rect)
+        self.robot = QGraphicsSvgItem(os.path.join(os.path.dirname(__file__), "robot.svg"))
+        self.addToGroup(self.robot)
 
         self.rotation_timeline = QTimeLine(2000)
         self.rotation_animation = QGraphicsItemAnimation()

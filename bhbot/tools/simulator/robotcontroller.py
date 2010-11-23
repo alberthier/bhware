@@ -57,6 +57,8 @@ class RobotController(object):
             self.process.waitForFinished()
             self.process = None
             self.socket = None
+            self.scene.removeItem(self.field_item)
+            self.field_item = None
 
 
     def connected(self, socket):
@@ -75,7 +77,6 @@ class RobotController(object):
             angle = 90.0
         self.scene.addItem(self.field_item)
         self.field_item.robot_rotation(angle)
-        print "connected {0}, socket: {1}".format(self.team, self.socket)
 
 
     def read_output(self):
@@ -85,7 +86,6 @@ class RobotController(object):
 
 
     def read_packet(self):
-        print "read all {0}".format(self.socket)
         self.incoming_packet_buffer += self.socket.readAll()
         if self.incoming_packet == None:
             self.incoming_packet = packets.create_packet(self.incoming_packet_buffer)
