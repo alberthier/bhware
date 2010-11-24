@@ -96,16 +96,17 @@ class RobotController(object):
 
 
     def read_packet(self):
-        self.incoming_packet_buffer += self.socket.readAll()
-        if self.incoming_packet == None:
-            self.incoming_packet = packets.create_packet(self.incoming_packet_buffer)
-        if len(self.incoming_packet_buffer) >= self.incoming_packet.MAX_SIZE:
-            buf = self.incoming_packet_buffer[:self.incoming_packet.MAX_SIZE]
-            self.incoming_packet_buffer = self.incoming_packet_buffer[self.incoming_packet.MAX_SIZE:]
-            packet = self.incoming_packet
-            self.incoming_packet = None
-            packet.deserialize(buf)
-            self.on_packet(packet)
+        if self.socket != None:
+            self.incoming_packet_buffer += self.socket.readAll()
+            if self.incoming_packet == None:
+                self.incoming_packet = packets.create_packet(self.incoming_packet_buffer)
+            if len(self.incoming_packet_buffer) >= self.incoming_packet.MAX_SIZE:
+                buf = self.incoming_packet_buffer[:self.incoming_packet.MAX_SIZE]
+                self.incoming_packet_buffer = self.incoming_packet_buffer[self.incoming_packet.MAX_SIZE:]
+                packet = self.incoming_packet
+                self.incoming_packet = None
+                packet.deserialize(buf)
+                self.on_packet(packet)
 
 
     def on_packet(self, packet):
