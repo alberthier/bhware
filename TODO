@@ -3,6 +3,7 @@ Brewery
 - Ajouter le temps au log
 - utiliser inspect pour inspecter le contenu d'un module
 - Attendre deviceready avant start
+- catch et affichage correct des exceptions (=> logger)
 
 Drunkstar
 - maj patch led
