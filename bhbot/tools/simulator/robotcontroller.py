@@ -67,8 +67,9 @@ class RobotController(object):
 
 
     def remove_field_item(self):
-        self.scene.removeItem(self.field_item)
-        self.field_item = None
+        if self.field_item != None:
+            self.scene.removeItem(self.field_item)
+            self.field_item = None
 
 
     def connected(self, socket):
