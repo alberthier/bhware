@@ -18,6 +18,8 @@ def download():
         if not os.path.exists(archive):
             call(["wget", "http://buildroot.uclibc.org/downloads/{0}".format(archive)])
         call(["tar", "xjf", archive])
+        call(["patch", "-d", BUILDROOT, "-p1", "-i", "../buildroot-2010.08-target-gcc.patch"])
+
 
 
 def build():
