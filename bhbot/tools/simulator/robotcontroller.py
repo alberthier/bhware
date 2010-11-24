@@ -63,9 +63,12 @@ class RobotController(object):
             self.process.waitForFinished()
             self.process = None
             self.socket = None
-            self.scene.removeItem(self.field_item)
-            self.field_item = None
             self.ready = False
+
+
+    def remove_field_item(self):
+        self.scene.removeItem(self.field_item)
+        self.field_item = None
 
 
     def connected(self, socket):

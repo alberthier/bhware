@@ -23,7 +23,7 @@ class GameController(object):
         self.main_bar = main_window.main_bar_dock.widget()
         self.main_bar.reload.clicked.connect(self.setup)
         self.main_bar.start_pause.clicked.connect(self.start_pause)
-        self.main_bar.stop.clicked.connect(self.stop)
+        self.main_bar.stop.clicked.connect(self.user_stop)
         QCoreApplication.instance().lastWindowClosed.connect(self.stop)
         self.start_requested = False
         self.started = False
@@ -36,7 +36,7 @@ class GameController(object):
 
     def setup(self):
         if not self.start_requested and not self.setting_up:
-            self.stop()
+            self.user_stop()
         if not self.red_robot.is_process_started():
             self.time = 900
             self.main_bar.chronograph.setText(str(round(self.time/10.0, 1)))
@@ -65,6 +65,12 @@ class GameController(object):
         elif not self.setting_up:
             self.start_requested = True
             self.try_start()
+
+
+    def user_stop(self):
+        self.stop()
+        self.red_robot.remove_field_item()
+        self.blue_robot.remove_field_item()
 
 
     def stop(self):
