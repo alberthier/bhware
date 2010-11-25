@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
+import math
+
 import statemachine
 import packets
 import trajectory
@@ -44,7 +46,7 @@ class WaitFirstKeepAlive(statemachine.State):
 class MovingBegin(statemachine.State):
 
     def on_enter(self):
-        self.robot().move(1300.0, 0.0)
+        self.robot().forward(1.0)
 
 
     def on_goto_finished(self, reason):
@@ -54,17 +56,18 @@ class MovingBegin(statemachine.State):
 class Rotate(statemachine.State):
 
     def on_enter(self):
-        self.robot().rotate(90.0)
+        self.robot().rotate(math.pi / 2.0)
 
 
     def on_goto_finished(self, reason):
+        return
         self.switch_to_state(Moving)
 
 
 class Moving(statemachine.State):
 
     def on_enter(self):
-        self.robot().move(300.0, 0.0)
+        self.robot().forward(0.3)
 
 
     def on_goto_finished(self, reason):

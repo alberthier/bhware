@@ -44,12 +44,6 @@ class RobotController(object):
         return self.ready
 
 
-    def robot_pose(self):
-        if self.field_item != None:
-            return trajectory.Pose(self.field_item.x(), self.field_item.y(), self.field_item.rotation())
-        return trajectory.Pose()
-
-
     def setup(self):
         if self.process == None:
             self.field_item = None
@@ -88,9 +82,10 @@ class RobotController(object):
         self.field_item = GraphicsRobotItem()
         if self.team == TEAM_RED:
             self.field_item.setPos(260.5, 200.0)
+            self.field_item.setRotation(90.0)
         elif self.team == TEAM_BLUE:
             self.field_item.setPos(3000.0 - 260.5, 200.0)
-            self.field_item.setRotation(180.0)
+            self.field_item.setRotation(-90.0)
         self.field_item.timeline.finished.connect(self.process_goto)
         self.scene.addItem(self.field_item)
 
@@ -162,7 +157,7 @@ class RobotController(object):
 
     def send_keep_alive(self):
         packet = packets.KeepAlive()
-        packet.current_pose = self.robot_pose()
+        packet.current_pose = self.field_item.get_pose()
         packet.match_started = self.game_controller.started
         packet.match_time = self.game_controller.time
         self.send_packet(packet)
@@ -177,15 +172,14 @@ class RobotController(object):
     def process_goto(self):
         if self.goto_packet != None:
             # direction is ignored for the moment
-            point = self.goto_packet.points[0]
-            self.goto_packet.points = self.goto_packet.points[1:]
-            if self.goto_packet.movement == MOVEMENT_ROTATE:
-                self.field_item.robot_rotation(point.angle)
-            elif self.goto_packet.movement == MOVEMENT_MOVE:
-                dx = point.x - self.field_item.x()
-                dy = point.y - self.field_item.y()
-                self.field_item.robot_move(dx, dy)
-            if len(self.goto_packet.points) == 0:
+            if len(self.goto_packet.points) != 0:
+                point = self.goto_packet.points[0]
+                self.goto_packet.points = self.goto_packet.points[1:]
+                if self.goto_packet.movement == MOVEMENT_ROTATE:
+                    self.field_item.robot_rotation(point.angle)
+                elif self.goto_packet.movement == MOVEMENT_MOVE:
+                    self.field_item.robot_move(point.x, point.y)
+            else:
                 self.goto_packet = None
                 packet = packets.GotoFinished()
                 packet.reason = REASON_DESTINATION_REACHED

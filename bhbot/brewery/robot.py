@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
+import math
+
 import trajectory
 import packets
 
@@ -18,23 +20,41 @@ class Robot(object):
 
 
     def move(self, dx, dy):
-        self.goto(self.pose.x + dx, self.pose.y, None)
+        self.goto(self.pose.x + dx, self.pose.y + dy, None, DIRECTION_FORWARD)
+
 
     def move_to(self, x, y):
-        self.goto(x, y, None)
+        self.goto(x, y, None, DIRECTION_FORWARD)
 
-    def rotate(self, dangle):
-        self.goto(None, None, self.pose.angle + dangle)
+
+    def forward(self, distance):
+        dx = math.cos(self.pose.angle) * distance
+        dy = math.sin(self.pose.angle) * distance
+        self.goto(self.pose.x + dx, self.pose.y + dy, None, DIRECTION_FORWARD)
+
+
+    def backward(self, distance):
+        dx = math.cos(self.pose.angle) * distance
+        dy = math.sin(self.pose.angle) * distance
+        self.goto(self.pose.x - dx, self.pose.y - dy, None, DIRECTION_BACKWARD)
+
+
+    def rotate(self, da):
+        self.goto(None, None, self.pose.angle + da, DIRECTION_FORWARD)
+
 
     def rotate_to(self, angle):
-        self.goto(None, None, angle)
+        self.goto(None, None, angle, DIRECTION_FORWARD)
 
-    def goto(self, x, y, angle):
+
+    def goto(self, x, y, angle, direction):
         packet = packets.Goto()
         if angle == None:
             packet.movement = MOVEMENT_MOVE
         else:
+            x = 0.0
+            y = 0.0
             packet.movement = MOVEMENT_ROTATE
-        packet.direction = DIRECTION_FORWARD
+        packet.direction = direction
         packet.points = [trajectory.Pose(x, y, angle)]
         self.event_loop.send_packet(packet)
