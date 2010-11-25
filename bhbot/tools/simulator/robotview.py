@@ -2,6 +2,7 @@
 # encoding: utf-8
 
 import os
+import math
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
@@ -69,15 +70,25 @@ class GraphicsRobotItem(QGraphicsItemGroup):
     def __init__(self, parent = None):
         QGraphicsItemGroup.__init__(self, parent)
         self.robot = QGraphicsSvgItem(os.path.join(os.path.dirname(__file__), "robot.svg"))
+        self.robot.translate(-260.5, -170.0)
         self.addToGroup(self.robot)
 
-        self.rotation_timeline = QTimeLine(2000)
-        self.rotation_animation = QGraphicsItemAnimation()
-        self.rotation_animation.setItem(self)
-        self.rotation_animation.setTimeLine(self.rotation_timeline)
+        self.timeline = QTimeLine()
+        self.animation = QGraphicsItemAnimation()
+        self.animation.setItem(self)
+        self.animation.setTimeLine(self.timeline)
 
 
     def robot_rotation(self, angle):
-        self.rotation_animation.setRotationAt(1.0, angle)
-        self.rotation_timeline.start()
+        # 360 deg/s
+        self.timeline.setDuration(abs(int(1000.0 / 360.0 * angle)))
+        self.animation.setRotationAt(1.0, angle)
+        self.timeline.start()
 
+
+    def robot_move(self, dx, dy):
+        # 1 m/s
+        dist = math.sqrt(math.pow(dx, 2) + math.pow(dy, 2))
+        self.timeline.setDuration(dist)
+        self.animation.setTranslationAt(1.0, dx, dy)
+        self.timeline.start()

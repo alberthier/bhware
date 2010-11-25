@@ -35,6 +35,10 @@ class State(object):
         self.fsm.event_loop.send_packet(packet)
 
 
+    def robot(self):
+        return self.fsm.event_loop.robot
+
+
     def on_enter(self):
         pass
 

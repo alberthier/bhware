@@ -8,6 +8,9 @@ from PyQt4.QtCore import *
 
 import packets
 import trajectory
+import config
+from definitions import *
+
 from robotview import *
 
 
@@ -25,8 +28,8 @@ class RobotController(object):
         self.socket = None
         self.incoming_packet_buffer = ""
         self.incoming_packet = None
-        self.robot_pose = None
         self.ready = False
+        self.goto_packet = None
 
 
     def is_process_started(self):
@@ -41,12 +44,17 @@ class RobotController(object):
         return self.ready
 
 
+    def robot_pose(self):
+        if self.field_item != None:
+            return trajectory.Pose(self.field_item.x(), self.field_item.y(), self.field_item.rotation())
+        return trajectory.Pose()
+
+
     def setup(self):
         if self.process == None:
             self.field_item = None
             self.incoming_packet_buffer = ""
             self.incoming_packet = None
-            self.robot_pose = trajectory.Pose(0.0, 0.0, 0.0)
 
             self.view.clear()
             brewery = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))), "brewery", "brewery.py")
@@ -79,15 +87,12 @@ class RobotController(object):
 
         self.field_item = GraphicsRobotItem()
         if self.team == TEAM_RED:
-            self.field_item.setPos(0.0, 50.0)
-            self.field_item.setRotation(90.0)
-            angle = -90.0
+            self.field_item.setPos(260.5, 200.0)
         elif self.team == TEAM_BLUE:
-            self.field_item.setRotation(90.0)
-            self.field_item.setPos(3000.0, 50.0 + self.field_item.boundingRect().height())
-            angle = 90.0
+            self.field_item.setPos(3000.0 - 260.5, 200.0)
+            self.field_item.setRotation(180.0)
+        self.field_item.timeline.finished.connect(self.process_goto)
         self.scene.addItem(self.field_item)
-        self.field_item.robot_rotation(angle)
 
 
     def read_output(self):
@@ -114,7 +119,9 @@ class RobotController(object):
         if isinstance(packet, packets.ControllerReady):
             self.try_device_ready()
         elif isinstance(packet, packets.Goto):
-            pass
+            self.goto_packet = packet
+            self.send_packet(packets.GotoStarted())
+            self.process_goto()
         elif isinstance(packet, packets.KeepAlive):
             pass
         elif isinstance(packet, packets.PositionControlConfig):
@@ -155,7 +162,7 @@ class RobotController(object):
 
     def send_keep_alive(self):
         packet = packets.KeepAlive()
-        packet.current_pose = self.robot_pose
+        packet.current_pose = self.robot_pose()
         packet.match_started = self.game_controller.started
         packet.match_time = self.game_controller.time
         self.send_packet(packet)
@@ -166,3 +173,20 @@ class RobotController(object):
         packet.team = self.team
         self.send_packet(packet)
 
+
+    def process_goto(self):
+        if self.goto_packet != None:
+            # direction is ignored for the moment
+            point = self.goto_packet.points[0]
+            self.goto_packet.points = self.goto_packet.points[1:]
+            if self.goto_packet.movement == MOVEMENT_ROTATE:
+                self.field_item.robot_rotation(point.angle)
+            elif self.goto_packet.movement == MOVEMENT_MOVE:
+                dx = point.x - self.field_item.x()
+                dy = point.y - self.field_item.y()
+                self.field_item.robot_move(dx, dy)
+            if len(self.goto_packet.points) == 0:
+                self.goto_packet = None
+                packet = packets.GotoFinished()
+                packet.reason = REASON_DESTINATION_REACHED
+                self.send_packet(packet)

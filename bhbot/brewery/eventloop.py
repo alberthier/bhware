@@ -13,6 +13,7 @@ import packets
 import config
 import statemachine
 import leds
+import robot
 
 
 
@@ -85,6 +86,7 @@ class EventLoop(object):
         self.channels = {}
         self.robot_control_channel = None
         self.fsm = None
+        self.robot = robot.Robot(self)
         self.state_machine_name = state_machine_name
 
 
@@ -116,6 +118,7 @@ class EventLoop(object):
                     self.fsm.state.on_blocked(channel_data.packet.side)
                 elif isinstance(channel_data.packet, packets.KeepAlive):
                     self.send_packet(channel_data.packet)
+                    self.robot.pose = channel_data.packet.current_pose
                     leds.green.heartbeat_tick()
                     self.fsm.state.on_keep_alive(channel_data.packet.current_pose, channel_data.packet.match_started, channel_data.packet.match_time)
                 elif isinstance(channel_data.packet, packets.TurretDetect):
