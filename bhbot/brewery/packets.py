@@ -189,16 +189,21 @@ class GotoFinished(BasePacket):
     TYPE = 6
 
     def __init__(self):
-        BasePacket.__init__(self, "B")
+        BasePacket.__init__(self, "Bfff")
         self.reason = REASON_DESTINATION_REACHED
+        self.pose = trajectory.Pose(0.0, 0.0, 0.0)
 
 
     def deserialize(self, buf):
-        (self.reason,) = self.do_deserialize(buf)
+        values = self.do_deserialize(buf)
+        self.reason = values[0]
+        self.pose.x = values[1]
+        self.pose.y = values[2]
+        self.pose.angle = values[3]
 
 
     def serialize(self):
-        return self.do_serialize(self.reason)
+        return self.do_serialize(self.reason, self.pose.x, self.pose.y, self.pose.angle)
 
 
 

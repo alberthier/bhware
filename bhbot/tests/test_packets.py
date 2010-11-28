@@ -144,10 +144,14 @@ class GotoFinishedPacketTestCase(unittest.TestCase):
     def test_serialization_deserialization(self):
         packet = packets.GotoFinished()
         packet.reason = REASON_QUEEN_FOUND
+        packet.pose = trajectory.Pose(20.0, 30.0, 5.5)
         buf = packet.serialize()
         packet2 = packets.GotoFinished()
         packet2.deserialize(buf)
-        self.assertEqual(packet.__dict__, packet2.__dict__)
+        self.assertEqual(packet.reason, packet2.reason)
+        self.assertTrue(compare_floats(packet.pose.x, packet2.pose.x))
+        self.assertTrue(compare_floats(packet.pose.y, packet2.pose.y))
+        self.assertTrue(compare_floats(packet.pose.angle, packet2.pose.angle))
 
 
 
