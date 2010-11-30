@@ -183,5 +183,5 @@ class RobotController(object):
                 self.goto_packet = None
                 packet = packets.GotoFinished()
                 packet.reason = REASON_DESTINATION_REACHED
-                packet.pose = self.field_object.get_pose()
+                packet.current_pose = self.field_object.get_pose()
                 self.send_packet(packet)
