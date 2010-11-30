@@ -63,7 +63,7 @@ class State(object):
         pass
 
 
-    def on_goto_finished(self, reason):
+    def on_goto_finished(self, reason, pose):
         pass
 
 

@@ -107,13 +107,16 @@ class EventLoop(object):
                 if isinstance(channel_data.packet, packets.DeviceBusy):
                     self.fsm.state.on_device_busy()
                 elif isinstance(channel_data.packet, packets.DeviceReady):
+                    self.robot.team = channel_data.packet.team
                     self.fsm.state.on_device_ready(channel_data.packet.team)
                 elif isinstance(channel_data.packet, packets.Start):
                     self.fsm.state.on_start(channel_data.packet.team)
+                    self.robot.team = channel_data.packet.team
                 elif isinstance(channel_data.packet, packets.GotoStarted):
                     self.fsm.state.on_goto_started()
                 elif isinstance(channel_data.packet, packets.GotoFinished):
-                    self.fsm.state.on_goto_finished(channel_data.packet.reason)
+                    self.robot.pose = channel_data.packet.pose
+                    self.fsm.state.on_goto_finished(channel_data.packet.reason, channel_data.packet.pose)
                 elif isinstance(channel_data.packet, packets.Blocked):
                     self.fsm.state.on_blocked(channel_data.packet.side)
                 elif isinstance(channel_data.packet, packets.KeepAlive):

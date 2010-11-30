@@ -39,28 +39,70 @@ class WaitStart(statemachine.State):
 class WaitFirstKeepAlive(statemachine.State):
 
     def on_keep_alive(self, current_pose, match_started, match_time):
-        self.switch_to_state(MovingBegin)
+        self.switch_to_state(GotoFieldMove)
 
 
 
-class MovingBegin(statemachine.State):
+class GotoFieldMove(statemachine.State):
 
     def on_enter(self):
-        self.robot().forward(1.0)
+        self.robot().forward(0.4)
 
 
-    def on_goto_finished(self, reason):
-        self.switch_to_state(Rotate)
+    def on_goto_finished(self, reason, pose):
+        self.switch_to_state(GotoFieldRotate)
+
+
+
+class GotoFieldRotate(statemachine.State):
+
+    def on_enter(self):
+        angle = math.pi / 6.0
+        if self.robot().team == TEAM_RED:
+            angle = -angle
+        self.robot().rotate(angle)
+
+
+    def on_goto_finished(self, reason, pose):
+        self.switch_to_state(GotoFieldMove2)
+
+
+
+class GotoFieldMove2(statemachine.State):
+
+    def on_enter(self):
+        self.robot().forward(0.4)
+
+
+    def on_goto_finished(self, reason, pose):
+        self.switch_to_state(GotoFieldRotate2)
+
+
+
+class GotoFieldRotate2(statemachine.State):
+
+    def on_enter(self):
+        angle = math.pi / 3.0
+        if self.robot().team == TEAM_RED:
+            angle = -angle
+        self.robot().rotate(angle)
+
+
+    def on_goto_finished(self, reason, pose):
+        self.switch_to_state(Moving)
+
 
 
 class Rotate(statemachine.State):
 
     def on_enter(self):
-        self.robot().rotate(math.pi / 2.0)
+        angle = math.pi / 2.0
+        if self.robot().team == TEAM_RED:
+            angle = -angle
+        self.robot().rotate(angle)
 
 
-    def on_goto_finished(self, reason):
-        return
+    def on_goto_finished(self, reason, pose):
         self.switch_to_state(Moving)
 
 
@@ -70,5 +112,5 @@ class Moving(statemachine.State):
         self.robot().forward(0.3)
 
 
-    def on_goto_finished(self, reason):
+    def on_goto_finished(self, reason, pose):
         self.switch_to_state(Rotate)

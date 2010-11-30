@@ -66,48 +66,100 @@ class RobotView(QWidget, RobotView_Ui):
 
 
 
-class GraphicsRobotItem(QGraphicsItemGroup):
+class GraphicsRobotObject(QObject):
 
-    def __init__(self, parent = None):
-        QGraphicsItemGroup.__init__(self, parent)
-        self.robot = QGraphicsSvgItem(os.path.join(os.path.dirname(__file__), "robot.svg"))
-        self.robot.rotate(-90.0)
-        self.robot.translate(-260.5, -170.0)
-        self.addToGroup(self.robot)
+    def __init__(self, team, parent = None):
+        QObject.__init__(self, parent)
 
-        self.timeline = QTimeLine()
-        self.animation = QGraphicsItemAnimation()
-        self.animation.setItem(self)
-        self.animation.setTimeLine(self.timeline)
+        self.team = team
+        self.animation = QPropertyAnimation()
+        self.animation.setTargetObject(self)
+
+        self.item = QGraphicsItemGroup()
+        self.robot_item = QGraphicsSvgItem(os.path.join(os.path.dirname(__file__), "robot.svg"))
+        self.robot_item.setTransformOriginPoint(260.5, 170.0)
+        transform = self.robot_item.transform()
+        transform.translate(-260.5, -170.0)
+        self.robot_item.setTransform(transform)
+        self.item.addToGroup(self.robot_item)
+        team_indicator = QGraphicsEllipseItem(-25.0, 15.0, 50.0, 50.0)
+        if self.team == TEAM_RED:
+            color = QColor("#c90000")
+        elif self.team == TEAM_BLUE:
+            color = QColor("#0000c9")
+        team_indicator.setBrush(color)
+        team_indicator.setPen(QPen(0))
+        self.item.addToGroup(team_indicator)
+
+
+    def get_position(self):
+        return self.item.pos()
+
+
+    def set_position(self, p):
+        self.item.setPos(p)
+
+    # declare 'position' to Qt's property system
+    position = pyqtProperty('QPointF', get_position, set_position)
+
+    def get_rotation(self):
+        return self.item.rotation()
+
+
+    def set_rotation(self, a):
+        self.item.setRotation(a)
+
+    #declare 'angle' to Qt's property system
+    angle = pyqtProperty('qreal', get_rotation, set_rotation)
+
+
+    def convert_angle(self, angle):
+        return math.atan2(math.cos(angle), math.sin(angle))
 
 
     def get_pose(self):
-        y = self.x() / 1000.0
-        x = self.y() / 1000.0
-        angle = self.rotation() / 180.0 * math.pi
+        y = self.item.pos().x() / 1000.0
+        x = self.item.pos().y() / 1000.0
+        angle = self.item.rotation() / 180.0 * math.pi
+        # Map from Qt reference to field reference
+        angle = self.convert_angle(angle)
         return trajectory.Pose(x, y, angle)
 
 
     def robot_rotation(self, angle):
-        angle_deg = angle / math.pi * 180.0
+        # Map from robot field reference to Qt reference
+        ref_angle = self.convert_angle(angle)
+        angle_deg = ((ref_angle) / math.pi * 180.0)
+
+        current = self.item.rotation() % 360.0
+
+        if abs(current - angle_deg) > 180.0:
+            if current > angle_deg:
+                angle_deg += 360.0
+            else:
+                angle_deg -= 360.0
+
+        self.animation.setPropertyName("angle")
         # 360 deg/s
-        duration = abs(int(angle_deg / 360.0 * 1000.0))
-        if duration == 0:
-            return
-        print "rotate duration={0}".format(duration)
-        self.timeline.setDuration(duration)
-        self.animation.setTranslationAt(1.0, 0.0, 0.0)
-        self.animation.setRotationAt(1.0, angle_deg)
-        self.timeline.start()
+        duration = abs(int((angle_deg - current) / 360.0 * 1000.0))
+        self.animation.setDuration(duration)
+        self.animation.setStartValue(current)
+        self.animation.setEndValue(angle_deg)
+        self.animation.start()
 
 
     def robot_move(self, x, y):
+        # Map from robot field reference to Qt reference
+        ref_x = y * 1000.0
+        ref_y = x * 1000.0
+        d_field_x = ref_x - self.item.pos().x()
+        d_field_y = ref_y - self.item.pos().y()
+
+        self.animation.setPropertyName("position")
         # 1 m/s
-        d_field_x = y * 1000.0 - self.x()
-        d_field_y = x * 1000.0 - self.y()
-        dist = math.sqrt(math.pow(d_field_x, 2) + math.pow(d_field_y, 2))
-        print "move duration={0}".format(dist)
-        self.timeline.setDuration(dist)
-        self.animation.setTranslationAt(1.0, d_field_x, d_field_y)
-        self.animation.setRotationAt(1.0, 0.0)
-        self.timeline.start()
+        duration = math.sqrt(math.pow(d_field_x, 2) + math.pow(d_field_y, 2))
+        self.animation.setDuration(duration)
+        self.animation.setStartValue(self.item.pos())
+        dest = QPointF(ref_x, ref_y)
+        self.animation.setEndValue(dest)
+        self.animation.start()

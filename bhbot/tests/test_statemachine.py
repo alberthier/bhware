@@ -58,6 +58,7 @@ class StateMachineTestCase(unittest.TestCase):
 
     def setUp(self):
         self.fsm = TestStateMachine()
+        self.fsm.start()
 
     def test_init(self):
         self.assertTrue(isinstance(self.fsm.state, TestStartState))

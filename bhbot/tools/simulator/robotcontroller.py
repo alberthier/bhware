@@ -23,7 +23,7 @@ class RobotController(object):
         self.view = view
         self.scene = scene
 
-        self.field_item = None
+        self.field_object = None
         self.process = None
         self.socket = None
         self.incoming_packet_buffer = ""
@@ -46,7 +46,7 @@ class RobotController(object):
 
     def setup(self):
         if self.process == None:
-            self.field_item = None
+            self.field_object = None
             self.incoming_packet_buffer = ""
             self.incoming_packet = None
 
@@ -69,9 +69,9 @@ class RobotController(object):
 
 
     def remove_field_item(self):
-        if self.field_item != None:
-            self.scene.removeItem(self.field_item)
-            self.field_item = None
+        if self.field_object != None:
+            self.scene.removeItem(self.field_object.item)
+            self.field_object = None
 
 
     def connected(self, socket):
@@ -79,15 +79,15 @@ class RobotController(object):
         self.socket.disconnected.connect(self.stop)
         self.socket.readyRead.connect(self.read_packet)
 
-        self.field_item = GraphicsRobotItem()
+        self.field_object = GraphicsRobotObject(self.team)
         if self.team == TEAM_RED:
-            self.field_item.setPos(260.5, 200.0)
-            self.field_item.setRotation(90.0)
+            self.field_object.item.setPos(260.5, 200.0)
+            #self.field_object.item.setRotation(90.0)
         elif self.team == TEAM_BLUE:
-            self.field_item.setPos(3000.0 - 260.5, 200.0)
-            self.field_item.setRotation(-90.0)
-        self.field_item.timeline.finished.connect(self.process_goto)
-        self.scene.addItem(self.field_item)
+            self.field_object.item.setPos(3000.0 - 260.5, 200.0)
+            self.field_object.item.setRotation(180.0)
+        self.field_object.animation.finished.connect(self.process_goto)
+        self.scene.addItem(self.field_object.item)
 
 
     def read_output(self):
@@ -157,7 +157,7 @@ class RobotController(object):
 
     def send_keep_alive(self):
         packet = packets.KeepAlive()
-        packet.current_pose = self.field_item.get_pose()
+        packet.current_pose = self.field_object.get_pose()
         packet.match_started = self.game_controller.started
         packet.match_time = self.game_controller.time
         self.send_packet(packet)
@@ -176,11 +176,12 @@ class RobotController(object):
                 point = self.goto_packet.points[0]
                 self.goto_packet.points = self.goto_packet.points[1:]
                 if self.goto_packet.movement == MOVEMENT_ROTATE:
-                    self.field_item.robot_rotation(point.angle)
+                    self.field_object.robot_rotation(point.angle)
                 elif self.goto_packet.movement == MOVEMENT_MOVE:
-                    self.field_item.robot_move(point.x, point.y)
+                    self.field_object.robot_move(point.x, point.y)
             else:
                 self.goto_packet = None
                 packet = packets.GotoFinished()
                 packet.reason = REASON_DESTINATION_REACHED
+                packet.pose = self.field_object.get_pose()
                 self.send_packet(packet)
