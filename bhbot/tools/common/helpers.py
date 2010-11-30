@@ -50,10 +50,10 @@ def translate_packet_data(packet_type, packet_data):
     elif packet_type == "GotoFinished":
         if packet_data["reason"] == REASON_DESTINATION_REACHED:
             packet_data["reason"] = "REASON_DESTINATION_REACHED"
-        elif packet_data["reason"] == REASON_POWN_FOUND:
-            packet_data["reason"] = "REASON_POWN_FOUND"
-        elif packet_data["reason"] == REASON_QWEEN_FOUND:
-            packet_data["reason"] = "REASON_QWEEN_FOUND"
+        elif packet_data["reason"] == REASON_PAWN_FOUND:
+            packet_data["reason"] = "REASON_PAWN_FOUND"
+        elif packet_data["reason"] == REASON_QUEEN_FOUND:
+            packet_data["reason"] = "REASON_QUEEN_FOUND"
         elif packet_data["reason"] == REASON_KING_FOUND:
             packet_data["reason"] = "REASON_KING_FOUND"
 
