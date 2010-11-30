@@ -17,6 +17,12 @@ class MainBar(QWidget, MainBar_Ui):
         QWidget.__init__(self, parent)
         MainBar_Ui.__init__(self)
         self.setupUi(self)
-        self.reload.setIcon(QIcon.fromTheme("reload"))
-        self.start_pause.setIcon(QIcon.fromTheme("media-playback-start"))
-        self.stop.setIcon(QIcon.fromTheme("media-playback-stop"))
+        icons_dir = os.path.join(os.path.dirname(__file__), "icons")
+        self.set_icon(self.reload, "refresh")
+        self.set_icon(self.start_pause, "start")
+        self.set_icon(self.stop, "stop")
+
+
+    def set_icon(self, button, icon_name):
+        icons_dir = os.path.join(os.path.dirname(__file__), "icons")
+        button.setIcon(QIcon(os.path.join(icons_dir, "{0}.svg".format(icon_name))))

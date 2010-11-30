@@ -54,10 +54,10 @@ class GameController(object):
     def start_pause(self):
         if self.started:
             if self.keep_alive_timer.isActive():
-                self.main_bar.start_pause.setIcon(QIcon.fromTheme("media-playback-start"))
+                self.main_bar.set_icon(self.main_bar.start_pause, "start")
                 self.keep_alive_timer.stop()
             else:
-                self.main_bar.start_pause.setIcon(QIcon.fromTheme("media-playback-pause"))
+                self.main_bar.set_icon(self.main_bar.start_pause, "pause")
                 self.keep_alive_timer.start()
         elif not self.start_requested:
             self.start_requested = True
@@ -76,7 +76,7 @@ class GameController(object):
     def stop(self):
         self.started = False
         self.start_requested = False
-        self.main_bar.start_pause.setIcon(QIcon.fromTheme("media-playback-start"))
+        self.main_bar.set_icon(self.main_bar.start_pause, "start")
         self.keep_alive_timer.stop()
         self.red_robot.stop()
         self.blue_robot.stop()
@@ -84,7 +84,7 @@ class GameController(object):
 
     def send_start_signal(self):
         self.started = True
-        self.main_bar.start_pause.setIcon(QIcon.fromTheme("media-playback-pause"))
+        self.main_bar.set_icon(self.main_bar.start_pause, "pause")
         self.red_robot.send_start_signal()
         self.blue_robot.send_start_signal()
 
