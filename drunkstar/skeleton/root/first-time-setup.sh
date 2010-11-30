@@ -9,6 +9,7 @@ MERCURIAL_ARCHIVE=$MERCURIAL.tar.gz
 
 bunzip2 -c $PYTHON_ARCHIVE | tar xf -
 cd $PYTHON
+find . -name "*" -exec touch {} \;
 ./configure
 make
 make install
@@ -17,6 +18,7 @@ rm -rf $PYTHON $PYTHON_ARCHIVE
 
 gunzip -c $PYSERIAL_ARCHIVE | tar xf -
 cd $PYSERIAL
+find . -name "*" -exec touch {} \;
 python setup.py build
 python setup.py install
 cd ..
@@ -24,6 +26,7 @@ rm -rf $PYSERIAL $PYSERIAL_ARCHIVE
 
 gunzip -c $MERCURIAL_ARCHIVE | tar xf -
 cd $MERCURIAL
+find . -name "*" -exec touch {} \;
 python setup.py build
 python setup.py install
 cd ..
