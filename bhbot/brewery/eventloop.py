@@ -7,6 +7,7 @@ import socket
 import imp
 import inspect
 import time
+import traceback
 
 import logger
 import packets
@@ -96,38 +97,42 @@ class EventLoop(object):
             channel_data.buffer += channel.recv(1)
             channel_data.packet = packets.create_packet(channel_data.buffer)
         else:
-            channel_data.buffer += channel.recv(channel_data.packet.MAX_SIZE - len(channel_data.buffer))
-            if len(channel_data.buffer) == channel_data.packet.MAX_SIZE:
-                # A complete packet has been received, notify the state machine
-                channel_data.packet.deserialize(channel_data.buffer)
-                channel_data.buffer = ""
+            try:
+                channel_data.buffer += channel.recv(channel_data.packet.MAX_SIZE - len(channel_data.buffer))
+                if len(channel_data.buffer) == channel_data.packet.MAX_SIZE:
+                    # A complete packet has been received, notify the state machine
+                    channel_data.packet.deserialize(channel_data.buffer)
+                    channel_data.buffer = ""
 
-                logger.log_packet("PIC", channel_data.packet)
+                    logger.log_packet("PIC", channel_data.packet)
 
-                if isinstance(channel_data.packet, packets.DeviceBusy):
-                    self.fsm.state.on_device_busy()
-                elif isinstance(channel_data.packet, packets.DeviceReady):
-                    self.robot.team = channel_data.packet.team
-                    self.fsm.state.on_device_ready(channel_data.packet.team)
-                elif isinstance(channel_data.packet, packets.Start):
-                    self.fsm.state.on_start(channel_data.packet.team)
-                    self.robot.team = channel_data.packet.team
-                elif isinstance(channel_data.packet, packets.GotoStarted):
-                    self.fsm.state.on_goto_started()
-                elif isinstance(channel_data.packet, packets.GotoFinished):
-                    self.robot.pose = channel_data.packet.current_pose
-                    self.fsm.state.on_goto_finished(channel_data.packet.reason, channel_data.packet.current_pose)
-                elif isinstance(channel_data.packet, packets.Blocked):
-                    self.fsm.state.on_blocked(channel_data.packet.side)
-                elif isinstance(channel_data.packet, packets.KeepAlive):
-                    self.send_packet(channel_data.packet)
-                    self.robot.pose = channel_data.packet.current_pose
-                    leds.green.heartbeat_tick()
-                    self.fsm.state.on_keep_alive(channel_data.packet.current_pose, channel_data.packet.match_started, channel_data.packet.match_time)
-                elif isinstance(channel_data.packet, packets.TurretDetect):
-                    self.fsm.state.on_turret_detect(channel_data.packet.mean_angle, channel_data.packet.angular_size)
+                    if isinstance(channel_data.packet, packets.DeviceBusy):
+                        self.fsm.state.on_device_busy()
+                    elif isinstance(channel_data.packet, packets.DeviceReady):
+                        self.robot.team = channel_data.packet.team
+                        self.fsm.state.on_device_ready(channel_data.packet.team)
+                    elif isinstance(channel_data.packet, packets.Start):
+                        self.fsm.state.on_start(channel_data.packet.team)
+                        self.robot.team = channel_data.packet.team
+                    elif isinstance(channel_data.packet, packets.GotoStarted):
+                        self.fsm.state.on_goto_started()
+                    elif isinstance(channel_data.packet, packets.GotoFinished):
+                        self.robot.pose = channel_data.packet.current_pose
+                        self.fsm.state.on_goto_finished(channel_data.packet.reason, channel_data.packet.current_pose)
+                    elif isinstance(channel_data.packet, packets.Blocked):
+                        self.fsm.state.on_blocked(channel_data.packet.side)
+                    elif isinstance(channel_data.packet, packets.KeepAlive):
+                        self.send_packet(channel_data.packet)
+                        self.robot.pose = channel_data.packet.current_pose
+                        leds.green.heartbeat_tick()
+                        self.fsm.state.on_keep_alive(channel_data.packet.current_pose, channel_data.packet.match_started, channel_data.packet.match_time)
+                    elif isinstance(channel_data.packet, packets.TurretDetect):
+                        self.fsm.state.on_turret_detect(channel_data.packet.mean_angle, channel_data.packet.angular_size)
+            except:
+                for line in traceback.format_exc().strip().split('\n'):
+                    logger.log(line)
 
-                channel_data.packet = None
+            channel_data.packet = None
 
 
     def send_packet(self, packet):
