@@ -4,7 +4,6 @@ Brewery
 - utiliser inspect pour inspecter le contenu d'un module
 - Attendre deviceready avant start
 - catch et affichage correct des exceptions (=> logger)
-- Force packet types with cases in packets.py (float() int())
 
 Drunkstar
 - maj patch led
