@@ -82,7 +82,7 @@ class GraphicsRobotObject(QObject):
         transform.translate(-260.5, -170.0)
         self.robot_item.setTransform(transform)
         self.item.addToGroup(self.robot_item)
-        team_indicator = QGraphicsEllipseItem(-25.0, 15.0, 50.0, 50.0)
+        team_indicator = QGraphicsEllipseItem(-65.0, -25.0, 50.0, 50.0)
         if self.team == TEAM_RED:
             color = QColor("#c90000")
         elif self.team == TEAM_BLUE:
