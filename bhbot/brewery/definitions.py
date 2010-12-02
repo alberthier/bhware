@@ -62,6 +62,13 @@ enum("AXIS",
     AXIS_ORDINATE = 1,
 )
 
+enum("PIECE_SENSOR",
+    "Lateral piece sensor",
+    LATERAL_SENSOR_NONE = 0,
+    LATERAL_SENSOR_PAWN = 1,
+    LATERAL_SENSOR_KING_OR_QWEEN = 2,
+)
+
 ####### ADD DEFINITIONS ABOVE ###############
 
 def get_defs_types() : return __lookup.keys()

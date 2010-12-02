@@ -400,6 +400,79 @@ class Resettle(BasePacket):
 
 
 
+class Deployment(BasePacket):
+
+    TYPE = 14
+
+    def __init__(self):
+        BasePacket.__init__(self, "")
+
+
+
+
+class PieceDetected(BasePacket):
+
+    TYPE = 15
+
+    def __init__(self):
+        BasePacket.__init__(self, "BBBf")
+        self.left_sensor = LATERAL_SENSOR_NONE
+        self.right_sensor = LATERAL_SENSOR_NONE
+        self.center_sensor_angle = None
+
+
+    def deserialize(self, buf):
+        values = self.do_deserialize(buf)
+        self.left_sensor = values[0]
+        self.right_sensor = values[1]
+        if values[2] != 0:
+            self.center_sensor_angle = values[3]
+
+
+    def serialize(self):
+        values = []
+        values.append(self.left_sensor)
+        values.append(self.right_sensor)
+        if self.center_sensor_angle != None:
+           values.append(1)
+           values.append(self.center_sensor_angle)
+        else:
+            values.append(0)
+            values.append(0.0)
+        return self.do_serialize(*values)
+
+
+
+
+class StorePiece(BasePacket):
+
+    TYPE = 16
+
+    def __init__(self):
+        BasePacket.__init__(self, "B")
+        self.piece_count = 0
+
+
+    def deserialize(self, buf):
+        (self.piece_count,) = self.do_deserialize(buf)
+
+
+    def serialize(self):
+        return self.do_serialize(self.piece_count)
+
+
+
+
+class ReleasePiece(BasePacket):
+
+    TYPE = 17
+
+    def __init__(self):
+        BasePacket.__init__(self, "")
+
+
+
+
 class Reinitialize(BasePacket):
 
     TYPE = 102
@@ -453,7 +526,7 @@ class TurretDetect(BasePacket):
 
 
 
-PACKET_CLASSES = [ControllerReady, DeviceBusy, DeviceReady, Start, Goto, GotoStarted, GotoFinished, Blocked, EnableAntiBlocking, DisableAntiBlocking, KeepAlive, PositionControlConfig, Stop, Resettle, Reinitialize, SimulatorData, TurretDetect]
+PACKET_CLASSES = [ControllerReady, DeviceBusy, DeviceReady, Start, Goto, GotoStarted, GotoFinished, Blocked, EnableAntiBlocking, DisableAntiBlocking, KeepAlive, PositionControlConfig, Stop, Resettle, Deployment, PieceDetected, StorePiece, ReleasePiece, Reinitialize, SimulatorData, TurretDetect]
 
 def create_packet(buffer):
     (type,) = struct.unpack("!B", buffer[0])

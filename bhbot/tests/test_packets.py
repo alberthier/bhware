@@ -336,6 +336,89 @@ class ResettlePacketTestCase(unittest.TestCase):
 
 
 
+class DeploymentPacketTestCase(unittest.TestCase):
+
+    def test_serialization_length(self):
+        packet = packets.Deployment()
+        buf = packet.serialize()
+        self.assertEqual(len(buf), packet.MAX_SIZE)
+
+    def test_serialization_deserialization(self):
+        packet = packets.Deployment()
+        buf = packet.serialize()
+        packet2 = packets.Deployment()
+        packet2.deserialize(buf)
+        self.assertEqual(packet.__dict__, packet2.__dict__)
+
+
+
+
+class PieceDetectedPacketTestCase(unittest.TestCase):
+
+    def test_serialization_length(self):
+        packet = packets.PieceDetected()
+        buf = packet.serialize()
+        self.assertEqual(len(buf), packet.MAX_SIZE)
+
+    def test_serialization_deserialization_with_angle(self):
+        packet = packets.PieceDetected()
+        packet.left_sensor = LATERAL_SENSOR_PAWN
+        packet.right_sensor = LATERAL_SENSOR_KING_OR_QWEEN
+        packet.center_sensor_angle = 12.5
+        buf = packet.serialize()
+        packet2 = packets.PieceDetected()
+        packet2.deserialize(buf)
+        self.assertEqual(packet.left_sensor, packet2.left_sensor)
+        self.assertEqual(packet.right_sensor, packet2.right_sensor)
+        self.assertTrue(compare_floats(packet.center_sensor_angle, packet2.center_sensor_angle))
+
+    def test_serialization_deserialization_without_angle(self):
+        packet = packets.PieceDetected()
+        packet.left_sensor = LATERAL_SENSOR_PAWN
+        packet.right_sensor = LATERAL_SENSOR_KING_OR_QWEEN
+        buf = packet.serialize()
+        packet2 = packets.PieceDetected()
+        packet2.deserialize(buf)
+        self.assertEqual(packet.__dict__, packet2.__dict__)
+
+
+
+
+class StorePiecePacketTestCase(unittest.TestCase):
+
+    def test_serialization_length(self):
+        packet = packets.StorePiece()
+        buf = packet.serialize()
+        self.assertEqual(len(buf), packet.MAX_SIZE)
+
+    def test_serialization_deserialization(self):
+        packet = packets.StorePiece()
+        packet.piece_count = 3
+        buf = packet.serialize()
+        packet2 = packets.StorePiece()
+        packet2.deserialize(buf)
+        self.assertEqual(packet.__dict__, packet2.__dict__)
+
+
+
+
+class ReleasePiecePacketTestCase(unittest.TestCase):
+
+    def test_serialization_length(self):
+        packet = packets.ReleasePiece()
+        buf = packet.serialize()
+        self.assertEqual(len(buf), packet.MAX_SIZE)
+
+    def test_serialization_deserialization(self):
+        packet = packets.ReleasePiece()
+        buf = packet.serialize()
+        packet2 = packets.ReleasePiece()
+        packet2.deserialize(buf)
+        self.assertEqual(packet.__dict__, packet2.__dict__)
+
+
+
+
 class ReinitializePacketTestCase(unittest.TestCase):
 
     def test_serialization_length(self):

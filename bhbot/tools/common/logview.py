@@ -14,6 +14,7 @@ from definitions import *
 
 #               Type                      Displayed name             Color     Displayed by default
 CATEGORIES = [["KeepAlive"             , "Keep Alive"             , "#fce94f", False],
+              ["SimulatorData"         , "Simulator Data"         , "#c4a000", False],
               ["ControllerReady"       , "Controller Ready"       , "#edd400", True],
               ["DeviceBusy"            , "Device Busy"            , "#f57900", True],
               ["DeviceReady"           , "Device Ready"           , "#ce5c00", True],
@@ -27,8 +28,11 @@ CATEGORIES = [["KeepAlive"             , "Keep Alive"             , "#fce94f", F
               ["PositionControlConfig" , "Position Control Config", "#e9b96e", True],
               ["Stop"                  , "Stop"                   , "#cc0000", True],
               ["Resettle"              , "Resettle"               , "#204a87", True],
+              ["Deployment"            , "Deployment"             , "#75507b", True],
+              ["PieceDetected"         , "Piece Detected"         , "#c17d11", True],
+              ["StorePiece"            , "Store Piece"            , "#ef2929", True],
+              ["Release Piece"         , "Release Piece"          , "#fcaf3e", True],
               ["Reinitialize"          , "Reinitialize"           , "#5c3566", True],
-              ["SimulatorData"         , "Simulator Data"         , "#c4a000", True],
               ["TurretDetect"          , "Turret Detect"          , "#babdb6", True],
               ["str"                   , "Log Text"               , "#555753", True]]
 
