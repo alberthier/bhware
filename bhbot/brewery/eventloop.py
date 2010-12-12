@@ -128,11 +128,10 @@ class EventLoop(object):
                         self.fsm.state.on_keep_alive(channel_data.packet.current_pose, channel_data.packet.match_started, channel_data.packet.match_time)
                     elif isinstance(channel_data.packet, packets.TurretDetect):
                         self.fsm.state.on_turret_detect(channel_data.packet.mean_angle, channel_data.packet.angular_size)
+                    channel_data.packet = None
             except:
                 for line in traceback.format_exc().strip().split('\n'):
                     logger.log(line)
-
-            channel_data.packet = None
 
 
     def send_packet(self, packet):
