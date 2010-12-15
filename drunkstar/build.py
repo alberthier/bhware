@@ -30,7 +30,7 @@ def download():
 def install_package(archive_url, archive):
     package = os.path.join(OUTPUT_DIR, "target", "root", archive)
     if not os.path.exists(package):
-        call(["wget", archive_url, "-O", archive])
+        call(["wget", archive_url, "-O", package])
 
 
 def build():
