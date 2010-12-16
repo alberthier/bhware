@@ -1,18 +1,21 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
-
+import logger
 
 
 class StateMachine(object):
+    """ Default state machine """
 
     def __init__(self, start_state_ctor):
         self.state = start_state_ctor()
         self.state.fsm = self
         self.event_loop = None
+        self.name = self.__doc__
 
 
     def start(self):
+        logger.log("Starting state machine '{0}'".format(self.name))
         self.state.on_enter()
 
 
@@ -27,6 +30,9 @@ class State(object):
     def switch_to_state(self, new_state_ctor):
         self.fsm.state.on_exit()
         self.fsm.state = new_state_ctor()
+        state_name = self.fsm.state.__doc__
+        if state_name is None : state_name = self.fsm.state.__class__.__name__
+        logger.log("Switching to state {0}".format( state_name ) )
         self.fsm.state.fsm = self.fsm
         self.fsm.state.on_enter()
 
