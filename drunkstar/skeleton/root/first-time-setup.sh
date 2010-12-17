@@ -10,7 +10,7 @@ MERCURIAL_ARCHIVE=$MERCURIAL.tar.gz
 bunzip2 -c $PYTHON_ARCHIVE | tar xf -
 cd $PYTHON
 find . -name "*" -exec touch {} \;
-./configure
+./configure --prefix=/usr
 make
 make install
 cd ..
