@@ -83,7 +83,7 @@ class LogModel(QAbstractTableModel):
 
 
     def columnCount(self, parent):
-        return 4
+        return 5
 
 
     def data(self, index, role):
@@ -91,12 +91,12 @@ class LogModel(QAbstractTableModel):
         global CATEGORIES_COLORS
 
         if role == Qt.DisplayRole:
-            if index.column() == 2:
+            if index.column() == 3:
                 return self.filtered_log[index.row()][index.column()][1]
             else:
                 return self.filtered_log[index.row()][index.column()]
         elif role == Qt.DecorationRole:
-            if index.column() == 2:
+            if index.column() == 3:
                 return QColor(self.filtered_log[index.row()][index.column()][2])
             else:
                 return QVariant()
@@ -109,10 +109,12 @@ class LogModel(QAbstractTableModel):
             if section == 0:
                 return "#"
             elif section == 1:
-                return "Sender"
+                return "Time"
             elif section == 2:
-                return "Type"
+                return "Sender"
             elif section == 3:
+                return "Type"
+            elif section == 4:
                 return "Content"
         else:
             return QVariant()
@@ -123,15 +125,15 @@ class LogModel(QAbstractTableModel):
         logcontent = imp.load_source("logcontent", filepath)
         index = 0
         for logline in logcontent.log:
-            if type(logline) == str:
+            if len(logline) == 2:
                 category_index = self.get_category_index('str')
                 category_data = CATEGORIES[category_index]
-                self.log.append([index, "", category_data, logline[2:], category_index])
-            elif type(logline) == list:
-                category_index = self.get_category_index(logline[0])
+                self.log.append([index, logline[0], "", category_data, logline[1][2:], category_index])
+            else:
+                category_index = self.get_category_index(logline[1])
                 category_data = CATEGORIES[category_index]
 
-                self.log.append([index, logline[1], category_data, str(helpers.translate_packet_data(logline[0], logline[2]))[1:-1], category_index])
+                self.log.append([index, logline[0], logline[2], category_data, str(helpers.translate_packet_data(logline[1], logline[3]))[1:-1], category_index])
             index += 1
 
 
@@ -149,7 +151,7 @@ class LogModel(QAbstractTableModel):
     def filter(self, categories):
         self.filtered_log = []
         for logline in self.log:
-            if logline[4] in categories:
+            if logline[5] in categories:
                 self.filtered_log.append(logline)
         self.reset()
 

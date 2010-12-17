@@ -4,6 +4,7 @@
 import os
 import sys
 import stat
+import datetime
 
 import packets
 import config
@@ -12,12 +13,15 @@ from definitions import *
 
 filepath = None
 log_file = None
+start_time = None
 
 
 def initialize():
     global filepath
     global log_file
+    global start_time
     if log_file == None:
+        start_time = datetime.datetime.now()
         filepath = get_next_log_filepath()
         log_file = file(filepath, "w")
         log_file.write("#!/usr/bin/env python\n")
@@ -43,19 +47,24 @@ def close():
 
 def log(text):
     global log_file
+    global start_time
     if log_file == None:
         initialize()
-    log_file.write("log.append(\"# " + text + "\")\n")
+    delta = datetime.datetime.now() - start_time
+    time = "'{0:=0.02f}'".format(float(delta.seconds) + (float(delta.microseconds)/1000000.0))
+    log_file.write("log.append([" + time + ",\"# " + text + "\"])\n")
     if config.host_device == HOST_DEVICE_PC:
         sys.stdout.write(text + "\n")
         sys.stdout.flush()
 
 
 def log_packet(sender, packet):
-    text = "['" + type(packet).__name__ + "', '" + sender + "', " + str(packet.to_dict()) + "]"
-    log_file.write("log.append(" + text + ")\n")
+    delta = datetime.datetime.now() - start_time
+    time = "'{0:=0.02f}'".format(float(delta.seconds) + (float(delta.microseconds)/1000000.0))
+    text = "'" + type(packet).__name__ + "', '" + sender + "', " + str(packet.to_dict()) + "]"
+    log_file.write("log.append([" + time + ", " + text + ")\n")
     if config.host_device == HOST_DEVICE_PC and not isinstance(packet, packets.KeepAlive) and not isinstance(packet, packets.SimulatorData):
-        sys.stdout.write(text + "\n")
+        sys.stdout.write("[" + text + "\n")
         sys.stdout.flush()
 
 
