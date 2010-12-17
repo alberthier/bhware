@@ -57,6 +57,10 @@
    </layout>
   </widget>
  </widget>
+ <tabstops>
+  <tabstop>log_view</tabstop>
+  <tabstop>categories</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>
