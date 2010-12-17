@@ -20,6 +20,8 @@ if __name__ == "__main__":
 
     if len(sys.argv) > 1:
         log_file = sys.argv[1]
+        if (log_file == "--remote"):
+            log_file = helpers.get_last_remote_logfile()
     else:
         log_file = helpers.get_last_logfile()
 

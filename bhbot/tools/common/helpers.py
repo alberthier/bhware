@@ -2,8 +2,31 @@
 # encoding: utf-8
 
 import os
+import subprocess
 
 from definitions import *
+
+
+
+def get_last_remote_logfile():
+    drunkstar_ip = "192.168.1.200"
+    drunkstar_bhware = "/root/bhware/bhbot/logs"
+    ls = subprocess.Popen(["ssh", "root@{0}".format(drunkstar_ip), "ls {0}".format(drunkstar_bhware)], stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+    (out, err) = ls.communicate()
+    logs = out.split("\n")
+    if len(logs) != 0:
+        logs.sort()
+        log = logs[-1]
+        if not os.path.exists("/tmp/bh"):
+            os.makedirs("/tmp/bh")
+        local_file = "/tmp/bh/remote_{0}".format(log)
+        subprocess.call(["scp", "root@{0}:{1}/{2}".format(drunkstar_ip, drunkstar_bhware, log), local_file])
+        return local_file
+
+    return None
+
+
+
 
 def get_last_logfile():
     brewery_root_path = os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
