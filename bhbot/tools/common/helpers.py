@@ -47,49 +47,27 @@ def get_last_logfile():
 
 def translate_packet_data(packet_type, packet_data):
 
-    if packet_type == "DeviceReady" or packet_type == "DeviceBusy":
-        if packet_data["remote_device"] == REMOTE_DEVICE_PIC:
-            packet_data["remote_device"] = "REMOTE_DEVICE_PIC"
-        elif packet_data["remote_device"] == REMOTE_DEVICE_SIMULATOR:
-            packet_data["remote_device"] = "REMOTE_DEVICE_SIMULATOR"
+    if packet_type == 'DeviceReady' or packet_type == 'DeviceBusy':
+        packet_data['remote_device'] = lookup_defs('REMOTE_DEVICE', packet_data['remote_device'])
 
-    if packet_type == "DeviceReady" or packet_type == "Start":
-        if packet_data["team"] == TEAM_BLUE:
-            packet_data["team"] = "TEAM_BLUE"
-        elif packet_data["team"] == TEAM_RED:
-            packet_data["team"] = "TEAM_RED"
+    if packet_type == 'DeviceReady' or packet_type == 'Start':
+        packet_data['team'] = lookup_defs('TEAM', packet_data['team'])
 
-    elif packet_type == "Goto":
-        if packet_data["movement"] == MOVEMENT_ROTATE:
-            packet_data["movement"] = "MOVEMENT_ROTATE"
-        elif packet_data["movement"] == MOVEMENT_MOVE:
-            packet_data["movement"] = "MOVEMENT_MOVE"
+    elif packet_type == 'Goto':
+        packet_data['movement'] = lookup_defs('MOVEMENT', packet_data['movement'])
+        packet_data['direction'] = lookup_defs('DIRECTION', packet_data['direction'])
 
-        if packet_data["direction"] == DIRECTION_FORWARD:
-            packet_data["direction"] = "DIRECTION_FORWARD"
-        elif packet_data["direction"] == DIRECTION_BACKWARD:
-            packet_data["direction"] = "DIRECTION_BACKWARD"
+    elif packet_type == 'GotoFinished':
+        packet_data['reason'] = lookup_defs('REASON', packet_data['reason'])
 
-    elif packet_type == "GotoFinished":
-        if packet_data["reason"] == REASON_DESTINATION_REACHED:
-            packet_data["reason"] = "REASON_DESTINATION_REACHED"
-        elif packet_data["reason"] == REASON_PAWN_FOUND:
-            packet_data["reason"] = "REASON_PAWN_FOUND"
-        elif packet_data["reason"] == REASON_QUEEN_FOUND:
-            packet_data["reason"] = "REASON_QUEEN_FOUND"
-        elif packet_data["reason"] == REASON_KING_FOUND:
-            packet_data["reason"] = "REASON_KING_FOUND"
+    elif packet_type == 'Blocked':
+        packet_data['side'] = lookup_defs('BLOCKING', packet_data['side'])
 
-    elif packet_type == "Blocked":
-        if packet_data["side"] == BLOCKED_FRONT:
-            packet_data["side"] = "BLOCKED_FRONT"
-        elif packet_data["side"] == BLOCKED_BACK:
-            packet_data["side"] = "BLOCKED_BACK"
+    elif packet_type == 'Resettle':
+        packet_data['axis'] = lookup_defs('AXIS', packet_data['axis'])
 
-    elif packet_type == "Resettle":
-        if packet_data["axis"] == AXIS_ABSCISSA:
-            packet_data["axis"] = "AXIS_ABSCISSA"
-        elif packet_data["axis"] == AXIS_ORDINATE:
-            packet_data["axis"] = "AXIS_ORDINATE"
+    elif packet_type == 'PieceDetected':
+        packet_data['left_sensor'] = lookup_defs('PIECE_SENSOR', packet_data['left_sensor'])
+        packet_data['right_sensor'] = lookup_defs('PIECE_SENSOR', packet_data['right_sensor'])
 
     return packet_data
