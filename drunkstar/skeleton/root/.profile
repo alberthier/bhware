@@ -30,4 +30,6 @@ if [ "$PS1" ]; then
     alias rm='rm -iv'
     alias df='df -h'
     alias du='du -h'
+    alias halt='busybox halt'
+    alias reboot='busybox reboot'
 fi;
