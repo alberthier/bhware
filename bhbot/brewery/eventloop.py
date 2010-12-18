@@ -8,6 +8,7 @@ import imp
 import inspect
 import time
 import traceback
+import errno
 
 import logger
 import packets
@@ -24,6 +25,8 @@ class TurretChannel(asyncore.file_dispatcher):
     def __init__(self, serial_port_path, eventloop):
         asyncore.file_dispatcher.__init__(file(serial_port_path))
         self.eventloop = eventloop
+        self.buffer = ""
+        self.packet = None
 
 
     def writable(self):
@@ -42,6 +45,8 @@ class RobotControlDeviceChannel(asyncore.dispatcher_with_send):
         asyncore.dispatcher_with_send.__init__(self)
         self.eventloop = eventloop
         self.close_requested = False
+        self.buffer = ""
+        self.packet = None
 
 
     def setup(self):
@@ -72,66 +77,77 @@ class RobotControlDeviceChannel(asyncore.dispatcher_with_send):
 
 
 
-class ChannelData(object):
-
-    def __init__(self):
-        self.buffer = ""
-        self.packet = None
-
-
-
-
 class EventLoop(object):
 
     def __init__(self, state_machine_name):
-        self.channels = {}
         self.robot_control_channel = None
+        self.turret_channel = None
         self.fsm = None
         self.robot = robot.Robot(self)
         self.state_machine_name = state_machine_name
 
 
     def handle_read(self, channel):
-        channel_data = self.channels[channel]
-        if channel_data.packet == None:
-            channel_data.buffer += channel.recv(1)
-            channel_data.packet = packets.create_packet(channel_data.buffer)
-        else:
-            try:
-                channel_data.buffer += channel.recv(channel_data.packet.MAX_SIZE - len(channel_data.buffer))
-                if len(channel_data.buffer) == channel_data.packet.MAX_SIZE:
-                    # A complete packet has been received, notify the state machine
-                    channel_data.packet.deserialize(channel_data.buffer)
-                    channel_data.buffer = ""
+        while True :
+            if channel.packet == None:
+                try:
+                    received_data = channel.recv(1)
+                    if len(received_data) == 0:
+                        return
+                    channel.buffer += received_data
+                    channel.packet = packets.create_packet(channel.buffer)
+                except socket.error as err:
+                    if err.errno in [errno.EAGAIN, errno.EINTR]:
+                        return
+                    for line in traceback.format_exc().strip().split('\n'):
+                        logger.log(line)
+                    return
+            else:
+                try:
+                    try:
+                        received_data = channel.recv(channel.packet.MAX_SIZE - len(channel.buffer))
+                        if len(received_data) == 0:
+                            return
+                        channel.buffer += received_data
+                    except socket.error as err:
+                        if err.errno in [errno.EAGAIN, errno.EINTR]:
+                            return
+                        for line in traceback.format_exc().strip().split('\n'):
+                            logger.log(line)
+                        return
+                    if len(channel.buffer) == channel.packet.MAX_SIZE:
+                        # A complete packet has been received, notify the state machine
+                        channel.packet.deserialize(channel.buffer)
+                        channel.buffer = ""
 
-                    logger.log_packet("PIC", channel_data.packet)
+                        logger.log_packet("PIC", channel.packet)
 
-                    if isinstance(channel_data.packet, packets.DeviceBusy):
-                        self.fsm.state.on_device_busy()
-                    elif isinstance(channel_data.packet, packets.DeviceReady):
-                        self.robot.team = channel_data.packet.team
-                        self.fsm.state.on_device_ready(channel_data.packet.team)
-                    elif isinstance(channel_data.packet, packets.Start):
-                        self.fsm.state.on_start(channel_data.packet.team)
-                        self.robot.team = channel_data.packet.team
-                    elif isinstance(channel_data.packet, packets.GotoStarted):
-                        self.fsm.state.on_goto_started()
-                    elif isinstance(channel_data.packet, packets.GotoFinished):
-                        self.robot.pose = channel_data.packet.current_pose
-                        self.fsm.state.on_goto_finished(channel_data.packet.reason, channel_data.packet.current_pose)
-                    elif isinstance(channel_data.packet, packets.Blocked):
-                        self.fsm.state.on_blocked(channel_data.packet.side)
-                    elif isinstance(channel_data.packet, packets.KeepAlive):
-                        self.send_packet(channel_data.packet)
-                        self.robot.pose = channel_data.packet.current_pose
-                        leds.green.heartbeat_tick()
-                        self.fsm.state.on_keep_alive(channel_data.packet.current_pose, channel_data.packet.match_started, channel_data.packet.match_time)
-                    elif isinstance(channel_data.packet, packets.TurretDetect):
-                        self.fsm.state.on_turret_detect(channel_data.packet.mean_angle, channel_data.packet.angular_size)
-                    channel_data.packet = None
-            except:
-                for line in traceback.format_exc().strip().split('\n'):
-                    logger.log(line)
+                        if isinstance(channel.packet, packets.DeviceBusy):
+                            self.fsm.state.on_device_busy()
+                        elif isinstance(channel.packet, packets.DeviceReady):
+                            self.robot.team = channel.packet.team
+                            self.fsm.state.on_device_ready(channel.packet.team)
+                        elif isinstance(channel.packet, packets.Start):
+                            self.fsm.state.on_start(channel.packet.team)
+                            self.robot.team = channel.packet.team
+                        elif isinstance(channel.packet, packets.GotoStarted):
+                            self.fsm.state.on_goto_started()
+                        elif isinstance(channel.packet, packets.GotoFinished):
+                            self.robot.pose = channel.packet.current_pose
+                            self.fsm.state.on_goto_finished(channel.packet.reason, channel.packet.current_pose)
+                        elif isinstance(channel.packet, packets.Blocked):
+                            self.fsm.state.on_blocked(channel.packet.side)
+                        elif isinstance(channel.packet, packets.KeepAlive):
+                            self.send_packet(channel.packet)
+                            self.robot.pose = channel.packet.current_pose
+                            leds.green.heartbeat_tick()
+                            self.fsm.state.on_keep_alive(channel.packet.current_pose, channel.packet.match_started, channel.packet.match_time)
+                        elif isinstance(channel.packet, packets.TurretDetect):
+                            self.fsm.state.on_turret_detect(channel.packet.mean_angle, channel.packet.angular_size)
+                        channel.packet = None
+                except:
+                    for line in traceback.format_exc().strip().split('\n'):
+                        logger.log(line)
 
 
     def send_packet(self, packet):
@@ -158,9 +174,12 @@ class EventLoop(object):
 
     def start(self):
         if (config.serial_port_path != None):
-            self.channels[TurretChannel(config.serial_port_path, self)] = ChannelData()
+            try:
+                self.turret_channel = TurretChannel(config.serial_port_path, self)
+            except serial.SerialException:
+                logger.log("Unable to open serial port {0}".format(config.serial_port_path))
+                self.turret_channel = None
         self.robot_control_channel = RobotControlDeviceChannel(self)
-        self.channels[self.robot_control_channel] = ChannelData()
         self.robot_control_channel.setup()
         if self.robot_control_channel.connected:
             logger.log("Starting brewery with state machine '{0}'".format(self.state_machine_name))
@@ -169,6 +188,8 @@ class EventLoop(object):
 
     def stop(self):
         logger.log("Stopping...")
-        for channel in self.channels.keys():
-            channel.close()
+        if self.turret_channel != None:
+            self.turret_channel.close()
+        if self.robot_control_channel != None:
+            self.robot_control_channel.close()
         logger.close()
