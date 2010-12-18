@@ -9,6 +9,7 @@ import inspect
 import time
 import traceback
 import errno
+import serial
 
 import logger
 import packets
@@ -22,8 +23,8 @@ import robot
 
 class TurretChannel(asyncore.file_dispatcher):
 
-    def __init__(self, serial_port_path, eventloop):
-        asyncore.file_dispatcher.__init__(file(serial_port_path))
+    def __init__(self, serial_port_path, serial_port_speed, eventloop):
+        asyncore.file_dispatcher.__init__(self, serial.Serial(serial_port_path, serial_port_speed))
         self.eventloop = eventloop
         self.buffer = ""
         self.packet = None
@@ -175,7 +176,7 @@ class EventLoop(object):
     def start(self):
         if (config.serial_port_path != None):
             try:
-                self.turret_channel = TurretChannel(config.serial_port_path, self)
+                self.turret_channel = TurretChannel(config.serial_port_path, config.serial_port_speed, self)
             except serial.SerialException:
                 logger.log("Unable to open serial port {0}".format(config.serial_port_path))
                 self.turret_channel = None

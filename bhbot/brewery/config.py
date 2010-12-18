@@ -18,5 +18,6 @@ else:
     orange_led_device_path = None
     green_led_device_path = None
 
+serial_port_speed = 115200
 remote_port = 7001
 state_machine = "default"
