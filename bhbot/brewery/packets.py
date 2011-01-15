@@ -18,7 +18,7 @@ class BasePacket(object):
     def __init__(self, format):
         cls = type(self)
         if cls.FORMAT == None:
-            cls.FORMAT = "!B" + format
+            cls.FORMAT = "<B" + format
             size = struct.calcsize(cls.FORMAT)
             pad_size = self.MAX_SIZE - size
             if pad_size != 0:
