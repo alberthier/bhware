@@ -9,7 +9,7 @@ from definitions import *
 
 
 def get_last_remote_logfile():
-    drunkstar_ip = "192.168.1.200"
+    drunkstar_ip = "192.168.1.201"
     drunkstar_bhware = "/root/bhware/bhbot/logs"
     ls = subprocess.Popen(["ssh", "root@{0}".format(drunkstar_ip), "ls {0}".format(drunkstar_bhware)], stdout = subprocess.PIPE, stderr = subprocess.PIPE)
     (out, err) = ls.communicate()
