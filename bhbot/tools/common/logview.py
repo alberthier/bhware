@@ -3,6 +3,7 @@
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
+from PyQt4.QtSvg import *
 from PyQt4 import uic
 import os
 import sys
@@ -70,11 +71,11 @@ class CategoriesModel(QAbstractListModel):
 
 class LogModel(QAbstractTableModel):
 
-    def __init__(self, filepath, categories, parent = None):
+    def __init__(self, log, categories, parent = None):
         QAbstractTableModel.__init__(self, parent)
         self.log = []
         self.filtered_log = []
-        self.load_log(filepath)
+        self.load_log(log)
         self.filter(categories)
 
 
@@ -120,11 +121,10 @@ class LogModel(QAbstractTableModel):
             return QVariant()
 
 
-    def load_log(self, filepath):
+    def load_log(self, log):
         global CATEGORIES
-        logcontent = imp.load_source("logcontent", filepath)
         index = 0
-        for logline in logcontent.log:
+        for logline in log:
             if len(logline) == 2:
                 category_index = self.get_category_index('str')
                 category_data = CATEGORIES[category_index]
@@ -158,6 +158,58 @@ class LogModel(QAbstractTableModel):
 
 
 
+class TrajectoryScene(QGraphicsScene):
+
+    def __init__(self, log):
+        QGraphicsScene.__init__(self)
+        gradiant = QLinearGradient(0.5, 0.1, 0.5, 0.9)
+        gradiant.setCoordinateMode(QGradient.ObjectBoundingMode)
+        gradiant.setColorAt(0.0, QColor("#729fcf"))
+        gradiant.setColorAt(1.0, QColor("#eeeeec"))
+        self.setBackgroundBrush(gradiant)
+
+        self.field = QGraphicsSvgItem(os.path.join(os.path.dirname(os.path.dirname(__file__)), "simulator", "field.svg"))
+        self.addItem(self.field)
+        self.field.setPos(-102.0, -102.0)
+
+        painterPath = QPainterPath()
+        first = True
+        for logline in log:
+            if len(logline) != 2 and logline[1] == "KeepAlive":
+                coords = logline[3]['current_pose']
+                x = coords[1] * 1000
+                y = coords[0] * 1000
+                angle = coords[2] * 1000
+                if first:
+                    first = False
+                    painterPath.moveTo(x, y)
+                else:
+                    painterPath.lineTo(x, y)
+
+        pathItem = QGraphicsPathItem(painterPath)
+        pathItem.setPen(QPen(QColor("#edd400"), 10))
+        self.addItem(pathItem)
+
+
+
+
+class TrajectoryView(QGraphicsView):
+
+    def __init__(self, parent = None):
+        QGraphicsView.__init__(self, parent)
+        self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+
+        self.setSceneRect(-200.0, -200.0, 3404, 2504)
+
+
+    def resizeEvent(self, event):
+        QGraphicsView.resizeEvent(self, event)
+        self.fitInView(-200.0, -200.0, 3404, 2504, Qt.KeepAspectRatio)
+
+
+
+
 class MainWindowController(QObject):
 
     def __init__(self, log_file):
@@ -181,7 +233,16 @@ class MainWindowController(QObject):
         self.ui.categories.selectionModel().select(selection, QItemSelectionModel.Select)
         self.ui.categories.selectionModel().selectionChanged.connect(self.updateView)
         self.ui.log_view.header().setResizeMode(QHeaderView.ResizeToContents)
-        self.ui.log_view.setModel(LogModel(log_file, filtered_cats, self))
+        log = self.load_log(log_file)
+        self.ui.log_view.setModel(LogModel(log, filtered_cats, self))
+        trajectory_view = TrajectoryView()
+        trajectory_view.setScene(TrajectoryScene(log))
+        self.ui.trajectory_tab.layout().addWidget(trajectory_view)
+
+
+    def load_log(self, filepath):
+        logcontent = imp.load_source("logcontent", filepath)
+        return logcontent.log
 
 
 
