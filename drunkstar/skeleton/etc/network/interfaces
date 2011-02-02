@@ -6,3 +6,13 @@ auto eth0
 iface eth0 inet static
     address 192.168.1.201
     netmask 255.255.255.0
+
+auto wlan0
+iface wlan0 inet static
+    address 192.168.0.210
+    netmask 255.255.255.0
+    wpa-ssid <my-ssid>
+    wpa-ap-scan 1
+    wpa-scan-ssid 1
+    wpa-key-mgmt WPA-PSK
+    wpa-psk <my-key>
