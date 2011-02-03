@@ -32,7 +32,8 @@ CATEGORIES = [["KeepAlive"             , "Keep Alive"             , "#fce94f", F
               ["Deployment"            , "Deployment"             , "#75507b", True],
               ["PieceDetected"         , "Piece Detected"         , "#c17d11", True],
               ["StorePiece"            , "Store Piece"            , "#ef2929", True],
-              ["Release Piece"         , "Release Piece"          , "#fcaf3e", True],
+              ["PieceStored"           , "Piece Stored"           , "#d4d7cf", True],
+              ["ReleasePiece"          , "Release Piece"          , "#fcaf3e", True],
               ["Reinitialize"          , "Reinitialize"           , "#5c3566", True],
               ["TurretDetect"          , "Turret Detect"          , "#babdb6", True],
               ["str"                   , "Log Text"               , "#555753", True]]

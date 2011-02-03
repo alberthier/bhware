@@ -62,11 +62,17 @@ enum("AXIS",
     AXIS_ORDINATE = 1,
 )
 
-enum("PIECE_SENSOR",
+enum("LATERAL_SENSOR",
     "Lateral piece sensor",
     LATERAL_SENSOR_NONE = 0,
     LATERAL_SENSOR_PAWN = 1,
     LATERAL_SENSOR_KING_OR_QWEEN = 2,
+)
+
+enum("STORAGE",
+    "Piece storage",
+    STORAGE_MANDIBLE = 0,
+    STORAGE_STOCK = 1,
 )
 
 ####### ADD DEFINITIONS ABOVE ###############

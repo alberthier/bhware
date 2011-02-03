@@ -143,6 +143,11 @@ class EventLoop(object):
                             self.robot.pose = channel.packet.current_pose
                             leds.green.heartbeat_tick()
                             self.fsm.state.on_keep_alive(channel.packet.current_pose, channel.packet.match_started, channel.packet.match_time)
+                        elif isinstance(channel.packet, packets.PieceDetected):
+                            self.fsm.state.on_piece_detected(channel.packet.left_sensor, channel.packet.right_sensor, channel.packet.center_sensor_angle)
+                        elif isinstance(channel.packet, packets.PieceStored):
+                            self.robot.stored_piece_count = channel.packet.piece_count
+                            self.fsm.state.on_piece_stored(channel.packet.piece_count)
                         elif isinstance(channel.packet, packets.TurretDetect):
                             self.fsm.state.on_turret_detect(channel.packet.mean_angle, channel.packet.angular_size)
                         channel.packet = None

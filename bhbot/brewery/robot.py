@@ -17,6 +17,7 @@ class Robot(object):
         self.pose = trajectory.Pose(0.0, 0.0, 0.0)
         self.team = TEAM_UNKNOWN
         self.event_loop = event_loop
+        self.stored_piece_count = 0
 
 
     def move(self, dx, dy):

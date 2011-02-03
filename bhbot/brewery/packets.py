@@ -284,7 +284,7 @@ class PositionControlConfig(BasePacket):
     TYPE = 11
 
     def __init__(self):
-        BasePacket.__init__(self, "ffffffffffHffffffHffffH")
+        BasePacket.__init__(self, "ffffffffffHffffffHffffHLLLLLf")
         self.t_acc = 0.0
         self.f_va_max = 0.0
         self.u_max = 0.0
@@ -308,6 +308,12 @@ class PositionControlConfig(BasePacket):
         self.v_max_g = 0.0
         self.d_roue_g = 0.0
         self.nb_pas_g = 0
+        self.app_net_ip = 0
+        self.app_net_mask = 0
+        self.app_net_gateway = 0
+        self.app_net_port = 0
+        self.test_mode = 0
+        self.coefficient_glissement_lateral = 0.0
 
 
     def deserialize(self, buf):
@@ -335,6 +341,13 @@ class PositionControlConfig(BasePacket):
         self.v_max_g = values[20]
         self.d_roue_g = values[21]
         self.nb_pas_g = values[22]
+        self.app_net_ip = values[23]
+        self.app_net_mask = values[24]
+        self.app_net_gateway = values[25]
+        self.app_net_port = values[26]
+        self.test_mode = values[27]
+        self.coefficient_glissement_lateral = values[28]
+
 
     def serialize(self):
         values = []
@@ -361,6 +374,12 @@ class PositionControlConfig(BasePacket):
         values.append(self.v_max_g)
         values.append(self.d_roue_g)
         values.append(self.nb_pas_g)
+        values.append(self.app_net_ip)
+        values.append(self.app_net_mask)
+        values.append(self.app_net_gateway)
+        values.append(self.app_net_port)
+        values.append(self.test_mode)
+        values.append(self.coefficient_glissement_lateral)
         return self.do_serialize(*values)
 
 
@@ -450,6 +469,25 @@ class StorePiece(BasePacket):
 
     def __init__(self):
         BasePacket.__init__(self, "B")
+        self.storage = STORAGE_MANDIBLE
+
+
+    def deserialize(self, buf):
+        (self.storage,) = self.do_deserialize(buf)
+
+
+    def serialize(self):
+        return self.do_serialize(self.storage)
+
+
+
+
+class PieceStored(BasePacket):
+
+    TYPE = 17
+
+    def __init__(self):
+        BasePacket.__init__(self, "B")
         self.piece_count = 0
 
 
@@ -465,7 +503,7 @@ class StorePiece(BasePacket):
 
 class ReleasePiece(BasePacket):
 
-    TYPE = 17
+    TYPE = 18
 
     def __init__(self):
         BasePacket.__init__(self, "")

@@ -267,6 +267,13 @@ class PositionControlConfigPacketTestCase(unittest.TestCase):
         packet.v_max_g = 0.684
         packet.d_roue_g = 1.6387
         packet.nb_pas_g = 3
+        packet.app_net_ip = 3456874
+        packet.app_net_mask = 1234698
+        packet.app_net_gateway = 988769
+        packet.app_net_port = 9867
+        packet.test_mode = 890
+        packet.coefficient_glissement_lateral = 2345.66
+
         buf = packet.serialize()
         packet2 = packets.PositionControlConfig()
         packet2.deserialize(buf)
@@ -293,6 +300,12 @@ class PositionControlConfigPacketTestCase(unittest.TestCase):
         self.assertTrue(compare_floats(packet.v_max_g, packet2.v_max_g))
         self.assertTrue(compare_floats(packet.d_roue_g, packet2.d_roue_g))
         self.assertTrue(compare_floats(packet.nb_pas_g, packet2.nb_pas_g))
+        self.assertEqual(packet.app_net_ip, packet2.app_net_ip)
+        self.assertEqual(packet.app_net_mask, packet2.app_net_mask)
+        self.assertEqual(packet.app_net_gateway, packet2.app_net_gateway)
+        self.assertEqual(packet.app_net_port, packet2.app_net_port)
+        self.assertEqual(packet.test_mode, packet2.test_mode)
+        self.assertTrue(compare_floats(packet.coefficient_glissement_lateral, packet2.coefficient_glissement_lateral))
 
 
 
@@ -393,9 +406,27 @@ class StorePiecePacketTestCase(unittest.TestCase):
 
     def test_serialization_deserialization(self):
         packet = packets.StorePiece()
-        packet.piece_count = 3
+        packet.storage = STORAGE_STOCK
         buf = packet.serialize()
         packet2 = packets.StorePiece()
+        packet2.deserialize(buf)
+        self.assertEqual(packet.__dict__, packet2.__dict__)
+
+
+
+
+class PieceStoredPacketTestCase(unittest.TestCase):
+
+    def test_serialization_length(self):
+        packet = packets.PieceStored()
+        buf = packet.serialize()
+        self.assertEqual(len(buf), packet.MAX_SIZE)
+
+    def test_serialization_deserialization(self):
+        packet = packets.PieceStored()
+        packet.piece_count = 3
+        buf = packet.serialize()
+        packet2 = packets.PieceStored()
         packet2.deserialize(buf)
         self.assertEqual(packet.__dict__, packet2.__dict__)
 
