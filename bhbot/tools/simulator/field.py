@@ -47,3 +47,11 @@ class FieldScene(QGraphicsScene):
         self.field = QGraphicsSvgItem(os.path.join(os.path.dirname(__file__), "field.svg"))
         self.addItem(self.field)
         self.field.setPos(-102.0, -102.0)
+
+        pen = QPen(QColor("#2e3436"), 10)
+        font = QFont()
+        font.setPointSize(70)
+        self.addLine(-170.0, -170.0, -170.0, 100.0, pen)
+        self.addText("x", font).setPos(-200.0, 80.0)
+        self.addLine(-170.0, -170.0, 100.0, -170.0, pen)
+        self.addText("y", font).setPos(120.0, -230.0)
