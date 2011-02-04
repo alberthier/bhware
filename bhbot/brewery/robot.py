@@ -40,6 +40,12 @@ class Robot(object):
         self.goto(self.pose.x - dx, self.pose.y - dy, None, DIRECTION_BACKWARD)
 
 
+    def look_at(self, x, y):
+        dx = x - self.pose.x
+        dy = y - self.pose.y
+        self.rotate_to(math.atan2(dy, dx))
+
+
     def rotate(self, da):
         self.goto(None, None, self.pose.angle + da, DIRECTION_FORWARD)
 
