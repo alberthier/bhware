@@ -8,11 +8,5 @@ iface eth0 inet static
     netmask 255.255.255.0
 
 auto wlan0
-iface wlan0 inet static
-    address 192.168.0.210
-    netmask 255.255.255.0
-    wpa-ssid <my-ssid>
-    wpa-ap-scan 1
-    wpa-scan-ssid 1
-    wpa-key-mgmt WPA-PSK
-    wpa-psk <my-key>
+iface wlan0 inet dhcp
+    pre-up wpa_supplicant -B -Dwext -iwlan0 -c/etc/wpa_supplicant/wpa_supplicant.conf
