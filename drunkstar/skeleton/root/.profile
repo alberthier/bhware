@@ -6,6 +6,13 @@ export PATH=\
 /usr/bin/X11:\
 /usr/local/bin
 
+do_exit()
+{
+    mount -o remount,ro,noatime /dev/root /
+    unalias exit
+    exit
+}
+
 # If running interactively, then:
 if [ "$PS1" ]; then
 
@@ -32,4 +39,7 @@ if [ "$PS1" ]; then
     alias du='du -h'
     alias halt='busybox halt'
     alias reboot='busybox reboot'
+
+    alias exit='do_exit'
+    mount -o remount,rw,noatime /dev/root /
 fi;
