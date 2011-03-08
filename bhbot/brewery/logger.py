@@ -5,6 +5,7 @@ import os
 import sys
 import stat
 import datetime
+import subprocess
 
 import packets
 import config
@@ -43,6 +44,7 @@ def close():
     os.chmod(filepath, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR | stat.S_IRGRP | stat.S_IXGRP | stat.S_IROTH | stat.S_IXOTH)
     filepath = None
     log_file = None
+    subprocess.Popen(["/bin/sync"]).wait()
 
 
 def log(text):
@@ -69,13 +71,11 @@ def log_packet(sender, packet):
 
 
 def get_next_log_filepath():
-    brewery_root_path = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
-    log_dir = os.path.join(brewery_root_path, "logs")
     index = 0
-    if not os.path.exists(log_dir):
-        os.mkdir(log_dir)
+    if not os.path.exists(config.log_dir):
+        os.mkdir(config.log_dir)
     while True:
-        filepath = os.path.join(log_dir, "brewerylog_{0:=#04}.py".format(index))
+        filepath = os.path.join(config.log_dir, "brewerylog_{0:=#04}.py".format(index))
         if os.path.exists(filepath):
             index += 1
         else:
