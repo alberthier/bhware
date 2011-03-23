@@ -1,0 +1,7 @@
+#!/bin/sh
+
+echo 1 > /proc/sys/net/ipv4/ip_forward
+
+iptables -P FORWARD ACCEPT
+iptables -A POSTROUTING -t nat -o eth0 -j MASQUERADE
+iptables -A PREROUTING -t nat -p tcp -i wlan0 --dport 8000 -j DNAT --to i 192.168.1.200:80
