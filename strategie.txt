@@ -1,0 +1,35 @@
+Stratégie générale
+
+Etat "Homologation"
+-------------------
+Descendre le long de la première colonne inter-case pour choper 1 pion
+Faire un virage avant la fin pour caler le pion dans la zone intouchable
+
+Etat "Construction"
+--------------------
+Scanner la zone verte pour trouver les figures et les pions (on s'arrête dès qu'on tout scanné)
+Choper la figure la plus proche ( ou la plus proche de 2 autres pions )
+Actions pour chaque pion/figure :
+    - Préparation
+    - Tirer
+    - Assembler
+Si pas de figure trouvée, ne choper qu'un pion
+Si aucun pion trouvé ou qu'un seul pion trouvé, on sort du mode construction de figure
+
+Etat "Le Rédempteur" (il remet les pions dans le droit chemin)
+--------------------
+On parcourt le terrain à la recherche de pions égarés
+Points où on peut passer : de préférence ceux qui ne sont pas sur les cases de notre couleur
+Si on trouve un pion égaré : on le "rectifie" dans la direction où on se déplace ou sur le côté
+
+Etat "End of the world"
+-----------------------
+10s avant la fin, on cherche un endroit "bonus" ou poser notre construction
+Se poser sur l'endroit
+Lacher la construction
+
+====================================
+
+Déplacements possibles :
+on se déplace selon des trajectoires qui passent par : les extrémités des carrés et les centres des carrés
+
