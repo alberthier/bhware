@@ -375,24 +375,25 @@ class PieceDetectedPacketTestCase(unittest.TestCase):
 
     def test_serialization_deserialization_with_angle(self):
         packet = packets.PieceDetected()
-        packet.left_sensor = LATERAL_SENSOR_PAWN
-        packet.right_sensor = LATERAL_SENSOR_KING_OR_QWEEN
-        packet.center_sensor_angle = 12.5
+        packet.start_pose = trajectory.Pose(12.3, 67.9, 56.4)
+        packet.start_distance = 54.8
+        packet.end_pose = trajectory.Pose(2.3, 32.9, 98.3)
+        packet.end_distance = 34.0
+        packet.sensor = SENSOR_RIGHT_BOTTOM
+        packet.angle = 32.8
         buf = packet.serialize()
         packet2 = packets.PieceDetected()
         packet2.deserialize(buf)
-        self.assertEqual(packet.left_sensor, packet2.left_sensor)
-        self.assertEqual(packet.right_sensor, packet2.right_sensor)
-        self.assertTrue(compare_floats(packet.center_sensor_angle, packet2.center_sensor_angle))
-
-    def test_serialization_deserialization_without_angle(self):
-        packet = packets.PieceDetected()
-        packet.left_sensor = LATERAL_SENSOR_PAWN
-        packet.right_sensor = LATERAL_SENSOR_KING_OR_QWEEN
-        buf = packet.serialize()
-        packet2 = packets.PieceDetected()
-        packet2.deserialize(buf)
-        self.assertEqual(packet.__dict__, packet2.__dict__)
+        self.assertTrue(compare_floats(packet.start_pose.x, packet2.start_pose.x))
+        self.assertTrue(compare_floats(packet.start_pose.y, packet2.start_pose.y))
+        self.assertTrue(compare_floats(packet.start_pose.angle, packet2.start_pose.angle))
+        self.assertTrue(compare_floats(packet.start_distance, packet2.start_distance))
+        self.assertTrue(compare_floats(packet.end_pose.x, packet2.end_pose.x))
+        self.assertTrue(compare_floats(packet.end_pose.y, packet2.end_pose.y))
+        self.assertTrue(compare_floats(packet.end_pose.angle, packet2.end_pose.angle))
+        self.assertTrue(compare_floats(packet.end_distance, packet2.end_distance))
+        self.assertEqual(packet.sensor, packet2.sensor)
+        self.assertTrue(compare_floats(packet.angle, packet2.angle))
 
 
 

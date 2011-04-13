@@ -434,30 +434,47 @@ class PieceDetected(BasePacket):
     TYPE = 15
 
     def __init__(self):
-        BasePacket.__init__(self, "BBBf")
-        self.left_sensor = LATERAL_SENSOR_NONE
-        self.right_sensor = LATERAL_SENSOR_NONE
-        self.center_sensor_angle = None
+        BasePacket.__init__(self, "ffffffffHf")
+        self.start_pose = trajectory.Pose()
+        self.start_distance = 0.0
+        self.end_pose = trajectory.Pose()
+        self.end_distance = 0.0
+        self.sensor = SENSOR_NONE
+        self.angle = 0.0
 
 
     def deserialize(self, buf):
         values = self.do_deserialize(buf)
-        self.left_sensor = values[0]
-        self.right_sensor = values[1]
-        if values[2] != 0:
-            self.center_sensor_angle = values[3]
+        self.start_pose.x = values[0]
+        self.start_pose.y = values[1]
+        self.start_pose.angle = values[2]
+        self.start_distance = values[3]
+        self.end_pose.x = values[4]
+        self.end_pose.y = values[5]
+        self.end_pose.angle = values[6]
+        self.end_distance = values[7]
+        self.sensor = values[8]
+        self.angle = values[9]
 
 
     def serialize(self):
         values = []
-        values.append(self.left_sensor)
-        values.append(self.right_sensor)
-        if self.center_sensor_angle != None:
-           values.append(1)
-           values.append(self.center_sensor_angle)
-        else:
-            values.append(0)
+        values.append(self.start_pose.x)
+        values.append(self.start_pose.y)
+        if (self.start_pose.angle == None):
             values.append(0.0)
+        else:
+            values.append(self.start_pose.angle)
+        values.append(self.start_distance)
+        values.append(self.end_pose.x)
+        values.append(self.end_pose.y)
+        if (self.end_pose.angle == None):
+            values.append(0.0)
+        else:
+            values.append(self.end_pose.angle)
+        values.append(self.end_distance)
+        values.append(self.sensor)
+        values.append(self.angle)
         return self.do_serialize(*values)
 
 
