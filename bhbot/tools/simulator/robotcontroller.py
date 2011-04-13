@@ -82,7 +82,6 @@ class RobotController(object):
         self.field_object = GraphicsRobotObject(self.team)
         if self.team == TEAM_RED:
             self.field_object.item.setPos(260.5, 200.0)
-            #self.field_object.item.setRotation(90.0)
         elif self.team == TEAM_BLUE:
             self.field_object.item.setPos(3000.0 - 260.5, 200.0)
             self.field_object.item.setRotation(180.0)
