@@ -144,7 +144,7 @@ class EventLoop(object):
                             leds.green.heartbeat_tick()
                             self.fsm.state.on_keep_alive(channel.packet.current_pose, channel.packet.match_started, channel.packet.match_time)
                         elif isinstance(channel.packet, packets.PieceDetected):
-                            self.fsm.state.on_piece_detected(channel.packet.left_sensor, channel.packet.right_sensor, channel.packet.center_sensor_angle)
+                            self.fsm.state.on_piece_detected(channel.packet.start_pose, channel.packet.start_distance, channel.packet.end_pose, channel.packet.end_distance, channel.packet.sensor, channel.packet.angle)
                         elif isinstance(channel.packet, packets.PieceStored):
                             self.robot.stored_piece_count = channel.packet.piece_count
                             self.fsm.state.on_piece_stored(channel.packet.piece_count)
