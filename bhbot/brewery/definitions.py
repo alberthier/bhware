@@ -78,6 +78,14 @@ enum("STORAGE",
     STORAGE_STOCK = 1,
 )
 
+enum("NODE",
+    "Node color",
+    NODE_BLUE = 0,
+    NODE_RED = 1,
+    NODE_GREEN = 2,
+    NODE_UNKNOWN = 0,
+)
+
 ####### ADD DEFINITIONS ABOVE ###############
 
 def get_defs_types() : return __lookup.keys()

@@ -7,6 +7,7 @@ import statemachine
 import packets
 import trajectory
 import logger
+import world
 
 from definitions import *
 
@@ -39,7 +40,31 @@ class WaitStart(statemachine.State):
 class WaitFirstKeepAlive(statemachine.State):
 
     def on_keep_alive(self, current_pose, match_started, match_time):
-        self.switch_to_state(GotoFieldMove)
+        self.switch_to_state(TestHomologationWorld)
+
+
+
+class TestHomologationWorld(statemachine.State):
+
+    def on_enter(self):
+        self.trajectory = world.world.get_trajectory()
+        self.current = None
+        self.next_move()
+
+
+    def next_move(self):
+        if self.current == None:
+            if not len(self.trajectory) == 0:
+                self.current = self.trajectory[0]
+                self.trajectory = self.trajectory[1:]
+                self.robot().look_at(self.current[0] / 1000.0, self.current[1] / 1000.0)
+        else:
+            self.robot().move_to(self.current[0] / 1000.0, self.current[1] / 1000.0)
+            self.current = None
+
+
+    def on_goto_finished(self, reason, pose):
+        self.next_move()
 
 
 
