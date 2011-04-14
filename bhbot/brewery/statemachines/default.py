@@ -103,7 +103,47 @@ class Rotate(statemachine.State):
 
 
     def on_goto_finished(self, reason, pose):
-        self.switch_to_state(Moving)
+        self.switch_to_state(RotateQ1)
+
+
+class RotateQ1(statemachine.State):
+
+    def on_enter(self):
+        self.robot().look_at(self.robot().pose.x - 10.0, self.robot().pose.y - 10.0)
+
+
+    def on_goto_finished(self, reason, pose):
+        self.switch_to_state(RotateQ2)
+
+
+class RotateQ2(statemachine.State):
+
+    def on_enter(self):
+        self.robot().look_at(self.robot().pose.x + 10.0, self.robot().pose.y - 10.0)
+
+
+    def on_goto_finished(self, reason, pose):
+        self.switch_to_state(RotateQ3)
+
+
+class RotateQ3(statemachine.State):
+
+    def on_enter(self):
+        self.robot().look_at(self.robot().pose.x + 10.0, self.robot().pose.y + 10.0)
+
+
+    def on_goto_finished(self, reason, pose):
+        self.switch_to_state(RotateQ4)
+
+
+class RotateQ4(statemachine.State):
+
+    def on_enter(self):
+        self.robot().look_at(self.robot().pose.x - 10.0, self.robot().pose.y + 10.0)
+
+
+    def on_goto_finished(self, reason, pose):
+        self.switch_to_state(RotateQ1)
 
 
 class Moving(statemachine.State):
