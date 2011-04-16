@@ -6,6 +6,7 @@ import sys
 import stat
 import datetime
 import subprocess
+import traceback
 
 import packets
 import config
@@ -56,6 +57,12 @@ def log(text):
     if config.host_device == HOST_DEVICE_PC:
         sys.stdout.write(text + "\n")
         sys.stdout.flush()
+
+def exception(exc,msg=None):
+    if msg == None : msg = "Exception"
+    log(msg + str(exc))
+    for l in traceback.format_exc(exc).split("\n") :
+        log("   "+l)        
 
 
 def log_packet(sender, packet):

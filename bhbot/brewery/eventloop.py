@@ -99,9 +99,7 @@ class EventLoop(object):
         try :
             return self.do_read(channel)
         except Exception, e :
-            logger.log("BH Exception : " + str(e))
-            for l in traceback.format_exc(e).split("\n") :
-                logger.log(l)
+            logger.exception(e)
 
     def do_read(self, channel):
         while True :
