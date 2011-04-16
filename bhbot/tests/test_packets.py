@@ -494,9 +494,8 @@ class TurretDetectPacketTestCase(unittest.TestCase):
 
     def test_serialization_deserialization(self):
         packet = packets.TurretDetect()
-        packet.mean_angle = 87
-        packet.angular_size = 258
+        packet.angle = 8.64
         buf = packet.serialize()
         packet2 = packets.TurretDetect()
         packet2.deserialize(buf)
-        self.assertEqual(packet.__dict__, packet2.__dict__)
+        self.assertTrue(compare_floats(packet.angle, packet2.angle))

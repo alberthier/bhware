@@ -566,17 +566,16 @@ class TurretDetect(BasePacket):
     TYPE = 32
 
     def __init__(self):
-        BasePacket.__init__(self, "hH")
-        self.mean_angle = 0
-        self.angular_size = 0
+        BasePacket.__init__(self, "f")
+        self.angle = 0.0
 
 
     def deserialize(self, buf):
-        (self.mean_angle, self.angular_size) = self.do_deserialize(buf)
+        (self.angle,) = self.do_deserialize(buf)
 
 
     def serialize(self):
-        return self.do_serialize(self.mean_angle, self.angular_size)
+        return self.do_serialize(self.angle)
 
 
 

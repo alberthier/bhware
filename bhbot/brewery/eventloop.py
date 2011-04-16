@@ -149,7 +149,7 @@ class EventLoop(object):
                             self.robot.stored_piece_count = channel.packet.piece_count
                             self.fsm.state.on_piece_stored(channel.packet.piece_count)
                         elif isinstance(channel.packet, packets.TurretDetect):
-                            self.fsm.state.on_turret_detect(channel.packet.mean_angle, channel.packet.angular_size)
+                            self.fsm.state.on_turret_detect(channel.packet.angle)
                         channel.packet = None
                 except:
                     for line in traceback.format_exc().strip().split('\n'):
