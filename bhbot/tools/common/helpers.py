@@ -67,7 +67,6 @@ def translate_packet_data(packet_type, packet_data):
         packet_data['axis'] = lookup_defs('AXIS', packet_data['axis'])
 
     elif packet_type == 'PieceDetected':
-        packet_data['left_sensor'] = lookup_defs('PIECE_SENSOR', packet_data['left_sensor'])
-        packet_data['right_sensor'] = lookup_defs('PIECE_SENSOR', packet_data['right_sensor'])
+        packet_data['sensor'] = lookup_defs('SENSOR', packet_data['sensor'])
 
     return packet_data
