@@ -38,7 +38,8 @@ class TurretChannel(asyncore.file_dispatcher):
         self.eventloop.handle_read(self)
 
 
-    def handle_error(self):
+    def handle_close(self):
+        # Ignore close events
         pass
 
 
