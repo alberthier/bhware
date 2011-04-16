@@ -22,7 +22,6 @@ class TrajectoryDrawer(object):
 
     def on_robot_move(self,ox,oy,x,y):
         if ox and oy :
-            print(self,"on_robot_move ",ox,oy,x,y)
             l = QGraphicsLineItem(ox,oy,x,y)
             self.items.append(l)
             l.setPen(self.pen)
@@ -54,7 +53,6 @@ class RobotController(object):
         return self.process != None
 
     def on_reset(self):
-        print "Resetting"
         self.trajectory_drawer.on_reset()
 
 
