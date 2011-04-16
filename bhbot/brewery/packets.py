@@ -434,7 +434,7 @@ class PieceDetected(BasePacket):
     TYPE = 15
 
     def __init__(self):
-        BasePacket.__init__(self, "ffffffffHf")
+        BasePacket.__init__(self, "ffffffffIf")
         self.start_pose = trajectory.Pose()
         self.start_distance = 0.0
         self.end_pose = trajectory.Pose()
