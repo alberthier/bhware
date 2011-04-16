@@ -6,6 +6,8 @@ import socket
 
 from definitions import *
 
+with_serial = True
+
 if socket.gethostname() == "drunkstar":
     host_device = HOST_DEVICE_ARM
     remote_ip = "192.168.1.200"
@@ -20,6 +22,7 @@ else:
     orange_led_device_path = None
     green_led_device_path = None
     log_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file__))), "logs")
+    with_serial = False
 
 serial_port_speed = 115200
 remote_port = 7001

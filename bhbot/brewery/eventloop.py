@@ -9,7 +9,7 @@ import inspect
 import time
 import traceback
 import errno
-import serial
+if config.with_serial : import serial
 
 import logger
 import packets
