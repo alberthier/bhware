@@ -8,7 +8,7 @@ from definitions import *
 
 if socket.gethostname() == "drunkstar":
     host_device = HOST_DEVICE_ARM
-    remote_ip = "192.168.1.200"
+    remote_ip = "192.168.2.200"
     serial_port_path = "/dev/ttyUSB0"
     orange_led_device_path = "/sys/class/leds/dockstar:orange:health/brightness"
     green_led_device_path = "/sys/class/leds/dockstar:green:health/brightness"
