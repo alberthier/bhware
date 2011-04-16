@@ -14,6 +14,7 @@ def instantiate_state_machine(state_machine_name, eventloop):
         if inspect.isclass(item_type) and issubclass(item_type, StateMachine):
             fsm = item_type()
             fsm.event_loop = eventloop
+            logger.log("Successfully instatiated state machine '{0}' from file '{1}'".format(item_name, state_machine_file))
             return fsm
 
 
