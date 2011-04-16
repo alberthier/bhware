@@ -38,6 +38,10 @@ class TurretChannel(asyncore.file_dispatcher):
         self.eventloop.handle_read(self)
 
 
+    def handle_error(self):
+        pass
+
+
 
 
 class RobotControlDeviceChannel(asyncore.dispatcher_with_send):
