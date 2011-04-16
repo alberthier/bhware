@@ -2,6 +2,19 @@
 # encoding: utf-8
 
 import logger
+import os
+import imp
+import inspect
+
+def instantiate_state_machine(state_machine_name, eventloop):
+    state_machines_dir = os.path.join(os.path.dirname(__file__), "statemachines")
+    state_machine_file = os.path.join(state_machines_dir, state_machine_name + ".py")
+    state_machine_module = imp.load_source(state_machine_name, state_machine_file)
+    for (item_name, item_type) in inspect.getmembers(state_machine_module):
+        if inspect.isclass(item_type) and issubclass(item_type, StateMachine):
+            fsm = item_type()
+            fsm.event_loop = eventloop
+            return fsm
 
 
 class StateMachine(object):

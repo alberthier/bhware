@@ -27,6 +27,8 @@ if __name__ == "__main__":
 
     logger.initialize()
 
+    logger.initialize()
+
     signal.signal(signal.SIGINT, signal_handler)
     signal.signal(signal.SIGTERM, signal_handler)
 

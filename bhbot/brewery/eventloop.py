@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
+import config
 import asyncore
 import os
 import socket
@@ -9,7 +10,7 @@ import inspect
 import time
 import traceback
 import errno
-import serial
+if config.with_serial : import serial
 
 import logger
 import packets
@@ -82,7 +83,7 @@ class RobotControlDeviceChannel(asyncore.dispatcher_with_send):
         self.close_requested = True
 
 
-
+import traceback
 
 class EventLoop(object):
 
@@ -94,8 +95,15 @@ class EventLoop(object):
         self.state_machine_name = state_machine_name
         self.figure_detector = figuredetector.FigureDetector()
 
-
     def handle_read(self, channel):
+        try :
+            return self.do_read(channel)
+        except Exception, e :
+            logger.log("BH Exception : " + str(e))
+            for l in traceback.format_exc(e).split("\n") :
+                logger.log(l)
+
+    def do_read(self, channel):
         while True :
             if channel.packet == None:
                 try:
@@ -172,18 +180,13 @@ class EventLoop(object):
 
 
     def create_fsm(self):
-        state_machines_dir = os.path.join(os.path.dirname(__file__), "statemachines")
-        state_machine_file = os.path.join(state_machines_dir, self.state_machine_name + ".py")
-        state_machine_module = imp.load_source(self.state_machine_name, state_machine_file)
-        for (item_name, item_type) in inspect.getmembers(state_machine_module):
-            if inspect.isclass(item_type) and issubclass(item_type, statemachine.StateMachine):
-                self.fsm = item_type()
-                self.fsm.event_loop = self
-                self.fsm.start()
-                self.send_packet(packets.ControllerReady())
-                return
-        logger.log("No state machine found in '{0}'".format(state_machine_file))
-        self.stop()
+        self.fsm = statemachine.instantiate_state_machine(self.state_machine_name, self)
+        if not self.fsm :
+            logger.log("No state machine found in '{0}'".format(state_machine_file))
+            self.stop()
+        self.fsm.start()
+        self.send_packet(packets.ControllerReady())
+
 
 
     def start(self):

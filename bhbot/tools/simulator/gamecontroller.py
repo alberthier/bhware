@@ -12,6 +12,7 @@ from robotcontroller import *
 
 
 
+
 class GameController(object):
 
     def __init__(self, main_window):
@@ -19,7 +20,8 @@ class GameController(object):
         self.server.newConnection.connect(self.brewery_connected)
         self.server.listen(QHostAddress.Any, config.remote_port)
         self.red_robot = RobotController(TEAM_RED, self, main_window.red_robot_dock.widget(), main_window.field_scene)
-        self.blue_robot = RobotController(TEAM_BLUE, self, main_window.blue_robot_dock.widget(), main_window.field_scene)
+        self.blue_robot = RobotController(TEAM_BLUE, self, main_window.blue_robot_dock.widget(), main_window.field_scene)        
+        self.trajectory_drawer = None
         self.main_bar = main_window.main_bar_dock.widget()
         self.main_bar.reload.clicked.connect(self.setup)
         self.main_bar.start_pause.clicked.connect(self.start_pause)
@@ -35,6 +37,7 @@ class GameController(object):
 
 
     def setup(self):
+        # self.trajectory_drawer = TrajectoryDrawer(main_window.field_scene, self.)
         if not self.start_requested and not self.setting_up:
             self.user_stop()
         if not self.red_robot.is_process_started():
