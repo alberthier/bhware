@@ -17,6 +17,7 @@ import config
 import statemachine
 import leds
 import robot
+import figuredetector
 
 
 
@@ -91,6 +92,7 @@ class EventLoop(object):
         self.fsm = None
         self.robot = robot.Robot(self)
         self.state_machine_name = state_machine_name
+        self.figure_detector = figuredetector.FigureDetector()
 
 
     def handle_read(self, channel):
@@ -149,6 +151,7 @@ class EventLoop(object):
                             leds.green.heartbeat_tick()
                             self.fsm.state.on_keep_alive(channel.packet.current_pose, channel.packet.match_started, channel.packet.match_time)
                         elif isinstance(channel.packet, packets.PieceDetected):
+                            self.figure_detector.on_piece_detected(channel.packet.start_pose, channel.packet.start_distance, channel.packet.end_pose, channel.packet.end_distance, channel.packet.sensor, channel.packet.angle)
                             self.fsm.state.on_piece_detected(channel.packet.start_pose, channel.packet.start_distance, channel.packet.end_pose, channel.packet.end_distance, channel.packet.sensor, channel.packet.angle)
                         elif isinstance(channel.packet, packets.PieceStored):
                             self.robot.stored_piece_count = channel.packet.piece_count
