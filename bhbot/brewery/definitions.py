@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
+import math
+
 __lookup={}
 __descriptions={}
 
@@ -41,6 +43,18 @@ enum("DIRECTION",
     DIRECTION_FORWARD = 1,
     DIRECTION_BACKWARD = -1,
 )
+
+enum("ANGLE",
+    "Angle",
+    ANGLE_N = math.pi/2,
+    ANGLE_NW = 3*math.pi/4,
+    ANGLE_W = math.pi,
+    ANGLE_SW = 5*math.pi/4,
+    ANGLE_S = 3*math.pi/2,
+    ANGLE_SE = 7*math.pi/4,
+    ANGLE_E = 0.0
+)
+
 
 enum("REASON",
     "Goto finished reason",
