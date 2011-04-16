@@ -48,6 +48,11 @@ class Cell(object):
         y = self.cell_size * (self.y + 0.5)
         return x,y        
 
+    def down_middle(self) :
+        x = self.offset_x + self.cell_size * (self.x + 0.5)
+        y = self.cell_size * (self.y + 1)
+        return x,y        
+
 # homologation_trajectory = [ list(Cell(0,0).center_right()) + [ANGLE_S,DIRECTION_FORWARD]
 #                           , list(Cell(0,4).center_right()) + [ANGLE_S,DIRECTION_FORWARD]
 #                           , list(Cell(0,5).center_middle()) + [ANGLE_S,DIRECTION_FORWARD]
@@ -71,10 +76,12 @@ def mirror_angle_y(a):
 
 class Pose(object):
     def __init__(self, x, y, angle=None, direction=DIRECTION_FORWARD) :
+    # def __init__(self, x, y, angle=None, direction=DIRECTION_FORWARD, movement = MOVEMENT_FORWARD) :
         self.x=x
         self.y=y
         self.angle=angle
         self.direction=direction
+        # self.movement=movement
 
     def __str__(self):
         return "Pose({0}, {1}, {2}, {3})".format(self.x,self.y, self.angle, self.direction)
@@ -83,6 +90,7 @@ class Pose(object):
         # TODO : this x,y swapping pisses me off
         # return [self.x, self.y, self.angle, self.direction]
         a = self.angle + math.pi / 2 if self.angle else None 
+        # return [self.y, self.x, a, self.direction, self.movement]
         return [self.y, self.x, a, self.direction]
 
 class TeamPose(Pose) :
@@ -128,11 +136,29 @@ class HomologationStart(statemachine.State) :
     
     def on_enter(self):
         self.fsm.points = deque()
-        for vals in homologation_trajectory :
-            if len(vals) > 1 :
-                self.fsm.points.append(TeamPose(*vals))
-            else :
-                self.fsm.points.append(TeamPose(0.0,0.0,angle=vals[0]))
+        lk = as_dict()
+        try :
+            for vals in homologation_trajectory :
+                angle = None
+                x,y=0.0,0.0
+                dir_=DIRECTION_FORWARD
+                if len(vals) > 1 or type(vals) is dict :
+                    if type(vals) is dict :
+                        x,y = vals.get("pos",(x,y))
+                        angle = vals.get("angle",angle)
+                        dir_ = vals.get("dir",dir_)
+                    else :
+                        if len(vals) == 2 : x,y=vals
+                        if len(vals) == 3 : x,y,angle=vals
+                        if len(vals) == 4 : x,y,angle,dir_=vals
+                else : angle = vals[0]
+                a=lookup_defs("ANGLE",angle) if angle else None
+                d=lookup_defs("DIRECTION",dir_) if dir_ else None
+                logger.log("Traj : {0},{1},{2},{3}".format(x,y,a,d))
+                self.fsm.points.append(TeamPose(x,y,angle,dir_))
+        except Exception, e :
+            logger.log( "Error decoding trajectory '{0}' : Exception is {1}".format(str(vals),str(e)))
+            logger.exception(e)
         logger.log("Points : {0}".format(", ".join(str(p) for p in self.fsm.points)))
         self.fsm.successful_exit_state = HomologationEnd
         self.switch_to_state(TrajectoryWalk)
