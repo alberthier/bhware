@@ -6,6 +6,7 @@ import sys
 import eventloop
 import config
 import signal
+import logger
 
 import leds
 
@@ -23,6 +24,8 @@ if __name__ == "__main__":
         state_machine_name = sys.argv[1]
     else:
         state_machine_name = config.state_machine
+
+    logger.initialize()
 
     signal.signal(signal.SIGINT, signal_handler)
     signal.signal(signal.SIGTERM, signal_handler)
