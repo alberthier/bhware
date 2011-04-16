@@ -26,4 +26,4 @@ else:
 
 serial_port_speed = 115200
 remote_port = 7001
-state_machine = "default"
+state_machine = "default_simple"
