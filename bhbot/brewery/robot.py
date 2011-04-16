@@ -5,6 +5,9 @@ import math
 
 import trajectory
 import packets
+import logger
+
+import tools
 
 from definitions import *
 
@@ -49,19 +52,25 @@ class Robot(object):
     def rotate(self, da):
         self.goto(None, None, self.pose.angle + da, DIRECTION_FORWARD)
 
+    def look_at(self, x,y):
+        """Rotate to look at position x,y"""
+        pass
+
 
     def rotate_to(self, angle):
         self.goto(None, None, angle, DIRECTION_FORWARD)
 
+    def goto_pose(self, pose) :
+        if hasattr(pose,"change_team") : pose.change_team(self.team)
+        return self.goto( *pose.get_values())
 
     def goto(self, x, y, angle, direction):
         packet = packets.Goto()
-        if angle == None:
+        if not tools.quasi_null(x) or not tools.quasi_null(y) :
             packet.movement = MOVEMENT_MOVE
         else:
-            x = 0.0
-            y = 0.0
             packet.movement = MOVEMENT_ROTATE
+        # logger.log("Goto {0} {1} {2} {3} {4}".format(x,y,angle,direction,packet.movement))
         packet.direction = direction
         packet.points = [trajectory.Pose(x, y, angle)]
         self.event_loop.send_packet(packet)
