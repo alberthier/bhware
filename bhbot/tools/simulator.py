@@ -21,6 +21,7 @@ if __name__ == "__main__":
     random.seed()
 
     app = QApplication(sys.argv)
+    app.setWindowIcon(QIcon("simulator/icons/main.png"))
 
     mw = MainWindow()
     mw.show()

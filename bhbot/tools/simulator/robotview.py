@@ -46,7 +46,7 @@ class RobotView(QWidget, RobotView_Ui):
             data[2] = helpers.translate_packet_data(data[0], data[2])
             self.log_view.append(str(data))
         else:
-            self.log_view.append(text)
+            self.log_view.append('<font color="blue">'+text+'</font>')
 
 
     def clear(self):
@@ -74,6 +74,9 @@ class GraphicsRobotObject(QObject):
         self.team = team
         self.animation = QPropertyAnimation()
         self.animation.setTargetObject(self)
+        self.old_ref_x = None
+        self.old_ref_y = None
+        self.observers = []
 
         self.item = QGraphicsItemGroup()
         self.robot_item = QGraphicsSvgItem(os.path.join(os.path.dirname(__file__), "robot.svg"))
@@ -154,6 +157,11 @@ class GraphicsRobotObject(QObject):
         ref_y = x * 1000.0
         d_field_x = ref_x - self.item.pos().x()
         d_field_y = ref_y - self.item.pos().y()
+
+        for o in self.observers : o.on_robot_move(self.old_ref_x, self.old_ref_y, ref_x, ref_y)
+        
+        self.old_ref_x = ref_x
+        self.old_ref_y = ref_y
 
         self.animation.setPropertyName("position")
         # 1 m/s

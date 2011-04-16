@@ -13,7 +13,24 @@ from definitions import *
 
 from robotview import *
 
+class TrajectoryDrawer(object):
+    def __init__(self, scene, team) :
+        self.scene = scene
+        pen_color = Qt.blue if team == TEAM_BLUE else Qt.red
+        self.pen = QPen(pen_color, 10, Qt.SolidLine, Qt.SquareCap, Qt.MiterJoin);
+        self.items = []
 
+    def on_robot_move(self,ox,oy,x,y):
+        if ox and oy :
+            print(self,"on_robot_move ",ox,oy,x,y)
+            l = QGraphicsLineItem(ox,oy,x,y)
+            self.items.append(l)
+            l.setPen(self.pen)
+            self.scene.addItem(l)
+
+    def on_reset(self):
+        for i in self.items : self.scene.removeItem(i)
+        self.items = []
 
 class RobotController(object):
 
@@ -30,10 +47,15 @@ class RobotController(object):
         self.incoming_packet = None
         self.ready = False
         self.goto_packet = None
+        self.trajectory_drawer = TrajectoryDrawer(scene,team)
 
 
     def is_process_started(self):
         return self.process != None
+
+    def on_reset(self):
+        print "Resetting"
+        self.trajectory_drawer.on_reset()
 
 
     def is_connected(self):
@@ -45,6 +67,7 @@ class RobotController(object):
 
 
     def setup(self):
+        self.on_reset()
         if self.process == None:
             self.field_object = None
             self.incoming_packet_buffer = ""
@@ -80,6 +103,7 @@ class RobotController(object):
         self.socket.readyRead.connect(self.read_packet)
 
         self.field_object = GraphicsRobotObject(self.team)
+        self.field_object.observers.append(self.trajectory_drawer)
         if self.team == TEAM_RED:
             self.field_object.item.setPos(260.5, 200.0)
             #self.field_object.item.setRotation(90.0)

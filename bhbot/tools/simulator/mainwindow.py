@@ -25,7 +25,8 @@ class MainWindow(QMainWindow, MainWindow_Ui):
         QMainWindow.__init__(self, parent)
         MainWindow_Ui.__init__(self)
         self.setupUi(self)
-        self.setWindowIcon(QIcon.fromTheme("applications-development"))
+        # self.setWindowIcon(QIcon.fromTheme("applications-development"))
+        self.setWindowIcon(QIcon(os.path.join(os.path.dirname(__file__),'icons/main.png')))
 
         self.main_bar_dock.setWidget(MainBar(self))
         self.red_robot_dock.setWidget(RobotView(self, TEAM_RED))
