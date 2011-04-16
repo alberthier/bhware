@@ -38,6 +38,11 @@ class TurretChannel(asyncore.file_dispatcher):
         self.eventloop.handle_read(self)
 
 
+    def handle_close(self):
+        # Ignore close events
+        pass
+
+
 
 
 class RobotControlDeviceChannel(asyncore.dispatcher_with_send):
@@ -144,12 +149,12 @@ class EventLoop(object):
                             leds.green.heartbeat_tick()
                             self.fsm.state.on_keep_alive(channel.packet.current_pose, channel.packet.match_started, channel.packet.match_time)
                         elif isinstance(channel.packet, packets.PieceDetected):
-                            self.fsm.state.on_piece_detected(channel.packet.left_sensor, channel.packet.right_sensor, channel.packet.center_sensor_angle)
+                            self.fsm.state.on_piece_detected(channel.packet.start_pose, channel.packet.start_distance, channel.packet.end_pose, channel.packet.end_distance, channel.packet.sensor, channel.packet.angle)
                         elif isinstance(channel.packet, packets.PieceStored):
                             self.robot.stored_piece_count = channel.packet.piece_count
                             self.fsm.state.on_piece_stored(channel.packet.piece_count)
                         elif isinstance(channel.packet, packets.TurretDetect):
-                            self.fsm.state.on_turret_detect(channel.packet.mean_angle, channel.packet.angular_size)
+                            self.fsm.state.on_turret_detect(channel.packet.angle)
                         channel.packet = None
                 except:
                     for line in traceback.format_exc().strip().split('\n'):

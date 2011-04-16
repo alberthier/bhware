@@ -81,7 +81,7 @@ class State(object):
         pass
 
 
-    def on_piece_detected(self, left_sensor, right_sensor, center_sensor_angle):
+    def on_piece_detected(start_pose, start_distance, end_pose, end_distance, sensor, angle):
         pass
 
 
@@ -89,5 +89,5 @@ class State(object):
         pass
 
 
-    def on_turret_detect(self, mean_angle, angular_size):
+    def on_turret_detect(self, angle):
         pass

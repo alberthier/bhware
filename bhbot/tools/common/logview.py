@@ -10,6 +10,7 @@ import sys
 import imp
 
 import helpers
+import world
 
 from definitions import *
 
@@ -190,6 +191,15 @@ class TrajectoryScene(QGraphicsScene):
         pathItem = QGraphicsPathItem(painterPath)
         pathItem.setPen(QPen(QColor("#edd400"), 10))
         self.addItem(pathItem)
+
+        # Display world
+        worldPen = QPen(QColor("#8ae234"), 10)
+        for edge in world.world.edges:
+            self.addLine(edge.node1.y, edge.node1.x, edge.node2.y, edge.node2.x, worldPen)
+        worldPen = QPen(QColor("#4e9a06"), 10)
+        worldBrush = QBrush(QColor("#8ae234"))
+        for node in world.world.nodes:
+            self.addEllipse(node.y - 20.0, node.x - 20.0, 40.0, 40.0, worldPen, worldBrush)
 
 
 

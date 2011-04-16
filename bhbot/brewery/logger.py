@@ -50,8 +50,6 @@ def close():
 def log(text):
     global log_file
     global start_time
-    if log_file == None:
-        initialize()
     delta = datetime.datetime.now() - start_time
     time = "'{0:=0.02f}'".format(float(delta.seconds) + (float(delta.microseconds)/1000000.0))
     log_file.write("log.append([" + time + ",\"# " + text + "\"])\n")

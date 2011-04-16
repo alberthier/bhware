@@ -76,17 +76,28 @@ enum("AXIS",
     AXIS_ORDINATE = 1,
 )
 
-enum("LATERAL_SENSOR",
-    "Lateral piece sensor",
-    LATERAL_SENSOR_NONE = 0,
-    LATERAL_SENSOR_PAWN = 1,
-    LATERAL_SENSOR_KING_OR_QWEEN = 2,
+enum("SENSOR",
+    "Piece sensor",
+    SENSOR_LEFT_BOTTOM = 0,
+    SENSOR_LEFT_TOP = 1,
+    SENSOR_RIGHT_BOTTOM = 2,
+    SENSOR_RIGHT_TOP = 3,
+    SENSOR_CENTER = 4,
+    SENSOR_NONE = 5,
 )
 
 enum("STORAGE",
     "Piece storage",
     STORAGE_MANDIBLE = 0,
     STORAGE_STOCK = 1,
+)
+
+enum("NODE",
+    "Node color",
+    NODE_BLUE = 0,
+    NODE_RED = 1,
+    NODE_GREEN = 2,
+    NODE_UNKNOWN = 0,
 )
 
 ####### ADD DEFINITIONS ABOVE ###############

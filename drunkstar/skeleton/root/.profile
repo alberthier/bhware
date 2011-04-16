@@ -39,6 +39,7 @@ if [ "$PS1" ]; then
     alias du='du -h'
     alias halt='busybox halt'
     alias reboot='busybox reboot'
+    alias remountro='mount -o remount,ro,noatime /dev/root /'
 
     alias exit='do_exit'
     mount -o remount,rw,noatime /dev/root /
