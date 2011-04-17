@@ -66,6 +66,8 @@ class State(object):
     def on_exit(self):
         pass
 
+    def on_resettle(self):
+        pass
 
     def on_device_busy(self):
         pass

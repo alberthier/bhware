@@ -146,6 +146,8 @@ class EventLoop(object):
                             self.robot.team = channel.packet.team
                         elif isinstance(channel.packet, packets.GotoStarted):
                             self.fsm.state.on_goto_started()
+                        elif isinstance(channel.packet, packets.Resettle):
+                            self.fsm.state.on_resettle()
                         elif isinstance(channel.packet, packets.GotoFinished):
                             self.robot.pose = channel.packet.current_pose
                             self.fsm.state.on_goto_finished(channel.packet.reason, channel.packet.current_pose)
