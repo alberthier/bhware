@@ -48,6 +48,13 @@ class Robot(object):
         dy = y - self.pose.y
         self.rotate_to(math.atan2(dy, dx))
 
+    def resettle(self, axis, value, angle):
+        p = packets.Resettle()
+        p.axis = axis
+        p.position = value
+        p.angle=angle
+        self.event_loop.send_packet(p)
+
 
     def rotate(self, da):
         self.goto(None, None, self.pose.angle + da, DIRECTION_FORWARD)
