@@ -37,6 +37,7 @@ if [ "$PS1" ]; then
     alias rm='rm -i'
     alias df='df -h'
     alias du='du -h'
+    alias vi='vim'
     alias halt='busybox halt'
     alias reboot='busybox reboot'
     alias remountro='mount -o remount,ro,noatime /dev/root /'
