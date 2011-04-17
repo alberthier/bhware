@@ -8,7 +8,7 @@ export PATH=\
 
 do_exit()
 {
-    mount -o remount,ro,noatime /dev/root /
+    mount -o remount,ro,noatime,sync /dev/root /
     unalias exit
     exit
 }
@@ -43,5 +43,5 @@ if [ "$PS1" ]; then
     alias remountro='mount -o remount,ro,noatime /dev/root /'
 
     alias exit='do_exit'
-    mount -o remount,rw,noatime /dev/root /
+    mount -o remount,rw,noatime,sync /dev/root /
 fi;
