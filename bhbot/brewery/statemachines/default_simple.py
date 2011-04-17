@@ -127,6 +127,7 @@ class WaitStart(statemachine.State):
 class WaitFirstKeepAlive(statemachine.State):
 
     def on_keep_alive(self, current_pose, match_started, match_time):
+        self.robot().deploy()
         self.switch_to_state(HomologationStart)
 
 class HomologationStart(statemachine.State) :

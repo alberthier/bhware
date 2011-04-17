@@ -56,6 +56,8 @@ class Robot(object):
         """Rotate to look at position x,y"""
         pass
 
+    def deploy(self):
+        self.event_loop.send_packet(packets.Deployment())
 
     def rotate_to(self, angle):
         self.goto(None, None, angle, DIRECTION_FORWARD)
