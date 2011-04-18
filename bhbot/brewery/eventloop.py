@@ -71,7 +71,7 @@ class RobotControlDeviceChannel(asyncore.dispatcher_with_send):
 
     def handle_connect(self):
         leds.orange.off()
-        self.eventloop.create_fsm()
+        self.eventloop.create_root_fsm()
 
 
     def handle_read(self):
@@ -90,7 +90,7 @@ class EventLoop(object):
     def __init__(self, state_machine_name):
         self.robot_control_channel = None
         self.turret_channel = None
-        self.fsm = None
+        self.root_fsm = None
         self.robot = robot.Robot(self)
         self.state_machine_name = state_machine_name
         self.figure_detector = figuredetector.FigureDetector()
@@ -137,33 +137,33 @@ class EventLoop(object):
                         logger.log_packet("PIC", channel.packet)
 
                         if isinstance(channel.packet, packets.DeviceBusy):
-                            self.fsm.state.on_device_busy()
+                            self.get_current_fsm().state.on_device_busy()
                         elif isinstance(channel.packet, packets.DeviceReady):
                             self.robot.team = channel.packet.team
-                            self.fsm.state.on_device_ready(channel.packet.team)
+                            self.get_current_fsm().state.on_device_ready(channel.packet.team)
                         elif isinstance(channel.packet, packets.Start):
-                            self.fsm.state.on_start(channel.packet.team)
                             self.robot.team = channel.packet.team
+                            self.get_current_fsm().state.on_start(channel.packet.team)
                         elif isinstance(channel.packet, packets.GotoStarted):
-                            self.fsm.state.on_goto_started()
+                            self.get_current_fsm().state.on_goto_started()
                         elif isinstance(channel.packet, packets.GotoFinished):
                             self.robot.pose = channel.packet.current_pose
-                            self.fsm.state.on_goto_finished(channel.packet.reason, channel.packet.current_pose)
+                            self.get_current_fsm().state.on_goto_finished(channel.packet.reason, channel.packet.current_pose)
                         elif isinstance(channel.packet, packets.Blocked):
-                            self.fsm.state.on_blocked(channel.packet.side)
+                            self.get_current_fsm().state.on_blocked(channel.packet.side)
                         elif isinstance(channel.packet, packets.KeepAlive):
                             self.send_packet(channel.packet)
                             self.robot.pose = channel.packet.current_pose
                             leds.green.heartbeat_tick()
-                            self.fsm.state.on_keep_alive(channel.packet.current_pose, channel.packet.match_started, channel.packet.match_time)
+                            self.get_current_fsm().state.on_keep_alive(channel.packet.current_pose, channel.packet.match_started, channel.packet.match_time)
                         elif isinstance(channel.packet, packets.PieceDetected):
                             self.figure_detector.on_piece_detected(channel.packet.start_pose, channel.packet.start_distance, channel.packet.end_pose, channel.packet.end_distance, channel.packet.sensor, channel.packet.angle)
-                            self.fsm.state.on_piece_detected(channel.packet.start_pose, channel.packet.start_distance, channel.packet.end_pose, channel.packet.end_distance, channel.packet.sensor, channel.packet.angle)
+                            self.get_current_fsm().state.on_piece_detected(channel.packet.start_pose, channel.packet.start_distance, channel.packet.end_pose, channel.packet.end_distance, channel.packet.sensor, channel.packet.angle)
                         elif isinstance(channel.packet, packets.PieceStored):
                             self.robot.stored_piece_count = channel.packet.piece_count
-                            self.fsm.state.on_piece_stored(channel.packet.piece_count)
+                            self.get_current_fsm().state.on_piece_stored(channel.packet.piece_count)
                         elif isinstance(channel.packet, packets.TurretDetect):
-                            self.fsm.state.on_turret_detect(channel.packet.angle)
+                            self.get_current_fsm().state.on_turret_detect(channel.packet.angle)
                         channel.packet = None
                 except:
                     for line in traceback.format_exc().strip().split('\n'):
@@ -171,19 +171,28 @@ class EventLoop(object):
 
 
     def send_packet(self, packet):
-        if self.fsm != None:
+        if self.root_fsm != None:
             logger.log_packet("ARM", packet)
             buffer = packet.serialize()
             self.robot_control_channel.send(buffer)
 
 
-    def create_fsm(self):
-        self.fsm = statemachine.instantiate_state_machine(self.state_machine_name, self)
-        if not self.fsm :
+    def get_current_fsm(self):
+        if self.root_fsm != None:
+            fsm = self.root_fsm
+            while fsm.sub_fsm != None:
+                fsm = fsm.sub_fsm
+        return None
+
+
+    def create_root_fsm(self):
+        self.root_fsm = statemachine.instantiate_state_machine(self.state_machine_name, self)
+        if not self.root_fsm :
             logger.log("No state machine found in '{0}'".format(state_machine_file))
             self.stop()
-        self.fsm.start()
-        self.send_packet(packets.ControllerReady())
+        else:
+            self.root_fsm.start()
+            self.send_packet(packets.ControllerReady())
 
 
 

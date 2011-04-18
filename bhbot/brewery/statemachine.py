@@ -5,6 +5,8 @@ import logger
 import os
 import imp
 import inspect
+import datetime
+
 
 def instantiate_state_machine(state_machine_name, eventloop):
     state_machines_dir = os.path.join(os.path.dirname(__file__), "statemachines")
@@ -24,10 +26,12 @@ class StateMachine(object):
         self.state = start_state_ctor(*args)
         self.state.fsm = self
         self.event_loop = None
+        self.sub_fsm = None
+        self.name = self.__class__.__name__
 
 
     def start(self):
-        logger.log("Starting state machine '{0}'".format(self.__class__.__name__))
+        logger.log("Starting state machine '{0}'".format(self.name))
         self.state.on_enter()
 
 
@@ -42,9 +46,24 @@ class State(object):
     def switch_to_state(self, new_state_ctor, *args):
         self.fsm.state.on_exit()
         self.fsm.state = new_state_ctor(*args)
-        logger.log("Switching to state {0}".format(self.fsm.state.__class__.__name__) )
+        logger.log("Switching to state {0}".format(self.fsm.state.__class__.__name__))
         self.fsm.state.fsm = self.fsm
         self.fsm.state.on_enter()
+
+
+    def switch_to_machine(self, new_state_machine_ctor, *args):
+        self.fsm.sub_fsm = new_state_machine_ctor(*args)
+        self.fsm.sub_fsm.event_loop = self.fsm.event_loop
+        self.fsm.sub_fsm.start()
+
+
+    def exit_machine(self):
+        parent_fsm = self.fsm.event_loop.fsm
+        while parent_fsm.sub_fsm != self:
+            parent_fsm = parent_fsm.sub_fsm
+        self.on_exit()
+        parent_fsm.state.on_exit_machine(self.fsm.name)
+        parent_fsm.sub_fsm = None
 
 
     def send_packet(self, packet):
@@ -60,6 +79,10 @@ class State(object):
 
 
     def on_exit(self):
+        pass
+
+
+    def on_exit_machine(self, machine_name):
         pass
 
 
@@ -101,3 +124,23 @@ class State(object):
 
     def on_turret_detect(self, angle):
         pass
+
+
+
+
+class Timer(StateMachine):
+
+    def __init__(self, miliseconds):
+        StateMachine.__init__(self, TimerState, name = None)
+        self.end_time = datetime.datetime.now() + datetime.timedelta(0, 0, 0, miliseconds)
+        if name != None:
+            self.name = name
+
+
+
+
+class TimerState(State):
+
+    def on_keep_alive(self, current_pose, match_started, match_time):
+        if datetime.datetime.now() > self.end_time:
+            self.exit_machine()
