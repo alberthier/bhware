@@ -174,32 +174,49 @@ class TrajectoryScene(QGraphicsScene):
         self.addItem(self.field)
         self.field.setPos(-102.0, -102.0)
 
-        painterPath = QPainterPath()
-        first = True
+        trajPath = QPainterPath()
+        expectedPath = QPainterPath()
+        firstTraj = True
+        firstGoto = True
         for logline in log:
-            if len(logline) != 2 and logline[1] == "KeepAlive":
-                coords = logline[3]['current_pose']
-                x = coords[1] * 1000
-                y = coords[0] * 1000
-                angle = coords[2] * 1000
-                if first:
-                    first = False
-                    painterPath.moveTo(x, y)
-                else:
-                    painterPath.lineTo(x, y)
+            if len(logline) != 2:
+                if logline[1] == "KeepAlive":
+                    coords = logline[3]['current_pose']
+                    x = coords[1] * 1000
+                    y = coords[0] * 1000
+                    if firstTraj:
+                        firstTraj = False
+                        trajPath.moveTo(x, y)
+                    else:
+                        trajPath.lineTo(x, y)
+                elif logline[1] == "Goto":
+                    if logline[3]['movement'] != 'MOVEMENT_ROTATE':
+                        points = logline[3]['points']
+                        for coords in points:
+                            x = coords[1] * 1000
+                            y = coords[0] * 1000
+                            if firstGoto:
+                                firstGoto = False
+                                expectedPath.moveTo(x, y)
+                            else:
+                                expectedPath.lineTo(x, y)
 
-        pathItem = QGraphicsPathItem(painterPath)
-        pathItem.setPen(QPen(QColor("#edd400"), 10))
-        self.addItem(pathItem)
+        trajItem = QGraphicsPathItem(trajPath)
+        trajItem.setPen(QPen(QColor("#edd400"), 10))
+        self.addItem(trajItem)
+
+        expectedItem = QGraphicsPathItem(expectedPath)
+        expectedItem.setPen(QPen(QColor("#73d216"), 10))
+        self.addItem(expectedItem)
 
         # Display world
-        worldPen = QPen(QColor("#8ae234"), 10)
-        for edge in world.world.edges:
-            self.addLine(edge.node1.y, edge.node1.x, edge.node2.y, edge.node2.x, worldPen)
-        worldPen = QPen(QColor("#4e9a06"), 10)
-        worldBrush = QBrush(QColor("#8ae234"))
-        for node in world.world.nodes:
-            self.addEllipse(node.y - 20.0, node.x - 20.0, 40.0, 40.0, worldPen, worldBrush)
+        #worldPen = QPen(QColor("#8ae234"), 10)
+        #for edge in world.world.edges:
+            #self.addLine(edge.node1.y, edge.node1.x, edge.node2.y, edge.node2.x, worldPen)
+        #worldPen = QPen(QColor("#4e9a06"), 10)
+        #worldBrush = QBrush(QColor("#8ae234"))
+        #for node in world.world.nodes:
+            #self.addEllipse(node.y - 20.0, node.x - 20.0, 40.0, 40.0, worldPen, worldBrush)
 
 
 
