@@ -31,35 +31,59 @@ class Cell(object):
     def center_left(self) :
         x = self.offset_x + self.cell_size * self.x
         y = self.cell_size * (self.y + 0.5)
-        return x,y
+        return y,x
     
     def center_right(self) :
         x = self.offset_x + self.cell_size * (self.x + 1)
         y = self.cell_size * (self.y + 0.5)
-        return x,y
+        return y,x
 
     def down_right(self) :
         x = self.offset_x + self.cell_size * (self.x + 1)
         y = self.cell_size * (self.y + 1)
-        return x,y        
+        return y,x
 
     def center_middle(self) :
         x = self.offset_x + self.cell_size * (self.x + 0.5)
         y = self.cell_size * (self.y + 0.5)
-        return x,y        
+        return y,x
 
     def down_middle(self) :
         x = self.offset_x + self.cell_size * (self.x + 0.5)
         y = self.cell_size * (self.y + 1)
-        return x,y        
+        return y,x
 
 # homologation_trajectory = [ list(Cell(0,0).center_right()) + [ANGLE_S,DIRECTION_FORWARD]
 #                           , list(Cell(0,4).center_right()) + [ANGLE_S,DIRECTION_FORWARD]
 #                           , list(Cell(0,5).center_middle()) + [ANGLE_S,DIRECTION_FORWARD]
 #                           ]
 
-homologation_trajectory = [ list(Cell(0,0).center_left()) #+ [ ANGLE_SE ]
-                          , [ANGLE_SE]  
+#homologation_trajectory = [ list(Cell(0,0).center_left()) #+ [ ANGLE_SE ]
+#                          , [ANGLE_SE]  
+#                          , list(Cell(0,0).down_right()) + [ ANGLE_SE ]
+#                          , [ ANGLE_S ] 
+                          # , Cell(0,4).center_right()
+                          # , [ ANGLE_SW ]
+#                          , list(Cell(0,4).down_right()) + [ ANGLE_SW ]
+#                          , [ ANGLE_SW ] # TODO : remove, robot can rotate and move
+                          # , [ ANGLE_S ]
+#1                          , Cell(0,5).center_middle()
+#                          ]
+
+#homologation_trajectory = [ [ 0.1685, 0.5, ANGLE_E ]
+#                          , [ANGLE_SE]  
+#                          , list(Cell(0,0).down_right()) + [ ANGLE_SE ]
+#                          , [ ANGLE_S ] 
+                          # , Cell(0,4).center_right()
+                          # , [ ANGLE_SW ]
+#                          , list(Cell(0,4).down_right()) + [ ANGLE_SW ]
+#                          , [ ANGLE_SW ] # TODO : remove, robot can rotate and move
+                          # , [ ANGLE_S ]
+#1                          , Cell(0,5).center_middle()
+#                          ]
+
+homologation_trajectory = [ list(Cell(0,0).center_left()) + [ ANGLE_SE ]
+#                          , [ANGLE_SE]  
                           , list(Cell(0,0).down_right()) + [ ANGLE_SE ]
                           , [ ANGLE_S ] 
                           # , Cell(0,4).center_right()
@@ -67,7 +91,7 @@ homologation_trajectory = [ list(Cell(0,0).center_left()) #+ [ ANGLE_SE ]
                           , list(Cell(0,4).down_right()) + [ ANGLE_SW ]
                           , [ ANGLE_SW ] # TODO : remove, robot can rotate and move
                           # , [ ANGLE_S ]
-                          , Cell(0,5).center_middle()
+                          , list(Cell(0,5).center_middle()) + [ANGLE_SW]
                           ]
 
 
@@ -89,9 +113,10 @@ class Pose(object):
     def get_values(self):
         # TODO : this x,y swapping pisses me off
         # return [self.x, self.y, self.angle, self.direction]
-        a = self.angle + math.pi / 2 if self.angle else None 
+        #a = self.angle + math.pi / 2 if self.angle else None 
         # return [self.y, self.x, a, self.direction, self.movement]
-        return [self.y, self.x, a, self.direction]
+#return [self.y, self.x, a, self.direction]
+        return [self.x, self.y, self.angle, self.direction]
 
 class TeamPose(Pose) :
     """ Pose which is automatically translated for the current team """
@@ -125,9 +150,23 @@ class WaitStart(statemachine.State):
         self.switch_to_state(WaitFirstKeepAlive)
 
 class WaitFirstKeepAlive(statemachine.State):
-
     def on_keep_alive(self, current_pose, match_started, match_time):
-        self.switch_to_state(HomologationStart)
+        self.switch_to_state(Resettle)
+
+class Resettle(statemachine.State):
+    def __init__(self):
+        self.resettle_count = 0
+
+    def on_enter(self):
+        self.robot().resettle( AXIS_ABSCISSA, 0.1685, math.pi/2 ) #todo : improve
+
+    def on_resettle(self):
+        if self.resettle_count == 0 :
+            self.robot().resettle( AXIS_ORDINATE, 0.0, math.pi/2 )
+            self.resettle_count+=1
+        else:
+            self.switch_to_state(HomologationStart)
+
 
 class HomologationStart(statemachine.State) :
     """Start of homologation"""
@@ -173,9 +212,11 @@ class TrajectoryWalk(statemachine.State):
         self.fsm.points.popleft()
         if len(self.fsm.points) > 0 :
             self.robot().goto_pose(self.fsm.points[0])
+        else:
+            self.switch_to_state(self.fsm.successful_exit_state)
 
     def on_evit_detected(self):
-        self.switch_to_state(self.successful_exit_state)
+        self.switch_to_state(self.fsm.successful_exit_state)
     def on_turret_detect(self, detect_angle):
         # self.wait(time=5
         #          ,success=self.continue_path
@@ -198,10 +239,9 @@ class HomologationEnd(statemachine.State) :
         statemachine.State.__init__(self)
     
     def on_enter(self):
-        logging.log("Homologation ended")
+        self.robot().deploy()
+        logger.log("Homologation ended")
 
-
-            
 
 
 if __name__=="__main__" :

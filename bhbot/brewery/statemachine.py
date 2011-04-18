@@ -81,6 +81,8 @@ class State(object):
     def on_exit(self):
         pass
 
+    def on_resettle(self):
+        pass
 
     def on_exit_machine(self, machine_name):
         pass
