@@ -8,6 +8,7 @@ import statemachine
 from definitions import *
 
 
+########################################################################
 
 
 class TestStateMachine(statemachine.StateMachine):
@@ -51,7 +52,40 @@ class TestEndState(statemachine.State):
         self.fsm.global_data = "finished"
 
 
+########################################################################
 
+
+class ArgsStateMachine(statemachine.StateMachine):
+
+    def __init__(self):
+        statemachine.StateMachine.__init__(self, ArgsState1, "test", 1, True)
+
+
+
+
+class ArgsState1(statemachine.State):
+
+    def __init__(self, arg1, arg2, arg3):
+        statemachine.State.__init__(self)
+        self.arg1 = arg1
+        self.arg2 = arg2
+        self.arg3 = arg3
+
+    def on_goto_started(self):
+        self.switch_to_state(ArgsState2, "hello", "world")
+
+
+
+
+class ArgsState2(statemachine.State):
+
+    def __init__(self, arg1, arg2):
+        statemachine.State.__init__(self)
+        self.arg1 = arg1
+        self.arg2 = arg2
+
+
+########################################################################
 
 
 class StateMachineTestCase(unittest.TestCase):
@@ -76,3 +110,23 @@ class StateMachineTestCase(unittest.TestCase):
         self.assertEqual(self.fsm.global_data, "finished")
 
 
+
+
+
+class ArgsStateMachineTestCase(unittest.TestCase):
+
+    def setUp(self):
+        self.fsm = ArgsStateMachine()
+        self.fsm.start()
+
+    def test_init(self):
+        self.assertTrue(isinstance(self.fsm.state, ArgsState1))
+        self.assertEqual(self.fsm.state.arg1, "test")
+        self.assertEqual(self.fsm.state.arg2, 1)
+        self.assertEqual(self.fsm.state.arg3, True)
+
+    def test_first_event(self):
+        self.fsm.state.on_goto_started()
+        self.assertTrue(isinstance(self.fsm.state, ArgsState2))
+        self.assertEqual(self.fsm.state.arg1, "hello")
+        self.assertEqual(self.fsm.state.arg2, "world")

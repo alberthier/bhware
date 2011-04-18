@@ -19,17 +19,15 @@ def instantiate_state_machine(state_machine_name, eventloop):
 
 
 class StateMachine(object):
-    """ Default state machine """
 
-    def __init__(self, start_state_ctor):
-        self.state = start_state_ctor()
+    def __init__(self, start_state_ctor, *args):
+        self.state = start_state_ctor(*args)
         self.state.fsm = self
         self.event_loop = None
-        self.name = self.__doc__
 
 
     def start(self):
-        logger.log("Starting state machine '{0}'".format(self.name))
+        logger.log("Starting state machine '{0}'".format(self.__class__.__name__))
         self.state.on_enter()
 
 
@@ -41,12 +39,10 @@ class State(object):
         self.fsm = None
 
 
-    def switch_to_state(self, new_state_ctor):
+    def switch_to_state(self, new_state_ctor, *args):
         self.fsm.state.on_exit()
-        self.fsm.state = new_state_ctor()
-        state_name = self.fsm.state.__doc__
-        if state_name is None : state_name = self.fsm.state.__class__.__name__
-        logger.log("Switching to state {0}".format( state_name ) )
+        self.fsm.state = new_state_ctor(*args)
+        logger.log("Switching to state {0}".format(self.fsm.state.__class__.__name__) )
         self.fsm.state.fsm = self.fsm
         self.fsm.state.on_enter()
 
