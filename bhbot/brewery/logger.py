@@ -51,6 +51,7 @@ def close():
 def log(text):
     global log_file
     global start_time
+    initialize()
     delta = datetime.datetime.now() - start_time
     time = "'{0:=0.02f}'".format(float(delta.seconds) + (float(delta.microseconds)/1000000.0))
     log_file.write("log.append([" + time + ",\"# " + text + "\"])\n")
@@ -58,14 +59,16 @@ def log(text):
         sys.stdout.write(text + "\n")
         sys.stdout.flush()
 
+
 def exception(exc,msg=None):
     if msg == None : msg = "Exception"
     log(msg + str(exc))
     for l in traceback.format_exc(exc).split("\n") :
-        log("   "+l)        
+        log("   "+l)
 
 
 def log_packet(sender, packet):
+    initialize()
     delta = datetime.datetime.now() - start_time
     time = "'{0:=0.02f}'".format(float(delta.seconds) + (float(delta.microseconds)/1000000.0))
     text = "'" + type(packet).__name__ + "', '" + sender + "', " + str(packet.to_dict()) + "]"
