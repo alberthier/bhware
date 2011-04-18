@@ -9,18 +9,19 @@ from definitions import *
 
 
 def get_last_remote_logfile():
-    drunkstar_ip = "192.168.2.201"
+    drunkstar_ip = "192.168.1.42"
     drunkstar_bhware = "/root/logs"
-    ls = subprocess.Popen(["ssh", "root@{0}".format(drunkstar_ip), "ls {0}".format(drunkstar_bhware)], stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+    ls = subprocess.Popen(["ssh", "root@{0}".format(drunkstar_ip), "ls {0}/brewerylog*".format(drunkstar_bhware)], stdout = subprocess.PIPE, stderr = subprocess.PIPE)
     (out, err) = ls.communicate()
     logs = out.split("\n")
     if len(logs) != 0:
         logs.sort()
         log = logs[-1]
+        print log
         if not os.path.exists("/tmp/bh"):
             os.makedirs("/tmp/bh")
-        local_file = "/tmp/bh/remote_{0}".format(log)
-        subprocess.call(["scp", "root@{0}:{1}/{2}".format(drunkstar_ip, drunkstar_bhware, log), local_file])
+        local_file = "/tmp/bh/remote_{0}".format(os.path.basename(log))
+        subprocess.call(["scp", "root@{0}:{1}".format(drunkstar_ip, log), local_file])
         return local_file
 
     return None
