@@ -17,7 +17,7 @@ from definitions import *
 class DefaultStateMachine(statemachine.StateMachine):
 
     def __init__(self):
-        statemachine.StateMachine.__init__(self, WaitDeviceReady)
+        statemachine.StateMachine.__init__(self, WaitDeviceReady())
 
 
 
@@ -25,7 +25,7 @@ class DefaultStateMachine(statemachine.StateMachine):
 class WaitDeviceReady(statemachine.State):
 
     def on_device_ready(self, team):
-        self.switch_to_state(WaitStart)
+        self.switch_to_state(WaitStart())
 
 
 
@@ -33,14 +33,14 @@ class WaitDeviceReady(statemachine.State):
 class WaitStart(statemachine.State):
 
     def on_start(self, team):
-        self.switch_to_state(WaitFirstKeepAlive)
+        self.switch_to_state(WaitFirstKeepAlive())
 
 
 
 class WaitFirstKeepAlive(statemachine.State):
 
     def on_keep_alive(self, current_pose, match_started, match_time):
-        self.switch_to_state(TestHomologationWorld)
+        self.switch_to_state(TestHomologationWorld())
 
 
 
@@ -75,7 +75,7 @@ class GotoFieldMove(statemachine.State):
 
 
     def on_goto_finished(self, reason, pose):
-        self.switch_to_state(GotoFieldRotate)
+        self.switch_to_state(GotoFieldRotate())
 
 
 
@@ -89,7 +89,7 @@ class GotoFieldRotate(statemachine.State):
 
 
     def on_goto_finished(self, reason, pose):
-        self.switch_to_state(GotoFieldMove2)
+        self.switch_to_state(GotoFieldMove2())
 
 
 
@@ -100,7 +100,7 @@ class GotoFieldMove2(statemachine.State):
 
 
     def on_goto_finished(self, reason, pose):
-        self.switch_to_state(GotoFieldRotate2)
+        self.switch_to_state(GotoFieldRotate2())
 
 
 
@@ -114,7 +114,7 @@ class GotoFieldRotate2(statemachine.State):
 
 
     def on_goto_finished(self, reason, pose):
-        self.switch_to_state(Moving)
+        self.switch_to_state(Moving())
 
 
 
@@ -128,7 +128,7 @@ class Rotate(statemachine.State):
 
 
     def on_goto_finished(self, reason, pose):
-        self.switch_to_state(RotateQ1)
+        self.switch_to_state(RotateQ1())
 
 
 class RotateQ1(statemachine.State):
@@ -138,7 +138,7 @@ class RotateQ1(statemachine.State):
 
 
     def on_goto_finished(self, reason, pose):
-        self.switch_to_state(RotateQ2)
+        self.switch_to_state(RotateQ2())
 
 
 class RotateQ2(statemachine.State):
@@ -148,7 +148,7 @@ class RotateQ2(statemachine.State):
 
 
     def on_goto_finished(self, reason, pose):
-        self.switch_to_state(RotateQ3)
+        self.switch_to_state(RotateQ3())
 
 
 class RotateQ3(statemachine.State):
@@ -158,7 +158,7 @@ class RotateQ3(statemachine.State):
 
 
     def on_goto_finished(self, reason, pose):
-        self.switch_to_state(RotateQ4)
+        self.switch_to_state(RotateQ4())
 
 
 class RotateQ4(statemachine.State):
@@ -168,7 +168,7 @@ class RotateQ4(statemachine.State):
 
 
     def on_goto_finished(self, reason, pose):
-        self.switch_to_state(RotateQ1)
+        self.switch_to_state(RotateQ1())
 
 
 class Moving(statemachine.State):
@@ -178,4 +178,4 @@ class Moving(statemachine.State):
 
 
     def on_goto_finished(self, reason, pose):
-        self.switch_to_state(Rotate)
+        self.switch_to_state(Rotate())

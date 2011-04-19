@@ -22,8 +22,8 @@ def instantiate_state_machine(state_machine_name, eventloop):
 
 class StateMachine(object):
 
-    def __init__(self, start_state_ctor, *args):
-        self.state = start_state_ctor(*args)
+    def __init__(self, start_state):
+        self.state = start_state
         self.state.fsm = self
         self.event_loop = None
         self.sub_fsm = None
@@ -43,16 +43,16 @@ class State(object):
         self.fsm = None
 
 
-    def switch_to_state(self, new_state_ctor, *args):
+    def switch_to_state(self, new_state):
         self.fsm.state.on_exit()
-        self.fsm.state = new_state_ctor(*args)
+        self.fsm.state = new_state
         logger.log("Switching to state {0}".format(self.fsm.state.__class__.__name__))
         self.fsm.state.fsm = self.fsm
         self.fsm.state.on_enter()
 
 
-    def switch_to_machine(self, new_state_machine_ctor, *args):
-        self.fsm.sub_fsm = new_state_machine_ctor(*args)
+    def switch_to_machine(self, new_state_machine):
+        self.fsm.sub_fsm = new_state_machine
         self.fsm.sub_fsm.event_loop = self.fsm.event_loop
         self.fsm.sub_fsm.start()
 
@@ -62,7 +62,7 @@ class State(object):
         while parent_fsm.sub_fsm != self:
             parent_fsm = parent_fsm.sub_fsm
         self.on_exit()
-        parent_fsm.state.on_exit_machine(self.fsm.name)
+        parent_fsm.state.on_exit_machine(self.fsm)
         parent_fsm.sub_fsm = None
 
 
@@ -81,8 +81,10 @@ class State(object):
     def on_exit(self):
         pass
 
+
     def on_resettle(self):
         pass
+
 
     def on_exit_machine(self, machine_name):
         pass
@@ -133,7 +135,7 @@ class State(object):
 class Timer(StateMachine):
 
     def __init__(self, miliseconds):
-        StateMachine.__init__(self, TimerState, name = None)
+        StateMachine.__init__(self, TimerState(), name = None)
         self.end_time = datetime.datetime.now() + datetime.timedelta(0, 0, 0, miliseconds)
         if name != None:
             self.name = name

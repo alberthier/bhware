@@ -14,7 +14,7 @@ from definitions import *
 class TestStateMachine(statemachine.StateMachine):
 
     def __init__(self):
-        statemachine.StateMachine.__init__(self, TestStartState)
+        statemachine.StateMachine.__init__(self, TestStartState())
         self.global_data = "global data"
 
 
@@ -36,7 +36,7 @@ class TestStartState(statemachine.State):
 
 
     def on_start(self, team):
-        self.switch_to_state(TestEndState)
+        self.switch_to_state(TestEndState())
 
 
 
@@ -52,40 +52,7 @@ class TestEndState(statemachine.State):
         self.fsm.global_data = "finished"
 
 
-########################################################################
 
-
-class ArgsStateMachine(statemachine.StateMachine):
-
-    def __init__(self):
-        statemachine.StateMachine.__init__(self, ArgsState1, "test", 1, True)
-
-
-
-
-class ArgsState1(statemachine.State):
-
-    def __init__(self, arg1, arg2, arg3):
-        statemachine.State.__init__(self)
-        self.arg1 = arg1
-        self.arg2 = arg2
-        self.arg3 = arg3
-
-    def on_goto_started(self):
-        self.switch_to_state(ArgsState2, "hello", "world")
-
-
-
-
-class ArgsState2(statemachine.State):
-
-    def __init__(self, arg1, arg2):
-        statemachine.State.__init__(self)
-        self.arg1 = arg1
-        self.arg2 = arg2
-
-
-########################################################################
 
 
 class StateMachineTestCase(unittest.TestCase):
@@ -108,6 +75,41 @@ class StateMachineTestCase(unittest.TestCase):
         self.fsm.state.on_start(TEAM_RED)
         self.assertTrue(isinstance(self.fsm.state, TestEndState))
         self.assertEqual(self.fsm.global_data, "finished")
+
+
+########################################################################
+
+
+class ArgsStateMachine(statemachine.StateMachine):
+
+    def __init__(self):
+        statemachine.StateMachine.__init__(self, ArgsState1("test", 1, True))
+
+
+
+
+
+class ArgsState1(statemachine.State):
+
+    def __init__(self, arg1, arg2, arg3):
+        statemachine.State.__init__(self)
+        self.arg1 = arg1
+        self.arg2 = arg2
+        self.arg3 = arg3
+
+    def on_goto_started(self):
+        self.switch_to_state(ArgsState2("hello", "world"))
+
+
+
+
+
+class ArgsState2(statemachine.State):
+
+    def __init__(self, arg1, arg2):
+        statemachine.State.__init__(self)
+        self.arg1 = arg1
+        self.arg2 = arg2
 
 
 
