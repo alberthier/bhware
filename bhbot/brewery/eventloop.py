@@ -182,6 +182,7 @@ class EventLoop(object):
             fsm = self.root_fsm
             while fsm.sub_fsm != None:
                 fsm = fsm.sub_fsm
+            return fsm
         return None
 
 
