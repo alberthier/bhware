@@ -61,7 +61,7 @@ def log(text):
 
 
 def exception(exc,msg=None):
-    if msg == None : msg = "Exception"
+    if msg == None : msg = "Exception "
     log(msg + str(exc))
     for l in traceback.format_exc(exc).split("\n") :
         log("   "+l)
