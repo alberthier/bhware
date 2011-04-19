@@ -110,7 +110,7 @@ class EventLoop(object):
                 except socket.error as err:
                     if err.errno in [errno.EAGAIN, errno.EINTR]:
                         return
-                    logger.format_exc(err)
+                    logger.exception(err)
                     return
             else:
                 try:
@@ -122,7 +122,7 @@ class EventLoop(object):
                     except socket.error as err:
                         if err.errno in [errno.EAGAIN, errno.EINTR]:
                             return
-                        logger.format_exc(err)
+                        logger.exception(err)
                         return
                     if len(channel.buffer) == channel.packet.MAX_SIZE:
                         # A complete packet has been received, notify the state machine
@@ -163,7 +163,7 @@ class EventLoop(object):
                             self.get_current_fsm().state.on_resettle()
                         channel.packet = None
                 except Exception, e:
-                    logger.format_exc(e)
+                    logger.exception(e)
 
     def send_packet(self, packet):
         if self.root_fsm != None:
