@@ -129,7 +129,7 @@ class TeamPose(Pose) :
             self.current_team = team
             # self.x = (Cell.total_cell_x_offset + Cell.offset_x) - self.x
             if not tools.quasi_null(self.x) and not tools.quasi_null(self.y) :
-                self.x = terrain_width - self.x
+                self.y = terrain_width - self.y
             # self.x = Cell.offset_x + (Cell.total_cell_x_offset / 2) + (Cell.total_cell_x_offset / 2 - (self.x - Cell.offset_x) )
             if self.angle is not None : self.angle = mirror_angle_y(self.angle)        
 

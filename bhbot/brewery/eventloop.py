@@ -8,7 +8,6 @@ import socket
 import imp
 import inspect
 import time
-import traceback
 import errno
 if config.with_serial : import serial
 
@@ -83,8 +82,6 @@ class RobotControlDeviceChannel(asyncore.dispatcher_with_send):
         self.close_requested = True
 
 
-import traceback
-
 class EventLoop(object):
 
     def __init__(self, state_machine_name):
@@ -113,8 +110,7 @@ class EventLoop(object):
                 except socket.error as err:
                     if err.errno in [errno.EAGAIN, errno.EINTR]:
                         return
-                    for line in traceback.format_exc().strip().split('\n'):
-                        logger.log(line)
+                    logger.format_exc(err)
                     return
             else:
                 try:
@@ -126,8 +122,7 @@ class EventLoop(object):
                     except socket.error as err:
                         if err.errno in [errno.EAGAIN, errno.EINTR]:
                             return
-                        for line in traceback.format_exc().strip().split('\n'):
-                            logger.log(line)
+                        logger.format_exc(err)
                         return
                     if len(channel.buffer) == channel.packet.MAX_SIZE:
                         # A complete packet has been received, notify the state machine
@@ -164,11 +159,11 @@ class EventLoop(object):
                             self.get_current_fsm().state.on_piece_stored(channel.packet.piece_count)
                         elif isinstance(channel.packet, packets.TurretDetect):
                             self.get_current_fsm().state.on_turret_detect(channel.packet.angle)
+                        elif isinstance(channel.packet, packets.Resettle):
+                            self.get_current_fsm().state.on_resettle()
                         channel.packet = None
-                except:
-                    for line in traceback.format_exc().strip().split('\n'):
-                        logger.log(line)
-
+                except Exception, e:
+                    logger.format_exc(e)
 
     def send_packet(self, packet):
         if self.root_fsm != None:
