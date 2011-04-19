@@ -148,6 +148,8 @@ class RobotController(object):
             self.send_packet(packet)
         elif isinstance(packet, packets.SimulatorData):
             self.view.handle_led(packet.leds)
+        else :
+            print "Unhandled packet type : ",packet.__class__.__name__
 
 
     def send_packet(self, packet):
