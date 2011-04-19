@@ -59,22 +59,26 @@ class Robot(object):
     def rotate(self, da):
         self.goto(None, None, self.pose.angle + da, DIRECTION_FORWARD)
 
-    def look_at(self, x,y):
-        """Rotate to look at position x,y"""
-        pass
 
     def deploy(self):
         self.event_loop.send_packet(packets.Deployment())
 
+
     def rotate_to(self, angle):
         self.goto(None, None, angle, DIRECTION_FORWARD)
+
 
     def goto_pose(self, pose) :
         if hasattr(pose,"change_team") : pose.change_team(self.team)
         return self.goto( *pose.get_values())
 
+
     def goto(self, x, y, angle, direction):
         packet = packets.Goto()
+        if x == None:
+            x = 0.0
+        if y == None:
+            y = 0.0
         if not tools.quasi_null(x) or not tools.quasi_null(y) :
             packet.movement = MOVEMENT_MOVE
         else:
