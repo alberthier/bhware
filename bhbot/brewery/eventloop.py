@@ -9,7 +9,6 @@ import imp
 import inspect
 import time
 import errno
-if config.with_serial : import serial
 
 import logger
 import packets
@@ -25,6 +24,7 @@ import figuredetector
 class TurretChannel(asyncore.file_dispatcher):
 
     def __init__(self, serial_port_path, serial_port_speed, eventloop):
+        import serial
         asyncore.file_dispatcher.__init__(self, serial.Serial(serial_port_path, serial_port_speed))
         self.eventloop = eventloop
         self.buffer = ""
