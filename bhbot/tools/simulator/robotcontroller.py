@@ -145,7 +145,7 @@ class RobotController(object):
         elif isinstance(packet, packets.Stop):
             pass
         elif isinstance(packet, packets.Resettle):
-            pass
+            self.send_packet(packet)
         elif isinstance(packet, packets.SimulatorData):
             self.view.handle_led(packet.leds)
 
