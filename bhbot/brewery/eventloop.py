@@ -88,6 +88,7 @@ class EventLoop(object):
         self.robot_control_channel = None
         self.turret_channel = None
         self.root_state = statemachine.State()
+        self.root_state.event_loop = self
         self.robot = robot.Robot(self)
         self.state_machine_name = state_machine_name
         self.figure_detector = figuredetector.FigureDetector()
@@ -112,7 +113,7 @@ class EventLoop(object):
                 except socket.error as err:
                     if err.errno in [errno.EAGAIN, errno.EINTR]:
                         return
-                    logger.format_exc(err)
+                    logger.exception(err)
                     return
             else:
                 try:
@@ -124,7 +125,7 @@ class EventLoop(object):
                     except socket.error as err:
                         if err.errno in [errno.EAGAIN, errno.EINTR]:
                             return
-                        logger.format_exc(err)
+                        logger.exception(err)
                         return
                     if len(channel.buffer) == channel.packet.MAX_SIZE:
                         # A complete packet has been received, notify the state machine
@@ -165,7 +166,7 @@ class EventLoop(object):
                             self.get_current_state().on_resettle()
                         channel.packet = None
                 except Exception, e:
-                    logger.format_exc(e)
+                    logger.exception(e)
 
 
     def send_packet(self, packet):
@@ -183,12 +184,12 @@ class EventLoop(object):
 
 
     def create_fsm(self):
-        self.root_state.sub_state = statemachine.instantiate_state_machine(self.state_machine_name, self)
-        if not self.root_state.sub_state :
+        state = statemachine.instantiate_state_machine(self.state_machine_name, self)
+        if state == None :
             logger.log("No 'Main' state machine found in '{0}'".format(state_machine_file))
             self.stop()
         else:
-            self.root_state.sub_state.on_enter()
+            self.root_state.switch_to_substate(state)
             self.send_packet(packets.ControllerReady())
 
 

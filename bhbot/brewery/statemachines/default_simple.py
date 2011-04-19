@@ -136,36 +136,49 @@ class TeamPose(Pose) :
 class DefaultStateMachine(statemachine.StateMachine):
     """Default state machine"""
     def __init__(self):
-        statemachine.StateMachine.__init__(self, WaitDeviceReady)
+        statemachine.StateMachine.__init__(self, WaitDeviceReady())
 
 class WaitDeviceReady(statemachine.State):
     """Waiting for PIC Ready"""
     def on_device_ready(self, team):
-        self.switch_to_state(WaitStart)
+        self.switch_to_state(WaitStart())
 
 
 class WaitStart(statemachine.State):
     """Waiting for start"""
     def on_start(self, team):
-        self.switch_to_state(WaitFirstKeepAlive)
+        self.switch_to_state(WaitFirstKeepAlive())
 
 class WaitFirstKeepAlive(statemachine.State):
     def on_keep_alive(self, current_pose, match_started, match_time):
-        self.switch_to_state(Resettle)
+        self.switch_to_state(Sequence(Resettle(0.1685,0.0,math.pi/2)
+                                        ,Homologation()
+                                        )
+                            )
 
 class Resettle(statemachine.State):
-    def __init__(self):
+    def __init__(self,abscissa, ordinate, angle):
         self.resettle_count = 0
+        self.abscissa = abscissa
+        self.ordinate = ordinate
+        self.angle = angle
 
     def on_enter(self):
-        self.robot().resettle( AXIS_ABSCISSA, 0.1685, math.pi/2 ) #todo : improve
+        self.robot().resettle( AXIS_ABSCISSA, self.abscissa, 0.0 )
 
     def on_resettle(self):
         if self.resettle_count == 0 :
-            self.robot().resettle( AXIS_ORDINATE, 0.0, math.pi/2 )
+            self.robot().resettle( AXIS_ORDINATE, self.ordinate, self.angle )
             self.resettle_count+=1
         else:
-            self.switch_to_state(HomologationStart)
+            self.exit_machine()
+
+class Homologation(statemachine.State):
+    def on_enter(self):
+        self.switch_to_substate(HomologationStart())
+
+    def on_exit_substate(self, inst):
+        self.switch_to_state(HomologationEnd())
 
 
 class HomologationStart(statemachine.State) :
@@ -173,11 +186,29 @@ class HomologationStart(statemachine.State) :
     def __init__(self):
         statemachine.State.__init__(self)
     
-    def on_enter(self):
-        self.fsm.points = deque()
+    def on_enter(self):        
+        self.switch_to_substate(Sequence( TrajectoryWalk(homologation_trajectory[0])
+                                        , Deploy()
+                                        , TrajectoryWalk(homologation_trajectory[1:])
+                                        )
+                                )
+
+    def on_exit_substate(self, st):
+        self.switch_to_state(HomologationEnd())
+
+class TrajectoryWalk(statemachine.State):
+    """Walk a path"""
+
+    def __init__(self,points):
+        statemachine.State.__init__(self)
+        self.points = self.load_points(points)
+        self.trajectory_complete = False
+
+    def load_points(self,points):
+        ret = deque()
         lk = as_dict()
         try :
-            for vals in homologation_trajectory :
+            for vals in points :
                 angle = None
                 x,y=0.0,0.0
                 dir_=DIRECTION_FORWARD
@@ -194,16 +225,12 @@ class HomologationStart(statemachine.State) :
                 a=lookup_defs("ANGLE",angle) if angle else None
                 d=lookup_defs("DIRECTION",dir_) if dir_ else None
                 logger.log("Traj : {0},{1},{2},{3}".format(x,y,a,d))
-                self.fsm.points.append(TeamPose(x,y,angle,dir_))
+                ret.points.append(TeamPose(x,y,angle,dir_))
         except Exception, e :
             logger.log( "Error decoding trajectory '{0}' : Exception is {1}".format(str(vals),str(e)))
             logger.exception(e)
-        logger.log("Points : {0}".format(", ".join(str(p) for p in self.fsm.points)))
-        self.fsm.successful_exit_state = HomologationEnd
-        self.switch_to_state(TrajectoryWalk)
-
-class TrajectoryWalk(statemachine.State):
-    """Walk a path"""
+        logger.log("Points : {0}".format(", ".join(str(p) for p in ret)))
+        return ret
 
     def on_enter(self):
         self.robot().goto_pose(self.fsm.points[0])
@@ -213,11 +240,15 @@ class TrajectoryWalk(statemachine.State):
         if len(self.fsm.points) > 0 :
             self.robot().goto_pose(self.fsm.points[0])
         else:
-            self.switch_to_state(self.fsm.successful_exit_state)
+            self.trajectory_complete = True
+            self.exit_state()
 
     def on_evit_detected(self):
-        self.switch_to_state(self.fsm.successful_exit_state)
+        self.exit_state()
+
     def on_turret_detect(self, detect_angle):
+        # TODO : wait
+
         # self.wait(time=5
         #          ,success=self.continue_path
         #          ,failure=lambda: self.fsm.exit()
