@@ -14,36 +14,11 @@ def instantiate_state_machine(state_machine_name, eventloop):
     state_machine_file = os.path.join(state_machines_dir, state_machine_name + ".py")
     state_machine_module = imp.load_source(state_machine_name, state_machine_file)
     for (item_name, item_type) in inspect.getmembers(state_machine_module):
-        if inspect.isclass(item_type) and issubclass(item_type, StateMachine):
-            fsm = item_type()
-            fsm.event_loop = eventloop
+        if inspect.isclass(item_type) and issubclass(item_type, State) and item_name == "Main":
+            root_state = item_type()
+            root_state.event_loop = eventloop
             logger.log("Successfully instatiated state machine '{0}' from file '{1}'".format(item_name, state_machine_file))
-            return fsm
-
-
-
-
-class StateMachine(object):
-
-    def __init__(self, start_state):
-        self.state = start_state
-        self.state.fsm = self
-        self.event_loop = None
-        self.sub_fsm = None
-        self.name = self.__class__.__name__
-
-
-    def start(self):
-        logger.log("Starting state machine '{0}'".format(self.name))
-        self.state.on_enter()
-
-
-
-
-class SingleStateMachine(StateMachine):
-
-    def __init__(self, start_state):
-        StateMachine.__init__(self, start_state)
+            return root_state
 
 
 
@@ -51,51 +26,41 @@ class SingleStateMachine(StateMachine):
 class State(object):
 
     def __init__(self):
-        self.fsm = None
+        self.event_loop = None
+        self.sub_state = None
+        self.parent_state = None
 
 
     def switch_to_state(self, new_state):
-        self.fsm.state.on_exit()
-        self.fsm.state = new_state
-        logger.log("Switching to state {0}".format(self.fsm.state.__class__.__name__))
-        self.fsm.state.fsm = self.fsm
-        self.fsm.state.on_enter()
-
-
-    def switch_to_machine(self, new_state_machine):
-        self.fsm.sub_fsm = new_state_machine
-        self.fsm.sub_fsm.event_loop = self.fsm.event_loop
-        self.fsm.sub_fsm.start()
+        self.on_exit()
+        new_state.event_loop = self.event_loop
+        new_state.sub_state = None
+        new_state.parent_state = self.parent_state
+        self.parent_state.sub_state = new_state
+        logger.log("Switching to state {0}".format(new_state.__class__.__name__))
+        new_state.on_enter()
 
 
     def switch_to_substate(self, new_state):
-        self.fsm.sub_fsm = SingleStateMachine(new_state)
-        self.fsm.sub_fsm.event_loop = self.fsm.event_loop
-        self.fsm.sub_fsm.start()
-
-
-    def exit_machine(self):
-        parent_fsm = self.fsm.event_loop.fsm
-        while parent_fsm.sub_fsm != self:
-            parent_fsm = parent_fsm.sub_fsm
-        self.on_exit()
-        if isinstance(self.fsm, SingleStateMachine):
-            parent_fsm.state.on_exit_substate(self)
-        else:
-            parent_fsm.state.on_exit_machine(self.fsm)
-        parent_fsm.sub_fsm = None
+        new_state.event_loop = self.event_loop
+        new_state.sub_state = None
+        new_state.parent_state = self
+        self.sub_state = new_state
+        logger.log("Switching to sub-state {0}".format(new_state.__class__.__name__))
+        new_state.on_enter()
 
 
     def exit_substate(self):
-        self.exit_machine()
+        self.parent_state.on_exit_substate(self)
+        self.parent_state.sub_state = None
 
 
     def send_packet(self, packet):
-        self.fsm.event_loop.send_packet(packet)
+        self.event_loop.send_packet(packet)
 
 
     def robot(self):
-        return self.fsm.event_loop.robot
+        return self.event_loop.robot
 
 
     def on_enter(self):
@@ -110,11 +75,7 @@ class State(object):
         pass
 
 
-    def on_exit_machine(self, machine):
-        pass
-
-
-    def on_exit_substate(self, state):
+    def on_exit_substate(self, substate):
         pass
 
 
@@ -160,22 +121,16 @@ class State(object):
 
 
 
-class Timer(StateMachine):
+class Timer(State):
 
     def __init__(self, miliseconds):
-        StateMachine.__init__(self, TimerState(), name = None)
+        State.__init__(self)
         self.end_time = datetime.datetime.now() + datetime.timedelta(0, 0, 0, miliseconds)
-        if name != None:
-            self.name = name
 
-
-
-
-class TimerState(State):
 
     def on_keep_alive(self, current_pose, match_started, match_time):
         if datetime.datetime.now() > self.end_time:
-            self.exit_machine()
+            self.exit_substate()
 
 
 
@@ -191,11 +146,14 @@ class Sequence(State):
 
 
     def on_enter(self):
-        if len(self.substates) == 0:
-            self.exit()
-        else:
-            self.switch_to_substate(self.substates.popleft())
-
+        self.process_next_substate()
 
     def on_exit_substate(self):
-        self.on_enter()
+        self.process_next_substate()
+
+
+    def process_next_substate(self):
+        if len(self.substates) == 0:
+            self.exit_substate()
+        else:
+            self.switch_to_substate(self.substates.popleft())

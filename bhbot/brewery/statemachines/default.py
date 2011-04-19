@@ -14,15 +14,7 @@ from definitions import *
 
 
 
-class DefaultStateMachine(statemachine.StateMachine):
-
-    def __init__(self):
-        statemachine.StateMachine.__init__(self, WaitDeviceReady())
-
-
-
-
-class WaitDeviceReady(statemachine.State):
+class Main(statemachine.State):
 
     def on_device_ready(self, team):
         self.switch_to_state(WaitStart())
