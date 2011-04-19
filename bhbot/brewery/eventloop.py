@@ -164,6 +164,8 @@ class EventLoop(object):
                             self.get_current_fsm().state.on_piece_stored(channel.packet.piece_count)
                         elif isinstance(channel.packet, packets.TurretDetect):
                             self.get_current_fsm().state.on_turret_detect(channel.packet.angle)
+                        elif isinstance(channel.packet, packets.Resettle):
+                            self.get_current_fsm().state.on_resettle()
                         channel.packet = None
                 except:
                     for line in traceback.format_exc().strip().split('\n'):
