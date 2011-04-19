@@ -6,6 +6,7 @@ import os
 import imp
 import inspect
 import datetime
+from collections import deque
 
 
 def instantiate_state_machine(state_machine_name, eventloop):
@@ -18,6 +19,8 @@ def instantiate_state_machine(state_machine_name, eventloop):
             fsm.event_loop = eventloop
             logger.log("Successfully instatiated state machine '{0}' from file '{1}'".format(item_name, state_machine_file))
             return fsm
+
+
 
 
 class StateMachine(object):
@@ -33,6 +36,14 @@ class StateMachine(object):
     def start(self):
         logger.log("Starting state machine '{0}'".format(self.name))
         self.state.on_enter()
+
+
+
+
+class SingleStateMachine(StateMachine):
+
+    def __init__(self, start_state):
+        StateMachine.__init__(self, start_state)
 
 
 
@@ -57,13 +68,26 @@ class State(object):
         self.fsm.sub_fsm.start()
 
 
+    def switch_to_substate(self, new_state):
+        self.fsm.sub_fsm = SingleStateMachine(new_state)
+        self.fsm.sub_fsm.event_loop = self.fsm.event_loop
+        self.fsm.sub_fsm.start()
+
+
     def exit_machine(self):
         parent_fsm = self.fsm.event_loop.fsm
         while parent_fsm.sub_fsm != self:
             parent_fsm = parent_fsm.sub_fsm
         self.on_exit()
-        parent_fsm.state.on_exit_machine(self.fsm)
+        if isinstance(self.fsm, SingleStateMachine):
+            parent_fsm.state.on_exit_substate(self)
+        else:
+            parent_fsm.state.on_exit_machine(self.fsm)
         parent_fsm.sub_fsm = None
+
+
+    def exit_substate(self):
+        self.exit_machine()
 
 
     def send_packet(self, packet):
@@ -86,7 +110,11 @@ class State(object):
         pass
 
 
-    def on_exit_machine(self, machine_name):
+    def on_exit_machine(self, machine):
+        pass
+
+
+    def on_exit_substate(self, state):
         pass
 
 
@@ -148,3 +176,26 @@ class TimerState(State):
     def on_keep_alive(self, current_pose, match_started, match_time):
         if datetime.datetime.now() > self.end_time:
             self.exit_machine()
+
+
+
+
+class Sequence(State):
+
+    def __init__(self, *args):
+        self.substates = deque(args)
+
+
+    def add(self, substate):
+        self.substates.append(substate)
+
+
+    def on_enter(self):
+        if len(self.substates) == 0:
+            self.exit()
+        else:
+            self.switch_to_substate(self.substates.popleft())
+
+
+    def on_exit_substate(self):
+        self.on_enter()
