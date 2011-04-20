@@ -75,3 +75,71 @@ class StateMachineTestCase(unittest.TestCase):
 
 ########################################################################
 
+
+class TestSubState1(statemachine.State):
+
+    def on_device_busy(self):
+        self.finished_substate = None
+        self.switch_to_substate(TestSubState2())
+
+
+    def on_exit_substate(self, substate):
+        self.finished_substate = substate.__class__.__name__
+
+
+
+
+
+class TestSubState2(statemachine.State):
+
+    def on_device_busy(self):
+        self.finished_substate = None
+        self.switch_to_substate(TestSubState3())
+
+
+    def on_exit_substate(self, substate):
+        self.finished_substate = substate.__class__.__name__
+
+
+    def on_device_ready(self, team):
+        self.exit_substate()
+
+
+
+
+
+class TestSubState3(statemachine.State):
+
+    def on_device_ready(self, team):
+        self.exit_substate()
+
+
+
+
+class SubStateStateTestCase(unittest.TestCase):
+
+    def setUp(self):
+        shared_data = {}
+        self.root_state = statemachine.State()
+        self.root_state.switch_to_substate(TestSubState1())
+
+
+    def get_current_state(self):
+        state = self.root_state
+        while state.sub_state != None:
+            state = state.sub_state
+        return state
+
+
+    def test_chain(self):
+        self.assertTrue(isinstance(self.get_current_state(), TestSubState1))
+        self.get_current_state().on_device_busy()
+        self.assertTrue(isinstance(self.get_current_state(), TestSubState2))
+        self.get_current_state().on_device_busy()
+        self.assertTrue(isinstance(self.get_current_state(), TestSubState3))
+        self.get_current_state().on_device_ready(TEAM_RED)
+        self.assertTrue(isinstance(self.get_current_state(), TestSubState2))
+        self.assertEqual(self.get_current_state().finished_substate, "TestSubState3")
+        self.get_current_state().on_device_ready(TEAM_RED)
+        self.assertTrue(isinstance(self.get_current_state(), TestSubState1))
+        self.assertEqual(self.get_current_state().finished_substate, "TestSubState2")

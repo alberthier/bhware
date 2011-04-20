@@ -71,11 +71,11 @@ class State(object):
         pass
 
 
-    def on_resettle(self):
+    def on_exit_substate(self, substate):
         pass
 
 
-    def on_exit_substate(self, substate):
+    def on_resettle(self):
         pass
 
 
