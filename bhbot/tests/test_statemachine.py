@@ -11,24 +11,18 @@ from definitions import *
 ########################################################################
 
 
-class TestStateMachine(statemachine.StateMachine):
-
-    def __init__(self):
-        statemachine.StateMachine.__init__(self, TestStartState())
-        self.global_data = "global data"
-
-
-
 
 
 class TestStartState(statemachine.State):
 
-    def __init__(self):
+    def __init__(self, shared_data):
         statemachine.State.__init__(self)
         self.state_data = None
+        self.shared_data = shared_data
 
     def on_enter(self):
         self.state_data = "on enter"
+        self.shared_data["key1"] = "value1"
 
 
     def on_device_ready(self, team):
@@ -36,7 +30,7 @@ class TestStartState(statemachine.State):
 
 
     def on_start(self, team):
-        self.switch_to_state(TestEndState())
+        self.switch_to_state(TestEndState(self.shared_data))
 
 
 
@@ -44,12 +38,13 @@ class TestStartState(statemachine.State):
 
 class TestEndState(statemachine.State):
 
-    def __init__(self):
+    def __init__(self, shared_data):
         statemachine.State.__init__(self)
+        self.shared_data = shared_data
 
 
     def on_enter(self):
-        self.fsm.global_data = "finished"
+        self.shared_data["key1"] = "finished"
 
 
 
@@ -58,77 +53,25 @@ class TestEndState(statemachine.State):
 class StateMachineTestCase(unittest.TestCase):
 
     def setUp(self):
-        self.fsm = TestStateMachine()
-        self.fsm.start()
+        shared_data = {}
+        self.state = statemachine.State()
+        self.state.switch_to_substate(TestStartState(shared_data))
 
     def test_init(self):
-        self.assertTrue(isinstance(self.fsm.state, TestStartState))
-        self.assertEqual(self.fsm.global_data, "global data")
-        self.assertEqual(self.fsm.state.state_data, "on enter")
+        self.assertTrue(isinstance(self.state.sub_state, TestStartState))
+        self.assertEqual(self.state.sub_state.shared_data["key1"], "value1")
+        self.assertEqual(self.state.sub_state.state_data, "on enter")
 
     def test_first_event(self):
-        self.fsm.state.on_device_ready(TEAM_RED)
-        self.assertEqual(self.fsm.state.state_data, "device ready")
+        self.state.sub_state.on_device_ready(TEAM_RED)
+        self.assertEqual(self.state.sub_state.state_data, "device ready")
 
     def test_transition(self):
-        self.fsm.state.on_device_ready(TEAM_RED)
-        self.fsm.state.on_start(TEAM_RED)
-        self.assertTrue(isinstance(self.fsm.state, TestEndState))
-        self.assertEqual(self.fsm.global_data, "finished")
+        self.state.sub_state.on_device_ready(TEAM_RED)
+        self.state.sub_state.on_start(TEAM_RED)
+        self.assertTrue(isinstance(self.state.sub_state, TestEndState))
+        self.assertEqual(self.state.sub_state.shared_data["key1"], "finished")
 
 
 ########################################################################
 
-
-class ArgsStateMachine(statemachine.StateMachine):
-
-    def __init__(self):
-        statemachine.StateMachine.__init__(self, ArgsState1("test", 1, True))
-
-
-
-
-
-class ArgsState1(statemachine.State):
-
-    def __init__(self, arg1, arg2, arg3):
-        statemachine.State.__init__(self)
-        self.arg1 = arg1
-        self.arg2 = arg2
-        self.arg3 = arg3
-
-    def on_goto_started(self):
-        self.switch_to_state(ArgsState2("hello", "world"))
-
-
-
-
-
-class ArgsState2(statemachine.State):
-
-    def __init__(self, arg1, arg2):
-        statemachine.State.__init__(self)
-        self.arg1 = arg1
-        self.arg2 = arg2
-
-
-
-
-
-class ArgsStateMachineTestCase(unittest.TestCase):
-
-    def setUp(self):
-        self.fsm = ArgsStateMachine()
-        self.fsm.start()
-
-    def test_init(self):
-        self.assertTrue(isinstance(self.fsm.state, ArgsState1))
-        self.assertEqual(self.fsm.state.arg1, "test")
-        self.assertEqual(self.fsm.state.arg2, 1)
-        self.assertEqual(self.fsm.state.arg3, True)
-
-    def test_first_event(self):
-        self.fsm.state.on_goto_started()
-        self.assertTrue(isinstance(self.fsm.state, ArgsState2))
-        self.assertEqual(self.fsm.state.arg1, "hello")
-        self.assertEqual(self.fsm.state.arg2, "world")
