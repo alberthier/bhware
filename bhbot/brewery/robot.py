@@ -76,10 +76,12 @@ class Robot(object):
     def goto(self, x, y, angle, direction):
         packet = packets.Goto()
         if x == None:
-            x = 0.0
+            x = self.pose.x
         if y == None:
-            y = 0.0
-        if not tools.quasi_null(x) or not tools.quasi_null(y) :
+            y = self.pose.y
+        if angle == None:
+            angle = self.pose.angle
+        if not tools.quasi_null(x - self.pose.x) or not tools.quasi_null(y - self.pose.y) :
             packet.movement = MOVEMENT_MOVE
         else:
             packet.movement = MOVEMENT_ROTATE
