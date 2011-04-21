@@ -480,26 +480,26 @@ class PieceDetected(BasePacket):
 
 
 
-class StorePiece(BasePacket):
+class StorePiece1(BasePacket):
 
     TYPE = 16
 
     def __init__(self):
         BasePacket.__init__(self, "B")
-        self.storage = STORAGE_MANDIBLE
+        self.piece_count = 0
 
 
     def deserialize(self, buf):
-        (self.storage,) = self.do_deserialize(buf)
+        (self.piece_count,) = self.do_deserialize(buf)
 
 
     def serialize(self):
-        return self.do_serialize(self.storage)
+        return self.do_serialize(self.piece_count)
 
 
 
 
-class PieceStored(BasePacket):
+class StorePiece2(BasePacket):
 
     TYPE = 17
 
@@ -518,9 +518,48 @@ class PieceStored(BasePacket):
 
 
 
-class ReleasePiece(BasePacket):
+class StorePiece3(BasePacket):
 
     TYPE = 18
+
+    def __init__(self):
+        BasePacket.__init__(self, "B")
+        self.piece_count = 0
+
+
+    def deserialize(self, buf):
+        (self.piece_count,) = self.do_deserialize(buf)
+
+
+    def serialize(self):
+        return self.do_serialize(self.piece_count)
+
+
+
+
+class ReleasePiece(BasePacket):
+
+    TYPE = 19
+
+    def __init__(self):
+        BasePacket.__init__(self, "")
+
+
+
+
+class OpenNippers(BasePacket):
+
+    TYPE = 20
+
+    def __init__(self):
+        BasePacket.__init__(self, "")
+
+
+
+
+class CloseNippers(BasePacket):
+
+    TYPE = 21
 
     def __init__(self):
         BasePacket.__init__(self, "")
@@ -580,7 +619,13 @@ class TurretDetect(BasePacket):
 
 
 
-PACKET_CLASSES = [ControllerReady, DeviceBusy, DeviceReady, Start, Goto, GotoStarted, GotoFinished, Blocked, EnableAntiBlocking, DisableAntiBlocking, KeepAlive, PositionControlConfig, Stop, Resettle, Deployment, PieceDetected, StorePiece, ReleasePiece, Reinitialize, SimulatorData, TurretDetect]
+PACKET_CLASSES = [ControllerReady, DeviceBusy, DeviceReady, Start, Goto,
+                  GotoStarted, GotoFinished, Blocked, EnableAntiBlocking,
+                  DisableAntiBlocking, KeepAlive, PositionControlConfig,
+                  Stop, Resettle, Deployment, PieceDetected, StorePiece1,
+                  StorePiece2, StorePiece3, ReleasePiece, OpenNippers,
+                  CloseNippers, Reinitialize, SimulatorData, TurretDetect]
+
 
 def create_packet(buffer):
     (type,) = struct.unpack("!B", buffer[0])

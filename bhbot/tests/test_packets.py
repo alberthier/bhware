@@ -143,7 +143,7 @@ class GotoFinishedPacketTestCase(unittest.TestCase):
 
     def test_serialization_deserialization(self):
         packet = packets.GotoFinished()
-        packet.reason = REASON_QUEEN_FOUND
+        packet.reason = REASON_PIECE_FOUND
         packet.current_pose = trajectory.Pose(20.0, 30.0, 5.5)
         buf = packet.serialize()
         packet2 = packets.GotoFinished()
@@ -398,36 +398,54 @@ class PieceDetectedPacketTestCase(unittest.TestCase):
 
 
 
-class StorePiecePacketTestCase(unittest.TestCase):
+class StorePiece1PacketTestCase(unittest.TestCase):
 
     def test_serialization_length(self):
-        packet = packets.StorePiece()
+        packet = packets.StorePiece1()
         buf = packet.serialize()
         self.assertEqual(len(buf), packet.MAX_SIZE)
 
     def test_serialization_deserialization(self):
-        packet = packets.StorePiece()
-        packet.storage = STORAGE_STOCK
+        packet = packets.StorePiece1()
+        packet.piece_count = 34
         buf = packet.serialize()
-        packet2 = packets.StorePiece()
+        packet2 = packets.StorePiece1()
         packet2.deserialize(buf)
         self.assertEqual(packet.__dict__, packet2.__dict__)
 
 
 
 
-class PieceStoredPacketTestCase(unittest.TestCase):
+class StorePiece2PacketTestCase(unittest.TestCase):
 
     def test_serialization_length(self):
-        packet = packets.PieceStored()
+        packet = packets.StorePiece2()
         buf = packet.serialize()
         self.assertEqual(len(buf), packet.MAX_SIZE)
 
     def test_serialization_deserialization(self):
-        packet = packets.PieceStored()
-        packet.piece_count = 3
+        packet = packets.StorePiece2()
+        packet.piece_count = 52
         buf = packet.serialize()
-        packet2 = packets.PieceStored()
+        packet2 = packets.StorePiece2()
+        packet2.deserialize(buf)
+        self.assertEqual(packet.__dict__, packet2.__dict__)
+
+
+
+
+class StorePiece3PacketTestCase(unittest.TestCase):
+
+    def test_serialization_length(self):
+        packet = packets.StorePiece3()
+        buf = packet.serialize()
+        self.assertEqual(len(buf), packet.MAX_SIZE)
+
+    def test_serialization_deserialization(self):
+        packet = packets.StorePiece3()
+        packet.piece_count = 64
+        buf = packet.serialize()
+        packet2 = packets.StorePiece3()
         packet2.deserialize(buf)
         self.assertEqual(packet.__dict__, packet2.__dict__)
 
@@ -445,6 +463,40 @@ class ReleasePiecePacketTestCase(unittest.TestCase):
         packet = packets.ReleasePiece()
         buf = packet.serialize()
         packet2 = packets.ReleasePiece()
+        packet2.deserialize(buf)
+        self.assertEqual(packet.__dict__, packet2.__dict__)
+
+
+
+
+class OpenNippersPacketTestCase(unittest.TestCase):
+
+    def test_serialization_length(self):
+        packet = packets.OpenNippers()
+        buf = packet.serialize()
+        self.assertEqual(len(buf), packet.MAX_SIZE)
+
+    def test_serialization_deserialization(self):
+        packet = packets.OpenNippers()
+        buf = packet.serialize()
+        packet2 = packets.OpenNippers()
+        packet2.deserialize(buf)
+        self.assertEqual(packet.__dict__, packet2.__dict__)
+
+
+
+
+class CloseNippersPacketTestCase(unittest.TestCase):
+
+    def test_serialization_length(self):
+        packet = packets.CloseNippers()
+        buf = packet.serialize()
+        self.assertEqual(len(buf), packet.MAX_SIZE)
+
+    def test_serialization_deserialization(self):
+        packet = packets.CloseNippers()
+        buf = packet.serialize()
+        packet2 = packets.CloseNippers()
         packet2.deserialize(buf)
         self.assertEqual(packet.__dict__, packet2.__dict__)
 

@@ -75,10 +75,6 @@ class State(object):
         pass
 
 
-    def on_resettle(self):
-        pass
-
-
     def on_device_busy(self):
         pass
 
@@ -95,7 +91,7 @@ class State(object):
         pass
 
 
-    def on_goto_finished(self, reason, pose):
+    def on_goto_finished(self, reason, current_pose):
         pass
 
 
@@ -103,7 +99,27 @@ class State(object):
         pass
 
 
+    def on_anti_blocking_enabled(self):
+        pass
+
+
+    def on_anti_blocking_disabled(self):
+        pass
+
+
     def on_keep_alive(self, current_pose, match_started, match_time):
+        pass
+
+
+    def on_position_control_configured(self):
+        pass
+
+
+    def on_resettled(self, axis, position, angle):
+        pass
+
+
+    def on_deployed(self):
         pass
 
 
@@ -111,7 +127,31 @@ class State(object):
         pass
 
 
-    def on_piece_stored(self, piece_count):
+    def on_piece_stored1(self, piece_count):
+        pass
+
+
+    def on_piece_stored2(self, piece_count):
+        pass
+
+
+    def on_piece_stored3(self, piece_count):
+        pass
+
+
+    def on_release_piece(self):
+        pass
+
+
+    def on_nippers_opened(self):
+        pass
+
+
+    def on_nippers_closed(self):
+        pass
+
+
+    def on_reinitialized(self):
         pass
 
 

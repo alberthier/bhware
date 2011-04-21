@@ -149,21 +149,44 @@ class EventLoop(object):
                             self.get_current_state().on_goto_finished(channel.packet.reason, channel.packet.current_pose)
                         elif isinstance(channel.packet, packets.Blocked):
                             self.get_current_state().on_blocked(channel.packet.side)
+                        elif isinstance(channel.packet, packets.EnableAntiBlocking):
+                            self.get_current_state().on_anti_blocking_enabled()
+                        elif isinstance(channel.packet, packets.DisableAntiBlocking):
+                            self.get_current_state().on_anti_blocking_disabled()
                         elif isinstance(channel.packet, packets.KeepAlive):
                             self.send_packet(channel.packet)
                             self.robot.pose = channel.packet.current_pose
                             leds.green.heartbeat_tick()
                             self.get_current_state().on_keep_alive(channel.packet.current_pose, channel.packet.match_started, channel.packet.match_time)
+                        elif isinstance(channel.packet, packets.PositionControlConfig):
+                            self.get_current_state().on_position_control_configured()
+                        elif isinstance(channel.packet, packets.Resettle):
+                            self.get_current_state().on_resettled(channel.packet.axis, channel.packet.position, channel.packet.angle)
+                        elif isinstance(channel.packet, packets.Deployment):
+                            self.get_current_state().on_deployed()
                         elif isinstance(channel.packet, packets.PieceDetected):
                             self.figure_detector.on_piece_detected(channel.packet.start_pose, channel.packet.start_distance, channel.packet.end_pose, channel.packet.end_distance, channel.packet.sensor, channel.packet.angle)
                             self.get_current_state().on_piece_detected(channel.packet.start_pose, channel.packet.start_distance, channel.packet.end_pose, channel.packet.end_distance, channel.packet.sensor, channel.packet.angle)
-                        elif isinstance(channel.packet, packets.PieceStored):
+                        elif isinstance(channel.packet, packets.StorePiece1):
                             self.robot.stored_piece_count = channel.packet.piece_count
-                            self.get_current_state().on_piece_stored(channel.packet.piece_count)
+                            self.get_current_state().on_piece_stored1(channel.packet.piece_count)
+                        elif isinstance(channel.packet, packets.StorePiece2):
+                            self.robot.stored_piece_count = channel.packet.piece_count
+                            self.get_current_state().on_piece_stored2(channel.packet.piece_count)
+                        elif isinstance(channel.packet, packets.StorePiece3):
+                            self.robot.stored_piece_count = channel.packet.piece_count
+                            self.get_current_state().on_piece_stored3(channel.packet.piece_count)
+                        elif isinstance(channel.packet, packets.ReleasePiece):
+                            self.robot.stored_piece_count = 0
+                            self.get_current_state().on_release_piece()
+                        elif isinstance(channel.packet, packets.OpenNippers):
+                            self.get_current_state().on_nippers_opened()
+                        elif isinstance(channel.packet, packets.CloseNippers):
+                            self.get_current_state().on_nippers_closed()
+                        elif isinstance(channel.packet, packets.Reinitialize):
+                            self.get_current_state().on_reinitialized()
                         elif isinstance(channel.packet, packets.TurretDetect):
                             self.get_current_state().on_turret_detect(channel.packet.angle)
-                        elif isinstance(channel.packet, packets.Resettle):
-                            self.get_current_state().on_resettle()
                         channel.packet = None
                 except Exception, e:
                     logger.exception(e)

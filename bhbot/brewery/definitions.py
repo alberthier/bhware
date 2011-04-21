@@ -36,6 +36,7 @@ enum("MOVEMENT",
     "Movement",
     MOVEMENT_ROTATE = 0,
     MOVEMENT_MOVE = 1,
+    MOVEMENT_LINE = 2
 )
 
 enum("DIRECTION",
@@ -59,9 +60,7 @@ enum("ANGLE",
 enum("REASON",
     "Goto finished reason",
     REASON_DESTINATION_REACHED = 0,
-    REASON_PAWN_FOUND = 1,
-    REASON_QUEEN_FOUND = 2,
-    REASON_KING_FOUND = 3,
+    REASON_PIECE_FOUND = 1,
 )
 
 enum("BLOCKING",
@@ -84,12 +83,6 @@ enum("SENSOR",
     SENSOR_RIGHT_TOP = 0,
     SENSOR_CENTER = 4,
     SENSOR_NONE = 5,
-)
-
-enum("STORAGE",
-    "Piece storage",
-    STORAGE_MANDIBLE = 0,
-    STORAGE_STOCK = 1,
 )
 
 enum("NODE",
