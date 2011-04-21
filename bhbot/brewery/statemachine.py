@@ -139,7 +139,7 @@ class State(object):
         pass
 
 
-    def on_release_piece(self):
+    def on_piece_released(self):
         pass
 
 
@@ -157,43 +157,3 @@ class State(object):
 
     def on_turret_detect(self, angle):
         pass
-
-
-
-
-class Timer(State):
-
-    def __init__(self, miliseconds):
-        State.__init__(self)
-        self.end_time = datetime.datetime.now() + datetime.timedelta(0, 0, 0, miliseconds)
-
-
-    def on_keep_alive(self, current_pose, match_started, match_time):
-        if datetime.datetime.now() > self.end_time:
-            self.exit_substate()
-
-
-
-
-class Sequence(State):
-
-    def __init__(self, *args):
-        self.substates = deque(args)
-
-
-    def add(self, substate):
-        self.substates.append(substate)
-
-
-    def on_enter(self):
-        self.process_next_substate()
-
-    def on_exit_substate(self):
-        self.process_next_substate()
-
-
-    def process_next_substate(self):
-        if len(self.substates) == 0:
-            self.exit_substate()
-        else:
-            self.switch_to_substate(self.substates.popleft())

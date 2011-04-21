@@ -178,7 +178,7 @@ class EventLoop(object):
                             self.get_current_state().on_piece_stored3(channel.packet.piece_count)
                         elif isinstance(channel.packet, packets.ReleasePiece):
                             self.robot.stored_piece_count = 0
-                            self.get_current_state().on_release_piece()
+                            self.get_current_state().on_piece_released()
                         elif isinstance(channel.packet, packets.OpenNippers):
                             self.get_current_state().on_nippers_opened()
                         elif isinstance(channel.packet, packets.CloseNippers):
