@@ -200,7 +200,7 @@ class RobotController(object):
                 self.goto_packet.points = self.goto_packet.points[1:]
                 if self.goto_packet.movement == MOVEMENT_ROTATE:
                     self.field_object.robot_rotation(point.angle)
-                elif self.goto_packet.movement == MOVEMENT_MOVE:
+                elif self.goto_packet.movement == MOVEMENT_LINE:
                     self.field_object.robot_move(point.x, point.y)
             else:
                 self.goto_packet = None

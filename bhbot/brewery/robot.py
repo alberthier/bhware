@@ -81,8 +81,8 @@ class Robot(object):
             y = self.pose.y
         if angle == None:
             angle = self.pose.angle
-        if not tools.quasi_null(x - self.pose.x) or not tools.quasi_null(y - self.pose.y) :
-            packet.movement = MOVEMENT_MOVE
+        if not tools.quasi_equal(x, self.pose.x) or not tools.quasi_equal(y, self.pose.y) :
+            packet.movement = MOVEMENT_LINE
         else:
             packet.movement = MOVEMENT_ROTATE
         # logger.log("Goto {0} {1} {2} {3} {4}".format(x,y,angle,direction,packet.movement))
