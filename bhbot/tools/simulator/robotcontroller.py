@@ -103,9 +103,10 @@ class RobotController(object):
         self.field_object = GraphicsRobotObject(self.team)
         self.field_object.observers.append(self.trajectory_drawer)
         if self.team == TEAM_RED:
-            self.field_object.item.setPos(260.5, 200.0)
+            self.field_object.item.setPos(31.0, 337 / 2.0 + 50.0)
+            pass
         elif self.team == TEAM_BLUE:
-            self.field_object.item.setPos(3000.0 - 260.5, 200.0)
+            self.field_object.item.setPos(3000.0 - 31.0, 337 / 2.0 + 50.0)
             self.field_object.item.setRotation(180.0)
         self.field_object.animation.finished.connect(self.process_goto)
         self.scene.addItem(self.field_object.item)

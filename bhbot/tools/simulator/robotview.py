@@ -79,13 +79,11 @@ class GraphicsRobotObject(QObject):
         self.observers = []
 
         self.item = QGraphicsItemGroup()
+        #self.item.setTransformOriginPoint(31.0, 170.0)
         self.robot_item = QGraphicsSvgItem(os.path.join(os.path.dirname(__file__), "robot.svg"))
-        self.robot_item.setTransformOriginPoint(260.5, 170.0)
-        transform = self.robot_item.transform()
-        transform.translate(-260.5, -170.0)
-        self.robot_item.setTransform(transform)
+        self.robot_item.setPos(-31.0, -170.0)
         self.item.addToGroup(self.robot_item)
-        team_indicator = QGraphicsEllipseItem(-195.0, -25.0, 50.0, 50.0)
+        team_indicator = QGraphicsEllipseItem(31.0, -25.0, 50.0, 50.0)
         if self.team == TEAM_RED:
             color = QColor("#c90000")
         elif self.team == TEAM_BLUE:
