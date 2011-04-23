@@ -17,7 +17,7 @@ import statemachine
 import leds
 import robot
 import figuredetector
-
+from definitions import *
 
 
 

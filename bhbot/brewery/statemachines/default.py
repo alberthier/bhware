@@ -82,10 +82,16 @@ class GotoFieldGenericGoto(statemachine.State):
             y = 3.0 - 1.3
             angle = math.pi / 2.0
         self.robot().goto(x, y, angle, DIRECTION_FORWARD)
+        self.first = True
 
 
     def on_goto_finished(self, reason, pose):
-        self.switch_to_state(GotoFieldRotate())
+        if self.first:
+            self.first = False
+            robot = self.robot()
+            robot.goto(robot.pose.x, robot.pose.y, robot.pose.angle, DIRECTION_FORWARD)
+        else:
+            self.switch_to_state(GotoFieldRotate())
 
 
 

@@ -88,6 +88,7 @@ class Robot(object):
             angle = self.pose.angle
             if packet.movement == None:
                 self.event_loop.inject_goto_finished()
+                return
         elif packet.movement == MOVEMENT_LINE:
             packet.movement = MOVEMENT_MOVE
         else:
