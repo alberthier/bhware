@@ -75,16 +75,24 @@ class Robot(object):
 
     def goto(self, x, y, angle, direction):
         packet = packets.Goto()
-        if x == None:
+        packet.movement = None
+        if x == None or tools.quasi_equal(x, self.pose.x):
             x = self.pose.x
-        if y == None:
-            y = self.pose.y
-        if angle == None:
-            angle = self.pose.angle
-        if not tools.quasi_equal(x, self.pose.x) or not tools.quasi_equal(y, self.pose.y) :
+        else:
             packet.movement = MOVEMENT_LINE
+        if y == None or tools.quasi_equal(y, self.pose.y):
+            y = self.pose.y
+        else:
+            packet.movement = MOVEMENT_LINE
+        if angle == None or tools.quasi_equal(angle, self.pose.angle):
+            angle = self.pose.angle
+            if packet.movement == None:
+                self.event_loop.inject_goto_finished()
+        elif packet.movement == MOVEMENT_LINE:
+            packet.movement = MOVEMENT_MOVE
         else:
             packet.movement = MOVEMENT_ROTATE
+
         # logger.log("Goto {0} {1} {2} {3} {4}".format(x,y,angle,direction,packet.movement))
         packet.direction = direction
         packet.points = [trajectory.Pose(x, y, angle)]

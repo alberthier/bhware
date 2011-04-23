@@ -13,12 +13,17 @@ from definitions import *
 
 from robotview import *
 
+
+
+
 class TrajectoryDrawer(object):
+
     def __init__(self, scene, team) :
         self.scene = scene
         pen_color = Qt.blue if team == TEAM_BLUE else Qt.red
         self.pen = QPen(pen_color, 10, Qt.SolidLine, Qt.SquareCap, Qt.MiterJoin);
         self.items = []
+
 
     def on_robot_move(self,ox,oy,x,y):
         if ox and oy :
@@ -27,9 +32,13 @@ class TrajectoryDrawer(object):
             l.setPen(self.pen)
             self.scene.addItem(l)
 
+
     def on_reset(self):
         for i in self.items : self.scene.removeItem(i)
         self.items = []
+
+
+
 
 class RobotController(object):
 
@@ -51,6 +60,7 @@ class RobotController(object):
 
     def is_process_started(self):
         return self.process != None
+
 
     def on_reset(self):
         self.trajectory_drawer.on_reset()
@@ -102,7 +112,7 @@ class RobotController(object):
 
         self.field_object = GraphicsRobotObject(self.team)
         self.field_object.observers.append(self.trajectory_drawer)
-        self.field_object.animation.finished.connect(self.process_goto)
+        self.field_object.movement_finished.connect(self.process_goto)
         self.scene.addItem(self.field_object.item)
 
 
@@ -201,7 +211,9 @@ class RobotController(object):
                 if self.goto_packet.movement == MOVEMENT_ROTATE:
                     self.field_object.robot_rotation(point.angle)
                 elif self.goto_packet.movement == MOVEMENT_LINE:
-                    self.field_object.robot_move(point.x, point.y)
+                    self.field_object.robot_line(point.x, point.y)
+                elif self.goto_packet.movement == MOVEMENT_MOVE:
+                    self.field_object.robot_move(point.x, point.y, point.angle)
             else:
                 self.goto_packet = None
                 packet = packets.GotoFinished()

@@ -199,6 +199,10 @@ class EventLoop(object):
             self.robot_control_channel.send(buffer)
 
 
+    def inject_goto_finished(self):
+        self.get_current_state().on_goto_finished(REASON_DESTINATION_REACHED, self.robot.pose)
+
+
     def get_current_state(self):
         state = self.root_state
         while state.sub_state != None:

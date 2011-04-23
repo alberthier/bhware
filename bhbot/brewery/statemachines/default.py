@@ -43,7 +43,7 @@ class WaitStart(statemachine.State):
 class WaitFirstKeepAlive(statemachine.State):
 
     def on_keep_alive(self, current_pose, match_started, match_time):
-        self.switch_to_state(GotoFieldMove())
+        self.switch_to_state(GotoFieldGenericGoto())
 
 
 
@@ -68,6 +68,24 @@ class TestHomologationWorld(statemachine.State):
 
     def on_goto_finished(self, reason, pose):
         self.next_move()
+
+
+
+class GotoFieldGenericGoto(statemachine.State):
+
+    def on_enter(self):
+        x = 1.0
+        if self.robot().team == TEAM_RED:
+            y = 1.3
+            angle = -math.pi / 2.0
+        elif self.robot().team == TEAM_BLUE:
+            y = 3.0 - 1.3
+            angle = math.pi / 2.0
+        self.robot().goto(x, y, angle, DIRECTION_FORWARD)
+
+
+    def on_goto_finished(self, reason, pose):
+        self.switch_to_state(GotoFieldRotate())
 
 
 

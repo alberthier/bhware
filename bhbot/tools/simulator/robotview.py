@@ -68,14 +68,16 @@ class RobotView(QWidget, RobotView_Ui):
 
 class GraphicsRobotObject(QObject):
 
+    movement_finished = pyqtSignal()
+
     def __init__(self, team, parent = None):
         QObject.__init__(self, parent)
 
         self.team = team
-        self.animation = QPropertyAnimation()
-        self.animation.setTargetObject(self)
-        self.old_ref_x = None
-        self.old_ref_y = None
+
+        self.move_animation = QParallelAnimationGroup()
+        self.move_animation.finished.connect(self.movement_finished)
+
         self.observers = []
 
         self.item = QGraphicsItemGroup()
@@ -140,32 +142,81 @@ class GraphicsRobotObject(QObject):
             else:
                 angle_deg -= 360.0
 
-        self.animation.setPropertyName("angle")
         # 360 deg/s
         duration = abs(int((angle_deg - current) / 360.0 * 1000.0))
-        self.animation.setDuration(duration)
-        self.animation.setStartValue(current)
-        self.animation.setEndValue(angle_deg)
-        self.animation.start()
+        rotate_animation = QPropertyAnimation()
+        rotate_animation.setTargetObject(self)
+        rotate_animation.setPropertyName("angle")
+        rotate_animation.setDuration(duration)
+        rotate_animation.setStartValue(current)
+        rotate_animation.setEndValue(angle_deg)
+
+        self.move_animation.clear()
+        self.move_animation.addAnimation(rotate_animation)
+        self.move_animation.start()
 
 
-    def robot_move(self, x, y):
+    def robot_line(self, x, y):
         # Map from robot field reference to Qt reference
         ref_x = y * 1000.0
         ref_y = x * 1000.0
         d_field_x = ref_x - self.item.pos().x()
         d_field_y = ref_y - self.item.pos().y()
 
-        for o in self.observers : o.on_robot_move(self.old_ref_x, self.old_ref_y, ref_x, ref_y)
+        for o in self.observers : o.on_robot_move(self.item.x(), self.item.y(), ref_x, ref_y)
 
-        self.old_ref_x = ref_x
-        self.old_ref_y = ref_y
-
-        self.animation.setPropertyName("position")
         # 1 m/s
         duration = math.sqrt(math.pow(d_field_x, 2) + math.pow(d_field_y, 2))
-        self.animation.setDuration(duration)
-        self.animation.setStartValue(self.item.pos())
-        dest = QPointF(ref_x, ref_y)
-        self.animation.setEndValue(dest)
-        self.animation.start()
+        pos_animation = QPropertyAnimation()
+        pos_animation.setTargetObject(self)
+        pos_animation.setPropertyName("position")
+        pos_animation.setDuration(duration)
+        pos_animation.setStartValue(self.item.pos())
+        pos_animation.setEndValue(QPointF(ref_x, ref_y))
+
+        self.move_animation.clear()
+        self.move_animation.addAnimation(pos_animation)
+        self.move_animation.start()
+
+
+    def robot_move(self, x, y, angle):
+        # Map from robot field reference to Qt reference
+        ref_x = y * 1000.0
+        ref_y = x * 1000.0
+        d_field_x = ref_x - self.item.pos().x()
+        d_field_y = ref_y - self.item.pos().y()
+
+        for o in self.observers : o.on_robot_move(self.item.x(), self.item.y(), ref_x, ref_y)
+
+        # 1 m/s
+        duration = math.sqrt(math.pow(d_field_x, 2) + math.pow(d_field_y, 2))
+        pos_animation = QPropertyAnimation()
+        pos_animation.setTargetObject(self)
+        pos_animation.setPropertyName("position")
+        pos_animation.setDuration(duration)
+        pos_animation.setStartValue(self.item.pos())
+        pos_animation.setEndValue(QPointF(ref_x, ref_y))
+
+        # Map from robot field reference to Qt reference
+        ref_angle = self.convert_angle(angle)
+        angle_deg = ((ref_angle) / math.pi * 180.0)
+
+        current = self.item.rotation() % 360.0
+
+        if abs(current - angle_deg) > 180.0:
+            if current > angle_deg:
+                angle_deg += 360.0
+            else:
+                angle_deg -= 360.0
+
+        rotate_animation = QPropertyAnimation()
+        rotate_animation.setTargetObject(self)
+        rotate_animation.setPropertyName("angle")
+        rotate_animation.setDuration(duration)
+        rotate_animation.setStartValue(current)
+        rotate_animation.setEndValue(angle_deg)
+
+        self.move_animation.clear()
+        self.move_animation.addAnimation(rotate_animation)
+        self.move_animation.addAnimation(pos_animation)
+        self.move_animation.start()
