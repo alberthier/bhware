@@ -8,7 +8,7 @@ import packets
 import trajectory
 import logger
 import world
-
+import commonstates
 from definitions import *
 
 
@@ -17,6 +17,17 @@ from definitions import *
 class Main(statemachine.State):
 
     def on_device_ready(self, team):
+        if team == TEAM_RED:
+            x = 31.0
+            angle = 0.0
+        elif team == TEAM_BLUE:
+            x = 3000.0 - 31.0
+            angle = math.pi
+        y = 337 / 2.0 + 50.0
+        self.switch_to_substate(commonstates.DefinePosition(x, y, angle))
+
+
+    def on_exit_substate(self, substate):
         self.switch_to_state(WaitStart())
 
 

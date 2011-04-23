@@ -82,23 +82,23 @@ class DefinePosition(statemachine.State):
         self.process()
 
 
-    def on_resettled(self):
+    def on_resettled(self, axis, position, angle):
         self.process()
 
 
-    def process(self)
+    def process(self):
         if not self.x_sent:
             packet = packets.Resettle()
             packet.axis = AXIS_ABSCISSA
-            packet.position = x
-            packet.angle = angle
+            packet.position = self.x
+            packet.angle = self.angle
             self.send_packet(packet)
             self.x_sent = True
         elif not self.y_sent:
             packet = packets.Resettle()
             packet.axis = AXIS_ORDINATE
-            packet.position = y
-            packet.angle = angle
+            packet.position = self.y
+            packet.angle = self.angle
             self.send_packet(packet)
             self.y_sent = True
         else:

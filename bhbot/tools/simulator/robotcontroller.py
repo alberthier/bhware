@@ -102,12 +102,6 @@ class RobotController(object):
 
         self.field_object = GraphicsRobotObject(self.team)
         self.field_object.observers.append(self.trajectory_drawer)
-        if self.team == TEAM_RED:
-            self.field_object.item.setPos(31.0, 337 / 2.0 + 50.0)
-            pass
-        elif self.team == TEAM_BLUE:
-            self.field_object.item.setPos(3000.0 - 31.0, 337 / 2.0 + 50.0)
-            self.field_object.item.setRotation(180.0)
         self.field_object.animation.finished.connect(self.process_goto)
         self.scene.addItem(self.field_object.item)
 
@@ -146,6 +140,11 @@ class RobotController(object):
         elif isinstance(packet, packets.Stop):
             pass
         elif isinstance(packet, packets.Resettle):
+            if packet.axis == AXIS_ABSCISSA:
+                self.field_object.item.setX(packet.position)
+            elif packet.axis == AXIS_ORDINATE:
+                self.field_object.item.setY(packet.position)
+            self.field_object.item.setRotation(packet.angle / math.pi * 180.0)
             self.send_packet(packet)
         elif isinstance(packet, packets.SimulatorData):
             self.view.handle_led(packet.leds)
