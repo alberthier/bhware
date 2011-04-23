@@ -29,11 +29,11 @@ class RobotView(QWidget, RobotView_Ui):
         self.setupUi(self)
 
         if team == TEAM_RED:
-            color = "#c90000"
+            self.color = "#c90000"
         elif team == TEAM_BLUE:
-            color = "#0000c9"
+            self.color = "#0000c9"
         palette = self.palette()
-        palette.setColor(QPalette.Window, QColor(color))
+        palette.setColor(QPalette.Window, QColor(self.color))
         self.setPalette(palette)
 
         self.points_widget.setPalette(self.style().standardPalette())
@@ -46,7 +46,7 @@ class RobotView(QWidget, RobotView_Ui):
             data[2] = helpers.translate_packet_data(data[0], data[2])
             self.log_view.append(str(data))
         else:
-            self.log_view.append('<font color="blue">'+text+'</font>')
+            self.log_view.append('<font color="{0}">{1}</font>'.format(self.color, text))
 
 
     def clear(self):
