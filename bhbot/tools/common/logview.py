@@ -174,19 +174,29 @@ class TrajectoryScene(QGraphicsScene):
         self.addItem(self.field)
         self.field.setPos(-102.0, -102.0)
 
+        pen = QPen(QColor("#2e3436"), 10)
+        font = QFont()
+        font.setPointSize(70)
+        self.addLine(-170.0, -170.0, -170.0, 100.0, pen)
+        self.addText("x", font).setPos(-200.0, 80.0)
+        self.addLine(-170.0, -170.0, 100.0, -170.0, pen)
+        self.addText("y", font).setPos(120.0, -230.0)
+
         trajPath = QPainterPath()
         expectedPath = QPainterPath()
-        firstTraj = True
         firstGoto = True
+        startX = None
+        startY = None
         for logline in log:
             if len(logline) != 2:
                 if logline[1] == "KeepAlive":
                     coords = logline[3]['current_pose']
                     x = coords[1] * 1000
                     y = coords[0] * 1000
-                    if firstTraj:
-                        firstTraj = False
+                    if firstGoto:
                         trajPath.moveTo(x, y)
+                        startX = x
+                        startY = y
                     else:
                         trajPath.lineTo(x, y)
                 elif logline[1] == "Goto":
@@ -197,17 +207,16 @@ class TrajectoryScene(QGraphicsScene):
                             y = coords[0] * 1000
                             if firstGoto:
                                 firstGoto = False
-                                expectedPath.moveTo(x, y)
-                            else:
-                                expectedPath.lineTo(x, y)
+                                expectedPath.moveTo(startX, startY)
+                            expectedPath.lineTo(x, y)
 
-        trajItem = QGraphicsPathItem(trajPath)
-        trajItem.setPen(QPen(QColor("#edd400"), 10))
-        self.addItem(trajItem)
+        self.trajItem = QGraphicsPathItem(trajPath)
+        self.trajItem.setPen(QPen(QColor("#edd400"), 10))
+        self.addItem(self.trajItem)
 
-        expectedItem = QGraphicsPathItem(expectedPath)
-        expectedItem.setPen(QPen(QColor("#73d216"), 10))
-        self.addItem(expectedItem)
+        self.expectedItem = QGraphicsPathItem(expectedPath)
+        self.expectedItem.setPen(QPen(QColor("#73d216"), 10))
+        self.addItem(self.expectedItem)
 
         # Display world
         #worldPen = QPen(QColor("#8ae234"), 10)
@@ -264,8 +273,26 @@ class MainWindowController(QObject):
         log = self.load_log(log_file)
         self.ui.log_view.setModel(LogModel(log, filtered_cats, self))
         trajectory_view = TrajectoryView()
-        trajectory_view.setScene(TrajectoryScene(log))
-        self.ui.trajectory_tab.layout().addWidget(trajectory_view)
+        self.traj_scene = TrajectoryScene(log)
+        trajectory_view.setScene(self.traj_scene)
+        layout = QBoxLayout(QBoxLayout.LeftToRight)
+        layout.setSpacing(0.0)
+        layout.setContentsMargins(0.0, 0.0, 0.0, 0.0)
+        self.ui.field_container.setLayout(layout)
+        layout.addWidget(trajectory_view)
+
+        self.ui.expected_checkbox.stateChanged.connect(self.expected_changed)
+        self.traj_scene.expectedItem.setVisible(self.ui.expected_checkbox.isChecked())
+        self.ui.real_checkbox.stateChanged.connect(self.real_changed)
+        self.traj_scene.trajItem.setVisible(self.ui.real_checkbox.isChecked())
+
+
+    def expected_changed(self, state):
+        self.traj_scene.expectedItem.setVisible(self.ui.expected_checkbox.isChecked())
+
+
+    def real_changed(self, state):
+        self.traj_scene.trajItem.setVisible(self.ui.real_checkbox.isChecked())
 
 
     def load_log(self, filepath):
