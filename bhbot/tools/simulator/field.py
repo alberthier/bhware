@@ -2,6 +2,7 @@
 # encoding: utf-8
 
 import os
+import random
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
@@ -35,7 +36,7 @@ class FieldView(QGraphicsView):
 
 class FieldScene(QGraphicsScene):
 
-    def __init__(self):
+    def __init__(self, piece_config):
         QGraphicsScene.__init__(self)
 
         gradiant = QLinearGradient(0.5, 0.1, 0.5, 0.9)
@@ -55,3 +56,104 @@ class FieldScene(QGraphicsScene):
         self.addText("x", font).setPos(-200.0, 80.0)
         self.addLine(-170.0, -170.0, 100.0, -170.0, pen)
         self.addText("y", font).setPos(120.0, -230.0)
+
+        config = self.parse_piece_config(piece_config)
+        self.display_config(config)
+
+        self.setup_green_zone(config[0])
+        self.setup_line(config[1], 0)
+        self.setup_line(config[2], 350)
+        pen = QPen()
+        pen.setWidth(10)
+        piece = QGraphicsEllipseItem(1400.0, 950.0, 200.0, 200.0)
+        piece.setBrush(QBrush(QColor("#e2df03")))
+        piece.setPen(pen)
+        self.addItem(piece)
+
+
+    def parse_piece_config(self, piece_config):
+        if len(piece_config) == 6:
+            config = ((int(piece_config[0]), int(piece_config[1])),
+                      (int(piece_config[2]), int(piece_config[3])),
+                      (int(piece_config[4]), int(piece_config[5])))
+            ok = config[0][0] != config[0][1] and config[1][0] != config[1][1] and config[2][0] != config[2][1]
+            ok &= config[0][0] >= 0 and config[0][0] <= 4
+            ok &= config[0][1] >= 0 and config[0][1] <= 4
+            ok &= config[1][0] >= 0 and config[1][0] <= 4
+            ok &= config[1][1] >= 0 and config[1][1] <= 4
+            ok &= config[2][0] >= 0 and config[2][0] <= 4
+            ok &= config[2][1] >= 0 and config[2][1] <= 4
+            if ok:
+                return config
+        if len(piece_config) > 0:
+            print("Invalid piece config")
+
+        config = (self.random_tuple(), self.random_tuple(), self.random_tuple())
+        return config
+
+
+    def display_config(self, config):
+        s = ""
+        for c in config:
+            for r in c:
+                s += str(r)
+        font = QFont()
+        font.setPointSize(70)
+        self.addText("Config:\n{0}".format(s), font).setPos(-500.0, 200.0)
+
+
+    def random_tuple(self):
+        r1 = random.randint(0, 4)
+        r2 = random.randint(0, 4)
+        while r1 == r2:
+            r2 = random.randint(0, 4)
+        return (r1, r2)
+
+
+    def setup_green_zone(self, config):
+        brush = QBrush(QColor("#e2df03"))
+        pen = QPen()
+        pen.setWidth(10)
+        font = QFont()
+        font.setPointSize(70)
+        for i in xrange(5):
+            if not i in config:
+                x = 690.0 + i * 280.0 - 100.0
+                for y in [100.0, 2700.0]:
+                    piece = QGraphicsEllipseItem(y, x, 200.0, 200.0)
+                    piece.setBrush(brush)
+                    piece.setPen(pen)
+                    self.addItem(piece)
+        figures = ((config[0], "R"), (config[1], "Q"))
+        for f in figures:
+            x = 690.0 + f[0] * 280.0 - 100.0
+            for y in [100.0, 2700.0]:
+                group = QGraphicsItemGroup()
+                piece = QGraphicsEllipseItem(0.0, 0.0, 200.0, 200.0)
+                piece.setBrush(brush)
+                piece.setPen(pen)
+                group.addToGroup(piece)
+                text = QGraphicsTextItem()
+                text.setDefaultTextColor(Qt.black)
+                text.setPos(60, 35)
+                text.setFont(font)
+                text.setPlainText(f[1])
+                group.addToGroup(text)
+                self.addItem(group)
+                group.setPos(y, x)
+
+
+    def setup_line(self, config, offset):
+        brush = QBrush(QColor("#e2df03"))
+        pen = QPen()
+        pen.setWidth(10)
+        for i in config:
+            x = 350.0 * (i + 1) - 100.0
+            piece = QGraphicsEllipseItem(700.0 + offset, x, 200.0, 200.0)
+            piece.setBrush(brush)
+            piece.setPen(pen)
+            self.addItem(piece)
+            piece = QGraphicsEllipseItem(3000.0 - (900.0 + offset), x, 200.0, 200.0)
+            piece.setBrush(brush)
+            piece.setPen(pen)
+            self.addItem(piece)

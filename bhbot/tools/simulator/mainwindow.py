@@ -21,7 +21,7 @@ from definitions import *
 
 class MainWindow(QMainWindow, MainWindow_Ui):
 
-    def __init__(self, parent = None):
+    def __init__(self, piece_config, parent = None):
         QMainWindow.__init__(self, parent)
         MainWindow_Ui.__init__(self)
         self.setupUi(self)
@@ -32,7 +32,7 @@ class MainWindow(QMainWindow, MainWindow_Ui):
         self.red_robot_dock.setWidget(RobotView(self, TEAM_RED))
         self.blue_robot_dock.setWidget(RobotView(self, TEAM_BLUE))
 
-        self.field_scene = FieldScene()
+        self.field_scene = FieldScene(piece_config)
         self.setCentralWidget(FieldView(self.field_scene, self))
 
         self.game_controller = GameController(self)

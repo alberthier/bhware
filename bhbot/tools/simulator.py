@@ -23,7 +23,12 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)
     app.setWindowIcon(QIcon("simulator/icons/main.png"))
 
-    mw = MainWindow()
+    if len(sys.argv) > 1:
+        piece_config = sys.argv[1]
+    else:
+        piece_config = ""
+
+    mw = MainWindow(piece_config)
     mw.show()
 
     sys.exit(app.exec_())
