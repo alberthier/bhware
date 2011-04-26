@@ -129,7 +129,7 @@ class GraphicsRobotObject(QObject):
         return trajectory.Pose(x, y, angle)
 
 
-    def robot_rotation(self, angle):
+    def create_rotation_animation(self, angle):
         # Map from robot field reference to Qt reference
         ref_angle = self.convert_angle(angle)
         angle_deg = ((ref_angle) / math.pi * 180.0)
@@ -150,13 +150,17 @@ class GraphicsRobotObject(QObject):
         rotate_animation.setDuration(duration)
         rotate_animation.setStartValue(current)
         rotate_animation.setEndValue(angle_deg)
+        return rotate_animation
 
+
+    def robot_rotation(self, angle):
+        rotate_animation = self.create_rotation_animation(angle)
         self.move_animation.clear()
         self.move_animation.addAnimation(rotate_animation)
         self.move_animation.start()
 
 
-    def robot_line(self, x, y):
+    def create_linear_animation(self, x, y):
         # Map from robot field reference to Qt reference
         ref_x = y * 1000.0
         ref_y = x * 1000.0
@@ -173,49 +177,20 @@ class GraphicsRobotObject(QObject):
         pos_animation.setDuration(duration)
         pos_animation.setStartValue(self.item.pos())
         pos_animation.setEndValue(QPointF(ref_x, ref_y))
+        return pos_animation
 
+
+    def robot_line(self, x, y):
+        pos_animation = self.create_linear_animation(x, y)
         self.move_animation.clear()
         self.move_animation.addAnimation(pos_animation)
         self.move_animation.start()
 
 
     def robot_move(self, x, y, angle):
-        # Map from robot field reference to Qt reference
-        ref_x = y * 1000.0
-        ref_y = x * 1000.0
-        d_field_x = ref_x - self.item.pos().x()
-        d_field_y = ref_y - self.item.pos().y()
-
-        for o in self.observers : o.on_robot_move(self.item.x(), self.item.y(), ref_x, ref_y)
-
-        # 1 m/s
-        duration = math.sqrt(math.pow(d_field_x, 2) + math.pow(d_field_y, 2))
-        pos_animation = QPropertyAnimation()
-        pos_animation.setTargetObject(self)
-        pos_animation.setPropertyName("position")
-        pos_animation.setDuration(duration)
-        pos_animation.setStartValue(self.item.pos())
-        pos_animation.setEndValue(QPointF(ref_x, ref_y))
-
-        # Map from robot field reference to Qt reference
-        ref_angle = self.convert_angle(angle)
-        angle_deg = ((ref_angle) / math.pi * 180.0)
-
-        current = self.item.rotation() % 360.0
-
-        if abs(current - angle_deg) > 180.0:
-            if current > angle_deg:
-                angle_deg += 360.0
-            else:
-                angle_deg -= 360.0
-
-        rotate_animation = QPropertyAnimation()
-        rotate_animation.setTargetObject(self)
-        rotate_animation.setPropertyName("angle")
-        rotate_animation.setDuration(duration)
-        rotate_animation.setStartValue(current)
-        rotate_animation.setEndValue(angle_deg)
-
+        rotate_animation = self.create_rotation_animation(angle)
+        pos_animation = self.create_linear_animation(x, y)
+        rotate_animation.setDuration(pos_animation.duration())
         self.move_animation.clear()
         self.move_animation.addAnimation(rotate_animation)
         self.move_animation.addAnimation(pos_animation)
