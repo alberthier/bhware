@@ -34,6 +34,34 @@ class FieldView(QGraphicsView):
 
 
 
+class Piece(QGraphicsItemGroup):
+
+    def __init__(self, x, y, piece_type = None):
+        QGraphicsItemGroup.__init__(self)
+        brush = QBrush(QColor("#e2df03"))
+        pen = QPen()
+        pen.setWidth(10)
+
+        circle = QGraphicsEllipseItem(-100.0, -100.0, 200.0, 200.0)
+        circle.setBrush(brush)
+        circle.setPen(pen)
+        self.addToGroup(circle)
+
+        if piece_type != None:
+            font = QFont()
+            font.setPointSize(70)
+            text = QGraphicsTextItem()
+            text.setDefaultTextColor(Qt.black)
+            text.setPos(-37.5, -60.0)
+            text.setFont(font)
+            text.setPlainText(piece_type)
+            self.addToGroup(text)
+
+        self.setPos(y, x)
+
+
+
+
 class FieldScene(QGraphicsScene):
 
     def __init__(self, piece_config):
@@ -63,12 +91,7 @@ class FieldScene(QGraphicsScene):
         self.setup_green_zone(config[0])
         self.setup_line(config[1], 0)
         self.setup_line(config[2], 350)
-        pen = QPen()
-        pen.setWidth(10)
-        piece = QGraphicsEllipseItem(1400.0, 950.0, 200.0, 200.0)
-        piece.setBrush(QBrush(QColor("#e2df03")))
-        piece.setPen(pen)
-        self.addItem(piece)
+        self.addItem(Piece(1050.0, 1500.0))
 
 
     def parse_piece_config(self, piece_config):
@@ -117,43 +140,19 @@ class FieldScene(QGraphicsScene):
         font = QFont()
         font.setPointSize(70)
         for i in xrange(5):
-            if not i in config:
-                x = 690.0 + i * 280.0 - 100.0
-                for y in [100.0, 2700.0]:
-                    piece = QGraphicsEllipseItem(y, x, 200.0, 200.0)
-                    piece.setBrush(brush)
-                    piece.setPen(pen)
-                    self.addItem(piece)
-        figures = ((config[0], "R"), (config[1], "Q"))
-        for f in figures:
-            x = 690.0 + f[0] * 280.0 - 100.0
-            for y in [100.0, 2700.0]:
-                group = QGraphicsItemGroup()
-                piece = QGraphicsEllipseItem(0.0, 0.0, 200.0, 200.0)
-                piece.setBrush(brush)
-                piece.setPen(pen)
-                group.addToGroup(piece)
-                text = QGraphicsTextItem()
-                text.setDefaultTextColor(Qt.black)
-                text.setPos(60, 35)
-                text.setFont(font)
-                text.setPlainText(f[1])
-                group.addToGroup(text)
-                self.addItem(group)
-                group.setPos(y, x)
+            x = 690.0 + i * 280.0
+            for y in [200.0, 2800.0]:
+                if i == config[0]:
+                    piece = Piece(x, y, "R")
+                elif i == config[1]:
+                    piece = Piece(x, y, "Q")
+                else:
+                    piece = Piece(x, y)
+                self.addItem(piece)
 
 
     def setup_line(self, config, offset):
-        brush = QBrush(QColor("#e2df03"))
-        pen = QPen()
-        pen.setWidth(10)
         for i in config:
-            x = 350.0 * (i + 1) - 100.0
-            piece = QGraphicsEllipseItem(700.0 + offset, x, 200.0, 200.0)
-            piece.setBrush(brush)
-            piece.setPen(pen)
-            self.addItem(piece)
-            piece = QGraphicsEllipseItem(3000.0 - (900.0 + offset), x, 200.0, 200.0)
-            piece.setBrush(brush)
-            piece.setPen(pen)
-            self.addItem(piece)
+            x = 350.0 * (i + 1)
+            self.addItem(Piece(x, 800.0 + offset))
+            self.addItem(Piece(x, 2200.0 - offset))
