@@ -47,6 +47,7 @@ class RobotController(object):
         self.game_controller = game_controller
         self.view = view
         self.scene = scene
+        self.scene.changed.connect(self.check_piece_detection)
 
         self.field_object = None
         self.process = None
@@ -56,6 +57,10 @@ class RobotController(object):
         self.ready = False
         self.goto_packet = None
         self.trajectory_drawer = TrajectoryDrawer(scene,team)
+        self.left_sensor_start_pose = None
+        self.left_sensor_is_figure = False
+        self.right_sensor_start_pose = None
+        self.right_sensor_is_figure = False
 
 
     def is_process_started(self):
@@ -220,3 +225,50 @@ class RobotController(object):
                 packet.reason = REASON_DESTINATION_REACHED
                 packet.current_pose = self.field_object.get_pose()
                 self.send_packet(packet)
+
+
+    def check_piece_detection(self, region):
+        if self.field_object != None:
+            left_sensor_detected = False
+            right_sensor_detected = False
+            for piece in self.scene.pieces:
+                if piece.collidesWithItem(self.field_object.left_sensor):
+                    left_sensor_detected = True
+                    if self.left_sensor_start_pose == None:
+                        self.left_sensor_start_pose = self.field_object.get_pose()
+                        self.left_sensor_is_figure = piece.piece_type != "P"
+                if piece.collidesWithItem(self.field_object.right_sensor):
+                    right_sensor_detected = True
+                    if self.right_sensor_start_pose == None:
+                        self.right_sensor_start_pose = self.field_object.get_pose()
+                        self.right_sensor_is_figure = piece.piece_type != "P"
+                if piece.collidesWithItem(self.field_object.nippers_sensor):
+                    if self.field_object.move_animation.state() == QAbstractAnimation.Running:
+                        self.field_object.move_animation.stop()
+                        self.goto_packet = None
+                        packet = packets.GotoFinished()
+                        packet.reason = REASON_PIECE_FOUND
+                        packet.current_pose = self.field_object.get_pose()
+                        self.send_packet(packet)
+            if not left_sensor_detected and self.left_sensor_start_pose != None:
+                packet = packets.PieceDetected()
+                packet.start_pose = self.left_sensor_start_pose
+                packet.end_pose = self.field_object.get_pose()
+                packet.sensor = SENSOR_LEFT_BOTTOM
+                self.send_packet(packet)
+                if self.left_sensor_is_figure:
+                    packet.sensor = SENSOR_LEFT_TOP
+                    self.send_packet(packet)
+                self.left_sensor_start_pose = None
+                self.left_sensor_is_figure = False
+            if not right_sensor_detected and self.right_sensor_start_pose != None:
+                packet = packets.PieceDetected()
+                packet.start_pose = self.right_sensor_start_pose
+                packet.end_pose = self.field_object.get_pose()
+                packet.sensor = SENSOR_RIGHT_BOTTOM
+                self.send_packet(packet)
+                if self.right_sensor_is_figure:
+                    packet.sensor = SENSOR_RIGHT_TOP
+                    self.send_packet(packet)
+                self.right_sensor_start_pose = None
+                self.right_sensor_is_figure = False

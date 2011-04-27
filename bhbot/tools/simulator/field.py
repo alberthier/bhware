@@ -48,6 +48,7 @@ class Piece(QGraphicsItemGroup):
         self.addToGroup(circle)
 
         if piece_type != None:
+            self.piece_type = piece_type
             font = QFont()
             font.setPointSize(70)
             text = QGraphicsTextItem()
@@ -56,6 +57,8 @@ class Piece(QGraphicsItemGroup):
             text.setFont(font)
             text.setPlainText(piece_type)
             self.addToGroup(text)
+        else:
+            self.piece_type = "P"
 
         self.setPos(y, x)
 
@@ -66,6 +69,8 @@ class FieldScene(QGraphicsScene):
 
     def __init__(self, piece_config):
         QGraphicsScene.__init__(self)
+
+        self.pieces = []
 
         gradiant = QLinearGradient(0.5, 0.1, 0.5, 0.9)
         gradiant.setCoordinateMode(QGradient.ObjectBoundingMode)
@@ -91,7 +96,7 @@ class FieldScene(QGraphicsScene):
         self.setup_green_zone(config[0])
         self.setup_line(config[1], 0)
         self.setup_line(config[2], 350)
-        self.addItem(Piece(1050.0, 1500.0))
+        self.add_piece(1050.0, 1500.0)
 
 
     def parse_piece_config(self, piece_config):
@@ -133,6 +138,12 @@ class FieldScene(QGraphicsScene):
         return (r1, r2)
 
 
+    def add_piece(self, x, y, piece_type = None):
+        piece = Piece(x, y, piece_type)
+        self.addItem(piece)
+        self.pieces.append(piece)
+
+
     def setup_green_zone(self, config):
         brush = QBrush(QColor("#e2df03"))
         pen = QPen()
@@ -143,16 +154,15 @@ class FieldScene(QGraphicsScene):
             x = 690.0 + i * 280.0
             for y in [200.0, 2800.0]:
                 if i == config[0]:
-                    piece = Piece(x, y, "R")
+                    self.add_piece(x, y, "R")
                 elif i == config[1]:
-                    piece = Piece(x, y, "Q")
+                    self.add_piece(x, y, "Q")
                 else:
-                    piece = Piece(x, y)
-                self.addItem(piece)
+                    self.add_piece(x, y)
 
 
     def setup_line(self, config, offset):
         for i in config:
             x = 350.0 * (i + 1)
-            self.addItem(Piece(x, 800.0 + offset))
-            self.addItem(Piece(x, 2200.0 - offset))
+            self.add_piece(x, 800.0 + offset)
+            self.add_piece(x, 2200.0 - offset)

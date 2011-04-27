@@ -66,6 +66,28 @@ class RobotView(QWidget, RobotView_Ui):
 
 
 
+class Sensor(QGraphicsLineItem):
+
+    def __init__(self, side):
+        QGraphicsLineItem.__init__(self)
+        self.setPen(QPen(QColor("#73d216"), 10.0))
+        if side == "nippers":
+            x = 126.0
+            y = 50.0
+            self.setLine(x, y, x, -y)
+        else:
+            self.side = side
+            x = 100.0
+            detection_distance = 300.0
+            y = 168.5
+            if side == "left":
+                self.setLine(x, -y, x, -(y + detection_distance))
+            elif side == "right":
+                self.setLine(x, y, x, y + detection_distance)
+
+
+
+
 class GraphicsRobotObject(QObject):
 
     movement_finished = pyqtSignal()
@@ -93,6 +115,12 @@ class GraphicsRobotObject(QObject):
         team_indicator.setBrush(color)
         team_indicator.setPen(QPen(0))
         self.item.addToGroup(team_indicator)
+        self.left_sensor = Sensor("left")
+        self.item.addToGroup(self.left_sensor)
+        self.right_sensor = Sensor("right")
+        self.item.addToGroup(self.right_sensor)
+        self.nippers_sensor = Sensor("nippers")
+        self.item.addToGroup(self.nippers_sensor)
 
 
     def get_position(self):

@@ -20,7 +20,7 @@ class GameController(object):
         self.server.newConnection.connect(self.brewery_connected)
         self.server.listen(QHostAddress.Any, config.remote_port)
         self.red_robot = RobotController(TEAM_RED, self, main_window.red_robot_dock.widget(), main_window.field_scene)
-        self.blue_robot = RobotController(TEAM_BLUE, self, main_window.blue_robot_dock.widget(), main_window.field_scene)        
+        self.blue_robot = RobotController(TEAM_BLUE, self, main_window.blue_robot_dock.widget(), main_window.field_scene)
         self.trajectory_drawer = None
         self.main_bar = main_window.main_bar_dock.widget()
         self.main_bar.reload.clicked.connect(self.setup)
@@ -32,7 +32,7 @@ class GameController(object):
         self.setting_up = False
         self.time = 900
         self.keep_alive_timer = QTimer()
-        self.keep_alive_timer.setInterval(100)
+        self.keep_alive_timer.setInterval(200)
         self.keep_alive_timer.timeout.connect(self.timer_tick)
 
 

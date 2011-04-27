@@ -14,4 +14,6 @@ class Pose(object):
 
 
     def __eq__(self, other):
+        if other == None:
+            return False
         return self.x == other.x and self.y == other.y and self.angle == other.angle
