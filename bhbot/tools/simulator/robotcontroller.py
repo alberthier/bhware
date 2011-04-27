@@ -61,6 +61,7 @@ class RobotController(object):
         self.left_sensor_is_figure = False
         self.right_sensor_start_pose = None
         self.right_sensor_is_figure = False
+        self.nippers_sensor_piece = None
 
 
     def is_process_started(self):
@@ -242,14 +243,18 @@ class RobotController(object):
                     if self.right_sensor_start_pose == None:
                         self.right_sensor_start_pose = self.field_object.get_pose()
                         self.right_sensor_is_figure = piece.piece_type != "P"
-                if piece.collidesWithItem(self.field_object.nippers_sensor):
-                    if self.field_object.move_animation.state() == QAbstractAnimation.Running:
-                        self.field_object.move_animation.stop()
-                        self.goto_packet = None
-                        packet = packets.GotoFinished()
-                        packet.reason = REASON_PIECE_FOUND
-                        packet.current_pose = self.field_object.get_pose()
-                        self.send_packet(packet)
+                if piece != self.nippers_sensor_piece:
+                    if piece.collidesWithItem(self.field_object.nippers_sensor):
+                        if self.field_object.move_animation.state() == QAbstractAnimation.Running:
+                            self.field_object.move_animation.stop()
+                            self.goto_packet = None
+                            packet = packets.GotoFinished()
+                            packet.reason = REASON_PIECE_FOUND
+                            packet.current_pose = self.field_object.get_pose()
+                            self.send_packet(packet)
+                            self.nippers_sensor_piece = piece
+                elif not piece.collidesWithItem(self.field_object.nippers_sensor):
+                    self.nippers_sensor_piece = None
             if not left_sensor_detected and self.left_sensor_start_pose != None:
                 packet = packets.PieceDetected()
                 packet.start_pose = self.left_sensor_start_pose
