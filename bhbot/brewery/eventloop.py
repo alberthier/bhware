@@ -231,7 +231,7 @@ class EventLoop(object):
         self.robot_control_channel.setup()
         if self.robot_control_channel.connected:
             logger.log("Starting brewery with state machine '{0}'".format(self.state_machine_name))
-            asyncore.loop()
+            asyncore.loop(30.0, True)
 
 
     def stop(self):
