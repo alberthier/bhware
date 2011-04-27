@@ -115,7 +115,7 @@ class GameController(object):
         self.red_robot.send_keep_alive()
         self.blue_robot.send_keep_alive()
         if self.started:
-            self.time -= 1
+            self.time -= 2
             self.main_bar.chronograph.setText(str(round(self.time/10.0, 1)))
         if self.time == 0:
             self.stop()
