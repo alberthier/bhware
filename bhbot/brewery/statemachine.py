@@ -51,8 +51,8 @@ class State(object):
 
 
     def exit_substate(self):
-        self.parent_state.on_exit_substate(self)
         self.parent_state.sub_state = None
+        self.parent_state.on_exit_substate(self)
 
 
     def send_packet(self, packet):
