@@ -75,6 +75,10 @@ class Sensor(QGraphicsLineItem):
             x = 126.0
             y = 50.0
             self.setLine(x, y, x, -y)
+        elif side == "back":
+            x = -31.0
+            y = y = 168.5
+            self.setLine(x, y, x, -y)
         else:
             self.side = side
             x = 100.0
@@ -121,6 +125,8 @@ class GraphicsRobotObject(QObject):
         self.item.addToGroup(self.right_sensor)
         self.nippers_sensor = Sensor("nippers")
         self.item.addToGroup(self.nippers_sensor)
+        self.back_sensor = Sensor("back")
+        self.item.addToGroup(self.back_sensor)
 
 
     def get_position(self):

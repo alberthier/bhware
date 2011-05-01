@@ -62,6 +62,7 @@ class RobotController(object):
         self.right_sensor_start_pose = None
         self.right_sensor_is_figure = False
         self.nippers_sensor_piece = None
+        self.back_sensor_piece = None
 
 
     def is_process_started(self):
@@ -214,6 +215,9 @@ class RobotController(object):
             if len(self.goto_packet.points) != 0:
                 point = self.goto_packet.points[0]
                 self.goto_packet.points = self.goto_packet.points[1:]
+                if self.goto_packet.direction == DIRECTION_BACKWARD and self.back_sensor_piece != None:
+                    self.field_object.item.removeFromGroup(self.back_sensor_piece)
+                    self.back_sensor_piece = None
                 if self.goto_packet.movement == MOVEMENT_ROTATE:
                     self.field_object.robot_rotation(point.angle)
                 elif self.goto_packet.movement == MOVEMENT_LINE:
@@ -253,6 +257,9 @@ class RobotController(object):
                             packet.current_pose = self.field_object.get_pose()
                             self.send_packet(packet)
                             self.nippers_sensor_piece = piece
+                if piece != self.back_sensor_piece and piece.collidesWithItem(self.field_object.back_sensor):
+                    self.back_sensor_piece = piece
+                    self.field_object.item.addToGroup(piece)
                 elif not piece.collidesWithItem(self.field_object.nippers_sensor):
                     self.nippers_sensor_piece = None
             if not left_sensor_detected and self.left_sensor_start_pose != None:
