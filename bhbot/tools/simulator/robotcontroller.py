@@ -163,6 +163,12 @@ class RobotController(object):
                 self.field_object.item.setY(packet.position)
             self.field_object.item.setRotation(packet.angle / math.pi * 180.0)
             self.send_packet(packet)
+        elif isinstance(packet, packets.StorePiece1):
+            if self.nippers_sensor_piece != None:
+                self.field_object.item.addToGroup(self.nippers_sensor_piece)
+        elif isinstance(packet, packets.ReleasePiece):
+            if self.nippers_sensor_piece != None:
+                self.field_object.item.removeFromGroup(self.nippers_sensor_piece)
         elif isinstance(packet, packets.SimulatorData):
             self.view.handle_led(packet.leds)
         else :
