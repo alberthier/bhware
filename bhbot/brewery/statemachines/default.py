@@ -43,7 +43,7 @@ class WaitStart(statemachine.State):
 class WaitFirstKeepAlive(statemachine.State):
 
     def on_keep_alive(self, current_pose, match_started, match_time):
-        self.switch_to_state(GotoFieldGenericGoto())
+        self.switch_to_state(GotoFieldMove())
 
 
 
@@ -127,7 +127,32 @@ class GotoFieldMove2(statemachine.State):
 
 
     def on_goto_finished(self, reason, pose):
-        self.switch_to_state(GotoFieldRotate2())
+        if reason == REASON_PIECE_FOUND:
+            self.switch_to_substate(commonstates.StorePiece1())
+        else:
+            self.switch_to_state(GotoFieldRotate2())
+
+
+    def on_exit_substate(self, substate):
+        self.switch_to_state(GotoFieldMove3())
+
+
+
+class GotoFieldMove3(statemachine.State):
+
+    def on_enter(self):
+        self.robot().forward(0.2)
+
+
+    def on_goto_finished(self, reason, pose):
+        self.switch_to_state(GotoFieldMove4())
+
+
+
+class GotoFieldMove4(statemachine.State):
+
+    def on_enter(self):
+        self.robot().backward(0.1)
 
 
 
@@ -141,7 +166,7 @@ class GotoFieldRotate2(statemachine.State):
 
 
     def on_goto_finished(self, reason, pose):
-        self.switch_to_state(Moving())
+        self.switch_to_state(GotoFieldMove2())
 
 
 

@@ -166,9 +166,11 @@ class RobotController(object):
         elif isinstance(packet, packets.StorePiece1):
             if self.nippers_sensor_piece != None:
                 self.field_object.item.addToGroup(self.nippers_sensor_piece)
+            self.send_packet(packet)
         elif isinstance(packet, packets.ReleasePiece):
             if self.nippers_sensor_piece != None:
                 self.field_object.item.removeFromGroup(self.nippers_sensor_piece)
+            self.send_packet(packet)
         elif isinstance(packet, packets.SimulatorData):
             self.view.handle_led(packet.leds)
         else :
