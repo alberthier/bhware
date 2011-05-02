@@ -77,7 +77,7 @@ class Sensor(QGraphicsLineItem):
             self.setLine(x, y, x, -y)
         elif side == "back":
             x = -31.0
-            y = y = 168.5
+            y = 100.0
             self.setLine(x, y, x, -y)
         else:
             self.side = side

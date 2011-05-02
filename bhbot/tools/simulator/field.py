@@ -90,13 +90,10 @@ class FieldScene(QGraphicsScene):
         self.addLine(-170.0, -170.0, 100.0, -170.0, pen)
         self.addText("y", font).setPos(120.0, -230.0)
 
-        config = self.parse_piece_config(piece_config)
-        self.display_config(config)
+        self.config = self.parse_piece_config(piece_config)
+        self.display_config()
 
-        self.setup_green_zone(config[0])
-        self.setup_line(config[1], 0)
-        self.setup_line(config[2], 350)
-        self.add_piece(1050.0, 1500.0)
+        self.setup()
 
 
     def parse_piece_config(self, piece_config):
@@ -120,9 +117,9 @@ class FieldScene(QGraphicsScene):
         return config
 
 
-    def display_config(self, config):
+    def display_config(self):
         s = ""
-        for c in config:
+        for c in self.config:
             for r in c:
                 s += str(r)
         font = QFont()
@@ -142,6 +139,17 @@ class FieldScene(QGraphicsScene):
         piece = Piece(x, y, piece_type)
         self.addItem(piece)
         self.pieces.append(piece)
+
+
+    def setup(self):
+        for piece in self.pieces:
+            self.removeItem(piece)
+        self.pieces = []
+        self.setup_green_zone(self.config[0])
+        self.setup_line(self.config[1], 0)
+        self.setup_line(self.config[2], 350)
+        self.add_piece(1050.0, 1500.0)
+
 
 
     def setup_green_zone(self, config):

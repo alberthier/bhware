@@ -210,7 +210,7 @@ class RobotController(object):
 
 
     def process_goto(self):
-        if self.goto_packet != None:
+        if self.goto_packet != None and self.field_object != None:
             # direction is ignored for the moment
             if len(self.goto_packet.points) != 0:
                 point = self.goto_packet.points[0]

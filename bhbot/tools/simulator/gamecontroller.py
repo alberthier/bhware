@@ -19,8 +19,9 @@ class GameController(object):
         self.server = QTcpServer()
         self.server.newConnection.connect(self.brewery_connected)
         self.server.listen(QHostAddress.Any, config.remote_port)
-        self.red_robot = RobotController(TEAM_RED, self, main_window.red_robot_dock.widget(), main_window.field_scene)
-        self.blue_robot = RobotController(TEAM_BLUE, self, main_window.blue_robot_dock.widget(), main_window.field_scene)
+        self.field_scene = main_window.field_scene
+        self.red_robot = RobotController(TEAM_RED, self, main_window.red_robot_dock.widget(), self.field_scene)
+        self.blue_robot = RobotController(TEAM_BLUE, self, main_window.blue_robot_dock.widget(), self.field_scene)
         self.trajectory_drawer = None
         self.main_bar = main_window.main_bar_dock.widget()
         self.main_bar.reload.clicked.connect(self.setup)
@@ -37,10 +38,10 @@ class GameController(object):
 
 
     def setup(self):
-        # self.trajectory_drawer = TrajectoryDrawer(main_window.field_scene, self.)
         if not self.start_requested and not self.setting_up:
             self.user_stop()
         if not self.red_robot.is_process_started():
+            self.field_scene.setup()
             self.time = 900
             self.main_bar.chronograph.setText(str(round(self.time/10.0, 1)))
             self.setting_up = True
