@@ -17,8 +17,10 @@ def instantiate_state_machine(state_machine_name, eventloop):
         if inspect.isclass(item_type) and issubclass(item_type, State) and item_name == "Main":
             root_state = item_type()
             root_state.event_loop = eventloop
-            logger.log("Successfully instatiated state machine '{0}' from file '{1}'".format(item_name, state_machine_file))
+            logger.log("Successfully instatiated state '{0}' from file '{1}'".format(item_name, state_machine_file))
             return root_state
+    else:
+        logger.log("No 'Main' state found in '{0}'".format(state_machine_file))
 
 
 
