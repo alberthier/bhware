@@ -18,12 +18,12 @@ class Main(statemachine.State):
 
     def on_device_ready(self, team):
         if team == TEAM_RED:
-            x = 31.0
+            x = 0.031
             angle = 0.0
         elif team == TEAM_BLUE:
-            x = 3000.0 - 31.0
+            x = 3.0 - 0.031
             angle = math.pi
-        y = 337 / 2.0 + 50.0
+        y = 0.337 / 2.0 + 0.050
         self.switch_to_substate(commonstates.DefinePosition(x, y, angle))
 
 

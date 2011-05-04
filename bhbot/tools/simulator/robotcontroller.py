@@ -157,9 +157,9 @@ class RobotController(object):
             pass
         elif isinstance(packet, packets.Resettle):
             if packet.axis == AXIS_ABSCISSA:
-                self.field_object.item.setX(packet.position)
+                self.field_object.item.setX(packet.position * 1000.0)
             elif packet.axis == AXIS_ORDINATE:
-                self.field_object.item.setY(packet.position)
+                self.field_object.item.setY(packet.position * 1000.0)
             self.field_object.item.setRotation(packet.angle / math.pi * 180.0)
             self.send_packet(packet)
         elif isinstance(packet, packets.StorePiece1):
