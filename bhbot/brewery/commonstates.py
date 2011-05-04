@@ -6,7 +6,7 @@ import statemachine
 import packets
 from definitions import *
 
-
+from collections import deque
 
 class Timer(statemachine.State):
 
@@ -37,7 +37,7 @@ class Sequence(statemachine.State):
         self.process_next_substate()
 
 
-    def on_exit_substate(self):
+    def on_exit_substate(self,finished_substate):
         self.process_next_substate()
 
 
