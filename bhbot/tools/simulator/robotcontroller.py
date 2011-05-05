@@ -67,7 +67,7 @@ class SensorController(QObject):
                 collided = piece in self.currently_detected
                 if collides and not collided:
                     self.currently_detected.append(piece)
-                    if len(self.currently_detected) == 1:
+                    if self.sensor_type == None or len(self.currently_detected) == 1:
                         self.start_pose = self.field_object.get_pose()
                         self.start_detection.emit(self)
                 elif not collides and collided:
