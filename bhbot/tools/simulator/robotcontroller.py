@@ -40,6 +40,45 @@ class TrajectoryDrawer(object):
 
 
 
+
+class SensorController(QObject):
+
+    start_detection = pyqtSignal(QObject)
+    end_detection = pyqtSignal(QObject)
+
+    def __init__(self, sensor_item, field_object, sensor_type = None):
+        QObject.__init__(self)
+        self.currently_detected = []
+        self.sensor_item = sensor_item
+        self.start_pose = None
+        self.end_pose = None
+        self.field_object = field_object
+        self.sensor_type = sensor_type
+        self.sensor_item.scene().changed.connect(self.check)
+
+
+    def check(self, region):
+        if self.sensor_item.scene() == None:
+            return
+        only_figures = self.sensor_type == SENSOR_LEFT_TOP or self.sensor_type == SENSOR_RIGHT_TOP
+        for piece in self.sensor_item.scene().pieces:
+            if not only_figures or piece.piece_type != "P":
+                collides = self.sensor_item.collidesWithItem(piece)
+                collided = piece in self.currently_detected
+                if collides and not collided:
+                    self.currently_detected.append(piece)
+                    if len(self.currently_detected) == 1:
+                        self.start_pose = self.field_object.get_pose()
+                        self.start_detection.emit(self)
+                elif not collides and collided:
+                    self.currently_detected.remove(piece)
+                    if len(self.currently_detected) == 0:
+                        self.end_pose = self.field_object.get_pose()
+                        self.end_detection.emit(self)
+
+
+
+
 class RobotController(object):
 
     def __init__(self, team, game_controller, view, scene):
@@ -47,7 +86,6 @@ class RobotController(object):
         self.game_controller = game_controller
         self.view = view
         self.scene = scene
-        self.scene.changed.connect(self.check_piece_detection)
 
         self.field_object = None
         self.process = None
@@ -56,13 +94,12 @@ class RobotController(object):
         self.incoming_packet = None
         self.ready = False
         self.goto_packet = None
-        self.trajectory_drawer = TrajectoryDrawer(scene,team)
-        self.left_sensor_start_pose = None
-        self.left_sensor_is_figure = False
-        self.right_sensor_start_pose = None
-        self.right_sensor_is_figure = False
-        self.nippers_sensor_piece = None
-        self.back_sensor_piece = None
+        self.trajectory_drawer = TrajectoryDrawer(scene, team)
+
+        self.left_sensor = None
+        self.right_sensor = None
+        self.nippers_sensor = None
+        self.back_sensor = None
 
 
     def is_process_started(self):
@@ -122,6 +159,24 @@ class RobotController(object):
         self.field_object.movement_finished.connect(self.process_goto)
         self.scene.addItem(self.field_object.item)
 
+        self.top_left_sensor = SensorController(self.field_object.left_sensor, self.field_object, SENSOR_LEFT_TOP)
+        self.top_left_sensor.end_detection.connect(self.on_lateral_detection)
+        self.bottom_left_sensor = SensorController(self.field_object.left_sensor, self.field_object, SENSOR_LEFT_BOTTOM)
+        self.bottom_left_sensor.end_detection.connect(self.on_lateral_detection)
+        self.top_right_sensor = SensorController(self.field_object.right_sensor, self.field_object, SENSOR_RIGHT_TOP)
+        self.top_right_sensor.end_detection.connect(self.on_lateral_detection)
+        self.bottom_right_sensor = SensorController(self.field_object.right_sensor, self.field_object, SENSOR_RIGHT_BOTTOM)
+        self.bottom_right_sensor.end_detection.connect(self.on_lateral_detection)
+        self.nippers_sensor = SensorController(self.field_object.nippers_sensor, self.field_object)
+        self.nippers_sensor.start_detection.connect(self.on_nippers_detection)
+        self.back_sensor = SensorController(self.field_object.back_sensor, self.field_object)
+        self.back_sensor.start_detection.connect(self.on_back_detection)
+
+        self.front_pieces = []
+        self.stored_pieces = []
+        self.back_pieces = []
+
+
 
     def read_output(self):
         while self.process.canReadLine():
@@ -163,12 +218,12 @@ class RobotController(object):
             self.field_object.item.setRotation(packet.angle / math.pi * 180.0)
             self.send_packet(packet)
         elif isinstance(packet, packets.StorePiece1):
-            if self.nippers_sensor_piece != None:
-                self.field_object.item.addToGroup(self.nippers_sensor_piece)
-            self.send_packet(packet)
+            self.stored_pieces += self.front_pieces
+            self.front_pieces = []
         elif isinstance(packet, packets.ReleasePiece):
-            if self.nippers_sensor_piece != None:
-                self.field_object.item.removeFromGroup(self.nippers_sensor_piece)
+            for piece in self.stored_pieces:
+                self.field_object.item.removeFromGroup(piece)
+            self.stored_pieces = []
             self.send_packet(packet)
         elif isinstance(packet, packets.SimulatorData):
             self.view.handle_led(packet.leds)
@@ -222,9 +277,13 @@ class RobotController(object):
             if len(self.goto_packet.points) != 0:
                 point = self.goto_packet.points[0]
                 self.goto_packet.points = self.goto_packet.points[1:]
-                if self.goto_packet.direction == DIRECTION_BACKWARD and self.back_sensor_piece != None:
-                    self.field_object.item.removeFromGroup(self.back_sensor_piece)
-                    self.back_sensor_piece = None
+                if self.goto_packet.direction == DIRECTION_BACKWARD:
+                    for piece in self.stored_pieces:
+                        self.field_object.item.removeFromGroup(piece)
+                    self.stored_pieces = []
+                    for piece in self.back_pieces:
+                        self.field_object.item.removeFromGroup(piece)
+                    self.back_pieces = []
                 if self.goto_packet.movement == MOVEMENT_ROTATE:
                     self.field_object.robot_rotation(point.angle)
                 elif self.goto_packet.movement == MOVEMENT_LINE:
@@ -239,55 +298,31 @@ class RobotController(object):
                 self.send_packet(packet)
 
 
-    def check_piece_detection(self, region):
-        if self.field_object != None:
-            left_sensor_detected = False
-            right_sensor_detected = False
-            for piece in self.scene.pieces:
-                if piece.collidesWithItem(self.field_object.left_sensor):
-                    left_sensor_detected = True
-                    if self.left_sensor_start_pose == None:
-                        self.left_sensor_start_pose = self.field_object.get_pose()
-                        self.left_sensor_is_figure = piece.piece_type != "P"
-                if piece.collidesWithItem(self.field_object.right_sensor):
-                    right_sensor_detected = True
-                    if self.right_sensor_start_pose == None:
-                        self.right_sensor_start_pose = self.field_object.get_pose()
-                        self.right_sensor_is_figure = piece.piece_type != "P"
-                if piece != self.nippers_sensor_piece:
-                    if piece.collidesWithItem(self.field_object.nippers_sensor):
-                        if self.field_object.move_animation.state() == QAbstractAnimation.Running:
-                            self.field_object.move_animation.stop()
-                            self.goto_packet = None
-                            packet = packets.GotoFinished()
-                            packet.reason = REASON_PIECE_FOUND
-                            packet.current_pose = self.field_object.get_pose()
-                            self.send_packet(packet)
-                            self.nippers_sensor_piece = piece
-                if piece != self.back_sensor_piece and piece.collidesWithItem(self.field_object.back_sensor):
-                    self.back_sensor_piece = piece
-                    self.field_object.item.addToGroup(piece)
-                elif not piece.collidesWithItem(self.field_object.nippers_sensor):
-                    self.nippers_sensor_piece = None
-            if not left_sensor_detected and self.left_sensor_start_pose != None:
-                packet = packets.PieceDetected()
-                packet.start_pose = self.left_sensor_start_pose
-                packet.end_pose = self.field_object.get_pose()
-                packet.sensor = SENSOR_LEFT_BOTTOM
-                self.send_packet(packet)
-                if self.left_sensor_is_figure:
-                    packet.sensor = SENSOR_LEFT_TOP
-                    self.send_packet(packet)
-                self.left_sensor_start_pose = None
-                self.left_sensor_is_figure = False
-            if not right_sensor_detected and self.right_sensor_start_pose != None:
-                packet = packets.PieceDetected()
-                packet.start_pose = self.right_sensor_start_pose
-                packet.end_pose = self.field_object.get_pose()
-                packet.sensor = SENSOR_RIGHT_BOTTOM
-                self.send_packet(packet)
-                if self.right_sensor_is_figure:
-                    packet.sensor = SENSOR_RIGHT_TOP
-                    self.send_packet(packet)
-                self.right_sensor_start_pose = None
-                self.right_sensor_is_figure = False
+    def on_lateral_detection(self, sensor):
+        packet = packets.PieceDetected()
+        packet.start_pose = sensor.start_pose
+        packet.end_pose = sensor.end_pose
+        packet.sensor = sensor.sensor_type
+        self.send_packet(packet)
+
+
+    def on_nippers_detection(self, sensor):
+        self.front_pieces = self.nippers_sensor.currently_detected
+        for piece in self.front_pieces:
+            self.field_object.item.addToGroup(piece)
+
+
+    def on_back_detection(self, sensor):
+        self.back_pieces = self.back_sensor.currently_detected
+        for piece in self.back_pieces:
+            self.field_object.item.addToGroup(piece)
+
+
+    def pause(self):
+        if self.field_object != None and self.field_object.move_animation.state() == QAbstractAnimation.Running:
+            self.field_object.move_animation.pause()
+
+
+    def resume(self):
+        if self.field_object != None and self.field_object.move_animation.state() == QAbstractAnimation.Paused:
+            self.field_object.move_animation.resume()

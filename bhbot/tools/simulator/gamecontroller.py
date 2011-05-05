@@ -60,9 +60,13 @@ class GameController(object):
             if self.keep_alive_timer.isActive():
                 self.main_bar.set_icon(self.main_bar.start_pause, "start")
                 self.keep_alive_timer.stop()
+                self.red_robot.pause()
+                self.blue_robot.pause()
             else:
                 self.main_bar.set_icon(self.main_bar.start_pause, "pause")
                 self.keep_alive_timer.start()
+                self.red_robot.resume()
+                self.blue_robot.resume()
         elif not self.start_requested:
             self.start_requested = True
             self.setup()
