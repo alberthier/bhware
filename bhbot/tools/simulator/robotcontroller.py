@@ -101,6 +101,8 @@ class RobotController(object):
         self.nippers_sensor = None
         self.back_sensor = None
 
+        self.resettle_count = 0
+
 
     def is_process_started(self):
         return self.process != None
@@ -124,6 +126,7 @@ class RobotController(object):
             self.field_object = None
             self.incoming_packet_buffer = ""
             self.incoming_packet = None
+            self.resettle_count = 0
 
             self.view.clear()
             brewery = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))), "brewery", "brewery.py")
@@ -217,6 +220,11 @@ class RobotController(object):
                 self.field_object.item.setY(packet.position * 1000.0)
             self.field_object.item.setRotation(packet.angle / math.pi * 180.0)
             self.send_packet(packet)
+            self.resettle_count += 1
+            if self.resettle_count == 2:
+                self.ready = True
+                self.game_controller.try_start()
+
         elif isinstance(packet, packets.StorePiece1):
             self.stored_pieces += self.front_pieces
             self.front_pieces = []
@@ -253,8 +261,6 @@ class RobotController(object):
         packet.team = self.team
         packet.remote_device = REMOTE_DEVICE_SIMULATOR
         self.send_packet(packet)
-        self.ready = True
-        self.game_controller.try_start()
 
 
     def send_keep_alive(self):
