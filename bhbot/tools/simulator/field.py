@@ -72,11 +72,7 @@ class FieldScene(QGraphicsScene):
 
         self.pieces = []
 
-        gradiant = QLinearGradient(0.5, 0.1, 0.5, 0.9)
-        gradiant.setCoordinateMode(QGradient.ObjectBoundingMode)
-        gradiant.setColorAt(0.0, QColor("#729fcf"))
-        gradiant.setColorAt(1.0, QColor("#eeeeec"))
-        self.setBackgroundBrush(gradiant)
+        self.setBackgroundBrush(QBrush(QColor("#82a2cf")))
 
         self.field = QGraphicsSvgItem(os.path.join(os.path.dirname(__file__), "field.svg"))
         self.addItem(self.field)
