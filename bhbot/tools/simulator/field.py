@@ -3,6 +3,7 @@
 
 import os
 import random
+import math
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
@@ -30,6 +31,16 @@ class FieldView(QGraphicsView):
     def resizeEvent(self, event):
         QGraphicsView.resizeEvent(self, event)
         self.fitInView(-200.0, -200.0, 3404, 2504, Qt.KeepAspectRatio)
+
+
+    def enterEvent(self, event):
+        QGraphicsView.enterEvent(self, event)
+        self.scene().mouse_item.setVisible(True)
+
+
+    def leaveEvent(self, event):
+        QGraphicsView.leaveEvent(self, event)
+        self.scene().mouse_item.setVisible(False)
 
 
 
@@ -67,8 +78,10 @@ class Piece(QGraphicsItemGroup):
 
 class FieldScene(QGraphicsScene):
 
-    def __init__(self, piece_config):
+    def __init__(self, piece_config, main_bar):
         QGraphicsScene.__init__(self)
+
+        self.main_bar = main_bar
 
         self.pieces = []
 
@@ -85,6 +98,27 @@ class FieldScene(QGraphicsScene):
         self.addText("x", font).setPos(-200.0, 80.0)
         self.addLine(-170.0, -170.0, 100.0, -170.0, pen)
         self.addText("y", font).setPos(120.0, -230.0)
+
+        # Mouse ghost robot item
+        ghost_pen = QPen(QColor("#edd400"))
+        self.mouse_item = QGraphicsItemGroup()
+        gyration = QGraphicsEllipseItem(-288.0, -288.0, 576.0, 576.0)
+        gyration.setPen(ghost_pen)
+        self.mouse_item.addToGroup(gyration)
+        piece_gyration = QGraphicsEllipseItem(-325.0, -325.0, 650.0, 650.0)
+        piece_gyration.setPen(ghost_pen)
+        self.mouse_item.addToGroup(piece_gyration)
+        robot_ghost = QGraphicsRectItem(-31.0, -170.0, 256.0, 340.0)
+        robot_ghost.setPen(ghost_pen)
+        self.mouse_item.addToGroup(robot_ghost)
+        line = QGraphicsLineItem(-50.0, 0.0, 50.0, 0.0)
+        line.setPen(ghost_pen)
+        self.mouse_item.addToGroup(line)
+        line = QGraphicsLineItem(0.0, -50.0, 0.0, 50.0)
+        line.setPen(ghost_pen)
+        self.mouse_item.addToGroup(line)
+        self.mouse_item.setVisible(False)
+        self.addItem(self.mouse_item)
 
         self.config = self.parse_piece_config(piece_config)
         self.display_config()
@@ -118,9 +152,7 @@ class FieldScene(QGraphicsScene):
         for c in self.config:
             for r in c:
                 s += str(r)
-        font = QFont()
-        font.setPointSize(70)
-        self.addText("Config:\n{0}".format(s), font).setPos(-500.0, 200.0)
+        self.main_bar.config.setText(s)
 
 
     def random_tuple(self):
@@ -170,3 +202,24 @@ class FieldScene(QGraphicsScene):
             x = 350.0 * (i + 1)
             self.add_piece(x, 800.0 + offset)
             self.add_piece(x, 2200.0 - offset)
+
+
+    def mouseMoveEvent(self, mouseEvent):
+        self.mouse_item.setVisible(True)
+        pos = mouseEvent.scenePos()
+        self.mouse_item.setPos(pos)
+        self.main_bar.x.setText("{0:=0.03f}".format(pos.y() / 1000.0))
+        self.main_bar.y.setText("{0:=0.03f}".format(pos.x() / 1000.0))
+        self.main_bar.angle.setText("{0:=0.03f}".format(self.convert_angle()))
+
+
+    def wheelEvent(self, wheelEvent):
+        self.mouse_item.setVisible(True)
+        angle = (self.mouse_item.rotation() + wheelEvent.delta() / 8) % 360.0
+        self.mouse_item.setRotation(angle)
+        self.main_bar.angle.setText("{0:=0.03f}".format(self.convert_angle()))
+
+
+    def convert_angle(self):
+        angle = (self.mouse_item.rotation() % 360.0) / 180.0 * math.pi
+        return math.atan2(math.cos(angle), math.sin(angle))

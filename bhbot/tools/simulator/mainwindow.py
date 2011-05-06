@@ -28,11 +28,12 @@ class MainWindow(QMainWindow, MainWindow_Ui):
         # self.setWindowIcon(QIcon.fromTheme("applications-development"))
         self.setWindowIcon(QIcon(os.path.join(os.path.dirname(__file__),'icons/main.png')))
 
-        self.main_bar_dock.setWidget(MainBar(self))
+        main_bar = MainBar(self)
+        self.main_bar_dock.setWidget(main_bar)
         self.red_robot_dock.setWidget(RobotView(self, TEAM_RED))
         self.blue_robot_dock.setWidget(RobotView(self, TEAM_BLUE))
 
-        self.field_scene = FieldScene(piece_config)
+        self.field_scene = FieldScene(piece_config, main_bar)
         self.setCentralWidget(FieldView(self.field_scene, self))
 
         self.game_controller = GameController(self)

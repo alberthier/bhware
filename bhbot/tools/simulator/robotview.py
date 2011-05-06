@@ -107,7 +107,6 @@ class GraphicsRobotObject(QObject):
         self.observers = []
 
         self.item = QGraphicsItemGroup()
-        #self.item.setTransformOriginPoint(31.0, 170.0)
         self.robot_item = QGraphicsSvgItem(os.path.join(os.path.dirname(__file__), "robot.svg"))
         self.robot_item.setPos(-31.0, -170.0)
         self.item.addToGroup(self.robot_item)
@@ -119,6 +118,12 @@ class GraphicsRobotObject(QObject):
         team_indicator.setBrush(color)
         team_indicator.setPen(QPen(0))
         self.item.addToGroup(team_indicator)
+        gyration = QGraphicsEllipseItem(-288.0, -288.0, 576.0, 576.0)
+        gyration.setPen(QColor("#edd400"))
+        self.item.addToGroup(gyration)
+        piece_gyration = QGraphicsEllipseItem(-325.0, -325.0, 650.0, 650.0)
+        piece_gyration.setPen(QColor("#edd400"))
+        self.item.addToGroup(piece_gyration)
         self.left_sensor = Sensor("left")
         self.item.addToGroup(self.left_sensor)
         self.right_sensor = Sensor("right")
