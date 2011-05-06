@@ -22,6 +22,8 @@ class FieldView(QGraphicsView):
         policy.setVerticalStretch(255)
         self.setSizePolicy(policy)
 
+        self.setRenderHints(QPainter.Antialiasing | QPainter.SmoothPixmapTransform)
+
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
 

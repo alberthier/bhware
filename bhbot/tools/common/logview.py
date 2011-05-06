@@ -233,6 +233,8 @@ class TrajectoryView(QGraphicsView):
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
 
+        self.setRenderHints(QPainter.Antialiasing | QPainter.SmoothPixmapTransform)
+
         self.setSceneRect(-200.0, -200.0, 3404, 2504)
 
 
