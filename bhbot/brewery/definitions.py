@@ -3,6 +3,8 @@
 
 import math
 
+import trajectory
+
 __lookup={}
 __descriptions={}
 
@@ -11,6 +13,26 @@ def enum(name, description, **kwargs) :
     for k,v in kwargs.items() :
         globals()[k]=v
         __lookup.setdefault(name,{})[v]=k
+
+
+FIELD_WIDTH = 3.0
+FIELD_HEIGHT= 2.1
+FIELD_CELL_SIZE = 0.350
+FIELD_CELLS_COUNT = 6
+FIELD_GREEN_ZONE_WIDTH = 0.450
+PIECE_RADIUS = 0.2
+ROBOT_WIDTH = 0.337
+ROBOT_HEIGHT = 0.256
+ROBOT_CENTER_X = ROBOT_WIDTH / 2.0
+ROBOT_CENTER_Y = 0.031
+ROBOT_EMPTY_GYRATION_RADIUS = 0.288
+ROBOT_WITH_PIECE_GYRATION_RADIUS = 0.325
+RED_START_POSE = trajectory.Pose(ROBOT_CENTER_Y, ROBOT_CENTER_X + 0.050, math.pi / 2.0)
+BLUE_START_POSE = trajectory.Pose(FIELD_WIDTH - ROBOT_CENTER_Y, ROBOT_CENTER_X + 0.050, -math.pi / 2.0)
+OPPONENT_DETECTION_ANGLE = math.pi / 6.0
+OPPONENT_DETECTION_DISAPEARING_KEEP_ALIVE_TICKS = 4
+KEEP_ALIVE_DELAY_MS = 200
+
 
 enum("REMOTE_DEVICE",
     "Remote hardware type",
@@ -91,6 +113,14 @@ enum("NODE",
     NODE_RED = 1,
     NODE_GREEN = 2,
     NODE_UNKNOWN = 0,
+)
+
+enum("TRAJECTORY_WALK",
+    "Trajectory walk result",
+    TRAJECTORY_WALK_DESTINATION_REACHED = 0,
+    TRAJECTORY_WALK_PIECE_FOUND = 1,
+    TRAJECTORY_WALK_BLOCKED = 2,
+    TRAJECTORY_WALK_OPPONENT_DETECTED = 3,
 )
 
 ####### ADD DEFINITIONS ABOVE ###############

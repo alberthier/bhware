@@ -13,18 +13,14 @@ from definitions import *
 
 
 
+################################################################################
+# Setup states
+
 
 class Main(statemachine.State):
 
     def on_device_ready(self, team):
-        if team == TEAM_RED:
-            y = 0.031
-            angle = 0.0
-        elif team == TEAM_BLUE:
-            y = 3.0 - 0.031
-            angle = math.pi
-        x = 0.337 / 2.0 + 0.050
-        self.switch_to_substate(commonstates.DefinePosition(x, y, angle))
+        self.switch_to_substate(commonstates.DefinePosition())
 
 
     def on_exit_substate(self, substate):
@@ -40,10 +36,48 @@ class WaitStart(statemachine.State):
 
 
 
+
 class WaitFirstKeepAlive(statemachine.State):
 
     def on_keep_alive(self, current_pose, match_started, match_time):
-        self.switch_to_state(GotoFieldMove())
+        self.switch_to_state(GotoFirstIntersection())
+
+
+################################################################################
+# Place both first line pieces (Homologation)
+
+
+class GotoFirstIntersection(statemachine.State):
+
+    def on_enter(self):
+        dest_angle = math.pi / 8.0
+        (dest_x, dest_y) = trajectory.Cell(0, 0).down_right()
+        dest_x_dist = dest_x - RED_START_POSE.x
+        first_dist = FIELD_GREEN_ZONE_WIDTH + FIELD_CELL_SIZE - dest_x_dist / math.tan(dest_angle)
+        second_dist = dest_x_dist / math.sin(dest_angle)
+
+        self.walk = commonstates.TrajectoryWalk()
+        self.walk.forward(first_dist)
+        self.walk.rotate(dest_angle)
+        self.walk.forward(second_dist)
+        self.switch_to_substate(self.walk)
+        
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

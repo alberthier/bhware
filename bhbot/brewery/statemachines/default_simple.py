@@ -19,39 +19,7 @@ from definitions import *
 
 terrain_width=3.0
 
-class Cell(object):
-    cell_size = 0.35
-    offset_x = 0.450
-    total_cell_x = 6
-    total_cell_x_offset = total_cell_x * cell_size
-    def __init__(self, x, y) :
-        self.x = x
-        self.y = y
 
-    def center_left(self) :
-        x = self.offset_x + self.cell_size * self.x
-        y = self.cell_size * (self.y + 0.5)
-        return y,x
-    
-    def center_right(self) :
-        x = self.offset_x + self.cell_size * (self.x + 1)
-        y = self.cell_size * (self.y + 0.5)
-        return y,x
-
-    def down_right(self) :
-        x = self.offset_x + self.cell_size * (self.x + 1)
-        y = self.cell_size * (self.y + 1)
-        return y,x
-
-    def center_middle(self) :
-        x = self.offset_x + self.cell_size * (self.x + 0.5)
-        y = self.cell_size * (self.y + 0.5)
-        return y,x
-
-    def down_middle(self) :
-        x = self.offset_x + self.cell_size * (self.x + 0.5)
-        y = self.cell_size * (self.y + 1)
-        return y,x
 
 # homologation_trajectory = [ list(Cell(0,0).center_right()) + [ANGLE_S,DIRECTION_FORWARD]
 #                           , list(Cell(0,4).center_right()) + [ANGLE_S,DIRECTION_FORWARD]
@@ -59,9 +27,9 @@ class Cell(object):
 #                           ]
 
 #homologation_trajectory = [ list(Cell(0,0).center_left()) #+ [ ANGLE_SE ]
-#                          , [ANGLE_SE]  
+#                          , [ANGLE_SE]
 #                          , list(Cell(0,0).down_right()) + [ ANGLE_SE ]
-#                          , [ ANGLE_S ] 
+#                          , [ ANGLE_S ]
                           # , Cell(0,4).center_right()
                           # , [ ANGLE_SW ]
 #                          , list(Cell(0,4).down_right()) + [ ANGLE_SW ]
@@ -71,9 +39,9 @@ class Cell(object):
 #                          ]
 
 #homologation_trajectory = [ [ 0.1685, 0.5, ANGLE_E ]
-#                          , [ANGLE_SE]  
+#                          , [ANGLE_SE]
 #                          , list(Cell(0,0).down_right()) + [ ANGLE_SE ]
-#                          , [ ANGLE_S ] 
+#                          , [ ANGLE_S ]
                           # , Cell(0,4).center_right()
                           # , [ ANGLE_SW ]
 #                          , list(Cell(0,4).down_right()) + [ ANGLE_SW ]
@@ -83,9 +51,9 @@ class Cell(object):
 #                          ]
 
 homologation_trajectory = [ list(Cell(0,0).center_left()) + [ ANGLE_SE ]
-#                          , [ANGLE_SE]  
+#                          , [ANGLE_SE]
                           , list(Cell(0,0).down_right()) + [ ANGLE_SE ]
-                          , [ ANGLE_S ] 
+                          , [ ANGLE_S ]
                           # , Cell(0,4).center_right()
                           # , [ ANGLE_SW ]
                           , list(Cell(0,4).down_right()) + [ ANGLE_SW ]
@@ -113,7 +81,7 @@ class Pose(object):
     def get_values(self):
         # TODO : this x,y swapping pisses me off
         # return [self.x, self.y, self.angle, self.direction]
-        #a = self.angle + math.pi / 2 if self.angle else None 
+        #a = self.angle + math.pi / 2 if self.angle else None
         # return [self.y, self.x, a, self.direction, self.movement]
 #return [self.y, self.x, a, self.direction]
         return [self.x, self.y, self.angle, self.direction]
@@ -131,7 +99,7 @@ class TeamPose(Pose) :
             if not tools.quasi_null(self.x) and not tools.quasi_null(self.y) :
                 self.y = terrain_width - self.y
             # self.x = Cell.offset_x + (Cell.total_cell_x_offset / 2) + (Cell.total_cell_x_offset / 2 - (self.x - Cell.offset_x) )
-            if self.angle is not None : self.angle = mirror_angle_y(self.angle)        
+            if self.angle is not None : self.angle = mirror_angle_y(self.angle)
 
 class DefaultStateMachine(statemachine.StateMachine):
     """Default state machine"""
@@ -185,8 +153,8 @@ class HomologationStart(statemachine.State) :
     """Start of homologation"""
     def __init__(self):
         statemachine.State.__init__(self)
-    
-    def on_enter(self):        
+
+    def on_enter(self):
         self.switch_to_substate(Sequence( TrajectoryWalk(homologation_trajectory[0])
                                         , Deploy()
                                         , TrajectoryWalk(homologation_trajectory[1:])
@@ -196,79 +164,12 @@ class HomologationStart(statemachine.State) :
     def on_exit_substate(self, st):
         self.switch_to_state(HomologationEnd())
 
-class TrajectoryWalk(statemachine.State):
-    """Walk a path"""
-
-    def __init__(self,points):
-        statemachine.State.__init__(self)
-        self.points = self.load_points(points)
-        self.trajectory_complete = False
-
-    def load_points(self,points):
-        ret = deque()
-        lk = as_dict()
-        try :
-            for vals in points :
-                angle = None
-                x,y=0.0,0.0
-                dir_=DIRECTION_FORWARD
-                if len(vals) > 1 or type(vals) is dict :
-                    if type(vals) is dict :
-                        x,y = vals.get("pos",(x,y))
-                        angle = vals.get("angle",angle)
-                        dir_ = vals.get("dir",dir_)
-                    else :
-                        if len(vals) == 2 : x,y=vals
-                        if len(vals) == 3 : x,y,angle=vals
-                        if len(vals) == 4 : x,y,angle,dir_=vals
-                else : angle = vals[0]
-                a=lookup_defs("ANGLE",angle) if angle else None
-                d=lookup_defs("DIRECTION",dir_) if dir_ else None
-                logger.log("Traj : {0},{1},{2},{3}".format(x,y,a,d))
-                ret.points.append(TeamPose(x,y,angle,dir_))
-        except Exception, e :
-            logger.log( "Error decoding trajectory '{0}' : Exception is {1}".format(str(vals),str(e)))
-            logger.exception(e)
-        logger.log("Points : {0}".format(", ".join(str(p) for p in ret)))
-        return ret
-
-    def on_enter(self):
-        self.robot().goto_pose(self.fsm.points[0])
-
-    def on_goto_finished(self,ignore1,ignore2):
-        self.fsm.points.popleft()
-        if len(self.fsm.points) > 0 :
-            self.robot().goto_pose(self.fsm.points[0])
-        else:
-            self.trajectory_complete = True
-            self.exit_state()
-
-    def on_evit_detected(self):
-        self.exit_state()
-
-    def on_turret_detect(self, detect_angle):
-        # TODO : wait
-
-        # self.wait(time=5
-        #          ,success=self.continue_path
-        #          ,failure=lambda: self.fsm.exit()
-        #          ,condition=lambda : angle.is_aligned(vector(self.robot.pose,detect_angle), self.robot.current_direction, constants.90_DEGREES))
-        #          )
-        if self.robot().is_in_my_way(detect_angle) :
-            self.switch_to_state(WaitOpponentMove)
-
-    # def on_opponent_moved(self, position):
-    #     if self.robot.is_in_my_way(position) :
-    #         self.switch_to_state(WaitOpponentMove)
-    
-    # def continue_path(self):
-    #     self.robot.goto(self.robot.current_destination)
 
 class HomologationEnd(statemachine.State) :
     """End of homologation"""
     def __init__(self):
         statemachine.State.__init__(self)
-    
+
     def on_enter(self):
         self.robot().deploy()
         logger.log("Homologation ended")
@@ -289,8 +190,8 @@ if __name__=="__main__" :
             self.assertEquals(self.pose.y, 10.0)
         def test_mirror_angle(self):
             self.pose.change_team(TEAM_BLUE)
-            self.assertAlmostEqual(self.pose.angle, 0.0) 
-            
+            self.assertAlmostEqual(self.pose.angle, 0.0)
+
     class CellTest(unittest.TestCase):
         def setUp(self):
             self.c = Cell(1,1)
@@ -301,14 +202,14 @@ if __name__=="__main__" :
         def test_center_right(self):
             x,y = self.c.center_right()
             self.assertEquals(x, Cell.offset_x + Cell.cell_size * 2)
-            self.assertEquals(y,Cell.cell_size * 1.5)     
-            
+            self.assertEquals(y,Cell.cell_size * 1.5)
+
     class CellMirroringTest(unittest.TestCase):
         def test(self):
             p1 = TeamPose(*Cell(0,0).center_middle())
             p1.change_team(TEAM_BLUE)
             p2 = TeamPose(*Cell(0,5).center_middle())
             self.assertEqual(p1.get_values(),p2.get_values())
-               
+
 
     unittest.main()

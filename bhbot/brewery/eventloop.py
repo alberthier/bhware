@@ -17,6 +17,7 @@ import statemachine
 import leds
 import robot
 import figuredetector
+import opponentdetector
 from definitions import *
 
 
@@ -92,6 +93,7 @@ class EventLoop(object):
         self.robot = robot.Robot(self)
         self.state_machine_name = state_machine_name
         self.figure_detector = figuredetector.FigureDetector()
+        self.opponent_detector = opponentdetector.OpponentDetector(self)
 
 
     def handle_read(self, channel):
@@ -157,6 +159,7 @@ class EventLoop(object):
                             self.send_packet(channel.packet)
                             self.robot.pose = channel.packet.current_pose
                             leds.green.heartbeat_tick()
+                            self.opponent_detector.on_keep_alive(channel.packet.current_pose, channel.packet.match_started, channel.packet.match_time)
                             self.get_current_state().on_keep_alive(channel.packet.current_pose, channel.packet.match_started, channel.packet.match_time)
                         elif isinstance(channel.packet, packets.PositionControlConfig):
                             self.get_current_state().on_position_control_configured()
@@ -186,7 +189,7 @@ class EventLoop(object):
                         elif isinstance(channel.packet, packets.Reinitialize):
                             self.get_current_state().on_reinitialized()
                         elif isinstance(channel.packet, packets.TurretDetect):
-                            self.get_current_state().on_turret_detect(channel.packet.angle)
+                            self.opponent_detector.on_turret_detect(channel.packet.angle)
                         channel.packet = None
                 except Exception, e:
                     logger.exception(e)

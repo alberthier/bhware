@@ -157,5 +157,13 @@ class State(object):
         pass
 
 
-    def on_turret_detect(self, angle):
+    def on_opponent_entered(self, angle):
+        pass
+
+
+    def on_opponent_detected(self, angle):
+        pass
+
+
+    def on_opponent_left(self):
         pass

@@ -4,9 +4,14 @@
 
 import statemachine
 import packets
+import trajectory
+import logger
 from definitions import *
 
 from collections import deque
+
+
+
 
 class Timer(statemachine.State):
 
@@ -69,16 +74,22 @@ class SetupPositionControl(statemachine.State):
 
 class DefinePosition(statemachine.State):
 
-    def __init__(self, x, y, angle):
+    def __init__(self, x = None, y = None, angle = None):
         statemachine.State.__init__(self)
-        self.x = x
-        self.y = y
-        self.angle = angle
+        if x == None or y == None or angle == None:
+            self.pose = None
+        else:
+            self.pose = trajectory.Pose(x, y, angle)
         self.x_sent = False
         self.y_sent = False
 
 
     def on_enter(self):
+        if self.pose == None:
+            if self.robot().team == TEAM_RED:
+                self.pose = RED_START_POSE
+            else:
+                self.pose = BLUE_START_POSE
         self.process()
 
 
@@ -90,15 +101,15 @@ class DefinePosition(statemachine.State):
         if not self.x_sent:
             packet = packets.Resettle()
             packet.axis = AXIS_ABSCISSA
-            packet.position = self.x
-            packet.angle = self.angle
+            packet.position = self.pose.x
+            packet.angle = self.pose.angle
             self.send_packet(packet)
             self.x_sent = True
         elif not self.y_sent:
             packet = packets.Resettle()
             packet.axis = AXIS_ORDINATE
-            packet.position = self.y
-            packet.angle = self.angle
+            packet.position = self.pose.y
+            packet.angle = self.pose.angle
             self.send_packet(packet)
             self.y_sent = True
         else:
@@ -186,4 +197,120 @@ class CloseNippers(statemachine.State):
 
 
     def on_nippers_closed(self):
+        self.exit_substate()
+
+
+
+
+class TrajectoryWalk(statemachine.State):
+    """Walk a path"""
+
+    def __init__(self, points):
+        statemachine.State.__init__(self)
+        self.moves = deque()
+        self.current_packet = None
+        self.exit_reason = TRAJECTORY_WALK_DESTINATION_REACHED
+        self.load_points(points)
+
+
+    def move(self, dx, dy):
+        self.moves.append(('move', (dx, dy)))
+
+
+    def move_to(self, x, y):
+        self.moves.append(('move_to', (x, y)))
+
+
+    def forward(self, distance):
+        self.moves.append(('forward', (distance,)))
+
+
+    def backward(self, distance):
+        self.moves.append(('backward', (distance,)))
+
+
+    def look_at(self, x, y):
+        self.moves.append(('look_at', (x, y)))
+
+
+    def rotate(self, da):
+        self.moves.append(('rotate', (da,)))
+
+
+    def rotate_to(self, angle):
+        self.moves.append(('rotate_to', (angle,)))
+
+
+    def goto(self, x, y, angle, direction):
+        self.moves.append(('goto', x, y, angle, direction))
+
+
+    def load_points(self, points):
+        try :
+            for vals in points :
+                angle = None
+                x, y = 0.0, 0.0
+                direction = DIRECTION_FORWARD
+                if len(vals) > 1 or type(vals) is dict:
+                    if type(vals) is dict:
+                        x, y = vals.get("pos", (x, y))
+                        angle = vals.get("angle", angle)
+                        direction = vals.get("dir", direction)
+                    else :
+                        if len(vals) == 2:
+                            x, y = vals
+                        elif len(vals) == 3:
+                            x, y, angle = vals
+                        elif len(vals) == 4:
+                            x, y, angle, direction = vals
+                else:
+                    angle = vals[0]
+                    a = lookup_defs("ANGLE", angle) if angle else None
+                    d = lookup_defs("DIRECTION", direction) if direction else None
+                    logger.log("Traj : {0}, {1}, {2}, {3}".format(x, y, a, d))
+                    self.goto(x, y, angle, direction)
+        except Exception, e :
+            logger.log( "Error decoding trajectory '{0}' : Exception is {1}".format(str(vals),str(e)))
+            logger.exception(e)
+
+
+    def on_enter(self):
+        self.process_next_move()
+
+
+    def on_goto_finished(self, reason, current_pose):
+        if reason == REASON_DESTINATION_REACHED:
+            self.exit_reason = TRAJECTORY_WALK_DESTINATION_REACHED
+            self.current_packet = None
+            self.process_next_move()
+        elif reason == REASON_PIECE_FOUND:
+            self.exit_reason = TRAJECTORY_WALK_PIECE_FOUND
+            self.exit_substate()
+
+
+    def process_next_move(self):
+        if self.current_packet == None:
+            if len(self.moves) == 0:
+                self.exit_reason = TRAJECTORY_WALK_DESTINATION_REACHED
+                self.exit_substate()
+            else:
+                (method, args) = self.moves.popleft()
+                if hasattr(self.robot(), method):
+                    self.current_packet = getattr(self.robot(), method)(*args)
+                    self.send_packet(self.current_packet)
+                else:
+                    logger.log("Unknown move method: {O}{1}".format(method, args))
+                    self.exit_reason = TRAJECTORY_WALK_DESTINATION_REACHED
+                    self.exit_substate()
+        else:
+            self.send_packet(self.current_packet)
+
+
+    def on_blocked(self, side):
+        self.exit_reason = TRAJECTORY_WALK_BLOCKED
+        self.exit_substate()
+
+
+    def on_opponent_detected(self, angle):
+        self.exit_reason = TRAJECTORY_WALK_OPPONENT_DETECTED
         self.exit_substate()

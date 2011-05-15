@@ -10,6 +10,8 @@ from PyQt4.QtGui import *
 from PyQt4.QtSvg import *
 from PyQt4.Qt import Qt
 
+from definitions import *
+
 
 
 
@@ -104,13 +106,15 @@ class FieldScene(QGraphicsScene):
         # Mouse ghost robot item
         ghost_pen = QPen(QColor("#edd400"))
         self.mouse_item = QGraphicsItemGroup()
-        gyration = QGraphicsEllipseItem(-288.0, -288.0, 576.0, 576.0)
+        empty_gyr = ROBOT_EMPTY_GYRATION_RADIUS * 1000.0
+        gyration = QGraphicsEllipseItem(-empty_gyr, -empty_gyr, 2.0 * empty_gyr, 2.0 * empty_gyr)
         gyration.setPen(ghost_pen)
         self.mouse_item.addToGroup(gyration)
-        piece_gyration = QGraphicsEllipseItem(-325.0, -325.0, 650.0, 650.0)
+        piece_gyr = ROBOT_WITH_PIECE_GYRATION_RADIUS * 1000.0
+        piece_gyration = QGraphicsEllipseItem(-piece_gyr, -piece_gyr, 2.0 * piece_gyr, 2.0 * piece_gyr)
         piece_gyration.setPen(ghost_pen)
         self.mouse_item.addToGroup(piece_gyration)
-        robot_ghost = QGraphicsRectItem(-31.0, -170.0, 256.0, 340.0)
+        robot_ghost = QGraphicsRectItem(-ROBOT_CENTER_Y * 1000.0, -ROBOT_CENTER_X * 1000.0, ROBOT_HEIGHT * 1000.0, ROBOT_WIDTH * 1000.0)
         robot_ghost.setPen(ghost_pen)
         self.mouse_item.addToGroup(robot_ghost)
         line = QGraphicsLineItem(-50.0, 0.0, 50.0, 0.0)
@@ -178,7 +182,7 @@ class FieldScene(QGraphicsScene):
         self.setup_green_zone(self.config[0])
         self.setup_line(self.config[1], 0)
         self.setup_line(self.config[2], 350)
-        self.add_piece(1050.0, 1500.0)
+        self.add_piece(FIELD_HEIGHT / 2.0 * 1000.0, FIELD_WIDTH / 2.0 * 1000.0)
 
 
 
