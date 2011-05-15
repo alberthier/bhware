@@ -23,53 +23,72 @@ class Robot(object):
         self.stored_piece_count = 0
 
 
-    def move(self, dx, dy):
-        return self.goto(self.pose.x + dx, self.pose.y + dy, None, DIRECTION_FORWARD)
+    def move(self, dx, dy, reference_team = TEAM_UNKNOWN):
+        pose = self.get_reference_pose(reference_team)
+        pose.x += dx
+        pose.y += dy
+        pose = self.get_real_pose(pose, reference_team)
+        return self.goto(pose.x + dx, pose.y + dy, None, DIRECTION_FORWARD)
 
 
-    def move_to(self, x, y):
-        return self.goto(x, y, None, DIRECTION_FORWARD)
+    def move_to(self, x, y, reference_team = TEAM_UNKNOWN):
+        pose = self.get_reference_pose(reference_team)
+        pose.x = x
+        pose.y = y
+        pose = self.get_real_pose(pose, reference_team)
+        return self.goto(pose.x, pose.y, None, DIRECTION_FORWARD)
 
 
-    def forward(self, distance):
+    def forward(self, distance, reference_team = TEAM_UNKNOWN):
         dx = math.cos(self.pose.angle) * distance
         dy = math.sin(self.pose.angle) * distance
-        return self.goto(self.pose.x + dx, self.pose.y + dy, None, DIRECTION_FORWARD)
+        return self.move(dx, dy, None, DIRECTION_FORWARD)
 
 
-    def backward(self, distance):
+    def backward(self, distance, reference_team = TEAM_UNKNOWN):
         dx = math.cos(self.pose.angle) * distance
         dy = math.sin(self.pose.angle) * distance
-        return self.goto(self.pose.x - dx, self.pose.y - dy, None, DIRECTION_BACKWARD)
+        return self.move(-dx, -dy, None, DIRECTION_BACKWARD)
 
 
-    def look_at(self, x, y):
-        dx = x - self.pose.x
-        dy = y - self.pose.y
-        return self.rotate_to(math.atan2(dy, dx))
+    def look_at(self, x, y, reference_team = TEAM_UNKNOWN):
+        pose = self.get_reference_pose(reference_team)
+        dx = x - pose.x
+        dy = y - pose.y
+        pose.angle = math.atan2(dy, dx)
+        pose = self.get_real_pose(pose, reference_team)
+        return self.rotate_to(pose.angle)
 
 
-    def rotate(self, da):
-        return self.goto(None, None, self.pose.angle + da, DIRECTION_FORWARD)
+    def rotate(self, da, reference_team = TEAM_UNKNOWN):
+        pose = self.get_reference_pose(reference_team)
+        pose.angle += da
+        pose = self.get_real_pose(pose, reference_team)
+        return self.goto(None, None, pose.angle, DIRECTION_FORWARD)
 
 
-    def rotate_to(self, angle):
+    def rotate_to(self, angle, reference_team = TEAM_UNKNOWN):
+        pose = self.get_reference_pose(reference_team)
+        pose.angle = angle
+        pose = self.get_real_pose(pose, reference_team)
         return self.goto(None, None, angle, DIRECTION_FORWARD)
 
 
-    def goto(self, x, y, angle, direction):
+    def goto(self, x, y, angle, direction, reference_team = TEAM_UNKNOWN):
+        pose = trajectory.Pose(x, y, angle)
+        pose = self.get_real_pose(pose, reference_team)
         packet = packets.Goto()
         packet.movement = None
-        if x == None or tools.quasi_equal(x, self.pose.x):
-            x = self.pose.x
+        if pose.x == None or tools.quasi_equal(pose.x, self.pose.x):
+            pose.x = self.pose.x
         else:
             packet.movement = MOVEMENT_LINE
-        if y == None or tools.quasi_equal(y, self.pose.y):
-            y = self.pose.y
+        if pose.y == None or tools.quasi_equal(pose.y, self.pose.y):
+            pose.y = self.pose.y
         else:
             packet.movement = MOVEMENT_LINE
-        if angle == None or tools.quasi_equal(angle, self.pose.angle):
-            angle = self.pose.angle
+        if pose.angle == None or tools.quasi_equal(pose.angle, self.pose.angle):
+            pose.angle = self.pose.angle
             if packet.movement == None:
                 self.event_loop.inject_goto_finished()
                 return None
@@ -79,6 +98,6 @@ class Robot(object):
             packet.movement = MOVEMENT_ROTATE
 
         packet.direction = direction
-        packet.points = [trajectory.Pose(x, y, angle)]
+        packet.points = [trajectory.Pose(pose.x, pose.y, pose.angle)]
         self.event_loop.send_packet(packet)
         return packet
