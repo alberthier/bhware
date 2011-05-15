@@ -87,9 +87,9 @@ class DefinePosition(statemachine.State):
     def on_enter(self):
         if self.pose == None:
             if self.robot().team == TEAM_RED:
-                self.pose = RED_START_POSE
+                self.pose = trajectory.Pose(RED_START_X, RED_START_Y, RED_START_ANGLE)
             else:
-                self.pose = BLUE_START_POSE
+                self.pose = trajectory.Pose(BLUE_START_X, BLUE_START_Y, BLUE_START_ANGLE)
         self.process()
 
 
@@ -205,12 +205,14 @@ class CloseNippers(statemachine.State):
 class TrajectoryWalk(statemachine.State):
     """Walk a path"""
 
-    def __init__(self, points):
+    def __init__(self, points = None, reference_team = TEAM_RED):
         statemachine.State.__init__(self)
         self.moves = deque()
         self.current_packet = None
         self.exit_reason = TRAJECTORY_WALK_DESTINATION_REACHED
-        self.load_points(points)
+        self.reference_team = reference_team
+        if points != None:
+            self.load_points(points)
 
 
     def move(self, dx, dy):
@@ -314,3 +316,10 @@ class TrajectoryWalk(statemachine.State):
     def on_opponent_detected(self, angle):
         self.exit_reason = TRAJECTORY_WALK_OPPONENT_DETECTED
         self.exit_substate()
+
+
+    def teamify(self, packet):
+        if self.reference_team != self.robot().team:
+            for point in packet.points:
+                point.y = FIELD_WIDTH - point.y
+                point.angle = math.atan2(math.sin(point.angle), -math.cos(point.angle))

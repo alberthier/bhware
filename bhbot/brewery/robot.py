@@ -50,7 +50,7 @@ class Robot(object):
 
 
     def rotate(self, da):
-        self.goto(None, None, self.pose.angle + da, DIRECTION_FORWARD)
+        return self.goto(None, None, self.pose.angle + da, DIRECTION_FORWARD)
 
 
     def rotate_to(self, angle):

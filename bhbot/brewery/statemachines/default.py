@@ -50,10 +50,10 @@ class WaitFirstKeepAlive(statemachine.State):
 class GotoFirstIntersection(statemachine.State):
 
     def on_enter(self):
-        dest_angle = math.pi / 8.0
+        dest_angle = -math.pi / 8.0
         (dest_x, dest_y) = trajectory.Cell(0, 0).down_right()
-        dest_x_dist = dest_x - RED_START_POSE.x
-        first_dist = FIELD_GREEN_ZONE_WIDTH + FIELD_CELL_SIZE - dest_x_dist / math.tan(dest_angle)
+        dest_x_dist = dest_x - RED_START_X
+        first_dist = (FIELD_GREEN_ZONE_WIDTH + FIELD_CELL_SIZE - RED_START_Y) - dest_x_dist / math.tan(dest_angle)
         second_dist = dest_x_dist / math.sin(dest_angle)
 
         self.walk = commonstates.TrajectoryWalk()
@@ -61,7 +61,7 @@ class GotoFirstIntersection(statemachine.State):
         self.walk.rotate(dest_angle)
         self.walk.forward(second_dist)
         self.switch_to_substate(self.walk)
-        
+
 
 
 
