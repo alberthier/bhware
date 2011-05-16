@@ -244,7 +244,7 @@ class TrajectoryWalk(statemachine.State):
 
 
     def goto(self, x, y, angle, direction):
-        self.moves.append(('goto', x, y, angle, direction))
+        self.moves.append(('goto', (x, y, angle, direction)))
 
 
     def load_points(self, points):
@@ -298,8 +298,7 @@ class TrajectoryWalk(statemachine.State):
             else:
                 (method, args) = self.moves.popleft()
                 if hasattr(self.robot(), method):
-                    self.current_packet = getattr(self.robot(), method)(*args)
-                    self.send_packet(self.current_packet)
+                    self.current_packet = getattr(self.robot(), method)(*(args + (self.reference_team,)))
                 else:
                     logger.log("Unknown move method: {O}{1}".format(method, args))
                     self.exit_reason = TRAJECTORY_WALK_DESTINATION_REACHED
@@ -316,10 +315,3 @@ class TrajectoryWalk(statemachine.State):
     def on_opponent_detected(self, angle):
         self.exit_reason = TRAJECTORY_WALK_OPPONENT_DETECTED
         self.exit_substate()
-
-
-    def teamify(self, packet):
-        if self.reference_team != self.robot().team:
-            for point in packet.points:
-                point.y = FIELD_WIDTH - point.y
-                point.angle = math.atan2(math.sin(point.angle), -math.cos(point.angle))

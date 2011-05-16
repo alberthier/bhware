@@ -56,12 +56,17 @@ class GotoFirstIntersection(statemachine.State):
         first_dist = (FIELD_GREEN_ZONE_WIDTH + FIELD_CELL_SIZE - RED_START_Y) - dest_x_dist / math.tan(dest_angle)
         second_dist = dest_x_dist / math.sin(dest_angle)
 
-        self.walk = commonstates.TrajectoryWalk()
-        self.walk.forward(first_dist)
-        self.walk.rotate(dest_angle)
-        self.walk.forward(second_dist)
-        self.switch_to_substate(self.walk)
+        #self.walk = commonstates.TrajectoryWalk()
+        #self.walk.forward(first_dist)
+        #self.walk.rotate(dest_angle)
+        #self.walk.forward(second_dist)
+        #self.switch_to_substate(self.walk)
 
+        self.walk = commonstates.TrajectoryWalk()
+        self.walk.forward(0.500)
+        self.walk.look_at(dest_x, dest_y)
+        self.walk.move_to(dest_x, dest_y)
+        self.switch_to_substate(self.walk)
 
 
 
