@@ -218,7 +218,8 @@ class RobotController(object):
                 self.field_object.item.setY(packet.position * 1000.0)
             elif packet.axis == AXIS_ORDINATE:
                 self.field_object.item.setX(packet.position * 1000.0)
-            self.field_object.item.setRotation(packet.angle / math.pi * 180.0)
+            angle = math.atan2(math.cos(packet.angle), math.sin(packet.angle)) / math.pi * 180.0
+            self.field_object.item.setRotation(angle)
             self.send_packet(packet)
             self.resettle_count += 1
             if self.resettle_count == 2:
