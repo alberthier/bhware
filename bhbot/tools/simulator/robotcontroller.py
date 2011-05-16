@@ -98,7 +98,7 @@ class RobotController(object):
 
         self.left_sensor = None
         self.right_sensor = None
-        self.nippers_sensor = None
+        self.elevator_sensor = None
         self.back_sensor = None
 
         self.resettle_count = 0
@@ -170,8 +170,8 @@ class RobotController(object):
         self.top_right_sensor.end_detection.connect(self.on_lateral_detection)
         self.bottom_right_sensor = SensorController(self.field_object.right_sensor, self.field_object, SENSOR_RIGHT_BOTTOM)
         self.bottom_right_sensor.end_detection.connect(self.on_lateral_detection)
-        self.nippers_sensor = SensorController(self.field_object.nippers_sensor, self.field_object)
-        self.nippers_sensor.start_detection.connect(self.on_nippers_detection)
+        self.elevator_sensor = SensorController(self.field_object.elevator_sensor, self.field_object)
+        self.elevator_sensor.start_detection.connect(self.on_elevator_detection)
         self.back_sensor = SensorController(self.field_object.back_sensor, self.field_object)
         self.back_sensor.start_detection.connect(self.on_back_detection)
 
@@ -315,8 +315,8 @@ class RobotController(object):
         self.send_packet(packet)
 
 
-    def on_nippers_detection(self, sensor):
-        self.front_pieces = self.nippers_sensor.currently_detected
+    def on_elevator_detection(self, sensor):
+        self.front_pieces = self.elevator_sensor.currently_detected
         for piece in self.front_pieces:
             self.field_object.item.addToGroup(piece)
 

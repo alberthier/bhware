@@ -71,7 +71,7 @@ class Sensor(QGraphicsLineItem):
     def __init__(self, side):
         QGraphicsLineItem.__init__(self)
         self.setPen(QPen(QColor("#73d216"), 10.0))
-        if side == "nippers":
+        if side == "elevator":
             x = 126.0
             y = 50.0
             self.setLine(x, y, x, -y)
@@ -128,8 +128,8 @@ class GraphicsRobotObject(QObject):
         self.item.addToGroup(self.left_sensor)
         self.right_sensor = Sensor("right")
         self.item.addToGroup(self.right_sensor)
-        self.nippers_sensor = Sensor("nippers")
-        self.item.addToGroup(self.nippers_sensor)
+        self.elevator_sensor = Sensor("elevator")
+        self.item.addToGroup(self.elevator_sensor)
         self.back_sensor = Sensor("back")
         self.item.addToGroup(self.back_sensor)
 
