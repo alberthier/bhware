@@ -50,32 +50,92 @@ class WaitFirstKeepAlive(statemachine.State):
 class GotoFirstIntersection(statemachine.State):
 
     def on_enter(self):
-        dest_angle = -math.pi / 8.0
-        (dest_x, dest_y) = trajectory.Cell(0, 0).down_right()
-        dest_x_dist = dest_x - RED_START_X
-        first_dist = (FIELD_GREEN_ZONE_WIDTH + FIELD_CELL_SIZE - RED_START_Y) - dest_x_dist / math.tan(dest_angle)
-        second_dist = dest_x_dist / math.sin(dest_angle)
-
-        #self.walk = commonstates.TrajectoryWalk()
-        #self.walk.forward(first_dist)
-        #self.walk.rotate(dest_angle)
-        #self.walk.forward(second_dist)
-        #self.switch_to_substate(self.walk)
-
         self.walk = commonstates.TrajectoryWalk()
         self.walk.forward(0.500)
-        self.walk.look_at(dest_x, dest_y)
-        self.walk.move_to(dest_x, dest_y)
+        (p1_x, p1_y) = trajectory.Cell(0, 0).bottom_right()
+        self.walk.look_at(p1_x, p1_y)
+        self.walk.move_to(p1_x, p1_y)
         self.switch_to_substate(self.walk)
 
 
+    def on_exit_substate(self, substate):
+        if self.walk.exit_reason == TRAJECTORY_WALK_DESTINATION_REACHED:
+            self.switch_to_state(GotoBottomIntersectionHeadFirst())
+        elif self.walk.exit_reason == TRAJECTORY_WALK_PIECE_FOUND:
+            self.switch_to_state(GotoFirstIntersectionWithPiece())
 
 
 
 
+class GotoFirstIntersectionWithPiece(statemachine.State):
+
+    def on_enter(self):
+        self.store_piece = commonstates.DirectStorePiece()
+
+        self.walk = commonstates.TrajectoryWalk()
+        self.walk.move_to(*trajectory.Cell(0, 0).bottom_right())
+        self.walk.look_at(*trajectory.Cell(0, 0).top_right())
+
+        self.switch_to_substate(self.store_piece)
+
+
+    def on_exit_substate(self, substate):
+        if substate == self.store_piece:
+            self.switch_to_substate(self.walk)
+        else:
+            self.switch_to_state(GotoBottomIntersectionBackFirst())
 
 
 
+class GotoBottomIntersectionHeadFirst(statemachine.State):
+
+    def on_enter(self):
+        self.walk = commonstates.TrajectoryWalk()
+        self.walk.move_to(*trajectory.Cell(0, 0).bottom_right())
+        self.walk.look_at(*trajectory.Cell(5, 0).top_right())
+        self.walk.move_to(*trajectory.Cell(5, 0).top_right())
+
+
+    def on_exit_substate(self, substate):
+        self.switch_to_state(GotoBottomIntersectionWithPiece())
+
+
+
+
+class GotoBottomIntersectionWithPiece(statemachine.State):
+
+    def on_enter(self):
+        self.store_piece = commonstates.DirectStorePiece()
+
+        self.walk = commonstates.TrajectoryWalk()
+        self.walk.rotate_to(-math.pi / 2.0)
+        self.walk.rotate_to(-math.pi)
+
+        self.switch_to_substate(self.store_piece)
+
+
+    def on_exit_substate(self, substate):
+        if substate == self.store_piece:
+            self.switch_to_substate(self.walk)
+        else:
+            self.switch_to_state(GotoBottomIntersectionBackFirst())
+
+
+
+
+class GotoBottomIntersectionBackFirst(statemachine.State):
+
+    def on_enter(self):
+        self.walk = commonstates.TrajectoryWalk()
+        self.walk.move_to(*trajectory.Cell(5, 0).top_right())
+        self.walk.look_at(*trajectory.Cell(4, 1).top_right())
+        self.walk.backward(0.150 * math.sqrt(2.0))
+        self.walk.forward(0.150 * math.sqrt(2.0))
+        self.switch_to_substate(self.walk)
+
+
+    def on_exit_substate(self, substate):
+        pass
 
 
 
