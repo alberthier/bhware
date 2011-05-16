@@ -50,7 +50,7 @@ class Robot(object):
         current_y = self.convert_y(self.pose.y, reference_team)
         dx = x - self.pose.x
         dy = y - current_y
-        return self.rotate(-math.atan2(dx, dy), reference_team)
+        return self.rotate_to(math.atan2(dy, dx), reference_team)
 
 
     def rotate(self, da, reference_team = TEAM_UNKNOWN):
@@ -100,10 +100,10 @@ class Robot(object):
         else:
             return FIELD_WIDTH - y
 
-            
+
     def convert_angle(self, angle, reference_team):
         if reference_team == TEAM_UNKNOWN or self.team == TEAM_UNKNOWN or reference_team == self.team:
             return angle
         else:
-            return math.atan2(math.sin(angle), -math.cos(angle))
+            return math.atan2(-math.sin(angle), math.cos(angle))
 
