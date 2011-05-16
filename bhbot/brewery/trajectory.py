@@ -33,31 +33,57 @@ class Cell(object):
         self.y = y
 
 
+    def top_left(self):
+        x = FIELD_GREEN_ZONE_WIDTH + FIELD_CELL_SIZE * self.x
+        y = FIELD_CELL_SIZE * self.y
+        return y, x
+
+
+    def top_middle(self):
+        x = FIELD_GREEN_ZONE_WIDTH + FIELD_CELL_SIZE * (self.x + 0.5)
+        y = FIELD_CELL_SIZE * self.y
+        return y, x
+
+
+    def top_right(self):
+        x = FIELD_GREEN_ZONE_WIDTH + FIELD_CELL_SIZE * (self.x + 1)
+        y = FIELD_CELL_SIZE * self.y
+        return y, x
+
+
     def center_left(self) :
         x = FIELD_GREEN_ZONE_WIDTH + FIELD_CELL_SIZE * self.x
         y = FIELD_CELL_SIZE * (self.y + 0.5)
-        return y,x
-
-
-    def center_right(self) :
-        x = FIELD_GREEN_ZONE_WIDTH + FIELD_CELL_SIZE * (self.x + 1)
-        y = FIELD_CELL_SIZE * (self.y + 0.5)
-        return y,x
-
-
-    def down_right(self) :
-        x = FIELD_GREEN_ZONE_WIDTH + FIELD_CELL_SIZE * (self.x + 1)
-        y = FIELD_CELL_SIZE * (self.y + 1)
-        return y,x
+        return y, x
 
 
     def center_middle(self) :
         x = FIELD_GREEN_ZONE_WIDTH + FIELD_CELL_SIZE * (self.x + 0.5)
         y = FIELD_CELL_SIZE * (self.y + 0.5)
-        return y,x
+        return y, x
 
 
-    def down_middle(self) :
+    def center_right(self) :
+        x = FIELD_GREEN_ZONE_WIDTH + FIELD_CELL_SIZE * (self.x + 1)
+        y = FIELD_CELL_SIZE * (self.y + 0.5)
+        return y, x
+
+
+    def bottom_left(self):
+        x = FIELD_GREEN_ZONE_WIDTH + FIELD_CELL_SIZE * self.x
+        y = FIELD_CELL_SIZE * (self.y + 1)
+        return y, x
+
+
+    def bottom_middle(self) :
         x = FIELD_GREEN_ZONE_WIDTH + FIELD_CELL_SIZE * (self.x + 0.5)
         y = FIELD_CELL_SIZE * (self.y + 1)
-        return y,x
+        return y, x
+
+
+    def bottom_right(self) :
+        x = FIELD_GREEN_ZONE_WIDTH + FIELD_CELL_SIZE * (self.x + 1)
+        y = FIELD_CELL_SIZE * (self.y + 1)
+        return y, x
+
+
