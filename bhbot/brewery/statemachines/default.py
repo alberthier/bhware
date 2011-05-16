@@ -91,9 +91,13 @@ class GotoBottomIntersectionHeadFirst(statemachine.State):
 
     def on_enter(self):
         self.walk = commonstates.TrajectoryWalk()
-        self.walk.move_to(*trajectory.Cell(0, 0).bottom_right())
+        self.walk.backward(0.125)
+        self.walk.look_at_opposite(*trajectory.Cell(0, 0).center_right())
+        (p1_x, p1_y) = trajectory.Cell(0, 0).center_right()
+        self.walk.move_to(p1_x, p1_y, DIRECTION_BACKWARD)
         self.walk.look_at(*trajectory.Cell(5, 0).top_right())
         self.walk.move_to(*trajectory.Cell(5, 0).top_right())
+        self.switch_to_substate(self.walk)
 
 
     def on_exit_substate(self, substate):
@@ -129,8 +133,18 @@ class GotoBottomIntersectionBackFirst(statemachine.State):
         self.walk = commonstates.TrajectoryWalk()
         self.walk.move_to(*trajectory.Cell(5, 0).top_right())
         self.walk.look_at(*trajectory.Cell(4, 1).top_right())
-        self.walk.backward(0.150 * math.sqrt(2.0))
-        self.walk.forward(0.150 * math.sqrt(2.0))
+        self.walk.backward(0.100 * math.sqrt(2.0))
+        self.walk.forward(0.100 * math.sqrt(2.0))
+        self.walk.look_at(*trajectory.Cell(3, 0).top_right())
+        self.walk.move_to(*trajectory.Cell(3, 0).top_right())
+        (p1_x, p1_y) = trajectory.Cell(5, 0).top_middle()
+        p1_y -= 0.040
+        self.walk.look_at_opposite(p1_x, p1_y)
+        self.walk.move_to(p1_x, p1_y, DIRECTION_BACKWARD)
+        self.walk.rotate_to(math.pi)
+        self.walk.forward(FIELD_CELL_SIZE * 3.2)
+        self.walk.look_at(*trajectory.Cell(0, 1).bottom_left())
+        self.walk.move_to(*trajectory.Cell(0, 1).bottom_left())
         self.switch_to_substate(self.walk)
 
 
