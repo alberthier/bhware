@@ -229,6 +229,11 @@ class RobotController(object):
         elif isinstance(packet, packets.StorePiece1):
             self.stored_pieces += self.front_pieces
             self.front_pieces = []
+            self.send_packet(packet)
+        elif isinstance(packet, packets.StorePiece2):
+            self.send_packet(packet)
+        elif isinstance(packet, packets.StorePiece3):
+            self.send_packet(packet)
         elif isinstance(packet, packets.ReleasePiece):
             for piece in self.stored_pieces:
                 self.field_object.item.removeFromGroup(piece)
@@ -300,12 +305,7 @@ class RobotController(object):
                 elif self.goto_packet.movement == MOVEMENT_MOVE:
                     self.field_object.robot_move(point.x, point.y, point.angle)
             else:
-                self.goto_packet = None
-                packet = packets.GotoFinished()
-                packet.reason = REASON_DESTINATION_REACHED
-                packet.current_pose = self.field_object.get_pose()
-                self.send_packet(packet)
-
+                self.send_goto_finished(REASON_DESTINATION_REACHED)
 
     def on_lateral_detection(self, sensor):
         packet = packets.PieceDetected()
@@ -316,6 +316,8 @@ class RobotController(object):
 
 
     def on_elevator_detection(self, sensor):
+        self.field_object.move_animation.stop()
+        self.send_goto_finished(REASON_PIECE_FOUND)
         self.front_pieces = self.elevator_sensor.currently_detected
         for piece in self.front_pieces:
             self.field_object.item.addToGroup(piece)
@@ -335,3 +337,11 @@ class RobotController(object):
     def resume(self):
         if self.field_object != None and self.field_object.move_animation.state() == QAbstractAnimation.Paused:
             self.field_object.move_animation.resume()
+
+
+    def send_goto_finished(self, reason):
+        self.goto_packet = None
+        packet = packets.GotoFinished()
+        packet.reason = reason
+        packet.current_pose = self.field_object.get_pose()
+        self.send_packet(packet)
