@@ -166,6 +166,17 @@ class StorePiece3(statemachine.State):
 
 
 
+class DirectStorePiece(Sequence):
+
+    def __init__(self):
+        Sequence.__init__(self)
+        self.add(StorePiece1())
+        self.add(StorePiece2())
+        self.add(StorePiece3())
+
+
+
+
 class ReleasePiece(statemachine.State):
 
     def on_enter(self):
