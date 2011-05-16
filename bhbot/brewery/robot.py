@@ -23,15 +23,15 @@ class Robot(object):
         self.stored_piece_count = 0
 
 
-    def move(self, dx, dy, reference_team = TEAM_UNKNOWN):
+    def move(self, dx, dy, direction = DIRECTION_FORWARD, reference_team = TEAM_UNKNOWN):
         y = self.convert_y(self.pose.y, reference_team)
         y = self.convert_y(y + dy, reference_team)
-        return self.goto(self.pose.x + dx, y, None, DIRECTION_FORWARD, self.team)
+        return self.goto(self.pose.x + dx, y, None, direction, self.team)
 
 
-    def move_to(self, x, y, reference_team = TEAM_UNKNOWN):
+    def move_to(self, x, y, direction = DIRECTION_FORWARD, reference_team = TEAM_UNKNOWN):
         y = self.convert_y(y, reference_team)
-        return self.goto(x, y, None, DIRECTION_FORWARD, self.team)
+        return self.goto(x, y, None, direction, self.team)
 
 
     def forward(self, distance, reference_team = TEAM_UNKNOWN):
@@ -51,6 +51,13 @@ class Robot(object):
         dx = x - self.pose.x
         dy = y - current_y
         return self.rotate_to(math.atan2(dy, dx), reference_team)
+
+
+    def look_at_opposite(self, x, y, reference_team = TEAM_UNKNOWN):
+        current_y = self.convert_y(self.pose.y, reference_team)
+        dx = x - self.pose.x
+        dy = y - current_y
+        return self.rotate_to(math.atan2(dy, dx) + math.pi, reference_team)
 
 
     def rotate(self, da, reference_team = TEAM_UNKNOWN):

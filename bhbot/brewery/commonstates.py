@@ -226,12 +226,12 @@ class TrajectoryWalk(statemachine.State):
             self.load_points(points)
 
 
-    def move(self, dx, dy):
-        self.moves.append(('move', (dx, dy)))
+    def move(self, dx, dy, direction = DIRECTION_FORWARD):
+        self.moves.append(('move', (dx, dy, direction)))
 
 
-    def move_to(self, x, y):
-        self.moves.append(('move_to', (x, y)))
+    def move_to(self, x, y, direction = DIRECTION_FORWARD):
+        self.moves.append(('move_to', (x, y, direction)))
 
 
     def forward(self, distance):
@@ -244,6 +244,10 @@ class TrajectoryWalk(statemachine.State):
 
     def look_at(self, x, y):
         self.moves.append(('look_at', (x, y)))
+
+
+    def look_at_opposite(self, x, y):
+        self.moves.append(('look_at_opposite', (x, y)))
 
 
     def rotate(self, da):
