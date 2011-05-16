@@ -292,9 +292,10 @@ class RobotController(object):
                 point = self.goto_packet.points[0]
                 self.goto_packet.points = self.goto_packet.points[1:]
                 if self.goto_packet.direction == DIRECTION_BACKWARD:
-                    for piece in self.stored_pieces:
+                    for piece in self.front_pieces:
                         self.field_object.item.removeFromGroup(piece)
-                    self.stored_pieces = []
+                    self.front_pieces = []
+                elif self.goto_packet.direction == DIRECTION_FORWARD and self.goto_packet.movement != MOVEMENT_ROTATE:
                     for piece in self.back_pieces:
                         self.field_object.item.removeFromGroup(piece)
                     self.back_pieces = []
