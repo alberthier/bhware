@@ -142,7 +142,43 @@ class GotoBottomIntersectionBackFirst(statemachine.State):
         self.walk.look_at_opposite(p1_x, p1_y)
         self.walk.move_to(p1_x, p1_y, DIRECTION_BACKWARD)
         self.walk.rotate_to(math.pi)
+        self.switch_to_substate(self.walk)
+
+
+    def on_exit_substate(self, substate):
+        if substate == self.walk:
+            # Timer eating PieceDetected noise during 500ms
+            self.switch_to_substate(commonstates.Timer(500))
+        else:
+            self.switch_to_state(ScanGreenZoneFigureConfiguration())
+
+
+
+
+class ScanGreenZoneFigureConfiguration(statemachine.State):
+
+    def on_enter(self):
+        if self.robot().team == TEAM_RED:
+            reference_sensor = SENSOR_LEFT_TOP
+        else:
+            reference_sensor = SENSOR_RIGHT_TOP
+        self.event_loop.figure_detector.enable(reference_sensor)
+        self.walk = commonstates.TrajectoryWalk()
         self.walk.forward(FIELD_CELL_SIZE * 3.2)
+        self.switch_to_substate(self.walk)
+
+
+    def on_exit_substate(self, substate):
+        self.event_loop.figure_detector.disable()
+        self.switch_to_state(PlaceSecondPiece())
+
+
+
+
+class PlaceSecondPiece(statemachine.State):
+
+    def on_enter(self):
+        self.walk = commonstates.TrajectoryWalk()
         self.walk.look_at(*trajectory.Cell(0, 1).bottom_left())
         self.walk.move_to(*trajectory.Cell(0, 1).bottom_left())
         self.switch_to_substate(self.walk)
@@ -150,6 +186,18 @@ class GotoBottomIntersectionBackFirst(statemachine.State):
 
     def on_exit_substate(self, substate):
         pass
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

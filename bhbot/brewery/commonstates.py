@@ -2,13 +2,14 @@
 # encoding: utf-8
 
 
+import datetime
+from collections import deque
+
 import statemachine
 import packets
 import trajectory
 import logger
 from definitions import *
-
-from collections import deque
 
 
 
