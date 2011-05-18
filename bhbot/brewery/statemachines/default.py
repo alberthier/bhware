@@ -62,6 +62,7 @@ class GotoFirstIntersection(statemachine.State):
         if self.walk.exit_reason == TRAJECTORY_WALK_DESTINATION_REACHED:
             self.switch_to_state(GotoBottomIntersectionHeadFirst())
         elif self.walk.exit_reason == TRAJECTORY_WALK_PIECE_FOUND:
+            self.event_loop.figure_detector.detected_at(1, trajectory.Cell(0, 0).bottom_right()[0])
             self.switch_to_state(GotoFirstIntersectionWithPiece())
 
 
@@ -87,9 +88,12 @@ class GotoFirstIntersectionWithPiece(statemachine.State):
 
 
 
+
 class GotoBottomIntersectionHeadFirst(statemachine.State):
 
     def on_enter(self):
+        sensor = self.robot().convert_sensor(SENSOR_LEFT_BOTTOM, TEAM_RED)
+        self.event_loop.figure_detector.enable(sensor, 2)
         self.walk = commonstates.TrajectoryWalk()
         self.walk.backward(0.125)
         self.walk.look_at_opposite(*trajectory.Cell(0, 0).center_right())
@@ -101,6 +105,8 @@ class GotoBottomIntersectionHeadFirst(statemachine.State):
 
 
     def on_exit_substate(self, substate):
+        self.event_loop.figure_detector.disable()
+        self.event_loop.figure_detector.detected_at(1, self.robot().pose.x + ROBOT_CENTER_TO_LATERAL_SENSOR_DISTANCE)
         self.switch_to_state(GotoBottomIntersectionWithPiece())
 
 
@@ -130,6 +136,8 @@ class GotoBottomIntersectionWithPiece(statemachine.State):
 class GotoBottomIntersectionBackFirst(statemachine.State):
 
     def on_enter(self):
+        sensor = self.robot().convert_sensor(SENSOR_RIGHT_BOTTOM, TEAM_RED)
+        self.event_loop.figure_detector.enable(sensor, 2)
         self.walk = commonstates.TrajectoryWalk()
         self.walk.move_to(*trajectory.Cell(5, 0).top_right())
         self.walk.look_at(*trajectory.Cell(4, 1).top_right())
@@ -137,20 +145,18 @@ class GotoBottomIntersectionBackFirst(statemachine.State):
         self.walk.forward(0.100 * math.sqrt(2.0))
         self.walk.look_at(*trajectory.Cell(3, 0).top_right())
         self.walk.move_to(*trajectory.Cell(3, 0).top_right())
-        (p1_x, p1_y) = trajectory.Cell(5, 0).top_middle()
+        (p1_x, p1_y) = trajectory.Cell(4, 0).top_middle()
         p1_y -= 0.040
         self.walk.look_at_opposite(p1_x, p1_y)
         self.walk.move_to(p1_x, p1_y, DIRECTION_BACKWARD)
         self.walk.rotate_to(math.pi)
+        self.walk.backward(FIELD_CELL_SIZE)
         self.switch_to_substate(self.walk)
 
 
     def on_exit_substate(self, substate):
-        if substate == self.walk:
-            # Timer eating PieceDetected noise during 500ms
-            self.switch_to_substate(commonstates.Timer(500))
-        else:
-            self.switch_to_state(ScanGreenZoneFigureConfiguration())
+        self.event_loop.figure_detector.disable()
+        self.switch_to_state(ScanGreenZoneFigureConfiguration())
 
 
 
@@ -158,11 +164,8 @@ class GotoBottomIntersectionBackFirst(statemachine.State):
 class ScanGreenZoneFigureConfiguration(statemachine.State):
 
     def on_enter(self):
-        if self.robot().team == TEAM_RED:
-            reference_sensor = SENSOR_LEFT_TOP
-        else:
-            reference_sensor = SENSOR_RIGHT_TOP
-        self.event_loop.figure_detector.enable(reference_sensor)
+        sensor = self.robot().convert_sensor(SENSOR_LEFT_TOP, TEAM_RED)
+        self.event_loop.figure_detector.enable(sensor, 0)
         self.walk = commonstates.TrajectoryWalk()
         self.walk.forward(FIELD_CELL_SIZE * 3.2)
         self.switch_to_substate(self.walk)
@@ -178,13 +181,28 @@ class ScanGreenZoneFigureConfiguration(statemachine.State):
 class PlaceSecondPiece(statemachine.State):
 
     def on_enter(self):
-        self.walk = commonstates.TrajectoryWalk()
-        self.walk.look_at(*trajectory.Cell(0, 1).bottom_left())
-        self.walk.move_to(*trajectory.Cell(0, 1).bottom_left())
-        self.switch_to_substate(self.walk)
+        self.sequence = commonstates.Sequence()
+        walk = commonstates.TrajectoryWalk()
+        (dest_x, dest_y) = trajectory.Cell(0, 1).bottom_left()
+        dest_x -= 0.060
+        dest_y += 0.060
+        walk.look_at(dest_x, dest_y)
+        walk.move_to(dest_x, dest_y)
+        self.sequence.add(walk)
+        self.sequence.add(commonstates.ReleasePiece())
+        walk = commonstates.TrajectoryWalk()
+        walk.backward(0.250)
+        dest_x = self.event_loop.figure_detector.get_first_match_x(0)
+        dest_y = trajectory.Cell(0, 0).top_right()[1]
+        walk.look_at_opposite(dest_x, dest_y)
+        walk.move_to(dest_x, dest_y, DIRECTION_BACKWARD)
+        walk.rotate_to(-math.pi / 2.0)
+        self.sequence.add(walk)
+        self.switch_to_substate(self.sequence)
 
 
     def on_exit_substate(self, substate):
+        logger.log("'" + str(self.event_loop.figure_detector.elements) + "'")
         pass
 
 
