@@ -92,7 +92,7 @@ class EventLoop(object):
         self.root_state.event_loop = self
         self.robot = robot.Robot(self)
         self.state_machine_name = state_machine_name
-        self.figure_detector = figuredetector.FigureDetector()
+        self.figure_detector = figuredetector.FigureDetector(self.robot)
         self.opponent_detector = opponentdetector.OpponentDetector(self)
 
 

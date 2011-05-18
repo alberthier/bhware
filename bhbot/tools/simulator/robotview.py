@@ -81,7 +81,7 @@ class Sensor(QGraphicsLineItem):
             self.setLine(x, y, x, -y)
         else:
             self.side = side
-            x = 100.0
+            x = ROBOT_CENTER_TO_LATERAL_SENSOR_DISTANCE * 1000.0
             detection_distance = 300.0
             y = 168.5
             if side == "left":

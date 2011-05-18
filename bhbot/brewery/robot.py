@@ -114,3 +114,17 @@ class Robot(object):
         else:
             return math.atan2(-math.sin(angle), math.cos(angle))
 
+
+    def convert_sensor(self, sensor, reference_team):
+        if reference_team == TEAM_UNKNOWN or self.team == TEAM_UNKNOWN or reference_team == self.team:
+            return sensor
+        else:
+            if sensor == SENSOR_LEFT_BOTTOM:
+                return SENSOR_RIGHT_BOTTOM
+            elif sensor == SENSOR_LEFT_TOP:
+                return SENSOR_RIGHT_TOP
+            elif sensor == SENSOR_RIGHT_BOTTOM:
+                return SENSOR_LEFT_BOTTOM
+            elif sensor == SENSOR_RIGHT_TOP:
+                return SENSOR_LEFT_TOP
+
