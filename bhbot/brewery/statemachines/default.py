@@ -192,26 +192,55 @@ class PlaceSecondPiece(statemachine.State):
         self.sequence.add(commonstates.ReleasePiece())
         walk = commonstates.TrajectoryWalk()
         walk.backward(0.250)
-        dest_x = self.event_loop.figure_detector.get_first_match_x(0)
-        dest_y = trajectory.Cell(0, 0).top_right()[1]
-        walk.look_at_opposite(dest_x, dest_y)
-        walk.move_to(dest_x, dest_y, DIRECTION_BACKWARD)
-        walk.rotate_to(-math.pi / 2.0)
         self.sequence.add(walk)
         self.switch_to_substate(self.sequence)
 
 
     def on_exit_substate(self, substate):
         logger.log("'" + str(self.event_loop.figure_detector.elements) + "'")
+        self.switch_to_state(TakeFirstFigure())
+
+
+
+
+class TakeFirstFigure(statemachine.State):
+
+    def on_enter(self):
+        self.sequence = commonstates.Sequence()
+        walk = commonstates.TrajectoryWalk()
+        figure_x = self.event_loop.figure_detector.get_first_match_x(0)
+        first_line_y = trajectory.Cell(0, 0).top_right()[1]
+        walk.look_at_opposite(figure_x, first_line_y)
+        walk.move_to(figure_x, first_line_y, DIRECTION_BACKWARD)
+        walk.rotate_to(-math.pi / 2.0)
+        walk.move_to(figure_x, 0.280)
+        self.sequence.add(walk)
+        self.sequence.add(commonstates.StorePiece1())
+        walk = commonstates.TrajectoryWalk()
+        walk.move_to(figure_x, first_line_y, DIRECTION_BACKWARD)
+        self.sequence.add(walk)
+        self.sequence.add(commonstates.StorePiece2())
+        self.sequence.add(commonstates.StorePiece3())
+
+        pieces_x = self.event_loop.figure_detector.get_green_zone_pawns_x()
+        for piece_x in pieces_x[:-1]:
+            walk = commonstates.TrajectoryWalk()
+            walk.look_at(piece_x, first_line_y)
+            walk.move_to(piece_x, first_line_y)
+            walk.rotate_to(-math.pi / 2.0)
+            walk.move_to(piece_x, 0.280)
+            self.sequence.add(walk)
+            self.sequence.add(commonstates.StorePiece1())
+            walk = commonstates.TrajectoryWalk()
+            walk.move_to(piece_x, first_line_y, DIRECTION_BACKWARD)
+            self.sequence.add(walk)
+            self.sequence.add(commonstates.StorePiece2())
+            self.sequence.add(commonstates.StorePiece3())
+        self.switch_to_substate(self.sequence)
+
+
+    def on_exit_substate(self, substate):
         pass
-
-
-
-
-
-
-
-
 
 
 

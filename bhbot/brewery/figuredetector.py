@@ -89,3 +89,13 @@ class FigureDetector(object):
                 return self.x_coords[idx][column]
             idx += 1
         return None
+
+
+    def get_green_zone_pawns_x(self):
+        pawns_x = []
+        idx = 0
+        for elt in self.elements:
+            if not elt[0]:
+                pawns_x.append(self.x_coords[idx][0])
+            idx += 1
+        return pawns_x
