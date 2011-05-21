@@ -77,6 +77,8 @@ typedef struct
     float           decc_D3;
     float           decc_D4;
     float           decc_Dtot;
+
+    float           tempsAcc;
     //unsigned int m;
 } ParametresProfilVitesse;
 
