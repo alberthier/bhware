@@ -1,4 +1,6 @@
 #!/usr/bin/python
+# -*- coding: iso-8859-1 -*-
+
 
 import subprocess
 import sys
@@ -37,6 +39,7 @@ def lineForm(l_char):
 def stdoutParser(l_line):
     d_traj = {}
     for line in l_line:
+        ignored=True
         l_linedata = line.split(" ")
         if len(l_linedata) > 0:
             #if l_linedata[0] == "log_data:":
@@ -47,6 +50,7 @@ def stdoutParser(l_line):
                 if d_traj.keys().count(l_linedata[0]) == 0:
                     d_traj[l_linedata[0]] = []
                 d_traj[l_linedata[0]].append(float(l_linedata[1]))
+                ignored=False
             if l_linedata[0].count('logStr_', 0, 7) == 1:
                 l_linedata[0] = l_linedata[0].replace("logStr_", "")
                 l_linedata[0] = l_linedata[0].replace(":", "")
@@ -59,7 +63,9 @@ def stdoutParser(l_line):
                 else:
                     textMsg = l_linedata[1]
                 d_traj[l_linedata[0]].append(textMsg)
-            
+                ignored=False
+            if ignored and line.startswith("LOG ") : print line[4:]
+    file("log.txt","w").write(str(d_traj))
     return d_traj
     
 #def trajFunction(K1 = 20.0, K2 = 75.0, K3 = 50.0, R1 = -10.2, R2 = -10.2, T1 = 3.0, T2 = 4.0, T3 = 900.0):
