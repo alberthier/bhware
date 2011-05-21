@@ -155,7 +155,10 @@ extern void                 ASSER_TRAJ_ResetLogAsserTable(void);
 extern unsigned int         ASSER_TRAJ_GetCompteur(void);
 
 #ifndef PIC32_BUILD
+#define                     ASSER_TRAJ_LogStr(...) printf("LOG " __VA_ARGS__)
 extern void                 ASSER_TRAJ_InitialisationLogAsser(void);
+#else
+#define                     ASSER_TRAJ_LogStr(...) /* */
 #endif
 
 /*! @} */
