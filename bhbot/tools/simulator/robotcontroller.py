@@ -229,10 +229,10 @@ class RobotController(object):
                 self.ready = True
                 self.game_controller.try_start()
         elif isinstance(packet, packets.StorePiece1):
-            self.stored_pieces += self.front_pieces
-            self.front_pieces = []
             self.send_packet(packet)
         elif isinstance(packet, packets.StorePiece2):
+            self.stored_pieces += self.front_pieces
+            self.front_pieces = []
             self.send_packet(packet)
         elif isinstance(packet, packets.StorePiece3):
             self.send_packet(packet)

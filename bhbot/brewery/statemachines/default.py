@@ -40,6 +40,10 @@ class WaitStart(statemachine.State):
 class WaitFirstKeepAlive(statemachine.State):
 
     def on_keep_alive(self, current_pose, match_started, match_time):
+        self.switch_to_substate(commonstates.Deploy())
+
+
+    def on_exit_substate(self, substate):
         self.switch_to_state(GotoFirstIntersection())
 
 
@@ -234,28 +238,32 @@ class TakeFirstFigure(statemachine.State):
         walk.look_at_opposite(figure_x, first_line_y)
         walk.move_to(figure_x, first_line_y, DIRECTION_BACKWARD)
         walk.rotate_to(-math.pi / 2.0)
-        walk.move_to(figure_x, 0.280)
         self.sequence.add(walk)
         self.sequence.add(commonstates.StorePiece1())
         walk = commonstates.TrajectoryWalk()
-        walk.move_to(figure_x, first_line_y, DIRECTION_BACKWARD)
+        walk.move_to(figure_x, 0.280)
         self.sequence.add(walk)
         self.sequence.add(commonstates.StorePiece2())
+        walk = commonstates.TrajectoryWalk()
+        walk.move_to(figure_x, first_line_y, DIRECTION_BACKWARD)
+        self.sequence.add(walk)
         self.sequence.add(commonstates.StorePiece3())
 
         pieces_x = self.event_loop.figure_detector.get_green_zone_pawns_x()
-        for piece_x in pieces_x[:-1]:
+        for piece_x in pieces_x[:-2]:
             walk = commonstates.TrajectoryWalk()
             walk.look_at(piece_x, first_line_y)
             walk.move_to(piece_x, first_line_y)
             walk.rotate_to(-math.pi / 2.0)
-            walk.move_to(piece_x, 0.280)
             self.sequence.add(walk)
             self.sequence.add(commonstates.StorePiece1())
             walk = commonstates.TrajectoryWalk()
-            walk.move_to(piece_x, first_line_y, DIRECTION_BACKWARD)
+            walk.move_to(piece_x, 0.280)
             self.sequence.add(walk)
             self.sequence.add(commonstates.StorePiece2())
+            walk = commonstates.TrajectoryWalk()
+            walk.move_to(piece_x, first_line_y, DIRECTION_BACKWARD)
+            self.sequence.add(walk)
             self.sequence.add(commonstates.StorePiece3())
         self.switch_to_substate(self.sequence)
 
