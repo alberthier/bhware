@@ -14,6 +14,36 @@ import world
 
 from definitions import *
 
+# Tango Colors
+# Used  Color   Name
+#  X   #eeeeec Aluminium 1
+#  x   #d3d7cf Aluminium 2
+#  X   #babdb6 Aluminium 3
+#  X   #888a85 Aluminium 4
+#  X   #555753 Aluminium 5
+#  X   #2e3436 Aluminium 6
+#  X   #fce94f Butter 1
+#  X   #edd400 Butter 2
+#  X   #c4a000 Butter 3
+#  X   #8ae234 Chameleon 1
+#  X   #73d216 Chameleon 2
+#  X   #4e9a06 Chameleon 3
+#  X   #e9b96e Chocolate 1
+#  X   #c17d11 Chocolate 2
+#  X   #8f5902 Chocolate 3
+#  X   #fcaf3e Orange 1
+#  X   #f57900 Orange 2
+#  X   #ce5c00 Orange 3
+#  X   #ad7fa8 Plum 1
+#  X   #75507b Plum 2
+#  X   #5c3566 Plum 3
+#  X   #ef2929 Scarlet Red 1
+#  X   #cc0000 Scarlet Red 2
+#  X   #a40000 Scarlet Red 3
+#  X   #729fcf Sky Blue 1
+#  X   #3465a4 Sky Blue 2
+#  X   #204a87 Sky Blue 3
+
 #               Type                      Displayed name             Color     Displayed by default
 CATEGORIES = [["KeepAlive"             , "Keep Alive"             , "#fce94f", False],
               ["SimulatorData"         , "Simulator Data"         , "#c4a000", False],
@@ -32,9 +62,12 @@ CATEGORIES = [["KeepAlive"             , "Keep Alive"             , "#fce94f", F
               ["Resettle"              , "Resettle"               , "#204a87", True],
               ["Deployment"            , "Deployment"             , "#75507b", True],
               ["PieceDetected"         , "Piece Detected"         , "#c17d11", True],
-              ["StorePiece"            , "Store Piece"            , "#ef2929", True],
-              ["PieceStored"           , "Piece Stored"           , "#d4d7cf", True],
+              ["StorePiece1"           , "Store Piece 1"          , "#ef2929", True],
+              ["StorePiece2"           , "Store Piece 2"          , "#2e3436", True],
+              ["StorePiece3"           , "Store Piece 3"          , "#8ae234", True],
               ["ReleasePiece"          , "Release Piece"          , "#fcaf3e", True],
+              ["OpenNippers"           , "Open Nippers"           , "#eeeeec", True],
+              ["CloseNippers"          , "Close Nippers"          , "#d3d7cf", True],
               ["Reinitialize"          , "Reinitialize"           , "#5c3566", True],
               ["TurretDetect"          , "Turret Detect"          , "#babdb6", True],
               ["str"                   , "Log Text"               , "#555753", True]]
