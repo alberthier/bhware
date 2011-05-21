@@ -170,6 +170,8 @@ static void                     ASSER_TRAJ_Acceleration_np1(float a, float d, fl
 static unsigned char            ASSER_TRAJ_Acceleration(ParametresProfilVitesse *ppv, float vitesse_in, float flag_TD, float Te, float pas_dist, float alpha, float vmax, float tempsAcc, float D, float *vitesse_suivante);
 static unsigned int             ASSER_TRAJ_Decceleration(ParametresProfilVitesse *ppv, float vitesse_in, float flag_TD, float Te, float pas_dist, float alpha, float vmax, float tempsAcc, float D, float *vitesse_suivante);
 static float                    ASSER_TRAJ_ProfilConsigneVitesse_V5(Trajectoire *traj, float distanceRestante, float vitesse_initiale, unsigned int flag_TD);
+static unsigned char            ASSER_TRAJ_isDeplacement(Trajectoire *traj);
+
 
 #if 0
 static void                     ASSER_TRAJ_InitialisationDeriv2(unsigned int iPt, Vecteur q);
@@ -192,6 +194,11 @@ extern void ASSER_TRAJ_InitialisationGenerale(void)
     chemin.profilVitesse.p = 0;
 
     ASSER_TRAJ_ResetLogAsserTable();
+}
+
+static unsigned char            ASSER_TRAJ_isDeplacement(Trajectoire *traj)
+{
+    return traj->mouvement > ROTATION;
 }
 
 /**********************************************************************/
@@ -342,7 +349,7 @@ extern void ASSER_TRAJ_AsservissementMouvementRobot(Pose poseRobot, VitessesRobo
                 /* distance de deplacement sur la periode */
                 //delta_distance = vitesse_profil_consigne * TE;
                 //delta_distance = cos(g_poseRobotTrajectoire.angle) * (poseRobot.x - g_poseRobotTrajectoire.x) + sin(g_poseRobotTrajectoire.angle) * (poseRobot.y - g_poseRobotTrajectoire.y);
-                if (chemin.mouvement == DEPLACEMENT)
+                if (ASSER_TRAJ_isDeplacement(&chemin))
                 {
                     delta_distance = cos(poseReferenceRobot.angle) * (poseRobot.x - poseReferenceRobot.x) + sin(poseReferenceRobot.angle) * (poseRobot.y - poseReferenceRobot.y);
                 }
@@ -383,7 +390,7 @@ extern void ASSER_TRAJ_AsservissementMouvementRobot(Pose poseRobot, VitessesRobo
             //poseReferenceOld = poseReference;
             //poseReferenceRobotOld = poseReferenceRobot;
             
-            if (chemin.mouvement == DEPLACEMENT)
+            if (ASSER_TRAJ_isDeplacement(&chemin))
             {
                 diff1BS = ASSER_TRAJ_DiffCourbeBSpline(&chemin.segmentTrajBS[segmentCourant], parametrePositionSegmentTrajectoire);
                 diff2BS = ASSER_TRAJ_Diff2CourbeBSpline(&chemin.segmentTrajBS[segmentCourant], parametrePositionSegmentTrajectoire);
@@ -434,7 +441,7 @@ extern void ASSER_TRAJ_AsservissementMouvementRobot(Pose poseRobot, VitessesRobo
 #endif /* PIC32_BUILD */
         }
 
-        if (chemin.mouvement == DEPLACEMENT)
+        if (ASSER_TRAJ_isDeplacement(&chemin))
         {
             erreurPoseCentreRobot = ASSER_TRAJ_ErreurPose(poseRobot, poseReferenceRobot);
 
@@ -541,7 +548,8 @@ extern void ASSER_TRAJ_AsservissementMouvementRobot(Pose poseRobot, VitessesRobo
  *  \param [in]     poseRobot       pose courante du robot integrant le choix de la marche (AVANT ou ARRIERE)
  *  \param [in]     point               pointeur du tableau des points imposes du chemin dont le point a atteindre en dernier
  *  \param [in]     nbrePts           nombre de points intermediaires du chemin par lesquelles passer +1 pour le point d'arrvee
- *  \param [in]     mouvement     type de mouvement a executer: un deplacement ou une pure rotation 
+ *  \param [in]     mouvement     type de mouvement a executer: un deplacement (DEPLACEMENT)
+                                    , une pure rotation (ROTATION) ou un déplacement qui finit en ligne droite (DEPLACEMENT_LIGNE_DROITE)
  */
 /**********************************************************************/
 extern void ASSER_TRAJ_InitialisationTrajectoire(Pose poseRobot, PtTraj *point, unsigned int nbrePts, unsigned int mouvement)
@@ -582,7 +590,7 @@ extern void ASSER_TRAJ_InitialisationTrajectoire(Pose poseRobot, PtTraj *point, 
 
     /* Liste des points terminee */
 
-    if (chemin.mouvement == DEPLACEMENT)
+    if (ASSER_TRAJ_isDeplacement(&chemin))
     {
         /* Configuration du profil de vitesse */
         chemin.profilVitesse.vmax = POS_GetConsVitesseMax();                /* UMAX * GAIN_STATIQUE_MOTEUR */
@@ -593,9 +601,16 @@ extern void ASSER_TRAJ_InitialisationTrajectoire(Pose poseRobot, PtTraj *point, 
             /* Conditions aux limites des derivees */
             cordeInitiale = sqrt(pow((g_tableauPoints[1].x - g_tableauPoints[0].x), 2.0) + pow((g_tableauPoints[1].y - g_tableauPoints[0].y), 2.0));
             angleInitial = poseRobot.angle;
+
             deltaI.x =  (cordeInitiale * 1.0) * cos(angleInitial);
             deltaI.y =  (cordeInitiale * 1.0) * sin(angleInitial);
             angleFinal = point[0].pose.angle;
+
+            if ( chemin.mouvement == DEPLACEMENT_LIGNE_DROITE)
+            {
+                angleFinal = atan2(point[0].pose.y - poseRobot.y, point[0].pose.x - poseRobot.x );
+            }
+
             deltaF.x =  (cordeInitiale * 1.0) * cos(angleFinal);
             deltaF.y =  (cordeInitiale * 1.0) * sin(angleFinal);
 
@@ -631,6 +646,13 @@ extern void ASSER_TRAJ_InitialisationTrajectoire(Pose poseRobot, PtTraj *point, 
                 {
                     /* Configuration d'une portion de trajectoire */
                     angleFinal = point[(iCurrentGPoint_n1 - 1)].pose.angle;
+
+                    // calcul de l'angle dans le cas déplacement ligne droite et dernier point de la traj
+                    if ( chemin.mouvement == DEPLACEMENT_LIGNE_DROITE && iCurrentGPoint_n1 == nbrePts)
+                    {
+                        angleFinal = atan2( point[iCurrentGPoint_n1].pose.y - point[iCurrentGPoint_n1 - 1].pose.y
+                                          , point[iCurrentGPoint_n1].pose.x - point[iCurrentGPoint_n1 - 1].pose.x );
+                    }
 
                     /*** Debut d'une boucle de config de portion de trajectoire ***/
                     /* Passage des segments de bords en B-Spline d'ordre 5, pour tenir compte des angles aux limites de chaque portion de trajectoire */
@@ -1508,7 +1530,7 @@ static unsigned char ASSER_TRAJ_ParcoursTrajectoire(Trajectoire *traj, float del
     {
         memoSegmentCourant = *segmentCourant;
 
-        if (traj->mouvement == DEPLACEMENT)
+        if (ASSER_TRAJ_isDeplacement(traj))
         {
             /* determination du ratio entre un deplacement en metre et un deplacement du parametre du chemin */
             diffD_T = ASSER_TRAJ_DiffCourbeBSpline(&traj->segmentTrajBS[*segmentCourant], *paramPoseSegTraj);
@@ -2627,7 +2649,7 @@ static unsigned char ASSER_TRAJ_TestFinAsservissement(Trajectoire *traj, float e
     poseRobot_asserEnd = POS_GetPoseRobot();
     
     /* Test pour un mouvement de deplacement */
-    if ((traj->mouvement == DEPLACEMENT) && ((erDist < tolDist) || (((erDist < (tolDist * 10.0)) && ((erDist - memo_erDist) > 0.0)))))
+    if ((ASSER_TRAJ_isDeplacement(traj)) && ((erDist < tolDist) || (((erDist < (tolDist * 10.0)) && ((erDist - memo_erDist) > 0.0)))))
     {
         ret = True;
         

@@ -138,8 +138,8 @@ def trajFunction(Kp = 10.0, Ki = 5.0, K1 = 20.0, K2 = 75.0, K3 = 50.0, R1 = -10.
     depMessagePI = depPI.cmdMsgGeneration()
     
     #generation d'un message de commande de deplacement
-    dep2 = commandMsg("MSG_MAIN_GOTO 1 1")   # 'DEPLACEMENT' en 'MARCHE_AVANT'
-    dep2.addPose("2.0 -0.7 0.0 1")
+    dep2 = commandMsg("MSG_MAIN_GOTO 2 1")   # 'DEPLACEMENT' en 'MARCHE_AVANT'
+    dep2.addPose("2.0 0.5 0.0 1")
     depMessage2 = dep2.cmdMsgGeneration()
     
     #lancement du simulateur de deplacement
