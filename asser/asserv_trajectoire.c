@@ -62,7 +62,7 @@ float                           gainDeplacement3                        =   20.0
 float                           tempsAcc                                =   1.0;      /* Acceleration du deplacement sur la trajectoire,
                         -> temps en secondes pour passer de 0 a la vitesse max retournee par POS_GetConsVitesseMax() */
 float                           ALPHA_ACC                               =   0.5;
-float                           ALPHA_DECC                              =   0.9;
+float                           ALPHA_DECC                              =   0.5;
 
 float                           facteurVitesseAngulaireMax              =   4.0;
                             
@@ -194,6 +194,8 @@ extern void ASSER_TRAJ_InitialisationGenerale(void)
     chemin.profilVitesse.p = 0;
 
     ASSER_TRAJ_ResetLogAsserTable();
+
+    chemin.profilVitesse.tempsAcc = tempsAcc;
 }
 
 static unsigned char            ASSER_TRAJ_isDeplacement(Trajectoire *traj)
@@ -595,6 +597,9 @@ extern void ASSER_TRAJ_InitialisationTrajectoire(Pose poseRobot, PtTraj *point, 
 
     if (ASSER_TRAJ_isDeplacement(&chemin))
     {
+        /* temps d'acceleration/decceration par defaut */
+        tempsAcc = chemin.profilVitesse.tempsAcc;
+
         /* Position a atteindre (condition d'arret du test de fin d'asservissment) */
         chemin.posArrivee.x = point[(nbrePts - 1)].pose.x;
         chemin.posArrivee.y = point[(nbrePts - 1)].pose.y;
@@ -791,7 +796,10 @@ extern void ASSER_TRAJ_InitialisationTrajectoire(Pose poseRobot, PtTraj *point, 
 
     }
     else
-    {       
+    {
+        /* temps d'acceleration/decceration reduit pour la rotation */
+        tempsAcc = chemin.profilVitesse.tempsAcc * 2.0;
+
         /* Position a atteindre (condition d'arret du test de fin d'asservissment) */
         chemin.posArrivee.x = poseRobot.x + NORME_BARRE_SUIVI_TRAJ * cos(point[0].pose.angle);
         chemin.posArrivee.y = poseRobot.y + NORME_BARRE_SUIVI_TRAJ * sin(point[0].pose.angle);
