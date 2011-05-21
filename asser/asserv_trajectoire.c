@@ -571,10 +571,6 @@ extern void ASSER_TRAJ_InitialisationTrajectoire(Pose poseRobot, PtTraj *point, 
     segmentCourant = 0;
     shuntTestFinAsser = False;
 
-    /* Position a atteindre (condition d'arret du test de fin d'asservissment) */
-    chemin.posArrivee.x = point[(nbrePts - 1)].pose.x;
-    chemin.posArrivee.y = point[(nbrePts - 1)].pose.y;
-
     /* Constitution des points a interpoler */
     g_tableauPoints[0].x = poseRobot.x;
     g_tableauPoints[0].y = poseRobot.y;
@@ -599,6 +595,10 @@ extern void ASSER_TRAJ_InitialisationTrajectoire(Pose poseRobot, PtTraj *point, 
 
     if (ASSER_TRAJ_isDeplacement(&chemin))
     {
+        /* Position a atteindre (condition d'arret du test de fin d'asservissment) */
+        chemin.posArrivee.x = point[(nbrePts - 1)].pose.x;
+        chemin.posArrivee.y = point[(nbrePts - 1)].pose.y;
+
         /* Configuration du profil de vitesse */
         chemin.profilVitesse.vmax = POS_GetConsVitesseMax();                /* UMAX * GAIN_STATIQUE_MOTEUR */
         chemin.profilVitesse.acc = chemin.profilVitesse.vmax / tempsAcc;
@@ -791,7 +791,11 @@ extern void ASSER_TRAJ_InitialisationTrajectoire(Pose poseRobot, PtTraj *point, 
 
     }
     else
-    {
+    {       
+        /* Position a atteindre (condition d'arret du test de fin d'asservissment) */
+        chemin.posArrivee.x = poseRobot.x + NORME_BARRE_SUIVI_TRAJ * cos(point[0].pose.angle);
+        chemin.posArrivee.y = poseRobot.y + NORME_BARRE_SUIVI_TRAJ * sin(point[0].pose.angle);
+
         /* Configuration du profil de vitesse */
         chemin.profilVitesse.vmax = POS_GetConsVitesseAngulaireMax() * NORME_BARRE_SUIVI_TRAJ;
         chemin.profilVitesse.acc = chemin.profilVitesse.vmax / tempsAcc;
@@ -800,9 +804,7 @@ extern void ASSER_TRAJ_InitialisationTrajectoire(Pose poseRobot, PtTraj *point, 
         //chemin.segmentTraj[0].posDepart.x = poseRobot.x + (NORME_BARRE_SUIVI_TRAJ * cos(poseRobot.angle));
         //chemin.segmentTraj[0].posDepart.y = poseRobot.y + (NORME_BARRE_SUIVI_TRAJ * sin(poseRobot.angle));
         chemin.nbreSegments = 1;
-        posAPointer.x = point[0].pose.x;
-        posAPointer.y = point[0].pose.y;
-        chemin.rotation.angle = POS_ErreurOrientation(chemin.rotation.poseDepartRobot, posAPointer);
+        chemin.rotation.angle = POS_ModuloAngle(point[0].pose.angle - poseRobot.angle);
 
         /* Calcul du point d'arrivee de la trajectoire de consigne */
         //poseArriveeTemp = ASSER_TRAJ_TrajectoireRotation(&(chemin.rotation), 1.0);
