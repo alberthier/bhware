@@ -136,7 +136,7 @@ def trajFunction(Kp = 10.0, Ki = 5.0, K1 = 20.0, K2 = 75.0, K3 = 50.0, R1 = -10.
     depMessage1 = dep1.cmdMsgGeneration()
     
     depR = commandMsg("MSG_MAIN_GOTO 0 1")   # 'ROTATION' en 'MARCHE_AVANT'
-    depR.addPose("-1.0 -0.2 0.0")
+    depR.addPose("-1.0 -0.2 3.14")
     depMessageR = depR.cmdMsgGeneration()
 	
     depPI = commandMsg("MSG_MAIN_GOTO 1 1")   # 'DEPLACEMENT' en 'MARCHE_AVANT'
@@ -144,8 +144,8 @@ def trajFunction(Kp = 10.0, Ki = 5.0, K1 = 20.0, K2 = 75.0, K3 = 50.0, R1 = -10.
     depMessagePI = depPI.cmdMsgGeneration()
     
     #generation d'un message de commande de deplacement
-    dep2 = commandMsg("MSG_MAIN_GOTO 2 1")   # 'DEPLACEMENT' en 'MARCHE_AVANT'
-    dep2.addPose("2.0 0.5 0.0 1")
+    dep2 = commandMsg("MSG_MAIN_GOTO 1 1")   # 'DEPLACEMENT' en 'MARCHE_AVANT'
+    dep2.addPose("2.5 0.0 0.0 1")
     depMessage2 = dep2.cmdMsgGeneration()
     
     #lancement du simulateur de deplacement
@@ -919,7 +919,7 @@ traj = trajFunction(Kp = 1.49
                     , K3 = 20.0
                     , R1 = -6.0
                     , R2 = -6.0
-                    , T1 = 2.0	# tempsAcc
+                    , T1 = 0.5	# tempsAcc
                     , T2 = 1.2	# facteur de vitesse angulaire
                     , T3 = 900.0	# Umax
                     )

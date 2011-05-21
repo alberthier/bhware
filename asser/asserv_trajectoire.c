@@ -61,6 +61,7 @@ float                           gainDeplacement3                        =   20.0
 /** Parametres de la generation de trajectoire */
 float                           tempsAcc                                =   1.0;      /* Acceleration du deplacement sur la trajectoire,
                         -> temps en secondes pour passer de 0 a la vitesse max retournee par POS_GetConsVitesseMax() */
+float                           tempsDecc                               =   1.0;
 float                           ALPHA_ACC                               =   0.5;
 float                           ALPHA_DECC                              =   0.5;
 
@@ -157,7 +158,7 @@ static Pose                     ASSER_TRAJ_TrajectoireRemorqueBS(segmentTrajecto
 static void                     ASSER_TRAJ_InitialisationCourbeBS_5(Vecteur ptI, Vecteur ptF, Vecteur deltaPtI, Vecteur deltaPtF, Vecteur qI, Vecteur qF, segmentTrajectoireBS *segmentTraj);
 static void                     ASSER_TRAJ_InterpolationBSpline3(unsigned int iPtI, unsigned int iPtF);
 
-static float                    ASSER_TRAJ_Distance_decceleration(ParametresProfilVitesse *ppv, float vmax, float alpha);
+static float                    ASSER_TRAJ_Distance_decceleration(ParametresProfilVitesse *ppv, float vmax, float alpha, float tempsAcc);
 static float                    ASSER_TRAJ_temps_vs_vitesse(float a, float vitesse);
 static float                    ASSER_TRAJ_vitesse_vs_temps(float a, float t);
 static float                    ASSER_TRAJ_temps_vs_distance_phase1(float a, float distance);
@@ -567,6 +568,10 @@ extern void ASSER_TRAJ_InitialisationTrajectoire(Pose poseRobot, PtTraj *point, 
     float           sommeMask;
 #endif /* PIC32_BUILD */
 
+    /* temps d'acceleration/decceration par defaut */
+    tempsAcc = chemin.profilVitesse.tempsAcc;
+    tempsDecc = chemin.profilVitesse.tempsAcc * 6.0;
+
     chemin.mouvement = mouvement;
     chemin.nbreSegments = nbrePts;
     parametrePositionSegmentTrajectoire = 0.0;
@@ -596,10 +601,7 @@ extern void ASSER_TRAJ_InitialisationTrajectoire(Pose poseRobot, PtTraj *point, 
     /* Liste des points terminee */
 
     if (ASSER_TRAJ_isDeplacement(&chemin))
-    {
-        /* temps d'acceleration/decceration par defaut */
-        tempsAcc = chemin.profilVitesse.tempsAcc;
-
+    {        
         /* Position a atteindre (condition d'arret du test de fin d'asservissment) */
         chemin.posArrivee.x = point[(nbrePts - 1)].pose.x;
         chemin.posArrivee.y = point[(nbrePts - 1)].pose.y;
@@ -798,7 +800,7 @@ extern void ASSER_TRAJ_InitialisationTrajectoire(Pose poseRobot, PtTraj *point, 
     else
     {
         /* temps d'acceleration/decceration reduit pour la rotation */
-        tempsAcc = chemin.profilVitesse.tempsAcc * 2.0;
+        tempsDecc = tempsDecc * 2.0;
 
         /* Position a atteindre (condition d'arret du test de fin d'asservissment) */
         chemin.posArrivee.x = poseRobot.x + NORME_BARRE_SUIVI_TRAJ * cos(point[0].pose.angle);
@@ -839,11 +841,11 @@ extern void ASSER_TRAJ_InitialisationTrajectoire(Pose poseRobot, PtTraj *point, 
     chemin.profilVitesse.acc_a2 = -chemin.profilVitesse.vmax / ((1.0 - chemin.profilVitesse.acc_alpha) * pow(tempsAcc, 2.0));
     chemin.profilVitesse.vitesse_courante = vitesse_profil_consigne;
     chemin.profilVitesse.decc_vmax = chemin.profilVitesse.vmax; // affectation par defaut
-    chemin.profilVitesse.decc_tempsAcc = tempsAcc; // affectation par defaut
+    chemin.profilVitesse.decc_tempsAcc = tempsDecc; // affectation par defaut
     chemin.profilVitesse.acc_D1 = (chemin.profilVitesse.acc_a1/3.0) * pow( (chemin.profilVitesse.acc_alpha * tempsAcc), 3.0);
-    chemin.profilVitesse.acc_Dtot = ASSER_TRAJ_Distance_decceleration(&chemin.profilVitesse, chemin.profilVitesse.vmax, chemin.profilVitesse.acc_alpha);
+    chemin.profilVitesse.acc_Dtot = ASSER_TRAJ_Distance_decceleration(&chemin.profilVitesse, chemin.profilVitesse.vmax, chemin.profilVitesse.acc_alpha, tempsAcc);
     chemin.profilVitesse.acc_D2 = chemin.profilVitesse.acc_Dtot - chemin.profilVitesse.acc_D1;
-    chemin.profilVitesse.decc_Dtot = ASSER_TRAJ_Distance_decceleration(&chemin.profilVitesse, chemin.profilVitesse.vmax, chemin.profilVitesse.decc_alpha);    
+    chemin.profilVitesse.decc_Dtot = ASSER_TRAJ_Distance_decceleration(&chemin.profilVitesse, chemin.profilVitesse.vmax, chemin.profilVitesse.decc_alpha, tempsDecc);
     //chemin.profilVitesse.decc_Dinter = (chemin.profilVitesse.acc_a1/3.0) * pow( (chemin.profilVitesse.acc_alpha * tempsAcc), 3.0);
 
     ASSER_TRAJ_LogAsser("acc_D1", NBR_ASSER_LOG_VALUE, chemin.profilVitesse.acc_D1);
@@ -1601,7 +1603,7 @@ static unsigned char ASSER_TRAJ_ParcoursTrajectoire(Trajectoire *traj, float del
  *  \return         distance
  */
 /**********************************************************************/
-static float ASSER_TRAJ_Distance_decceleration(ParametresProfilVitesse *ppv, float vmax, float alpha)
+static float ASSER_TRAJ_Distance_decceleration(ParametresProfilVitesse *ppv, float vmax, float alpha, float tempsAcc)
 {
     return(vmax * tempsAcc * ( (2.0 - alpha) / 3.0));
 }
@@ -2187,7 +2189,7 @@ static float ASSER_TRAJ_ProfilConsigneVitesse_V5(Trajectoire *traj, float distan
 
         /* Test de declenchement de la decceleration */
         distance_restante_temp = distanceRestante - vitesse_possible * TE;
-        distance_decceleration = ASSER_TRAJ_Distance_decceleration(&traj->profilVitesse, vitesse_possible, traj->profilVitesse.decc_alpha);
+        distance_decceleration = ASSER_TRAJ_Distance_decceleration(&traj->profilVitesse, vitesse_possible, traj->profilVitesse.decc_alpha, tempsDecc);
         ASSER_TRAJ_LogAsser("distance_decceleration", NBR_ASSER_LOG_VALUE, distance_decceleration);
         if (distance_restante_temp < distance_decceleration)
         //if (traj->profilVitesse.distNormaliseeRestante < 0.5)
@@ -2202,7 +2204,7 @@ static float ASSER_TRAJ_ProfilConsigneVitesse_V5(Trajectoire *traj, float distan
             traj->profilVitesse.decc_vmax = (3.0 / (2.0 - traj->profilVitesse.decc_alpha)) * (distance_restante_temp / traj->profilVitesse.decc_tempsAcc);
             ASSER_TRAJ_LogAsser("decc_tempsAcc", NBR_ASSER_LOG_VALUE, traj->profilVitesse.decc_tempsAcc);
             ASSER_TRAJ_LogAsser("decc_vmax", NBR_ASSER_LOG_VALUE, traj->profilVitesse.decc_vmax);
-            traj->profilVitesse.decc_Dtot = ASSER_TRAJ_Distance_decceleration(&traj->profilVitesse, traj->profilVitesse.decc_vmax, chemin.profilVitesse.decc_alpha);
+            traj->profilVitesse.decc_Dtot = ASSER_TRAJ_Distance_decceleration(&traj->profilVitesse, traj->profilVitesse.decc_vmax, chemin.profilVitesse.decc_alpha, tempsDecc);
 
             vitesse_possible = vitesse_initiale;
 
@@ -2427,12 +2429,12 @@ static float ASSER_TRAJ_ProfilConsigneAccelerationVitesse(Trajectoire *traj, flo
         {
             /* Test de detection de la decceleration */
             distance_restante_temp = distanceRestante - traj->profilVitesse.pas_echantillon_distance;
-            distance_decceleration = ASSER_TRAJ_Distance_decceleration(&traj->profilVitesse, vitesse_consigne_possible, traj->profilVitesse.decc_alpha);
+            distance_decceleration = ASSER_TRAJ_Distance_decceleration(&traj->profilVitesse, vitesse_consigne_possible, traj->profilVitesse.decc_alpha, tempsDecc);
             ASSER_TRAJ_LogAsser("distance_decceleration", NBR_ASSER_LOG_VALUE, distance_decceleration);
             if (distance_restante_temp < distance_decceleration)
             {
                 /* calcul de la distance de decceleration avec la vitesse initiale */
-                distance_decceleration = ASSER_TRAJ_Distance_decceleration(&traj->profilVitesse, *vitesse_consigne, traj->profilVitesse.decc_alpha);
+                distance_decceleration = ASSER_TRAJ_Distance_decceleration(&traj->profilVitesse, *vitesse_consigne, traj->profilVitesse.decc_alpha, tempsDecc);
                 if ((distanceRestante - distance_decceleration) > traj->profilVitesse.pas_echantillon_distance)
                 {
                     traj->profilVitesse.phase = 0; /* => vitesse constante jusqu'au jalon suivant*/
@@ -2443,9 +2445,9 @@ static float ASSER_TRAJ_ProfilConsigneAccelerationVitesse(Trajectoire *traj, flo
                     /* parcours transitoire a vitesse constante avant la decceleration*/
                     traj->profilVitesse.phase = 203;
                     Dphase_restante = traj->profilVitesse.pas_echantillon_distance - (distanceRestante - distance_decceleration);
-                    chemin.profilVitesse.decc_a1 = (*vitesse_consigne) / (chemin.profilVitesse.decc_alpha * pow(tempsAcc, 2.0));
-                    chemin.profilVitesse.decc_a2 = -(*vitesse_consigne) / ((1.0 - chemin.profilVitesse.decc_alpha) * pow(tempsAcc, 2.0));
-                    chemin.profilVitesse.decc_D4 = (chemin.profilVitesse.decc_a1/3.0) * pow( (chemin.profilVitesse.decc_alpha * tempsAcc), 3.0);
+                    chemin.profilVitesse.decc_a1 = (*vitesse_consigne) / (chemin.profilVitesse.decc_alpha * pow(tempsDecc, 2.0));
+                    chemin.profilVitesse.decc_a2 = -(*vitesse_consigne) / ((1.0 - chemin.profilVitesse.decc_alpha) * pow(tempsDecc, 2.0));
+                    chemin.profilVitesse.decc_D4 = (chemin.profilVitesse.decc_a1/3.0) * pow( (chemin.profilVitesse.decc_alpha * tempsDecc), 3.0);
                     chemin.profilVitesse.decc_D3 = distance_decceleration - chemin.profilVitesse.decc_D4;
                     ASSER_TRAJ_LogAsser("decc_D3", NBR_ASSER_LOG_VALUE, chemin.profilVitesse.decc_D3);
                     ASSER_TRAJ_LogAsser("decc_D4", NBR_ASSER_LOG_VALUE, chemin.profilVitesse.decc_D4);
