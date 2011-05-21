@@ -588,6 +588,13 @@ extern void ASSER_TRAJ_InitialisationTrajectoire(Pose poseRobot, PtTraj *point, 
         g_tableauMask[(j + 1)] = point[j].mask;
     }
 
+    // en cas de déplacement, l'angle final est de toute façon exploité
+    // --> soit calculé, soit défini
+    if(ASSER_TRAJ_isDeplacement(&chemin))
+    {
+        g_tableauMask[nbrePts]=1;
+    }
+
     /* Liste des points terminee */
 
     if (ASSER_TRAJ_isDeplacement(&chemin))
