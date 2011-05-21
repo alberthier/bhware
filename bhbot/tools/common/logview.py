@@ -14,7 +14,7 @@ import world
 
 from definitions import *
 
-# Tango Colors
+# Tango Colors (http://colors.bravo9.com/tango/)
 # Used  Color   Name
 #  X   #eeeeec Aluminium 1
 #  x   #d3d7cf Aluminium 2
@@ -106,6 +106,14 @@ class CategoriesModel(QAbstractListModel):
 
 class LogModel(QAbstractTableModel):
 
+    COLUMN_NUMBER = 0
+    COLUMN_TIME = 1
+    COLUMN_SENDER = 2
+    COLUMN_TYPE = 3
+    COLUMN_STATE = 4
+    COLUMN_CONTENT = 5
+    COLUMN_COUNT = 6
+
     def __init__(self, log, categories, parent = None):
         QAbstractTableModel.__init__(self, parent)
         self.log = []
@@ -119,7 +127,7 @@ class LogModel(QAbstractTableModel):
 
 
     def columnCount(self, parent):
-        return 5
+        return LogModel.COLUMN_COUNT
 
 
     def data(self, index, role):
@@ -127,12 +135,12 @@ class LogModel(QAbstractTableModel):
         global CATEGORIES_COLORS
 
         if role == Qt.DisplayRole:
-            if index.column() == 3:
+            if index.column() == LogModel.COLUMN_TYPE:
                 return self.filtered_log[index.row()][index.column()][1]
             else:
                 return self.filtered_log[index.row()][index.column()]
         elif role == Qt.DecorationRole:
-            if index.column() == 3:
+            if index.column() == LogModel.COLUMN_TYPE:
                 return QColor(self.filtered_log[index.row()][index.column()][2])
             else:
                 return QVariant()
@@ -142,15 +150,17 @@ class LogModel(QAbstractTableModel):
 
     def headerData(self, section, orientation, role):
         if role == Qt.DisplayRole:
-            if section == 0:
+            if section == LogModel.COLUMN_NUMBER:
                 return "#"
-            elif section == 1:
+            elif section == LogModel.COLUMN_TIME:
                 return "Time"
-            elif section == 2:
+            elif section == LogModel.COLUMN_SENDER:
                 return "Sender"
-            elif section == 3:
+            elif section == LogModel.COLUMN_TYPE:
                 return "Type"
-            elif section == 4:
+            elif section == LogModel.COLUMN_STATE:
+                return "State"
+            elif section == LogModel.COLUMN_CONTENT:
                 return "Content"
         else:
             return QVariant()
@@ -159,16 +169,20 @@ class LogModel(QAbstractTableModel):
     def load_log(self, log):
         global CATEGORIES
         index = 0
+        current_state = "None"
         for logline in log:
             if len(logline) == 2:
                 category_index = self.get_category_index('str')
                 category_data = CATEGORIES[category_index]
-                self.log.append([index, logline[0], "", category_data, logline[1][2:], category_index])
+                text = logline[1][2:]
+                self.log.append([index, logline[0], "", category_data, current_state, text, category_index])
+                if text.startswith("Switching to"):
+                    current_state = text[text.rfind(" ") + 1:]
             else:
                 category_index = self.get_category_index(logline[1])
                 category_data = CATEGORIES[category_index]
 
-                self.log.append([index, logline[0], logline[2], category_data, str(helpers.translate_packet_data(logline[1], logline[3]))[1:-1], category_index])
+                self.log.append([index, logline[0], logline[2], category_data, current_state, str(helpers.translate_packet_data(logline[1], logline[3]))[1:-1], category_index])
             index += 1
 
 
@@ -186,7 +200,7 @@ class LogModel(QAbstractTableModel):
     def filter(self, categories):
         self.filtered_log = []
         for logline in self.log:
-            if logline[5] in categories:
+            if logline[6] in categories:
                 self.filtered_log.append(logline)
         self.reset()
 
