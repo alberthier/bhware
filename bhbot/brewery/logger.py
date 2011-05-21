@@ -25,7 +25,10 @@ def initialize():
     if log_file == None:
         start_time = datetime.datetime.now()
         filepath = get_next_log_filepath()
-        log_file = file(filepath, "w")
+        try:
+            log_file = file(filepath, "w")
+        except:
+            log_file = file(os.devnull, "w")
         log_file.write("#!/usr/bin/env python\n")
         log_file.write("# encoding: utf-8\n\n")
         log_file.write("log = []\n\n")
