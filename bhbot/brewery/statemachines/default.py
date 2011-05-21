@@ -55,7 +55,7 @@ class GotoFirstIntersection(statemachine.State):
 
     def on_enter(self):
         self.walk = commonstates.TrajectoryWalk()
-        self.walk.forward(0.500)
+        self.walk.forward(0.375)
         (p1_x, p1_y) = trajectory.Cell(0, 0).bottom_right()
         self.walk.look_at(p1_x, p1_y)
         self.walk.move_to(p1_x, p1_y)
