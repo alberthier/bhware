@@ -239,6 +239,12 @@ class RobotController(object):
                 self.field_object.item.removeFromGroup(piece)
             self.stored_pieces = []
             self.send_packet(packet)
+        elif isinstance(packet, packets.OpenNippers):
+            self.field_object.open_nippers()
+            self.send_packet(packet)
+        elif isinstance(packet, packets.CloseNippers):
+            self.field_object.close_nippers()
+            self.send_packet(packet)
         elif isinstance(packet, packets.SimulatorData):
             self.view.handle_led(packet.leds)
         elif isinstance(packet, packets.Deployment):

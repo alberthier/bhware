@@ -132,6 +132,7 @@ class GraphicsRobotObject(QObject):
         self.item.addToGroup(self.elevator_sensor)
         self.back_sensor = Sensor("back")
         self.item.addToGroup(self.back_sensor)
+        self.nippers = None
 
 
     def get_position(self):
@@ -234,3 +235,15 @@ class GraphicsRobotObject(QObject):
         self.move_animation.addAnimation(rotate_animation)
         self.move_animation.addAnimation(pos_animation)
         self.move_animation.start()
+
+
+    def open_nippers(self):
+        if self.nippers == None:
+            self.nippers = QGraphicsEllipseItem(self.item.x() - 100.0, self.item.y() -100.0, 200.0, 200.0)
+            self.item.addToGroup(self.nippers)
+
+
+    def close_nippers(self):
+        if self.nippers != None:
+            self.item.removeFromGroup(self.nippers)
+            self.nippers = None
