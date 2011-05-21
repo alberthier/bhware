@@ -567,6 +567,26 @@ class CloseNippers(BasePacket):
 
 
 
+class EnableLateralSensors(BasePacket):
+
+    TYPE = 22
+
+    def __init__(self):
+        BasePacket.__init__(self, "")
+
+
+
+
+class DisableLateralSensors(BasePacket):
+
+    TYPE = 23
+
+    def __init__(self):
+        BasePacket.__init__(self, "")
+
+
+
+
 class Reinitialize(BasePacket):
 
     TYPE = 102
@@ -621,10 +641,11 @@ class TurretDetect(BasePacket):
 
 PACKET_CLASSES = [ControllerReady, DeviceBusy, DeviceReady, Start, Goto,
                   GotoStarted, GotoFinished, Blocked, EnableAntiBlocking,
-                  DisableAntiBlocking, KeepAlive, PositionControlConfig,
-                  Stop, Resettle, Deployment, PieceDetected, StorePiece1,
+                  DisableAntiBlocking, KeepAlive, PositionControlConfig, Stop,
+                  Resettle, Deployment, PieceDetected, StorePiece1,
                   StorePiece2, StorePiece3, ReleasePiece, OpenNippers,
-                  CloseNippers, Reinitialize, SimulatorData, TurretDetect]
+                  CloseNippers, EnableLateralSensors, DisableLateralSensors,
+                  Reinitialize, SimulatorData, TurretDetect]
 
 
 def create_packet(buffer):

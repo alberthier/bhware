@@ -153,6 +153,14 @@ class State(object):
         pass
 
 
+    def on_lateral_sensors_enabled(self):
+        pass
+
+
+    def on_lateral_sensors_disabled(self):
+        pass
+
+
     def on_reinitialized(self):
         pass
 

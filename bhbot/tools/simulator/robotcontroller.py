@@ -48,6 +48,7 @@ class SensorController(QObject):
 
     def __init__(self, sensor_item, field_object, sensor_type = None):
         QObject.__init__(self)
+        self.enabled = False
         self.currently_detected = []
         self.sensor_item = sensor_item
         self.start_pose = None
@@ -58,7 +59,7 @@ class SensorController(QObject):
 
 
     def check(self, region):
-        if self.sensor_item.scene() == None:
+        if not self.enabled or self.sensor_item.scene() == None:
             return
         only_figures = self.sensor_type == SENSOR_LEFT_TOP or self.sensor_type == SENSOR_RIGHT_TOP
         for piece in self.sensor_item.scene().pieces:
@@ -172,8 +173,10 @@ class RobotController(object):
         self.bottom_right_sensor.end_detection.connect(self.on_lateral_detection)
         self.elevator_sensor = SensorController(self.field_object.elevator_sensor, self.field_object)
         self.elevator_sensor.start_detection.connect(self.on_elevator_detection)
+        self.elevator_sensor.enabled = True
         self.back_sensor = SensorController(self.field_object.back_sensor, self.field_object)
         self.back_sensor.start_detection.connect(self.on_back_detection)
+        self.back_sensor.enabled = True
 
         self.front_pieces = []
         self.stored_pieces = []
@@ -225,7 +228,6 @@ class RobotController(object):
             if self.resettle_count == 2:
                 self.ready = True
                 self.game_controller.try_start()
-
         elif isinstance(packet, packets.StorePiece1):
             self.stored_pieces += self.front_pieces
             self.front_pieces = []
@@ -248,6 +250,18 @@ class RobotController(object):
         elif isinstance(packet, packets.SimulatorData):
             self.view.handle_led(packet.leds)
         elif isinstance(packet, packets.Deployment):
+            self.send_packet(packet)
+        elif isinstance(packet, packets.EnableLateralSensors):
+            self.top_left_sensor.enabled = True
+            self.bottom_left_sensor.enabled = True
+            self.top_right_sensor.enabled = True
+            self.bottom_right_sensor.enabled = True
+            self.send_packet(packet)
+        elif isinstance(packet, packets.DisableLateralSensors):
+            self.top_left_sensor.enabled = False
+            self.bottom_left_sensor.enabled = False
+            self.top_right_sensor.enabled = False
+            self.bottom_right_sensor.enabled = False
             self.send_packet(packet)
         else :
             print "Unhandled packet type : ",packet.__class__.__name__

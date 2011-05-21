@@ -186,6 +186,10 @@ class EventLoop(object):
                             self.get_current_state().on_nippers_opened()
                         elif isinstance(channel.packet, packets.CloseNippers):
                             self.get_current_state().on_nippers_closed()
+                        elif isinstance(channel.packet, packets.EnableLateralSensors):
+                            self.get_current_state().on_lateral_sensors_enabled()
+                        elif isinstance(channel.packet, packets.DisableLateralSensors):
+                            self.get_current_state().on_lateral_sensors_disabled()
                         elif isinstance(channel.packet, packets.Reinitialize):
                             self.get_current_state().on_reinitialized()
                         elif isinstance(channel.packet, packets.TurretDetect):

@@ -214,6 +214,30 @@ class CloseNippers(statemachine.State):
 
 
 
+class EnableLateralSensors(statemachine.State):
+
+    def on_enter(self):
+        self.send_packet(packets.EnableLateralSensors())
+
+
+    def on_lateral_sensors_enabled(self):
+        self.exit_substate()
+
+
+
+
+class DisableLateralSensors(statemachine.State):
+
+    def on_enter(self):
+        self.send_packet(packets.DisableLateralSensors())
+
+
+    def on_lateral_sensors_disabled(self):
+        self.exit_substate()
+
+
+
+
 class TrajectoryWalk(statemachine.State):
     """Walk a path"""
 

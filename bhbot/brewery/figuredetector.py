@@ -2,7 +2,8 @@
 # encoding: utf-8
 
 
-import trajectory
+import commonstates
+import packets
 from definitions import *
 
 
@@ -24,39 +25,37 @@ class FigureDetector(object):
                          [False, False, False]]
         self.reference_sensor = None
         self.robot = robot
-        self.enabled_pose = None
         self.column = None
 
 
     def enable(self, reference_sensor, column):
         self.reference_sensor = reference_sensor
-        self.enabled_pose = self.robot.pose
         self.column = column
-        for elt in self.elements:
-            elt[self.column] = False
+        return commonstates.EnableLateralSensors()
 
 
     def disable(self):
         self.reference_sensor = None
         self.enabled_pose = None
         figure_count = 0
-        for elt in self.elements:
-            if elt[self.column]:
-                figure_count += 1
-        if figure_count < 2:
-            self.elements[4][self.column] = True
+        if self.column == 0:
+            for elt in self.elements:
+                if elt[self.column]:
+                    figure_count += 1
+            if figure_count < 2:
+                self.elements[4][self.column] = True
+        return commonstates.DisableLateralSensors()
 
 
     def on_piece_detected(self, start_pose, start_distance, end_pose, end_distance, sensor, angle):
         if sensor == self.reference_sensor:
-            if abs(math.cos(start_pose.angle)) > 0.995 and abs(math.cos(end_pose.angle)) > 0.995:
-                center_x = (start_pose.x + end_pose.x) / 2.0
-                center_angle = (start_pose.angle + end_pose.angle) / 2.0
-                if math.cos(center_angle) > 0:
-                    center_x += ROBOT_CENTER_TO_LATERAL_SENSOR_DISTANCE
-                else:
-                    center_x -= ROBOT_CENTER_TO_LATERAL_SENSOR_DISTANCE
-                self.detected_at(self.column, center_x)
+            center_x = (start_pose.x + end_pose.x) / 2.0
+            center_angle = (start_pose.angle + end_pose.angle) / 2.0
+            if math.cos(center_angle) > 0:
+                center_x += ROBOT_CENTER_TO_LATERAL_SENSOR_DISTANCE
+            else:
+                center_x -= ROBOT_CENTER_TO_LATERAL_SENSOR_DISTANCE
+            self.detected_at(self.column, center_x)
 
 
     def detected_at(self, column, x):
