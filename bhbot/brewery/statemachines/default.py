@@ -270,14 +270,34 @@ class TakeFirstFigure(statemachine.State):
 
 
     def on_exit_substate(self, substate):
-        pass
+        self.switch_to_state(ReleaseConstruction())
 
 
 
 
+class ReleaseConstruction(statemachine.State):
+
+    def on_enter(self):
+        self.sequence = commonstates.Sequence()
+        walk = commonstates.TrajectoryWalk()
+        walk.look_at(*trajectory.Cell(4, 2).top_middle())
+        walk.move_to(*trajectory.Cell(4, 2).top_middle())
+        walk.look_at(*trajectory.Cell(5, 2).top_middle())
+        walk.move_to(*trajectory.Cell(5, 2).top_middle())
+        self.sequence.add(walk)
+        self.sequence.add(commonstates.ReleasePiece())
+        walk = commonstates.TrajectoryWalk()
+        walk.backward(0.5)
+        self.sequence.add(walk)
+        self.switch_to_substate(self.sequence)
 
 
 
+
+class EndOfMatch(statemachine.State):
+
+    def on_enter(self):
+        logger.log("Did we won ?")
 
 
 
