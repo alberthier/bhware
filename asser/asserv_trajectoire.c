@@ -1818,7 +1818,7 @@ static unsigned char ASSER_TRAJ_Acceleration(ParametresProfilVitesse *ppv, float
     float 			vitesse_initiale, vitesse_effective;
     unsigned int 	phase;
     float 			acc_a;    										/* parametre du profil de vitesse */
-    unsigned char 	flag_fin_acc = 0;
+    char 	        flag_fin_acc = 0;
 
     /* Plage de vitesse du profil de vitesse*/
     if (vitesse_in < 0.0)
@@ -1989,7 +1989,7 @@ static unsigned char ASSER_TRAJ_Acceleration(ParametresProfilVitesse *ppv, float
         }
     }
 
-    return (flag_fin_acc);
+    return flag_fin_acc !=0;
 }
 
 /**********************************************************************/
