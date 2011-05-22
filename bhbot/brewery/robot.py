@@ -59,6 +59,9 @@ class Robot(object):
         dy = y - current_y
         return self.rotate_to(math.atan2(dy, dx) + math.pi, reference_team)
 
+    def stop(self):
+        packet = packets.Stop()
+        self.event_loop.send_packet(packet)
 
     def rotate(self, da, reference_team = TEAM_UNKNOWN):
         angle = self.convert_angle(self.pose.angle, reference_team)

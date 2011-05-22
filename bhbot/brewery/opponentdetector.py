@@ -3,7 +3,8 @@
 
 
 from definitions import *
-
+import logging
+import logger
 
 
 
@@ -15,6 +16,8 @@ class OpponentDetector(object):
 
 
     def on_turret_detect(self, angle):
+        # logging.debug("OpponentDetector.on_turret_detect {0}".format(angle))
+        logger.log("OpponentDetector.on_turret_detect {0}".format(angle))
         if angle < (OPPONENT_DETECTION_ANGLE / 2.0) or angle > (2.0 * math.pi - OPPONENT_DETECTION_ANGLE / 2.0):
             if self.detection_tick == 0:
                 self.detection_tick = OPPONENT_DETECTION_DISAPEARING_KEEP_ALIVE_TICKS

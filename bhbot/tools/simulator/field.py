@@ -229,3 +229,8 @@ class FieldScene(QGraphicsScene):
     def convert_angle(self):
         angle = (self.mouse_item.rotation() % 360.0) / 180.0 * math.pi
         return math.atan2(math.cos(angle), math.sin(angle))
+
+    def keyPressEvent(self, keyEvent):
+        print keyEvent.key()
+        if keyEvent.key() == Qt.Key_O:
+            self.game_controller.opponent_detected()

@@ -215,7 +215,7 @@ class RobotController(object):
         elif isinstance(packet, packets.PositionControlConfig):
             pass
         elif isinstance(packet, packets.Stop):
-            pass
+            self.stop()
         elif isinstance(packet, packets.Resettle):
             if packet.axis == AXIS_ABSCISSA:
                 self.field_object.item.setY(packet.position * 1000.0)
@@ -292,11 +292,12 @@ class RobotController(object):
 
 
     def send_keep_alive(self):
-        packet = packets.KeepAlive()
-        packet.current_pose = self.field_object.get_pose()
-        packet.match_started = self.game_controller.started
-        packet.match_time = self.game_controller.time
-        self.send_packet(packet)
+        if self.field_object:
+            packet = packets.KeepAlive()
+            packet.current_pose = self.field_object.get_pose()
+            packet.match_started = self.game_controller.started
+            packet.match_time = self.game_controller.time
+            self.send_packet(packet)
 
 
     def send_start_signal(self):
@@ -354,6 +355,10 @@ class RobotController(object):
         if self.field_object != None and self.field_object.move_animation.state() == QAbstractAnimation.Running:
             self.field_object.move_animation.pause()
 
+    def stop(self):
+        if self.field_object != None and self.field_object.move_animation.state() == QAbstractAnimation.Running:
+            self.field_object.move_animation.stop()            
+
 
     def resume(self):
         if self.field_object != None and self.field_object.move_animation.state() == QAbstractAnimation.Paused:
@@ -366,3 +371,7 @@ class RobotController(object):
         packet.reason = reason
         packet.current_pose = self.field_object.get_pose()
         self.send_packet(packet)
+
+    def send_opponent_detected(self):
+        packet = packets.TurretDetect()
+        self.send_packet(packet)        

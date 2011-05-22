@@ -52,7 +52,9 @@ class State(object):
         new_state.on_enter()
 
 
-    def exit_substate(self):
+    def exit_substate(self, exit_status = None):
+        if exit_status is not None :
+            logger.log("Substate exit status = {0}".format(exit_status))
         self.parent_state.sub_state = None
         self.parent_state.on_exit_substate(self)
 

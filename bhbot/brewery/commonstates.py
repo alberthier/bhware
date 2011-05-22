@@ -3,6 +3,7 @@
 
 
 import datetime
+import config
 from collections import deque
 
 import statemachine
@@ -15,17 +16,28 @@ from definitions import *
 
 
 class Timer(statemachine.State):
-
+    TIMEOUT=0
     def __init__(self, miliseconds):
+        logger.log("Enter timer {0}".format(datetime.datetime.now()))
         statemachine.State.__init__(self)
         self.end_time = datetime.datetime.now() + datetime.timedelta(0, 0, 0, miliseconds)
 
 
     def on_keep_alive(self, current_pose, match_started, match_time):
         if datetime.datetime.now() > self.end_time:
-            self.exit_substate()
+            logger.log("End timer {0}".format(datetime.datetime.now()))
+            self.exit_substate(self.TIMEOUT)
 
+class WaitForOpponentLeave(Timer):
+    OPPONENT_LEFT=1
+    def __init__(self, miliseconds):
+        Timer.__init__(self,miliseconds)
+        self.exit_reason=self.TIMEOUT
 
+    def on_opponent_left(self):
+        self.exit_reason=self.OPPONENT_LEFT
+        logger.log("WaitForOpponentLeave : exit on opponent leave")
+        self.exit_substate(self.exit_reason)
 
 
 class Sequence(statemachine.State):
@@ -245,6 +257,9 @@ class TrajectoryWalk(statemachine.State):
         statemachine.State.__init__(self)
         self.moves = deque()
         self.current_packet = None
+        self.opponent_wait_time = config.default_opponent_wait_time
+        self.opponent_blocking_max_retries = config.default_opponent_max_retries
+        self.opponent_blocking_current_retries = 0
         self.exit_reason = TRAJECTORY_WALK_DESTINATION_REACHED
         self.reference_team = reference_team
         if points != None:
@@ -329,7 +344,6 @@ class TrajectoryWalk(statemachine.State):
             self.exit_reason = TRAJECTORY_WALK_PIECE_FOUND
             self.exit_substate()
 
-
     def process_next_move(self):
         if self.current_packet == None:
             if len(self.moves) == 0:
@@ -351,7 +365,19 @@ class TrajectoryWalk(statemachine.State):
         self.exit_reason = TRAJECTORY_WALK_BLOCKED
         self.exit_substate()
 
+    def on_exit_substate(self, substate):
+        if isinstance(substate, WaitForOpponentLeave):
+            if substate.exit_reason == WaitForOpponentLeave.OPPONENT_LEFT:
+                self.send_packet(self.current_packet)
+            else:
+                self.opponent_detected(0.0)
+
 
     def on_opponent_detected(self, angle):
-        self.exit_reason = TRAJECTORY_WALK_OPPONENT_DETECTED
-        self.exit_substate()
+        self.robot().stop()
+        if self.opponent_blocking_current_retries < self.opponent_blocking_max_retries :
+            self.opponent_blocking_current_retries+=1
+            self.switch_to_substate(WaitForOpponentLeave(self.opponent_wait_time))
+        else :
+            self.exit_reason = TRAJECTORY_WALK_OPPONENT_DETECTED
+            self.exit_substate()

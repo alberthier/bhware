@@ -20,6 +20,7 @@ class GameController(object):
         self.server.newConnection.connect(self.brewery_connected)
         self.server.listen(QHostAddress.Any, config.remote_port)
         self.field_scene = main_window.field_scene
+        self.field_scene.game_controller = self
         self.red_robot = RobotController(TEAM_RED, self, main_window.red_robot_dock.widget(), self.field_scene)
         self.blue_robot = RobotController(TEAM_BLUE, self, main_window.blue_robot_dock.widget(), self.field_scene)
         self.trajectory_drawer = None
@@ -124,3 +125,8 @@ class GameController(object):
             self.main_bar.chronograph.setText(str(round(self.time/10.0, 1)))
         if self.time == 0:
             self.stop()
+
+    def opponent_detected(self):
+        for r in (self.red_robot, self.blue_robot) :
+            r.send_opponent_detected()
+

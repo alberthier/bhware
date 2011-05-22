@@ -34,6 +34,7 @@ class MainWindow(QMainWindow, MainWindow_Ui):
         self.blue_robot_dock.setWidget(RobotView(self, TEAM_BLUE))
 
         self.field_scene = FieldScene(piece_config, main_bar)
+        self.game_controller = GameController(self)
         self.setCentralWidget(FieldView(self.field_scene, self))
 
-        self.game_controller = GameController(self)
+        
