@@ -137,9 +137,9 @@ class RobotController(object):
             self.process.start(brewery, [])
 
 
-    def stop(self):
+    def shutdown(self):
         if self.process != None:
-            self.socket.disconnected.disconnect(self.stop)
+            self.socket.disconnected.disconnect(self.shutdown)
             self.process.terminate()
             self.process.waitForFinished()
             self.process = None
@@ -155,7 +155,7 @@ class RobotController(object):
 
     def connected(self, socket):
         self.socket = socket
-        self.socket.disconnected.connect(self.stop)
+        self.socket.disconnected.connect(self.shutdown)
         self.socket.readyRead.connect(self.read_packet)
 
         self.field_object = GraphicsRobotObject(self.team)
@@ -357,7 +357,7 @@ class RobotController(object):
 
     def stop(self):
         if self.field_object != None and self.field_object.move_animation.state() == QAbstractAnimation.Running:
-            self.field_object.move_animation.stop()            
+            self.field_object.move_animation.stop()
 
 
     def resume(self):
@@ -374,4 +374,4 @@ class RobotController(object):
 
     def send_opponent_detected(self):
         packet = packets.TurretDetect()
-        self.send_packet(packet)        
+        self.send_packet(packet)
