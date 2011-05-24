@@ -1,12 +1,5 @@
 Brewery
 - Optimiser la création des paquets en utilisant un tableau indexé sur les types
-- Ajouter le temps au log
-- utiliser inspect pour inspecter le contenu d'un module
-- Attendre deviceready avant start
-- catch et affichage correct des exceptions (=> logger)
-
-Drunkstar
-- maj patch led
-- ethtool (10mb full duplex)
-- setserial (en python ?)
-- Ajouter de la swap
+- Gerer les PIECE_FOUND en reculant après dépot de palet.
+- Timeout 3s pour paquets attendant une réponse
+- StorePiece2 mandibules => ascenseur en même temps que le déplacement pour 1 palet.
