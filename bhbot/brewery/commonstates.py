@@ -194,9 +194,6 @@ class ReleasePiece(statemachine.State):
 
     def on_enter(self):
         self.send_packet(packets.ReleasePiece())
-
-
-    def on_piece_released(self):
         self.exit_substate()
 
 
@@ -206,9 +203,6 @@ class OpenNippers(statemachine.State):
 
     def on_enter(self):
         self.send_packet(packets.OpenNippers())
-
-
-    def on_nippers_opened(self):
         self.exit_substate()
 
 
@@ -302,6 +296,10 @@ class TrajectoryWalk(statemachine.State):
         self.moves.append(('goto', (x, y, angle, direction)))
 
 
+    def follow(self, points, direction):
+        self.moves.append(('follow', (points, direction)))
+
+
     def load_points(self, points):
         try :
             for vals in points :
@@ -364,6 +362,7 @@ class TrajectoryWalk(statemachine.State):
     def on_blocked(self, side):
         self.exit_reason = TRAJECTORY_WALK_BLOCKED
         self.exit_substate()
+
 
     def on_exit_substate(self, substate):
         if isinstance(substate, WaitForOpponentLeave):
