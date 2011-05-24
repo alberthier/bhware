@@ -3,3 +3,4 @@ Brewery
 - Gerer les PIECE_FOUND en reculant après dépot de palet.
 - Timeout 3s pour paquets attendant une réponse
 - StorePiece2 mandibules => ascenseur en même temps que le déplacement pour 1 palet.
+- ATTENTION avec robot.follow : comment savoir à quel point de la traj il faut aller en cas d'évitement.
