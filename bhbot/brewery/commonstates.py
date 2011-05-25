@@ -222,9 +222,6 @@ class CloseNippers(statemachine.State):
 
     def on_enter(self):
         self.send_packet(packets.CloseNippers())
-
-
-    def on_nippers_closed(self):
         self.exit_substate()
 
 
