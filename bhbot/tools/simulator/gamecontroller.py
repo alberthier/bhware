@@ -87,8 +87,8 @@ class GameController(object):
         self.start_requested = False
         self.main_bar.set_icon(self.main_bar.start_pause, "start")
         self.keep_alive_timer.stop()
-        self.red_robot.stop()
-        self.blue_robot.stop()
+        self.red_robot.shutdown()
+        self.blue_robot.shutdown()
 
 
     def send_start_signal(self):

@@ -14,65 +14,110 @@ import world
 
 from definitions import *
 
-# Tango Colors (http://colors.bravo9.com/tango/)
-# Used  Color   Name
-#  X   #eeeeec Aluminium 1
-#  x   #d3d7cf Aluminium 2
-#  X   #babdb6 Aluminium 3
-#  X   #888a85 Aluminium 4
-#  X   #555753 Aluminium 5
-#  X   #2e3436 Aluminium 6
-#  X   #fce94f Butter 1
-#  X   #edd400 Butter 2
-#  X   #c4a000 Butter 3
-#  X   #8ae234 Chameleon 1
-#  X   #73d216 Chameleon 2
-#  X   #4e9a06 Chameleon 3
-#  X   #e9b96e Chocolate 1
-#  X   #c17d11 Chocolate 2
-#  X   #8f5902 Chocolate 3
-#  X   #fcaf3e Orange 1
-#  X   #f57900 Orange 2
-#  X   #ce5c00 Orange 3
-#  X   #ad7fa8 Plum 1
-#  X   #75507b Plum 2
-#  X   #5c3566 Plum 3
-#  X   #ef2929 Scarlet Red 1
-#  X   #cc0000 Scarlet Red 2
-#  X   #a40000 Scarlet Red 3
-#  X   #729fcf Sky Blue 1
-#  X   #3465a4 Sky Blue 2
-#  X   #204a87 Sky Blue 3
+# Mozilla Colors (http://colors.bravo9.com/mozilla/)
+# Used  Color   Name                        Used  Color   Name
+#      #f0f8ff aliceblue                         #ffa07a lightsalmon
+#      #faebd7 antiquewhite                      #20b2aa lightseagreen
+#      #00ffff aqua                              #87cefa lightskyblue
+#      #7fffd4 aquamarine                        #778899 lightslategray
+#      #f0ffff azure                             #778899 lightslategrey
+#      #f5f5dc beige                             #ffffe0 lightyellow
+#      #ffe4c4 bisque                            #00ff00 lime
+#      #000000 black                             #32cd32 limegreen
+#      #0000ff blue                              #faf0e6 linen
+#   X  #8a2be2 blueviolet                        #ff00ff magenta
+#   X  #a52a2a brown                             #800000 maroon
+#   X  #deb887 burlywood                         #66cdaa mediumaquamarine
+#   X  #5f9ea0 cadetblue                         #0000cd mediumblue
+#   X  #7fff00 chartreuse                        #ba55d3 mediumorchid
+#   X  #d2691e chocolate                         #9370db mediumpurple
+#   X  #ff7f50 coral                             #3cb371 mediumseagreen
+#   X  #6495ed cornflowerblue                    #7b68ee mediumslateblue
+#      #fff8dc cornsilk                          #00fa9a mediumspringgreen
+#   X  #dc143c crimson                           #48d1cc mediumturquoise
+#   X  #00ffff cyan                              #c71585 mediumvioletred
+#   X  #00008b darkblue                          #191970 midnightblue
+#   X  #008b8b darkcyan                          #f5fffa mintcream
+#   X  #b8860b darkgoldenrod                     #ffe4e1 mistyrose
+#   X  #a9a9a9 darkgray                          #ffe4b5 moccasin
+#   X  #006400 darkgreen                         #ffdead navajowhite
+#   X  #a9a9a9 darkgrey                          #000080 navy
+#   X  #bdb76b darkkhaki                         #fdf5e6 oldlace
+#   X  #8b008b darkmagenta                       #808000 olive
+#   X  #556b2f darkolivegreen                    #6b8e23 olivedrab
+#   X  #ff8c00 darkorange                        #ffa500 orange
+#   X  #9932cc darkorchid                        #ff4500 orangered
+#   X  #8b0000 darkred                           #da70d6 orchid
+#   X  #e9967a darksalmon                        #eee8aa palegoldenrod
+#   X  #8fbc8f darkseagreen                      #98fb98 palegreen
+#   X  #483d8b darkslateblue                     #afeeee paleturquoise
+#   X  #2f4f4f darkslategray                     #db7093 palevioletred
+#   X  #2f4f4f darkslategrey                     #ffefd5 papayawhip
+#      #9400d3 darkviolet                        #ffdab9 peachpuff
+#   X  #ff1493 deeppink                          #cd853f peru
+#      #00bfff deepskyblue                       #ffc0cb pink
+#      #696969 dimgray                           #dda0dd plum
+#      #696969 dimgrey                           #b0e0e6 powderblue
+#      #1e90ff dodgerblue                        #800080 purple
+#      #b22222 firebrick                         #ff0000 red
+#      #fffaf0 floralwhite                       #bc8f8f rosybrown
+#      #228b22 forestgreen                       #4169e1 royalblue
+#      #ff00ff fuchsia                           #8b4513 saddlebrown
+#      #dcdcdc gainsboro                         #fa8072 salmon
+#      #f8f8ff ghostwhite                        #f4a460 sandybrown
+#   X  #ffd700 gold                              #2e8b57 seagreen
+#   X  #daa520 goldenrod                         #fff5ee seashell
+#      #808080 gray                              #a0522d sienna
+#      #008000 green                             #c0c0c0 silver
+#      #adff2f greenyellow                       #87ceeb skyblue
+#      #808080 grey                              #6a5acd slateblue
+#      #f0fff0 honeydew                          #708090 slategray
+#      #ff69b4 hotpink                           #708090 slategrey
+#      #cd5c5c indianred                         #fffafa snow
+#      #4b0082 indigo                            #00ff7f springgreen
+#      #fffff0 ivory                             #4682b4 steelblue
+#      #f0e68c khaki                             #d2b48c tan
+#      #e6e6fa lavender                          #008080 teal
+#      #fff0f5 lavenderblush                     #d8bfd8 thistle
+#      #7cfc00 lawngreen                         #ff6347 tomato
+#      #fffacd lemonchiffon                      #40e0d0 turquoise
+#      #add8e6 lightblue                         #ee82ee violet
+#      #f08080 lightcoral                        #f5deb3 wheat
+#      #e0ffff lightcyan                         #ffffff white
+#      #fafad2 lightgoldenrodyellow              #f5f5f5 whitesmoke
+#      #90ee90 lightgreen                        #ffff00 yellow
+#      #d3d3d3 lightgrey                         #9acd32 yellowgreen
+#      #ffb6c1 lightpink
 
 #               Type                      Displayed name             Color     Displayed by default
-CATEGORIES = [["KeepAlive"             , "Keep Alive"              , "#fce94f", False],
-              ["SimulatorData"         , "Simulator Data"          , "#c4a000", False],
-              ["ControllerReady"       , "Controller Ready"        , "#edd400", True],
-              ["DeviceBusy"            , "Device Busy"             , "#f57900", True],
-              ["DeviceReady"           , "Device Ready"            , "#ce5c00", True],
-              ["Start"                 , "Start"                   , "#73d216", True],
-              ["Goto"                  , "Goto"                    , "#729fcf", True],
-              ["GotoStarted"           , "Goto Started"            , "#4e9a06", True],
-              ["GotoFinished"          , "Goto Finished"           , "#a40000", True],
-              ["Blocked"               , "Blocked"                 , "#8f5902", True],
-              ["EnableAntiBlocking"    , "Enable Anti-Blocking"    , "#3465a4", True],
-              ["DisableAntiBlocking"   , "Disable Anti-Blocking"   , "#ad7fa8", True],
-              ["PositionControlConfig" , "Position Control Config" , "#e9b96e", True],
-              ["Stop"                  , "Stop"                    , "#cc0000", True],
-              ["Resettle"              , "Resettle"                , "#204a87", True],
-              ["Deployment"            , "Deployment"              , "#75507b", True],
-              ["PieceDetected"         , "Piece Detected"          , "#c17d11", True],
-              ["StorePiece1"           , "Store Piece 1"           , "#ef2929", True],
-              ["StorePiece2"           , "Store Piece 2"           , "#2e3436", True],
-              ["StorePiece3"           , "Store Piece 3"           , "#8ae234", True],
-              ["ReleasePiece"          , "Release Piece"           , "#fcaf3e", True],
-              ["OpenNippers"           , "Open Nippers"            , "#eeeeec", True],
-              ["CloseNippers"          , "Close Nippers"           , "#d3d7cf", True],
-              ["EnableLateralSensors"  , "Enable Lateral Sensors"  , "#d3d7cf", True], #
-              ["DisableLateralSensors" , "Disable Lateral Sensors" , "#d3d7cf", True], #
-              ["Reinitialize"          , "Reinitialize"            , "#5c3566", True],
-              ["TurretDetect"          , "Turret Detect"           , "#babdb6", True],
-              ["str"                   , "Log Text"                , "#555753", True]]
+CATEGORIES = [["KeepAlive"             , "Keep Alive"              , "#8a2be2", False],
+              ["SimulatorData"         , "Simulator Data"          , "#a52a2a", False],
+              ["ControllerReady"       , "Controller Ready"        , "#deb887", True],
+              ["DeviceBusy"            , "Device Busy"             , "#5f9ea0", True],
+              ["DeviceReady"           , "Device Ready"            , "#7fff00", True],
+              ["Start"                 , "Start"                   , "#d2691e", True],
+              ["Goto"                  , "Goto"                    , "#ff7f50", True],
+              ["GotoStarted"           , "Goto Started"            , "#6495ed", True],
+              ["GotoFinished"          , "Goto Finished"           , "#daa520", True],
+              ["Blocked"               , "Blocked"                 , "#dc143c", True],
+              ["EnableAntiBlocking"    , "Enable Anti-Blocking"    , "#00ffff", True],
+              ["DisableAntiBlocking"   , "Disable Anti-Blocking"   , "#00008b", True],
+              ["PositionControlConfig" , "Position Control Config" , "#008b8b", True],
+              ["Stop"                  , "Stop"                    , "#b8860b", True],
+              ["Resettle"              , "Resettle"                , "#ff1493", True],
+              ["Deployment"            , "Deployment"              , "#006400", True],
+              ["PieceDetected"         , "Piece Detected"          , "#ffd700", True],
+              ["StorePiece1"           , "Store Piece 1"           , "#bdb76b", True],
+              ["StorePiece2"           , "Store Piece 2"           , "#8b008b", True],
+              ["StorePiece3"           , "Store Piece 3"           , "#556b2f", True],
+              ["ReleasePiece"          , "Release Piece"           , "#ff8c00", True],
+              ["OpenNippers"           , "Open Nippers"            , "#9932cc", True],
+              ["CloseNippers"          , "Close Nippers"           , "#8b0000", True],
+              ["EnableLateralSensors"  , "Enable Lateral Sensors"  , "#e9967a", True],
+              ["DisableLateralSensors" , "Disable Lateral Sensors" , "#8fbc8f", True],
+              ["Reinitialize"          , "Reinitialize"            , "#483d8b", True],
+              ["TurretDetect"          , "Turret Detect"           , "#2f4f4f", True],
+              ["str"                   , "Log Text"                , "#a9a9a9", True]]
 
 
 class CategoriesModel(QAbstractListModel):

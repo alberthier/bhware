@@ -104,15 +104,28 @@ class Robot(object):
         return packet
 
 
+    def follow(self, points, direction, reference_team = TEAM_UNKNOWN):
+        packet = packets.Goto()
+
+        for p in points:
+            converted_point = trajectory.Pose(p.x, self.convert_y(p.y), self.convert_angle(p.angle))
+            packet.points.append(converted_point)
+
+        packet.movement = MOVEMENT_MOVE
+        packet.direction = direction
+        self.event_loop.send_packet(packet)
+        return packet
+
+
     def convert_y(self, y, reference_team):
-        if reference_team == TEAM_UNKNOWN or self.team == TEAM_UNKNOWN or reference_team == self.team:
+        if y == None or reference_team == TEAM_UNKNOWN or self.team == TEAM_UNKNOWN or reference_team == self.team:
             return y
         else:
             return FIELD_WIDTH - y
 
 
     def convert_angle(self, angle, reference_team):
-        if reference_team == TEAM_UNKNOWN or self.team == TEAM_UNKNOWN or reference_team == self.team:
+        if angle == None or reference_team == TEAM_UNKNOWN or self.team == TEAM_UNKNOWN or reference_team == self.team:
             return angle
         else:
             return math.atan2(-math.sin(angle), math.cos(angle))
