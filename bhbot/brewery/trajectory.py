@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
+import math
+
 from definitions import *
 
 
@@ -12,6 +14,10 @@ class Pose(object):
         self.x = x
         self.y = y
         self.angle = angle
+
+
+    def look_at(self, pose):
+        return math.atan2(pose.y - self.y, pose.x - self.x)
 
 
     def __repr__(self):
