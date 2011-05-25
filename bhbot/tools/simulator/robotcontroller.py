@@ -325,7 +325,10 @@ class RobotController(object):
                 elif self.goto_packet.movement == MOVEMENT_LINE:
                     self.field_object.robot_line(point.x, point.y)
                 elif self.goto_packet.movement == MOVEMENT_MOVE:
-                    self.field_object.robot_move(point.x, point.y, point.angle)
+                    if point.angle != None:
+                        self.field_object.robot_move(point.x, point.y, point.angle)
+                    else:
+                        self.field_object.robot_line(point.x, point.y)
             else:
                 self.send_goto_finished(REASON_DESTINATION_REACHED)
 
