@@ -58,9 +58,8 @@ def log(text):
     delta = datetime.datetime.now() - start_time
     time = "'{0:=0.02f}'".format(float(delta.seconds) + (float(delta.microseconds)/1000000.0))
     log_file.write("log.append([" + time + ",\"# " + text + "\"])\n")
-    if config.host_device == HOST_DEVICE_PC:
-        sys.stdout.write(text + "\n")
-        sys.stdout.flush()
+    sys.stdout.write(text + "\n")
+    sys.stdout.flush()
 
 
 def exception(exc,msg=None):
@@ -76,7 +75,7 @@ def log_packet(sender, packet):
     time = "'{0:=0.02f}'".format(float(delta.seconds) + (float(delta.microseconds)/1000000.0))
     text = "'" + type(packet).__name__ + "', '" + sender + "', " + str(packet.to_dict()) + "]"
     log_file.write("log.append([" + time + ", " + text + ")\n")
-    if config.host_device == HOST_DEVICE_PC and not isinstance(packet, packets.KeepAlive) and not isinstance(packet, packets.SimulatorData):
+    if not isinstance(packet, packets.KeepAlive) and not isinstance(packet, packets.SimulatorData):
         sys.stdout.write("[" + text + "\n")
         sys.stdout.flush()
 
