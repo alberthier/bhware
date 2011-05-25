@@ -54,32 +54,19 @@ class WaitFirstKeepAlive(statemachine.State):
 class GotoFirstIntersection(statemachine.State):
 
     def on_enter(self):
-        p0_x = self.robot().pose.x
-        p0_y = self.robot().pose.y + 0.375
-        p0_angle = self.robot().pose.angle
+        p0 = trajectory.Pose(self.robot().pose.x, 0.400)
+        p1 = trajectory.Pose(*trajectory.Cell(0, 0).bottom_right())
+        p1.angle = p0.look_at(p1) - math.pi / 8.0
 
-        (p1_x, p1_y) = trajectory.Cell(0, 0).bottom_right()
-        p1_angle = 1.2444
-    
-        packet = packets.Goto()
-        packet.movement = MOVEMENT_MOVE
-        packet.direction = DIRECTION_FORWARD
-        packet.points = [trajectory.Pose(p0_x, p0_y, p0_angle), trajectory.Pose(p1_x, p1_y, p1_angle)]
-        
-        self.event_loop.send_packet(packet)
+        self.walk = commonstates.TrajectoryWalk()
+        self.walk.follow([p0, p1])
+        self.switch_to_substate(self.walk)
 
 
     def on_exit_substate(self, substate):
-        pass
-#        if self.walk.exit_reason == TRAJECTORY_WALK_DESTINATION_REACHED:
-#            logger.log("Destination reached")
-#        elif self.walk.exit_reason == TRAJECTORY_WALK_PIECE_FOUND:
-#            logger.log("Piece found")
-
-    def on_goto_finished(self, reason, current_pose):
-        if reason == TRAJECTORY_WALK_DESTINATION_REACHED:
+        if self.walk.exit_reason == TRAJECTORY_WALK_DESTINATION_REACHED:
             self.switch_to_state(GotoBottomIntersectionHeadFirst())
-        elif reason == TRAJECTORY_WALK_PIECE_FOUND:
+        elif self.walk.exit_reason == TRAJECTORY_WALK_PIECE_FOUND:
             self.event_loop.figure_detector.detected_at(1, trajectory.Cell(0, 0).bottom_right()[0])
             self.switch_to_state(GotoFirstIntersectionWithPiece())
 
@@ -114,10 +101,6 @@ class GotoBottomIntersectionHeadFirst(statemachine.State):
         sensor = self.robot().convert_sensor(SENSOR_LEFT_BOTTOM, TEAM_RED)
         self.sequence.add(self.event_loop.figure_detector.enable(sensor, 2))
         walk = commonstates.TrajectoryWalk()
-        walk.backward(0.125)
-        walk.look_at_opposite(*trajectory.Cell(0, 0).center_right())
-        (p1_x, p1_y) = trajectory.Cell(0, 0).center_right()
-        walk.move_to(p1_x, p1_y, DIRECTION_BACKWARD)
         walk.look_at(*trajectory.Cell(5, 0).top_right())
         walk.move_to(*trajectory.Cell(5, 0).top_right())
         self.sequence.add(walk)
