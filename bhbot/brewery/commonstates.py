@@ -299,11 +299,15 @@ class TrajectoryWalk(statemachine.State):
         self.jobs.append(('rotate_to', (angle,)))
 
 
-    def goto(self, x, y, angle, direction):
+    def goto(self, x, y, angle, direction = DIRECTION_FORWARD):
         self.jobs.append(('goto', (x, y, angle, direction)))
 
 
-    def follow(self, points, direction):
+    def goto_looking_at(self, x, y, look_at_x, look_at_y, direction = DIRECTION_FORWARD):
+        self.jobs.append(('goto_looking_at', (x, y, look_at_x, look_at_y, direction)))
+
+
+    def follow(self, points, direction = DIRECTION_FORWARD):
         self.jobs.append(('follow', (points, direction)))
 
 

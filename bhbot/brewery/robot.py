@@ -59,9 +59,12 @@ class Robot(object):
         dy = y - current_y
         return self.rotate_to(math.atan2(dy, dx) + math.pi, reference_team)
 
+
     def stop(self):
         packet = packets.Stop()
         self.event_loop.send_packet(packet)
+        return packet
+
 
     def rotate(self, da, reference_team = TEAM_UNKNOWN):
         angle = self.convert_angle(self.pose.angle, reference_team)
@@ -75,7 +78,15 @@ class Robot(object):
         return self.goto(None, None, angle, DIRECTION_FORWARD, self.team)
 
 
-    def goto(self, x, y, angle, direction, reference_team = TEAM_UNKNOWN):
+    def goto_looking_at(self, x, y, look_at_x, look_at_y, direction = DIRECTION_FORWARD, reference_team = TEAM_UNKNOWN):
+        dest_y = self.convert_y(y, reference_team)
+        dest_look_at_y = self.convert_y(look_at_y, reference_team)
+        dx = look_at_x - x
+        dy = dest_look_at_y - dest_y
+        return self.goto(x, dest_y, math.atan2(dy, dx), direction, self.team)
+
+
+    def goto(self, x, y, angle, direction = DIRECTION_FORWARD, reference_team = TEAM_UNKNOWN):
         y = self.convert_y(y, reference_team)
         angle = self.convert_angle(angle, reference_team)
         packet = packets.Goto()
@@ -104,11 +115,11 @@ class Robot(object):
         return packet
 
 
-    def follow(self, points, direction, reference_team = TEAM_UNKNOWN):
+    def follow(self, points, direction = DIRECTION_FORWARD, reference_team = TEAM_UNKNOWN):
         packet = packets.Goto()
 
         for p in points:
-            converted_point = trajectory.Pose(p.x, self.convert_y(p.y), self.convert_angle(p.angle))
+            converted_point = trajectory.Pose(p.x, self.convert_y(p.y, reference_team), self.convert_angle(p.angle, reference_team))
             packet.points.append(converted_point)
 
         packet.movement = MOVEMENT_MOVE
