@@ -206,9 +206,6 @@ class OpenNippers(statemachine.State):
 
     def on_enter(self):
         self.send_packet(packets.OpenNippers())
-
-
-    def on_nippers_opened(self):
         self.exit_substate()
 
 
@@ -218,9 +215,6 @@ class CloseNippers(statemachine.State):
 
     def on_enter(self):
         self.send_packet(packets.CloseNippers())
-
-
-    def on_nippers_closed(self):
         self.exit_substate()
 
 
