@@ -36,7 +36,6 @@ class FigureDetector(object):
 
     def disable(self):
         self.reference_sensor = None
-        self.enabled_pose = None
         figure_count = 0
         if self.column == 0:
             for elt in self.elements:
