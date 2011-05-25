@@ -9,6 +9,7 @@ import imp
 import inspect
 import time
 import errno
+import traceback
 
 import logger
 import packets
@@ -26,11 +27,16 @@ class TurretChannel(asyncore.file_dispatcher):
 
     def __init__(self, serial_port_path, serial_port_speed, eventloop):
         import serial
-        asyncore.file_dispatcher.__init__(self, serial.Serial(serial_port_path, serial_port_speed))
+        self.port = serial.PosixPollSerial(serial_port_path, serial_port_speed, timeout = 0)
+        self.port.nonblocking()
+        asyncore.file_dispatcher.__init__(self, self.port)
+        logger.log(str(self.port.getSettingsDict()))
         self.eventloop = eventloop
         self.buffer = ""
         self.packet = None
 
+    def bytes_available(self):
+        return self.port.inWaiting()    
 
     def writable(self):
         return False
@@ -41,8 +47,9 @@ class TurretChannel(asyncore.file_dispatcher):
 
 
     def handle_close(self):
-        # Ignore close events
-        pass
+        logger.log("handle_close")
+        for l in traceback.format_stack() :
+            logger.log(l)
 
 
 
@@ -107,6 +114,10 @@ class EventLoop(object):
         while True :
             if channel.packet == None:
                 try:
+                    if hasattr(channel,"bytes_available") :
+                        b = channel.bytes_available() 
+                        logger.log("Bytes available : {0}".format(b))
+                        if b == 0 : return
                     received_data = channel.recv(1)
                     if len(received_data) == 0:
                         return
@@ -120,6 +131,7 @@ class EventLoop(object):
             else:
                 try:
                     try:
+                        if hasattr(channel,"bytes_available") and not channel.bytes_available() >= channel.packet.MAX_SIZE - 1  : return
                         received_data = channel.recv(channel.packet.MAX_SIZE - len(channel.buffer))
                         if len(received_data) == 0:
                             return
