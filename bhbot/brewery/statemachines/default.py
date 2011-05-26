@@ -97,18 +97,16 @@ class GotoFirstIntersectionWithPiece(statemachine.State):
 class GotoBottomIntersectionHeadFirst(statemachine.State):
 
     def on_enter(self):
-        self.sequence = commonstates.Sequence()
+        self.walk = commonstates.TrajectoryWalk()
         sensor = self.robot().convert_sensor(SENSOR_LEFT_BOTTOM, TEAM_RED)
-        self.sequence.add(self.event_loop.figure_detector.enable(sensor, 2))
-        walk = commonstates.TrajectoryWalk()
-        walk.look_at(*trajectory.Cell(5, 0).top_right())
-        walk.move_to(*trajectory.Cell(5, 0).top_right())
-        self.sequence.add(walk)
-        self.switch_to_substate(self.sequence)
+        self.walk.wait_for(self.event_loop.figure_detector.enable(sensor, 2))
+        self.walk.look_at(*trajectory.Cell(5, 0).top_right())
+        self.walk.move_to(*trajectory.Cell(5, 0).top_right())
+        self.switch_to_substate(self.walk)
 
 
     def on_exit_substate(self, substate):
-        if substate == self.sequence:
+        if substate == self.walk:
             self.event_loop.figure_detector.detected_at(1, self.robot().pose.x + ROBOT_CENTER_TO_LATERAL_SENSOR_DISTANCE)
             self.switch_to_substate(self.event_loop.figure_detector.disable())
         else:
@@ -141,23 +139,29 @@ class GotoBottomIntersectionWithPiece(statemachine.State):
 class GotoBottomIntersectionBackFirst(statemachine.State):
 
     def on_enter(self):
-        self.sequence = commonstates.Sequence()
-
-        self.sequence.add(commonstates.OpenNippers())
-
-        sensor = self.robot().convert_sensor(SENSOR_RIGHT_BOTTOM, TEAM_RED)
-        self.sequence.add(self.event_loop.figure_detector.enable(sensor, 2))
         walk = commonstates.TrajectoryWalk()
+        walk.wait_for(commonstates.OpenNippers())
+        sensor = self.robot().convert_sensor(SENSOR_RIGHT_BOTTOM, TEAM_RED)
+        walk.wait_for(self.event_loop.figure_detector.enable(sensor, 2))
         (dest_x, dest_y) = trajectory.Cell(5, 0).top_right()
         walk.move_to(dest_x, dest_y, DIRECTION_BACKWARD)
+        walk.wait_for(self.event_loop.figure_detector.disable())
         walk.look_at(*trajectory.Cell(4, 1).top_right())
         walk.backward(0.100 * math.sqrt(2.0))
         walk.forward(0.100 * math.sqrt(2.0))
+        walk.wait_for(commonstates.CloseNippers())
+        self.switch_to_substate(walk)
 
-        self.sequence.add(walk)
 
-        self.sequence.add(commonstates.CloseNippers())
+    def on_exit_substate(self, substate):
+        self.switch_to_state(GotoGreenScanStartPoint())
 
+
+
+
+class GotoGreenScanStartPoint(statemachine.State):
+
+    def on_enter(self):
         walk = commonstates.TrajectoryWalk()
         walk.look_at(*trajectory.Cell(3, 0).top_right())
         walk.move_to(*trajectory.Cell(3, 0).top_right())
@@ -167,15 +171,11 @@ class GotoBottomIntersectionBackFirst(statemachine.State):
         walk.move_to(p1_x, p1_y, DIRECTION_BACKWARD)
         walk.rotate_to(math.pi)
         walk.backward(FIELD_CELL_SIZE)
-        self.sequence.add(walk)
-        self.switch_to_substate(self.sequence)
+        self.switch_to_substate(walk)
 
 
     def on_exit_substate(self, substate):
-        if substate == self.sequence:
-            self.switch_to_substate(self.event_loop.figure_detector.disable())
-        else:
-            self.switch_to_state(ScanGreenZoneFigureConfiguration())
+        self.switch_to_state(ScanGreenZoneFigureConfiguration())
 
 
 
