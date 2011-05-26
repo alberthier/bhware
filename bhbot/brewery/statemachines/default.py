@@ -154,23 +154,26 @@ class GotoBottomIntersectionBackFirst(statemachine.State):
 
 
     def on_exit_substate(self, substate):
-        self.switch_to_state(GotoGreenScanStartPoint())
+        self.switch_to_state(ReleaseFirstPieceOnBonusCell())
 
 
 
 
-class GotoGreenScanStartPoint(statemachine.State):
+class ReleaseFirstPieceOnBonusCell(statemachine.State):
 
     def on_enter(self):
         walk = commonstates.TrajectoryWalk()
-        walk.look_at(*trajectory.Cell(3, 0).top_right())
-        walk.move_to(*trajectory.Cell(3, 0).top_right())
-        (p1_x, p1_y) = trajectory.Cell(4, 0).top_middle()
+        (p0_x, p0_y) = trajectory.Cell(4, 1).center_right()
+        walk.goto(p0_x, p0_y, math.pi / 2.0)
+        (p1_x, p1_y) = trajectory.Cell(4, 2).center_middle()
+        p1_x += 0.100
+        p1_y += 0.030
+        walk.goto(p1_x, p1_y, 0.0)
+        walk.wait_for(commonstates.ReleasePiece())
+        walk.move_to(p1_x - 0.130, p1_y)
+        (p1_x, p1_y) = trajectory.Cell(5, 0).top_middle()
         p1_y -= 0.040
-        walk.look_at_opposite(p1_x, p1_y)
-        walk.move_to(p1_x, p1_y, DIRECTION_BACKWARD)
-        walk.rotate_to(math.pi)
-        walk.backward(FIELD_CELL_SIZE)
+        walk.goto(p1_x, p1_y, math.pi)
         self.switch_to_substate(walk)
 
 
@@ -183,40 +186,15 @@ class GotoGreenScanStartPoint(statemachine.State):
 class ScanGreenZoneFigureConfiguration(statemachine.State):
 
     def on_enter(self):
-        self.sequence = commonstates.Sequence()
+        walk = commonstates.TrajectoryWalk()
         sensor = self.robot().convert_sensor(SENSOR_LEFT_TOP, TEAM_RED)
-        self.sequence.add(self.event_loop.figure_detector.enable(sensor, 0))
-        walk = commonstates.TrajectoryWalk()
-        walk.forward(FIELD_CELL_SIZE * 3.2)
-        self.sequence.add(walk)
-        self.switch_to_substate(self.sequence)
-
-
-    def on_exit_substate(self, substate):
-        if substate == self.sequence:
-            self.switch_to_substate(self.event_loop.figure_detector.disable())
-        else:
-            self.switch_to_state(PlaceSecondPiece())
-
-
-
-
-class PlaceSecondPiece(statemachine.State):
-
-    def on_enter(self):
-        self.sequence = commonstates.Sequence()
-        walk = commonstates.TrajectoryWalk()
-        (dest_x, dest_y) = trajectory.Cell(0, 1).bottom_left()
-        dest_x -= 0.060
-        dest_y += 0.060
-        walk.look_at(dest_x, dest_y)
-        walk.move_to(dest_x, dest_y)
-        self.sequence.add(walk)
-        self.sequence.add(commonstates.ReleasePiece())
-        walk = commonstates.TrajectoryWalk()
-        walk.backward(0.250)
-        self.sequence.add(walk)
-        self.switch_to_substate(self.sequence)
+        walk.wait_for(self.event_loop.figure_detector.enable(sensor, 0))
+        (p0_x, p0_y) = trajectory.Cell(1, 0).bottom_middle()
+        p0_x -= 0.070
+        p0_y -= 0.040
+        walk.move_to(p0_x, p0_y)
+        walk.wait_for(self.event_loop.figure_detector.disable())
+        self.switch_to_substate(walk)
 
 
     def on_exit_substate(self, substate):
@@ -229,41 +207,28 @@ class PlaceSecondPiece(statemachine.State):
 class TakeFirstFigure(statemachine.State):
 
     def on_enter(self):
-        self.sequence = commonstates.Sequence()
+        # If the only available figure is the last one, don't take it
         walk = commonstates.TrajectoryWalk()
         figure_x = self.event_loop.figure_detector.get_first_match_x(0)
         first_line_y = trajectory.Cell(0, 0).top_right()[1]
-        walk.look_at_opposite(figure_x, first_line_y)
+        walk.goto(figure_x, first_line_y, -math.pi / 2.0)
+        walk.wait_for(commonstates.StorePiece1())
+        walk.move_to(figure_x, 0.250)
+        walk.wait_for(commonstates.StorePiece2())
         walk.move_to(figure_x, first_line_y, DIRECTION_BACKWARD)
-        walk.rotate_to(-math.pi / 2.0)
-        self.sequence.add(walk)
-        self.sequence.add(commonstates.StorePiece1())
-        walk = commonstates.TrajectoryWalk()
-        walk.move_to(figure_x, 0.280)
-        self.sequence.add(walk)
-        self.sequence.add(commonstates.StorePiece2())
-        walk = commonstates.TrajectoryWalk()
-        walk.move_to(figure_x, first_line_y, DIRECTION_BACKWARD)
-        self.sequence.add(walk)
-        self.sequence.add(commonstates.StorePiece3())
+        walk.wait_for(commonstates.StorePiece3())
 
         pieces_x = self.event_loop.figure_detector.get_green_zone_pawns_x()
         for piece_x in pieces_x[:-2]:
-            walk = commonstates.TrajectoryWalk()
             walk.look_at(piece_x, first_line_y)
             walk.move_to(piece_x, first_line_y)
             walk.rotate_to(-math.pi / 2.0)
-            self.sequence.add(walk)
-            self.sequence.add(commonstates.StorePiece1())
-            walk = commonstates.TrajectoryWalk()
-            walk.move_to(piece_x, 0.280)
-            self.sequence.add(walk)
-            self.sequence.add(commonstates.StorePiece2())
-            walk = commonstates.TrajectoryWalk()
+            walk.wait_for(commonstates.StorePiece1())
+            walk.move_to(piece_x, 0.250)
+            walk.wait_for(commonstates.StorePiece2())
             walk.move_to(piece_x, first_line_y, DIRECTION_BACKWARD)
-            self.sequence.add(walk)
-            self.sequence.add(commonstates.StorePiece3())
-        self.switch_to_substate(self.sequence)
+            walk.wait_for(commonstates.StorePiece3())
+        self.switch_to_substate(walk)
 
 
     def on_exit_substate(self, substate):
