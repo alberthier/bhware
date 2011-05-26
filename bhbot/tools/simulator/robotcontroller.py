@@ -347,8 +347,9 @@ class RobotController(object):
 
 
     def on_elevator_detection(self, sensor):
-        self.field_object.move_animation.stop()
-        self.send_goto_finished(REASON_PIECE_FOUND)
+        if len(self.stored_pieces) == 0:
+            self.field_object.move_animation.stop()
+            self.send_goto_finished(REASON_PIECE_FOUND)
         self.front_pieces = self.elevator_sensor.currently_detected
         for piece in self.front_pieces:
             self.field_object.item.addToGroup(piece)
