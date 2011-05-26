@@ -36,7 +36,7 @@ class TurretChannel(asyncore.file_dispatcher):
         self.packet = None
 
     def bytes_available(self):
-        return self.port.inWaiting()    
+        return self.port.inWaiting()
 
     def writable(self):
         return False
@@ -115,7 +115,7 @@ class EventLoop(object):
             if channel.packet == None:
                 try:
                     if hasattr(channel,"bytes_available") :
-                        b = channel.bytes_available() 
+                        b = channel.bytes_available()
                         logger.log("Bytes available : {0}".format(b))
                         if b == 0 : return
                     received_data = channel.recv(1)
@@ -160,7 +160,7 @@ class EventLoop(object):
                             self.get_current_state().on_goto_started()
                         elif isinstance(channel.packet, packets.GotoFinished):
                             self.robot.pose = channel.packet.current_pose
-                            self.get_current_state().on_goto_finished(channel.packet.reason, channel.packet.current_pose)
+                            self.get_current_state().on_goto_finished(channel.packet.reason, channel.packet.current_pose, channel.packet.current_point_index)
                         elif isinstance(channel.packet, packets.Blocked):
                             self.get_current_state().on_blocked(channel.packet.side)
                         elif isinstance(channel.packet, packets.EnableAntiBlocking):
@@ -219,7 +219,7 @@ class EventLoop(object):
 
 
     def inject_goto_finished(self):
-        self.get_current_state().on_goto_finished(REASON_DESTINATION_REACHED, self.robot.pose)
+        self.get_current_state().on_goto_finished(REASON_DESTINATION_REACHED, self.robot.pose, 0)
 
 
     def get_current_state(self):

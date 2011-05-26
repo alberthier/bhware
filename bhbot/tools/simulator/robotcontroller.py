@@ -95,6 +95,7 @@ class RobotController(object):
         self.incoming_packet = None
         self.ready = False
         self.goto_packet = None
+        self.goto_packet_point_index = 0
         self.trajectory_drawer = TrajectoryDrawer(scene, team)
 
         self.left_sensor = None
@@ -160,7 +161,7 @@ class RobotController(object):
 
         self.field_object = GraphicsRobotObject(self.team)
         self.field_object.observers.append(self.trajectory_drawer)
-        self.field_object.movement_finished.connect(self.process_goto)
+        self.field_object.movement_finished.connect(self.movement_finished)
         self.scene.addItem(self.field_object.item)
 
         self.top_left_sensor = SensorController(self.field_object.left_sensor, self.field_object, SENSOR_LEFT_TOP)
@@ -208,6 +209,7 @@ class RobotController(object):
             self.try_device_ready()
         elif isinstance(packet, packets.Goto):
             self.goto_packet = packet
+            self.goto_packet_point_index = 0
             self.send_packet(packets.GotoStarted())
             self.process_goto()
         elif isinstance(packet, packets.KeepAlive):
@@ -306,12 +308,16 @@ class RobotController(object):
         self.send_packet(packet)
 
 
+    def movement_finished(self):
+        self.goto_packet_point_index += 1
+        self.process_goto()
+
+
     def process_goto(self):
         if self.goto_packet != None and self.field_object != None:
             # direction is ignored for the moment
-            if len(self.goto_packet.points) != 0:
-                point = self.goto_packet.points[0]
-                self.goto_packet.points = self.goto_packet.points[1:]
+            if self.goto_packet_point_index != len(self.goto_packet.points):
+                point = self.goto_packet.points[self.goto_packet_point_index]
                 if self.goto_packet.direction == DIRECTION_BACKWARD:
                     for piece in self.front_pieces:
                         self.field_object.item.removeFromGroup(piece)
@@ -373,6 +379,7 @@ class RobotController(object):
         packet = packets.GotoFinished()
         packet.reason = reason
         packet.current_pose = self.field_object.get_pose()
+        packet.current_point_index = self.goto_packet_point_index
         self.send_packet(packet)
 
     def send_opponent_detected(self):

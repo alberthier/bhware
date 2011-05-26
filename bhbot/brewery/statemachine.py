@@ -95,7 +95,7 @@ class State(object):
         pass
 
 
-    def on_goto_finished(self, reason, current_pose):
+    def on_goto_finished(self, reason, current_pose, current_point_index):
         pass
 
 

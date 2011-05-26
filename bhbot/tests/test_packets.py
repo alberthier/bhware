@@ -145,6 +145,7 @@ class GotoFinishedPacketTestCase(unittest.TestCase):
         packet = packets.GotoFinished()
         packet.reason = REASON_PIECE_FOUND
         packet.current_pose = trajectory.Pose(20.0, 30.0, 5.5)
+        packet.current_point_index = 12
         buf = packet.serialize()
         packet2 = packets.GotoFinished()
         packet2.deserialize(buf)

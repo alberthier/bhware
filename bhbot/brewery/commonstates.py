@@ -348,7 +348,7 @@ class TrajectoryWalk(statemachine.State):
         self.process_next_job()
 
 
-    def on_goto_finished(self, reason, current_pose):
+    def on_goto_finished(self, reason, current_pose, current_point_index):
         if reason == REASON_DESTINATION_REACHED:
             self.exit_reason = TRAJECTORY_WALK_DESTINATION_REACHED
             self.current_goto_packet = None
