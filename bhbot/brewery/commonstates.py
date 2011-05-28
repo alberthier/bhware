@@ -10,6 +10,7 @@ import statemachine
 import packets
 import trajectory
 import logger
+import figuredetector
 from definitions import *
 
 
@@ -403,3 +404,42 @@ class TrajectoryWalk(statemachine.State):
             else :
                 self.exit_reason = TRAJECTORY_WALK_OPPONENT_DETECTED
                 self.exit_substate()
+
+
+
+
+class EnableFigureDetector(statemachine.State):
+
+    def __init__(self, sensor, column, reference_team = TEAM_RED):
+        statemachine.State.__init__(self)
+        self.sensor = sensor
+        self.column = column
+        self.reference_team = reference_team
+
+
+    def on_enter(self):
+        sensor = self.robot().convert_sensor(self.sensor, self.reference_team)
+        self.event_loop.figure_detector.enable(self.sensor, self.column)
+        self.switch_to_substate(EnableLateralSensors())
+
+
+    def on_exit_substate(self, substate):
+        self.exit_substate()
+
+
+
+
+class DisableFigureDetector(statemachine.State):
+
+    def __init__(self, fix_column):
+        statemachine.State.__init__(self)
+        self.fix_column = fix_column
+
+
+    def on_enter(self):
+        self.switch_to_substate(DisableLateralSensors())
+
+
+    def on_exit_substate(self, substate):
+        self.event_loop.figure_detector.disable(self.fix_column)
+        self.exit_substate()

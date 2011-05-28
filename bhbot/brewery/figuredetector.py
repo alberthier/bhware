@@ -3,7 +3,6 @@
 
 
 import commonstates
-import packets
 from definitions import *
 
 
@@ -21,7 +20,8 @@ class FigureDetector(object):
         self.elements = [[False, False, False, False, False],
                          [False, False, False, False, False],
                          [False, False, False, False, False]]
-        self.taken_elements = [[False, False, False, False, False],
+                                # We don't want to ever take the last piece of the first line.
+        self.taken_elements = [[False, False, False, False, True],
                                [False, False, False, False, False],
                                [False, False, False, False, False]]
         self.reference_sensor = None
@@ -32,19 +32,17 @@ class FigureDetector(object):
     def enable(self, reference_sensor, column):
         self.reference_sensor = reference_sensor
         self.column_index = column
-        return commonstates.EnableLateralSensors()
 
 
-    def disable(self):
+    def disable(self, fix_column):
         self.reference_sensor = None
         figure_count = 0
         elements_column = self.elements[self.column_index]
         for flag in elements_column:
             if flag:
                 figure_count += 1
-        if self.column != 0 and figure_count < 2:
+        if fix_column and figure_count < 2:
             elements_column[4] = True
-        return commonstates.DisableLateralSensors()
 
 
     def on_piece_detected(self, start_pose, start_distance, end_pose, end_distance, sensor, angle):
@@ -80,7 +78,7 @@ class FigureDetector(object):
         min_idx = -1
         x_coords_column = self.x_coords[column_index]
         elements_column = self.elements[column_index]
-        taken_elements_column = self.elements[column_index]
+        taken_elements_column = self.taken_elements[column_index]
 
         for idx in xrange(len(elements_column)):
             if not taken_elements_column[idx] and elements_column[idx]:
@@ -91,7 +89,7 @@ class FigureDetector(object):
                     min_idx = idx
 
         if min_idx != -1:
-            taken_elements_column[min_idx] = False
+            taken_elements_column[min_idx] = True
         else:
             # arg nothing detected
             return None
@@ -105,7 +103,7 @@ class FigureDetector(object):
 
         x_coords_column = self.x_coords[0]
         elements_column = self.elements[0]
-        taken_elements_column = self.elements[0]
+        taken_elements_column = self.taken_elements[0]
 
         for idx in xrange(len(elements_column)):
             # No figure detected and not already taken
@@ -117,7 +115,7 @@ class FigureDetector(object):
                     min_idx = idx
 
         if min_idx != -1:
-            taken_elements_column[min_idx] = False
+            taken_elements_column[min_idx] = True
         else:
             # arg nothing detected
             return None
