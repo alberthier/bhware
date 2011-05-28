@@ -319,6 +319,7 @@ class RobotController(object):
             if self.goto_packet_point_index != len(self.goto_packet.points):
                 point = self.goto_packet.points[self.goto_packet_point_index]
                 if self.goto_packet.direction == DIRECTION_BACKWARD:
+                    point.angle += math.pi
                     for piece in self.front_pieces:
                         self.field_object.item.removeFromGroup(piece)
                     self.front_pieces = []
