@@ -121,8 +121,7 @@ class GotoBottomIntersectionWithPiece(statemachine.State):
         self.store_piece = commonstates.DirectStorePiece()
 
         self.walk = commonstates.TrajectoryWalk()
-        self.walk.rotate_to(-math.pi / 2.0)
-        self.walk.rotate_to(-math.pi)
+        self.walk.rotate_to(math.radians(-178))
 
         self.switch_to_substate(self.store_piece)
 
@@ -146,9 +145,9 @@ class GotoBottomIntersectionBackFirst(statemachine.State):
         (dest_x, dest_y) = trajectory.Cell(5, 0).top_right()
         walk.move_to(dest_x, dest_y, DIRECTION_BACKWARD)
         walk.wait_for(self.event_loop.figure_detector.disable())
-        walk.look_at(*trajectory.Cell(4, 1).top_right())
-        walk.backward(0.100 * math.sqrt(2.0))
-        walk.forward(0.100 * math.sqrt(2.0))
+        walk.rotate_to(2.0 * math.pi/3)
+        walk.backward(0.075 * math.sqrt(2.0))
+        walk.forward(0.075 * math.sqrt(2.0))
         walk.wait_for(commonstates.CloseNippers())
         self.switch_to_substate(walk)
 
@@ -170,10 +169,11 @@ class ReleaseFirstPieceOnBonusCell(statemachine.State):
         p1_y += 0.030
         walk.goto(p1_x, p1_y, 0.0)
         walk.wait_for(commonstates.ReleasePiece())
-        walk.move_to(p1_x - 0.130, p1_y)
+        walk.backward(0.22)
+        walk.rotate_to(math.radians(80))
         (p1_x, p1_y) = trajectory.Cell(5, 0).top_middle()
         p1_y -= 0.040
-        walk.goto(p1_x, p1_y, math.pi)
+        walk.goto(p1_x, p1_y, 0.0, DIRECTION_BACKWARD)
         self.switch_to_substate(walk)
 
 
