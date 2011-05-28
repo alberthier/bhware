@@ -32,6 +32,10 @@ class Main(statemachine.State):
 class WaitStart(statemachine.State):
 
     def on_start(self, team):
+        self.switch_to_substate(commonstates.DefinePosition())
+
+
+    def on_exit_substate(self, substate):
         self.switch_to_state(WaitFirstKeepAlive())
 
 
