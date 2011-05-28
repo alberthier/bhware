@@ -209,7 +209,7 @@ class TakeFirstFigure(statemachine.State):
     def on_enter(self):
         # If the only available figure is the last one, don't take it
         walk = commonstates.TrajectoryWalk()
-        figure_x = self.event_loop.figure_detector.get_first_match_x(0)
+        figure_x = self.event_loop.figure_detector.pop_nearest_match_x(0)
         first_line_y = trajectory.Cell(0, 0).top_right()[1]
         walk.goto(figure_x, first_line_y, -math.pi / 2.0)
         walk.wait_for(commonstates.StorePiece1())
@@ -218,16 +218,15 @@ class TakeFirstFigure(statemachine.State):
         walk.move_to(figure_x, first_line_y, DIRECTION_BACKWARD)
         walk.wait_for(commonstates.StorePiece3())
 
-        pieces_x = self.event_loop.figure_detector.get_green_zone_pawns_x()
-        for piece_x in pieces_x[:-2]:
-            walk.look_at(piece_x, first_line_y)
-            walk.move_to(piece_x, first_line_y)
-            walk.rotate_to(-math.pi / 2.0)
-            walk.wait_for(commonstates.StorePiece1())
-            walk.move_to(piece_x, 0.250)
-            walk.wait_for(commonstates.StorePiece2())
-            walk.move_to(piece_x, first_line_y, DIRECTION_BACKWARD)
-            walk.wait_for(commonstates.StorePiece3())
+        pawn_x = self.event_loop.figure_detector.pop_nearest_green_zone_pawn_x()
+        walk.look_at(pawn_x, first_line_y)
+        walk.move_to(pawn_x, first_line_y)
+        walk.rotate_to(-math.pi / 2.0)
+        walk.wait_for(commonstates.StorePiece1())
+        walk.move_to(pawn_x, 0.250)
+        walk.wait_for(commonstates.StorePiece2())
+        walk.move_to(pawn_x, first_line_y, DIRECTION_BACKWARD)
+        walk.wait_for(commonstates.StorePiece3())
         self.switch_to_substate(walk)
 
 

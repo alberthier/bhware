@@ -11,18 +11,19 @@ from definitions import *
 
 class FigureDetector(object):
 
+    PIECE_NONE = 0
+
     def __init__(self, robot):
 
-        self.x_coords = [[0.690, FIELD_CELL_SIZE * 1.0, FIELD_CELL_SIZE * 1.0],
-                         [0.970, FIELD_CELL_SIZE * 2.0, FIELD_CELL_SIZE * 2.0],
-                         [1.250, FIELD_CELL_SIZE * 3.0, FIELD_CELL_SIZE * 3.0],
-                         [1.530, FIELD_CELL_SIZE * 4.0, FIELD_CELL_SIZE * 4.0],
-                         [1.810, FIELD_CELL_SIZE * 5.0, FIELD_CELL_SIZE * 5.0]]
-        self.elements = [[False, False, False],
-                         [False, False, False],
-                         [False, False, False],
-                         [False, False, False],
-                         [False, False, False]]
+        self.x_coords = [[0.690,                 0.970,                 1.250,                 1.530,                 1.810                ],
+                         [FIELD_CELL_SIZE * 1.0, FIELD_CELL_SIZE * 2.0, FIELD_CELL_SIZE * 3.0, FIELD_CELL_SIZE * 4.0, FIELD_CELL_SIZE * 5.0],
+                         [FIELD_CELL_SIZE * 1.0, FIELD_CELL_SIZE * 2.0, FIELD_CELL_SIZE * 3.0, FIELD_CELL_SIZE * 4.0, FIELD_CELL_SIZE * 5.0]]
+        self.elements = [[False, False, False, False, False],
+                         [False, False, False, False, False],
+                         [False, False, False, False, False]]
+        self.taken_elements = [[False, False, False, False, False],
+                               [False, False, False, False, False],
+                               [False, False, False, False, False]]
         self.reference_sensor = None
         self.robot = robot
         self.column = None
@@ -30,19 +31,19 @@ class FigureDetector(object):
 
     def enable(self, reference_sensor, column):
         self.reference_sensor = reference_sensor
-        self.column = column
+        self.column_index = column
         return commonstates.EnableLateralSensors()
 
 
     def disable(self):
         self.reference_sensor = None
         figure_count = 0
-        if self.column == 0:
-            for elt in self.elements:
-                if elt[self.column]:
-                    figure_count += 1
-            if figure_count < 2:
-                self.elements[4][self.column] = True
+        elements_column = self.elements[self.column_index]
+        for flag in elements_column:
+            if flag:
+                figure_count += 1
+        if self.column != 0 and figure_count < 2:
+            elements_column[4] = True
         return commonstates.DisableLateralSensors()
 
 
@@ -54,46 +55,71 @@ class FigureDetector(object):
                 center_x += ROBOT_CENTER_TO_LATERAL_SENSOR_DISTANCE
             else:
                 center_x -= ROBOT_CENTER_TO_LATERAL_SENSOR_DISTANCE
-            self.detected_at(self.column, center_x)
+            self.detected_at(self.column_index, center_x)
 
 
-    def detected_at(self, column, x):
-        min = 9999.0
+    def detected_at(self, column_index, x):
+        min_diff = 9999.0
         min_idx = -1
         idx = 0
-        for x_coord in self.x_coords:
-            diff = abs(x_coord[column] - x)
-            if diff < min:
-                min = diff
+        x_coords_column = self.x_coords[column_index]
+        elements_column = self.elements[column_index]
+
+        for x_coord in x_coords_column:
+            diff = abs(x_coord - x)
+            if diff < min_diff:
+                min_diff = diff
                 min_idx = idx
             idx += 1
         if (min_idx != -1):
-            self.elements[min_idx][column] = True
+            elements_column[min_idx] = True
 
 
-    def get_first_match_x(self, column):
-        idx = 0
-        for elt in self.elements:
-            if elt[column]:
-                return self.x_coords[idx][column]
-            idx += 1
-        return None
+    def pop_nearest_match_x(self, column_index):
+        min_diff = 9999.0
+        min_idx = -1
+        x_coords_column = self.x_coords[column_index]
+        elements_column = self.elements[column_index]
+        taken_elements_column = self.elements[column_index]
+
+        for idx in xrange(len(elements_column)):
+            if not taken_elements_column[idx] and elements_column[idx]:
+                x_coord = x_coords_column[idx]
+                diff = abs(x_coord - self.robot.pose.x)
+                if diff < min_diff:
+                    min_diff = diff
+                    min_idx = idx
+
+        if min_idx != -1:
+            taken_elements_column[min_idx] = False
+        else:
+            # arg nothing detected
+            return None
+
+        return x_coords_column[min_idx]
 
 
-    def get_second_match_x(self, column):
-        idx = 0
-        for elt in reversed(self.elements):
-            if elt[column]:
-                return self.x_coords[idx][column]
-            idx += 1
-        return None
+    def pop_nearest_green_zone_pawn_x(self):
+        min_diff = 9999.0
+        min_idx = -1
 
+        x_coords_column = self.x_coords[0]
+        elements_column = self.elements[0]
+        taken_elements_column = self.elements[0]
 
-    def get_green_zone_pawns_x(self):
-        pawns_x = []
-        idx = 0
-        for elt in self.elements:
-            if not elt[0]:
-                pawns_x.append(self.x_coords[idx][0])
-            idx += 1
-        return pawns_x
+        for idx in xrange(len(elements_column)):
+            # No figure detected and not already taken
+            if not elements_column[idx] and not taken_elements_column[idx]:
+                x_coord = x_coords_column[idx]
+                diff = abs(x_coord - self.robot.pose.x)
+                if diff < min_diff:
+                    min_diff = diff
+                    min_idx = idx
+
+        if min_idx != -1:
+            taken_elements_column[min_idx] = False
+        else:
+            # arg nothing detected
+            return None
+
+        return x_coords_column[min_idx]
