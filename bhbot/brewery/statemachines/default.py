@@ -103,7 +103,6 @@ class GotoBottomIntersectionHeadFirst(statemachine.State):
     def on_enter(self):
         self.walk = commonstates.TrajectoryWalk()
         sensor = self.robot().convert_sensor(SENSOR_LEFT_BOTTOM, TEAM_RED)
-        logger.log("sensor= " + str(sensor))
         self.walk.wait_for(commonstates.EnableFigureDetector(sensor, 2))
         self.walk.look_at(*trajectory.Cell(5, 0).top_right())
         self.walk.move_to(*trajectory.Cell(5, 0).top_right())
@@ -146,7 +145,6 @@ class GotoBottomIntersectionBackFirst(statemachine.State):
         walk = commonstates.TrajectoryWalk()
         walk.wait_for(commonstates.OpenNippers())
         sensor = self.robot().convert_sensor(SENSOR_RIGHT_BOTTOM, TEAM_RED)
-        logger.log("sensor= " + str(sensor))
         walk.wait_for(commonstates.EnableFigureDetector(sensor, 2))
         (dest_x, dest_y) = trajectory.Cell(5, 0).top_right()
         walk.move_to(dest_x, dest_y, DIRECTION_BACKWARD)
@@ -194,7 +192,6 @@ class ScanGreenZoneFigureConfiguration(statemachine.State):
     def on_enter(self):
         walk = commonstates.TrajectoryWalk()
         sensor = self.robot().convert_sensor(SENSOR_LEFT_TOP, TEAM_RED)
-        logger.log("sensor= " + str(sensor))
         walk.wait_for(commonstates.EnableFigureDetector(sensor, 0))
         (p0_x, p0_y) = trajectory.Cell(1, 0).bottom_middle()
         p0_x -= 0.070
