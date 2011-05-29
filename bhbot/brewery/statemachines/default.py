@@ -150,8 +150,9 @@ class GotoBottomIntersectionBackFirst(statemachine.State):
         walk.move_to(dest_x, dest_y, DIRECTION_BACKWARD)
         walk.wait_for(commonstates.DisableFigureDetector(True))
         walk.rotate_to(2.0 * math.pi/3)
-        walk.backward(0.075 * math.sqrt(2.0))
-        walk.forward(0.075 * math.sqrt(2.0))
+        # Check: the rotation is enough to push the pawn on the cell
+        #walk.backward(0.075 * math.sqrt(2.0))
+        #walk.forward(0.075 * math.sqrt(2.0))
         walk.wait_for(commonstates.CloseNippers())
         self.switch_to_substate(walk)
 
