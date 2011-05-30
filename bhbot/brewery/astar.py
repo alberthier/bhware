@@ -1,22 +1,5 @@
 #!/usr/bin/env python
-# -*- coding: iso8859-1 -*- #
-
-terrain = """  XXXXXXXXXXXXXXXXXXXXXX
-               XO   D    O          X
-               XO        O          X
-               XO        O      OOOOX
-               XO        O      OA  X
-               XO        O      O   X
-               XO        O      O   X
-               XO        O      O   X
-               XO        O      O   X
-               X  OOOOOOOO      O   X
-               X                O   X
-               X                O   X
-               X                O   X
-               X                O   X
-               X                    X
-               XXXXXXXXXXXXXXXXXXXXXX"""               
+# -*- coding: iso8859-1 -*- #          
 
 class Map(object):
    def __init__(self, s=None):
@@ -218,6 +201,22 @@ def astar(startPoint, endPoint, terrain):
    # print closedList
 
 if __name__ == "__main__" :
+   terrain = """  XXXXXXXXXXXXXXXXXXXXXX
+               XO   D    O          X
+               XO        O          X
+               XO        O      OOOOX
+               XO        O      OA  X
+               XO        O      O   X
+               XO        O      O   X
+               XO        O      O   X
+               XO        O      O   X
+               X  OOOOOOOO      O   X
+               X                O   X
+               X                O   X
+               X                O   X
+               X                O   X
+               X                    X
+               XXXXXXXXXXXXXXXXXXXXXX"""     
    t = Map()
 
    startPoint, endPoint = t.load_from_string(terrain)
