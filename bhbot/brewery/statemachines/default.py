@@ -278,6 +278,23 @@ class TakeFirstFigurePawn(statemachine.State):
             substate.current_goto_packet = None
             self.switch_to_substate(substate)
         else:
+            self.switch_to_state(TakeConstruction())
+
+
+class TakeConstruction(statemachine.State):
+
+    def on_enter(self):
+        self.walk = commonstates.TrajectoryWalk()
+        self.walk.wait_for(commonstates.ReleasePiece())
+        self.walk.backward(0.030)
+        self.walk.forward(0.100)
+        self.switch_to_substate(self.walk)
+
+
+    def on_exit_substate(self, substate):
+        if substate == self.walk and substate.exit_reason == TRAJECTORY_WALK_PIECE_FOUND:
+            self.switch_to_substate(commonstates.DirectStorePiece())
+        else:
             self.switch_to_state(ReleaseConstruction())
 
 
