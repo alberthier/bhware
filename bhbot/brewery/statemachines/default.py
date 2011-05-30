@@ -191,21 +191,36 @@ class ReleaseFirstPieceOnBonusCell(statemachine.State):
 class ScanGreenZoneFigureConfiguration(statemachine.State):
 
     def on_enter(self):
-        walk = commonstates.TrajectoryWalk()
-        sensor = self.robot().convert_sensor(SENSOR_LEFT_TOP, TEAM_RED)
-        walk.wait_for(commonstates.EnableFigureDetector(sensor, 0))
+        self.detector_disabler = commonstates.DisableFigureDetector(True)
+        self.walk = commonstates.TrajectoryWalk()
+        self.walk.on_piece_detected = self.on_piece_detected
+        self.sensor = self.robot().convert_sensor(SENSOR_LEFT_TOP, TEAM_RED)
+        self.walk.wait_for(commonstates.EnableFigureDetector(self.sensor, 0))
         (p0_x, p0_y) = trajectory.Cell(1, 0).bottom_middle()
         p0_x -= 0.070
         p0_y -= 0.040
-        walk.move_to(p0_x, p0_y)
-        walk.wait_for(commonstates.DisableFigureDetector(True))
-        self.switch_to_substate(walk)
+        self.walk.move_to(p0_x, p0_y)
+        self.switch_to_substate(self.walk)
 
 
     def on_exit_substate(self, substate):
-        logger.log("'" + str(self.event_loop.figure_detector.elements) + "'")
-        self.switch_to_state(TakeFirstFigure())
+        if substate == self.walk:
+            # We are at the end of the green zone. Only 0 or 1 figure detected
+            self.detection_finished()
+        else:
+            self.switch_to_state(TakeFirstFigure())
 
+
+    def on_piece_detected(self, start_pose, start_distance, end_pose, end_distance, sensor, angle):
+        if sensor == self.sensor and self.event_loop.figure_detector.get_elements_count(0) == 2:
+            # Two figures detected. Stop here.
+            self.robot().stop()
+            self.detection_finished()
+
+
+    def detection_finished(self):
+        logger.log("'" + str(self.event_loop.figure_detector.elements) + "'")
+        self.switch_to_substate(self.detector_disabler)
 
 
 

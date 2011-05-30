@@ -73,6 +73,14 @@ class FigureDetector(object):
             elements_column[min_idx] = True
 
 
+    def get_elements_count(self, column_index):
+        count = 0
+        for elt in self.elements[column_index]:
+            if elt:
+                count += 1
+        return count
+
+
     def pop_nearest_match_x(self, column_index):
         min_diff = 9999.0
         min_idx = -1
