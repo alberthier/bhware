@@ -43,43 +43,45 @@ terrain = """  XXXXXXXXXXXXXXXXXXXXXX
                X                O   X
                X                    X
                XXXXXXXXXXXXXXXXXXXXXX"""               
-               
-tailleX = 0
-tailleY = 0
 
-tabTerrain=[]
+def load_terrain(s):               
+   tailleX = 0
+   tailleY = 0
 
-startPoint = (0,0)
-endPoint = (0,0)
+   tabTerrain=[]
 
-for l in terrain.splitlines() :
-   y = tailleY
-   tabTerrain.append([])
-   l= l.strip()
-   tailleX = max(tailleX, len(l))
-   for x,elem in enumerate(l) :
-      val = 0
-      if elem == "X" :
-         val = 64
-      elif elem == "O" :
-         val = 63
-      elif elem == "D" :
-         startPoint = [x, y]
-      elif elem == "A" :
-         endPoint = [x, y]
+   startPoint = (0,0)
+   endPoint = (0,0)
+
+   for l in terrain.splitlines() :
+      y = tailleY
+      tabTerrain.append([])
+      l= l.strip()
+      tailleX = max(tailleX, len(l))
+      for x,elem in enumerate(l) :
+         val = 0
+         if elem == "X" :
+            val = 64
+         elif elem == "O" :
+            val = 63
+         elif elem == "D" :
+            startPoint = [x, y]
+         elif elem == "A" :
+            endPoint = [x, y]
+         
+         tabTerrain[tailleY].append(val)
+         
+         
+      tailleY = tailleY +1
       
-      tabTerrain[tailleY].append(val)
-      
-      
-   tailleY = tailleY +1
-   
-print u"Dimensions du terrain en mémoire", tailleX, tailleY
-print u"Taille maximum en mémoire de la liste des pts", tailleX * tailleY
+   print u"Dimensions du terrain en mémoire", tailleX, tailleY
+   print u"Taille maximum en mémoire de la liste des pts", tailleX * tailleY
 
-# print tabTerrain
+   # print tabTerrain
 
-for line in tabTerrain :
-   print "".join(map(lambda x : " %2d" % (x), line))
+   for line in tabTerrain :
+      print "".join(map(lambda x : " %2d" % (x), line))
+   return tabTerrain, startPoint, endPoint
 
    
 
@@ -134,98 +136,102 @@ def get_point(coord):
 def dist_manhattan(p1, p2):
    return abs(p1.x - p2.x) + abs(p1.y - p2.y )
 
-start = get_point(startPoint)
-end = get_point(endPoint)
+def astar(startPoint, endPoint, tabTerrain):
+   start = get_point(startPoint)
+   end = get_point(endPoint)
 
-openList = [start]
-parents = {}
-closedList = []
+   openList = [start]
+   parents = {}
+   closedList = []
 
-print "debut : ", start
-print "fin :", end
+   print "debut : ", start
+   print "fin :", end
 
-# print openList
+   # print openList
 
-#statistiques
+   #statistiques
 
-stats={ "openListMax" : 0, "closedListMax" : 0, "gMax" : 0, "hMax" : 0  }
+   stats={ "openListMax" : 0, "closedListMax" : 0, "gMax" : 0, "hMax" : 0  }
 
 
-iteration = 0
+   iteration = 0
 
-while len(openList) > 0 and not end in closedList:
-   iteration+=1
-   top = openList[0]
-   openList.remove(top)
-   neighbours = get_reachable_neighbours(top)
-   # a_rajouter = [ n for n in neighbours if n not in closedList ]
-   ptTop = top
-   print "top", top, top.get_f(), top.g, top.h
-   for n in neighbours :
-      ptNew = get_point(n)
-      if ptNew in closedList :
-         continue
-      newG = ptTop.g + 1
-      if ptNew not in openList or newG < ptNew.g :
-         print "trouve meilleur que", ptNew.g, ">", newG,"pour",ptNew
-         parents[ptNew] = ptTop
-         ptNew.set_g(newG)
-         newH = dist_manhattan(ptNew, start)
-         ptNew.set_h(newH)
-         stats["gMax"]=max(stats["gMax"], newG)
-         stats["hMax"]=max(stats["hMax"], newH)   
-         openList.append(ptNew)
-   
-   closedList.append(top)
-   openList.sort(cmp = lambda x, y : cmp(x.get_f(), y.get_f()))
-   
-   stats["openListMax"]=max(stats["openListMax"], len(openList))
-   stats["closedListMax"]=max(stats["closedListMax"], len(closedList))   
-   # print [ (n, n.get_f()) for n in openList]
-   # print "iteration", iteration
+   while len(openList) > 0 and not end in closedList:
+      iteration+=1
+      top = openList[0]
+      openList.remove(top)
+      neighbours = get_reachable_neighbours(top)
+      # a_rajouter = [ n for n in neighbours if n not in closedList ]
+      ptTop = top
+      print "top", top, top.get_f(), top.g, top.h
+      for n in neighbours :
+         ptNew = get_point(n)
+         if ptNew in closedList :
+            continue
+         newG = ptTop.g + 1
+         if ptNew not in openList or newG < ptNew.g :
+            print "trouve meilleur que", ptNew.g, ">", newG,"pour",ptNew
+            parents[ptNew] = ptTop
+            ptNew.set_g(newG)
+            newH = dist_manhattan(ptNew, start)
+            ptNew.set_h(newH)
+            stats["gMax"]=max(stats["gMax"], newG)
+            stats["hMax"]=max(stats["hMax"], newH)   
+            openList.append(ptNew)
+      
+      closedList.append(top)
+      openList.sort(cmp = lambda x, y : cmp(x.get_f(), y.get_f()))
+      
+      stats["openListMax"]=max(stats["openListMax"], len(openList))
+      stats["closedListMax"]=max(stats["closedListMax"], len(closedList))   
+      # print [ (n, n.get_f()) for n in openList]
+      # print "iteration", iteration
 
-chemin = []
-nextP = get_point( endPoint )
+   chemin = []
+   nextP = get_point( endPoint )
 
-while not startPoint in chemin :
-   parent = parents[nextP]
-   chemin.append(parent.to_array())
-   nextP = parent
+   while not startPoint in chemin :
+      parent = parents[nextP]
+      chemin.append(parent.to_array())
+      nextP = parent
 
-print "iterations :", iteration   
+   print "iterations :", iteration   
 
-print "chemin :", chemin
-print "longueur :", len(chemin)
-   
-print openList
+   print "chemin :", chemin
+   print "longueur :", len(chemin)
+      
+   print openList
 
-for y in range(len(tabTerrain)) :
-   l = tabTerrain[y]
-   for x in  range(len(l)) :
-      if [x, y] in chemin :
-         tabTerrain[y][x] = 1
+   for y in range(len(tabTerrain)) :
+      l = tabTerrain[y]
+      for x in  range(len(l)) :
+         if [x, y] in chemin :
+            tabTerrain[y][x] = 1
 
-for line in tabTerrain :
-   print "".join(map(lambda x : " %2d" % (x), line))
-   #l = [ " %2d" % (x) if x > 0 else " . " ] 
-   #print "".join( l )      
+   for line in tabTerrain :
+      print "".join(map(lambda x : " %2d" % (x), line))
+      #l = [ " %2d" % (x) if x > 0 else " . " ] 
+      #print "".join( l )      
 
-for y in range(len(tabTerrain)) :
-   l = tabTerrain[y]
-   for x in  range(len(l)) :
-      tabTerrain[y][x] = get_point([x,y]).h
+   for y in range(len(tabTerrain)) :
+      l = tabTerrain[y]
+      for x in  range(len(l)) :
+         tabTerrain[y][x] = get_point([x,y]).h
 
-for line in tabTerrain :
-   print "".join(map(lambda x : " %2d" % (x), line))
+   for line in tabTerrain :
+      print "".join(map(lambda x : " %2d" % (x), line))
 
-print "closed list",len(closedList)
+   print "closed list",len(closedList)
 
-# import pdb
-# 
-# pdb.set_trace()
+   # import pdb
+   # 
+   # pdb.set_trace()
 
-# print parents
-   
-print "Statistiques :", stats   
+   # print parents
+      
+   print "Statistiques :", stats   
 
-# print closedList
+   # print closedList
+
+tabTerrain, startPoint, endPoint = load_terrain(terrain)
+astar(startPoint, endPoint, tabTerrain)
