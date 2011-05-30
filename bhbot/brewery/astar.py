@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: iso8859-1 -*- #          
 
+import datetime
+
 class Map(object):
    def __init__(self, s=None):
       self.tabTerrain = None
@@ -92,14 +94,13 @@ class Point(object):
       self.g = g
    def set_h(self, h):
       self.h = h
-
-
    
 
 def dist_manhattan(p1, p2):
    return abs(p1.x - p2.x) + abs(p1.y - p2.y )
 
 def astar(startPoint, endPoint, terrain):
+   start_time = datetime.datetime.now()
    start = terrain.get_point(startPoint)
    end = terrain.get_point(endPoint)
 
@@ -114,7 +115,7 @@ def astar(startPoint, endPoint, terrain):
 
    #statistiques
 
-   stats={ "openListMax" : 0, "closedListMax" : 0, "gMax" : 0, "hMax" : 0  }
+   stats={ "openListMax" : 0, "closedListMax" : 0, "gMax" : 0, "hMax" : 0, "duration" :0.0  }
 
 
    iteration = 0
@@ -160,12 +161,15 @@ def astar(startPoint, endPoint, terrain):
       nextP = parent
 
 
+   stats["duration"] = "%.3fms" % (float((datetime.datetime.now() - start_time).microseconds) / 1000000)
+
+
    print "iterations :", iteration   
 
    print "chemin :", chemin
    print "longueur :", len(chemin)
       
-   print openList
+   print "openList", openList
 
    disp_terrain = terrain.clone()
 
