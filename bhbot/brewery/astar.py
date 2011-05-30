@@ -217,7 +217,8 @@ def astar(startPoint, endPoint, terrain):
 
    # print closedList
 
-t = Map()
+if __name__ == "__main__" :
+   t = Map()
 
-startPoint, endPoint = t.load_from_string(terrain)
-astar(startPoint, endPoint, t)
+   startPoint, endPoint = t.load_from_string(terrain)
+   astar(startPoint, endPoint, t)
