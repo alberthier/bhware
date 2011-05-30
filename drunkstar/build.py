@@ -19,7 +19,7 @@ OUTPUT_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), BUILDROOT
 
 
 def download():
-    if not os.path.exists(BUILDROOT):
+    if not os.path.exists("{0}/Makefile".format(BUILDROOT)):
         archive = "{0}.tar.bz2".format(BUILDROOT)
         if not os.path.exists(archive):
             call(["wget", "http://buildroot.uclibc.org/downloads/{0}".format(archive)])
