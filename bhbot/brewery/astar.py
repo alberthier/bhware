@@ -1,32 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: iso8859-1 -*- #
 
-# terrain = """  XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX 
-#                X        O   D    O            X
-#                X        O        O            X
-#                X        O        O        OOOOX
-#                X        O        O        OA  X
-#                X                 O        O   X
-#                X                 O        O   X
-#                X                 O        O   X
-#                X                 O        O   X
-#                X     OOOOOOOOOOOOO        O   X
-#                X                          O   X
-#                X                          O   X
-#                X                          O   X
-#                X                          O   X
-#                X                          O   X
-#                X                              X
-#                X                              X
-#                X                              X
-#                X                              X
-#                X                              X
-#                X                              X
-#                X                              X
-#                X                              X
-#                XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"""
-
-#               12345...10...15...20...25...30..
 terrain = """  XXXXXXXXXXXXXXXXXXXXXX
                XO   D    O          X
                XO        O          X
@@ -44,46 +18,76 @@ terrain = """  XXXXXXXXXXXXXXXXXXXXXX
                X                    X
                XXXXXXXXXXXXXXXXXXXXXX"""               
 
-def load_terrain(s):               
-   tailleX = 0
-   tailleY = 0
-
-   tabTerrain=[]
-
-   startPoint = (0,0)
-   endPoint = (0,0)
-
-   for l in terrain.splitlines() :
-      y = tailleY
-      tabTerrain.append([])
-      l= l.strip()
-      tailleX = max(tailleX, len(l))
-      for x,elem in enumerate(l) :
-         val = 0
-         if elem == "X" :
-            val = 64
-         elif elem == "O" :
-            val = 63
-         elif elem == "D" :
-            startPoint = [x, y]
-         elif elem == "A" :
-            endPoint = [x, y]
-         
-         tabTerrain[tailleY].append(val)
-         
-         
-      tailleY = tailleY +1
-      
-   print u"Dimensions du terrain en mémoire", tailleX, tailleY
-   print u"Taille maximum en mémoire de la liste des pts", tailleX * tailleY
-
-   # print tabTerrain
-
-   for line in tabTerrain :
-      print "".join(map(lambda x : " %2d" % (x), line))
-   return tabTerrain, startPoint, endPoint
-
+class Map(object):
+   def __init__(self, s=None):
+      self.tabTerrain = None
+      self.points = {}
+      if s is not None :
+         self.load_from_string(s)
    
+   def load_from_string(self,s):               
+      tailleX = 0
+      tailleY = 0
+
+      self.tabTerrain=[]
+
+      startPoint = (0,0)
+      endPoint = (0,0)
+
+      for l in terrain.splitlines() :
+         y = tailleY
+         self.tabTerrain.append([])
+         l= l.strip()
+         tailleX = max(tailleX, len(l))
+         for x,elem in enumerate(l) :
+            val = 0
+            if elem == "X" :
+               val = 64
+            elif elem == "O" :
+               val = 63
+            elif elem == "D" :
+               startPoint = [x, y]
+            elif elem == "A" :
+               endPoint = [x, y]
+            
+            self.tabTerrain[tailleY].append(val)
+            
+            
+         tailleY = tailleY +1
+         
+      print u"Dimensions du terrain en mémoire", tailleX, tailleY
+      print u"Taille maximum en mémoire de la liste des pts", tailleX * tailleY
+
+      return startPoint, endPoint
+
+   def print_(self):
+      for line in self.tabTerrain :
+         print "".join(map(lambda x : " %2d" % (x), line))
+
+   def get_reachable_neighbours( self, point, fn ):
+      """ Reachable neighbours of point which satisfy function fn"""
+      x, y = point.to_array()
+      ret = []
+      for iy in range(y-1, y+2) :
+         for ix in range(x-1, x+2) :
+            if fn(ix,iy) :
+               ret.append([ ix, iy ] )
+      ret.remove(point.to_array())
+      # print point, "renvoi de ", ret
+      return ret
+
+   def clone(self):
+      ret = Map()
+      ret.tabTerrain = self.tabTerrain[:]
+      ret.points = self.points.copy()
+      return ret
+
+   def get_point(self, coord):
+      return self.points.setdefault(coord[0],{}).setdefault(coord[1],Point(*coord))
+
+   def is_reachable(self, coord):
+      x,y=coord
+      return self.tabTerrain[y][x] == 0
 
 
 class Point(object):
@@ -107,38 +111,14 @@ class Point(object):
       self.h = h
 
 
-def get_reachable_neighbours( point ):
-   x, y = point.to_array()
-   ret = []
-   for iy in range(y-1, y+2) :
-      for ix in range(x-1, x+2) :
-         if tabTerrain[iy][ix] == 0 :
-            ret.append([ ix, iy ] )
-   ret.remove(point.to_array())
-   # print point, "renvoi de ", ret
-   return ret
-
-global points
-points = {}
-
-def get_point(coord):
-   # global points
-   # # print "co", coord
-   # s = str(coord)
-   # # print "s",s
-   # if not points.has_key(s) :
-   #    print "creation point", coord, len(points)
-   #    points[s] = Point(*coord)
-   # return points[s]
-   return points.setdefault(coord[0],{}).setdefault(coord[1],Point(*coord))
    
 
 def dist_manhattan(p1, p2):
    return abs(p1.x - p2.x) + abs(p1.y - p2.y )
 
-def astar(startPoint, endPoint, tabTerrain):
-   start = get_point(startPoint)
-   end = get_point(endPoint)
+def astar(startPoint, endPoint, terrain):
+   start = terrain.get_point(startPoint)
+   end = terrain.get_point(endPoint)
 
    openList = [start]
    parents = {}
@@ -160,12 +140,12 @@ def astar(startPoint, endPoint, tabTerrain):
       iteration+=1
       top = openList[0]
       openList.remove(top)
-      neighbours = get_reachable_neighbours(top)
+      neighbours = terrain.get_reachable_neighbours(top,lambda x,y : terrain.is_reachable([x,y]))
       # a_rajouter = [ n for n in neighbours if n not in closedList ]
       ptTop = top
       print "top", top, top.get_f(), top.g, top.h
       for n in neighbours :
-         ptNew = get_point(n)
+         ptNew = terrain.get_point(n)
          if ptNew in closedList :
             continue
          newG = ptTop.g + 1
@@ -188,12 +168,14 @@ def astar(startPoint, endPoint, tabTerrain):
       # print "iteration", iteration
 
    chemin = []
-   nextP = get_point( endPoint )
+   nextP = terrain.get_point( endPoint )
+   chemin.append(nextP.to_array())
 
    while not startPoint in chemin :
       parent = parents[nextP]
       chemin.append(parent.to_array())
       nextP = parent
+
 
    print "iterations :", iteration   
 
@@ -202,23 +184,25 @@ def astar(startPoint, endPoint, tabTerrain):
       
    print openList
 
-   for y in range(len(tabTerrain)) :
-      l = tabTerrain[y]
+   disp_terrain = terrain.clone()
+
+   for y in range(len(disp_terrain.tabTerrain)) :
+      l = disp_terrain.tabTerrain[y]
       for x in  range(len(l)) :
          if [x, y] in chemin :
-            tabTerrain[y][x] = 1
+            disp_terrain.tabTerrain[y][x] = 1
 
-   for line in tabTerrain :
+   for line in disp_terrain.tabTerrain :
       print "".join(map(lambda x : " %2d" % (x), line))
       #l = [ " %2d" % (x) if x > 0 else " . " ] 
       #print "".join( l )      
 
-   for y in range(len(tabTerrain)) :
-      l = tabTerrain[y]
+   for y in range(len(disp_terrain.tabTerrain)) :
+      l = disp_terrain.tabTerrain[y]
       for x in  range(len(l)) :
-         tabTerrain[y][x] = get_point([x,y]).h
+         disp_terrain.tabTerrain[y][x] = disp_terrain.get_point([x,y]).h
 
-   for line in tabTerrain :
+   for line in disp_terrain.tabTerrain :
       print "".join(map(lambda x : " %2d" % (x), line))
 
    print "closed list",len(closedList)
@@ -233,5 +217,7 @@ def astar(startPoint, endPoint, tabTerrain):
 
    # print closedList
 
-tabTerrain, startPoint, endPoint = load_terrain(terrain)
-astar(startPoint, endPoint, tabTerrain)
+t = Map()
+
+startPoint, endPoint = t.load_from_string(terrain)
+astar(startPoint, endPoint, t)
