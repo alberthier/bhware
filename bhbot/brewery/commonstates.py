@@ -355,8 +355,11 @@ class TrajectoryWalk(statemachine.State):
             self.current_goto_packet = None
             self.process_next_job()
         elif reason == REASON_PIECE_FOUND:
-            self.exit_reason = TRAJECTORY_WALK_PIECE_FOUND
-            self.exit_substate()
+            if self.current_goto_packet.direction == DIRECTION_BACKWARD:
+                self.process_next_job()
+            else:
+                self.exit_reason = TRAJECTORY_WALK_PIECE_FOUND
+                self.exit_substate()
 
 
     def process_next_job(self):

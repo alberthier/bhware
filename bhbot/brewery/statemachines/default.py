@@ -103,7 +103,6 @@ class GotoBottomIntersectionHeadFirst(statemachine.State):
     def on_enter(self):
         self.walk = commonstates.TrajectoryWalk()
         sensor = self.robot().convert_sensor(SENSOR_LEFT_BOTTOM, TEAM_RED)
-        logger.log("sensor= " + str(sensor))
         self.walk.wait_for(commonstates.EnableFigureDetector(sensor, 2))
         self.walk.look_at(*trajectory.Cell(5, 0).top_right())
         self.walk.move_to(*trajectory.Cell(5, 0).top_right())
@@ -146,14 +145,14 @@ class GotoBottomIntersectionBackFirst(statemachine.State):
         walk = commonstates.TrajectoryWalk()
         walk.wait_for(commonstates.OpenNippers())
         sensor = self.robot().convert_sensor(SENSOR_RIGHT_BOTTOM, TEAM_RED)
-        logger.log("sensor= " + str(sensor))
         walk.wait_for(commonstates.EnableFigureDetector(sensor, 2))
         (dest_x, dest_y) = trajectory.Cell(5, 0).top_right()
         walk.move_to(dest_x, dest_y, DIRECTION_BACKWARD)
         walk.wait_for(commonstates.DisableFigureDetector(True))
         walk.rotate_to(2.0 * math.pi/3)
-        walk.backward(0.075 * math.sqrt(2.0))
-        walk.forward(0.075 * math.sqrt(2.0))
+        # Check: the rotation is enough to push the pawn on the cell
+        #walk.backward(0.075 * math.sqrt(2.0))
+        #walk.forward(0.075 * math.sqrt(2.0))
         walk.wait_for(commonstates.CloseNippers())
         self.switch_to_substate(walk)
 
@@ -194,7 +193,6 @@ class ScanGreenZoneFigureConfiguration(statemachine.State):
     def on_enter(self):
         walk = commonstates.TrajectoryWalk()
         sensor = self.robot().convert_sensor(SENSOR_LEFT_TOP, TEAM_RED)
-        logger.log("sensor= " + str(sensor))
         walk.wait_for(commonstates.EnableFigureDetector(sensor, 0))
         (p0_x, p0_y) = trajectory.Cell(1, 0).bottom_middle()
         p0_x -= 0.070
@@ -214,20 +212,40 @@ class ScanGreenZoneFigureConfiguration(statemachine.State):
 class TakeFirstFigure(statemachine.State):
 
     def on_enter(self):
-        # If the only available figure is the last one, don't take it
-        walk = commonstates.TrajectoryWalk()
         figure_x = self.event_loop.figure_detector.pop_nearest_match_x(0)
-        first_line_y = trajectory.Cell(0, 0).top_right()[1]
 
         if figure_x != None:
+            walk = commonstates.TrajectoryWalk()
+            first_line_y = trajectory.Cell(0, 0).top_right()[1]
             walk.goto(figure_x, first_line_y, -math.pi / 2.0)
             walk.wait_for(commonstates.StorePiece1())
             walk.move_to(figure_x, 0.250)
             walk.wait_for(commonstates.StorePiece2())
             walk.move_to(figure_x, first_line_y, DIRECTION_BACKWARD)
             walk.wait_for(commonstates.StorePiece3())
+            self.switch_to_substate(walk)
+        else:
+            self.switch_to_state(TakeFirstFigurePawn())
 
+
+    def on_exit_substate(self, substate):
+        if substate.exit_reason == TRAJECTORY_WALK_PIECE_FOUND:
+            # Skip current destination and continue the walk
+            substate.current_goto_packet = None
+            self.switch_to_substate(substate)
+        else:
+            self.switch_to_state(TakeFirstFigurePawn())
+
+
+
+
+class TakeFirstFigurePawn(statemachine.State):
+
+    def on_enter(self):
+        # If the only available figure is the last one, don't take it
+        walk = commonstates.TrajectoryWalk()
         pawn_x = self.event_loop.figure_detector.pop_nearest_green_zone_pawn_x()
+        first_line_y = trajectory.Cell(0, 0).top_right()[1]
         walk.look_at(pawn_x, first_line_y)
         walk.move_to(pawn_x, first_line_y)
         walk.rotate_to(-math.pi / 2.0)
@@ -240,7 +258,12 @@ class TakeFirstFigure(statemachine.State):
 
 
     def on_exit_substate(self, substate):
-        self.switch_to_state(ReleaseConstruction())
+        if substate.exit_reason == TRAJECTORY_WALK_PIECE_FOUND:
+            # Skip current destination and continue the walk
+            substate.current_goto_packet = None
+            self.switch_to_substate(substate)
+        else:
+            self.switch_to_state(ReleaseConstruction())
 
 
 
