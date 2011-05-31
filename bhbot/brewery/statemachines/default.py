@@ -284,18 +284,28 @@ class TakeFirstFigurePawn(statemachine.State):
 class TakeConstruction(statemachine.State):
 
     def on_enter(self):
-        self.walk = commonstates.TrajectoryWalk()
-        self.walk.wait_for(commonstates.ReleasePiece())
-        self.walk.backward(0.030)
-        self.walk.forward(0.100)
-        self.switch_to_substate(self.walk)
+        sequence = commonstates.Sequence()
+
+        sequence.add(commonstates.ReleasePiece())
+
+        walk = commonstates.TrajectoryWalk()
+        walk.backward(0.070)
+        sequence.add(walk)
+
+        sequence.add(commonstates.StorePiece1())
+
+        walk = commonstates.TrajectoryWalk()
+        walk.forward(0.100)
+        sequence.add(walk)
+
+        sequence.add(commonstates.StorePiece2())
+        sequence.add(commonstates.StorePiece3())
+
+        self.switch_to_substate(sequence)
 
 
     def on_exit_substate(self, substate):
-        if substate == self.walk and substate.exit_reason == TRAJECTORY_WALK_PIECE_FOUND:
-            self.switch_to_substate(commonstates.DirectStorePiece())
-        else:
-            self.switch_to_state(ReleaseConstruction())
+        self.switch_to_state(ReleaseConstruction())
 
 
 
