@@ -26,6 +26,7 @@ def download():
         call(["tar", "xjf", archive])
         call(["patch", "-d", BUILDROOT, "-p1", "-i", "../buildroot-2010.08-target-gcc.patch"])
         call(["patch", "-d", BUILDROOT, "-p1", "-i", "../buildroot-2010.08-dropbear-no-host-lookup.patch"])
+        call(["patch", "-d", BUILDROOT, "-p1", "-i", "../buildroot-2010.08-fix-microperl-compilation.patch"])
 
 
 def install_package(archive_url, archive):
