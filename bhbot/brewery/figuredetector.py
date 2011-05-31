@@ -47,6 +47,8 @@ class FigureDetector(object):
 
     def on_piece_detected(self, start_pose, start_distance, end_pose, end_distance, sensor, angle):
         if sensor == self.reference_sensor:
+            # piece detected bug workaround
+            # end_pose = self.robot.pose
             center_x = (start_pose.x + end_pose.x) / 2.0
             center_angle = (start_pose.angle + end_pose.angle) / 2.0
             if math.cos(center_angle) > 0:
