@@ -167,14 +167,14 @@ class ReleaseFirstPieceOnBonusCell(statemachine.State):
 
     def on_enter(self):
         walk = commonstates.TrajectoryWalk()
-        (p0_x, p0_y) = trajectory.Cell(4, 2).center_middle()
+        (p0_x, p0_y) = trajectory.Cell(4, 2).top_middle()
         p0_y += 0.050
         walk.forward(0.100)
         walk.wait_for(commonstates.CloseNippers())
         walk.look_at(p0_x, p0_y)
         walk.move_to(p0_x, p0_y)
         walk.rotate_to(0.0)
-        walk.move_to(p0_x + FIELD_CELL_SIZE / 2.0, p0_y)
+        walk.move_to(p0_x + FIELD_CELL_SIZE, p0_y)
         walk.wait_for(commonstates.ReleasePiece())
         walk.move_to(p0_x, p0_y, DIRECTION_BACKWARD)
 
@@ -320,10 +320,12 @@ class ReleaseConstruction(statemachine.State):
     def on_enter(self):
         self.sequence = commonstates.Sequence()
         walk = commonstates.TrajectoryWalk()
-        walk.look_at(*trajectory.Cell(4, 2).top_middle())
-        walk.move_to(*trajectory.Cell(4, 2).top_middle())
-        walk.look_at(*trajectory.Cell(5, 2).top_middle())
-        walk.move_to(*trajectory.Cell(5, 2).top_middle())
+        (p0_x, p0_y) = trajectory.Cell(4, 2).top_middle()
+        p0_y += 0.050
+        walk.look_at(p0_x, p0_y)
+        walk.move_to(p0_x, p0_y)
+        walk.rotate_to(0.0)
+        walk.move_to(p0_x + FIELD_CELL_SIZE, p0_y)
         self.sequence.add(walk)
         self.sequence.add(commonstates.ReleasePiece())
         walk = commonstates.TrajectoryWalk()
