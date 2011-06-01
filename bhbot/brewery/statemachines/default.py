@@ -154,7 +154,6 @@ class GotoBottomIntersectionBackFirst(statemachine.State):
         # Check: the rotation is enough to push the pawn on the cell
         #walk.backward(0.075 * math.sqrt(2.0))
         #walk.forward(0.075 * math.sqrt(2.0))
-        walk.wait_for(commonstates.CloseNippers())
         self.switch_to_substate(walk)
 
 
@@ -168,18 +167,23 @@ class ReleaseFirstPieceOnBonusCell(statemachine.State):
 
     def on_enter(self):
         walk = commonstates.TrajectoryWalk()
-        (p0_x, p0_y) = trajectory.Cell(4, 1).center_right()
-        walk.goto(p0_x, p0_y, math.pi / 2.0)
-        (p1_x, p1_y) = trajectory.Cell(4, 2).center_middle()
-        p1_x += 0.100
-        p1_y += 0.030
-        walk.goto(p1_x, p1_y, 0.0)
+        (p0_x, p0_y) = trajectory.Cell(4, 2).center_middle()
+        p0_y += 0.050
+        walk.forward(0.100)
+        walk.wait_for(commonstates.CloseNippers())
+        walk.look_at(p0_x, p0_y)
+        walk.move_to(p0_x, p0_y)
+        walk.rotate_to(0.0)
+        walk.move_to(p0_x + FIELD_CELL_SIZE / 2.0, p0_y)
         walk.wait_for(commonstates.ReleasePiece())
-        walk.backward(0.22)
-        walk.rotate_to(math.radians(80))
+        walk.move_to(p0_x, p0_y, DIRECTION_BACKWARD)
+
         (p1_x, p1_y) = trajectory.Cell(5, 0).top_middle()
         p1_y -= 0.040
-        walk.goto(p1_x, p1_y, 0.0, DIRECTION_BACKWARD)
+        walk.look_at_opposite(p0_x, p1_y)
+        walk.move_to(p0_x, p1_y, DIRECTION_BACKWARD)
+        walk.look_at_opposite(p1_x, p1_y)
+        walk.move_to(p1_x, p1_y, DIRECTION_BACKWARD)
         self.switch_to_substate(walk)
 
 
