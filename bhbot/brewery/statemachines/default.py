@@ -197,21 +197,28 @@ class SuperReleaseFirstPieceOnBonusCell(statemachine.State):
 
     def on_enter(self):
         walk = commonstates.TrajectoryWalk()
+        # goto near green zone
         (p0_x, p0_y) = trajectory.Cell(3, 0).bottom_right()
         p0_y -= 0.060
         walk.goto(p0_x, p0_y, -math.pi / 2.0)
 
+        # goto backwards to bonus cell 1
         (p1_x, p1_y) = trajectory.Cell(3, 3).bottom_right()
         walk.move_to(p1_x, p1_y, DIRECTION_BACKWARD)
-        walk.rotate_to(-math.pi / 4.0)
 
+        # Goto bonus cell 2
+        walk.rotate_to(-math.pi / 3.0)
         walk.wait_for(commonstates.CloseNippers())
+        walk.forward(0.100)
+        walk.look_at(*trajectory.Cell(4, 2).bottom_right())
         walk.move_to(*trajectory.Cell(4, 2).bottom_right())
 
+        # Goto bonus cell 1 (extraction)
         walk.wait_for(commonstates.ReleasePiece())
         walk.move_to(p1_x, p1_y, DIRECTION_BACKWARD)
         walk.rotate_to(-math.pi / 2.0)
 
+        # Goto green zone for scan
         (p2_x, p2_y) = trajectory.Cell(5, 0).top_middle()
         p2_y -= 0.040
         walk.move_to(p1_x, p2_y, DIRECTION_BACKWARD)
