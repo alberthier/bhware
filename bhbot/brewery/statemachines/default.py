@@ -147,6 +147,7 @@ class GotoBottomIntersectionBackFirst(statemachine.State):
         sensor = self.robot().convert_sensor(SENSOR_RIGHT_BOTTOM, TEAM_RED)
         walk.wait_for(commonstates.EnableFigureDetector(sensor, 2))
         (dest_x, dest_y) = trajectory.Cell(5, 0).top_right()
+        dest_x -= 0.120 # Safe zone black area width
         walk.move_to(dest_x, dest_y, DIRECTION_BACKWARD)
         walk.wait_for(commonstates.DisableFigureDetector(True))
         walk.rotate_to(2.0 * math.pi/3)
