@@ -235,7 +235,7 @@ class TakeFirstFigure(statemachine.State):
             first_line_y = trajectory.Cell(0, 0).top_right()[1]
             walk.goto(figure_x, first_line_y, -math.pi / 2.0)
             walk.wait_for(commonstates.StorePiece1())
-            walk.move_to(figure_x, 0.250)
+            walk.move_to(figure_x, 0.270)
             walk.wait_for(commonstates.StorePiece2())
             walk.move_to(figure_x, first_line_y, DIRECTION_BACKWARD)
             walk.wait_for(commonstates.StorePiece3())
@@ -266,7 +266,7 @@ class TakeFirstFigurePawn(statemachine.State):
         walk.move_to(pawn_x, first_line_y)
         walk.rotate_to(-math.pi / 2.0)
         walk.wait_for(commonstates.StorePiece1())
-        walk.move_to(pawn_x, 0.250)
+        walk.move_to(pawn_x, 0.270)
         walk.wait_for(commonstates.StorePiece2())
         walk.move_to(pawn_x, first_line_y, DIRECTION_BACKWARD)
         walk.wait_for(commonstates.StorePiece3())
