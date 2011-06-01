@@ -74,7 +74,7 @@ from definitions import *
 #      #f0fff0 honeydew                          #708090 slategray
 #      #ff69b4 hotpink                           #708090 slategrey
 #      #cd5c5c indianred                         #fffafa snow
-#      #4b0082 indigo                            #00ff7f springgreen
+#      #4b0082 indigo                         X  #00ff7f springgreen
 #      #fffff0 ivory                             #4682b4 steelblue
 #      #f0e68c khaki                             #d2b48c tan
 #      #e6e6fa lavender                          #008080 teal
@@ -299,6 +299,19 @@ class TrajectoryScene(QGraphicsScene):
                                 firstGoto = False
                                 expectedPath.moveTo(startX, startY)
                             expectedPath.lineTo(x, y)
+                elif logline[1] == "PieceDetected":
+                    packet = logline[3]
+                    if packet["sensor"] == "SENSOR_RIGHT_TOP" or packet["sensor"] == "SENSOR_LEFT_TOP":
+                        start_pose = packet["start_pose"]
+                        end_pose = packet["end_pose"]
+                        x1 = start_pose[1] * 1000
+                        y1 = (start_pose[0] - ROBOT_CENTER_TO_LATERAL_SENSOR_DISTANCE) * 1000
+                        x2 = end_pose[1] * 1000
+                        y2 = (end_pose[0] - ROBOT_CENTER_TO_LATERAL_SENSOR_DISTANCE) * 1000
+                        line = QGraphicsLineItem(x1, y1, x2, y2)
+                        line.setPen(QPen(QColor("#00ff7f"), 20.0))
+                        self.addItem(line)
+
 
         self.trajItem = QGraphicsPathItem(trajPath)
         self.trajItem.setPen(QPen(QColor("#edd400"), 10))
