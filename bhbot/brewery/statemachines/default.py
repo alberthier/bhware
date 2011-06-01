@@ -237,7 +237,10 @@ class TakeFirstFigure(statemachine.State):
         if figure_x != None:
             walk = commonstates.TrajectoryWalk()
             first_line_y = trajectory.Cell(0, 0).top_right()[1]
-            walk.goto(figure_x, first_line_y, -math.pi / 2.0)
+            #walk.goto(figure_x, first_line_y, -math.pi / 2.0, DIRECTION_BACKWARD)
+            walk.look_at_opposite(figure_x, first_line_y)
+            walk.move_to(figure_x, first_line_y, DIRECTION_BACKWARD)
+            walk.rotate_to(-math.pi / 2.0)
             walk.wait_for(commonstates.StorePiece1())
             walk.move_to(figure_x, 0.270)
             walk.wait_for(commonstates.StorePiece2())
