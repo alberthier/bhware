@@ -49,13 +49,15 @@ class FigureDetector(object):
         if sensor == self.reference_sensor:
             # piece detected bug workaround
             # end_pose = self.robot.pose
-            center_x = (start_pose.x + end_pose.x) / 2.0
-            center_angle = (start_pose.angle + end_pose.angle) / 2.0
-            if math.cos(center_angle) > 0:
-                center_x += ROBOT_CENTER_TO_LATERAL_SENSOR_DISTANCE
-            else:
-                center_x -= ROBOT_CENTER_TO_LATERAL_SENSOR_DISTANCE
-            self.detected_at(self.column_index, center_x)
+            dist = math.sqrt((start_pose.x - end_pose.x) ** 2 + (start_pose.y - end_pose.y) ** 2)
+            if dist > 0.065:
+                center_x = (start_pose.x + end_pose.x) / 2.0
+                center_angle = (start_pose.angle + end_pose.angle) / 2.0
+                if math.cos(center_angle) > 0:
+                    center_x += ROBOT_CENTER_TO_LATERAL_SENSOR_DISTANCE
+                else:
+                    center_x -= ROBOT_CENTER_TO_LATERAL_SENSOR_DISTANCE
+                self.detected_at(self.column_index, center_x)
 
 
     def detected_at(self, column_index, x):
