@@ -205,6 +205,9 @@ class ReleasePiece(statemachine.State):
 
     def on_enter(self):
         self.send_packet(packets.ReleasePiece())
+
+
+    def on_piece_released(self):
         self.exit_substate()
 
 
