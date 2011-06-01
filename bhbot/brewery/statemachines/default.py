@@ -158,7 +158,7 @@ class GotoBottomIntersectionBackFirst(statemachine.State):
 
 
     def on_exit_substate(self, substate):
-        self.switch_to_state(ReleaseFirstPieceOnBonusCell())
+        self.switch_to_state(SuperReleaseFirstPieceOnBonusCell())
 
 
 
@@ -189,6 +189,40 @@ class ReleaseFirstPieceOnBonusCell(statemachine.State):
 
     def on_exit_substate(self, substate):
         self.switch_to_state(ScanGreenZoneFigureConfiguration())
+
+
+
+
+class SuperReleaseFirstPieceOnBonusCell(statemachine.State):
+
+    def on_enter(self):
+        walk = commonstates.TrajectoryWalk()
+        (p0_x, p0_y) = trajectory.Cell(3, 0).bottom_right()
+        p0_y -= 0.060
+        walk.goto(p0_x, p0_y, -math.pi / 2.0)
+
+        (p1_x, p1_y) = trajectory.Cell(3, 3).bottom_right()
+        walk.move_to(p1_x, p1_y, DIRECTION_BACKWARD)
+        walk.rotate_to(-math.pi / 4.0)
+
+        walk.wait_for(commonstates.CloseNippers())
+        walk.move_to(*trajectory.Cell(4, 2).bottom_right())
+
+        walk.wait_for(commonstates.ReleasePiece())
+        walk.move_to(p1_x, p1_y, DIRECTION_BACKWARD)
+        walk.rotate_to(-math.pi / 2.0)
+
+        (p2_x, p2_y) = trajectory.Cell(5, 0).top_middle()
+        p2_y -= 0.040
+        walk.move_to(p1_x, p2_y, DIRECTION_BACKWARD)
+        walk.look_at_opposite(p2_x, p2_y)
+        walk.move_to(p2_x, p2_y, DIRECTION_BACKWARD)
+        self.switch_to_substate(walk)
+
+
+    def on_exit_substate(self, substate):
+        self.switch_to_state(ScanGreenZoneFigureConfiguration())
+
 
 
 
