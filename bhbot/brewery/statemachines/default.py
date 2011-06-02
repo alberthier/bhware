@@ -213,17 +213,18 @@ class SuperReleaseFirstPieceOnBonusCell(statemachine.State):
         walk.look_at(*trajectory.Cell(4, 2).bottom_right())
         walk.move_to(*trajectory.Cell(4, 2).bottom_right())
 
-        # Goto bonus cell 1 (extraction)
+        # Extraction
         walk.wait_for(commonstates.ReleasePiece())
-        walk.move_to(p1_x, p1_y, DIRECTION_BACKWARD)
-        walk.rotate_to(-math.pi / 2.0)
+        (p2_x, p2_y) = trajectory.Cell(3, 2).bottom_right()
+        walk.goto(p2_x, p2_y, math.pi, DIRECTION_BACKWARD)
+        walk.rotate_to(math.pi / 2.0)
 
         # Goto green zone for scan
-        (p2_x, p2_y) = trajectory.Cell(5, 0).top_middle()
-        p2_y -= 0.040
-        walk.move_to(p1_x, p2_y, DIRECTION_BACKWARD)
-        walk.look_at_opposite(p2_x, p2_y)
-        walk.move_to(p2_x, p2_y, DIRECTION_BACKWARD)
+        (p3_x, p3_y) = trajectory.Cell(5, 0).top_middle()
+        p3_y -= 0.040
+        walk.move_to(p1_x, p3_y, DIRECTION_BACKWARD)
+        walk.look_at_opposite(p3_x, p3_y)
+        walk.move_to(p3_x, p3_y, DIRECTION_BACKWARD)
         self.switch_to_substate(walk)
 
 
