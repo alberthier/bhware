@@ -43,10 +43,6 @@ class WaitForOpponentLeave(Timer):
         self.exit_reason=self.TIMEOUT
 
 
-    def on_enter(self):
-        self.robot().backward(0.100)
-
-
     def on_opponent_left(self):
         self.exit_reason=self.OPPONENT_LEFT
         logger.log("WaitForOpponentLeave : exit on opponent leave")
@@ -386,7 +382,6 @@ class TrajectoryWalk(statemachine.State):
                         self.exit_reason = TRAJECTORY_WALK_DESTINATION_REACHED
                         self.exit_substate()
         else:
-            self.robot().current_move_direction = self.current_goto_packet.direction
             self.send_packet(self.current_goto_packet)
 
 

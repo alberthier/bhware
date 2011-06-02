@@ -21,11 +21,6 @@ class Robot(object):
         self.team = TEAM_UNKNOWN
         self.event_loop = event_loop
         self.stored_piece_count = 0
-        self.current_move_direction = None
-
-
-    def on_goto_finished(self, reason, current_pose, current_point_index):
-        self.current_move_direction = None
 
 
     def move(self, dx, dy, direction = DIRECTION_FORWARD, reference_team = TEAM_UNKNOWN):
@@ -114,7 +109,6 @@ class Robot(object):
         else:
             packet.movement = MOVEMENT_ROTATE
 
-        self.current_move_direction = direction
         packet.direction = direction
         packet.points = [trajectory.Pose(x, y, angle)]
         self.event_loop.send_packet(packet)
@@ -129,7 +123,6 @@ class Robot(object):
             packet.points.append(converted_point)
 
         packet.movement = MOVEMENT_MOVE
-        self.current_move_direction = direction
         packet.direction = direction
         self.event_loop.send_packet(packet)
         return packet

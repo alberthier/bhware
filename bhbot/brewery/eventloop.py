@@ -160,7 +160,6 @@ class EventLoop(object):
                             self.get_current_state().on_goto_started()
                         elif isinstance(channel.packet, packets.GotoFinished):
                             self.robot.pose = channel.packet.current_pose
-                            self.robot.on_goto_finished(channel.packet.reason, channel.packet.current_pose, channel.packet.current_point_index)
                             self.get_current_state().on_goto_finished(channel.packet.reason, channel.packet.current_pose, channel.packet.current_point_index)
                         elif isinstance(channel.packet, packets.Blocked):
                             self.get_current_state().on_blocked(channel.packet.side)
