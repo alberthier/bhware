@@ -66,6 +66,7 @@ class Robot(object):
 
 
     def stop(self):
+        self.current_move_direction = None
         packet = packets.Stop()
         self.event_loop.send_packet(packet)
         return packet
