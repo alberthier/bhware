@@ -215,7 +215,7 @@ class RobotController(object):
         elif isinstance(packet, packets.KeepAlive):
             pass
         elif isinstance(packet, packets.PositionControlConfig):
-            pass
+            self.send_packet(packet)
         elif isinstance(packet, packets.Stop):
             self.stop()
         elif isinstance(packet, packets.Resettle):
