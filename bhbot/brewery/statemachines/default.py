@@ -377,6 +377,13 @@ class ReleaseConstruction(statemachine.State):
     def on_enter(self):
         self.sequence = commonstates.Sequence()
         walk = commonstates.TrajectoryWalk()
+
+        (wpx, wpy) = trajectory.Cell(2, 0).bottom_right()
+        wpx += 0.150
+        if self.robot().pose.x < wpx:
+            walk.look_at(wpx, wpy)
+            walk.move_to(wpx, wpy)
+
         (p0_x, p0_y) = trajectory.Cell(4, 2).top_middle()
         p0_x += 0.020
         p0_y += 0.050
