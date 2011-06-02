@@ -9,6 +9,7 @@ import trajectory
 import logger
 import world
 import commonstates
+import tools
 from definitions import *
 
 
@@ -288,7 +289,7 @@ class TakeFirstFigure(statemachine.State):
             walk.move_to(figure_x, first_line_y, DIRECTION_BACKWARD)
             walk.rotate_to(-math.pi / 2.0)
             walk.wait_for(commonstates.StorePiece1())
-            walk.move_to(figure_x, 0.290)
+            walk.move_to(figure_x, TAKE_FIGURE_Y)
             walk.wait_for(commonstates.StorePiece2())
             walk.move_to(figure_x, first_line_y, DIRECTION_BACKWARD)
             walk.wait_for(commonstates.StorePiece3())
@@ -319,7 +320,7 @@ class TakeFirstFigurePawn(statemachine.State):
         walk.move_to(pawn_x, first_line_y)
         walk.rotate_to(-math.pi / 2.0)
         walk.wait_for(commonstates.StorePiece1())
-        walk.move_to(pawn_x, 0.290)
+        walk.move_to(pawn_x, TAKE_FIGURE_Y)
         walk.wait_for(commonstates.StorePiece2())
         walk.move_to(pawn_x, first_line_y, DIRECTION_BACKWARD)
         walk.wait_for(commonstates.StorePiece3())
@@ -373,10 +374,58 @@ class ReleaseConstruction(statemachine.State):
         self.sequence.add(commonstates.StorePiece3())
         self.sequence.add(commonstates.ReleasePiece())
         walk = commonstates.TrajectoryWalk()
-        walk.backward(0.5)
+        walk.move_to(p0_x, p0_y)
         self.sequence.add(walk)
         self.switch_to_substate(self.sequence)
 
+
+    def on_exit_substate(self, substate):
+        self.switch_to_state(TakeSecondGreenZoneItem())
+
+
+
+
+class TakeSecondGreenZoneItem(statemachine.State):
+
+    def on_enter(self):
+        sequence = commonstates.Sequence()
+
+        piece_x = self.event_loop.figure_detector.pop_nearest_match_x(0)
+        if piece_x == None:
+            piece_x = self.event_loop.figure_detector.pop_nearest_green_zone_pawn_x()
+
+        walk = commonstates.TrajectoryWalk()
+        if tools.quasi_equal(piece_x, 0.690) or tools.quasi_equal(piece_x, 0.970):
+            (p0x, p0y) = trajectory.Cell(3, 1).bottom_middle()
+            walk.look_at(p0x, p0y)
+            walk.move_to(p0x, p0y)
+
+        p1y = trajectory.Cell(0, 0).bottom_right()[1]
+        walk.look_at(piece_x, p1y)
+        walk.move_to(piece_x, p1y)
+        walk.look_at(piece_x, TAKE_FIGURE_Y)
+        walk.wait_for(commonstates.StorePiece1())
+        walk.move_to(piece_x, TAKE_FIGURE_Y)
+        sequence.add(walk)
+        sequence.add(commonstates.StorePiece2())
+
+        walk = commonstates.TrajectoryWalk()
+        walk.move_to(piece_x, p1y, DIRECTION_BACKWARD)
+        walk.wait_for(commonstates.StorePiece3())
+
+        if tools.quasi_equal(piece_x, 0.690):
+            walk.look_at(*trajectory.Cell(1, 0).top_left())
+        elif tools.quasi_equal(piece_x, 0.970):
+            walk.rotate_to(-math.pi / 6.0)
+            walk.forward(0.050)
+        elif tools.quasi_equal(piece_x, 1.250):
+            pass
+        elif tools.quasi_equal(piece_x, 1.530):
+            walk.rotate_to(math.pi / 2.0 + 0.05)
+        walk.wait_for(commonstates.ReleasePiece())
+        walk.backward(0.150)
+        sequence.add(walk)
+        self.switch_to_substate(sequence)
 
 
 
