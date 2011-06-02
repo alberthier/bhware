@@ -204,6 +204,8 @@ class SuperReleaseFirstPieceOnBonusCell(statemachine.State):
 
         # goto backwards to bonus cell 1
         (p1_x, p1_y) = trajectory.Cell(3, 3).bottom_right()
+        p1_x -= 0.100
+        p1_y += 0.050
         walk.move_to(p1_x, p1_y, DIRECTION_BACKWARD)
 
         # Goto bonus cell 2
@@ -222,7 +224,8 @@ class SuperReleaseFirstPieceOnBonusCell(statemachine.State):
         # Goto green zone for scan
         (p3_x, p3_y) = trajectory.Cell(5, 0).top_middle()
         p3_y -= 0.040
-        walk.move_to(p1_x, p3_y, DIRECTION_BACKWARD)
+        p4_x = trajectory.Cell(3, 3).bottom_right()[0]
+        walk.move_to(p4_x, p3_y, DIRECTION_BACKWARD)
         walk.look_at_opposite(p3_x, p3_y)
         walk.move_to(p3_x, p3_y, DIRECTION_BACKWARD)
         self.switch_to_substate(walk)
@@ -366,7 +369,7 @@ class ReleaseConstruction(statemachine.State):
         self.sequence = commonstates.Sequence()
         walk = commonstates.TrajectoryWalk()
         (p0_x, p0_y) = trajectory.Cell(4, 2).top_middle()
-        p0_y += 0.050
+        p0_y += 0.100
         walk.look_at(p0_x, p0_y)
         walk.move_to(p0_x, p0_y)
         walk.rotate_to(0.0)
