@@ -337,27 +337,12 @@ class TakeFirstFigurePawn(statemachine.State):
             self.switch_to_state(TakeConstruction())
 
 
+
+
 class TakeConstruction(statemachine.State):
 
     def on_enter(self):
-        sequence = commonstates.Sequence()
-
-        sequence.add(commonstates.ReleasePiece())
-
-        walk = commonstates.TrajectoryWalk()
-        walk.backward(0.070)
-        sequence.add(walk)
-
-        sequence.add(commonstates.StorePiece1())
-
-        walk = commonstates.TrajectoryWalk()
-        walk.forward(0.100)
-        sequence.add(walk)
-
-        sequence.add(commonstates.StorePiece2())
-        sequence.add(commonstates.StorePiece3())
-
-        self.switch_to_substate(sequence)
+        self.switch_to_substate(commonstates.StorePiece1())
 
 
     def on_exit_substate(self, substate):
@@ -386,6 +371,8 @@ class ReleaseConstruction(statemachine.State):
         walk.rotate_to(0.0)
         walk.move_to(p0_x + FIELD_CELL_SIZE, p0_y)
         self.sequence.add(walk)
+        self.sequence.add(commonstates.StorePiece2())
+        self.sequence.add(commonstates.StorePiece3())
         self.sequence.add(commonstates.ReleasePiece())
         walk = commonstates.TrajectoryWalk()
         walk.backward(0.5)
