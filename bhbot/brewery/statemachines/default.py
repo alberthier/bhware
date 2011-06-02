@@ -225,6 +225,7 @@ class SuperReleaseFirstPieceOnBonusCell(statemachine.State):
         # Goto green zone for scan
         (p3_x, p3_y) = trajectory.Cell(5, 0).top_middle()
         p3_y -= 0.040
+        p3_x -= ROBOT_CENTER_Y
         p4_x = trajectory.Cell(3, 3).bottom_right()[0]
         walk.move_to(p4_x, p3_y, DIRECTION_BACKWARD)
         walk.look_at_opposite(p3_x, p3_y)
