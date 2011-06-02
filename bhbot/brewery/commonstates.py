@@ -408,17 +408,22 @@ class TrajectoryWalk(statemachine.State):
     def on_opponent_detected(self, angle):
         logger.log("TrajectoryWalk call on_opponent_entered")
         if self.current_goto_packet != None:
-            logger.log("TrajectoryWalk self.current_goto_packet != None")
-            self.robot().stop()
-            logger.log("TrajectoryWalk robot stopped")
-            if self.opponent_blocking_current_retries < self.opponent_blocking_max_retries :
-                logger.log("TrajectoryWalk self.opponent_blocking_current_retries={0} < self.opponent_blocking_max_retries={1}".format(self.opponent_blocking_current_retries, self.opponent_blocking_max_retries))
-                self.opponent_blocking_current_retries += 1
-                self.switch_to_substate(WaitForOpponentLeave(self.opponent_wait_time))
-            else :
-                logger.log("TrajectoryWalk TRAJECTORY_WALK_OPPONENT_DETECTED")
-                self.exit_reason = TRAJECTORY_WALK_OPPONENT_DETECTED
-                self.exit_substate()
+            direction = self.current_goto_packet.direction
+            is_in_front = self.event_loop.opponent_detector.is_opponent_in_front(angle)
+            is_in_back = self.event_loop.opponent_detector.is_opponent_in_back(angle)
+            logger.log("TrajectoryWalk self.current_goto_packet != None - is_in_front={0} - is_in_back={1}".format(is_in_front, is_in_back))
+            if direction == DIRECTION_FORWARD and is_in_front or \
+                direction == DIRECTION_BACKWARD and is_in_back:
+                self.robot().stop()
+                logger.log("TrajectoryWalk robot stopped")
+                if self.opponent_blocking_current_retries < self.opponent_blocking_max_retries :
+                    logger.log("TrajectoryWalk self.opponent_blocking_current_retries={0} < self.opponent_blocking_max_retries={1}".format(self.opponent_blocking_current_retries, self.opponent_blocking_max_retries))
+                    self.opponent_blocking_current_retries += 1
+                    self.switch_to_substate(WaitForOpponentLeave(self.opponent_wait_time))
+                else :
+                    logger.log("TrajectoryWalk TRAJECTORY_WALK_OPPONENT_DETECTED")
+                    self.exit_reason = TRAJECTORY_WALK_OPPONENT_DETECTED
+                    self.exit_substate()
 
 
 
