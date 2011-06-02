@@ -50,7 +50,7 @@ class FigureDetector(object):
             # piece detected bug workaround
             # end_pose = self.robot.pose
             dist = math.sqrt((start_pose.x - end_pose.x) ** 2 + (start_pose.y - end_pose.y) ** 2)
-            if dist > 0.065:
+            if dist > SICK_DETECTION_THRESHOLD:
                 center_x = (start_pose.x + end_pose.x) / 2.0
                 center_angle = (start_pose.angle + end_pose.angle) / 2.0
                 offset = ROBOT_CENTER_TO_HACKED_SENSOR_DISTANCE if self.reference_sensor == SENSOR_CENTER else ROBOT_CENTER_TO_LATERAL_SENSOR_DISTANCE
