@@ -218,6 +218,7 @@ class SuperReleaseFirstPieceOnBonusCell(statemachine.State):
         # Extraction
         walk.wait_for(commonstates.ReleasePiece())
         (p2_x, p2_y) = trajectory.Cell(3, 2).bottom_right()
+        walk.backward(0.100)
         walk.goto(p2_x, p2_y, math.pi, DIRECTION_BACKWARD)
         walk.rotate_to(math.pi / 2.0)
 
@@ -378,7 +379,7 @@ class ReleaseConstruction(statemachine.State):
         walk = commonstates.TrajectoryWalk()
         (p0_x, p0_y) = trajectory.Cell(4, 2).top_middle()
         p0_x += 0.020
-        p0_y += 0.100
+        p0_y += 0.050
         walk.look_at(p0_x, p0_y)
         walk.move_to(p0_x, p0_y)
         walk.rotate_to(0.0)
