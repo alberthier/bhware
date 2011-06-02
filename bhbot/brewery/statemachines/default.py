@@ -242,12 +242,9 @@ class SuperReleaseFirstPieceOnBonusCell(statemachine.State):
 class ScanGreenZoneFigureConfiguration(statemachine.State):
 
     def on_enter(self):
-        self.end_sequence = commonstates.Sequence()
-        self.end_sequence.add(commonstates.DisableFigureDetector(True))
-
         self.walk = commonstates.TrajectoryWalk()
         self.walk.on_piece_detected = self.on_piece_detected
-        self.sensor = self.robot().convert_sensor(SENSOR_LEFT_TOP, TEAM_RED)
+        self.sensor = SENSOR_CENTER
         self.walk.wait_for(commonstates.EnableFigureDetector(self.sensor, 0))
         (p0_x, p0_y) = trajectory.Cell(1, 0).bottom_middle()
         p0_x -= 0.070
@@ -273,7 +270,7 @@ class ScanGreenZoneFigureConfiguration(statemachine.State):
 
     def detection_finished(self):
         logger.log("'" + str(self.event_loop.figure_detector.elements) + "'")
-        self.switch_to_substate(self.end_sequence)
+        self.switch_to_substate(commonstates.DisableFigureDetector(True))
 
 
 

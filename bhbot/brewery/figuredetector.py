@@ -53,10 +53,11 @@ class FigureDetector(object):
             if dist > 0.065:
                 center_x = (start_pose.x + end_pose.x) / 2.0
                 center_angle = (start_pose.angle + end_pose.angle) / 2.0
+                offset = ROBOT_CENTER_TO_HACKED_SENSOR_DISTANCE if self.reference_sensor == SENSOR_CENTER else ROBOT_CENTER_TO_LATERAL_SENSOR_DISTANCE
                 if math.cos(center_angle) > 0:
-                    center_x += ROBOT_CENTER_TO_LATERAL_SENSOR_DISTANCE
+                    center_x += offset
                 else:
-                    center_x -= ROBOT_CENTER_TO_LATERAL_SENSOR_DISTANCE
+                    center_x -= offset
                 self.detected_at(self.column_index, center_x)
 
 
