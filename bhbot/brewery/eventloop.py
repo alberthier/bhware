@@ -30,7 +30,6 @@ class TurretChannel(asyncore.file_dispatcher):
         self.port = serial.PosixPollSerial(serial_port_path, serial_port_speed, timeout = 0)
         self.port.nonblocking()
         asyncore.file_dispatcher.__init__(self, self.port)
-        logger.log(str(self.port.getSettingsDict()))
         self.eventloop = eventloop
         self.buffer = ""
         self.packet = None
@@ -116,7 +115,6 @@ class EventLoop(object):
                 try:
                     if hasattr(channel,"bytes_available") :
                         b = channel.bytes_available()
-                        logger.log("Bytes available : {0}".format(b))
                         if b == 0 : return
                     received_data = channel.recv(1)
                     if len(received_data) == 0:
