@@ -210,8 +210,8 @@ class SuperReleaseFirstPieceOnBonusCell(statemachine.State):
 
         # Goto bonus cell 2
         walk.rotate_to(-math.pi / 3.0)
-        walk.wait_for(commonstates.CloseNippers())
         walk.forward(0.100)
+        walk.wait_for(commonstates.CloseNippers())
         walk.look_at(*trajectory.Cell(4, 2).bottom_right())
         walk.move_to(*trajectory.Cell(4, 2).bottom_right())
 
@@ -287,7 +287,7 @@ class TakeFirstFigure(statemachine.State):
             walk.move_to(figure_x, first_line_y, DIRECTION_BACKWARD)
             walk.rotate_to(-math.pi / 2.0)
             walk.wait_for(commonstates.StorePiece1())
-            walk.move_to(figure_x, 0.270)
+            walk.move_to(figure_x, 0.280)
             walk.wait_for(commonstates.StorePiece2())
             walk.move_to(figure_x, first_line_y, DIRECTION_BACKWARD)
             walk.wait_for(commonstates.StorePiece3())
@@ -318,7 +318,7 @@ class TakeFirstFigurePawn(statemachine.State):
         walk.move_to(pawn_x, first_line_y)
         walk.rotate_to(-math.pi / 2.0)
         walk.wait_for(commonstates.StorePiece1())
-        walk.move_to(pawn_x, 0.270)
+        walk.move_to(pawn_x, 0.280)
         walk.wait_for(commonstates.StorePiece2())
         walk.move_to(pawn_x, first_line_y, DIRECTION_BACKWARD)
         walk.wait_for(commonstates.StorePiece3())
@@ -369,6 +369,7 @@ class ReleaseConstruction(statemachine.State):
         self.sequence = commonstates.Sequence()
         walk = commonstates.TrajectoryWalk()
         (p0_x, p0_y) = trajectory.Cell(4, 2).top_middle()
+        p0_x += 0.020
         p0_y += 0.100
         walk.look_at(p0_x, p0_y)
         walk.move_to(p0_x, p0_y)
