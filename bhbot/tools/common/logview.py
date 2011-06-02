@@ -301,7 +301,8 @@ class TrajectoryScene(QGraphicsScene):
                             expectedPath.lineTo(x, y)
                 elif logline[1] == "PieceDetected":
                     packet = logline[3]
-                    if packet["sensor"] == "SENSOR_RIGHT_TOP" or packet["sensor"] == "SENSOR_LEFT_TOP":
+                    if packet["sensor"] == "SENSOR_CENTER":
+                    #if packet["sensor"].endswith("BOTTOM"):
                         start_pose = packet["start_pose"]
                         end_pose = packet["end_pose"]
                         x1 = start_pose[1] * 1000

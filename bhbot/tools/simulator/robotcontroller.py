@@ -61,7 +61,7 @@ class SensorController(QObject):
     def check(self, region):
         if not self.enabled or self.sensor_item.scene() == None:
             return
-        only_figures = self.sensor_type == SENSOR_LEFT_TOP or self.sensor_type == SENSOR_RIGHT_TOP
+        only_figures = self.sensor_type == SENSOR_CENTER
         for piece in self.sensor_item.scene().pieces:
             if not only_figures or piece.piece_type != "P":
                 collides = self.sensor_item.collidesWithItem(piece)
@@ -164,12 +164,14 @@ class RobotController(object):
         self.field_object.movement_finished.connect(self.movement_finished)
         self.scene.addItem(self.field_object.item)
 
-        self.top_left_sensor = SensorController(self.field_object.left_sensor, self.field_object, SENSOR_LEFT_TOP)
-        self.top_left_sensor.end_detection.connect(self.on_lateral_detection)
+        self.top_left_sensor = SensorController(self.field_object.left_sensor, self.field_object, SENSOR_CENTER)
+        if self.team == TEAM_RED :
+            self.top_left_sensor.end_detection.connect(self.on_lateral_detection)
         self.bottom_left_sensor = SensorController(self.field_object.left_sensor, self.field_object, SENSOR_LEFT_BOTTOM)
         self.bottom_left_sensor.end_detection.connect(self.on_lateral_detection)
-        self.top_right_sensor = SensorController(self.field_object.right_sensor, self.field_object, SENSOR_RIGHT_TOP)
-        self.top_right_sensor.end_detection.connect(self.on_lateral_detection)
+        self.top_right_sensor = SensorController(self.field_object.right_sensor, self.field_object, SENSOR_CENTER)
+        if self.team == TEAM_BLUE :
+            self.top_right_sensor.end_detection.connect(self.on_lateral_detection)
         self.bottom_right_sensor = SensorController(self.field_object.right_sensor, self.field_object, SENSOR_RIGHT_BOTTOM)
         self.bottom_right_sensor.end_detection.connect(self.on_lateral_detection)
         self.elevator_sensor = SensorController(self.field_object.elevator_sensor, self.field_object)
