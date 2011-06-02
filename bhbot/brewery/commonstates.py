@@ -408,7 +408,7 @@ class TrajectoryWalk(statemachine.State):
 
 
     def on_opponent_detected(self, angle):
-        logger.log("TrajectoryWalk call on_opponent_entered tick={0}".format(self.detection_tick))
+        logger.log("TrajectoryWalk call on_opponent_entered")
         if self.current_goto_packet != None:
             logger.log("TrajectoryWalk self.current_goto_packet != None")
             self.robot().stop()
