@@ -94,7 +94,7 @@ class GameController(object):
     def send_start_signal(self):
         self.started = True
         self.main_bar.set_icon(self.main_bar.start_pause, "pause")
-        self.red_robot.send_start_signal()
+        #self.red_robot.send_start_signal()
         self.blue_robot.send_start_signal()
 
 
