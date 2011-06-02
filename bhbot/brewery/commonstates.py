@@ -44,6 +44,7 @@ class WaitForOpponentLeave(Timer):
 
 
     def on_enter(self):
+        logger.log("WaitForOpponentLeave : backward")
         self.robot().backward(0.100)
 
 
@@ -407,12 +408,17 @@ class TrajectoryWalk(statemachine.State):
 
 
     def on_opponent_detected(self, angle):
+        logger.log("TrajectoryWalk call on_opponent_entered tick={0}".format(self.detection_tick))
         if self.current_goto_packet != None:
+            logger.log("TrajectoryWalk self.current_goto_packet != None")
             self.robot().stop()
+            logger.log("TrajectoryWalk robot stopped")
             if self.opponent_blocking_current_retries < self.opponent_blocking_max_retries :
+                logger.log("TrajectoryWalk self.opponent_blocking_current_retries={0} < self.opponent_blocking_max_retries={1}".format(self.opponent_blocking_current_retries, self.opponent_blocking_max_retries))
                 self.opponent_blocking_current_retries += 1
                 self.switch_to_substate(WaitForOpponentLeave(self.opponent_wait_time))
             else :
+                logger.log("TrajectoryWalk TRAJECTORY_WALK_OPPONENT_DETECTED")
                 self.exit_reason = TRAJECTORY_WALK_OPPONENT_DETECTED
                 self.exit_substate()
 

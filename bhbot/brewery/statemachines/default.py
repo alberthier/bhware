@@ -244,14 +244,8 @@ class ScanGreenZoneFigureConfiguration(statemachine.State):
     def on_enter(self):
         self.end_sequence = commonstates.Sequence()
         self.end_sequence.add(commonstates.DisableFigureDetector(True))
-        control = commonstates.SetupPositionControl()
-        control.packet.t_acc = 0.3
-        self.end_sequence.add(control)
 
         self.walk = commonstates.TrajectoryWalk()
-        control = commonstates.SetupPositionControl()
-        control.packet.t_acc = 0.5
-        self.walk.wait_for(control)
         self.walk.on_piece_detected = self.on_piece_detected
         self.sensor = self.robot().convert_sensor(SENSOR_LEFT_TOP, TEAM_RED)
         self.walk.wait_for(commonstates.EnableFigureDetector(self.sensor, 0))
