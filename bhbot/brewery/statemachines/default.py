@@ -244,7 +244,7 @@ class ScanGreenZoneFigureConfiguration(statemachine.State):
         self.end_sequence = commonstates.Sequence()
         self.end_sequence.add(commonstates.DisableFigureDetector(True))
         control = commonstates.SetupPositionControl()
-        control.packet.t_acc = 0.2
+        control.packet.t_acc = 0.3
         self.end_sequence.add(control)
 
         self.walk = commonstates.TrajectoryWalk()
