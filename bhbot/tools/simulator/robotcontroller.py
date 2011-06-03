@@ -165,12 +165,12 @@ class RobotController(object):
         self.scene.addItem(self.field_object.item)
 
         self.top_left_sensor = SensorController(self.field_object.left_sensor, self.field_object, SENSOR_CENTER)
-        if self.team == TEAM_RED :
+        if self.team == TEAM_BLUE :
             self.top_left_sensor.end_detection.connect(self.on_lateral_detection)
         self.bottom_left_sensor = SensorController(self.field_object.left_sensor, self.field_object, SENSOR_LEFT_BOTTOM)
         self.bottom_left_sensor.end_detection.connect(self.on_lateral_detection)
         self.top_right_sensor = SensorController(self.field_object.right_sensor, self.field_object, SENSOR_CENTER)
-        if self.team == TEAM_BLUE :
+        if self.team == TEAM_RED :
             self.top_right_sensor.end_detection.connect(self.on_lateral_detection)
         self.bottom_right_sensor = SensorController(self.field_object.right_sensor, self.field_object, SENSOR_RIGHT_BOTTOM)
         self.bottom_right_sensor.end_detection.connect(self.on_lateral_detection)

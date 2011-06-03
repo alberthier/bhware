@@ -84,8 +84,9 @@ class GotoFirstIntersectionWithPiece(statemachine.State):
         self.store_piece = commonstates.DirectStorePiece()
 
         self.walk = commonstates.TrajectoryWalk()
-        self.walk.move_to(*trajectory.Cell(0, 0).bottom_right())
-        self.walk.look_at(*trajectory.Cell(0, 0).top_right())
+        (p0x, p0y) = trajectory.Cell(0, 0).bottom_right()
+        self.walk.goto(p0x, p0y, 0.0)
+        self.walk.wait_for(commonstates.EnableFigureDetector(SENSOR_CENTER, 0))
 
         self.switch_to_substate(self.store_piece)
 
@@ -94,7 +95,7 @@ class GotoFirstIntersectionWithPiece(statemachine.State):
         if substate == self.store_piece:
             self.switch_to_substate(self.walk)
         else:
-            self.switch_to_state(GotoBottomIntersectionBackFirst())
+            self.switch_to_state(GotoBottomIntersectionHeadFirstWithPiece())
 
 
 
@@ -104,8 +105,8 @@ class GotoBottomIntersectionHeadFirst(statemachine.State):
     def on_enter(self):
         self.walk = commonstates.TrajectoryWalk()
         sensor = self.robot().convert_sensor(SENSOR_LEFT_BOTTOM, TEAM_RED)
-        self.walk.wait_for(commonstates.EnableFigureDetector(sensor, 2))
         self.walk.look_at(*trajectory.Cell(5, 0).top_right())
+        self.walk.wait_for(commonstates.EnableFigureDetector(SENSOR_CENTER, 0))
         self.walk.move_to(*trajectory.Cell(2, 0).center_right())
         self.walk.move_to(*trajectory.Cell(5, 0).top_right())
         self.switch_to_substate(self.walk)
@@ -114,7 +115,6 @@ class GotoBottomIntersectionHeadFirst(statemachine.State):
     def on_exit_substate(self, substate):
         if substate == self.walk:
             self.event_loop.figure_detector.detected_at(1, self.robot().pose.x + ROBOT_CENTER_TO_LATERAL_SENSOR_DISTANCE)
-            self.switch_to_substate(commonstates.DisableFigureDetector(False))
         else:
             self.switch_to_state(GotoBottomIntersectionWithPiece())
 
@@ -126,36 +126,25 @@ class GotoBottomIntersectionWithPiece(statemachine.State):
     def on_enter(self):
         self.store_piece = commonstates.DirectStorePiece()
 
-        self.walk = commonstates.TrajectoryWalk()
-        self.walk.rotate_to(math.radians(-178))
-
         self.switch_to_substate(self.store_piece)
 
 
     def on_exit_substate(self, substate):
-        if substate == self.store_piece:
-            self.switch_to_substate(self.walk)
-        else:
-            self.switch_to_state(GotoBottomIntersectionBackFirst())
+        self.switch_to_state(GotoBottomIntersectionHeadFirstWithPiece())
 
 
 
 
-class GotoBottomIntersectionBackFirst(statemachine.State):
+class GotoBottomIntersectionHeadFirstWithPiece(statemachine.State):
 
     def on_enter(self):
         walk = commonstates.TrajectoryWalk()
         walk.wait_for(commonstates.OpenNippers())
-        sensor = self.robot().convert_sensor(SENSOR_RIGHT_BOTTOM, TEAM_RED)
-        walk.wait_for(commonstates.EnableFigureDetector(sensor, 2))
-        (dest_x, dest_y) = trajectory.Cell(5, 0).top_right()
-        dest_x -= 0.120 # Safe zone black area width
-        walk.move_to(dest_x, dest_y, DIRECTION_BACKWARD)
+        (dest_x, dest_y) = trajectory.Cell(4, 0).center_right()
+        dest_x += 0.040 # Safe zone black area width
+        walk.move_to(dest_x, dest_y)
         walk.wait_for(commonstates.DisableFigureDetector(True))
-        walk.rotate_to(2.0 * math.pi/3)
-        # Check: the rotation is enough to push the pawn on the cell
-        #walk.backward(0.075 * math.sqrt(2.0))
-        #walk.forward(0.075 * math.sqrt(2.0))
+        walk.rotate_to(-math.pi/4.0)
         self.switch_to_substate(walk)
 
 
@@ -199,9 +188,9 @@ class SuperReleaseFirstPieceOnBonusCell(statemachine.State):
 
     def on_enter(self):
         walk = commonstates.TrajectoryWalk()
-        # goto near green zone
-        (p0_x, p0_y) = trajectory.Cell(3, 0).bottom_right()
-        p0_y -= 0.060
+        # goto possible bonus pawn
+        walk.backward(0.170)
+        (p0_x, p0_y) = trajectory.Cell(3, 1).bottom_right()
         walk.goto(p0_x, p0_y, -math.pi / 2.0)
 
         # goto backwards to bonus cell 1
@@ -236,44 +225,7 @@ class SuperReleaseFirstPieceOnBonusCell(statemachine.State):
 
 
     def on_exit_substate(self, substate):
-        self.switch_to_state(ScanGreenZoneFigureConfiguration())
-
-
-
-
-
-class ScanGreenZoneFigureConfiguration(statemachine.State):
-
-    def on_enter(self):
-        self.walk = commonstates.TrajectoryWalk()
-        self.walk.on_piece_detected = self.on_piece_detected
-        self.sensor = SENSOR_CENTER
-        self.walk.wait_for(commonstates.EnableFigureDetector(self.sensor, 0))
-        (p0_x, p0_y) = trajectory.Cell(1, 0).bottom_middle()
-        p0_x -= 0.070
-        p0_y -= 0.040
-        self.walk.move_to(p0_x, p0_y)
-        self.switch_to_substate(self.walk)
-
-
-    def on_exit_substate(self, substate):
-        if substate == self.walk:
-            # We are at the end of the green zone. Only 0 or 1 figure detected
-            self.detection_finished()
-        else:
-            self.switch_to_state(TakeFirstFigure())
-
-
-    def on_piece_detected(self, start_pose, start_distance, end_pose, end_distance, sensor, angle):
-        if sensor == self.sensor and self.event_loop.figure_detector.get_elements_count(0) == 2:
-            # Two figures detected. Stop here.
-            self.robot().stop()
-            self.detection_finished()
-
-
-    def detection_finished(self):
-        logger.log("'" + str(self.event_loop.figure_detector.elements) + "'")
-        self.switch_to_substate(commonstates.DisableFigureDetector(True))
+        self.switch_to_state(TakeFirstFigure())
 
 
 
