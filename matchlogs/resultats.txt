@@ -9,3 +9,7 @@ Cybernetique en Nord : 70 + 10 pts
 3eme match:
 BH Team : 60 + 40 pts
 Coffee machine : 0 + 10 pts
+
+4eme match:
+BH Team: 80 + 40 pts
+ENSSAT: 10 + 10 pts
