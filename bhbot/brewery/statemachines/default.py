@@ -106,7 +106,7 @@ class GotoBottomIntersectionHeadFirst(statemachine.State):
         sensor = self.robot().convert_sensor(SENSOR_LEFT_BOTTOM, TEAM_RED)
         self.walk.wait_for(commonstates.EnableFigureDetector(sensor, 2))
         self.walk.look_at(*trajectory.Cell(5, 0).top_right())
-        self.walk.move_to(*trajectory.Cell(3, 0).top_right())
+        self.walk.move_to(*trajectory.Cell(2, 0).center_right())
         self.walk.move_to(*trajectory.Cell(5, 0).top_right())
         self.switch_to_substate(self.walk)
 
