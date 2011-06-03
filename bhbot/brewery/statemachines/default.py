@@ -421,7 +421,8 @@ class TakeSecondGreenZoneItem(statemachine.State):
         elif tools.quasi_equal(piece_x, 1.250):
             pass
         elif tools.quasi_equal(piece_x, 1.530):
-            walk.rotate_to(math.pi)
+            walk.rotate_to(-math.pi / 2.0 - math.pi / 3.0)
+            walk.rotate_to(-math.pi / 2.0 - 2.0 * math.pi / 3.0)
             walk.rotate_to(math.pi / 2.0)
         walk.wait_for(commonstates.OpenMandibles())
         walk.backward(0.150)
