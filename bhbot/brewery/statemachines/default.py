@@ -209,16 +209,16 @@ class SuperReleaseFirstPieceOnBonusCell(statemachine.State):
         (p2_x, p2_y) = trajectory.Cell(3, 2).bottom_right()
         walk.backward(0.100)
         walk.goto(p2_x, p2_y, math.pi, DIRECTION_BACKWARD)
-        walk.rotate_to(math.pi / 2.0)
+        walk.rotate_to(-math.pi / 2.0)
 
-        # Goto green zone for scan
-        (p3_x, p3_y) = trajectory.Cell(5, 0).top_middle()
-        p3_y -= 0.040
-        p3_x -= ROBOT_CENTER_Y
-        p4_x = trajectory.Cell(3, 3).bottom_right()[0]
-        walk.move_to(p4_x, p3_y, DIRECTION_BACKWARD)
-        walk.look_at_opposite(p3_x, p3_y)
-        walk.move_to(p3_x, p3_y, DIRECTION_BACKWARD)
+        # # Goto green zone for scan
+        # (p3_x, p3_y) = trajectory.Cell(5, 0).top_middle()
+        # p3_y -= 0.040
+        # p3_x -= ROBOT_CENTER_Y
+        # p4_x = trajectory.Cell(3, 3).bottom_right()[0]
+        # walk.move_to(p4_x, p3_yBACKWARD)
+        # walk.look_at_opposite(p3_x, p3_y)
+        # walk.move_to(p3_x, p3_y, DIRECTION_BACKWARD)
         self.switch_to_substate(walk)
 
 
@@ -236,8 +236,14 @@ class TakeFirstFigure(statemachine.State):
             walk = commonstates.TrajectoryWalk()
             first_line_y = trajectory.Cell(0, 0).top_right()[1]
             #walk.goto(figure_x, first_line_y, -math.pi / 2.0, DIRECTION_BACKWARD)
-            walk.look_at_opposite(figure_x, first_line_y)
-            walk.move_to(figure_x, first_line_y, DIRECTION_BACKWARD)
+
+            if tools.quasi_equal(figure_x, 0.690) or tools.quasi_equal(figure_x, 0.970):
+                (p0x, p0y) = trajectory.Cell(3, 1).bottom_middle()
+                walk.look_at(p0x, p0y)
+                walk.move_to(p0x, p0y)
+
+            walk.look_at(figure_x, first_line_y)
+            walk.move_to(figure_x, first_line_y)
             walk.rotate_to(-math.pi / 2.0)
             walk.wait_for(commonstates.StorePiece1())
             walk.move_to(figure_x, TAKE_FIGURE_Y)
