@@ -113,10 +113,8 @@ class GotoBottomIntersectionHeadFirst(statemachine.State):
 
 
     def on_exit_substate(self, substate):
-        if substate == self.walk:
-            self.event_loop.figure_detector.detected_at(1, self.robot().pose.x + ROBOT_CENTER_TO_LATERAL_SENSOR_DISTANCE)
-        else:
-            self.switch_to_state(GotoBottomIntersectionWithPiece())
+        self.event_loop.figure_detector.detected_at(1, self.robot().pose.x + ROBOT_CENTER_TO_LATERAL_SENSOR_DISTANCE)
+        self.switch_to_state(GotoBottomIntersectionWithPiece())
 
 
 
