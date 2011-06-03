@@ -189,7 +189,7 @@ class SuperReleaseFirstPieceOnBonusCell(statemachine.State):
         # goto possible bonus pawn
         walk.backward(0.170)
         (p0_x, p0_y) = trajectory.Cell(3, 1).bottom_right()
-        walk.goto(p0_x, p0_y, -math.pi / 2.0)
+        walk.goto(p0_x, p0_y, math.pi / 2.0, DIRECTION_BACKWARD)
 
         # goto backwards to bonus cell 1
         (p1_x, p1_y) = trajectory.Cell(3, 3).bottom_right()
