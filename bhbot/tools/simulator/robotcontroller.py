@@ -267,6 +267,10 @@ class RobotController(object):
             self.top_right_sensor.enabled = False
             self.bottom_right_sensor.enabled = False
             self.send_packet(packet)
+        elif isinstance(packet, packets.OpenMandibles):
+            self.send_packet(packet)
+        elif isinstance(packet, packets.CloseMandibles):
+            self.send_packet(packet)
         else :
             print "Unhandled packet type : ",packet.__class__.__name__
 

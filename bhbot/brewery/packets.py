@@ -589,6 +589,26 @@ class DisableLateralSensors(BasePacket):
 
 
 
+class CloseMandibles(BasePacket):
+
+    TYPE = 24
+
+    def __init__(self):
+        BasePacket.__init__(self, "")
+
+
+
+
+class OpenMandibles(BasePacket):
+
+    TYPE = 25
+
+    def __init__(self):
+        BasePacket.__init__(self, "")
+
+
+
+
 class Reinitialize(BasePacket):
 
     TYPE = 102
@@ -641,13 +661,12 @@ class TurretDetect(BasePacket):
 
 
 
-PACKET_CLASSES = [ControllerReady, DeviceBusy, DeviceReady, Start, Goto,
-                  GotoStarted, GotoFinished, Blocked, EnableAntiBlocking,
-                  DisableAntiBlocking, KeepAlive, PositionControlConfig, Stop,
-                  Resettle, Deployment, PieceDetected, StorePiece1,
-                  StorePiece2, StorePiece3, ReleasePiece, OpenNippers,
-                  CloseNippers, EnableLateralSensors, DisableLateralSensors,
-                  Reinitialize, SimulatorData, TurretDetect]
+PACKET_CLASSES = [ControllerReady, DeviceBusy, DeviceReady, Start, Goto, GotoStarted,
+                  GotoFinished, Blocked, EnableAntiBlocking, DisableAntiBlocking, KeepAlive,
+                  PositionControlConfig, Stop, Resettle, Deployment, PieceDetected,
+                  StorePiece1, StorePiece2, StorePiece3, ReleasePiece, OpenNippers,
+                  CloseNippers, EnableLateralSensors, DisableLateralSensors, CloseMandibles,
+                  OpenMandibles, Reinitialize, SimulatorData, TurretDetect]
 
 
 def create_packet(buffer):

@@ -163,6 +163,14 @@ class State(object):
         pass
 
 
+    def on_mandibles_opened(self):
+        pass
+
+
+    def on_mandibles_closed(self):
+        pass
+
+
     def on_reinitialized(self):
         pass
 

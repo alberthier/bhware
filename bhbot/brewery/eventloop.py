@@ -200,6 +200,10 @@ class EventLoop(object):
                             self.get_current_state().on_lateral_sensors_enabled()
                         elif isinstance(channel.packet, packets.DisableLateralSensors):
                             self.get_current_state().on_lateral_sensors_disabled()
+                        elif isinstance(channel.packet, packets.OpenMandibles):
+                            self.get_current_state().on_mandibles_opened()
+                        elif isinstance(channel.packet, packets.CloseMandibles):
+                            self.get_current_state().on_mandibles_closed()
                         elif isinstance(channel.packet, packets.Reinitialize):
                             self.get_current_state().on_reinitialized()
                         elif isinstance(channel.packet, packets.TurretDetect):

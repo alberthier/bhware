@@ -259,6 +259,30 @@ class DisableLateralSensors(statemachine.State):
 
 
 
+class OpenMandibles(statemachine.State):
+
+    def on_enter(self):
+        self.send_packet(packets.OpenMandibles())
+
+
+    def on_mandibles_opened(self):
+        self.exit_substate()
+
+
+
+
+class CloseMandibles(statemachine.State):
+
+    def on_enter(self):
+        self.send_packet(packets.CloseMandibles())
+
+
+    def on_mandibles_closed(self):
+        self.exit_substate()
+
+
+
+
 class TrajectoryWalk(statemachine.State):
     """Walk a path"""
 

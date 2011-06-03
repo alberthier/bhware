@@ -404,14 +404,13 @@ class TakeSecondGreenZoneItem(statemachine.State):
         walk.look_at(piece_x, p1y)
         walk.move_to(piece_x, p1y)
         walk.look_at(piece_x, TAKE_FIGURE_Y)
-        walk.wait_for(commonstates.StorePiece1())
+        walk.wait_for(commonstates.OpenMandibles())
         walk.move_to(piece_x, TAKE_FIGURE_Y)
         sequence.add(walk)
-        sequence.add(commonstates.StorePiece2())
+        sequence.add(commonstates.CloseMandibles())
 
         walk = commonstates.TrajectoryWalk()
         walk.move_to(piece_x, p1y, DIRECTION_BACKWARD)
-        walk.wait_for(commonstates.StorePiece3())
 
         if tools.quasi_equal(piece_x, 0.690):
             walk.look_at(*trajectory.Cell(1, 0).top_left())
@@ -422,7 +421,7 @@ class TakeSecondGreenZoneItem(statemachine.State):
             pass
         elif tools.quasi_equal(piece_x, 1.530):
             walk.rotate_to(math.pi / 2.0 + 0.05)
-        walk.wait_for(commonstates.ReleasePiece())
+        walk.wait_for(commonstates.OpenMandibles())
         walk.backward(0.150)
         sequence.add(walk)
         self.switch_to_substate(sequence)
