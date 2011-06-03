@@ -139,7 +139,7 @@ class GotoBottomIntersectionHeadFirstWithPiece(statemachine.State):
         walk = commonstates.TrajectoryWalk()
         walk.wait_for(commonstates.OpenNippers())
         (dest_x, dest_y) = trajectory.Cell(4, 0).center_right()
-        dest_x += 0.040 # Safe zone black area width
+        dest_x += 0.120 # Safe zone black area width
         walk.move_to(dest_x, dest_y)
         walk.wait_for(commonstates.DisableFigureDetector(True))
         walk.rotate_to(-math.pi/4.0)
