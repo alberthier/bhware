@@ -38,13 +38,17 @@ class WaitForOpponentLeave(Timer):
 
     OPPONENT_LEFT = 1
 
-    def __init__(self, miliseconds):
+    def __init__(self, miliseconds, current_move_direction):
         Timer.__init__(self,miliseconds)
         self.exit_reason=self.TIMEOUT
+        self.current_move_direction = current_move_direction
 
 
     def on_enter(self):
-        self.robot().backward(0.100)
+        if self.current_move_direction == DIRECTION_FORWARD:
+            self.robot().backward(0.100)
+        else:
+            self.robot().forward(0.100)
 
 
     def on_opponent_left(self):
@@ -443,7 +447,7 @@ class TrajectoryWalk(statemachine.State):
                 if self.opponent_blocking_current_retries < self.opponent_blocking_max_retries :
                     logger.log("TrajectoryWalk self.opponent_blocking_current_retries={0} < self.opponent_blocking_max_retries={1}".format(self.opponent_blocking_current_retries, self.opponent_blocking_max_retries))
                     self.opponent_blocking_current_retries += 1
-                    self.switch_to_substate(WaitForOpponentLeave(self.opponent_wait_time))
+                    self.switch_to_substate(WaitForOpponentLeave(self.opponent_wait_time, direction))
                 else :
                     logger.log("TrajectoryWalk TRAJECTORY_WALK_OPPONENT_DETECTED")
                     self.exit_reason = TRAJECTORY_WALK_OPPONENT_DETECTED
