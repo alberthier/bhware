@@ -374,7 +374,7 @@ class ReleaseConstruction(statemachine.State):
         self.sequence.add(commonstates.StorePiece3())
         self.sequence.add(commonstates.ReleasePiece())
         walk = commonstates.TrajectoryWalk()
-        walk.move_to(p0_x, p0_y)
+        walk.move_to(p0_x, p0_y, DIRECTION_BACKWARD)
         self.sequence.add(walk)
         self.switch_to_substate(self.sequence)
 
