@@ -65,7 +65,7 @@ from definitions import *
 #      #ff00ff fuchsia                           #8b4513 saddlebrown
 #      #dcdcdc gainsboro                         #fa8072 salmon
 #      #f8f8ff ghostwhite                        #f4a460 sandybrown
-#   X  #ffd700 gold                              #2e8b57 seagreen
+#   X  #ffd700 gold                           X  #2e8b57 seagreen
 #   X  #daa520 goldenrod                         #fff5ee seashell
 #      #808080 gray                              #a0522d sienna
 #      #008000 green                             #c0c0c0 silver
@@ -75,7 +75,7 @@ from definitions import *
 #      #ff69b4 hotpink                           #708090 slategrey
 #      #cd5c5c indianred                         #fffafa snow
 #      #4b0082 indigo                         X  #00ff7f springgreen
-#      #fffff0 ivory                             #4682b4 steelblue
+#      #fffff0 ivory                          X  #4682b4 steelblue
 #      #f0e68c khaki                             #d2b48c tan
 #      #e6e6fa lavender                          #008080 teal
 #      #fff0f5 lavenderblush                     #d8bfd8 thistle
@@ -115,6 +115,8 @@ CATEGORIES = [["KeepAlive"             , "Keep Alive"              , "#8a2be2", 
               ["CloseNippers"          , "Close Nippers"           , "#8b0000", True],
               ["EnableLateralSensors"  , "Enable Lateral Sensors"  , "#e9967a", True],
               ["DisableLateralSensors" , "Disable Lateral Sensors" , "#8fbc8f", True],
+              ["OpenMandibles"         , "Open Mandibles"          , "#2e8b57", True],
+              ["CloseMandibles"        , "Close Mandibles"         , "#4682b4", True],
               ["Reinitialize"          , "Reinitialize"            , "#483d8b", True],
               ["TurretDetect"          , "Turret Detect"           , "#2f4f4f", True],
               ["str"                   , "Log Text"                , "#a9a9a9", True]]
