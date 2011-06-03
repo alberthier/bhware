@@ -67,6 +67,41 @@
        height="1678"
        x="0"
        y="422" />
+     <rect
+       style="fill:#00A700;stroke:none;fill-opacity:1"
+       id="maprect1001"
+       width="425"
+       height="200"
+       x="0"
+       y="590" />
+     <rect
+       style="fill:#00A700;stroke:none;fill-opacity:1"
+       id="maprect1001"
+       width="425"
+       height="200"
+       x="0"
+       y="870" />
+     <rect
+       style="fill:#00A700;stroke:none;fill-opacity:1"
+       id="maprect1001"
+       width="425"
+       height="200"
+       x="0"
+       y="1150" />
+     <rect
+       style="fill:#00A700;stroke:none;fill-opacity:1"
+       id="maprect1001"
+       width="425"
+       height="200"
+       x="0"
+       y="1430" />
+     <rect
+       style="fill:#00A700;stroke:none;fill-opacity:1"
+       id="maprect1001"
+       width="425"
+       height="200"
+       x="0"
+       y="1710" />
 
     <!-- Cadrillage principal -->
      <rect
@@ -224,6 +259,41 @@
        height="1678"
        x="2575"
        y="422" />
+     <rect
+       style="fill:#00A700;stroke:none;fill-opacity:1"
+       id="maprect1001"
+       width="425"
+       height="200"
+       x="2575"
+       y="590" />
+     <rect
+       style="fill:#00A700;stroke:none;fill-opacity:1"
+       id="maprect1001"
+       width="425"
+       height="200"
+       x="2575"
+       y="870" />
+     <rect
+       style="fill:#00A700;stroke:none;fill-opacity:1"
+       id="maprect1001"
+       width="425"
+       height="200"
+       x="2575"
+       y="1150" />
+     <rect
+       style="fill:#00A700;stroke:none;fill-opacity:1"
+       id="maprect1001"
+       width="425"
+       height="200"
+       x="2575"
+       y="1430" />
+     <rect
+       style="fill:#00A700;stroke:none;fill-opacity:1"
+       id="maprect1001"
+       width="425"
+       height="200"
+       x="2575"
+       y="1710" />
 
      <!-- Bordures -->
      <rect
