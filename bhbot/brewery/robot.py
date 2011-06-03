@@ -89,6 +89,8 @@ class Robot(object):
     def goto(self, x, y, angle, direction = DIRECTION_FORWARD, reference_team = TEAM_UNKNOWN):
         y = self.convert_y(y, reference_team)
         angle = self.convert_angle(angle, reference_team)
+        if angle != None:
+            angle = math.fmod(angle, 2.0 * math.pi)
         packet = packets.Goto()
         packet.movement = None
         if x == None or tools.quasi_equal(x, self.pose.x):
