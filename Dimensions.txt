@@ -1,6 +1,6 @@
 - Distance du centre de la tour dans la pince au centre de rotation = 210
 - Distance du centre de rotation à la face ascenseur du robot = 225
 - Distance du centre de rotation à la mandibule ouverte = 276
-- Distance du centre de rotation à la face pousse palet = 31
+- Distance du centre de rotation à la face pousse palet = 54
 - Distance du centre de rotation au pousse palet ouvert = 113
 - Rayon de giration = 288
