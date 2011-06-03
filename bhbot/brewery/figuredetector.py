@@ -52,12 +52,13 @@ class FigureDetector(object):
             dist = math.sqrt((start_pose.x - end_pose.x) ** 2 + (start_pose.y - end_pose.y) ** 2)
             if dist > SICK_DETECTION_THRESHOLD:
                 center_x = (start_pose.x + end_pose.x) / 2.0
-                center_angle = (start_pose.angle + end_pose.angle) / 2.0
                 offset = ROBOT_CENTER_TO_HACKED_SENSOR_DISTANCE if self.reference_sensor == SENSOR_CENTER else ROBOT_CENTER_TO_LATERAL_SENSOR_DISTANCE
-                if math.cos(center_angle) > 0:
+                logger.log("Piece detected: center_x={0} dist={1} offset={2}".format(center_x, dist, offset))
+                if math.cos(start_pose.angle) > 0:
                     center_x += offset
                 else:
                     center_x -= offset
+                logger.log("Piece detected: fixed center_x={0}".format(center_x))
                 self.detected_at(self.column_index, center_x)
 
 
