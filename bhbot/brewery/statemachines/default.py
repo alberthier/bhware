@@ -369,7 +369,7 @@ class ReleaseConstruction(statemachine.State):
         walk.look_at(p0_x, p0_y)
         walk.move_to(p0_x, p0_y)
         walk.rotate_to(0.0)
-        walk.move_to(p0_x + FIELD_CELL_SIZE, p0_y)
+        walk.move_to(p0_x + FIELD_CELL_SIZE + 0.030, p0_y)
         self.sequence.add(walk)
         self.sequence.add(commonstates.StorePiece2())
         self.sequence.add(commonstates.StorePiece3())

@@ -392,4 +392,5 @@ class RobotController(object):
 
     def send_opponent_detected(self):
         packet = packets.TurretDetect()
+        packet.angle = math.pi
         self.send_packet(packet)
