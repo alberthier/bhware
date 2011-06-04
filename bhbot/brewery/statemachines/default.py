@@ -368,8 +368,10 @@ class TakeSecondGreenZoneItem(statemachine.State):
         sequence.add(commonstates.CloseMandibles())
 
         walk = commonstates.TrajectoryWalk()
+        p1y-=0.030 # better placement 
         walk.move_to(piece_x, p1y, DIRECTION_BACKWARD)
 
+        #piece placement
         if tools.quasi_equal(piece_x, 0.690):
             walk.look_at(*trajectory.Cell(1, 0).top_left())
         elif tools.quasi_equal(piece_x, 0.970):
@@ -381,7 +383,13 @@ class TakeSecondGreenZoneItem(statemachine.State):
             walk.rotate_to(math.pi)
             walk.rotate_to(math.pi / 2.0)
         walk.wait_for(commonstates.OpenMandibles())
-        walk.backward(0.150)
+        walk.backward(0.250)
+
+        # cheat mode
+
+        walk.look_at(trajectory.Cell(1,1).center_middle())
+        walk.move_to(trajectory.Cell(1,1).center_middle())
+
         sequence.add(walk)
         self.switch_to_substate(sequence)
 
