@@ -13,3 +13,7 @@ Coffee machine : 0 + 10 pts
 4eme match:
 BH Team: 80 + 40 pts
 ENSSAT: 10 + 10 pts
+
+5eme match:
+BH Team : 50 + 10 pts
+RCVA: 220 + 40 pts
