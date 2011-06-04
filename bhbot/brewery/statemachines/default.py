@@ -85,7 +85,9 @@ class GotoFirstIntersectionWithPiece(statemachine.State):
 
         self.walk = commonstates.TrajectoryWalk()
         (p0x, p0y) = trajectory.Cell(0, 0).bottom_right()
-        self.walk.goto(p0x, p0y, 0.0)
+        self.walk.look_at(p0x, p0y)
+        self.walk.move_to(p0x, p0y)
+        self.walk.rotate_to(0.0)
         self.walk.wait_for(commonstates.EnableFigureDetector(SENSOR_CENTER, 0))
 
         self.switch_to_substate(self.store_piece)
