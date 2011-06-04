@@ -365,7 +365,7 @@ class TakeSecondGreenZoneItem(statemachine.State):
         walk.move_to(piece_x, p1y)
         walk.look_at(piece_x, TAKE_FIGURE_Y)
         walk.wait_for(commonstates.OpenMandibles())
-        walk.move_to(piece_x, TAKE_FIGURE_Y)
+        walk.move_to(piece_x, TAKE_FIGURE_Y - 0.030)
         sequence.add(walk)
         sequence.add(commonstates.CloseMandibles())
 
