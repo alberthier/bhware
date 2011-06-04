@@ -57,7 +57,10 @@ def log(text):
     initialize()
     delta = datetime.datetime.now() - start_time
     time = "'{0:=0.02f}'".format(float(delta.seconds) + (float(delta.microseconds)/1000000.0))
-    log_file.write("log.append([" + time + ",\"# " + text + "\"])\n")
+    try:
+        log_file.write("log.append([" + time + ",\"# " + text + "\"])\n")
+    except:
+        print("Failed to write to file")
     sys.stdout.write(text + "\n")
     sys.stdout.flush()
 
@@ -74,7 +77,10 @@ def log_packet(sender, packet):
     delta = datetime.datetime.now() - start_time
     time = "'{0:=0.02f}'".format(float(delta.seconds) + (float(delta.microseconds)/1000000.0))
     text = "'" + type(packet).__name__ + "', '" + sender + "', " + str(packet.to_dict()) + "]"
-    log_file.write("log.append([" + time + ", " + text + ")\n")
+    try:
+        log_file.write("log.append([" + time + ", " + text + ")\n")
+    except:
+        print("Failed to write to file")
     if not isinstance(packet, packets.KeepAlive) and not isinstance(packet, packets.SimulatorData):
         sys.stdout.write("[" + text + "\n")
         sys.stdout.flush()
