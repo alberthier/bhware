@@ -134,7 +134,7 @@ enum("TRAJECTORY_WALK",
 def get_defs_types() : return __lookup.keys()
 
 def lookup_defs(_type,_value) :
-    return __lookup[_type][_value]
+    return __lookup[_type].get(_value,"--- UNKNOWN ---")
 
 def dump_defs() :
     print as_string()
