@@ -364,6 +364,7 @@ class ReleaseConstruction(statemachine.State):
             walk.move_to(wpx, wpy)
 
         p0_x = trajectory.Cell(4, 2).top_middle()[0]
+        p0_x -= 0.05 # 5cm, handle worst case of piece in trajectory
         p0_y = 1.3515
         walk.look_at(p0_x, p0_y)
         walk.move_to(p0_x, p0_y)
