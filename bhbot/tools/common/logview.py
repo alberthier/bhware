@@ -308,9 +308,9 @@ class TrajectoryScene(QGraphicsScene):
                         start_pose = packet["start_pose"]
                         end_pose = packet["end_pose"]
                         x1 = start_pose[1] * 1000
-                        y1 = (start_pose[0] - ROBOT_CENTER_TO_HACKED_SENSOR_DISTANCE) * 1000
+                        y1 = (start_pose[0] + ROBOT_CENTER_TO_HACKED_SENSOR_DISTANCE) * 1000
                         x2 = end_pose[1] * 1000
-                        y2 = (end_pose[0] - ROBOT_CENTER_TO_HACKED_SENSOR_DISTANCE) * 1000
+                        y2 = (end_pose[0] + ROBOT_CENTER_TO_HACKED_SENSOR_DISTANCE) * 1000
                         print logline[0], math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
                         line = QGraphicsLineItem(x1, y1, x2, y2)
                         line.setPen(QPen(QColor("#00ff7f"), 20.0))
