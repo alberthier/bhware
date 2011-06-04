@@ -325,8 +325,8 @@ class ReleaseConstruction(statemachine.State):
         p0_x -= 0.05 # 5cm, handle worst case of piece in trajectory
         p0_y = 1.3515
         walk.look_at(p0_x, p0_y)
-        walk.move_to(p0_x, p0_y)
-        walk.rotate_to(0.0)
+        walk.move_to(p0_x, p0_y + 0.070)
+        walk.look_at(1.6885 + 0.020, p0_y)
         walk.move_to(1.6885 + 0.020, p0_y)
         self.sequence.add(walk)
         self.sequence.add(commonstates.StorePiece2())
