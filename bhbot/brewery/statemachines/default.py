@@ -387,8 +387,8 @@ class TakeSecondGreenZoneItem(statemachine.State):
 
         # cheat mode
 
-        walk.look_at(trajectory.Cell(1,1).center_middle())
-        walk.move_to(trajectory.Cell(1,1).center_middle())
+        walk.look_at(*trajectory.Cell(1,1).center_middle())
+        walk.move_to(*trajectory.Cell(1,1).center_middle())
 
         sequence.add(walk)
         self.switch_to_substate(sequence)
