@@ -17,3 +17,28 @@ ENSSAT: 10 + 10 pts
 5eme match:
 BH Team : 50 + 10 pts
 RCVA: 220 + 40 pts
+
+8eme de finale:
+BH Team :
+Rogwai :
+
+Quart de finale:
+BH Team : 180
+Telecom Robotics : 0
+
+Demi finale:
+BH Team :
+Clubelek :
+
+Finale 1:
+BH Team:
+RCVA
+
+Finale 2:
+BH Team:
+RCVA
+
+Finale 3:
+BH Team:
+RCVA
+
