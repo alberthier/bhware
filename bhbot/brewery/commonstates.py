@@ -132,14 +132,14 @@ class DefinePosition(statemachine.State):
     def process(self):
         if not self.x_sent:
             packet = packets.Resettle()
-            packet.axis = AXIS_ABSCISSA
+            packet.axis = AXIS_X
             packet.position = self.pose.x
             packet.angle = self.pose.angle
             self.send_packet(packet)
             self.x_sent = True
         elif not self.y_sent:
             packet = packets.Resettle()
-            packet.axis = AXIS_ORDINATE
+            packet.axis = AXIS_Y
             packet.position = self.pose.y
             packet.angle = self.pose.angle
             self.send_packet(packet)

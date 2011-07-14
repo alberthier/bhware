@@ -6,7 +6,6 @@ import socket
 
 from definitions import *
 
-with_serial = True
 
 if socket.gethostname() == "drunkstar":
     host_device = HOST_DEVICE_ARM

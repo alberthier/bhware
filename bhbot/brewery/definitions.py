@@ -1,16 +1,12 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
+
 import math
 
-__lookup={}
-__descriptions={}
 
-def enum(name, description, **kwargs) :
-    __descriptions[name]=description
-    for k,v in kwargs.items() :
-        globals()[k]=v
-        __lookup.setdefault(name,{})[v]=k
+########################################################################
+# Constants
 
 
 FIELD_WIDTH = 3.0
@@ -40,70 +36,93 @@ SICK_DETECTION_THRESHOLD = 0.030
 TAKE_FIGURE_Y = 0.250
 
 
-enum("REMOTE_DEVICE",
+########################################################################
+# Enums
+
+
+ENUMS = {}
+
+
+class Enum(object):
+	
+	def __init__(self, name, description, **kwargs):
+		self.name = name
+		self.description = description
+		self.lookup_by_name = {}
+		self.lookup_by_value = {}
+		ENUMS[name] = self
+		for enum_item_name, enum_item_value in kwargs.items():
+			globals()[enum_item_name] = enum_item_value
+			self.lookup_by_name[enum_item_name] = enum_item_value
+			self.lookup_by_value[enum_item_value] = enum_item_name
+
+
+
+
+Enum("REMOTE_DEVICE",
     "Remote hardware type",
     REMOTE_DEVICE_PIC = 0,
     REMOTE_DEVICE_SIMULATOR = 1,
     REMOTE_DEVICE_UNKNOWN = 2,
 )
 
-enum("HOST_DEVICE",
+Enum("HOST_DEVICE",
     "Host hardware type",
     HOST_DEVICE_ARM = 0,
     HOST_DEVICE_PC = 1,
 )
 
-enum("TEAM",
+Enum("TEAM",
     "Team color",
     TEAM_BLUE = 0,
     TEAM_RED  = 1,
     TEAM_UNKNOWN = 2,
 )
 
-enum("MOVEMENT",
+Enum("MOVEMENT",
     "Movement",
     MOVEMENT_ROTATE = 0,
     MOVEMENT_MOVE = 1,
     MOVEMENT_LINE = 2
 )
 
-enum("DIRECTION",
+Enum("DIRECTION",
     "Direction",
     DIRECTION_FORWARD = 1,
     DIRECTION_BACKWARD = -1,
 )
 
-enum("ANGLE",
+Enum("ANGLE",
     "Angle",
-    ANGLE_N = math.pi/2,
-    ANGLE_NW = 3*math.pi/4,
+    ANGLE_N = math.pi / 2.0,
+    ANGLE_NW = 3.0 * math.pi / 4.0,
     ANGLE_W = math.pi,
-    ANGLE_SW = 5*math.pi/4,
-    ANGLE_S = 3*math.pi/2,
-    ANGLE_SE = 7*math.pi/4,
+    ANGLE_SW = 5.0 * math.pi / 4.0,
+    ANGLE_S = 3.0 * math.pi / 2.0,
+    ANGLE_SE = 7.0 * math.pi / 4.0,
     ANGLE_E = 0.0
 )
 
 
-enum("REASON",
+Enum("REASON",
     "Goto finished reason",
     REASON_DESTINATION_REACHED = 0,
     REASON_PIECE_FOUND = 1,
 )
 
-enum("BLOCKING",
+Enum("BLOCKING",
     "Blocking side",
     BLOCKED_FRONT = 1,
     BLOCKED_BACK = -1,
 )
 
-enum("AXIS",
+Enum("AXIS",
     "Axis",
-    AXIS_ABSCISSA = 0,
-    AXIS_ORDINATE = 1,
+    AXIS_X = 0,
+    AXIS_Y = 1,
 )
 
-enum("SENSOR",
+Enum("SENSOR",
     "Piece sensor",
     SENSOR_LEFT_BOTTOM = 3,
     SENSOR_LEFT_TOP = 2,
@@ -113,7 +132,7 @@ enum("SENSOR",
     SENSOR_NONE = 5,
 )
 
-enum("NODE",
+Enum("NODE",
     "Node color",
     NODE_BLUE = 0,
     NODE_RED = 1,
@@ -121,37 +140,10 @@ enum("NODE",
     NODE_UNKNOWN = 0,
 )
 
-enum("TRAJECTORY_WALK",
+Enum("TRAJECTORY_WALK",
     "Trajectory walk result",
     TRAJECTORY_WALK_DESTINATION_REACHED = 0,
     TRAJECTORY_WALK_PIECE_FOUND = 1,
     TRAJECTORY_WALK_BLOCKED = 2,
     TRAJECTORY_WALK_OPPONENT_DETECTED = 3,
 )
-
-####### ADD DEFINITIONS ABOVE ###############
-
-def get_defs_types() : return __lookup.keys()
-
-def lookup_defs(_type,_value) :
-    return __lookup[_type].get(_value,"--- UNKNOWN ---")
-
-def dump_defs() :
-    print as_string()
-
-def as_string() :
-    ret=""
-    for k, v in __lookup.items() :
-        ret+=k +" "+ __descriptions[k] + "\n"
-        for w,x in v.items() :
-            ret+="\t" + str(w) +"\t" + str(x) + "\n"
-    return ret
-
-def as_dict() : return __lookup.items()
-
-
-del enum
-
-if __name__ == "__main__" :
-    dump_defs()
-    print lookup_defs("REMOTE_DEVICE",1)

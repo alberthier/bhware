@@ -76,7 +76,7 @@ def log_packet(sender, packet):
     initialize()
     delta = datetime.datetime.now() - start_time
     time = "'{0:=0.02f}'".format(float(delta.seconds) + (float(delta.microseconds)/1000000.0))
-    text = "'" + type(packet).__name__ + "', '" + sender + "', " + str(packet.to_dict()) + "]"
+    text = "'" + type(packet).__name__ + "', '" + sender + "', " + str(packet.__dict__.copy()) + "]"
     try:
         log_file.write("log.append([" + time + ", " + text + ")\n")
     except:

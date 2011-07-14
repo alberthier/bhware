@@ -337,7 +337,7 @@ class ResettlePacketTestCase(unittest.TestCase):
 
     def test_serialization_deserialization(self):
         packet = packets.Resettle()
-        packet.axis = AXIS_ORDINATE
+        packet.axis = AXIS_Y
         packet.position = 684.87
         packet.angle = 156.5
         buf = packet.serialize()

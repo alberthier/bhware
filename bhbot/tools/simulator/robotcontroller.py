@@ -221,9 +221,9 @@ class RobotController(object):
         elif isinstance(packet, packets.Stop):
             self.stop()
         elif isinstance(packet, packets.Resettle):
-            if packet.axis == AXIS_ABSCISSA:
+            if packet.axis == AXIS_X:
                 self.field_object.item.setY(packet.position * 1000.0)
-            elif packet.axis == AXIS_ORDINATE:
+            elif packet.axis == AXIS_Y:
                 self.field_object.item.setX(packet.position * 1000.0)
             angle = math.atan2(math.cos(packet.angle), math.sin(packet.angle)) / math.pi * 180.0
             self.field_object.item.setRotation(angle)

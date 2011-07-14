@@ -132,11 +132,11 @@ class Resettle(statemachine.State):
         self.angle = angle
 
     def on_enter(self):
-        self.robot().resettle( AXIS_ABSCISSA, self.abscissa, 0.0 )
+        self.robot().resettle( AXIS_X, self.abscissa, 0.0 )
 
     def on_resettle(self):
         if self.resettle_count == 0 :
-            self.robot().resettle( AXIS_ORDINATE, self.ordinate, self.angle )
+            self.robot().resettle( AXIS_Y, self.ordinate, self.angle )
             self.resettle_count+=1
         else:
             self.exit_machine()
