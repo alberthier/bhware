@@ -206,7 +206,7 @@ class PoseItem(PacketItem):
     DESCRIPTION = "Robot pose"
 
     def __init__(self, name, description = None):
-        PacketItem.__init__(self, name, trajectory.Pose(), description)
+        PacketItem.__init__(self, name, trajectory.Pose(0.0, 0.0, 0.0), description)
 
 
     def to_value_list(self, value, buf):
@@ -343,7 +343,7 @@ class BasePacket(object):
 
 
     def deserialize(self, buf):
-        for k, v in self.do_deserialize(buf):
+        for k, v in self.do_deserialize(buf).iteritems():
             setattr(self, k, v)
 
 
@@ -478,7 +478,7 @@ class PositionControlConfig(BasePacket):
     DEFINITION = (
         FloatItem ('t_acc',                             0.0),
         FloatItem ('f_va_max',                          0.0),
-        FloatItem ('umax',                              0.0),
+        FloatItem ('u_max',                             0.0),
         FloatItem ('k1',                                0.0),
         FloatItem ('k2',                                0.0),
         FloatItem ('k3',                                0.0),
@@ -500,11 +500,11 @@ class PositionControlConfig(BasePacket):
         FloatItem ('d_roue_g',                          0.0),
         UInt16Item('nb_pas_g',                          0),
         UInt32Item('app_net_ip',                        0),
-        UInt32Item('app_net_msk',                       0),
+        UInt32Item('app_net_mask',                       0),
         UInt32Item('app_net_gateway',                   0),
         UInt32Item('app_net_port',                      0),
         UInt32Item('test_mode',                         0),
-        FloatItem ('coefficient_de_glissement_lateral', 0.0),
+        FloatItem ('coefficient_glissement_lateral', 0.0),
     )
 
 
@@ -545,7 +545,7 @@ class PieceDetected(BasePacket):
         PoseItem  ('end_pose',                    "Detection end pose"),
         FloatItem ('end_distance',   0.0,         "Detection end distance"),
         UEnum8Item('sensor',         SENSOR_NONE, 'SENSOR'),
-        FloatItem ('end_distance',   0.0,         "SICK detection angle"),
+        FloatItem ('angle',          0.0,         "SICK detection angle"),
     )
 
 
@@ -652,7 +652,7 @@ class TurretDetect(BasePacket):
     MAX_SIZE = 5
     TYPE = 32
     DEFINITION = (
-        UInt8Item('angle', 0.0, "Opponent detection angle"),
+        FloatItem('angle', 0.0, "Opponent detection angle"),
     )
 
 
