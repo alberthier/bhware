@@ -43,6 +43,14 @@ class PacketItem(object):
         return value
 
 
+    def to_pretty_value(self, value):
+        return value
+
+
+    def from_pretty_value(self, value):
+        return value
+
+
 
 
 class Int8Item(PacketItem):
@@ -179,7 +187,7 @@ class BoolItem(UInt8Item):
 
 
 class Enum8Item(Int8Item):
-    
+
     DESCRIPTION = "8 bytes enum value (char)"
 
     def __init__(self, name, default_value, enum_name):
@@ -187,16 +195,31 @@ class Enum8Item(Int8Item):
         Int8Item.__init__(self, name, default_value, self.enum.description)
 
 
+    def to_pretty_value(self, value):
+        return self.enum.lookup_by_value[value]
+
+
+    def from_pretty_value(self, value):
+        return self.enum.lookup_by_name[value]
+
+
 
 
 class UEnum8Item(UInt8Item):
-    
+
     DESCRIPTION = "8 bytes enum value (unsigned char)"
 
     def __init__(self, name, default_value, enum_name):
         self.enum = ENUMS[enum_name]
         UInt8Item.__init__(self, name, default_value, self.enum.description)
 
+
+    def to_pretty_value(self, value):
+        return self.enum.lookup_by_value[value]
+
+
+    def from_pretty_value(self, value):
+        return self.enum.lookup_by_name[value]
 
 
 
@@ -361,8 +384,30 @@ class BasePacket(object):
         return self.do_serialize(elements)
 
 
-    def pretty_print(self):
-        return str(self)
+    def to_dict(self):
+        packet_dict = {}
+        for elt in self.DEFINITION:
+            packet_dict[elt.name] = getattr(self, elt.name)
+        return packet_dict
+
+
+    def to_pretty_dict(self):
+        packet_dict = {}
+        for elt in self.DEFINITION:
+            packet_dict[elt.name] = elt.to_pretty_value(getattr(self, elt.name))
+        return packet_dict
+
+
+    def from_dict(self, packet_dict):
+        for elt in self.DEFINITION:
+            value = packet_dict[elt.name]
+            setattr(self, elt.name, value)
+
+
+    def from_pretty_dict(self):
+        for elt in self.DEFINITION:
+            value = elt.from_pretty_value(packet_dict[elt.name])
+            setattr(self, elt.name, value)
 
 
 
@@ -500,11 +545,11 @@ class PositionControlConfig(BasePacket):
         FloatItem ('d_roue_g',                          0.0),
         UInt16Item('nb_pas_g',                          0),
         UInt32Item('app_net_ip',                        0),
-        UInt32Item('app_net_mask',                       0),
+        UInt32Item('app_net_mask',                      0),
         UInt32Item('app_net_gateway',                   0),
         UInt32Item('app_net_port',                      0),
         UInt32Item('test_mode',                         0),
-        FloatItem ('coefficient_glissement_lateral', 0.0),
+        FloatItem ('coefficient_glissement_lateral',    0.0),
     )
 
 
