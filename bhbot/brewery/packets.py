@@ -404,7 +404,7 @@ class BasePacket(object):
             setattr(self, elt.name, value)
 
 
-    def from_pretty_dict(self):
+    def from_pretty_dict(self, packet_dict):
         for elt in self.DEFINITION:
             value = elt.from_pretty_value(packet_dict[elt.name])
             setattr(self, elt.name, value)
