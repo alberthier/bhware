@@ -150,6 +150,14 @@ class FloatItem(PacketItem):
         PacketItem.__init__(self, name, default_value, description)
 
 
+    def to_pretty_value(self, value):
+        return "{0:0.4f}".format(value)
+
+
+    def from_pretty_value(self, value):
+        return float(value)
+
+
 
 
 class DoubleItem(PacketItem):
@@ -159,6 +167,14 @@ class DoubleItem(PacketItem):
 
     def __init__(self, name, default_value, description = None):
         PacketItem.__init__(self, name, default_value, description)
+
+
+    def to_pretty_value(self, value):
+        return "{0:0.4f}".format(value)
+
+
+    def from_pretty_value(self, value):
+        return float(value)
 
 
 
