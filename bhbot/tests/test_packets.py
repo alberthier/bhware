@@ -9,242 +9,244 @@ import trajectory
 from definitions import *
 
 
-def compare_floats(f1, f2):
-    return abs(f1 - f2) < 0.01
+
+########################################################################
+# Packet test infrastructure
 
 
-class ControllerReadyPacketTestCase(unittest.TestCase):
+
+class PacketTestMixin(object):
+
+    def create_packet(self):
+        return None
+
+
+    def initialize_packet(self, packet):
+        pass
+
+
+    def assert_packet_equal(self, packet1, packet2):
+        self.assert_equal(packet1.__dict__, packet2.__dict__)
+
+
+    def assert_equal(self, value1, value2):
+        self.assertEqual(type(value1), type(value2))
+        if isinstance(value1, dict):
+            self.assert_dict_equal(value1, value2)
+        elif isinstance(value1, list) or isinstance(value1, tuple):
+            self.assert_sequence_equal(value1, value2)
+        elif isinstance(value1, trajectory.Pose):
+            self.assert_pose_equal(value1, value2)
+        elif isinstance(value1, float):
+            self.assert_float_equal(value1, value2)
+        else:
+            self.assertEqual(value1, value2)
+
+
+    def assert_dict_equal(self, dict1, dict2):
+        self.assertEqual(len(dict1), len(dict2))
+        for key, value1 in dict1.iteritems():
+            value2 = dict2[key]
+            self.assert_equal(value1, value2)
+
+
+    def assert_sequence_equal(self, seq1, seq2):
+        self.assertEqual(len(seq1), len(seq2))
+        for i in xrange(len(seq1)):
+            self.assert_equal(seq1[i], seq2[i])
+
+
+    def assert_pose_equal(self, pose1, pose2):
+        self.assert_float_equal(pose1.x, pose2.x)
+        self.assert_float_equal(pose1.y, pose2.y)
+        self.assert_float_equal(pose1.angle, pose2.angle)
+
+
+    def assert_float_equal(self, value1, value2):
+        self.assertAlmostEqual(value1, value2, None, None, 0.01)
+
 
     def test_serialization_length(self):
-        packet = packets.ControllerReady()
+        packet = self.create_packet()
         buf = packet.serialize()
         self.assertEqual(len(buf), packet.MAX_SIZE)
 
-    def test_serialization_deserialization(self):
-        packet = packets.ControllerReady()
-        buf = packet.serialize()
-        packet2 = packets.ControllerReady()
+
+    def test_buffer_serialization_deserialization(self):
+        packet1 = self.create_packet()
+        self.initialize_packet(packet1)
+        buf = packet1.serialize()
+        packet2 = self.create_packet()
         packet2.deserialize(buf)
-        self.assertEqual(packet.__dict__, packet2.__dict__)
+        self.assert_packet_equal(packet1, packet2)
+
+
+    def test_dict_serialization_deserialization(self):
+        packet1 = self.create_packet()
+        self.initialize_packet(packet1)
+        d = packet1.to_dict()
+        packet2 = self.create_packet()
+        packet2.from_dict(d)
+        self.assert_packet_equal(packet1, packet2)
+
+
+    def test_pretty_dict_serialization_deserialization(self):
+        packet1 = self.create_packet()
+        self.initialize_packet(packet1)
+        d = packet1.to_pretty_dict()
+        packet2 = self.create_packet()
+        packet2.from_pretty_dict(d)
+        self.assert_packet_equal(packet1, packet2)
+
+
+    def test_packet_id_uniqueness(self):
+        count = 0
+        packet_type = self.create_packet().TYPE
+        for name, packet_class in packets.PACKETS_BY_NAME.iteritems():
+            if packet_class.TYPE == packet_type:
+                count += 1
+        self.assertEqual(count, 1)
+
+
+
+########################################################################
+# Packet test cases
+
+
+
+class ControllerReadyPacketTestCase(unittest.TestCase, PacketTestMixin):
+
+    def create_packet(self):
+        return packets.ControllerReady()
 
 
 
 
-class DeviceBusyPacketTestCase(unittest.TestCase):
+class DeviceBusyPacketTestCase(unittest.TestCase, PacketTestMixin):
 
-    def test_serialization_length(self):
-        packet = packets.DeviceBusy()
-        buf = packet.serialize()
-        self.assertEqual(len(buf), packet.MAX_SIZE)
+    def create_packet(self):
+        return packets.DeviceBusy()
 
-    def test_serialization_deserialization(self):
-        packet = packets.DeviceBusy()
+
+    def initialize_packet(self, packet):
         packet.remote_device = REMOTE_DEVICE_SIMULATOR
-        buf = packet.serialize()
-        packet2 = packets.DeviceBusy()
-        packet2.deserialize(buf)
-        self.assertEqual(packet.__dict__, packet2.__dict__)
 
 
 
 
-class DeviceReadyPacketTestCase(unittest.TestCase):
+class DeviceReadyPacketTestCase(unittest.TestCase, PacketTestMixin):
 
-    def test_serialization_length(self):
-        packet = packets.DeviceReady()
-        buf = packet.serialize()
-        self.assertEqual(len(buf), packet.MAX_SIZE)
+    def create_packet(self):
+        return packets.DeviceReady()
 
-    def test_serialization_deserialization(self):
-        packet = packets.DeviceReady()
+
+    def initialize_packet(self, packet):
         packet.team = TEAM_RED
         packet.remote_device = REMOTE_DEVICE_SIMULATOR
-        buf = packet.serialize()
-        packet2 = packets.DeviceReady()
-        packet2.deserialize(buf)
-        self.assertEqual(packet.__dict__, packet2.__dict__)
 
 
 
 
-class StartPacketTestCase(unittest.TestCase):
+class StartPacketTestCase(unittest.TestCase, PacketTestMixin):
 
-    def test_serialization_length(self):
-        packet = packets.Start()
-        buf = packet.serialize()
-        self.assertEqual(len(buf), packet.MAX_SIZE)
+    def create_packet(self):
+        return packets.Start()
 
-    def test_serialization_deserialization(self):
-        packet = packets.Start()
+
+    def initialize_packet(self, packet):
         packet.team = TEAM_RED
-        buf = packet.serialize()
-        packet2 = packets.Start()
-        packet2.deserialize(buf)
-        self.assertEqual(packet.__dict__, packet2.__dict__)
 
 
 
 
-class GotoPacketTestCase(unittest.TestCase):
+class GotoPacketTestCase(unittest.TestCase, PacketTestMixin):
 
-    def test_serialization_length(self):
-        packet = packets.Goto()
-        buf = packet.serialize()
-        self.assertEqual(len(buf), packet.MAX_SIZE)
+    def create_packet(self):
+        return packets.Goto()
 
-    def test_serialization_deserialization(self):
-        packet = packets.Goto()
+
+    def initialize_packet(self, packet):
         packet.movement = MOVEMENT_ROTATE
         packet.direction = DIRECTION_BACKWARD
         packet.points.append(trajectory.Pose(10.5, 20.3, 56.4))
         packet.points.append(trajectory.Pose(84.6, 45.7, 85.0))
         packet.points.append(trajectory.Pose(75.4, 75.2, 12.8))
         packet.points.append(trajectory.Pose(85.4, 45.7, 89.4))
-        buf = packet.serialize()
-        packet2 = packets.Goto()
-        packet2.deserialize(buf)
-        self.assertEqual(packet.movement, packet2.movement)
-        self.assertEqual(packet.direction, packet2.direction)
-        for i in xrange(len(packet.points)):
-            self.assertTrue(compare_floats(packet.points[i].x, packet2.points[i].x))
-            self.assertTrue(compare_floats(packet.points[i].y, packet2.points[i].y))
-            if packet.points[i].angle == None:
-                self.assertEqual(packet.points[i].angle, packet2.points[i].angle)
-            else:
-                self.assertTrue(compare_floats(packet.points[i].angle, packet2.points[i].angle))
 
 
 
 
+class GotoStartedPacketTestCase(unittest.TestCase, PacketTestMixin):
 
-class GotoStartedPacketTestCase(unittest.TestCase):
-
-    def test_serialization_length(self):
-        packet = packets.GotoStarted()
-        buf = packet.serialize()
-        self.assertEqual(len(buf), packet.MAX_SIZE)
-
-    def test_serialization_deserialization(self):
-        packet = packets.GotoStarted()
-        buf = packet.serialize()
-        packet2 = packets.GotoStarted()
-        packet2.deserialize(buf)
-        self.assertEqual(packet.__dict__, packet2.__dict__)
+    def create_packet(self):
+        return packets.GotoStarted()
 
 
 
 
-class GotoFinishedPacketTestCase(unittest.TestCase):
+class GotoFinishedPacketTestCase(unittest.TestCase, PacketTestMixin):
 
-    def test_serialization_length(self):
-        packet = packets.GotoFinished()
-        buf = packet.serialize()
-        self.assertEqual(len(buf), packet.MAX_SIZE)
+    def create_packet(self):
+        return packets.GotoFinished()
 
-    def test_serialization_deserialization(self):
-        packet = packets.GotoFinished()
+
+    def initialize_packet(self, packet):
         packet.reason = REASON_PIECE_FOUND
         packet.current_pose = trajectory.Pose(20.0, 30.0, 5.5)
         packet.current_point_index = 12
-        buf = packet.serialize()
-        packet2 = packets.GotoFinished()
-        packet2.deserialize(buf)
-        self.assertEqual(packet.reason, packet2.reason)
-        self.assertTrue(compare_floats(packet.current_pose.x, packet2.current_pose.x))
-        self.assertTrue(compare_floats(packet.current_pose.y, packet2.current_pose.y))
-        self.assertTrue(compare_floats(packet.current_pose.angle, packet2.current_pose.angle))
 
 
 
 
-class BlockedPacketTestCase(unittest.TestCase):
+class BlockedPacketTestCase(unittest.TestCase, PacketTestMixin):
 
-    def test_serialization_length(self):
-        packet = packets.Blocked()
-        buf = packet.serialize()
-        self.assertEqual(len(buf), packet.MAX_SIZE)
+    def create_packet(self):
+        return packets.Blocked()
 
-    def test_serialization_deserialization(self):
-        packet = packets.Blocked()
+
+    def initialize_packet(self, packet):
         packet.side = BLOCKED_BACK
-        buf = packet.serialize()
-        packet2 = packets.Blocked()
-        packet2.deserialize(buf)
-        self.assertEqual(packet.__dict__, packet2.__dict__)
 
 
 
 
-class EnableAntiBlockingPacketTestCase(unittest.TestCase):
+class EnableAntiBlockingPacketTestCase(unittest.TestCase, PacketTestMixin):
 
-    def test_serialization_length(self):
-        packet = packets.EnableAntiBlocking()
-        buf = packet.serialize()
-        self.assertEqual(len(buf), packet.MAX_SIZE)
-
-    def test_serialization_deserialization(self):
-        packet = packets.EnableAntiBlocking()
-        buf = packet.serialize()
-        packet2 = packets.EnableAntiBlocking()
-        packet2.deserialize(buf)
-        self.assertEqual(packet.__dict__, packet2.__dict__)
+    def create_packet(self):
+        return packets.EnableAntiBlocking()
 
 
 
 
-class DisableAntiBlockingPacketTestCase(unittest.TestCase):
+class DisableAntiBlockingPacketTestCase(unittest.TestCase, PacketTestMixin):
 
-    def test_serialization_length(self):
-        packet = packets.DisableAntiBlocking()
-        buf = packet.serialize()
-        self.assertEqual(len(buf), packet.MAX_SIZE)
-
-    def test_serialization_deserialization(self):
-        packet = packets.DisableAntiBlocking()
-        buf = packet.serialize()
-        packet2 = packets.DisableAntiBlocking()
-        packet2.deserialize(buf)
-        self.assertEqual(packet.__dict__, packet2.__dict__)
+    def create_packet(self):
+        return packets.DisableAntiBlocking()
 
 
 
 
-class KeepAlivePacketTestCase(unittest.TestCase):
+class KeepAlivePacketTestCase(unittest.TestCase, PacketTestMixin):
 
-    def test_serialization_length(self):
-        packet = packets.KeepAlive()
-        buf = packet.serialize()
-        self.assertEqual(len(buf), packet.MAX_SIZE)
+    def create_packet(self):
+        return packets.KeepAlive()
 
-    def test_serialization_deserialization(self):
-        packet = packets.KeepAlive()
+
+    def initialize_packet(self, packet):
         packet.current_pose = trajectory.Pose(564.8, 452.3, 96.4)
         packet.match_started = True
         packet.match_time = 56
-        buf = packet.serialize()
-        packet2 = packets.KeepAlive()
-        packet2.deserialize(buf)
-        self.assertTrue(compare_floats(packet.current_pose.x, packet2.current_pose.x))
-        self.assertTrue(compare_floats(packet.current_pose.y, packet2.current_pose.y))
-        if packet.current_pose.angle == None:
-            self.assertEqual(packet.current_pose.angle, packet2.current_pose.angle)
-        else:
-            self.assertTrue(compare_floats(packet.current_pose.angle, packet2.current_pose.angle))
-        self.assertEqual(packet.match_started, packet2.match_started)
-        self.assertEqual(packet.match_time, packet2.match_time)
 
 
 
 
-class PositionControlConfigPacketTestCase(unittest.TestCase):
+class PositionControlConfigPacketTestCase(unittest.TestCase, PacketTestMixin):
 
-    def test_serialization_length(self):
-        packet = packets.PositionControlConfig()
-        buf = packet.serialize()
-        self.assertEqual(len(buf), packet.MAX_SIZE)
+    def create_packet(self):
+        return packets.PositionControlConfig()
 
-    def test_serialization_deserialization(self):
-        packet = packets.PositionControlConfig()
+
+    def initialize_packet(self, packet):
         packet.t_acc = 453.45
         packet.f_va_max = 684.2
         packet.u_max = 4857.3
@@ -275,280 +277,173 @@ class PositionControlConfigPacketTestCase(unittest.TestCase):
         packet.test_mode = 890
         packet.coefficient_glissement_lateral = 2345.66
 
-        buf = packet.serialize()
-        packet2 = packets.PositionControlConfig()
-        packet2.deserialize(buf)
-        self.assertTrue(compare_floats(packet.t_acc, packet2.t_acc))
-        self.assertTrue(compare_floats(packet.f_va_max, packet2.f_va_max))
-        self.assertTrue(compare_floats(packet.u_max, packet2.u_max))
-        self.assertTrue(compare_floats(packet.k1, packet2.k1))
-        self.assertTrue(compare_floats(packet.k2, packet2.k2))
-        self.assertTrue(compare_floats(packet.k3, packet2.k3))
-        self.assertTrue(compare_floats(packet.g_re_1, packet2.g_re_1))
-        self.assertTrue(compare_floats(packet.g_re_2, packet2.g_re_2))
-        self.assertTrue(compare_floats(packet.dist_min, packet2.dist_min))
-        self.assertTrue(compare_floats(packet.angle_min, packet2.angle_min))
-        self.assertTrue(compare_floats(packet.nbr_pas_evit_detect, packet2.nbr_pas_evit_detect))
-        self.assertTrue(compare_floats(packet.ecart_roue_libre, packet2.ecart_roue_libre))
-        self.assertTrue(compare_floats(packet.ecart_roue_motrice, packet2.ecart_roue_motrice))
-        self.assertTrue(compare_floats(packet.k_p_d, packet2.k_p_d))
-        self.assertTrue(compare_floats(packet.k_i_d, packet2.k_i_d))
-        self.assertTrue(compare_floats(packet.v_max_d, packet2.v_max_d))
-        self.assertTrue(compare_floats(packet.d_roue_d, packet2.d_roue_d))
-        self.assertTrue(compare_floats(packet.nb_pas_d, packet2.nb_pas_d))
-        self.assertTrue(compare_floats(packet.k_p_g, packet2.k_p_g))
-        self.assertTrue(compare_floats(packet.k_i_g, packet2.k_i_g))
-        self.assertTrue(compare_floats(packet.v_max_g, packet2.v_max_g))
-        self.assertTrue(compare_floats(packet.d_roue_g, packet2.d_roue_g))
-        self.assertTrue(compare_floats(packet.nb_pas_g, packet2.nb_pas_g))
-        self.assertEqual(packet.app_net_ip, packet2.app_net_ip)
-        self.assertEqual(packet.app_net_mask, packet2.app_net_mask)
-        self.assertEqual(packet.app_net_gateway, packet2.app_net_gateway)
-        self.assertEqual(packet.app_net_port, packet2.app_net_port)
-        self.assertEqual(packet.test_mode, packet2.test_mode)
-        self.assertTrue(compare_floats(packet.coefficient_glissement_lateral, packet2.coefficient_glissement_lateral))
+
+
+
+class StopPacketTestCase(unittest.TestCase, PacketTestMixin):
+
+    def create_packet(self):
+        return packets.Stop()
 
 
 
 
-class StopPacketTestCase(unittest.TestCase):
+class ResettlePacketTestCase(unittest.TestCase, PacketTestMixin):
 
-    def test_serialization_length(self):
-        packet = packets.Stop()
-        buf = packet.serialize()
-        self.assertEqual(len(buf), packet.MAX_SIZE)
-
-    def test_serialization_deserialization(self):
-        packet = packets.Stop()
-        buf = packet.serialize()
-        packet2 = packets.Stop()
-        packet2.deserialize(buf)
-        self.assertEqual(packet.__dict__, packet2.__dict__)
+    def create_packet(self):
+        return packets.Resettle()
 
 
-
-
-class ResettlePacketTestCase(unittest.TestCase):
-
-    def test_serialization_length(self):
-        packet = packets.Resettle()
-        buf = packet.serialize()
-        self.assertEqual(len(buf), packet.MAX_SIZE)
-
-    def test_serialization_deserialization(self):
-        packet = packets.Resettle()
+    def initialize_packet(self, packet):
         packet.axis = AXIS_Y
         packet.position = 684.87
         packet.angle = 156.5
-        buf = packet.serialize()
-        packet2 = packets.Resettle()
-        packet2.deserialize(buf)
-        self.assertEqual(packet.axis, packet2.axis)
-        self.assertTrue(compare_floats(packet.position, packet2.position))
-        self.assertTrue(compare_floats(packet.angle, packet2.angle))
 
 
 
 
-class DeploymentPacketTestCase(unittest.TestCase):
+class DeploymentPacketTestCase(unittest.TestCase, PacketTestMixin):
 
-    def test_serialization_length(self):
-        packet = packets.Deployment()
-        buf = packet.serialize()
-        self.assertEqual(len(buf), packet.MAX_SIZE)
-
-    def test_serialization_deserialization(self):
-        packet = packets.Deployment()
-        buf = packet.serialize()
-        packet2 = packets.Deployment()
-        packet2.deserialize(buf)
-        self.assertEqual(packet.__dict__, packet2.__dict__)
+    def create_packet(self):
+        return packets.Deployment()
 
 
 
 
-class PieceDetectedPacketTestCase(unittest.TestCase):
+class PieceDetectedPacketTestCase(unittest.TestCase, PacketTestMixin):
 
-    def test_serialization_length(self):
-        packet = packets.PieceDetected()
-        buf = packet.serialize()
-        self.assertEqual(len(buf), packet.MAX_SIZE)
+    def create_packet(self):
+        return packets.PieceDetected()
 
-    def test_serialization_deserialization_with_angle(self):
-        packet = packets.PieceDetected()
+
+    def initialize_packet(self, packet):
         packet.start_pose = trajectory.Pose(12.3, 67.9, 56.4)
         packet.start_distance = 54.8
         packet.end_pose = trajectory.Pose(2.3, 32.9, 98.3)
         packet.end_distance = 34.0
         packet.sensor = SENSOR_RIGHT_BOTTOM
         packet.angle = 32.8
-        buf = packet.serialize()
-        packet2 = packets.PieceDetected()
-        packet2.deserialize(buf)
-        self.assertTrue(compare_floats(packet.start_pose.x, packet2.start_pose.x))
-        self.assertTrue(compare_floats(packet.start_pose.y, packet2.start_pose.y))
-        self.assertTrue(compare_floats(packet.start_pose.angle, packet2.start_pose.angle))
-        self.assertTrue(compare_floats(packet.start_distance, packet2.start_distance))
-        self.assertTrue(compare_floats(packet.end_pose.x, packet2.end_pose.x))
-        self.assertTrue(compare_floats(packet.end_pose.y, packet2.end_pose.y))
-        self.assertTrue(compare_floats(packet.end_pose.angle, packet2.end_pose.angle))
-        self.assertTrue(compare_floats(packet.end_distance, packet2.end_distance))
-        self.assertEqual(packet.sensor, packet2.sensor)
-        self.assertTrue(compare_floats(packet.angle, packet2.angle))
 
 
 
 
-class StorePiece1PacketTestCase(unittest.TestCase):
+class StorePiece1PacketTestCase(unittest.TestCase, PacketTestMixin):
 
-    def test_serialization_length(self):
-        packet = packets.StorePiece1()
-        buf = packet.serialize()
-        self.assertEqual(len(buf), packet.MAX_SIZE)
+    def create_packet(self):
+        return packets.StorePiece1()
 
-    def test_serialization_deserialization(self):
-        packet = packets.StorePiece1()
+
+    def initialize_packet(self, packet):
         packet.piece_count = 34
-        buf = packet.serialize()
-        packet2 = packets.StorePiece1()
-        packet2.deserialize(buf)
-        self.assertEqual(packet.__dict__, packet2.__dict__)
 
 
 
 
-class StorePiece2PacketTestCase(unittest.TestCase):
+class StorePiece2PacketTestCase(unittest.TestCase, PacketTestMixin):
 
-    def test_serialization_length(self):
-        packet = packets.StorePiece2()
-        buf = packet.serialize()
-        self.assertEqual(len(buf), packet.MAX_SIZE)
+    def create_packet(self):
+        return packets.StorePiece2()
 
-    def test_serialization_deserialization(self):
-        packet = packets.StorePiece2()
+
+    def initialize_packet(self, packet):
         packet.piece_count = 52
-        buf = packet.serialize()
-        packet2 = packets.StorePiece2()
-        packet2.deserialize(buf)
-        self.assertEqual(packet.__dict__, packet2.__dict__)
 
 
 
 
-class StorePiece3PacketTestCase(unittest.TestCase):
+class StorePiece3PacketTestCase(unittest.TestCase, PacketTestMixin):
 
-    def test_serialization_length(self):
-        packet = packets.StorePiece3()
-        buf = packet.serialize()
-        self.assertEqual(len(buf), packet.MAX_SIZE)
+    def create_packet(self):
+        return packets.StorePiece3()
 
-    def test_serialization_deserialization(self):
-        packet = packets.StorePiece3()
+
+    def initialize_packet(self, packet):
         packet.piece_count = 64
-        buf = packet.serialize()
-        packet2 = packets.StorePiece3()
-        packet2.deserialize(buf)
-        self.assertEqual(packet.__dict__, packet2.__dict__)
 
 
 
 
-class ReleasePiecePacketTestCase(unittest.TestCase):
+class ReleasePiecePacketTestCase(unittest.TestCase, PacketTestMixin):
 
-    def test_serialization_length(self):
-        packet = packets.ReleasePiece()
-        buf = packet.serialize()
-        self.assertEqual(len(buf), packet.MAX_SIZE)
-
-    def test_serialization_deserialization(self):
-        packet = packets.ReleasePiece()
-        buf = packet.serialize()
-        packet2 = packets.ReleasePiece()
-        packet2.deserialize(buf)
-        self.assertEqual(packet.__dict__, packet2.__dict__)
+    def create_packet(self):
+        return packets.ReleasePiece()
 
 
 
 
-class OpenNippersPacketTestCase(unittest.TestCase):
+class OpenNippersPacketTestCase(unittest.TestCase, PacketTestMixin):
 
-    def test_serialization_length(self):
-        packet = packets.OpenNippers()
-        buf = packet.serialize()
-        self.assertEqual(len(buf), packet.MAX_SIZE)
-
-    def test_serialization_deserialization(self):
-        packet = packets.OpenNippers()
-        buf = packet.serialize()
-        packet2 = packets.OpenNippers()
-        packet2.deserialize(buf)
-        self.assertEqual(packet.__dict__, packet2.__dict__)
+    def create_packet(self):
+        return packets.OpenNippers()
 
 
 
 
-class CloseNippersPacketTestCase(unittest.TestCase):
+class CloseNippersPacketTestCase(unittest.TestCase, PacketTestMixin):
 
-    def test_serialization_length(self):
-        packet = packets.CloseNippers()
-        buf = packet.serialize()
-        self.assertEqual(len(buf), packet.MAX_SIZE)
-
-    def test_serialization_deserialization(self):
-        packet = packets.CloseNippers()
-        buf = packet.serialize()
-        packet2 = packets.CloseNippers()
-        packet2.deserialize(buf)
-        self.assertEqual(packet.__dict__, packet2.__dict__)
+    def create_packet(self):
+        return packets.CloseNippers()
 
 
 
 
-class ReinitializePacketTestCase(unittest.TestCase):
+class EnableLateralSensorsPacketTestCase(unittest.TestCase, PacketTestMixin):
 
-    def test_serialization_length(self):
-        packet = packets.Reinitialize()
-        buf = packet.serialize()
-        self.assertEqual(len(buf), packet.MAX_SIZE)
-
-    def test_serialization_deserialization(self):
-        packet = packets.Reinitialize()
-        buf = packet.serialize()
-        packet2 = packets.Reinitialize()
-        packet2.deserialize(buf)
-        self.assertEqual(packet.__dict__, packet2.__dict__)
+    def create_packet(self):
+        return packets.EnableLateralSensors()
 
 
 
 
-class SimulatorDataPacketTestCase(unittest.TestCase):
+class DisableLateralSensorsPacketTestCase(unittest.TestCase, PacketTestMixin):
 
-    def test_serialization_length(self):
-        packet = packets.SimulatorData()
-        buf = packet.serialize()
-        self.assertEqual(len(buf), packet.MAX_SIZE)
-
-    def test_serialization_deserialization(self):
-        packet = packets.SimulatorData()
-        buf = packet.serialize()
-        packet2 = packets.SimulatorData()
-        packet2.deserialize(buf)
-        self.assertEqual(packet.__dict__, packet2.__dict__)
+    def create_packet(self):
+        return packets.DisableLateralSensors()
 
 
 
 
-class TurretDetectPacketTestCase(unittest.TestCase):
+class CloseMandiblesPacketTestCase(unittest.TestCase, PacketTestMixin):
 
-    def test_serialization_length(self):
-        packet = packets.TurretDetect()
-        buf = packet.serialize()
-        self.assertEqual(len(buf), packet.MAX_SIZE)
+    def create_packet(self):
+        return packets.CloseMandibles()
 
-    def test_serialization_deserialization(self):
-        packet = packets.TurretDetect()
+
+
+
+class OpenMandiblesPacketTestCase(unittest.TestCase, PacketTestMixin):
+
+    def create_packet(self):
+        return packets.OpenMandibles()
+
+
+
+
+class ReinitializePacketTestCase(unittest.TestCase, PacketTestMixin):
+
+    def create_packet(self):
+        return packets.Reinitialize()
+
+
+
+
+class SimulatorDataPacketTestCase(unittest.TestCase, PacketTestMixin):
+
+    def create_packet(self):
+        return packets.SimulatorData()
+
+
+    def initialize_packet(self, packet):
+        packet.leds = 10
+
+
+
+
+class TurretDetectPacketTestCase(unittest.TestCase, PacketTestMixin):
+
+    def create_packet(self):
+        return packets.TurretDetect()
+
+
+    def initialize_packet(self, packet):
         packet.angle = 8.64
-        buf = packet.serialize()
-        packet2 = packets.TurretDetect()
-        packet2.deserialize(buf)
-        self.assertTrue(compare_floats(packet.angle, packet2.angle))
