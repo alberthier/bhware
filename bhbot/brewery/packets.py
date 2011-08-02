@@ -51,6 +51,10 @@ class PacketItem(object):
         return value
 
 
+    def to_log_structure(self, value):
+        return { "name": self.name, "value": self.to_pretty_value(value) }
+
+
 
 
 class Int8Item(PacketItem):
@@ -239,28 +243,6 @@ class UEnum8Item(UInt8Item):
 
 
 
-class PoseItem(PacketItem):
-
-    C_TYPE = 'fff'
-    DESCRIPTION = "Robot pose"
-
-    def __init__(self, name, description = None):
-        PacketItem.__init__(self, name, trajectory.Pose(0.0, 0.0, 0.0), description)
-
-
-    def to_value_list(self, value, buf):
-        buf.append(value.x)
-        buf.append(value.y)
-        buf.append(value.angle)
-
-
-    def from_value_list(self, buf):
-        value = trajectory.Pose(buf[0], buf[1], buf[2])
-        del buf[0:3]
-        return value
-
-
-
 
 class PoseWithOptionalAngleItem(PacketItem):
 
@@ -288,6 +270,63 @@ class PoseWithOptionalAngleItem(PacketItem):
             value.angle = None
         del buf[0:4]
         return value
+
+
+    def to_pretty_value(self, value):
+        if value.angle == None:
+            angle_value = None
+        else:
+            angle_value = "{0:0.4f}".format(value.angle)
+        return { "x":     "{0:0.4f}".format(value.x),
+                 "y":     "{0:0.4f}".format(value.y),
+                 "angle": angle_value
+               }
+
+
+    def from_pretty_value(self, value):
+        angle = value["angle"]
+        if angle != None:
+            angle = float(angle)
+        return trajectory.Pose(float(value["x"]), float(value["y"]), angle)
+
+
+    def to_log_structure(self, value):
+        log_structure = { "name": self.name }
+        children = []
+        children.append({ "name": "x",     "value": "{0:0.4f}".format(value.x),     "parent": log_structure})
+        children.append({ "name": "y",     "value": "{0:0.4f}".format(value.y),     "parent": log_structure})
+        if value.angle != None:
+            angle_value = "{0:0.4f}".format(value.angle)
+        else:
+            angle_value = None
+        children.append({ "name": "angle", "value": angle_value, "parent": log_structure})
+        log_structure["children"] = children
+        return log_structure
+
+
+
+
+class PoseItem(PoseWithOptionalAngleItem):
+
+    C_TYPE = 'fff'
+    DESCRIPTION = "Robot pose"
+
+    def __init__(self, name, description = None):
+        PoseWithOptionalAngleItem.__init__(self, name, description)
+        self.default_value.angle = 0.0
+
+
+    def to_value_list(self, value, buf):
+        buf.append(value.x)
+        buf.append(value.y)
+        buf.append(value.angle)
+
+
+    def from_value_list(self, buf):
+        value = trajectory.Pose(buf[0], buf[1], buf[2])
+        del buf[0:3]
+        return value
+
 
 
 
@@ -325,6 +364,17 @@ class ListItem(PacketItem):
         for i in xrange(self.max_elements - count):
             self.element_type.from_value_list(buf)
         return value
+
+
+    def to_log_structure(self, value):
+        log_structure = { "name": self.name }
+        children = []
+        for elt in value:
+            child = self.element_type.to_log_structure(elt)
+            child["parent"] = log_structure
+            children.append(child)
+        log_structure["children"] = children
+        return log_structure
 
 
 
@@ -424,6 +474,20 @@ class BasePacket(object):
         for elt in self.DEFINITION:
             value = elt.from_pretty_value(packet_dict[elt.name])
             setattr(self, elt.name, value)
+
+
+    def to_log_structure(self):
+        log_structure = { "name":  type(self).__name__,
+                          "color": LOGVIEW_COLOR,
+                        }
+        children = []
+        for elt in self.DEFINITION:
+            value = getattr(self, elt.name)
+            children.append(elt.to_log_structure(value))
+        if len(children) != 0:
+            log_structure["children"] = children
+
+        return log_structure
 
 
 
