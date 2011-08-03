@@ -51,7 +51,7 @@ class PacketItem(object):
         return value
 
 
-    def to_log_structure(self, value):
+    def to_logview_structure(self, value):
         return { "name": self.name, "value": self.to_pretty_value(value) }
 
 
@@ -290,7 +290,7 @@ class PoseWithOptionalAngleItem(PacketItem):
         return trajectory.Pose(float(value["x"]), float(value["y"]), angle)
 
 
-    def to_log_structure(self, value):
+    def to_logview_structure(self, value):
         log_structure = { "name": self.name }
         children = []
         children.append({ "name": "x",     "value": "{0:0.4f}".format(value.x),     "parent": log_structure})
@@ -366,11 +366,11 @@ class ListItem(PacketItem):
         return value
 
 
-    def to_log_structure(self, value):
+    def to_logview_structure(self, value):
         log_structure = { "name": self.name }
         children = []
         for elt in value:
-            child = self.element_type.to_log_structure(elt)
+            child = self.element_type.to_logview_structure(elt)
             child["parent"] = log_structure
             children.append(child)
         log_structure["children"] = children
@@ -476,14 +476,16 @@ class BasePacket(object):
             setattr(self, elt.name, value)
 
 
-    def to_log_structure(self):
+    def to_logview_structure(self):
         log_structure = { "name":  type(self).__name__,
-                          "color": LOGVIEW_COLOR,
+                          "color": self.LOGVIEW_COLOR,
                         }
         children = []
         for elt in self.DEFINITION:
             value = getattr(self, elt.name)
-            children.append(elt.to_log_structure(value))
+            child = elt.to_logview_structure(value)
+            child["parent"] = log_structure
+            children.append(child)
         if len(children) != 0:
             log_structure["children"] = children
 

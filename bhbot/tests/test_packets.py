@@ -108,6 +108,25 @@ class PacketTestMixin(object):
         self.assertEqual(count, 1)
 
 
+    def test_logview_structure(self):
+        packet = self.create_packet()
+        s = packet.to_logview_structure()
+        self.inspect_logview_structure(s, None)
+
+
+    def inspect_logview_structure(self, s, parent):
+        self.assertTrue(s.has_key("name"))
+        if parent != None:
+            self.assertTrue(s.has_key("parent"))
+            self.assertEqual(s["parent"], parent)
+
+        if s.has_key("children"):
+            for c in s["children"]:
+                self.inspect_logview_structure(c, s)
+        elif parent != None:
+            self.assertTrue(s.has_key("value"))
+
+
 
 ########################################################################
 # Packet test cases
