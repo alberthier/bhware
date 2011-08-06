@@ -79,6 +79,10 @@ class State(object):
         pass
 
 
+    def on_timer_tick(self):
+        pass
+
+
     def on_device_busy(self):
         pass
 

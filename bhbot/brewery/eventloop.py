@@ -100,6 +100,7 @@ class EventLoop(object):
         self.state_machine_name = state_machine_name
         self.figure_detector = figuredetector.FigureDetector(self.robot)
         self.opponent_detector = opponentdetector.OpponentDetector(self)
+        self.stopping = False
 
 
     def handle_read(self, channel):
@@ -252,11 +253,15 @@ class EventLoop(object):
         self.robot_control_channel.setup()
         if self.robot_control_channel.connected:
             logger.log("Starting brewery with state machine '{0}'".format(self.state_machine_name))
-            asyncore.loop(30.0, True)
+            while not self.stopping:
+                asyncore.loop(EVENT_LOOP_TICK_RESOLUTION, True, None, 1)
+                self.get_current_state().on_timer_tick()
+
 
 
     def stop(self):
         logger.log("Stopping...")
+        self.stopping = True
         if self.turret_channel != None:
             self.turret_channel.close()
         if self.robot_control_channel != None:

@@ -26,7 +26,7 @@ class Timer(statemachine.State):
         self.end_time = datetime.datetime.now() + datetime.timedelta(0, 0, 0, miliseconds)
 
 
-    def on_keep_alive(self, current_pose, match_started, match_time):
+    def on_timer_tick(self):
         if datetime.datetime.now() > self.end_time:
             logger.log("End timer {0}".format(datetime.datetime.now()))
             self.exit_substate(self.TIMEOUT)

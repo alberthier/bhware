@@ -8,7 +8,7 @@ import math
 ########################################################################
 # Constants
 
-
+EVENT_LOOP_TICK_RESOLUTION = 0.05
 FIELD_WIDTH = 3.0
 FIELD_HEIGHT= 2.1
 FIELD_CELL_SIZE = 0.350
@@ -44,7 +44,7 @@ ENUMS = {}
 
 
 class Enum(object):
-	
+
 	def __init__(self, name, description, **kwargs):
 		self.name = name
 		self.description = description
