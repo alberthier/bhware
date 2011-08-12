@@ -58,7 +58,7 @@ def log(text):
     delta = datetime.datetime.now() - start_time
     time = "'{0:=0.02f}'".format(float(delta.seconds) + (float(delta.microseconds)/1000000.0))
     try:
-        log_file.write("log.append([" + time + ",\"# " + text + "\"])\n")
+        log_file.write("log.append([" + time + ",\"# " + text.replace("\"", "\\\"") + "\"])\n")
     except:
         print("Failed to write to file")
     sys.stdout.write(text + "\n")
