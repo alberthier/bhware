@@ -7,9 +7,10 @@ import os
 import socket
 import imp
 import inspect
-import time
 import errno
 import traceback
+import datetime
+import bisect
 
 import logger
 import packets
@@ -25,6 +26,7 @@ from definitions import *
 
 
 
+
 class TurretChannel(asyncore.file_dispatcher):
 
     def __init__(self, serial_port_path, serial_port_speed, eventloop):
@@ -36,8 +38,10 @@ class TurretChannel(asyncore.file_dispatcher):
         self.buffer = ""
         self.packet = None
 
+
     def bytes_available(self):
         return self.port.inWaiting()
+
 
     def writable(self):
         return False
@@ -57,38 +61,83 @@ class TurretChannel(asyncore.file_dispatcher):
 
 class RobotControlDeviceChannel(asyncore.dispatcher_with_send):
 
-    def __init__(self, eventloop):
-        asyncore.dispatcher_with_send.__init__(self)
+    def __init__(self, eventloop, socket):
+        asyncore.dispatcher_with_send.__init__(self, socket)
         self.eventloop = eventloop
-        self.close_requested = False
         self.buffer = ""
         self.packet = None
-
-
-    def setup(self):
-        self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
-        logger.log("Connecting to {0}:{1} ...".format(config.remote_ip, config.remote_port))
-        while not self.connected and not self.close_requested:
-            try:
-                self.connect((config.remote_ip, config.remote_port))
-            except Exception as e:
-                logger.log("Unable to connect to {0}:{1} ({2}), retrying".format(config.remote_ip, config.remote_port, e))
-                time.sleep(1)
-                leds.orange.toggle()
-
-
-    def handle_connect(self):
-        leds.orange.off()
-        self.eventloop.create_fsm()
 
 
     def handle_read(self):
         self.eventloop.handle_read(self)
 
 
-    def close(self):
-        asyncore.dispatcher_with_send.close(self)
-        self.close_requested = True
+
+
+class Timer(object):
+
+    def __init__(self, eventloop, timeout_ms, callback, single_shot = True):
+        self.eventloop = eventloop
+        self.timeout_ms = timeout_ms
+        self.callback = callback
+        self.single_shot = single_shot
+        self.timeout_date = None
+
+
+    def check_timeout(self):
+        if datetime.datetime.now() >= self.timeout_date:
+            self.stop()
+            if not self.single_shot:
+                self.start()
+            self.callback()
+            return True
+        return False
+
+
+    def start(self):
+        self.timeout_date = datetime.datetime.now() + datetime.timedelta(milliseconds = self.timeout_ms)
+        bisect.insort_left(self.eventloop.timers, self)
+
+
+    def stop(self):
+        try:
+            self.eventloop.timers.remove(self)
+        except:
+            pass
+        self.timeout_date = None
+
+
+    def __cmp__(self, other):
+        return cmp(self.timeout_date, other.timeout_date)
+
+
+
+
+class RobotControlDeviceStarter(object):
+
+    def __init__(self, eventloop):
+        logger.log("Connecting to {0}:{1} ...".format(config.remote_ip, config.remote_port))
+        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.eventloop = eventloop
+        self.timer = Timer(eventloop, 1000, self.try_connect, False)
+        if not self.try_connect():
+            self.timer.start()
+
+
+    def try_connect(self):
+        connected = False
+        try:
+            self.socket.connect((config.remote_ip, config.remote_port))
+            self.eventloop.robot_control_channel = RobotControlDeviceChannel(self.eventloop, self.socket)
+            leds.orange.off()
+            self.eventloop.create_fsm()
+            connected = True
+        except Exception as e:
+            logger.log("Unable to connect to {0}:{1} ({2}), retrying".format(config.remote_ip, config.remote_port, e))
+            leds.orange.toggle()
+        return connected
+
+
 
 
 class EventLoop(object):
@@ -105,6 +154,7 @@ class EventLoop(object):
         self.figure_detector = figuredetector.FigureDetector(self.robot)
         self.opponent_detector = opponentdetector.OpponentDetector(self)
         self.stopping = False
+        self.timers = []
 
 
     def handle_read(self, channel):
@@ -255,13 +305,14 @@ class EventLoop(object):
             except serial.SerialException:
                 logger.log("Unable to open serial port {0}".format(config.serial_port_path))
                 self.turret_channel = None
-        self.robot_control_channel = RobotControlDeviceChannel(self)
-        self.robot_control_channel.setup()
-        if self.robot_control_channel.connected:
-            logger.log("Starting brewery with state machine '{0}'".format(self.state_machine_name))
-            while not self.stopping:
-                asyncore.loop(EVENT_LOOP_TICK_RESOLUTION, True, None, 1)
-                self.get_current_state().on_timer_tick()
+        RobotControlDeviceStarter(self)
+        logger.log("Starting brewery with state machine '{0}'".format(self.state_machine_name))
+        while not self.stopping:
+            asyncore.loop(EVENT_LOOP_TICK_RESOLUTION, True, None, 1)
+            self.get_current_state().on_timer_tick()
+            while len(self.timers) != 0:
+                if not self.timers[0].check_timeout():
+                    break
 
 
 
