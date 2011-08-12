@@ -48,6 +48,8 @@ def get_last_logfile():
 
 def translate_packet_data(packet_type, packet_data):
 
+    return packet_data
+
     if packet_type == 'DeviceReady' or packet_type == 'DeviceBusy':
         packet_data['remote_device'] = lookup_defs('REMOTE_DEVICE', packet_data['remote_device'])
 
