@@ -7,6 +7,7 @@ import eventloop
 import config
 import signal
 import logger
+import argparse
 
 import leds
 
@@ -20,18 +21,16 @@ def signal_handler(signum, frame):
 
 
 if __name__ == "__main__":
-    if len(sys.argv) > 1:
-        state_machine_name = sys.argv[1]
-    else:
-        state_machine_name = config.state_machine
-
-    logger.initialize()
+    parser = argparse.ArgumentParser(description = "BH Team's main strategy program.", add_help = True)
+    parser.add_argument("--webserver-port", action = "store", type = int, default = config.webserver_port, metavar = "PORT", help = "Internal web server port")
+    parser.add_argument('statemachine', action="store", nargs='?', default = config.state_machine)
+    args = parser.parse_args()
 
     logger.initialize()
 
     signal.signal(signal.SIGINT, signal_handler)
     signal.signal(signal.SIGTERM, signal_handler)
 
-    loop = eventloop.EventLoop(state_machine_name)
+    loop = eventloop.EventLoop(args.statemachine, args.webserver_port)
     leds.initialize(loop)
     loop.start()

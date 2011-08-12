@@ -135,7 +135,11 @@ class RobotController(object):
             self.process = QProcess()
             self.process.setReadChannelMode(QProcess.MergedChannels)
             self.process.readyRead.connect(self.read_output)
-            self.process.start(brewery, [])
+            if self.team == TEAM_RED:
+                port = "8000"
+            else:
+                port = "8001"
+            self.process.start(brewery, ["--webserver-port", port])
 
 
     def shutdown(self):

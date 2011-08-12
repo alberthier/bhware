@@ -15,6 +15,8 @@ import logger
 import packets
 import config
 import statemachine
+import asyncwsgiserver
+import web.webinterface
 import leds
 import robot
 import figuredetector
@@ -91,13 +93,15 @@ class RobotControlDeviceChannel(asyncore.dispatcher_with_send):
 
 class EventLoop(object):
 
-    def __init__(self, state_machine_name):
+    def __init__(self, state_machine_name, webserver_port):
         self.robot_control_channel = None
         self.turret_channel = None
+        self.web_server = None
         self.root_state = statemachine.State()
         self.root_state.event_loop = self
         self.robot = robot.Robot(self)
         self.state_machine_name = state_machine_name
+        self.webserver_port = webserver_port
         self.figure_detector = figuredetector.FigureDetector(self.robot)
         self.opponent_detector = opponentdetector.OpponentDetector(self)
         self.stopping = False
@@ -243,6 +247,8 @@ class EventLoop(object):
 
 
     def start(self):
+        logger.log("Starting internal web server on port {0}".format(self.webserver_port))
+        self.web_server = asyncwsgiserver.WsgiServer("", self.webserver_port, web.webinterface.demo_app)
         if (config.serial_port_path != None):
             try:
                 self.turret_channel = TurretChannel(config.serial_port_path, config.serial_port_speed, self)

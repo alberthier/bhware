@@ -24,6 +24,7 @@ else:
 
 serial_port_speed = 115200
 remote_port = 7001
+webserver_port = 80
 state_machine = "default"
 default_opponent_wait_time = 3000
 default_opponent_max_retries = 5
