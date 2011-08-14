@@ -1,15 +1,15 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
-import sys
-
 import eventloop
 import config
 import signal
 import logger
 import argparse
-
 import leds
+
+
+
 
 loop = None
 

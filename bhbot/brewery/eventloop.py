@@ -298,7 +298,7 @@ class EventLoop(object):
 
     def start(self):
         logger.log("Starting internal web server on port {0}".format(self.webserver_port))
-        self.web_server = asyncwsgiserver.WsgiServer("", self.webserver_port, web.webinterface.demo_app)
+        self.web_server = asyncwsgiserver.WsgiServer("", self.webserver_port, web.webinterface.app)
         if (config.serial_port_path != None):
             try:
                 self.turret_channel = TurretChannel(config.serial_port_path, config.serial_port_speed, self)
