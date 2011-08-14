@@ -14,11 +14,15 @@ import cherrypy
 
 class BHWeb(object):
 
+    def __init__(self, eventloop):
+        self.eventloop = eventloop
+
     @cherrypy.expose
     def index(self):
-        return "Hello World!"
+        return "Hello World!\nCurrent state: {0}".format(type(self.eventloop.get_current_state()).__name__)
 
 
 
 
-app = cherrypy.tree.mount(BHWeb(), script_name = "/")
+def create_app(eventloop):
+    return cherrypy.tree.mount(BHWeb(eventloop), script_name = "/")
