@@ -93,9 +93,9 @@ class PacketTestMixin(object):
     def test_pretty_dict_serialization_deserialization(self):
         packet1 = self.create_packet()
         self.initialize_packet(packet1)
-        d = packet1.to_pretty_dict()
+        d = packet1.to_dict(True)
         packet2 = self.create_packet()
-        packet2.from_pretty_dict(d)
+        packet2.from_dict(d, True)
         self.assert_packet_equal(packet1, packet2)
 
 
@@ -106,12 +106,6 @@ class PacketTestMixin(object):
             if packet_class.TYPE == packet_type:
                 count += 1
         self.assertEqual(count, 1)
-
-
-    def test_logview_structure(self):
-        packet = self.create_packet()
-        s = packet.to_logview_structure()
-        self.inspect_logview_structure(s, None)
 
 
     def inspect_logview_structure(self, s, parent):

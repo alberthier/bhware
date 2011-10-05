@@ -4,6 +4,7 @@
 import sys
 import struct
 import inspect
+from collections import OrderedDict
 
 from definitions import *
 
@@ -43,16 +44,12 @@ class PacketItem(object):
         return value
 
 
-    def to_pretty_value(self, value):
+    def to_dict_value(self, value, pretty = False):
         return value
 
 
-    def from_pretty_value(self, value):
+    def from_dict_value(self, value, pretty = False):
         return value
-
-
-    def to_logview_structure(self, value):
-        return { "name": self.name, "value": self.to_pretty_value(value) }
 
 
 
@@ -154,31 +151,25 @@ class FloatItem(PacketItem):
         PacketItem.__init__(self, name, default_value, description)
 
 
-    def to_pretty_value(self, value):
-        return "{0:0.4f}".format(value)
+    def to_dict_value(self, value, pretty = False):
+        if pretty:
+            return "{0:0.4f}".format(value)
+        return value
 
 
-    def from_pretty_value(self, value):
+    def from_dict_value(self, value, pretty = False):
         return float(value)
 
 
 
 
-class DoubleItem(PacketItem):
+class DoubleItem(FloatItem):
 
     C_TYPE = 'd'
     DESCRIPTION = "8 bytes real (double)"
 
     def __init__(self, name, default_value, description = None):
-        PacketItem.__init__(self, name, default_value, description)
-
-
-    def to_pretty_value(self, value):
-        return "{0:0.4f}".format(value)
-
-
-    def from_pretty_value(self, value):
-        return float(value)
+        FloatItem.__init__(self, name, default_value, description)
 
 
 
@@ -215,12 +206,16 @@ class Enum8Item(Int8Item):
         Int8Item.__init__(self, name, default_value, self.enum.description)
 
 
-    def to_pretty_value(self, value):
-        return self.enum.lookup_by_value[value]
+    def to_dict_value(self, value, pretty = False):
+        if pretty:
+            return self.enum.lookup_by_value[value]
+        return value
 
 
-    def from_pretty_value(self, value):
-        return self.enum.lookup_by_name[value]
+    def from_dict_value(self, value, pretty = False):
+        if pretty:
+            return self.enum.lookup_by_name[value]
+        return value
 
 
 
@@ -234,12 +229,16 @@ class UEnum8Item(UInt8Item):
         UInt8Item.__init__(self, name, default_value, self.enum.description)
 
 
-    def to_pretty_value(self, value):
-        return self.enum.lookup_by_value[value]
+    def to_dict_value(self, value, pretty = False):
+        if pretty:
+            return self.enum.lookup_by_value[value]
+        return value
 
 
-    def from_pretty_value(self, value):
-        return self.enum.lookup_by_name[value]
+    def from_dict_value(self, value, pretty = False):
+        if pretty:
+            return self.enum.lookup_by_name[value]
+        return value
 
 
 
@@ -272,36 +271,29 @@ class PoseWithOptionalAngleItem(PacketItem):
         return value
 
 
-    def to_pretty_value(self, value):
-        if value.angle == None:
-            angle_value = None
+    def to_dict_value(self, value, pretty = False):
+        ret = OrderedDict()
+
+        if pretty:
+            ret["x"] = "{0:0.4f}".format(value.x)
+            ret["y"] = "{0:0.4f}".format(value.y)
+            ret["angle"] = "{0:0.4f}".format(value.angle)
         else:
-            angle_value = "{0:0.4f}".format(value.angle)
-        return { "x":     "{0:0.4f}".format(value.x),
-                 "y":     "{0:0.4f}".format(value.y),
-                 "angle": angle_value
-               }
+            ret["x"] = value.x
+            ret["y"] = value.y
+            ret["angle"] = value.angle
+
+        return ret
 
 
-    def from_pretty_value(self, value):
-        angle = value["angle"]
-        if angle != None:
-            angle = float(angle)
-        return trajectory.Pose(float(value["x"]), float(value["y"]), angle)
+    def from_dict_value(self, value, pretty = False):
+        pose = trajectory.Pose()
 
+        pose.x = float(value["x"])
+        pose.y = float(value["y"])
+        pose.angle = float(value["angle"])
 
-    def to_logview_structure(self, value):
-        log_structure = { "name": self.name }
-        children = []
-        children.append({ "name": "x",     "value": "{0:0.4f}".format(value.x),     "parent": log_structure})
-        children.append({ "name": "y",     "value": "{0:0.4f}".format(value.y),     "parent": log_structure})
-        if value.angle != None:
-            angle_value = "{0:0.4f}".format(value.angle)
-        else:
-            angle_value = None
-        children.append({ "name": "angle", "value": angle_value, "parent": log_structure})
-        log_structure["children"] = children
-        return log_structure
+        return pose
 
 
 
@@ -366,15 +358,18 @@ class ListItem(PacketItem):
         return value
 
 
-    def to_logview_structure(self, value):
-        log_structure = { "name": self.name }
-        children = []
+    def to_dict_value(self, value, pretty = False):
+        ret = []
         for elt in value:
-            child = self.element_type.to_logview_structure(elt)
-            child["parent"] = log_structure
-            children.append(child)
-        log_structure["children"] = children
-        return log_structure
+            ret.append(self.element_type.to_dict_value(elt, pretty))
+        return ret
+
+
+    def from_dict_value(self, value, pretty = False):
+        ret = []
+        for elt in value:
+            ret.append(self.element_type.from_dict_value(elt, pretty))
+        return ret
 
 
 
@@ -390,7 +385,7 @@ class PoseListItem(ListItem):
 
 
 ################################################################################
-# Packet classes
+# Base packet class
 
 
 
@@ -450,46 +445,23 @@ class BasePacket(object):
         return self.do_serialize(elements)
 
 
-    def to_dict(self):
-        packet_dict = {}
+    def to_dict(self, pretty = False):
+        packet_dict = OrderedDict()
         for elt in self.DEFINITION:
-            packet_dict[elt.name] = getattr(self, elt.name)
+            packet_dict[elt.name] = elt.to_dict_value(getattr(self, elt.name), pretty)
         return packet_dict
 
 
-    def to_pretty_dict(self):
-        packet_dict = {}
+    def from_dict(self, packet_dict, pretty = False):
         for elt in self.DEFINITION:
-            packet_dict[elt.name] = elt.to_pretty_value(getattr(self, elt.name))
-        return packet_dict
-
-
-    def from_dict(self, packet_dict):
-        for elt in self.DEFINITION:
-            value = packet_dict[elt.name]
+            value = elt.from_dict_value(packet_dict[elt.name], pretty)
             setattr(self, elt.name, value)
 
 
-    def from_pretty_dict(self, packet_dict):
-        for elt in self.DEFINITION:
-            value = elt.from_pretty_value(packet_dict[elt.name])
-            setattr(self, elt.name, value)
 
 
-    def to_logview_structure(self):
-        log_structure = { "name":  type(self).__name__,
-                          "color": self.LOGVIEW_COLOR,
-                        }
-        children = []
-        for elt in self.DEFINITION:
-            value = getattr(self, elt.name)
-            child = elt.to_logview_structure(value)
-            child["parent"] = log_structure
-            children.append(child)
-        if len(children) != 0:
-            log_structure["children"] = children
-
-        return log_structure
+################################################################################
+# Packet classes
 
 
 
