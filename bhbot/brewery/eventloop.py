@@ -161,7 +161,7 @@ class EventLoop(object):
         try :
             return self.do_read(channel)
         except Exception, e :
-            logger.exception(e)
+            logger.log_exception(e)
 
 
     def do_read(self, channel):
@@ -179,7 +179,7 @@ class EventLoop(object):
                 except socket.error as err:
                     if err.errno in [errno.EAGAIN, errno.EINTR]:
                         return
-                    logger.exception(err)
+                    logger.log_exception(err)
                     return
             else:
                 try:
@@ -192,7 +192,7 @@ class EventLoop(object):
                     except socket.error as err:
                         if err.errno in [errno.EAGAIN, errno.EINTR]:
                             return
-                        logger.exception(err)
+                        logger.log_exception(err)
                         return
                     if len(channel.buffer) == channel.packet.MAX_SIZE:
                         # A complete packet has been received, notify the state machine
@@ -265,7 +265,7 @@ class EventLoop(object):
                             self.opponent_detector.on_turret_detect(channel.packet.angle)
                         channel.packet = None
                 except Exception, e:
-                    logger.exception(e)
+                    logger.log_exception(e)
 
 
     def send_packet(self, packet):

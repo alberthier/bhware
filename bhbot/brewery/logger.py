@@ -65,8 +65,9 @@ def log(text):
     sys.stdout.flush()
 
 
-def exception(exc,msg=None):
-    if msg == None : msg = "Exception "
+def log_exception(exc, msg = None):
+    if msg == None:
+        msg = "Exception "
     log(msg + str(exc))
     for l in traceback.format_exc(exc).split("\n") :
         log("   "+l)
@@ -76,7 +77,8 @@ def log_packet(sender, packet):
     initialize()
     delta = datetime.datetime.now() - start_time
     time = "'{0:=0.02f}'".format(float(delta.seconds) + (float(delta.microseconds)/1000000.0))
-    text = "'" + type(packet).__name__ + "', '" + sender + "', " + str(packet.__dict__.copy()) + "]"
+    packet_dict = packet.to_dict()
+    text = "'" + type(packet).__name__ + "', '" + sender + "', " + str(packet_dict) + "]"
     try:
         log_file.write("log.append([" + time + ", " + text + ")\n")
     except:

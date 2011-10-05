@@ -377,7 +377,7 @@ class TrajectoryWalk(statemachine.State):
                     self.goto(x, y, angle, direction)
         except Exception, e :
             logger.log( "Error decoding trajectory '{0}' : Exception is {1}".format(str(vals),str(e)))
-            logger.exception(e)
+            logger.log_exception(e)
 
 
     def on_enter(self):
