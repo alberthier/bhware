@@ -27,11 +27,20 @@ def initialize():
         filepath = get_next_log_filepath()
         try:
             log_file = file(filepath, "w")
+            os.chmod(filepath, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR | stat.S_IRGRP | stat.S_IXGRP | stat.S_IROTH | stat.S_IXOTH)
         except:
             log_file = file(os.devnull, "w")
         log_file.write("#!/usr/bin/env python\n")
         log_file.write("# encoding: utf-8\n\n")
+        log_file.write("from collections import OrderedDict\n\n")
         log_file.write("log = []\n\n")
+        log_file.write("if __name__ == '__main__':\n")
+        log_file.write("    def l(line):\n")
+        log_file.write("        print(line)\n")
+        log_file.write("else:\n")
+        log_file.write("    def l(line):\n")
+        log_file.write("        global log\n")
+        log_file.write("        log.append(line)\n\n")
         log("Logging to '{0}'".format(os.path.split(filepath)[1]))
 
 
@@ -40,12 +49,7 @@ def close():
     global filepath
     if log_file == None:
         return
-
-    log_file.write("\nif __name__ == '__main__':\n")
-    log_file.write("    for line in log:\n")
-    log_file.write("        print(line)\n")
     log_file.close()
-    os.chmod(filepath, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR | stat.S_IRGRP | stat.S_IXGRP | stat.S_IROTH | stat.S_IXOTH)
     filepath = None
     log_file = None
     subprocess.Popen(["/bin/sync"]).wait()
@@ -58,7 +62,7 @@ def log(text):
     delta = datetime.datetime.now() - start_time
     time = "'{0:=0.02f}'".format(float(delta.seconds) + (float(delta.microseconds)/1000000.0))
     try:
-        log_file.write("log.append([" + time + ",\"# " + text.replace("\"", "\\\"") + "\"])\n")
+        log_file.write("l([" + time + ",\"# " + text.replace("\"", "\\\"") + "\"])\n")
     except:
         print("Failed to write to file")
     sys.stdout.write(text + "\n")
@@ -80,7 +84,7 @@ def log_packet(sender, packet):
     packet_dict = packet.to_dict()
     text = "'" + type(packet).__name__ + "', '" + sender + "', " + str(packet_dict) + "]"
     try:
-        log_file.write("log.append([" + time + ", " + text + ")\n")
+        log_file.write("l([" + time + ", " + text + ")\n")
     except:
         print("Failed to write to file")
     if not isinstance(packet, packets.KeepAlive) and not isinstance(packet, packets.SimulatorData):

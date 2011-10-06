@@ -8,9 +8,11 @@ from PyQt4 import uic
 import os
 import sys
 import imp
+import collections
 
 import helpers
 import world
+import packets
 
 from definitions import *
 
@@ -153,48 +155,26 @@ class CategoriesModel(QAbstractListModel):
 
 
 
-class LogModel(QAbstractTableModel):
+class LogModel(QAbstractItemModel):
 
-    COLUMN_NUMBER = 0
-    COLUMN_TIME = 1
-    COLUMN_SENDER = 2
-    COLUMN_TYPE = 3
-    COLUMN_STATE = 4
+    COLUMN_NUMBER  = 0
+    COLUMN_TIME    = 1
+    COLUMN_SENDER  = 2
+    COLUMN_TYPE    = 3
+    COLUMN_STATE   = 4
     COLUMN_CONTENT = 5
-    COLUMN_COUNT = 6
+    COLUMN_COUNT   = 6
 
-    def __init__(self, log, categories, parent = None):
-        QAbstractTableModel.__init__(self, parent)
-        self.log = []
-        self.filtered_log = []
-        self.load_log(log)
-        self.filter(categories)
+    LOG_LINE_TIME   = 0
+    LOG_LINE_TYPE   = 1
+    LOG_LINE_SENDER = 2
+    LOG_LINE_PACKET = 3
 
 
-    def rowCount(self, parent):
-        return len(self.filtered_log)
-
-
-    def columnCount(self, parent):
-        return LogModel.COLUMN_COUNT
-
-
-    def data(self, index, role):
-        global CATEGORIES
-        global CATEGORIES_COLORS
-
-        if role == Qt.DisplayRole:
-            if index.column() == LogModel.COLUMN_TYPE:
-                return self.filtered_log[index.row()][index.column()][1]
-            else:
-                return self.filtered_log[index.row()][index.column()]
-        elif role == Qt.DecorationRole:
-            if index.column() == LogModel.COLUMN_TYPE:
-                return QColor(self.filtered_log[index.row()][index.column()][2])
-            else:
-                return QVariant()
-        else:
-            return QVariant()
+    def __init__(self, parent = None):
+        QAbstractItemModel.__init__(self, parent)
+        self.log_lines = []
+        self.states = ["Main"]
 
 
     def headerData(self, section, orientation, role):
@@ -215,43 +195,163 @@ class LogModel(QAbstractTableModel):
             return QVariant()
 
 
-    def load_log(self, log):
-        global CATEGORIES
-        index = 0
-        current_state = "None"
-        for logline in log:
-            if len(logline) == 2:
-                category_index = self.get_category_index('str')
-                category_data = CATEGORIES[category_index]
-                text = logline[1][2:]
-                self.log.append([index, logline[0], "", category_data, current_state, text, category_index])
-                if text.startswith("Switching to"):
-                    current_state = text[text.rfind(" ") + 1:]
+    def index(self, row, column, parent):
+        if parent.isValid():
+            data = parent.internalPointer()
+            if data != None:
+                return self.createIndex(row, column, data["children"][row])
+
+        return self.createIndex(row, column, self.log_lines[row])
+
+
+    def parent(self, index):
+        data = index.internalPointer()
+        if data != None and data.has_key("parent"):
+            parent = data["parent"]
+            if parent.has_key("parent"):
+                grandParent = parent["parent"]
+                row = grandParent["children"].index(parent)
+                return self.createIndex(row, 0, grandParent)
             else:
-                category_index = self.get_category_index(logline[1])
-                category_data = CATEGORIES[category_index]
+                row = self.log_lines.index(parent)
+                return self.createIndex(row, 0, None)
+        else:
+            return QModelIndex()
 
-                self.log.append([index, logline[0], logline[2], category_data, current_state, str(helpers.translate_packet_data(logline[1], logline[3]))[1:-1], category_index])
-            index += 1
+
+    def hasChildren(self, parent):
+        if parent.isValid():
+            data = parent.internalPointer()
+            if data != None:
+                return data.has_key("children")
+
+        return len(self.log_lines) != 0
 
 
-    def get_category_index(self, key):
-        global CATEGORIES
-        index = 0
-        for cat in CATEGORIES:
-            if cat[0] == key:
-                break
+
+    def rowCount(self, parent):
+        if parent.isValid():
+            data = parent.internalPointer()
+            if data != None:
+                if data.has_key("children"):
+                    return len(data["children"])
+                else:
+                    return 0
+        return len(self.log_lines)
+
+
+    def columnCount(self, parent):
+        return LogModel.COLUMN_COUNT
+
+
+    def data(self, index, role):
+        if role == Qt.DisplayRole:
+            data = index.internalPointer()
+            if not data.has_key("parent"):
+                if index.column() == LogModel.COLUMN_NUMBER:
+                    return self.log_lines.index(data)
+                elif index.column() == LogModel.COLUMN_TIME:
+                    return data["time"]
+                elif index.column() == LogModel.COLUMN_SENDER:
+                    return data["sender"]
+                elif index.column() == LogModel.COLUMN_TYPE:
+                    return data["name"]
+                elif index.column() == LogModel.COLUMN_STATE:
+                    return data["state"]
+                elif index.column() == LogModel.COLUMN_CONTENT:
+                    if data.has_key("value"):
+                        return data["value"]
             else:
-                index += 1
-        return index
+                if index.column() == LogModel.COLUMN_STATE:
+                    return data["name"]
+                elif index.column() == LogModel.COLUMN_CONTENT:
+                    return data["value"]
+        elif role == Qt.DecorationRole:
+            data = index.internalPointer()
+            if not data.has_key("parent") and index.column() == LogModel.COLUMN_TYPE:
+                return QColor(data["color"])
+        return QVariant()
 
 
-    def filter(self, categories):
-        self.filtered_log = []
-        for logline in self.log:
-            if logline[6] in categories:
-                self.filtered_log.append(logline)
-        self.reset()
+    def add_log_line(self, log_line):
+        log = None
+        type = log_line[LogModel.LOG_LINE_TYPE]
+        if not packets.PACKETS_BY_NAME.has_key(type):
+            log = { "time"  : log_line[LogModel.LOG_LINE_TIME],
+                    "name"  : "LogText",
+                    "sender": "ARM",
+                    "color" : "#a9a9a9",
+                    "state" : self.states[-1],
+                    "value" : type }
+        else:
+            packet = packets.PACKETS_BY_NAME[type]()
+            packet.from_dict(log_line[LogModel.LOG_LINE_PACKET])
+            log = packet.to_logview_structure()
+            log["time"]   = log_line[LogModel.LOG_LINE_TIME]
+            log["sender"] = log_line[LogModel.LOG_LINE_SENDER]
+            log["state"]  = self.states[-1]
+        self.log_lines.append(log)
+
+
+
+
+class LogStdModel(QStandardItemModel):
+
+    LOG_LINE_TIME = 0
+    LOG_LINE_TYPE = 1
+    LOG_LINE_SENDER = 2
+    LOG_LINE_PACKET = 3
+
+
+    def __init__(self, parent = None):
+        QStandardItemModel.__init__(self, parent)
+        self.setHorizontalHeaderLabels(["#", "Time", "Sender", "Type", "State", "content"])
+        self.colors = {}
+        icon_size = QSize(16, 16)
+        for type, packet in packets.PACKETS_BY_TYPE.iteritems():
+            pixmap = QPixmap(icon_size)
+            pixmap.fill(QColor(packet.LOGVIEW_COLOR))
+            self.colors[type] = QIcon(pixmap)
+        pixmap = QPixmap(icon_size)
+        pixmap.fill(QColor("#a9a9a9"))
+        self.comment_color = QIcon(pixmap)
+
+
+    def add_log_line(self, log_line):
+        line = []
+        first_item = QStandardItem(log_line[LogStdModel.LOG_LINE_TIME])
+        line.append(first_item)
+        type = log_line[LogStdModel.LOG_LINE_TYPE]
+        if not packets.PACKETS_BY_NAME.has_key(type):
+            line.append(QStandardItem())
+            line.append(QStandardItem(self.comment_color, "Log Text"))
+            line.append(QStandardItem("CurrentState"))
+            line.append(QStandardItem(type))
+        else:
+            packet = packets.PACKETS_BY_NAME[type]()
+            packet.from_dict(log_line[LogStdModel.LOG_LINE_PACKET])
+            line.append(QStandardItem(log_line[LogStdModel.LOG_LINE_SENDER]))
+            line.append(QStandardItem(self.colors[packet.TYPE], type))
+            line.append(QStandardItem("CurrentState"))
+            packet_dict = packet.to_dict(True)
+            line.append(QStandardItem(str(packet_dict)))
+            self.add_content(first_item, packet_dict)
+        self.appendRow(line)
+
+
+    def add_content(self, parent_item, log, indent = ""):
+        for name, value in log.iteritems():
+            line = []
+            first_item = QStandardItem()
+            line.append(first_item)
+            line.append(QStandardItem())
+            line.append(QStandardItem())
+            line.append(QStandardItem(indent + name))
+            line.append(QStandardItem(str(value)))
+            if isinstance(value, collections.OrderedDict):
+                self.add_content(first_item, value, indent + "    ")
+            parent_item.appendRow(line)
+
 
 
 
@@ -279,42 +379,42 @@ class TrajectoryScene(QGraphicsScene):
         firstGoto = True
         startX = None
         startY = None
-        for logline in log:
-            if len(logline) != 2:
-                if logline[1] == "KeepAlive":
-                    coords = logline[3]['current_pose']
-                    x = coords[1] * 1000
-                    y = coords[0] * 1000
-                    if firstGoto:
-                        trajPath.moveTo(x, y)
-                        startX = x
-                        startY = y
-                    else:
-                        trajPath.lineTo(x, y)
-                elif logline[1] == "Goto":
-                    if logline[3]['movement'] != 'MOVEMENT_ROTATE':
-                        points = logline[3]['points']
-                        for coords in points:
-                            x = coords[1] * 1000
-                            y = coords[0] * 1000
-                            if firstGoto:
-                                firstGoto = False
-                                expectedPath.moveTo(startX, startY)
-                            expectedPath.lineTo(x, y)
-                elif logline[1] == "PieceDetected":
-                    packet = logline[3]
-                    if packet["sensor"] == "SENSOR_CENTER":
+        #for logline in log:
+            #if len(logline) != 2:
+                #if logline[1] == "KeepAlive":
+                    #coords = logline[3]['current_pose']
+                    #x = coords[1] * 1000
+                    #y = coords[0] * 1000
+                    #if firstGoto:
+                        #trajPath.moveTo(x, y)
+                        #startX = x
+                        #startY = y
+                    #else:
+                        #trajPath.lineTo(x, y)
+                #elif logline[1] == "Goto":
+                    #if logline[3]['movement'] != 'MOVEMENT_ROTATE':
+                        #points = logline[3]['points']
+                        #for coords in points:
+                            #x = coords[1] * 1000
+                            #y = coords[0] * 1000
+                            #if firstGoto:
+                                #firstGoto = False
+                                #expectedPath.moveTo(startX, startY)
+                            #expectedPath.lineTo(x, y)
+                #elif logline[1] == "PieceDetected":
+                    #packet = logline[3]
+                    #if packet["sensor"] == "SENSOR_CENTER":
                     #if packet["sensor"].endswith("BOTTOM"):
-                        start_pose = packet["start_pose"]
-                        end_pose = packet["end_pose"]
-                        x1 = start_pose[1] * 1000
-                        y1 = (start_pose[0] + ROBOT_CENTER_TO_HACKED_SENSOR_DISTANCE) * 1000
-                        x2 = end_pose[1] * 1000
-                        y2 = (end_pose[0] + ROBOT_CENTER_TO_HACKED_SENSOR_DISTANCE) * 1000
-                        print logline[0], math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
-                        line = QGraphicsLineItem(x1, y1, x2, y2)
-                        line.setPen(QPen(QColor("#00ff7f"), 20.0))
-                        self.addItem(line)
+                        #start_pose = packet["start_pose"]
+                        #end_pose = packet["end_pose"]
+                        #x1 = start_pose[1] * 1000
+                        #y1 = (start_pose[0] + ROBOT_CENTER_TO_HACKED_SENSOR_DISTANCE) * 1000
+                        #x2 = end_pose[1] * 1000
+                        #y2 = (end_pose[0] + ROBOT_CENTER_TO_HACKED_SENSOR_DISTANCE) * 1000
+                        #print logline[0], math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
+                        #line = QGraphicsLineItem(x1, y1, x2, y2)
+                        #line.setPen(QPen(QColor("#00ff7f"), 20.0))
+                        #self.addItem(line)
 
 
         self.trajItem = QGraphicsPathItem(trajPath)
@@ -380,7 +480,10 @@ class MainWindowController(QObject):
         self.ui.categories.selectionModel().selectionChanged.connect(self.updateView)
         self.ui.log_view.header().setResizeMode(QHeaderView.ResizeToContents)
         log = self.load_log(log_file)
-        self.ui.log_view.setModel(LogModel(log, filtered_cats, self))
+        log_model = LogStdModel()
+        for line in log:
+            log_model.add_log_line(line)
+        self.ui.log_view.setModel(log_model)
         trajectory_view = TrajectoryView()
         self.traj_scene = TrajectoryScene(log)
         trajectory_view.setScene(self.traj_scene)

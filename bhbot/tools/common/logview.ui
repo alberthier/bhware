@@ -21,7 +21,7 @@
        <enum>QTabWidget::Rounded</enum>
       </property>
       <property name="currentIndex">
-       <number>1</number>
+       <number>0</number>
       </property>
       <widget class="QWidget" name="log_tab">
        <attribute name="title">
@@ -59,9 +59,6 @@
            <widget class="QTreeView" name="log_view">
             <property name="editTriggers">
              <set>QAbstractItemView::NoEditTriggers</set>
-            </property>
-            <property name="rootIsDecorated">
-             <bool>false</bool>
             </property>
             <attribute name="headerStretchLastSection">
              <bool>false</bool>
