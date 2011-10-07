@@ -4,6 +4,7 @@
 import sys
 import struct
 import inspect
+import math
 from collections import OrderedDict
 
 from definitions import *
@@ -174,6 +175,48 @@ class DoubleItem(FloatItem):
 
 
 
+class FloatRadianItem(FloatItem):
+
+    def __init__(self, name, default_value, description = None):
+        FloatItem.__init__(self, name, default_value, description)
+
+
+    def to_dict_value(self, value, pretty = False):
+        if pretty:
+            return "{0:0.4f} ({1:0.4f} deg)".format(value, value / math.pi * 180.0)
+        return value
+
+
+    def from_dict_value(self, value, pretty = False):
+        if pretty:
+            return float(value[:value.find(" (")])
+        else:
+            return float(value)
+
+
+
+
+class DoubleRadianItem(DoubleItem):
+
+    def __init__(self, name, default_value, description = None):
+        DoubleItem.__init__(self, name, default_value, description)
+
+
+    def to_dict_value(self, value, pretty = False):
+        if pretty:
+            return "{0:0.4f} ({1:0.4f} deg)".format(value, value / math.pi * 180.0)
+        return value
+
+
+    def from_dict_value(self, value, pretty = False):
+        if pretty:
+            return float(value[:value.find(" (")])
+        else:
+            return float(value)
+
+
+
+
 class BoolItem(UInt8Item):
 
     DESCRIPTION = "8 bytes boolean value (unsigned char)"
@@ -273,25 +316,26 @@ class PoseWithOptionalAngleItem(PacketItem):
 
     def to_dict_value(self, value, pretty = False):
         ret = OrderedDict()
-
         if pretty:
-            ret["x"] = "{0:0.4f}".format(value.x)
-            ret["y"] = "{0:0.4f}".format(value.y)
-            ret["angle"] = "{0:0.4f}".format(value.angle)
+            ret["x"]     = "{0:0.4f}".format(value.x)
+            ret["y"]     = "{0:0.4f}".format(value.y)
+            ret["angle"] = "{0:0.4f} ({1:0.4f} deg)".format(value.angle, value.angle / math.pi * 180.0)
         else:
-            ret["x"] = value.x
-            ret["y"] = value.y
+            ret["x"]     = value.x
+            ret["y"]     = value.y
             ret["angle"] = value.angle
-
         return ret
 
 
     def from_dict_value(self, value, pretty = False):
         pose = trajectory.Pose()
-
-        pose.x = float(value["x"])
-        pose.y = float(value["y"])
-        pose.angle = float(value["angle"])
+        pose.x =     float(value["x"])
+        pose.y =     float(value["y"])
+        angle = value["angle"]
+        if pretty:
+            pose.angle = float(angle[:angle.find(" (")])
+        else:
+            pose.angle = float(angle)
 
         return pose
 
@@ -620,9 +664,9 @@ class Resettle(BasePacket):
 
     TYPE = 13
     DEFINITION = (
-        UEnum8Item('axis',     AXIS_X, 'AXIS'),
-        FloatItem ('position', 0.0,    "Robot position on the given axis"),
-        FloatItem ('angle',    0.0,    "Robot angle"),
+        UEnum8Item     ('axis',     AXIS_X, 'AXIS'),
+        FloatItem      ('position', 0.0,    "Robot position on the given axis"),
+        FloatRadianItem('angle',    0.0,    "Robot angle"),
     )
 
 
@@ -639,12 +683,12 @@ class PieceDetected(BasePacket):
 
     TYPE = 15
     DEFINITION = (
-        PoseItem  ('start_pose',                  "Detection start pose"),
-        FloatItem ('start_distance', 0.0,         "Detection start distance"),
-        PoseItem  ('end_pose',                    "Detection end pose"),
-        FloatItem ('end_distance',   0.0,         "Detection end distance"),
-        UEnum8Item('sensor',         SENSOR_NONE, 'SENSOR'),
-        FloatItem ('angle',          0.0,         "SICK detection angle"),
+        PoseItem        ('start_pose',                  "Detection start pose"),
+        FloatItem       ('start_distance', 0.0,         "Detection start distance"),
+        PoseItem        ('end_pose',                    "Detection end pose"),
+        FloatItem       ('end_distance',   0.0,         "Detection end distance"),
+        UEnum8Item      ('sensor',         SENSOR_NONE, 'SENSOR'),
+        FloatRadianItem ('angle',          0.0,         "SICK detection angle"),
     )
 
 
@@ -751,7 +795,7 @@ class TurretDetect(BasePacket):
     MAX_SIZE = 5
     TYPE = 32
     DEFINITION = (
-        FloatItem('angle', 0.0, "Opponent detection angle"),
+        FloatRadianItem('angle', 0.0, "Opponent detection angle"),
     )
 
 
