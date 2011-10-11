@@ -329,14 +329,13 @@ class PoseWithOptionalAngleItem(PacketItem):
 
     def from_dict_value(self, value, pretty = False):
         pose = trajectory.Pose()
-        pose.x =     float(value["x"])
-        pose.y =     float(value["y"])
-        angle = value["angle"]
+        pose.x = float(value["x"])
+        pose.y = float(value["y"])
+        angle  = value["angle"]
         if pretty:
             pose.angle = float(angle[:angle.find(" (")])
         else:
             pose.angle = float(angle)
-
         return pose
 
 
@@ -513,6 +512,8 @@ class BasePacket(object):
 class ControllerReady(BasePacket):
 
     TYPE = 0
+    LOGVIEW_DEFAULT_ENABLED = True
+    LOGVIEW_COLOR = "#a52a2a"
 
 
 
@@ -520,6 +521,7 @@ class ControllerReady(BasePacket):
 class DeviceBusy(BasePacket):
 
     TYPE = 1
+    LOGVIEW_COLOR = "#5f9ea0"
     DEFINITION = (
         UEnum8Item('remote_device', REMOTE_DEVICE_PIC, 'REMOTE_DEVICE'),
     )
@@ -530,6 +532,7 @@ class DeviceBusy(BasePacket):
 class DeviceReady(BasePacket):
 
     TYPE = 2
+    LOGVIEW_COLOR = "#7fff00"
     DEFINITION = (
         UEnum8Item('team',          TEAM_UNKNOWN,      'TEAM'),
         UEnum8Item('remote_device', REMOTE_DEVICE_PIC, 'REMOTE_DEVICE'),
@@ -541,6 +544,7 @@ class DeviceReady(BasePacket):
 class Start(BasePacket):
 
     TYPE = 3
+    LOGVIEW_COLOR = "#d2691e"
     DEFINITION = (
         UEnum8Item('team', TEAM_UNKNOWN, 'TEAM'),
     )
@@ -550,6 +554,7 @@ class Start(BasePacket):
 class Goto(BasePacket):
 
     TYPE = 4
+    LOGVIEW_COLOR = "#ff7f50"
     DEFINITION = (
         UEnum8Item  ('movement',   MOVEMENT_MOVE,     'MOVEMENT'),
         Enum8Item   ('direction',  DIRECTION_FORWARD, 'DIRECTION'),
@@ -562,6 +567,7 @@ class Goto(BasePacket):
 class GotoStarted(BasePacket):
 
     TYPE = 5
+    LOGVIEW_COLOR = "#ff7f50"
 
 
 
@@ -569,6 +575,7 @@ class GotoStarted(BasePacket):
 class GotoFinished(BasePacket):
 
     TYPE = 6
+    LOGVIEW_COLOR = "#daa520"
     DEFINITION = (
         UEnum8Item('reason',              REASON_DESTINATION_REACHED, 'REASON'),
         PoseItem  ('current_pose'),
@@ -581,6 +588,7 @@ class GotoFinished(BasePacket):
 class Blocked(BasePacket):
 
     TYPE = 7
+    LOGVIEW_COLOR = "#dc143c"
     DEFINITION = (
         Enum8Item('side', BLOCKED_FRONT, 'BLOCKING'),
     )
@@ -592,6 +600,7 @@ class Blocked(BasePacket):
 class EnableAntiBlocking(BasePacket):
 
     TYPE = 8
+    LOGVIEW_COLOR = "#00ffff"
 
 
 
@@ -599,6 +608,7 @@ class EnableAntiBlocking(BasePacket):
 class DisableAntiBlocking(BasePacket):
 
     TYPE = 9
+    LOGVIEW_COLOR = "#00008b"
 
 
 
@@ -606,6 +616,8 @@ class DisableAntiBlocking(BasePacket):
 class KeepAlive(BasePacket):
 
     TYPE = 10
+    LOGVIEW_COLOR = "#8a2be2"
+    LOGVIEW_DEFAULT_ENABLED = False
     DEFINITION = (
         PoseItem  ('current_pose',         "Current robot pose"),
         BoolItem  ('match_started', False, "Flag defining if the match has already started"),
@@ -618,6 +630,7 @@ class KeepAlive(BasePacket):
 class PositionControlConfig(BasePacket):
 
     TYPE = 11
+    LOGVIEW_COLOR = "#008b8b"
     DEFINITION = (
         FloatItem ('t_acc',                             0.0),
         FloatItem ('f_va_max',                          0.0),
@@ -656,6 +669,7 @@ class PositionControlConfig(BasePacket):
 class Stop(BasePacket):
 
     TYPE = 12
+    LOGVIEW_COLOR = "#b8860b"
 
 
 
@@ -663,6 +677,7 @@ class Stop(BasePacket):
 class Resettle(BasePacket):
 
     TYPE = 13
+    LOGVIEW_COLOR = "#ff1493"
     DEFINITION = (
         UEnum8Item     ('axis',     AXIS_X, 'AXIS'),
         FloatItem      ('position', 0.0,    "Robot position on the given axis"),
@@ -675,6 +690,7 @@ class Resettle(BasePacket):
 class Deployment(BasePacket):
 
     TYPE = 14
+    LOGVIEW_COLOR = "#006400"
 
 
 
@@ -682,6 +698,7 @@ class Deployment(BasePacket):
 class PieceDetected(BasePacket):
 
     TYPE = 15
+    LOGVIEW_COLOR = "#ffd700"
     DEFINITION = (
         PoseItem        ('start_pose',                  "Detection start pose"),
         FloatItem       ('start_distance', 0.0,         "Detection start distance"),
@@ -697,6 +714,7 @@ class PieceDetected(BasePacket):
 class StorePiece1(BasePacket):
 
     TYPE = 16
+    LOGVIEW_COLOR = "#bdb76b"
     DEFINITION = (
         UInt8Item('piece_count', 0, "Stored piece count"),
     )
@@ -707,6 +725,7 @@ class StorePiece1(BasePacket):
 class StorePiece2(BasePacket):
 
     TYPE = 17
+    LOGVIEW_COLOR = "#8b008b"
     DEFINITION = (
         UInt8Item('piece_count', 0, "Stored piece count"),
     )
@@ -717,6 +736,7 @@ class StorePiece2(BasePacket):
 class StorePiece3(BasePacket):
 
     TYPE = 18
+    LOGVIEW_COLOR = "#556b2f"
     DEFINITION = (
         UInt8Item('piece_count', 0, "Stored piece count"),
     )
@@ -727,6 +747,7 @@ class StorePiece3(BasePacket):
 class ReleasePiece(BasePacket):
 
     TYPE = 19
+    LOGVIEW_COLOR = "#ff8c00"
 
 
 
@@ -734,6 +755,7 @@ class ReleasePiece(BasePacket):
 class OpenNippers(BasePacket):
 
     TYPE = 20
+    LOGVIEW_COLOR = "#9932cc"
 
 
 
@@ -741,6 +763,7 @@ class OpenNippers(BasePacket):
 class CloseNippers(BasePacket):
 
     TYPE = 21
+    LOGVIEW_COLOR = "#8b0000"
 
 
 
@@ -748,6 +771,7 @@ class CloseNippers(BasePacket):
 class EnableLateralSensors(BasePacket):
 
     TYPE = 22
+    LOGVIEW_COLOR = "#e9967a"
 
 
 
@@ -755,6 +779,7 @@ class EnableLateralSensors(BasePacket):
 class DisableLateralSensors(BasePacket):
 
     TYPE = 23
+    LOGVIEW_COLOR = "#8fbc8f"
 
 
 
@@ -762,6 +787,7 @@ class DisableLateralSensors(BasePacket):
 class CloseMandibles(BasePacket):
 
     TYPE = 24
+    LOGVIEW_COLOR = "#4682b4"
 
 
 
@@ -769,6 +795,7 @@ class CloseMandibles(BasePacket):
 class OpenMandibles(BasePacket):
 
     TYPE = 25
+    LOGVIEW_COLOR = "#2e8b57"
 
 
 
@@ -776,6 +803,7 @@ class OpenMandibles(BasePacket):
 class Reinitialize(BasePacket):
 
     TYPE = 102
+    LOGVIEW_COLOR = "#483d8b"
 
 
 
@@ -783,6 +811,8 @@ class Reinitialize(BasePacket):
 class SimulatorData(BasePacket):
 
     TYPE = 103
+    LOGVIEW_DEFAULT_ENABLED = False
+    LOGVIEW_COLOR = "#a52a2a"
     DEFINITION = (
         UInt8Item('leds', 0, "Dockstar leds status"),
     )
@@ -794,6 +824,7 @@ class TurretDetect(BasePacket):
 
     MAX_SIZE = 5
     TYPE = 32
+    LOGVIEW_COLOR = "#2f4f4f"
     DEFINITION = (
         FloatRadianItem('angle', 0.0, "Opponent detection angle"),
     )
@@ -807,12 +838,14 @@ class TurretDetect(BasePacket):
 
 PACKETS_BY_NAME = {}
 PACKETS_BY_TYPE = {}
+PACKETS_LIST = []
 
 
 for (item_name, item_type) in inspect.getmembers(sys.modules[__name__]):
     if inspect.isclass(item_type) and issubclass(item_type, BasePacket) and item_type != BasePacket:
         PACKETS_BY_NAME[item_name] = item_type
         PACKETS_BY_TYPE[item_type.TYPE] = item_type
+        PACKETS_LIST.append(item_type)
 
 
 def create_packet(buffer):

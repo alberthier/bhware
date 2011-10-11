@@ -91,217 +91,45 @@ from definitions import *
 #      #d3d3d3 lightgrey                         #9acd32 yellowgreen
 #      #ffb6c1 lightpink
 
-#               Type                      Displayed name             Color     Displayed by default
-CATEGORIES = [["KeepAlive"             , "Keep Alive"              , "#8a2be2", False],
-              ["SimulatorData"         , "Simulator Data"          , "#a52a2a", False],
-              ["ControllerReady"       , "Controller Ready"        , "#deb887", True],
-              ["DeviceBusy"            , "Device Busy"             , "#5f9ea0", True],
-              ["DeviceReady"           , "Device Ready"            , "#7fff00", True],
-              ["Start"                 , "Start"                   , "#d2691e", True],
-              ["Goto"                  , "Goto"                    , "#ff7f50", True],
-              ["GotoStarted"           , "Goto Started"            , "#6495ed", True],
-              ["GotoFinished"          , "Goto Finished"           , "#daa520", True],
-              ["Blocked"               , "Blocked"                 , "#dc143c", True],
-              ["EnableAntiBlocking"    , "Enable Anti-Blocking"    , "#00ffff", True],
-              ["DisableAntiBlocking"   , "Disable Anti-Blocking"   , "#00008b", True],
-              ["PositionControlConfig" , "Position Control Config" , "#008b8b", True],
-              ["Stop"                  , "Stop"                    , "#b8860b", True],
-              ["Resettle"              , "Resettle"                , "#ff1493", True],
-              ["Deployment"            , "Deployment"              , "#006400", True],
-              ["PieceDetected"         , "Piece Detected"          , "#ffd700", True],
-              ["StorePiece1"           , "Store Piece 1"           , "#bdb76b", True],
-              ["StorePiece2"           , "Store Piece 2"           , "#8b008b", True],
-              ["StorePiece3"           , "Store Piece 3"           , "#556b2f", True],
-              ["ReleasePiece"          , "Release Piece"           , "#ff8c00", True],
-              ["OpenNippers"           , "Open Nippers"            , "#9932cc", True],
-              ["CloseNippers"          , "Close Nippers"           , "#8b0000", True],
-              ["EnableLateralSensors"  , "Enable Lateral Sensors"  , "#e9967a", True],
-              ["DisableLateralSensors" , "Disable Lateral Sensors" , "#8fbc8f", True],
-              ["OpenMandibles"         , "Open Mandibles"          , "#2e8b57", True],
-              ["CloseMandibles"        , "Close Mandibles"         , "#4682b4", True],
-              ["Reinitialize"          , "Reinitialize"            , "#483d8b", True],
-              ["TurretDetect"          , "Turret Detect"           , "#2f4f4f", True],
-              ["str"                   , "Log Text"                , "#a9a9a9", True]]
 
 
-class CategoriesModel(QAbstractListModel):
+
+class CategoriesModel(QStandardItemModel):
+
+    PACKET_TYPE_ROLE = Qt.UserRole + 1
 
     def __init__(self, parent = None):
-        QAbstractListModel.__init__(self, parent)
-
-
-    def rowCount(self, parent):
-        global CATEGORIES
-        return len(CATEGORIES)
-
-
-    def data(self, index, role):
-        global CATEGORIES
-
-        if role == Qt.DisplayRole:
-            return CATEGORIES[index.row()][1]
-        elif role == Qt.DecorationRole:
-            return QColor(CATEGORIES[index.row()][2])
-        else:
-            return QVariant()
-
-
-    def headerData(self, section, orientation, role):
-        if role == Qt.DisplayRole:
-            return "Categories"
-        else:
-            return QVariant()
+        QStandardItemModel.__init__(self, parent)
+        self.setHorizontalHeaderLabels(["Categories"])
+        icon_size = QSize(16, 16)
+        row = 0
+        for packet in packets.PACKETS_LIST:
+            pixmap = QPixmap(icon_size)
+            pixmap.fill(QColor(packet.LOGVIEW_COLOR))
+            item = QStandardItem(QIcon(pixmap), packet.__name__)
+            item.setData(QVariant(packet.TYPE), CategoriesModel.PACKET_TYPE_ROLE)
+            self.appendRow([item])
+            idx = self.index(row, 0)
+            row += 1
 
 
 
 
-class LogModel(QAbstractItemModel):
-
-    COLUMN_NUMBER  = 0
-    COLUMN_TIME    = 1
-    COLUMN_SENDER  = 2
-    COLUMN_TYPE    = 3
-    COLUMN_STATE   = 4
-    COLUMN_CONTENT = 5
-    COLUMN_COUNT   = 6
+class LogModel(QStandardItemModel):
 
     LOG_LINE_TIME   = 0
     LOG_LINE_TYPE   = 1
     LOG_LINE_SENDER = 2
     LOG_LINE_PACKET = 3
 
+    LOG_MODEL_COLUMN_NUMBER  = 0
+    LOG_MODEL_COLUMN_TIME    = 1
+    LOG_MODEL_COLUMN_SENDER  = 2
+    LOG_MODEL_COLUMN_TYPE    = 3
+    LOG_MODEL_COLUMN_STATE   = 4
+    LOG_MODEL_COLUMN_CONTENT = 5
 
-    def __init__(self, parent = None):
-        QAbstractItemModel.__init__(self, parent)
-        self.log_lines = []
-        self.states = ["Main"]
-
-
-    def headerData(self, section, orientation, role):
-        if role == Qt.DisplayRole:
-            if section == LogModel.COLUMN_NUMBER:
-                return "#"
-            elif section == LogModel.COLUMN_TIME:
-                return "Time"
-            elif section == LogModel.COLUMN_SENDER:
-                return "Sender"
-            elif section == LogModel.COLUMN_TYPE:
-                return "Type"
-            elif section == LogModel.COLUMN_STATE:
-                return "State"
-            elif section == LogModel.COLUMN_CONTENT:
-                return "Content"
-        else:
-            return QVariant()
-
-
-    def index(self, row, column, parent):
-        if parent.isValid():
-            data = parent.internalPointer()
-            if data != None:
-                return self.createIndex(row, column, data["children"][row])
-
-        return self.createIndex(row, column, self.log_lines[row])
-
-
-    def parent(self, index):
-        data = index.internalPointer()
-        if data != None and data.has_key("parent"):
-            parent = data["parent"]
-            if parent.has_key("parent"):
-                grandParent = parent["parent"]
-                row = grandParent["children"].index(parent)
-                return self.createIndex(row, 0, grandParent)
-            else:
-                row = self.log_lines.index(parent)
-                return self.createIndex(row, 0, None)
-        else:
-            return QModelIndex()
-
-
-    def hasChildren(self, parent):
-        if parent.isValid():
-            data = parent.internalPointer()
-            if data != None:
-                return data.has_key("children")
-
-        return len(self.log_lines) != 0
-
-
-
-    def rowCount(self, parent):
-        if parent.isValid():
-            data = parent.internalPointer()
-            if data != None:
-                if data.has_key("children"):
-                    return len(data["children"])
-                else:
-                    return 0
-        return len(self.log_lines)
-
-
-    def columnCount(self, parent):
-        return LogModel.COLUMN_COUNT
-
-
-    def data(self, index, role):
-        if role == Qt.DisplayRole:
-            data = index.internalPointer()
-            if not data.has_key("parent"):
-                if index.column() == LogModel.COLUMN_NUMBER:
-                    return self.log_lines.index(data)
-                elif index.column() == LogModel.COLUMN_TIME:
-                    return data["time"]
-                elif index.column() == LogModel.COLUMN_SENDER:
-                    return data["sender"]
-                elif index.column() == LogModel.COLUMN_TYPE:
-                    return data["name"]
-                elif index.column() == LogModel.COLUMN_STATE:
-                    return data["state"]
-                elif index.column() == LogModel.COLUMN_CONTENT:
-                    if data.has_key("value"):
-                        return data["value"]
-            else:
-                if index.column() == LogModel.COLUMN_STATE:
-                    return data["name"]
-                elif index.column() == LogModel.COLUMN_CONTENT:
-                    return data["value"]
-        elif role == Qt.DecorationRole:
-            data = index.internalPointer()
-            if not data.has_key("parent") and index.column() == LogModel.COLUMN_TYPE:
-                return QColor(data["color"])
-        return QVariant()
-
-
-    def add_log_line(self, log_line):
-        log = None
-        type = log_line[LogModel.LOG_LINE_TYPE]
-        if not packets.PACKETS_BY_NAME.has_key(type):
-            log = { "time"  : log_line[LogModel.LOG_LINE_TIME],
-                    "name"  : "LogText",
-                    "sender": "ARM",
-                    "color" : "#a9a9a9",
-                    "state" : self.states[-1],
-                    "value" : type }
-        else:
-            packet = packets.PACKETS_BY_NAME[type]()
-            packet.from_dict(log_line[LogModel.LOG_LINE_PACKET])
-            log = packet.to_logview_structure()
-            log["time"]   = log_line[LogModel.LOG_LINE_TIME]
-            log["sender"] = log_line[LogModel.LOG_LINE_SENDER]
-            log["state"]  = self.states[-1]
-        self.log_lines.append(log)
-
-
-
-
-class LogStdModel(QStandardItemModel):
-
-    LOG_LINE_TIME = 0
-    LOG_LINE_TYPE = 1
-    LOG_LINE_SENDER = 2
-    LOG_LINE_PACKET = 3
-
+    LOG_MODEL_PACKET_TYPE_ROLE = Qt.UserRole + 1
 
     def __init__(self, parent = None):
         QStandardItemModel.__init__(self, parent)
@@ -317,21 +145,31 @@ class LogStdModel(QStandardItemModel):
         self.comment_color = QIcon(pixmap)
 
 
+    def load_log(self, log):
+        for line in log:
+            self.add_log_line(line)
+
+
     def add_log_line(self, log_line):
         line = []
-        first_item = QStandardItem(log_line[LogStdModel.LOG_LINE_TIME])
+        first_item = QStandardItem(0)
         line.append(first_item)
-        type = log_line[LogStdModel.LOG_LINE_TYPE]
-        if not packets.PACKETS_BY_NAME.has_key(type):
+        line.append(QStandardItem(log_line[LogModel.LOG_LINE_TIME]))
+        packet_type = log_line[LogModel.LOG_LINE_TYPE]
+        if not packets.PACKETS_BY_NAME.has_key(packet_type):
             line.append(QStandardItem())
-            line.append(QStandardItem(self.comment_color, "Log Text"))
+            typeItem = QStandardItem(self.comment_color, "Log Text")
+            typeItem.setData(QVariant(-1), LogModel.LOG_MODEL_PACKET_TYPE_ROLE)
+            line.append(typeItem)
             line.append(QStandardItem("CurrentState"))
-            line.append(QStandardItem(type))
+            line.append(QStandardItem(packet_type))
         else:
-            packet = packets.PACKETS_BY_NAME[type]()
-            packet.from_dict(log_line[LogStdModel.LOG_LINE_PACKET])
-            line.append(QStandardItem(log_line[LogStdModel.LOG_LINE_SENDER]))
-            line.append(QStandardItem(self.colors[packet.TYPE], type))
+            packet = packets.PACKETS_BY_NAME[packet_type]()
+            packet.from_dict(log_line[LogModel.LOG_LINE_PACKET])
+            line.append(QStandardItem(log_line[LogModel.LOG_LINE_SENDER]))
+            typeItem = QStandardItem(self.colors[packet.TYPE], packet_type)
+            typeItem.setData(QVariant(packet.TYPE), LogModel.LOG_MODEL_PACKET_TYPE_ROLE)
+            line.append(typeItem)
             line.append(QStandardItem("CurrentState"))
             packet_dict = packet.to_dict(True)
             line.append(QStandardItem(str(packet_dict)))
@@ -346,12 +184,32 @@ class LogStdModel(QStandardItemModel):
             line.append(first_item)
             line.append(QStandardItem())
             line.append(QStandardItem())
+            line.append(QStandardItem())
             line.append(QStandardItem(indent + name))
             line.append(QStandardItem(str(value)))
             if isinstance(value, collections.OrderedDict):
                 self.add_content(first_item, value, indent + "    ")
             parent_item.appendRow(line)
 
+
+
+
+class LogFilterProxyModel(QSortFilterProxyModel):
+
+    def __init__(self, parent = None):
+        QSortFilterProxyModel.__init__(self, parent)
+        self.displayed_items = []
+
+
+    def filterAcceptsRow(self, sourceRow, sourceParent):
+        r = sourceRow
+        p = sourceParent
+        while p.isValid():
+            r = p.row()
+            p = p.parent()
+        index = self.sourceModel().index(r, LogModel.LOG_MODEL_COLUMN_TYPE)
+        t = index.data(LogModel.LOG_MODEL_PACKET_TYPE_ROLE).toInt()[0]
+        return t in self.displayed_items
 
 
 
@@ -464,26 +322,19 @@ class MainWindowController(QObject):
         self.ui = uic.loadUi(os.path.splitext(__file__)[0] + ".ui")
         self.ui.setWindowIcon(QIcon.fromTheme("text-x-generic"))
         self.ui.show()
-        model = CategoriesModel(self)
-        self.ui.categories.setModel(model)
-        selection = QItemSelection()
-        cat_index = 0
-        filtered_cats = []
-        for cat in CATEGORIES:
-            if cat[3]:
-                idx = model.index(cat_index, 0)
-                selection.select(idx, idx)
-                filtered_cats.append(cat_index)
-            cat_index += 1
 
-        self.ui.categories.selectionModel().select(selection, QItemSelectionModel.Select)
-        self.ui.categories.selectionModel().selectionChanged.connect(self.updateView)
+        self.ui.categories.setModel(CategoriesModel(self))
+
         self.ui.log_view.header().setResizeMode(QHeaderView.ResizeToContents)
         log = self.load_log(log_file)
-        log_model = LogStdModel()
-        for line in log:
-            log_model.add_log_line(line)
-        self.ui.log_view.setModel(log_model)
+        log_model = LogModel()
+        log_model.load_log(log)
+        filter_model = LogFilterProxyModel()
+        filter_model.setSourceModel(log_model)
+        self.ui.log_view.setModel(filter_model)
+        self.ui.log_view.doubleClicked.connect(self.packet_double_clicked)
+        self.setup_selection()
+
         trajectory_view = TrajectoryView()
         self.traj_scene = TrajectoryScene(log)
         trajectory_view.setScene(self.traj_scene)
@@ -499,6 +350,21 @@ class MainWindowController(QObject):
         self.traj_scene.trajItem.setVisible(self.ui.real_checkbox.isChecked())
 
 
+    def setup_selection(self):
+        selection = QItemSelection()
+        model = self.ui.categories.model()
+        row = 0
+        for packet in packets.PACKETS_LIST:
+            if packet.LOGVIEW_DEFAULT_ENABLED:
+                idx = model.index(row, 0)
+                selection.select(idx, idx)
+            row += 1
+        selection_model = self.ui.categories.selectionModel()
+        selection_model.select(selection, QItemSelectionModel.Select)
+        selection_model.selectionChanged.connect(self.update_view)
+        self.update_view(None, None)
+
+
     def expected_changed(self, state):
         self.traj_scene.expectedItem.setVisible(self.ui.expected_checkbox.isChecked())
 
@@ -512,9 +378,24 @@ class MainWindowController(QObject):
         return logcontent.log
 
 
-
-    def updateView(self, selected, deselected):
-        cats = []
+    def update_view(self, selected, deselected):
+        packet_types = []
         for index in self.ui.categories.selectionModel().selection().indexes():
-            cats.append(index.row())
-        self.ui.log_view.model().filter(cats)
+            packet_types.append(index.data(CategoriesModel.PACKET_TYPE_ROLE))
+        filter_model = self.ui.log_view.model()
+        filter_model.displayed_items = packet_types
+        filter_model.invalidateFilter()
+
+
+    def packet_double_clicked(self, index):
+        index = index.model().index(index.row(), 0)
+        if not index.parent().isValid():
+            expand = not self.ui.log_view.isExpanded(index)
+            self.expand_packet(index, expand)
+
+
+    def expand_packet(self, index, expand):
+        self.ui.log_view.setExpanded(index, expand)
+        for row in xrange(self.ui.log_view.model().rowCount(index)):
+            child_index = index.child(row, 0)
+            self.expand_packet(child_index, expand)
