@@ -13,6 +13,12 @@ import config
 from definitions import *
 
 
+LOG_DATA_TIME   = 0
+LOG_DATA_TYPE   = 1
+LOG_DATA_SENDER = 2
+LOG_DATA_PACKET = 3
+LOG_DATA_COUNT  = 4
+
 filepath = None
 log_file = None
 start_time = None

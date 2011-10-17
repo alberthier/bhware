@@ -14,6 +14,84 @@ import trajectory
 
 
 
+# Mozilla Colors (http://colors.bravo9.com/mozilla/)
+# Used  Color   Name                        Used  Color   Name
+#      #f0f8ff aliceblue                         #ffa07a lightsalmon
+#      #faebd7 antiquewhite                      #20b2aa lightseagreen
+#      #00ffff aqua                              #87cefa lightskyblue
+#      #7fffd4 aquamarine                        #778899 lightslategray
+#      #f0ffff azure                             #778899 lightslategrey
+#      #f5f5dc beige                             #ffffe0 lightyellow
+#      #ffe4c4 bisque                            #00ff00 lime
+#      #000000 black                             #32cd32 limegreen
+#      #0000ff blue                              #faf0e6 linen
+#   X  #8a2be2 blueviolet                        #ff00ff magenta
+#   X  #a52a2a brown                             #800000 maroon
+#   X  #deb887 burlywood                         #66cdaa mediumaquamarine
+#   X  #5f9ea0 cadetblue                         #0000cd mediumblue
+#   X  #7fff00 chartreuse                        #ba55d3 mediumorchid
+#   X  #d2691e chocolate                         #9370db mediumpurple
+#   X  #ff7f50 coral                             #3cb371 mediumseagreen
+#   X  #6495ed cornflowerblue                    #7b68ee mediumslateblue
+#      #fff8dc cornsilk                          #00fa9a mediumspringgreen
+#   X  #dc143c crimson                           #48d1cc mediumturquoise
+#   X  #00ffff cyan                              #c71585 mediumvioletred
+#   X  #00008b darkblue                          #191970 midnightblue
+#   X  #008b8b darkcyan                          #f5fffa mintcream
+#   X  #b8860b darkgoldenrod                     #ffe4e1 mistyrose
+#   X  #a9a9a9 darkgray                          #ffe4b5 moccasin
+#   X  #006400 darkgreen                         #ffdead navajowhite
+#   X  #a9a9a9 darkgrey                          #000080 navy
+#   X  #bdb76b darkkhaki                         #fdf5e6 oldlace
+#   X  #8b008b darkmagenta                       #808000 olive
+#   X  #556b2f darkolivegreen                    #6b8e23 olivedrab
+#   X  #ff8c00 darkorange                        #ffa500 orange
+#   X  #9932cc darkorchid                        #ff4500 orangered
+#   X  #8b0000 darkred                           #da70d6 orchid
+#   X  #e9967a darksalmon                        #eee8aa palegoldenrod
+#   X  #8fbc8f darkseagreen                      #98fb98 palegreen
+#   X  #483d8b darkslateblue                     #afeeee paleturquoise
+#   X  #2f4f4f darkslategray                     #db7093 palevioletred
+#   X  #2f4f4f darkslategrey                     #ffefd5 papayawhip
+#      #9400d3 darkviolet                        #ffdab9 peachpuff
+#   X  #ff1493 deeppink                          #cd853f peru
+#      #00bfff deepskyblue                       #ffc0cb pink
+#      #696969 dimgray                           #dda0dd plum
+#      #696969 dimgrey                           #b0e0e6 powderblue
+#      #1e90ff dodgerblue                        #800080 purple
+#      #b22222 firebrick                         #ff0000 red
+#      #fffaf0 floralwhite                       #bc8f8f rosybrown
+#      #228b22 forestgreen                       #4169e1 royalblue
+#      #ff00ff fuchsia                           #8b4513 saddlebrown
+#      #dcdcdc gainsboro                         #fa8072 salmon
+#      #f8f8ff ghostwhite                        #f4a460 sandybrown
+#   X  #ffd700 gold                           X  #2e8b57 seagreen
+#   X  #daa520 goldenrod                         #fff5ee seashell
+#      #808080 gray                              #a0522d sienna
+#      #008000 green                             #c0c0c0 silver
+#      #adff2f greenyellow                       #87ceeb skyblue
+#      #808080 grey                              #6a5acd slateblue
+#      #f0fff0 honeydew                          #708090 slategray
+#      #ff69b4 hotpink                           #708090 slategrey
+#      #cd5c5c indianred                         #fffafa snow
+#      #4b0082 indigo                         X  #00ff7f springgreen
+#      #fffff0 ivory                          X  #4682b4 steelblue
+#      #f0e68c khaki                             #d2b48c tan
+#      #e6e6fa lavender                          #008080 teal
+#      #fff0f5 lavenderblush                     #d8bfd8 thistle
+#      #7cfc00 lawngreen                         #ff6347 tomato
+#      #fffacd lemonchiffon                      #40e0d0 turquoise
+#      #add8e6 lightblue                         #ee82ee violet
+#      #f08080 lightcoral                        #f5deb3 wheat
+#      #e0ffff lightcyan                         #ffffff white
+#      #fafad2 lightgoldenrodyellow              #f5f5f5 whitesmoke
+#      #90ee90 lightgreen                        #ffff00 yellow
+#      #d3d3d3 lightgrey                         #9acd32 yellowgreen
+#      #ffb6c1 lightpink
+
+
+
+
 ################################################################################
 # Packet item types
 
@@ -319,7 +397,10 @@ class PoseWithOptionalAngleItem(PacketItem):
         if pretty:
             ret["x"]     = "{0:0.4f}".format(value.x)
             ret["y"]     = "{0:0.4f}".format(value.y)
-            ret["angle"] = "{0:0.4f} ({1:0.4f} deg)".format(value.angle, value.angle / math.pi * 180.0)
+            if value.angle != None:
+                ret["angle"] = "{0:0.4f} ({1:0.4f} deg)".format(value.angle, value.angle / math.pi * 180.0)
+            else:
+                ret["angle"] = "None"
         else:
             ret["x"]     = value.x
             ret["y"]     = value.y
@@ -332,10 +413,13 @@ class PoseWithOptionalAngleItem(PacketItem):
         pose.x = float(value["x"])
         pose.y = float(value["y"])
         angle  = value["angle"]
-        if pretty:
-            pose.angle = float(angle[:angle.find(" (")])
+        if angle != None:
+            if pretty:
+                pose.angle = float(angle[:angle.find(" (")])
+            else:
+                pose.angle = float(angle)
         else:
-            pose.angle = float(angle)
+            pose.angle = None
         return pose
 
 

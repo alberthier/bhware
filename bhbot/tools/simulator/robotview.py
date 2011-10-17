@@ -42,9 +42,10 @@ class RobotView(QWidget, RobotView_Ui):
     def add_log(self, text):
         if text.startswith("["):
             # this line is a packet
-            data = eval(text)
-            data[2] = helpers.translate_packet_data(data[0], data[2])
-            self.log_view.append(str(data))
+            #data = eval(text)
+            #data[2] = helpers.translate_packet_data(data[0], data[2])
+            #self.log_view.append(str(data))
+            self.log_view.append(text)
         else:
             self.log_view.append('<font color="{0}">{1}</font>'.format(self.color, text))
 
