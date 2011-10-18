@@ -42,34 +42,3 @@ def get_last_logfile():
                 index -= 1
                 return os.path.join(log_dir, "brewerylog_{0:=#04}.py".format(index))
     return None
-
-
-
-
-def translate_packet_data(packet_type, packet_data):
-
-    return packet_data
-
-    if packet_type == 'DeviceReady' or packet_type == 'DeviceBusy':
-        packet_data['remote_device'] = lookup_defs('REMOTE_DEVICE', packet_data['remote_device'])
-
-    if packet_type == 'DeviceReady' or packet_type == 'Start':
-        packet_data['team'] = lookup_defs('TEAM', packet_data['team'])
-
-    elif packet_type == 'Goto':
-        packet_data['movement'] = lookup_defs('MOVEMENT', packet_data['movement'])
-        packet_data['direction'] = lookup_defs('DIRECTION', packet_data['direction'])
-
-    elif packet_type == 'GotoFinished':
-        packet_data['reason'] = lookup_defs('REASON', packet_data['reason'])
-
-    elif packet_type == 'Blocked':
-        packet_data['side'] = lookup_defs('BLOCKING', packet_data['side'])
-
-    elif packet_type == 'Resettle':
-        packet_data['axis'] = lookup_defs('AXIS', packet_data['axis'])
-
-    elif packet_type == 'PieceDetected':
-        packet_data['sensor'] = lookup_defs('SENSOR', packet_data['sensor'])
-
-    return packet_data
