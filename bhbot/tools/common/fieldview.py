@@ -15,9 +15,11 @@ class FieldScene(QGraphicsScene):
     def __init__(self, parent = None):
         QGraphicsScene.__init__(self, parent)
         self.setBackgroundBrush(QBrush(QColor("#82a2cf")))
-        self.field = QGraphicsSvgItem(os.path.join(os.path.dirname(os.path.dirname(__file__)), "simulator", "field.svg"))
-        self.addItem(self.field)
-        self.field.setPos(-102.0, -102.0)
+        self.root = QGraphicsItemGroup()
+        self.addItem(self.root)
+        field = QGraphicsSvgItem(os.path.join(os.path.dirname(os.path.dirname(__file__)), "simulator", "field.svg"))
+        self.root.addToGroup(field)
+        field.setPos(-102.0, -102.0)
 
         pen = QPen(QColor("#2e3436"), 10)
         font = QFont()
@@ -32,7 +34,7 @@ class FieldScene(QGraphicsScene):
 
     def add_layer(self, layer):
         self.layers.append(layer)
-        layer.setParentItem(self.field)
+        layer.setParentItem(self.root)
 
 
 
