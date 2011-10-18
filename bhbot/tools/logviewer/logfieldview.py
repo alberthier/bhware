@@ -32,7 +32,6 @@ class ExpectedTrajectoryLayer(fieldview.Layer):
                     self.path.moveTo(pose.y * 1000.0, pose.x * 1000.0)
                 else:
                     self.path.lineTo(pose.y * 1000.0, pose.x * 1000.0)
-                    print pose.x, pose.y
             elif isinstance(packet, packets.Goto) and packet.movement != MOVEMENT_ROTATE:
                 self.has_first_goto = True
 
