@@ -6,69 +6,65 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1196</width>
-    <height>684</height>
+    <width>1062</width>
+    <height>704</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>BH Log Viewer</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <layout class="QGridLayout" name="gridLayout">
-    <item row="0" column="0">
+   <layout class="QHBoxLayout" name="horizontalLayout_3">
+    <item>
      <widget class="QTabWidget" name="tabWidget">
       <property name="tabShape">
        <enum>QTabWidget::Rounded</enum>
       </property>
       <property name="currentIndex">
-       <number>0</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="log_tab">
        <attribute name="title">
         <string>Log</string>
        </attribute>
-       <layout class="QGridLayout" name="gridLayout_2">
+       <layout class="QHBoxLayout" name="log_tab_layout">
         <property name="margin">
          <number>0</number>
         </property>
-        <item row="0" column="0">
-         <layout class="QHBoxLayout" name="horizontalLayout">
-          <item>
-           <widget class="QTreeView" name="categories">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Fixed" vsizetype="Expanding">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="editTriggers">
-             <set>QAbstractItemView::NoEditTriggers</set>
-            </property>
-            <property name="selectionMode">
-             <enum>QAbstractItemView::ExtendedSelection</enum>
-            </property>
-            <property name="selectionBehavior">
-             <enum>QAbstractItemView::SelectRows</enum>
-            </property>
-            <property name="rootIsDecorated">
-             <bool>false</bool>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QTreeView" name="log_view">
-            <property name="editTriggers">
-             <set>QAbstractItemView::NoEditTriggers</set>
-            </property>
-            <property name="expandsOnDoubleClick">
-             <bool>false</bool>
-            </property>
-            <attribute name="headerStretchLastSection">
-             <bool>false</bool>
-            </attribute>
-           </widget>
-          </item>
-         </layout>
+        <item>
+         <widget class="QTreeView" name="log_view">
+          <property name="editTriggers">
+           <set>QAbstractItemView::NoEditTriggers</set>
+          </property>
+          <property name="expandsOnDoubleClick">
+           <bool>false</bool>
+          </property>
+          <attribute name="headerStretchLastSection">
+           <bool>false</bool>
+          </attribute>
+         </widget>
+        </item>
+        <item>
+         <widget class="QTreeView" name="categories">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Fixed" vsizetype="Expanding">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="editTriggers">
+           <set>QAbstractItemView::NoEditTriggers</set>
+          </property>
+          <property name="selectionMode">
+           <enum>QAbstractItemView::ExtendedSelection</enum>
+          </property>
+          <property name="selectionBehavior">
+           <enum>QAbstractItemView::SelectRows</enum>
+          </property>
+          <property name="rootIsDecorated">
+           <bool>false</bool>
+          </property>
+         </widget>
         </item>
        </layout>
       </widget>
@@ -76,13 +72,32 @@
        <attribute name="title">
         <string>Trajectory</string>
        </attribute>
-       <layout class="QHBoxLayout" name="horizontalLayout_2">
-        <property name="spacing">
-         <number>0</number>
-        </property>
+       <layout class="QHBoxLayout" name="field_tab_layout">
         <property name="margin">
          <number>0</number>
         </property>
+        <item>
+         <widget class="QWidget" name="field_view_container" native="true"/>
+        </item>
+        <item>
+         <widget class="QListView" name="layers_view">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Fixed" vsizetype="Expanding">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="editTriggers">
+           <set>QAbstractItemView::NoEditTriggers</set>
+          </property>
+          <property name="selectionMode">
+           <enum>QAbstractItemView::ExtendedSelection</enum>
+          </property>
+          <property name="selectionBehavior">
+           <enum>QAbstractItemView::SelectRows</enum>
+          </property>
+         </widget>
+        </item>
        </layout>
       </widget>
      </widget>

@@ -19,6 +19,7 @@ class ExpectedTrajectoryLayer(fieldview.Layer):
     def __init__(self, parent = None):
         fieldview.Layer.__init__(self, parent)
         self.name = "Expected trajectory"
+        self.color = "#73d216"
         self.has_first_goto = False
         self.path = QPainterPath()
 
@@ -37,7 +38,7 @@ class ExpectedTrajectoryLayer(fieldview.Layer):
 
         if lineno == last_lineno:
             path_item = QGraphicsPathItem(self)
-            path_item.setPen(QPen(QColor("#73d216"), 10))
+            path_item.setPen(QPen(QColor(self.color), 10))
             path_item.setPath(self.path)
 
 
@@ -48,6 +49,7 @@ class RealTrajectoryLayer(fieldview.Layer):
     def __init__(self, parent = None):
         fieldview.Layer.__init__(self, parent)
         self.name = "Real trajectory"
+        self.color = "#edd400"
         self.has_first_goto = False
         self.path = QPainterPath()
 
@@ -67,28 +69,23 @@ class RealTrajectoryLayer(fieldview.Layer):
 
         if lineno == last_lineno:
             path_item = QGraphicsPathItem(self)
-            path_item.setPen(QPen(QColor("#edd400"), 10))
+            path_item.setPen(QPen(QColor(self.color), 10))
             path_item.setPath(self.path)
 
 
 
 
-class LogFieldViewController(QObject):
+class LogFieldViewController(fieldview.FieldViewController):
 
     def __init__(self, ui):
-        QObject.__init__(self)
+        fieldview.FieldViewController.__init__(self, ui)
 
-        self.ui = ui
-
-        self.field_scene = fieldview.FieldScene(self.ui.trajectory_tab)
         self.expected_trajectory = ExpectedTrajectoryLayer(self.field_scene)
         self.field_scene.add_layer(self.expected_trajectory)
         self.real_trajectory = RealTrajectoryLayer(self.field_scene)
         self.field_scene.add_layer(self.real_trajectory)
 
-        field_view = fieldview.FieldView(self.ui.trajectory_tab)
-        field_view.setScene(self.field_scene)
-        self.ui.trajectory_tab.layout().addWidget(field_view)
+        self.update_layers_list()
 
 
     def process_log_line(self, log_line, lineno, last_lineno):
