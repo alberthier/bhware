@@ -29,8 +29,12 @@ class CategoriesModel(QStandardItemModel):
             item = QStandardItem(QIcon(pixmap), packet.__name__)
             item.setData(QVariant(packet.TYPE), CategoriesModel.PACKET_TYPE_ROLE)
             self.appendRow([item])
-            idx = self.index(row, 0)
             row += 1
+        pixmap = QPixmap(icon_size)
+        pixmap.fill(QColor("#a9a9a9"))
+        item = QStandardItem(QIcon(pixmap), "LogText")
+        item.setData(QVariant(-1), CategoriesModel.PACKET_TYPE_ROLE)
+        self.appendRow([item])
 
 
 
@@ -142,12 +146,14 @@ class LogViewController(QObject):
         categories_model = CategoriesModel(self)
         self.ui.categories.setModel(categories_model)
         selection = QItemSelection()
-        row = 0
-        for packet in packets.PACKETS_LIST:
-            if packet.LOGVIEW_DEFAULT_ENABLED:
-                idx = categories_model.index(row, 0)
+        for row in xrange(categories_model.rowCount()):
+            idx = categories_model.index(row, 0)
+            packet_type = idx.data(CategoriesModel.PACKET_TYPE_ROLE).toInt()[0]
+            if packets.PACKETS_BY_TYPE.has_key(packet_type):
+                if packets.PACKETS_BY_TYPE[packet_type].LOGVIEW_DEFAULT_ENABLED:
+                    selection.select(idx, idx)
+            else:
                 selection.select(idx, idx)
-            row += 1
         selection_model = self.ui.categories.selectionModel()
         selection_model.select(selection, QItemSelectionModel.Select)
         selection_model.selectionChanged.connect(self.update_view)
