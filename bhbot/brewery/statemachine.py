@@ -6,7 +6,6 @@ import os
 import imp
 import inspect
 import datetime
-from collections import deque
 
 
 def instantiate_state_machine(state_machine_name, eventloop):
@@ -48,11 +47,12 @@ class State(object):
         new_state.sub_state = None
         new_state.parent_state = self
         self.sub_state = new_state
-        logger.log("Switching to sub-state {0}".format(new_state.__class__.__name__))
+        logger.log("Pushing sub-state {0}".format(new_state.__class__.__name__))
         new_state.on_enter()
 
 
     def exit_substate(self, exit_status = None):
+        logger.log("Poping sub-state {0}".format(self.__class__.__name__))
         if exit_status is not None :
             logger.log("Substate exit status = {0}".format(exit_status))
         self.parent_state.sub_state = None
