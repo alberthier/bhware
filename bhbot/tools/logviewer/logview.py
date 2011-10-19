@@ -85,7 +85,7 @@ class LogModel(QStandardItemModel):
             line.append(typeItem)
             line.append(QStandardItem("CurrentState"))
             packet_dict = packet.to_dict(True)
-            line.append(QStandardItem(str(packet_dict)))
+            line.append(QStandardItem(self.to_text(packet_dict)))
             self.add_content(first_item, None, packet_dict)
         self.appendRow(line)
 
@@ -100,7 +100,7 @@ class LogModel(QStandardItemModel):
             line.append(QStandardItem())
             line.append(QStandardItem())
             line.append(QStandardItem(indent + name))
-            line.append(QStandardItem(str(log)))
+            line.append(QStandardItem(self.to_text(log)))
             parent_item.appendRow(line)
             new_parent = first_item
         if isinstance(log, list) or isinstance(log, tuple):
@@ -111,6 +111,32 @@ class LogModel(QStandardItemModel):
         elif isinstance(log, collections.OrderedDict):
             for key, value in log.iteritems():
                 self.add_content(new_parent, key, value, indent + "    ")
+
+
+    def to_text(self, log):
+        if isinstance(log, list) or isinstance(log, tuple):
+            text = "["
+            first = True
+            for value in log:
+                if first:
+                    first = False
+                else:
+                    text += ", "
+                text += self.to_text(value)
+            text += "]"
+        elif isinstance(log, collections.OrderedDict) or isinstance(log, dict):
+            text = "{"
+            first = True
+            for key, value in log.iteritems():
+                if first:
+                    first = False
+                else:
+                    text += ", "
+                text += self.to_text(key) + ": " + self.to_text(value)
+            text += "}"
+        else:
+            text = str(log)
+        return text
 
 
 
