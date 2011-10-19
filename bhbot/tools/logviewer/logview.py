@@ -82,12 +82,13 @@ class LogModel(QStandardItemModel):
             line.append(QStandardItem("CurrentState"))
             packet_dict = packet.to_dict(True)
             line.append(QStandardItem(str(packet_dict)))
-            self.add_content(first_item, packet_dict)
+            self.add_content(first_item, None, packet_dict)
         self.appendRow(line)
 
 
-    def add_content(self, parent_item, log, indent = ""):
-        for name, value in log.iteritems():
+    def add_content(self, parent_item, name, log, indent = ""):
+        new_parent = parent_item
+        if name != None:
             line = []
             first_item = QStandardItem()
             line.append(first_item)
@@ -95,10 +96,18 @@ class LogModel(QStandardItemModel):
             line.append(QStandardItem())
             line.append(QStandardItem())
             line.append(QStandardItem(indent + name))
-            line.append(QStandardItem(str(value)))
-            if isinstance(value, collections.OrderedDict):
-                self.add_content(first_item, value, indent + "    ")
+            line.append(QStandardItem(str(log)))
             parent_item.appendRow(line)
+            new_parent = first_item
+        if isinstance(log, list):
+            index = 0
+            for value in log:
+                self.add_content(new_parent, "[{0}]".format(index), value, indent + "    ")
+                index += 1
+        elif isinstance(log, collections.OrderedDict):
+            for key, value in log.iteritems():
+                self.add_content(new_parent, key, value, indent + "    ")
+
 
 
 
