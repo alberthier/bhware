@@ -63,6 +63,7 @@ class LogModel(QStandardItemModel):
         pixmap = QPixmap(icon_size)
         pixmap.fill(QColor("#a9a9a9"))
         self.comment_color = QIcon(pixmap)
+        self.states_stack = collections.deque(["<None>"])
 
 
     def process_log_line(self, log_line, lineno, last_lineno):
@@ -72,19 +73,26 @@ class LogModel(QStandardItemModel):
         line.append(QStandardItem(log_line[logger.LOG_DATA_TIME]))
         packet_type = log_line[logger.LOG_DATA_TYPE]
         if not packets.PACKETS_BY_NAME.has_key(packet_type):
+            text = packet_type
             line.append(QStandardItem())
             typeItem = QStandardItem(self.comment_color, "Log Text")
             typeItem.setData(QVariant(-1), LogModel.LOG_MODEL_PACKET_TYPE_ROLE)
             line.append(typeItem)
-            line.append(QStandardItem("CurrentState"))
-            line.append(QStandardItem(packet_type))
+            line.append(QStandardItem(self.states_stack[-1]))
+            line.append(QStandardItem(text))
+            if text.startswith("# Pushing sub-state "):
+                self.states_stack.append(text[text.rfind(" ") + 1:])
+            elif text.startswith("# Poping sub-state "):
+                self.states_stack.pop()
+            elif text.startswith("# Switching to state "):
+                self.states_stack[-1] = text[text.rfind(" ") + 1:]
         else:
             packet = log_line[logger.LOG_DATA_PACKET]
             line.append(QStandardItem(log_line[logger.LOG_DATA_SENDER]))
             typeItem = QStandardItem(self.colors[packet.TYPE], packet_type)
             typeItem.setData(QVariant(packet.TYPE), LogModel.LOG_MODEL_PACKET_TYPE_ROLE)
             line.append(typeItem)
-            line.append(QStandardItem("CurrentState"))
+            line.append(QStandardItem(self.states_stack[-1]))
             packet_dict = packet.to_dict(True)
             line.append(QStandardItem(helpers.packet_dump_to_text(packet_dict)))
             self.add_content(first_item, None, packet_dict)
