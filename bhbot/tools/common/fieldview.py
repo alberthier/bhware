@@ -24,11 +24,16 @@ class FieldScene(QGraphicsScene):
         field.setPos(-102.0, -102.0)
 
         pen = QPen(QColor("#2e3436"), 10)
+        pen.setCapStyle(Qt.RoundCap)
         font = QFont()
         font.setPointSize(70)
         self.addLine(-170.0, -170.0, -170.0, 100.0, pen)
+        self.addLine(-170.0, 100.0, -150.0, 70.0, pen)
+        self.addLine(-170.0, 100.0, -190.0, 70.0, pen)
         self.addText("x", font).setPos(-200.0, 80.0)
         self.addLine(-170.0, -170.0, 100.0, -170.0, pen)
+        self.addLine(100.0, -170.0, 70.0, -190.0, pen)
+        self.addLine(100.0, -170.0, 70.0, -150.0, pen)
         self.addText("y", font).setPos(120.0, -230.0)
 
         self.layers = []
