@@ -99,7 +99,7 @@ class LogModel(QStandardItemModel):
             line.append(QStandardItem(str(log)))
             parent_item.appendRow(line)
             new_parent = first_item
-        if isinstance(log, list):
+        if isinstance(log, list) or isinstance(log, tuple):
             index = 0
             for value in log:
                 self.add_content(new_parent, "[{0}]".format(index), value, indent + "    ")
