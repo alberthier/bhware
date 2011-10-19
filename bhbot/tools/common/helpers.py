@@ -3,6 +3,7 @@
 
 import os
 import subprocess
+import collections
 
 from definitions import *
 
@@ -42,3 +43,31 @@ def get_last_logfile():
                 index -= 1
                 return os.path.join(log_dir, "brewerylog_{0:=#04}.py".format(index))
     return None
+
+
+
+
+def packet_dump_to_text(dump):
+    if isinstance(dump, list) or isinstance(dump, tuple):
+        text = "["
+        first = True
+        for value in dump:
+            if first:
+                first = False
+            else:
+                text += ", "
+            text += packet_dump_to_text(value)
+        text += "]"
+    elif isinstance(dump, collections.OrderedDict) or isinstance(dump, dict):
+        text = "{"
+        first = True
+        for key, value in dump.iteritems():
+            if first:
+                first = False
+            else:
+                text += ", "
+            text += packet_dump_to_text(key) + ": " + packet_dump_to_text(value)
+        text += "}"
+    else:
+        text = str(dump)
+    return text
