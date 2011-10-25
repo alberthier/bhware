@@ -2,510 +2,399 @@
 <!-- Created with Inkscape (http://www.inkscape.org/) -->
 
 <svg
-   xmlns:dc="http://purl.org/dc/elements/1.1/"
-   xmlns:cc="http://creativecommons.org/ns#"
-   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-   xmlns:svg="http://www.w3.org/2000/svg"
-   xmlns="http://www.w3.org/2000/svg"
-   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
-   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
-   width="3204"
-   height="2304"
-   id="svg2"
-   version="1.1"
-   inkscape:version="0.48.0 r9654"
-   sodipodi:docname="map.svg">
-  <defs
-     id="defs4" />
-  <sodipodi:namedview
-     id="base"
-     pagecolor="#ffffff"
-     bordercolor="#666666"
-     borderopacity="1.0"
-     inkscape:pageopacity="0.0"
-     inkscape:pageshadow="2"
-     inkscape:zoom="0.175"
-     inkscape:cx="807.65064"
-     inkscape:cy="1362.7561"
-     inkscape:document-units="px"
-     inkscape:current-layer="layer1"
-     showgrid="false"
-     inkscape:window-width="1440"
-     inkscape:window-height="823"
-     inkscape:window-x="0"
-     inkscape:window-y="24"
-     inkscape:window-maximized="1" />
-  <metadata
-     id="metadata7">
-    <rdf:RDF>
-      <cc:Work
-         rdf:about="">
-        <dc:format>image/svg+xml</dc:format>
-        <dc:type
-           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
-      </cc:Work>
-    </rdf:RDF>
-  </metadata>
-  <g
-     inkscape:label="Calque 1"
-     inkscape:groupmode="layer"
-     id="layer1"
-     transform="translate(102, 102)">
-     <!-- Cote rouge -->
-     <rect
-       style="fill:#c90000;stroke:none;fill-opacity:1"
-       id="maprect0001"
-       width="425"
-       height="500"
-       x="0"
-       y="0" />
-     <rect
-       style="fill:#006500;stroke:none;fill-opacity:1"
-       id="maprect0002"
-       width="425"
-       height="1678"
-       x="0"
-       y="422" />
-     <rect
-       style="fill:#00A700;stroke:none;fill-opacity:1"
-       id="maprect1001"
-       width="425"
-       height="200"
-       x="0"
-       y="590" />
-     <rect
-       style="fill:#00A700;stroke:none;fill-opacity:1"
-       id="maprect1001"
-       width="425"
-       height="200"
-       x="0"
-       y="870" />
-     <rect
-       style="fill:#00A700;stroke:none;fill-opacity:1"
-       id="maprect1001"
-       width="425"
-       height="200"
-       x="0"
-       y="1150" />
-     <rect
-       style="fill:#00A700;stroke:none;fill-opacity:1"
-       id="maprect1001"
-       width="425"
-       height="200"
-       x="0"
-       y="1430" />
-     <rect
-       style="fill:#00A700;stroke:none;fill-opacity:1"
-       id="maprect1001"
-       width="425"
-       height="200"
-       x="0"
-       y="1710" />
+    xmlns:dc="http://purl.org/dc/elements/1.1/"
+    xmlns:cc="http://creativecommons.org/ns#"
+    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+    xmlns:svg="http://www.w3.org/2000/svg"
+    xmlns="http://www.w3.org/2000/svg"
+    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+    width="3200"
+    height="2235"
+    id="svg2"
+    version="1.1"
+    inkscape:version="0.48.0 r9654"
+    sodipodi:docname="field.svg">
+    <defs
+        id="defs4" />
+    <sodipodi:namedview
+        id="base"
+        pagecolor="#ffffff"
+        bordercolor="#666666"
+        borderopacity="1.0"
+        inkscape:pageopacity="0.0"
+        inkscape:pageshadow="2"
+        inkscape:zoom="0.175"
+        inkscape:cx="807.65064"
+        inkscape:cy="1362.7561"
+        inkscape:document-units="px"
+        inkscape:current-layer="layer1"
+        showgrid="false"
+        inkscape:window-width="1440"
+        inkscape:window-height="823"
+        inkscape:window-x="0"
+        inkscape:window-y="24"
+        inkscape:window-maximized="1" />
+    <metadata
+        id="metadata7">
+        <rdf:RDF>
+            <cc:Work
+                rdf:about="">
+                <dc:format>image/svg+xml</dc:format>
+                <dc:type
+                    rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+                <dc:title></dc:title>
+            </cc:Work>
+        </rdf:RDF>
+    </metadata>
+    <g
+        inkscape:label="Calque 1"
+        inkscape:groupmode="layer"
+        id="layer1"
+        transform="translate(100, 135)">
 
-    <!-- Cadrillage principal -->
-     <rect
-       style="fill:#0000c9;stroke:none;fill-opacity:1"
-       id="maprect0003"
-       width="2150"
-       height="2100"
-       x="425"
-       y="0" />
+        <!-- Sea -->
+        <rect
+            style="fill:#31929e;stroke:none;fill-opacity:1"
+            id="mainborders"
+            width="3040"
+            height="2040"
+            x="-20"
+            y="-20" />
+        <rect
+            style="fill:#00e4ff;stroke:none;fill-opacity:1"
+            id="sea"
+            width="3000"
+            height="2000"
+            x="0"
+            y="0" />
 
-     <rect
-       style="fill:#c90000;stroke:none;fill-opacity:1"
-       id="maprect0003"
-       width="350"
-       height="350"
-       x="800"
-       y="0" />
-     <rect
-       style="fill:#c90000;stroke:none;fill-opacity:1"
-       id="maprect0003"
-       width="350"
-       height="350"
-       x="1500"
-       y="0" />
-     <rect
-       style="fill:#c90000;stroke:none;fill-opacity:1"
-       id="maprect0003"
-       width="350"
-       height="350"
-       x="2200"
-       y="0" />
+        <!-- Map island -->
+        <path
+            style="fill:#ffff01;stroke:none;fill-opacity:1"
+            id="map_island_beach"
+            d="M 1100,0 a 400,400 0 0 0 800,0 z"/>
+        <path
+            style="fill:#9Aff01;stroke:none;fill-opacity:1"
+            id="map_island_forest"
+            d="M 1200,0 a 300,300 0 0 0 600,0 z"/>
 
-     <rect
-       style="fill:#c90000;stroke:none;fill-opacity:1"
-       id="maprect0003"
-       width="350"
-       height="350"
-       x="450"
-       y="350" />
-     <rect
-       style="fill:#c90000;stroke:none;fill-opacity:1"
-       id="maprect0003"
-       width="350"
-       height="350"
-       x="1150"
-       y="350" />
-     <rect
-       style="fill:#c90000;stroke:none;fill-opacity:1"
-       id="maprect0003"
-       width="350"
-       height="350"
-       x="1850"
-       y="350" />
+        <!-- Map -->
+        <rect
+            style="fill:#00e4ff;stroke:none;fill-opacity:1"
+            id="map_sea"
+            width="500"
+            height="148"
+            x="1250"
+            y="-135" />
+        <ellipse
+            style="fill:#ffff01;stroke:none;fill-opacity:1"
+            id="map_beach_1"
+            cx="1430"
+            cy="-60"
+            rx="100"
+            ry="50" />
+        <ellipse
+            style="fill:#ffff01;stroke:none;fill-opacity:1"
+            id="map_beach_2"
+            cx="1570"
+            cy="-60"
+            rx="100"
+            ry="50" />
+        <ellipse
+            style="fill:#9Aff01;stroke:none;fill-opacity:1"
+            id="map_forest_1"
+            cx="1410"
+            cy="-60"
+            rx="70"
+            ry="30" />
+        <ellipse
+            style="fill:#9Aff01;stroke:none;fill-opacity:1"
+            id="map_forest_2"
+            cx="1590"
+            cy="-60"
+            rx="70"
+            ry="30" />
 
-     <rect
-       style="fill:#c90000;stroke:none;fill-opacity:1"
-       id="maprect0003"
-       width="350"
-       height="350"
-       x="800"
-       y="700" />
-     <rect
-       style="fill:#c90000;stroke:none;fill-opacity:1"
-       id="maprect0003"
-       width="350"
-       height="350"
-       x="1500"
-       y="700" />
-     <rect
-       style="fill:#c90000;stroke:none;fill-opacity:1"
-       id="maprect0003"
-       width="350"
-       height="350"
-       x="2200"
-       y="700" />
+        <!-- Peanut island -->
+        <path
+            style="fill:#ffff01;stroke:none;fill-opacity:1"
+            id="peanut_island_beach"
+            d="M 1241.17,735.29
+               A 300,300 0 1 0 1241.17,1264.70
+               A 550,550 0 0 1 1758.82,1264.70
+               A 300,300 0 1 0 1758.82,735.29
+               A 550,550 0 0 1 1241.17,735.29
+               z"/>
+        <circle
+            style="fill:#9Aff01;stroke:none;fill-opacity:1"
+            id="peanut_island_forest_1"
+            cx="1100"
+            cy="1000"
+            r="200" />
+        <circle
+            style="fill:#9Aff01;stroke:none;fill-opacity:1"
+            id="peanut_island_forest_2"
+            cx="1900"
+            cy="1000"
+            r="200" />
+        <circle
+            style="fill:#9Aff01;stroke:none;fill-opacity:1"
+            id="peanut_island_palmtree"
+            cx="1500"
+            cy="1000"
+            r="75" />
 
-     <rect
-       style="fill:#c90000;stroke:none;fill-opacity:1"
-       id="maprect0003"
-       width="350"
-       height="350"
-       x="450"
-       y="1050" />
-     <rect
-       style="fill:#c90000;stroke:none;fill-opacity:1"
-       id="maprect0003"
-       width="350"
-       height="350"
-       x="1150"
-       y="1050" />
-     <rect
-       style="fill:#c90000;stroke:none;fill-opacity:1"
-       id="maprect0003"
-       width="350"
-       height="350"
-       x="1850"
-       y="1050" />
+        <!-- totems -->
+        <rect
+            style="fill:#b75c03;stroke:none;fill-opacity:1"
+            id="totem_1"
+            width="250"
+            height="250"
+            x="975"
+            y="875" />
+        <rect
+            style="fill:#b75c03;stroke:none;fill-opacity:1"
+            id="totem_2"
+            width="250"
+            height="250"
+            x="1775"
+            y="875" />
 
-     <rect
-       style="fill:#c90000;stroke:none;fill-opacity:1"
-       id="maprect0003"
-       width="350"
-       height="350"
-       x="800"
-       y="1400" />
-     <rect
-       style="fill:#c90000;stroke:none;fill-opacity:1"
-       id="maprect0003"
-       width="350"
-       height="350"
-       x="1500"
-       y="1400" />
-     <rect
-       style="fill:#c90000;stroke:none;fill-opacity:1"
-       id="maprect0003"
-       width="350"
-       height="350"
-       x="2200"
-       y="1400" />
+        <!-- Purple boat -->
+        <rect
+            style="fill:#9632f6;stroke:none;fill-opacity:1"
+            id="purple_start"
+            width="500"
+            height="500"
+            x="0"
+            y="0" />
+        <path
+            style="fill:#b75c03;stroke:none;fill-opacity:1"
+            id="purple_boat_1"
+            d="M 0,500 L 0,2000 L 325,2000 L 400,500 z"/>
+        <rect
+            style="fill:#8c4702;stroke:none;fill-opacity:1"
+            id="purple_boat_2"
+            width="400"
+            height="18"
+            x="0"
+            y="500" />
+        <path
+            style="fill:#8c4702;stroke:none;fill-opacity:1"
+            id="purple_boat_3"
+            d="M 362,1251 L 325,2000 L 340,2000 L 377,1253 z"/>
+        <rect
+            style="fill:#c3a78b;stroke:none;fill-opacity:1"
+            id="purple_boat_4"
+            width="358"
+            height="610"
+            x="-18"
+            y="1408" />
+        <rect
+            style="fill:#d6d4c7;stroke:none;fill-opacity:1"
+            id="purple_boat_5"
+            width="322"
+            height="574"
+            x="0"
+            y="1426" />
 
-     <rect
-       style="fill:#c90000;stroke:none;fill-opacity:1"
-       id="maprect0003"
-       width="350"
-       height="350"
-       x="450"
-       y="1750" />
-     <rect
-       style="fill:#c90000;stroke:none;fill-opacity:1"
-       id="maprect0003"
-       width="350"
-       height="350"
-       x="1150"
-       y="1750" />
-     <rect
-       style="fill:#c90000;stroke:none;fill-opacity:1"
-       id="maprect0003"
-       width="350"
-       height="350"
-       x="1850"
-       y="1750" />
+        <!-- Purple side black line -->
+        <rect
+            style="fill:#000000;stroke:none;fill-opacity:1"
+            id="purple_boat_black_line_1"
+            width="150"
+            height="20"
+            x="500"
+            y="450" />
+        <rect
+            style="fill:#000000;stroke:none;fill-opacity:1"
+            id="purple_boat_black_line_2"
+            width="20"
+            height="1550"
+            x="630"
+            y="450" />
 
-     <!-- Cote bleu -->
-     <rect
-       style="fill:#0000c9;stroke:none;fill-opacity:1"
-       id="maprect0001"
-       width="425"
-       height="500"
-       x="2575"
-       y="0" />
-     <rect
-       style="fill:#006500;stroke:none;fill-opacity:1"
-       id="maprect0002"
-       width="425"
-       height="1678"
-       x="2575"
-       y="422" />
-     <rect
-       style="fill:#00A700;stroke:none;fill-opacity:1"
-       id="maprect1001"
-       width="425"
-       height="200"
-       x="2575"
-       y="590" />
-     <rect
-       style="fill:#00A700;stroke:none;fill-opacity:1"
-       id="maprect1001"
-       width="425"
-       height="200"
-       x="2575"
-       y="870" />
-     <rect
-       style="fill:#00A700;stroke:none;fill-opacity:1"
-       id="maprect1001"
-       width="425"
-       height="200"
-       x="2575"
-       y="1150" />
-     <rect
-       style="fill:#00A700;stroke:none;fill-opacity:1"
-       id="maprect1001"
-       width="425"
-       height="200"
-       x="2575"
-       y="1430" />
-     <rect
-       style="fill:#00A700;stroke:none;fill-opacity:1"
-       id="maprect1001"
-       width="425"
-       height="200"
-       x="2575"
-       y="1710" />
+        <!-- Red boat -->
+        <rect
+            style="fill:#ff3b3d;stroke:none;fill-opacity:1"
+            id="red_start"
+            width="500"
+            height="500"
+            x="2500"
+            y="0" />
+        <path
+            style="fill:#b75c03;stroke:none;fill-opacity:1"
+            id="red_boat_1"
+            d="M 3000,500 L 3000,2000 L 2675,2000 L 2600,500 z"/>
+        <rect
+            style="fill:#8c4702;stroke:none;fill-opacity:1"
+            id="red_boat_2"
+            width="400"
+            height="18"
+            x="2600"
+            y="500" />
+        <path
+            style="fill:#8c4702;stroke:none;fill-opacity:1"
+            id="red_boat_3"
+            d="M 2638,1251 L 2675,2000 L 2660,2000 L 2623,1253 z"/>
+        <rect
+            style="fill:#c3a78b;stroke:none;fill-opacity:1"
+            id="red_boat_4"
+            width="358"
+            height="610"
+            x="2660"
+            y="1408" />
+        <rect
+            style="fill:#d6d4c7;stroke:none;fill-opacity:1"
+            id="red_boat_5"
+            width="322"
+            height="574"
+            x="2678"
+            y="1426" />
 
-     <!-- Bordures -->
-     <rect
-       style="fill:#000000;stroke:none;fill-opacity:1"
-       id="maprect0002"
-       width="400"
-       height="22"
-       x="0"
-       y="400" />
-     <rect
-       style="fill:#000000;stroke:none;fill-opacity:1"
-       id="maprect0002"
-       width="400"
-       height="22"
-       x="2600"
-       y="400" />
-     <rect
-       style="fill:#333333;stroke:none;fill-opacity:1"
-       id="maprect0002"
-       width="50"
-       height="2100"
-       x="400"
-       y="0" />
-     <rect
-       style="fill:#333333;stroke:none;fill-opacity:1"
-       id="maprect0002"
-       width="50"
-       height="2100"
-       x="2550"
-       y="0" />
-     <rect
-       style="fill:#333333;stroke:none;fill-opacity:1"
-       id="maprect0002"
-       width="700"
-       height="20"
-       x="450"
-       y="1750" />
-     <rect
-       style="fill:#333333;stroke:none;fill-opacity:1"
-       id="maprect0002"
-       width="20"
-       height="350"
-       x="1130"
-       y="1750" />
-     <rect
-       style="fill:#333333;stroke:none;fill-opacity:1"
-       id="maprect0002"
-       width="700"
-       height="20"
-       x="1850"
-       y="1750" />
-     <rect
-       style="fill:#333333;stroke:none;fill-opacity:1"
-       id="maprect0002"
-       width="20"
-       height="350"
-       x="1850"
-       y="1750" />
-     <rect
-       style="fill:#000000;stroke:none;fill-opacity:1"
-       id="maprect0002"
-       width="700"
-       height="120"
-       x="450"
-       y="1980" />
-     <rect
-       style="fill:#000000;stroke:none;fill-opacity:1"
-       id="maprect0002"
-       width="22"
-       height="250"
-       x="450"
-       y="1850" />
-     <rect
-       style="fill:#000000;stroke:none;fill-opacity:1"
-       id="maprect0002"
-       width="22"
-       height="250"
-       x="1128"
-       y="1850" />
-     <rect
-       style="fill:#000000;stroke:none;fill-opacity:1"
-       id="maprect0002"
-       width="700"
-       height="120"
-       x="1850"
-       y="1980" />
-     <rect
-       style="fill:#000000;stroke:none;fill-opacity:1"
-       id="maprect0002"
-       width="22"
-       height="250"
-       x="1850"
-       y="1850" />
-     <rect
-       style="fill:#000000;stroke:none;fill-opacity:1"
-       id="maprect0002"
-       width="22"
-       height="250"
-       x="2528"
-       y="1850" />
+        <!-- Red side black line -->
+        <rect
+            style="fill:#000000;stroke:none;fill-opacity:1"
+            id="red_boat_black_line_1"
+            width="150"
+            height="20"
+            x="2350"
+            y="450" />
+        <rect
+            style="fill:#000000;stroke:none;fill-opacity:1"
+            id="red_boat_black_line_2"
+            width="20"
+            height="1550"
+            x="2350"
+            y="450" />
 
-     <!-- Contour -->
-     <rect
-       style="fill:#000000;stroke:none;fill-opacity:1"
-       id="maprect0002"
-       width="3044"
-       height="22"
-       x="-22"
-       y="-22" />
-     <rect
-       style="fill:#000000;stroke:none;fill-opacity:1"
-       id="maprect0002"
-       width="22"
-       height="2144"
-       x="-22"
-       y="-22" />
-     <rect
-       style="fill:#000000;stroke:none;fill-opacity:1"
-       id="maprect0002"
-       width="3044"
-       height="22"
-       x="-22"
-       y="2100" />
-     <rect
-       style="fill:#000000;stroke:none;fill-opacity:1"
-       id="maprect0002"
-       width="22"
-       height="2144"
-       x="3000"
-       y="-22" />
+        <!-- Purple bottles -->
+        <rect
+            style="fill:#9632f6;stroke:none;fill-opacity:1"
+            id="purple_bottle_1_1"
+            width="200"
+            height="66"
+            x="540"
+            y="2000" />
+        <rect
+            style="fill:#9632f6;stroke:none;fill-opacity:1"
+            id="purple_bottle_1_2"
+            width="22"
+            height="44"
+            x="629"
+            y="1956" />
+        <path
+            style="fill:#5C1F96;stroke:none;fill-opacity:1"
+            id="purple_bottle_1"
+            d="M 540,2000 l 20,0 l 30,-22 l 150,0
+               l 0,66 l -150,0 l -30,-22 l -20, 0 z"/>
 
-     <!-- Balises -->
-     <rect
-       style="fill:#000000;stroke:none;fill-opacity:1"
-       id="maprect0002"
-       width="80"
-       height="80"
-       x="-102"
-       y="-102" />
-     <rect
-       style="fill:#000000;stroke:none;fill-opacity:1"
-       id="maprect0002"
-       width="80"
-       height="80"
-       x="-102"
-       y="1010" />
-     <rect
-       style="fill:#000000;stroke:none;fill-opacity:1"
-       id="maprect0002"
-       width="80"
-       height="80"
-       x="-102"
-       y="2122" />
-     <rect
-       style="fill:#000000;stroke:none;fill-opacity:1"
-       id="maprect0002"
-       width="80"
-       height="80"
-       x="3022"
-       y="-102" />
-     <rect
-       style="fill:#000000;stroke:none;fill-opacity:1"
-       id="maprect0002"
-       width="80"
-       height="80"
-       x="3022"
-       y="1010" />
-     <rect
-       style="fill:#000000;stroke:none;fill-opacity:1"
-       id="maprect0002"
-       width="80"
-       height="80"
-       x="3022"
-       y="2122" />
+        <rect
+            style="fill:#9632f6;stroke:none;fill-opacity:1"
+            id="purple_bottle_2_1"
+            width="200"
+            height="66"
+            x="1783"
+            y="2000" />
+        <rect
+            style="fill:#9632f6;stroke:none;fill-opacity:1"
+            id="purple_bottle_2_2"
+            width="22"
+            height="44"
+            x="1872"
+            y="1956" />
+        <path
+            style="fill:#5C1F96;stroke:none;fill-opacity:1"
+            id="purple_bottle_2"
+            d="M 1783,2000 l 20,0 l 30,-22 l 150,0
+               l 0,66 l -150,0 l -30,-22 l -20, 0 z"/>
 
-     <!-- Bonus -->
-     <circle
-       cx="975"
-       cy="525"
-       r="50"
-       stroke="none"
-       fill="#333333" />
-     <circle
-       cx="2025"
-       cy="525"
-       r="50"
-       stroke="none"
-       fill="#333333" />
-     <circle
-       cx="975"
-       cy="1225"
-       r="50"
-       stroke="none"
-       fill="#333333" />
-     <circle
-       cx="2025"
-       cy="1225"
-       r="50"
-       stroke="none"
-       fill="#333333" />
-     <circle
-       cx="1325"
-       cy="1925"
-       r="50"
-       stroke="none"
-       fill="#333333" />
-     <circle
-       cx="1675"
-       cy="1925"
-       r="50"
-       stroke="none"
-       fill="#333333" />
+        <!-- Red bottles -->
+        <rect
+            style="fill:#ff3b3d;stroke:none;fill-opacity:1"
+            id="red_bottle_1_1"
+            width="200"
+            height="66"
+            x="1017"
+            y="2000" />
+        <rect
+            style="fill:#ff3b3d;stroke:none;fill-opacity:1"
+            id="red_bottle_1_2"
+            width="22"
+            height="44"
+            x="1106"
+            y="1956" />
+        <path
+            style="fill:#b3292b;stroke:none;fill-opacity:1"
+            id="red_bottle_1"
+            d="M 1017,1978 l 150,0 l 30,22 l 20, 0 l 0, 22
+               l -20,0 l -30,22 l -150,0 z"/>
 
-  </g>
+        <rect
+            style="fill:#ff3b3d;stroke:none;fill-opacity:1"
+            id="red_bottle_2_1"
+            width="200"
+            height="66"
+            x="2260"
+            y="2000" />
+        <rect
+            style="fill:#ff3b3d;stroke:none;fill-opacity:1"
+            id="red_bottle_2_2"
+            width="22"
+            height="44"
+            x="2349"
+            y="1956" />
+        <path
+            style="fill:#b3292b;stroke:none;fill-opacity:1"
+            id="red_bottle_2"
+            d="M 2260,1978 l 150,0 l 30,22 l 20, 0 l 0, 22
+               l -20,0 l -30,22 l -150,0 z"/>
+
+        <!-- Purple beacons -->
+        <rect
+            style="fill:#9632f6;stroke:none;fill-opacity:1"
+            id="purple_beacon_1"
+            width="80"
+            height="80"
+            x="-100"
+            y="-100" />
+        <rect
+            style="fill:#9632f6;stroke:none;fill-opacity:1"
+            id="purple_beacon_2"
+            width="80"
+            height="80"
+            x="-100"
+            y="2020" />
+        <rect
+            style="fill:#9632f6;stroke:none;fill-opacity:1"
+            id="purple_beacon_3"
+            width="80"
+            height="80"
+            x="3020"
+            y="960" />
+
+        <!-- Red beacons -->
+        <rect
+            style="fill:#ff3b3d;stroke:none;fill-opacity:1"
+            id="red_beacon_1"
+            width="80"
+            height="80"
+            x="3020"
+            y="-100" />
+        <rect
+            style="fill:#ff3b3d;stroke:none;fill-opacity:1"
+            id="red_beacon_2"
+            width="80"
+            height="80"
+            x="3020"
+            y="2020" />
+        <rect
+            style="fill:#ff3b3d;stroke:none;fill-opacity:1"
+            id="red_beacon_3"
+            width="80"
+            height="80"
+            x="-100"
+            y="960" />
+    </g>
 </svg>
