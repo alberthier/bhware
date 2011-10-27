@@ -1,44 +1,43 @@
-1er match:
+1er match :
 BH Team : 50 + 40 pts
 Telecom Robotics : 10 + 10 pts
 
-2eme match:
+2eme match :
 BH Team : 140 + 40 pts
 Cybernetique en Nord : 70 + 10 pts
 
-3eme match:
+3eme match :
 BH Team : 60 + 40 pts
 Coffee machine : 0 + 10 pts
 
-4eme match:
-BH Team: 80 + 40 pts
-ENSSAT: 10 + 10 pts
+4eme match :
+BH Team : 80 + 40 pts
+ENSSAT : 10 + 10 pts
 
-5eme match:
+5eme match :
 BH Team : 50 + 10 pts
-RCVA: 220 + 40 pts
+RCVA : 220 + 40 pts
 
-8eme de finale:
-BH Team :
-Rogwai :
+8eme de finale :
+BH Team : 80 - 64 (pénalités) = 16
+Rogwai : 10
 
-Quart de finale:
-BH Team : 180
+Quart de finale :
+BH Team : 130
 Telecom Robotics : 0
 
-Demi finale:
-BH Team :
-Clubelek :
+Demi finale :
+BH Team : 110
+Clubelek : 30
 
-Finale 1:
-BH Team:
-RCVA
+Finale 1 :
+BH Team : 70
+RCVA : 10
 
-Finale 2:
-BH Team:
-RCVA
+Finale 2 :
+BH Team : 70
+RCVA : 100
 
-Finale 3:
-BH Team:
-RCVA
-
+Finale 3 :
+BH Team : 50
+RCVA : 250
