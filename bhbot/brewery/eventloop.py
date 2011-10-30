@@ -102,7 +102,7 @@ class RobotLogDeviceChannel(asyncore.dispatcher):
             while True:
                 i = self.buffer.find("\n")
                 if i != -1:
-                    logger.log(self.buffer[:i])
+                    logger.log(self.buffer[:i], "PIC")
                     self.buffer = self.buffer[i + 1:]
                 else:
                     break;
@@ -248,7 +248,7 @@ class EventLoop(object):
                         channel.packet.deserialize(channel.buffer)
                         channel.buffer = ""
 
-                        logger.log_packet("PIC", channel.packet)
+                        logger.log_packet(channel.packet, "PIC")
 
                         if isinstance(channel.packet, packets.DeviceBusy):
                             self.get_current_state().on_device_busy()
@@ -319,7 +319,7 @@ class EventLoop(object):
 
     def send_packet(self, packet):
         if self.root_state.sub_state != None:
-            logger.log_packet("ARM", packet)
+            logger.log_packet(packet, "ARM")
             buffer = packet.serialize()
             self.robot_control_channel.send(buffer)
 

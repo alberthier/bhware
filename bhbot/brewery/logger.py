@@ -61,14 +61,14 @@ def close():
     subprocess.Popen(["/bin/sync"]).wait()
 
 
-def log(text):
+def log(text, sender = "ARM"):
     global log_file
     global start_time
     initialize()
     delta = datetime.datetime.now() - start_time
     time = "'{0:=0.02f}'".format(float(delta.seconds) + (float(delta.microseconds)/1000000.0))
     try:
-        log_file.write("l([" + time + ",\"# " + text.replace("\"", "\\\"") + "\"])\n")
+        log_file.write("l([" + time + ",'Log','" + sender + "','# " + text.replace("'", "\\'") + "'])\n")
     except:
         print("Failed to write to file")
     sys.stdout.write(text + "\n")
@@ -83,14 +83,14 @@ def log_exception(exc, msg = None):
         log("   "+l)
 
 
-def log_packet(sender, packet):
+def log_packet(packet, sender = "ARM"):
     initialize()
     delta = datetime.datetime.now() - start_time
     time = "'{0:=0.02f}'".format(float(delta.seconds) + (float(delta.microseconds)/1000000.0))
     packet_dict = packet.to_dict()
-    text = "'" + type(packet).__name__ + "', '" + sender + "', " + str(packet_dict) + "]"
+    text = "'" + type(packet).__name__ + "','" + sender + "'," + str(packet_dict) + "]"
     try:
-        log_file.write("l([" + time + ", " + text + ")\n")
+        log_file.write("l([" + time + "," + text + ")\n")
     except:
         print("Failed to write to file")
     if not isinstance(packet, packets.KeepAlive) and not isinstance(packet, packets.SimulatorData):

@@ -73,8 +73,8 @@ class LogModel(QStandardItemModel):
         line.append(QStandardItem(log_line[logger.LOG_DATA_TIME]))
         packet_type = log_line[logger.LOG_DATA_TYPE]
         if not packets.PACKETS_BY_NAME.has_key(packet_type):
-            text = packet_type
-            line.append(QStandardItem())
+            text = log_line[logger.LOG_DATA_PACKET]
+            line.append(QStandardItem(log_line[logger.LOG_DATA_SENDER]))
             typeItem = QStandardItem(self.comment_color, "Log Text")
             typeItem.setData(QVariant(-1), LogModel.LOG_MODEL_PACKET_TYPE_ROLE)
             line.append(typeItem)
