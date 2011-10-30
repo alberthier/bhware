@@ -11,6 +11,9 @@ import errno
 import traceback
 import datetime
 import bisect
+import fcntl
+import termios
+import ctypes
 
 import logger
 import packets
@@ -68,8 +71,43 @@ class RobotControlDeviceChannel(asyncore.dispatcher_with_send):
         self.packet = None
 
 
+    def bytes_available(self):
+        available = ctypes.c_int()
+        fcntl.ioctl(self.socket.fileno(), termios.FIONREAD, available)
+        return available.value
+
+
     def handle_read(self):
         self.eventloop.handle_read(self)
+
+
+
+
+class RobotLogDeviceChannel(asyncore.dispatcher):
+
+    def __init__(self, socket):
+        asyncore.dispatcher.__init__(self, socket)
+        self.buffer = ""
+
+
+    def bytes_available(self):
+        available = ctypes.c_int()
+        fcntl.ioctl(self.socket.fileno(), termios.FIONREAD, available)
+        return available.value
+
+
+    def handle_read(self):
+        try:
+            self.buffer += self.recv(self.bytes_available())
+            while True:
+                i = self.buffer.find("\n")
+                if i != -1:
+                    logger.log(self.buffer[:i])
+                    self.buffer = self.buffer[i + 1:]
+                else:
+                    break;
+        except:
+            pass
 
 
 
@@ -117,7 +155,8 @@ class RobotControlDeviceStarter(object):
 
     def __init__(self, eventloop):
         logger.log("Connecting to {0}:{1} ...".format(config.remote_ip, config.remote_port))
-        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.control_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.log_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.eventloop = eventloop
         self.timer = Timer(eventloop, 1000, self.try_connect, False)
         if not self.try_connect():
@@ -127,14 +166,22 @@ class RobotControlDeviceStarter(object):
     def try_connect(self):
         connected = False
         try:
-            self.socket.connect((config.remote_ip, config.remote_port))
-            self.eventloop.robot_control_channel = RobotControlDeviceChannel(self.eventloop, self.socket)
+            self.control_socket.connect((config.remote_ip, config.remote_port))
+            self.eventloop.robot_control_channel = RobotControlDeviceChannel(self.eventloop, self.control_socket)
             leds.orange.off()
-            self.eventloop.create_fsm()
             connected = True
         except Exception as e:
             logger.log("Unable to connect to {0}:{1} ({2}), retrying".format(config.remote_ip, config.remote_port, e))
             leds.orange.toggle()
+        if connected:
+            try:
+                self.log_socket.connect((config.remote_ip, config.remote_log_port))
+                self.eventloop.robot_log_channel = RobotLogDeviceChannel(self.log_socket)
+                logger.log("Connected to the log stocket {0}:{1}".format(config.remote_ip, config.remote_log_port))
+            except Exception as e:
+                # Log socket is not mandatory. If the connection fails, continue without it.
+                logger.log("Unable to connect to the log stocket {0}:{1} ({2}), continuing without PIC logs".format(config.remote_ip, config.remote_log_port, e))
+            self.eventloop.create_fsm()
         return connected
 
 
@@ -144,6 +191,7 @@ class EventLoop(object):
 
     def __init__(self, state_machine_name, webserver_port):
         self.robot_control_channel = None
+        self.robot_log_channel = None
         self.turret_channel = None
         self.web_server = None
         self.root_state = statemachine.State()
@@ -168,9 +216,9 @@ class EventLoop(object):
         while True :
             if channel.packet == None:
                 try:
-                    if hasattr(channel,"bytes_available") :
-                        b = channel.bytes_available()
-                        if b == 0 : return
+                    b = channel.bytes_available()
+                    if b == 0:
+                        return
                     received_data = channel.recv(1)
                     if len(received_data) == 0:
                         return
@@ -184,7 +232,8 @@ class EventLoop(object):
             else:
                 try:
                     try:
-                        if hasattr(channel,"bytes_available") and not channel.bytes_available() >= channel.packet.MAX_SIZE - 1  : return
+                        if channel.bytes_available() < channel.packet.MAX_SIZE - 1:
+                            return
                         received_data = channel.recv(channel.packet.MAX_SIZE - len(channel.buffer))
                         if len(received_data) == 0:
                             return
@@ -313,7 +362,6 @@ class EventLoop(object):
             while len(self.timers) != 0:
                 if not self.timers[0].check_timeout():
                     break
-
 
 
     def stop(self):
