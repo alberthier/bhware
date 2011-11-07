@@ -10,7 +10,7 @@ from PyQt4.Qt import Qt
 from mainbar import *
 from robotview import *
 from gamecontroller import *
-from field import *
+from simulatorfieldview import *
 
 from definitions import *
 
@@ -25,16 +25,20 @@ class MainWindow(QMainWindow, MainWindow_Ui):
         QMainWindow.__init__(self, parent)
         MainWindow_Ui.__init__(self)
         self.setupUi(self)
-        # self.setWindowIcon(QIcon.fromTheme("applications-development"))
         self.setWindowIcon(QIcon(os.path.join(os.path.dirname(__file__),'icons/main.png')))
 
-        main_bar = MainBar(self)
-        self.main_bar_dock.setWidget(main_bar)
-        self.red_robot_dock.setWidget(RobotView(self, TEAM_RED))
-        self.blue_robot_dock.setWidget(RobotView(self, TEAM_BLUE))
+        self.main_bar = MainBar(self)
+        self.set_widget(self.main_bar_container, self.main_bar)
+        self.purple_robot_view = RobotView(self, TEAM_PURPLE)
+        self.set_widget(self.purple_robot_view_container, self.purple_robot_view)
+        self.red_robot_view = RobotView(self, TEAM_RED)
+        self.set_widget(self.red_robot_view_container, self.red_robot_view)
 
-        self.field_scene = FieldScene(piece_config, main_bar)
+        self.field_controller = SimulatorFieldViewController(self)
         self.game_controller = GameController(self)
-        self.setCentralWidget(FieldView(self.field_scene, self))
 
-        
+
+    def set_widget(self, widget, child_widget):
+        layout = QHBoxLayout(widget)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.addWidget(child_widget)

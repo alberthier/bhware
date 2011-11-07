@@ -17,7 +17,6 @@ class MainBar(QWidget, MainBar_Ui):
         QWidget.__init__(self, parent)
         MainBar_Ui.__init__(self)
         self.setupUi(self)
-        icons_dir = os.path.join(os.path.dirname(__file__), "icons")
         self.set_icon(self.reload, "refresh")
         self.set_icon(self.start_pause, "start")
         self.set_icon(self.stop, "stop")

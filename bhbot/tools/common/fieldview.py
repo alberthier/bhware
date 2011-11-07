@@ -19,7 +19,7 @@ class FieldScene(QGraphicsScene):
         self.setBackgroundBrush(QBrush(QColor("#82a2cf")))
         self.root = QGraphicsItemGroup()
         self.addItem(self.root)
-        field = QGraphicsSvgItem(os.path.join(os.path.dirname(os.path.dirname(__file__)), "simulator", "field.svg"))
+        field = QGraphicsSvgItem(os.path.join(os.path.dirname(__file__), "field.svg"))
         self.root.addToGroup(field)
         field.setPos(-102.0, -102.0)
 
