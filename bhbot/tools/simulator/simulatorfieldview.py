@@ -11,6 +11,7 @@ from PyQt4.QtSvg import *
 import trajectory
 
 import fieldview
+import helpers
 
 
 
@@ -19,43 +20,24 @@ class GraphicsRobotObject(QObject):
 
     movement_finished = pyqtSignal()
 
-    def __init__(self, team, parent = None):
-        QObject.__init__(self, parent)
-
-        self.team = team
+    def __init__(self, layer):
+        QObject.__init__(self)
 
         self.move_animation = QParallelAnimationGroup()
         self.move_animation.finished.connect(self.movement_finished)
 
-        self.observers = []
+        self.item = helpers.create_robot_base_item(QColor("#838383"), QColor("#e9eaff"), QColor(layer.color))
+        self.item.setParentItem(layer)
 
-        self.item = QGraphicsItemGroup()
-        self.robot_item = QGraphicsSvgItem(os.path.join(os.path.dirname(__file__), "robot.svg"))
-        self.robot_item.setPos(-31.0, -170.0)
-        self.item.addToGroup(self.robot_item)
-        team_indicator = QGraphicsEllipseItem(31.0, -25.0, 50.0, 50.0)
-        if self.team == TEAM_RED:
-            color = QColor("#c90000")
-        elif self.team == TEAM_PURPLE:
-            color = QColor("#0000c9")
-        team_indicator.setBrush(color)
+        tower = QGraphicsRectItem(-40.0, 0.0, 80.0, 80.0)
+        tower.setPen(QPen(0))
+        tower.setBrush(QColor("#838383"))
+        self.item.addToGroup(tower)
+
+        team_indicator = QGraphicsEllipseItem(-25.0, 15.0, 50.0, 50.0)
+        team_indicator.setBrush(QColor(layer.color))
         team_indicator.setPen(QPen(0))
         self.item.addToGroup(team_indicator)
-        gyration = QGraphicsEllipseItem(-288.0, -288.0, 576.0, 576.0)
-        gyration.setPen(QColor("#edd400"))
-        self.item.addToGroup(gyration)
-        piece_gyration = QGraphicsEllipseItem(-325.0, -325.0, 650.0, 650.0)
-        piece_gyration.setPen(QColor("#edd400"))
-        self.item.addToGroup(piece_gyration)
-        self.left_sensor = Sensor("left")
-        self.item.addToGroup(self.left_sensor)
-        self.right_sensor = Sensor("right")
-        self.item.addToGroup(self.right_sensor)
-        self.elevator_sensor = Sensor("elevator")
-        self.item.addToGroup(self.elevator_sensor)
-        self.back_sensor = Sensor("back")
-        self.item.addToGroup(self.back_sensor)
-        self.nippers = None
 
 
     def get_position(self):
@@ -130,8 +112,6 @@ class GraphicsRobotObject(QObject):
         d_field_x = ref_x - self.item.pos().x()
         d_field_y = ref_y - self.item.pos().y()
 
-        for o in self.observers : o.on_robot_move(self.item.x(), self.item.y(), ref_x, ref_y)
-
         # 1 m/s
         duration = math.sqrt(math.pow(d_field_x, 2) + math.pow(d_field_y, 2))
         pos_animation = QPropertyAnimation()
@@ -160,18 +140,6 @@ class GraphicsRobotObject(QObject):
         self.move_animation.start()
 
 
-    def open_nippers(self):
-        if self.nippers == None:
-            self.nippers = QGraphicsEllipseItem(self.item.x() - 100.0, self.item.y() -100.0, 200.0, 200.0)
-            self.item.addToGroup(self.nippers)
-
-
-    def close_nippers(self):
-        if self.nippers != None:
-            self.item.removeFromGroup(self.nippers)
-            self.nippers = None
-
-
 
 
 class RobotLayer(fieldview.Layer):
@@ -185,6 +153,7 @@ class RobotLayer(fieldview.Layer):
         else:
             self.name = "Red robot"
             self.color = TEAM_COLOR_RED
+        self.robot = GraphicsRobotObject(self)
 
 
     def reset(self):
@@ -192,31 +161,38 @@ class RobotLayer(fieldview.Layer):
 
 
     def set_x(self, x):
-        pass
+        if self.robot:
+            self.robot.item.setX(x)
 
 
     def set_y(self, y):
-        pass
+        if self.robot:
+            self.robot.item.setX(y)
 
 
     def set_rotation(self, angle):
-        pass
+        if self.robot:
+            self.robot.set_rotation(angle)
 
 
     def robot_rotation(self, angle):
-        pass
+        if self.robot:
+            self.robot.robot_rotation(angle)
 
 
     def robot_line(self, x, y):
-        pass
+        if self.robot:
+            self.robot.robot_line(x, y)
 
 
     def robot_move(self, x, y, angle):
-        pass
-
+        if self.robot:
+            self.robot.robot_move(x, y, angle)
 
 
     def get_pose(self):
+        if self.robot:
+            return self.robot.get_pose()
         return trajectory.Pose(0.0, 0.0, 0.0)
 
 

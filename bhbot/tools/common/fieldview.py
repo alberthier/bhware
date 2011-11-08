@@ -7,6 +7,7 @@ from PyQt4.QtGui import *
 from PyQt4.QtSvg import *
 import os
 
+import helpers
 from definitions import *
 
 
@@ -43,8 +44,10 @@ class FieldScene(QGraphicsScene):
 
 
     def add_layer(self, layer):
-        self.layers.append(layer)
         layer.setParentItem(self.root)
+        if len(self.layers) != 0:
+            layer.stackBefore(self.layers[-1])
+        self.layers.append(layer)
 
 
     def mouseMoveEvent(self, event):
@@ -77,6 +80,7 @@ class GhostRobotLayer(Layer):
         self.name = "Ghost robot"
         self.color = "#ffdab9"
 
+        # Position indication
         font = QFont()
         font.setPointSize(50)
         self.x_label = QGraphicsSimpleTextItem()
@@ -92,25 +96,18 @@ class GhostRobotLayer(Layer):
         self.angle_label.setFont(font)
         self.addToGroup(self.angle_label)
 
+        # Ghost robot
         ghost_pen = QPen(QColor(self.color))
-        self.mouse_item = QGraphicsItemGroup()
-        empty_gyr = ROBOT_EMPTY_GYRATION_RADIUS * 1000.0
-        gyration = QGraphicsEllipseItem(-empty_gyr, -empty_gyr, 2.0 * empty_gyr, 2.0 * empty_gyr)
-        gyration.setPen(ghost_pen)
-        self.mouse_item.addToGroup(gyration)
-        piece_gyr = ROBOT_WITH_PIECE_GYRATION_RADIUS * 1000.0
-        piece_gyration = QGraphicsEllipseItem(-piece_gyr, -piece_gyr, 2.0 * piece_gyr, 2.0 * piece_gyr)
-        piece_gyration.setPen(ghost_pen)
-        self.mouse_item.addToGroup(piece_gyration)
-        robot_ghost = QGraphicsRectItem(-ROBOT_CENTER_Y * 1000.0, -ROBOT_CENTER_X * 1000.0, ROBOT_HEIGHT * 1000.0, ROBOT_WIDTH * 1000.0)
-        robot_ghost.setPen(ghost_pen)
-        self.mouse_item.addToGroup(robot_ghost)
+        self.mouse_item = helpers.create_robot_base_item(ghost_pen, QBrush(), ghost_pen)
+
         line = QGraphicsLineItem(-50.0, 0.0, 50.0, 0.0)
         line.setPen(ghost_pen)
         self.mouse_item.addToGroup(line)
+
         line = QGraphicsLineItem(0.0, -50.0, 0.0, 50.0)
         line.setPen(ghost_pen)
         self.mouse_item.addToGroup(line)
+
         self.mouse_item.setVisible(False)
         self.addToGroup(self.mouse_item)
 

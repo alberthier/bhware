@@ -31,6 +31,8 @@ class RobotController(object):
 
         self.resettle_count = 0
 
+        self.robot_layer.robot.movement_finished.connect(self.movement_finished)
+
 
     def is_process_started(self):
         return self.process != None
@@ -130,8 +132,6 @@ class RobotController(object):
         elif isinstance(packet, packets.StorePiece1):
             self.send_packet(packet)
         elif isinstance(packet, packets.StorePiece2):
-            self.stored_pieces += self.front_pieces
-            self.front_pieces = []
             self.send_packet(packet)
         elif isinstance(packet, packets.StorePiece3):
             self.send_packet(packet)
@@ -146,16 +146,8 @@ class RobotController(object):
         elif isinstance(packet, packets.Deployment):
             self.send_packet(packet)
         elif isinstance(packet, packets.EnableLateralSensors):
-            self.top_left_sensor.enabled = True
-            self.bottom_left_sensor.enabled = True
-            self.top_right_sensor.enabled = True
-            self.bottom_right_sensor.enabled = True
             self.send_packet(packet)
         elif isinstance(packet, packets.DisableLateralSensors):
-            self.top_left_sensor.enabled = False
-            self.bottom_left_sensor.enabled = False
-            self.top_right_sensor.enabled = False
-            self.bottom_right_sensor.enabled = False
             self.send_packet(packet)
         elif isinstance(packet, packets.OpenMandibles):
             self.send_packet(packet)
