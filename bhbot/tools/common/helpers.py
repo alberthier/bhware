@@ -103,9 +103,13 @@ def create_robot_base_item(pen, brush, gyration_pen):
     gyration = QGraphicsEllipseItem(-gyration_radius, -gyration_radius, 2.0 * gyration_radius, 2.0 * gyration_radius)
     gyration.setPen(gyration_pen)
 
-    expanded_gyration_radius = ROBOT_EXPANDED_GYRATION_RADIUS * 1000.0
-    expanded_gyration = QGraphicsEllipseItem(-expanded_gyration_radius, -expanded_gyration_radius, 2.0 * expanded_gyration_radius, 2.0 * expanded_gyration_radius)
-    expanded_gyration.setPen(gyration_pen)
+    expanded_gripper_gyration_radius = ROBOT_EXPANDED_GRIPPER_GYRATION_RADIUS * 1000.0
+    expanded_gripper_gyration = QGraphicsEllipseItem(-expanded_gripper_gyration_radius, -expanded_gripper_gyration_radius, 2.0 * expanded_gripper_gyration_radius, 2.0 * expanded_gripper_gyration_radius)
+    expanded_gripper_gyration.setPen(gyration_pen)
+
+    expanded_sweeper_gyration_radius = ROBOT_EXPANDED_SWEEPER_GYRATION_RADIUS * 1000.0
+    expanded_sweeper_gyration = QGraphicsEllipseItem(-expanded_sweeper_gyration_radius, -expanded_sweeper_gyration_radius, 2.0 * expanded_sweeper_gyration_radius, 2.0 * expanded_sweeper_gyration_radius)
+    expanded_sweeper_gyration.setPen(gyration_pen)
 
     group = QGraphicsItemGroup()
 
@@ -120,6 +124,7 @@ def create_robot_base_item(pen, brush, gyration_pen):
     group.addToGroup(top_item)
 
     group.addToGroup(gyration)
-    group.addToGroup(expanded_gyration)
+    group.addToGroup(expanded_gripper_gyration)
+    group.addToGroup(expanded_sweeper_gyration)
 
     return group
