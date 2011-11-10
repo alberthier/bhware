@@ -53,8 +53,8 @@ class RobotController(object):
             self.resettle_count = 0
 
             self.view.clear()
-            self.robot_layer.reset()
-            self.robot_trajectory_layer.reset()
+            self.robot_layer.setup()
+            self.robot_trajectory_layer.setup()
 
             brewery = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))), "brewery", "brewery.py")
             self.process = QProcess()
@@ -65,6 +65,10 @@ class RobotController(object):
             else:
                 port = "8001"
             self.process.start(brewery, ["--webserver-port", port])
+
+
+    def reset(self):
+        self.robot_layer.reset()
 
 
     def shutdown(self):
@@ -119,11 +123,10 @@ class RobotController(object):
             self.stop()
         elif isinstance(packet, packets.Resettle):
             if packet.axis == AXIS_X:
-                self.robot_layer.set_x(packet.position * 1000.0)
+                self.robot_layer.set_x(packet.position)
             elif packet.axis == AXIS_Y:
-                self.robot_layer.set_y(packet.position * 1000.0)
-            angle = math.atan2(math.cos(packet.angle), math.sin(packet.angle)) / math.pi * 180.0
-            self.robot_layer.set_rotation(angle)
+                self.robot_layer.set_y(packet.position)
+            self.robot_layer.set_rotation(packet.angle)
             self.send_packet(packet)
             self.resettle_count += 1
             if self.resettle_count == 2:

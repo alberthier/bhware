@@ -121,7 +121,7 @@ class DefinePosition(statemachine.State):
             if self.robot().team == TEAM_RED:
                 self.pose = trajectory.Pose(RED_START_X, RED_START_Y, RED_START_ANGLE)
             else:
-                self.pose = trajectory.Pose(BLUE_START_X, BLUE_START_Y, BLUE_START_ANGLE)
+                self.pose = trajectory.Pose(PURPLE_START_X, PURPLE_START_Y, PURPLE_START_ANGLE)
         self.process()
 
 

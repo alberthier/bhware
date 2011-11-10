@@ -84,8 +84,8 @@ class GameController(object):
 
     def user_stop(self):
         self.stop()
-        #self.red_robot.reset()
-        #self.purple_robot.reset()
+        self.red_robot.reset()
+        self.purple_robot.reset()
 
 
     def stop(self):

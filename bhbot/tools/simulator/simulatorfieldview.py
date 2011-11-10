@@ -29,12 +29,12 @@ class GraphicsRobotObject(QObject):
         self.item = helpers.create_robot_base_item(QColor("#838383"), QColor("#e9eaff"), QColor(layer.color))
         self.item.setParentItem(layer)
 
-        tower = QGraphicsRectItem(-40.0, 0.0, 80.0, 80.0)
+        tower = QGraphicsRectItem(0.0, -40.0, 80.0, 80.0)
         tower.setPen(QPen(0))
         tower.setBrush(QColor("#838383"))
         self.item.addToGroup(tower)
 
-        team_indicator = QGraphicsEllipseItem(-25.0, 15.0, 50.0, 50.0)
+        team_indicator = QGraphicsEllipseItem(15.0, -25.0, 50.0, 50.0)
         team_indicator.setBrush(QColor(layer.color))
         team_indicator.setPen(QPen(0))
         self.item.addToGroup(team_indicator)
@@ -154,25 +154,34 @@ class RobotLayer(fieldview.Layer):
             self.name = "Red robot"
             self.color = TEAM_COLOR_RED
         self.robot = GraphicsRobotObject(self)
+        self.robot.item.setVisible(False)
 
 
     def reset(self):
-        pass
+        self.robot.item.setVisible(False)
+        self.robot.item.setPos(0.0, 0.0)
+        self.robot.set_rotation(0.0)
+
+
+    def setup(self):
+        self.robot.item.setVisible(True)
 
 
     def set_x(self, x):
         if self.robot:
-            self.robot.item.setX(x)
+            self.robot.item.setY(x * 1000.0)
 
 
     def set_y(self, y):
         if self.robot:
-            self.robot.item.setX(y)
+            self.robot.item.setX(y * 1000.0)
 
 
     def set_rotation(self, angle):
         if self.robot:
-            self.robot.set_rotation(angle)
+            angle_deg = self.robot.convert_angle(angle) / math.pi * 180.0
+            print self.name, angle, angle_deg
+            self.robot.set_rotation(angle_deg)
 
 
     def robot_rotation(self, angle):
@@ -211,7 +220,7 @@ class RobotTrajectoryLayer(fieldview.Layer):
             self.color = TEAM_COLOR_RED
 
 
-    def reset(self):
+    def setup(self):
         pass
 
 
