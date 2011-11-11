@@ -26,7 +26,7 @@ class GraphicsRobotObject(QObject):
         self.move_animation = QParallelAnimationGroup()
         self.move_animation.finished.connect(self.movement_finished)
 
-        self.item = helpers.create_robot_base_item(QColor("#838383"), QColor("#e9eaff"), QColor(layer.color))
+        self.item = helpers.create_robot_base_item(QColor("#838383"), QColor("#e9eaff"), QColor(layer.color).darker(150))
         self.item.setParentItem(layer)
 
         tower = QGraphicsRectItem(0.0, -40.0, 80.0, 80.0)
@@ -180,7 +180,6 @@ class RobotLayer(fieldview.Layer):
     def set_rotation(self, angle):
         if self.robot:
             angle_deg = self.robot.convert_angle(angle) / math.pi * 180.0
-            print self.name, angle, angle_deg
             self.robot.set_rotation(angle_deg)
 
 
@@ -214,10 +213,10 @@ class RobotTrajectoryLayer(fieldview.Layer):
         self.team = team
         if self.team == TEAM_PURPLE:
             self.name = "Purple robot trajectory"
-            self.color = TEAM_COLOR_PURPLE
+            self.color = QColor(TEAM_COLOR_PURPLE).darker().name()
         else:
             self.name = "Red robot trajectory"
-            self.color = TEAM_COLOR_RED
+            self.color = QColor(TEAM_COLOR_RED).darker().name()
 
 
     def setup(self):

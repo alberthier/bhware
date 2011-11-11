@@ -78,7 +78,7 @@ class GhostRobotLayer(Layer):
         Layer.__init__(self, parent)
 
         self.name = "Ghost robot"
-        self.color = "#ffdab9"
+        self.color = "#702800"
 
         # Position indication
         font = QFont()
