@@ -106,6 +106,7 @@ extern float            POS_ErreurOrientation(Pose posRobot, Vecteur posArrivee)
 extern void             POS_ConversionVitessesLongRotToConsignesPWMRouesRobotUnicycle(float vitesseLongitudinale, float vitesseRotation, unsigned short *consPWMRoueGauche, unsigned short *consPWMRoueDroite);
 extern float            POS_GetConsVitesseMax(void);
 extern float            POS_GetConsVitesseAngulaireMax(void);
+extern void             POS_SetGainStatiqueMoteur(float gain);
 
 /*! @} */
 

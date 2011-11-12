@@ -46,7 +46,7 @@
 
 /* Constantes */
 
-#define                 GAIN_STATIQUE_MOTEUR    (((DonneeVmaxDroite + DonneeVmaxGauche) / 2.0) / 1023.0)   /* Gain statique des moteurs CC du deplacement 1 m.s-1 / 1023 */
+#define                 GAIN_STATIQUE_MOTEUR_DEFAULT_VAL    (((DonneeVmaxDroite + DonneeVmaxGauche) / 2.0) / 1023.0)   /* Gain statique des moteurs CC du deplacement 1 m.s-1 / 1023 */
 #define                 PERIMETRE_DROIT         (PI * (DonneeDRoueDroite / 1000))                          /* Perimetre en m de la roue libre du codeur droit */
 #define                 PERIMETRE_GAUCHE        (PI * (DonneeDRoueGauche / 1000))                          /* Perimetre en m de la roue libre du codeur gauche */
     
@@ -55,7 +55,8 @@ const   float           TE                      = 0.020;                        
 /**********************************************************************/
 
 /* Variables globales */
-    
+float                   GAIN_STATIQUE_MOTEUR    = 0.001;
+
 float                   ECART_ROUE_LIBRE        = 0.1704;                                                   /* Ecart entre les roues libres des codeurs incrementaux */
 float                   ECART_ROUE_MOTRICE      = 0.339;                                                    /* Entraxe des roues motrices */
 float                   COEFFICIENT_DE_GLISSEMENT_LATERAL = 0.0;
@@ -167,6 +168,19 @@ Pose POS_GetPoseAsserRobot(void)
     }
 
     return poseRobot;
+}
+
+/**********************************************************************/
+/*! \brief POS_SetGainStatiqueMoteur
+ *
+ *  \note   Calcul et retourne la vitesse maximale de consigne des moteurs de deplacement
+ *
+ *  \param [in] gain     Gain statique du moteur de deplacement
+ */
+/**********************************************************************/
+void POS_SetGainStatiqueMoteur(float gain)
+{
+     GAIN_STATIQUE_MOTEUR = gain;
 }
 
 /**********************************************************************/

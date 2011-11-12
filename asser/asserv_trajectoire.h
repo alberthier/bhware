@@ -29,20 +29,20 @@
  
 /* Nombre max de points pouvant definir la trajectoire */
 #ifndef PIC32_BUILD
-#define NBRE_MAX_PTS_TRAJ    70
+#define NBRE_MAX_PTS_TRAJ           70
 #else
-#define NBRE_MAX_PTS_TRAJ    5
+#define NBRE_MAX_PTS_TRAJ           5
 #endif
 
 #ifndef PIC32_BUILD
-#define NBR_ASSER_LOG_VALUE     60
+#define NBR_ASSER_LOG_VALUE         60
 #else
-#define NBR_ASSER_LOG_VALUE  ((NET_BUF_CFG_DATA_SIZE_SMALL - (3 * sizeof(float)) - (2 * sizeof(unsigned char)) - sizeof(int)) / sizeof(float))
+#define NBR_ASSER_LOG_VALUE         ((NET_BUF_CFG_DATA_SIZE_SMALL - (3 * sizeof(float)) - (2 * sizeof(unsigned char)) - sizeof(int)) / sizeof(float))
 #endif
 
-#define TAILLE_TAB_GABARIT_VITESSE  101
-#define PAS_TEMPS 0
-#define PAS_DISTANCE 1
+#define TAILLE_TAB_GABARIT_VITESSE  1001
+#define PAS_TEMPS                   0
+#define PAS_DISTANCE                1
 
 /** Structure de parametres du profil de vitesse des trajectoires */
 typedef struct
@@ -80,6 +80,14 @@ typedef struct
 
     float           tempsAcc;
     //unsigned int m;
+
+    // parametre gene profil 2012
+    float           Amax;
+    float           Dmax;
+    float           coeffDecc_v1;
+    float           D_AP;
+    float           pas_reduit;
+    unsigned int    iFin_P;
 } ParametresProfilVitesse;
 
 typedef struct
@@ -155,12 +163,11 @@ extern unsigned int         ASSER_TRAJ_GetSegmentCourant(void);
 extern void                 ASSER_TRAJ_LogAsser(char *keyWord, unsigned char index, float val);
 extern void                 ASSER_TRAJ_ResetLogAsserTable(void);
 extern unsigned int         ASSER_TRAJ_GetCompteur(void);
+extern float                ASSER_TRAJ_GabaritVitesse_getVitesse_vs_Distance(Trajectoire *traj, float distance);
 
 #ifndef PIC32_BUILD
 #define                     ASSER_TRAJ_LogStr(...) printf("LOG " __VA_ARGS__)
 extern void                 ASSER_TRAJ_InitialisationLogAsser(void);
-#else
-#define                     ASSER_TRAJ_LogStr(...) /* */
 #endif
 
 /*! @} */

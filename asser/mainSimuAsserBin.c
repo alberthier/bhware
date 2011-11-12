@@ -102,7 +102,7 @@ int main(void)
     char marche, marcheNull;
     unsigned int nbrPtsChemin, nbrPtsNull, nbrParameters, iParam;
     float angleArrivee;
-    Parameter paramPI[2], paramK[3], paramR[2], paramT[3];
+    Parameter paramPI[2], paramK[3], paramR[2], paramT[3], paramMotor[9];
 
     printf("asserSimulator: Demarrage simulateur\n");
 
@@ -129,6 +129,7 @@ int main(void)
         {
             commandMsgTreatment(buffer, &mouvement, &marche, &nbrPtsChemin, chemin);
 
+            SIMU_InitialisationLogRobot();
             /* initialisation des données pour l'ordre de déplacement */
             //angleArrivee = chemin[nbrPtsChemin-1].pose.angle;
             /* lancement du deplacement */
@@ -182,6 +183,23 @@ int main(void)
                 facteurVitesseAngulaireMax = paramT[1].value;
                 Umax = (unsigned int)paramT[2].value;
             }
+        }
+        else if (strcmp(command, "PARAMETERS_MOTOR") == 0)
+        {
+            parameterMsgTreatment(buffer, &nbrParameters, paramMotor, 9);
+            if (nbrParameters == 9)
+            {
+                SIMU_SetParamMoteur(paramMotor[0].value
+                                    , paramMotor[1].value
+                                    , paramMotor[2].value
+                                    , paramMotor[3].value
+                                    , paramMotor[4].value
+                                    , paramMotor[5].value
+                                    , paramMotor[6].value
+                                    , paramMotor[7].value
+                                    , paramMotor[8].value);
+            }
+
         }
         else
         {
