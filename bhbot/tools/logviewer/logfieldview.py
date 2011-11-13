@@ -25,16 +25,15 @@ class ExpectedTrajectoryLayer(fieldview.Layer):
 
 
     def process_log_line(self, log_line, lineno, last_lineno):
-        if len(log_line) > logger.LOG_DATA_PACKET:
-            packet = log_line[logger.LOG_DATA_PACKET]
-            if isinstance(packet, packets.KeepAlive):
-                pose = packet.current_pose
-                if not self.has_first_goto:
-                    self.path.moveTo(pose.y * 1000.0, pose.x * 1000.0)
-                else:
-                    self.path.lineTo(pose.y * 1000.0, pose.x * 1000.0)
-            elif isinstance(packet, packets.Goto) and packet.movement != MOVEMENT_ROTATE:
-                self.has_first_goto = True
+        data = log_line[logger.LOG_LINE_DATA]
+        if isinstance(data, packets.KeepAlive):
+            pose = data.current_pose
+            if not self.has_first_goto:
+                self.path.moveTo(pose.y * 1000.0, pose.x * 1000.0)
+            else:
+                self.path.lineTo(pose.y * 1000.0, pose.x * 1000.0)
+        elif isinstance(data, packets.Goto) and data.movement != MOVEMENT_ROTATE:
+            self.has_first_goto = True
 
         if lineno == last_lineno:
             path_item = QGraphicsPathItem(self)
@@ -55,17 +54,16 @@ class RealTrajectoryLayer(fieldview.Layer):
 
 
     def process_log_line(self, log_line, lineno, last_lineno):
-        if len(log_line) > logger.LOG_DATA_PACKET:
-            packet = log_line[logger.LOG_DATA_PACKET]
-            if isinstance(packet, packets.Goto) and packet.movement != MOVEMENT_ROTATE:
-                for pose in packet.points:
-                    x = pose.x * 1000.0
-                    y = pose.y * 1000.0
-                    if not self.has_first_goto:
-                        self.has_first_goto = True
-                        self.path.moveTo(y, x)
-                    else:
-                        self.path.lineTo(y, x)
+        data = log_line[logger.LOG_LINE_DATA]
+        if isinstance(data, packets.Goto) and data.movement != MOVEMENT_ROTATE:
+            for pose in data.points:
+                x = pose.x * 1000.0
+                y = pose.y * 1000.0
+                if not self.has_first_goto:
+                    self.has_first_goto = True
+                    self.path.moveTo(y, x)
+                else:
+                    self.path.lineTo(y, x)
 
         if lineno == last_lineno:
             path_item = QGraphicsPathItem(self)

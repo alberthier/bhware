@@ -9,7 +9,6 @@ import os
 import imp
 
 import logger
-import packets
 
 import logview
 import logfieldview
@@ -37,11 +36,6 @@ class MainWindowController(QObject):
         lineno = 1
         last_lineno = len(log)
         for log_line in log:
-            packet_type = log_line[logger.LOG_DATA_TYPE]
-            if packets.PACKETS_BY_NAME.has_key(packet_type):
-                packet = packets.PACKETS_BY_NAME[packet_type]()
-                packet.from_dict(log_line[logger.LOG_DATA_PACKET])
-                log_line[logger.LOG_DATA_PACKET] = packet
             self.logview_controller.process_log_line(log_line, lineno, last_lineno)
             self.fieldview_controller.process_log_line(log_line, lineno, last_lineno)
             lineno += 1

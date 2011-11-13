@@ -526,7 +526,7 @@ class BasePacket(object):
     LOGVIEW_DEFAULT_ENABLED = True
     STRUCT = None
 
-    def __init__(self, initialize_members = True):
+    def __init__(self, **kwargs):
         cls = type(self)
         if cls.STRUCT == None:
             fmt = "<B"
@@ -538,9 +538,12 @@ class BasePacket(object):
                 fmt += str(pad_size) + "x"
             cls.STRUCT = struct.Struct(fmt)
 
-        if initialize_members:
-            for elt in self.DEFINITION:
-                setattr(self, elt.name, elt.default_value)
+        for elt in self.DEFINITION:
+            if kwargs.has_key(elt.name):
+                value = kwargs[elt.name]
+            else:
+                value = elt.default_value
+            setattr(self, elt.name, value)
 
 
     def do_deserialize(self, buf):
@@ -583,6 +586,19 @@ class BasePacket(object):
         for elt in self.DEFINITION:
             value = elt.from_dict_value(packet_dict[elt.name], pretty)
             setattr(self, elt.name, value)
+
+
+    def to_code(self):
+        code = type(self).__name__ + "("
+        first = True
+        for elt in self.DEFINITION:
+            if not first:
+                code += ", "
+            else:
+                first = False
+            code += elt.name + " = " + str(getattr(self, elt.name))
+        code += ")"
+        return code
 
 
 

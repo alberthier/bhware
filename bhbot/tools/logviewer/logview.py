@@ -70,30 +70,28 @@ class LogModel(QStandardItemModel):
         line = []
         first_item = QStandardItem(0)
         line.append(first_item)
-        line.append(QStandardItem(log_line[logger.LOG_DATA_TIME]))
-        packet_type = log_line[logger.LOG_DATA_TYPE]
-        if not packets.PACKETS_BY_NAME.has_key(packet_type):
-            text = log_line[logger.LOG_DATA_PACKET]
-            line.append(QStandardItem(log_line[logger.LOG_DATA_SENDER]))
+        line.append(QStandardItem(log_line[logger.LOG_LINE_TIME]))
+        data = log_line[logger.LOG_LINE_DATA]
+        if type(data) == str:
+            line.append(QStandardItem(log_line[logger.LOG_LINE_SENDER]))
             typeItem = QStandardItem(self.comment_color, "Log Text")
             typeItem.setData(QVariant(-1), LogModel.LOG_MODEL_PACKET_TYPE_ROLE)
             line.append(typeItem)
             line.append(QStandardItem(self.states_stack[-1]))
-            line.append(QStandardItem(text))
-            if text.startswith("# Pushing sub-state "):
-                self.states_stack.append(text[text.rfind(" ") + 1:])
-            elif text.startswith("# Poping sub-state "):
+            line.append(QStandardItem(data))
+            if data.startswith("# Pushing sub-state "):
+                self.states_stack.append(data[data.rfind(" ") + 1:])
+            elif data.startswith("# Poping sub-state "):
                 self.states_stack.pop()
-            elif text.startswith("# Switching to state "):
-                self.states_stack[-1] = text[text.rfind(" ") + 1:]
+            elif data.startswith("# Switching to state "):
+                self.states_stack[-1] = data[data.rfind(" ") + 1:]
         else:
-            packet = log_line[logger.LOG_DATA_PACKET]
-            line.append(QStandardItem(log_line[logger.LOG_DATA_SENDER]))
-            typeItem = QStandardItem(self.colors[packet.TYPE], packet_type)
-            typeItem.setData(QVariant(packet.TYPE), LogModel.LOG_MODEL_PACKET_TYPE_ROLE)
+            line.append(QStandardItem(log_line[logger.LOG_LINE_SENDER]))
+            typeItem = QStandardItem(self.colors[data.TYPE], type(data).__name__)
+            typeItem.setData(QVariant(data.TYPE), LogModel.LOG_MODEL_PACKET_TYPE_ROLE)
             line.append(typeItem)
             line.append(QStandardItem(self.states_stack[-1]))
-            packet_dict = packet.to_dict(True)
+            packet_dict = data.to_dict(True)
             line.append(QStandardItem(helpers.packet_dump_to_text(packet_dict)))
             self.add_content(first_item, None, packet_dict)
         self.appendRow(line)

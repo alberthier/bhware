@@ -21,7 +21,7 @@ class Pose(object):
 
 
     def __repr__(self):
-        return "[{0}, {1}, {2}]".format(self.x, self.y, self.angle)
+        return "Pose({0}, {1}, {2})".format(self.x, self.y, self.angle)
 
 
     def __eq__(self, other):

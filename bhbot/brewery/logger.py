@@ -13,11 +13,10 @@ import config
 from definitions import *
 
 
-LOG_DATA_TIME   = 0
-LOG_DATA_TYPE   = 1
-LOG_DATA_SENDER = 2
-LOG_DATA_PACKET = 3
-LOG_DATA_COUNT  = 4
+LOG_LINE_TIME   = 0
+LOG_LINE_SENDER = 1
+LOG_LINE_DATA   = 2
+LOG_LINE_COUNT  = 3
 
 filepath = None
 log_file = None
@@ -38,7 +37,8 @@ def initialize():
             log_file = file(os.devnull, "w")
         log_file.write("#!/usr/bin/env python\n")
         log_file.write("# encoding: utf-8\n\n")
-        log_file.write("from collections import OrderedDict\n\n")
+        log_file.write("from packets import *\n")
+        log_file.write("from trajectory import *\n\n")
         log_file.write("log = []\n\n")
         log_file.write("if __name__ == '__main__':\n")
         log_file.write("    def l(line):\n")
@@ -68,7 +68,7 @@ def log(text, sender = "ARM"):
     delta = datetime.datetime.now() - start_time
     time = "'{0:=0.02f}'".format(float(delta.seconds) + (float(delta.microseconds)/1000000.0))
     try:
-        log_file.write("l([" + time + ",'Log','" + sender + "','# " + text.replace("'", "\\'") + "'])\n")
+        log_file.write("l([" + time + ",'" + sender + "','# " + text.replace("'", "\\'") + "'])\n")
     except:
         print("Failed to write to file")
     sys.stdout.write(text + "\n")
@@ -87,8 +87,7 @@ def log_packet(packet, sender = "ARM"):
     initialize()
     delta = datetime.datetime.now() - start_time
     time = "'{0:=0.02f}'".format(float(delta.seconds) + (float(delta.microseconds)/1000000.0))
-    packet_dict = packet.to_dict()
-    text = "'" + type(packet).__name__ + "','" + sender + "'," + str(packet_dict) + "]"
+    text = "'" + sender + "'," + packet.to_code() + "]"
     try:
         log_file.write("l([" + time + "," + text + ")\n")
     except:
