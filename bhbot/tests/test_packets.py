@@ -204,7 +204,7 @@ class GotoFinishedPacketTestCase(unittest.TestCase, PacketTestMixin):
 
 
     def initialize_packet(self, packet):
-        packet.reason = REASON_PIECE_FOUND
+        packet.reason = REASON_DESTINATION_REACHED
         packet.current_pose = trajectory.Pose(20.0, 30.0, 5.5)
         packet.current_point_index = 12
 
@@ -311,123 +311,6 @@ class ResettlePacketTestCase(unittest.TestCase, PacketTestMixin):
         packet.axis = AXIS_Y
         packet.position = 684.87
         packet.angle = 156.5
-
-
-
-
-class DeploymentPacketTestCase(unittest.TestCase, PacketTestMixin):
-
-    def create_packet(self):
-        return packets.Deployment()
-
-
-
-
-class PieceDetectedPacketTestCase(unittest.TestCase, PacketTestMixin):
-
-    def create_packet(self):
-        return packets.PieceDetected()
-
-
-    def initialize_packet(self, packet):
-        packet.start_pose = trajectory.Pose(12.3, 67.9, 56.4)
-        packet.start_distance = 54.8
-        packet.end_pose = trajectory.Pose(2.3, 32.9, 98.3)
-        packet.end_distance = 34.0
-        packet.sensor = SENSOR_RIGHT_BOTTOM
-        packet.angle = 32.8
-
-
-
-
-class StorePiece1PacketTestCase(unittest.TestCase, PacketTestMixin):
-
-    def create_packet(self):
-        return packets.StorePiece1()
-
-
-    def initialize_packet(self, packet):
-        packet.piece_count = 34
-
-
-
-
-class StorePiece2PacketTestCase(unittest.TestCase, PacketTestMixin):
-
-    def create_packet(self):
-        return packets.StorePiece2()
-
-
-    def initialize_packet(self, packet):
-        packet.piece_count = 52
-
-
-
-
-class StorePiece3PacketTestCase(unittest.TestCase, PacketTestMixin):
-
-    def create_packet(self):
-        return packets.StorePiece3()
-
-
-    def initialize_packet(self, packet):
-        packet.piece_count = 64
-
-
-
-
-class ReleasePiecePacketTestCase(unittest.TestCase, PacketTestMixin):
-
-    def create_packet(self):
-        return packets.ReleasePiece()
-
-
-
-
-class OpenNippersPacketTestCase(unittest.TestCase, PacketTestMixin):
-
-    def create_packet(self):
-        return packets.OpenNippers()
-
-
-
-
-class CloseNippersPacketTestCase(unittest.TestCase, PacketTestMixin):
-
-    def create_packet(self):
-        return packets.CloseNippers()
-
-
-
-
-class EnableLateralSensorsPacketTestCase(unittest.TestCase, PacketTestMixin):
-
-    def create_packet(self):
-        return packets.EnableLateralSensors()
-
-
-
-
-class DisableLateralSensorsPacketTestCase(unittest.TestCase, PacketTestMixin):
-
-    def create_packet(self):
-        return packets.DisableLateralSensors()
-
-
-
-
-class CloseMandiblesPacketTestCase(unittest.TestCase, PacketTestMixin):
-
-    def create_packet(self):
-        return packets.CloseMandibles()
-
-
-
-
-class OpenMandiblesPacketTestCase(unittest.TestCase, PacketTestMixin):
-
-    def create_packet(self):
-        return packets.OpenMandibles()
 
 
 
