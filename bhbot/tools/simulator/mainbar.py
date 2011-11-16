@@ -24,4 +24,4 @@ class MainBar(QWidget, MainBar_Ui):
 
     def set_icon(self, button, icon_name):
         icons_dir = os.path.join(os.path.dirname(__file__), "icons")
-        button.setIcon(QIcon(os.path.join(icons_dir, "{0}.svg".format(icon_name))))
+        button.setIcon(QIcon(os.path.join(icons_dir, "{}.svg".format(icon_name))))

@@ -113,7 +113,7 @@ class LogModel(QStandardItemModel):
         if isinstance(log, list) or isinstance(log, tuple):
             index = 0
             for value in log:
-                self.add_content(new_parent, "[{0}]".format(index), value, indent + "    ")
+                self.add_content(new_parent, "[{}]".format(index), value, indent + "    ")
                 index += 1
         elif isinstance(log, collections.OrderedDict):
             for key, value in log.iteritems():

@@ -232,7 +232,7 @@ class FloatItem(PacketItem):
 
     def to_dict_value(self, value, pretty = False):
         if pretty:
-            return "{0:0.4f}".format(value)
+            return "{:0.4f}".format(value)
         return value
 
 
@@ -261,7 +261,7 @@ class FloatRadianItem(FloatItem):
 
     def to_dict_value(self, value, pretty = False):
         if pretty:
-            return "{0:0.4f} ({1:0.4f} deg)".format(value, value / math.pi * 180.0)
+            return "{:0.4f} ({:0.4f} deg)".format(value, value / math.pi * 180.0)
         return value
 
 
@@ -282,7 +282,7 @@ class DoubleRadianItem(DoubleItem):
 
     def to_dict_value(self, value, pretty = False):
         if pretty:
-            return "{0:0.4f} ({1:0.4f} deg)".format(value, value / math.pi * 180.0)
+            return "{:0.4f} ({:0.4f} deg)".format(value, value / math.pi * 180.0)
         return value
 
 
@@ -395,10 +395,10 @@ class PoseWithOptionalAngleItem(PacketItem):
     def to_dict_value(self, value, pretty = False):
         ret = OrderedDict()
         if pretty:
-            ret["x"]     = "{0:0.4f}".format(value.x)
-            ret["y"]     = "{0:0.4f}".format(value.y)
+            ret["x"]     = "{:0.4f}".format(value.x)
+            ret["y"]     = "{:0.4f}".format(value.y)
             if value.angle != None:
-                ret["angle"] = "{0:0.4f} ({1:0.4f} deg)".format(value.angle, value.angle / math.pi * 180.0)
+                ret["angle"] = "{:0.4f} ({:0.4f} deg)".format(value.angle, value.angle / math.pi * 180.0)
             else:
                 ret["angle"] = "None"
         else:
@@ -783,119 +783,6 @@ class Resettle(BasePacket):
         FloatItem      ('position', 0.0,    "Robot position on the given axis"),
         FloatRadianItem('angle',    0.0,    "Robot angle"),
     )
-
-
-
-
-class Deployment(BasePacket):
-
-    TYPE = 14
-    LOGVIEW_COLOR = "#006400"
-
-
-
-
-class PieceDetected(BasePacket):
-
-    TYPE = 15
-    LOGVIEW_COLOR = "#ffd700"
-    DEFINITION = (
-        PoseItem        ('start_pose',                  "Detection start pose"),
-        FloatItem       ('start_distance', 0.0,         "Detection start distance"),
-        PoseItem        ('end_pose',                    "Detection end pose"),
-        FloatItem       ('end_distance',   0.0,         "Detection end distance"),
-        UEnum8Item      ('sensor',         SENSOR_NONE, 'SENSOR'),
-        FloatRadianItem ('angle',          0.0,         "SICK detection angle"),
-    )
-
-
-
-
-class StorePiece1(BasePacket):
-
-    TYPE = 16
-    LOGVIEW_COLOR = "#bdb76b"
-    DEFINITION = (
-        UInt8Item('piece_count', 0, "Stored piece count"),
-    )
-
-
-
-
-class StorePiece2(BasePacket):
-
-    TYPE = 17
-    LOGVIEW_COLOR = "#8b008b"
-    DEFINITION = (
-        UInt8Item('piece_count', 0, "Stored piece count"),
-    )
-
-
-
-
-class StorePiece3(BasePacket):
-
-    TYPE = 18
-    LOGVIEW_COLOR = "#556b2f"
-    DEFINITION = (
-        UInt8Item('piece_count', 0, "Stored piece count"),
-    )
-
-
-
-
-class ReleasePiece(BasePacket):
-
-    TYPE = 19
-    LOGVIEW_COLOR = "#ff8c00"
-
-
-
-
-class OpenNippers(BasePacket):
-
-    TYPE = 20
-    LOGVIEW_COLOR = "#9932cc"
-
-
-
-
-class CloseNippers(BasePacket):
-
-    TYPE = 21
-    LOGVIEW_COLOR = "#8b0000"
-
-
-
-
-class EnableLateralSensors(BasePacket):
-
-    TYPE = 22
-    LOGVIEW_COLOR = "#e9967a"
-
-
-
-
-class DisableLateralSensors(BasePacket):
-
-    TYPE = 23
-    LOGVIEW_COLOR = "#8fbc8f"
-
-
-
-
-class CloseMandibles(BasePacket):
-
-    TYPE = 24
-    LOGVIEW_COLOR = "#4682b4"
-
-
-
-
-class OpenMandibles(BasePacket):
-
-    TYPE = 25
-    LOGVIEW_COLOR = "#2e8b57"
 
 
 

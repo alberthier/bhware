@@ -8,37 +8,29 @@ import math
 ########################################################################
 # Constants
 
-EVENT_LOOP_TICK_RESOLUTION = 0.05
-FIELD_WIDTH = 3.0
-FIELD_HEIGHT= 2.0
-FIELD_CELL_SIZE = 0.350
-FIELD_CELLS_COUNT = 6
-FIELD_GREEN_ZONE_WIDTH = 0.450
-PIECE_RADIUS = 0.2
-ROBOT_WIDTH = 0.337
-ROBOT_HEIGHT = 0.256
-ROBOT_CENTER_X = ROBOT_WIDTH / 2.0
-ROBOT_CENTER_Y = 0.054
-ROBOT_CENTER_TO_LATERAL_SENSOR_DISTANCE = 0.150 - ROBOT_CENTER_Y
-ROBOT_CENTER_TO_HACKED_SENSOR_DISTANCE = 0.247 - ROBOT_CENTER_Y
-ROBOT_GYRATION_RADIUS = 0.2386
+EVENT_LOOP_TICK_RESOLUTION             = 0.05
+FIELD_WIDTH                            = 3.0
+FIELD_HEIGHT                           = 2.0
+ROBOT_WIDTH                            = 0.276
+ROBOT_HEIGHT                           = 0.322
+ROBOT_CENTER_X                         = 0.099
+ROBOT_CENTER_Y                         = 0.161
+ROBOT_GYRATION_RADIUS                  = 0.2386
 ROBOT_EXPANDED_GRIPPER_GYRATION_RADIUS = 0.321965
 ROBOT_EXPANDED_SWEEPER_GYRATION_RADIUS = 0.289355
-ROBOT_EXPANDED_GYRATION_RADIUS = max(ROBOT_EXPANDED_GRIPPER_GYRATION_RADIUS, ROBOT_EXPANDED_SWEEPER_GYRATION_RADIUS)
-RED_START_X = 0.310
-RED_START_Y = FIELD_WIDTH - 0.176
-RED_START_ANGLE = math.pi / 2.0
-PURPLE_START_X = 0.310
-PURPLE_START_Y = 0.176
-PURPLE_START_ANGLE = -math.pi / 2.0
-OPPONENT_DETECTION_ANGLE = math.pi / 6.0
-OPPONENT_DETECTION_DISAPEARING_KEEP_ALIVE_TICKS = 4
-KEEP_ALIVE_DELAY_MS = 200
-MATCH_DURATION_MS = 90000
-SICK_DETECTION_THRESHOLD = 0.030
-TAKE_FIGURE_Y = 0.250
-TEAM_COLOR_RED = "#ff3b3d"
-TEAM_COLOR_PURPLE = "#9632f6"
+ROBOT_EXPANDED_GYRATION_RADIUS         = max(ROBOT_EXPANDED_GRIPPER_GYRATION_RADIUS, ROBOT_EXPANDED_SWEEPER_GYRATION_RADIUS)
+RED_START_X                            = 0.310
+RED_START_Y                            = FIELD_WIDTH - (ROBOT_WIDTH - ROBOT_CENTER_X)
+RED_START_ANGLE                        = math.pi / 2.0
+PURPLE_START_X                         = 0.310
+PURPLE_START_Y                         = ROBOT_WIDTH - ROBOT_CENTER_X
+PURPLE_START_ANGLE                     = -math.pi / 2.0
+OPPONENT_DETECTION_ANGLE               = math.pi / 6.0
+OPPONENT_DETECTION_DISAPEARING_TICKS   = 800 * EVENT_LOOP_TICK_RESOLUTION
+KEEP_ALIVE_DELAY_MS                    = 200
+MATCH_DURATION_MS                      = 90000
+TEAM_COLOR_RED                         = "#ff3b3d"
+TEAM_COLOR_PURPLE                      = "#9632f6"
 
 ########################################################################
 # Enums
@@ -49,16 +41,16 @@ ENUMS = {}
 
 class Enum(object):
 
-	def __init__(self, name, description, **kwargs):
-		self.name = name
-		self.description = description
-		self.lookup_by_name = {}
-		self.lookup_by_value = {}
-		ENUMS[name] = self
-		for enum_item_name, enum_item_value in kwargs.items():
-			globals()[enum_item_name] = enum_item_value
-			self.lookup_by_name[enum_item_name] = enum_item_value
-			self.lookup_by_value[enum_item_value] = enum_item_name
+    def __init__(self, name, description, **kwargs):
+        self.name = name
+        self.description = description
+        self.lookup_by_name = {}
+        self.lookup_by_value = {}
+        ENUMS[name] = self
+        for enum_item_name, enum_item_value in kwargs.items():
+            globals()[enum_item_name] = enum_item_value
+            self.lookup_by_name[enum_item_name] = enum_item_value
+            self.lookup_by_value[enum_item_value] = enum_item_name
 
 
 
@@ -96,22 +88,9 @@ Enum("DIRECTION",
     DIRECTION_BACKWARD = -1,
 )
 
-Enum("ANGLE",
-    "Angle",
-    ANGLE_N  = math.pi / 2.0,
-    ANGLE_NW = 3.0 * math.pi / 4.0,
-    ANGLE_W  = math.pi,
-    ANGLE_SW = 5.0 * math.pi / 4.0,
-    ANGLE_S  = 3.0 * math.pi / 2.0,
-    ANGLE_SE = 7.0 * math.pi / 4.0,
-    ANGLE_E  = 0.0
-)
-
-
 Enum("REASON",
     "Goto finished reason",
     REASON_DESTINATION_REACHED = 0,
-    REASON_PIECE_FOUND         = 1,
 )
 
 Enum("BLOCKING",
@@ -126,28 +105,9 @@ Enum("AXIS",
     AXIS_Y = 1,
 )
 
-Enum("SENSOR",
-    "Piece sensor",
-    SENSOR_LEFT_BOTTOM  = 3,
-    SENSOR_LEFT_TOP     = 2,
-    SENSOR_RIGHT_BOTTOM = 1,
-    SENSOR_RIGHT_TOP    = 0,
-    SENSOR_CENTER       = 4,
-    SENSOR_NONE         = 5,
-)
-
-Enum("NODE",
-    "Node color",
-    NODE_BLUE    = 0,
-    NODE_RED     = 1,
-    NODE_GREEN   = 2,
-    NODE_UNKNOWN = 0,
-)
-
 Enum("TRAJECTORY_WALK",
     "Trajectory walk result",
     TRAJECTORY_WALK_DESTINATION_REACHED = 0,
-    TRAJECTORY_WALK_PIECE_FOUND         = 1,
     TRAJECTORY_WALK_BLOCKED             = 2,
     TRAJECTORY_WALK_OPPONENT_DETECTED   = 3,
 )

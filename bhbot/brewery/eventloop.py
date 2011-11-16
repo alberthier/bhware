@@ -23,7 +23,6 @@ import asyncwsgiserver
 import web.webinterface
 import leds
 import robot
-import figuredetector
 import opponentdetector
 from definitions import *
 
@@ -154,7 +153,7 @@ class Timer(object):
 class RobotControlDeviceStarter(object):
 
     def __init__(self, eventloop):
-        logger.log("Connecting to {0}:{1} ...".format(config.remote_ip, config.remote_port))
+        logger.log("Connecting to {}:{} ...".format(config.remote_ip, config.remote_port))
         self.control_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.log_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.eventloop = eventloop
@@ -171,16 +170,16 @@ class RobotControlDeviceStarter(object):
             leds.orange.off()
             connected = True
         except Exception as e:
-            logger.log("Unable to connect to {0}:{1} ({2}), retrying".format(config.remote_ip, config.remote_port, e))
+            logger.log("Unable to connect to {}:{} ({}), retrying".format(config.remote_ip, config.remote_port, e))
             leds.orange.toggle()
         if connected:
             try:
                 self.log_socket.connect((config.remote_ip, config.remote_log_port))
                 self.eventloop.robot_log_channel = RobotLogDeviceChannel(self.log_socket)
-                logger.log("Connected to the log stocket {0}:{1}".format(config.remote_ip, config.remote_log_port))
+                logger.log("Connected to the log stocket {}:{}".format(config.remote_ip, config.remote_log_port))
             except Exception as e:
                 # Log socket is not mandatory. If the connection fails, continue without it.
-                logger.log("Unable to connect to the log stocket {0}:{1} ({2}), continuing without PIC logs".format(config.remote_ip, config.remote_log_port, e))
+                logger.log("Unable to connect to the log stocket {}:{} ({}), continuing without PIC logs".format(config.remote_ip, config.remote_log_port, e))
             self.eventloop.create_fsm()
         return connected
 
@@ -199,7 +198,6 @@ class EventLoop(object):
         self.robot = robot.Robot(self)
         self.state_machine_name = state_machine_name
         self.webserver_port = webserver_port
-        self.figure_detector = figuredetector.FigureDetector(self.robot)
         self.opponent_detector = opponentdetector.OpponentDetector(self)
         self.stopping = False
         self.timers = []
@@ -273,7 +271,6 @@ class EventLoop(object):
                             self.send_packet(channel.packet)
                             self.robot.pose = channel.packet.current_pose
                             leds.green.heartbeat_tick()
-                            self.opponent_detector.on_keep_alive(channel.packet.current_pose, channel.packet.match_started, channel.packet.match_time)
                             self.get_current_state().on_keep_alive(channel.packet.current_pose, channel.packet.match_started, channel.packet.match_time)
                         elif isinstance(channel.packet, packets.PositionControlConfig):
                             self.get_current_state().on_position_control_configured()
@@ -282,7 +279,6 @@ class EventLoop(object):
                         elif isinstance(channel.packet, packets.Deployment):
                             self.get_current_state().on_deployed()
                         elif isinstance(channel.packet, packets.PieceDetected):
-                            self.figure_detector.on_piece_detected(channel.packet.start_pose, channel.packet.start_distance, channel.packet.end_pose, channel.packet.end_distance, channel.packet.sensor, channel.packet.angle)
                             self.get_current_state().on_piece_detected(channel.packet.start_pose, channel.packet.start_distance, channel.packet.end_pose, channel.packet.end_distance, channel.packet.sensor, channel.packet.angle)
                         elif isinstance(channel.packet, packets.StorePiece1):
                             self.robot.stored_piece_count = channel.packet.piece_count
@@ -338,7 +334,7 @@ class EventLoop(object):
     def create_fsm(self):
         state = statemachine.instantiate_state_machine(self.state_machine_name, self)
         if state == None :
-            logger.log("No 'Main' state machine found in '{0}'".format(state_machine_file))
+            logger.log("No 'Main' state machine found in '{}'".format(state_machine_file))
             self.stop()
         else:
             self.root_state.switch_to_substate(state)
@@ -346,19 +342,20 @@ class EventLoop(object):
 
 
     def start(self):
-        logger.log("Starting internal web server on port {0}".format(self.webserver_port))
+        logger.log("Starting internal web server on port {}".format(self.webserver_port))
         self.web_server = asyncwsgiserver.WsgiServer("", self.webserver_port, web.webinterface.create_app(self))
         if (config.serial_port_path != None):
             try:
                 self.turret_channel = TurretChannel(config.serial_port_path, config.serial_port_speed, self)
             except serial.SerialException:
-                logger.log("Unable to open serial port {0}".format(config.serial_port_path))
+                logger.log("Unable to open serial port {}".format(config.serial_port_path))
                 self.turret_channel = None
         RobotControlDeviceStarter(self)
-        logger.log("Starting brewery with state machine '{0}'".format(self.state_machine_name))
+        logger.log("Starting brewery with state machine '{}'".format(self.state_machine_name))
         while not self.stopping:
             asyncore.loop(EVENT_LOOP_TICK_RESOLUTION, True, None, 1)
             self.get_current_state().on_timer_tick()
+            self.opponent_detector.on_timer_tick()
             while len(self.timers) != 0:
                 if not self.timers[0].check_timeout():
                     break

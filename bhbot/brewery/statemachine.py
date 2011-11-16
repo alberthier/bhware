@@ -16,10 +16,10 @@ def instantiate_state_machine(state_machine_name, eventloop):
         if inspect.isclass(item_type) and issubclass(item_type, State) and item_name == "Main":
             root_state = item_type()
             root_state.event_loop = eventloop
-            logger.log("Successfully instatiated state '{0}' from file '{1}'".format(item_name, state_machine_file))
+            logger.log("Successfully instatiated state '{}' from file '{}'".format(item_name, state_machine_file))
             return root_state
     else:
-        logger.log("No 'Main' state found in '{0}'".format(state_machine_file))
+        logger.log("No 'Main' state found in '{}'".format(state_machine_file))
 
 
 
@@ -38,7 +38,7 @@ class State(object):
         new_state.sub_state = None
         new_state.parent_state = self.parent_state
         self.parent_state.sub_state = new_state
-        logger.log("Switching to state {0}".format(new_state.__class__.__name__))
+        logger.log("Switching to state {}".format(type(new_state).__name__))
         new_state.on_enter()
 
 
@@ -47,14 +47,14 @@ class State(object):
         new_state.sub_state = None
         new_state.parent_state = self
         self.sub_state = new_state
-        logger.log("Pushing sub-state {0}".format(new_state.__class__.__name__))
+        logger.log("Pushing sub-state {}".format(type(new_state).__name__))
         new_state.on_enter()
 
 
     def exit_substate(self, exit_status = None):
-        logger.log("Poping sub-state {0}".format(self.__class__.__name__))
+        logger.log("Poping sub-state {}".format(type(self).__name__))
         if exit_status is not None :
-            logger.log("Substate exit status = {0}".format(exit_status))
+            logger.log("Substate exit status = {}".format(exit_status))
         self.parent_state.sub_state = None
         self.parent_state.on_exit_substate(self)
 
@@ -124,54 +124,6 @@ class State(object):
 
 
     def on_resettled(self, axis, position, angle):
-        pass
-
-
-    def on_deployed(self):
-        pass
-
-
-    def on_piece_detected(self, start_pose, start_distance, end_pose, end_distance, sensor, angle):
-        pass
-
-
-    def on_piece_stored1(self, piece_count):
-        pass
-
-
-    def on_piece_stored2(self, piece_count):
-        pass
-
-
-    def on_piece_stored3(self, piece_count):
-        pass
-
-
-    def on_piece_released(self):
-        pass
-
-
-    def on_nippers_opened(self):
-        pass
-
-
-    def on_nippers_closed(self):
-        pass
-
-
-    def on_lateral_sensors_enabled(self):
-        pass
-
-
-    def on_lateral_sensors_disabled(self):
-        pass
-
-
-    def on_mandibles_opened(self):
-        pass
-
-
-    def on_mandibles_closed(self):
         pass
 
 

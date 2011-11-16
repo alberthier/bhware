@@ -126,7 +126,7 @@ class WsgiServer(asyncore.dispatcher):
         try:
             ret = self.accept()
         except socket.error, msg:
-            logger.log("Warning: server accept() threw an exception ({0})".format(msg))
+            logger.log("Warning: server accept() threw an exception ({})".format(msg))
             return
         except TypeError:
             logger.log("Warning: server accept() threw EWOULDBLOCK")

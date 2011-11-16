@@ -132,32 +132,10 @@ class RobotController(object):
             if self.resettle_count == 2:
                 self.ready = True
                 self.game_controller.try_start()
-        elif isinstance(packet, packets.StorePiece1):
-            self.send_packet(packet)
-        elif isinstance(packet, packets.StorePiece2):
-            self.send_packet(packet)
-        elif isinstance(packet, packets.StorePiece3):
-            self.send_packet(packet)
-        elif isinstance(packet, packets.ReleasePiece):
-            self.send_packet(packet)
-        elif isinstance(packet, packets.OpenNippers):
-            self.send_packet(packet)
-        elif isinstance(packet, packets.CloseNippers):
-            self.send_packet(packet)
         elif isinstance(packet, packets.SimulatorData):
             self.view.handle_led(packet.leds)
-        elif isinstance(packet, packets.Deployment):
-            self.send_packet(packet)
-        elif isinstance(packet, packets.EnableLateralSensors):
-            self.send_packet(packet)
-        elif isinstance(packet, packets.DisableLateralSensors):
-            self.send_packet(packet)
-        elif isinstance(packet, packets.OpenMandibles):
-            self.send_packet(packet)
-        elif isinstance(packet, packets.CloseMandibles):
-            self.send_packet(packet)
-        else :
-            print "Unhandled packet type : ",packet.__class__.__name__
+        else:
+            print("Unhandled packet type : {}".format(type(packet).__name__))
 
 
     def send_packet(self, packet):

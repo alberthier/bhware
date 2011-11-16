@@ -47,7 +47,7 @@ def initialize():
         log_file.write("    def l(line):\n")
         log_file.write("        global log\n")
         log_file.write("        log.append(line)\n\n")
-        log("Logging to '{0}'".format(os.path.split(filepath)[1]))
+        log("Logging to '{}'".format(os.path.split(filepath)[1]))
 
 
 def close():
@@ -66,7 +66,7 @@ def log(text, sender = "ARM"):
     global start_time
     initialize()
     delta = datetime.datetime.now() - start_time
-    time = "'{0:=0.02f}'".format(float(delta.seconds) + (float(delta.microseconds)/1000000.0))
+    time = "'{:=0.02f}'".format(float(delta.seconds) + (float(delta.microseconds)/1000000.0))
     try:
         log_file.write("l([" + time + ",'" + sender + "','# " + text.replace("'", "\\'") + "'])\n")
     except:
@@ -86,7 +86,7 @@ def log_exception(exc, msg = None):
 def log_packet(packet, sender = "ARM"):
     initialize()
     delta = datetime.datetime.now() - start_time
-    time = "'{0:=0.02f}'".format(float(delta.seconds) + (float(delta.microseconds)/1000000.0))
+    time = "'{:=0.02f}'".format(float(delta.seconds) + (float(delta.microseconds)/1000000.0))
     text = "'" + sender + "'," + packet.to_code() + "]"
     try:
         log_file.write("l([" + time + "," + text + ")\n")
@@ -102,7 +102,7 @@ def get_next_log_filepath():
     if not os.path.exists(config.log_dir):
         os.mkdir(config.log_dir)
     while True:
-        filepath = os.path.join(config.log_dir, "brewerylog_{0:=#04}.py".format(index))
+        filepath = os.path.join(config.log_dir, "brewerylog_{:=#04}.py".format(index))
         if os.path.exists(filepath):
             index += 1
         else:

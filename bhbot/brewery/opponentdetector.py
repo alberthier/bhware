@@ -16,16 +16,15 @@ class OpponentDetector(object):
 
 
     def on_turret_detect(self, angle):
-        # logging.debug("OpponentDetector.on_turret_detect {0}".format(angle))
-        logger.log("OpponentDetector.on_turret_detect {0}".format(angle))
+        logger.log("OpponentDetector.on_turret_detect {}".format(angle))
         if self.is_opponent_in_front(angle) or self.is_opponent_in_back(angle):
             if self.detection_tick == 0:
-                self.detection_tick = OPPONENT_DETECTION_DISAPEARING_KEEP_ALIVE_TICKS
+                self.detection_tick = OPPONENT_DETECTION_DISAPEARING_TICKS
                 self.event_loop.get_current_state().on_opponent_entered(angle)
             self.event_loop.get_current_state().on_opponent_detected(angle)
 
 
-    def on_keep_alive(self, current_pose, match_started, match_time):
+    def on_timer_tick(self):
         if self.detection_tick != 0:
             self.detection_tick -= 1
             if self.detection_tick == 0:

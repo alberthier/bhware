@@ -123,17 +123,17 @@ class GhostRobotLayer(Layer):
     def sceneMouseMoveEvent(self, event):
         pos = event.scenePos()
         self.mouse_item.setPos(pos)
-        self.x_label.setText("x = {0:=0.04f}".format(pos.y() / 1000.0))
-        self.y_label.setText("y = {0:=0.04f}".format(pos.x() / 1000.0))
+        self.x_label.setText("x = {:=0.04f}".format(pos.y() / 1000.0))
+        self.y_label.setText("y = {:=0.04f}".format(pos.x() / 1000.0))
         angle = self.convert_angle()
-        self.angle_label.setText("angle = {0:=0.04f} ({1:=0.01f} deg)".format(angle, angle / math.pi * 180.0))
+        self.angle_label.setText("angle = {:=0.04f} ({:=0.01f} deg)".format(angle, angle / math.pi * 180.0))
 
 
     def sceneWheelEvent(self, event):
         angle = (self.mouse_item.rotation() + event.delta() / 8) % 360.0
         self.mouse_item.setRotation(angle)
         angle = self.convert_angle()
-        self.angle_label.setText("angle = {0:=0.04f} ({1:=0.01f} deg)".format(angle, angle / math.pi * 180.0))
+        self.angle_label.setText("angle = {:=0.04f} ({:=0.01f} deg)".format(angle, angle / math.pi * 180.0))
 
 
     def convert_angle(self):

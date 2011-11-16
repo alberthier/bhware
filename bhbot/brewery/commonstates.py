@@ -21,14 +21,14 @@ class Timer(statemachine.State):
     TIMEOUT = 0
 
     def __init__(self, miliseconds):
-        logger.log("Enter timer {0}".format(datetime.datetime.now()))
+        logger.log("Enter timer {}".format(datetime.datetime.now()))
         statemachine.State.__init__(self)
         self.end_time = datetime.datetime.now() + datetime.timedelta(0, 0, 0, miliseconds)
 
 
     def on_timer_tick(self):
         if datetime.datetime.now() > self.end_time:
-            logger.log("End timer {0}".format(datetime.datetime.now()))
+            logger.log("End timer {}".format(datetime.datetime.now()))
             self.exit_substate(self.TIMEOUT)
 
 
@@ -150,147 +150,10 @@ class DefinePosition(statemachine.State):
 
 
 
-class Deploy(statemachine.State):
-
-    def on_enter(self):
-        self.send_packet(packets.Deployment())
-
-
-    def on_deployed(self):
-        self.exit_substate()
-
-
-
-
-class StorePiece1(statemachine.State):
-
-    def on_enter(self):
-        self.send_packet(packets.StorePiece1())
-
-
-    def on_piece_stored1(self, piece_count):
-        self.exit_substate()
-
-
-
-
-class StorePiece2(statemachine.State):
-
-    def on_enter(self):
-        self.send_packet(packets.StorePiece2())
-
-
-    def on_piece_stored2(self, piece_count):
-        self.exit_substate()
-
-
-
-
-class StorePiece3(statemachine.State):
-
-    def on_enter(self):
-        self.send_packet(packets.StorePiece3())
-
-
-    def on_piece_stored3(self, piece_count):
-        self.exit_substate()
-
-
-
-
-class DirectStorePiece(Sequence):
-
-    def __init__(self):
-        Sequence.__init__(self)
-        self.add(StorePiece1())
-        self.add(StorePiece2())
-        self.add(StorePiece3())
-
-
-
-
-class ReleasePiece(statemachine.State):
-
-    def on_enter(self):
-        self.send_packet(packets.ReleasePiece())
-
-
-    def on_piece_released(self):
-        self.exit_substate()
-
-
-
-
-class OpenNippers(statemachine.State):
-
-    def on_enter(self):
-        self.send_packet(packets.OpenNippers())
-        self.exit_substate()
-
-
-
-
-class CloseNippers(statemachine.State):
-
-    def on_enter(self):
-        self.send_packet(packets.CloseNippers())
-        self.exit_substate()
-
-
-
-
-class EnableLateralSensors(statemachine.State):
-
-    def on_enter(self):
-        self.send_packet(packets.EnableLateralSensors())
-
-
-    def on_lateral_sensors_enabled(self):
-        self.exit_substate()
-
-
-
-
-class DisableLateralSensors(statemachine.State):
-
-    def on_enter(self):
-        self.send_packet(packets.DisableLateralSensors())
-
-
-    def on_lateral_sensors_disabled(self):
-        self.exit_substate()
-
-
-
-
-class OpenMandibles(statemachine.State):
-
-    def on_enter(self):
-        self.send_packet(packets.OpenMandibles())
-
-
-    def on_mandibles_opened(self):
-        self.exit_substate()
-
-
-
-
-class CloseMandibles(statemachine.State):
-
-    def on_enter(self):
-        self.send_packet(packets.CloseMandibles())
-
-
-    def on_mandibles_closed(self):
-        self.exit_substate()
-
-
-
-
 class TrajectoryWalk(statemachine.State):
     """Walk a path"""
 
-    def __init__(self, points = None, reference_team = TEAM_RED):
+    def __init__(self, points = None, reference_team = TEAM_PURPLE):
         statemachine.State.__init__(self)
         self.jobs = deque()
         self.current_goto_packet = None
@@ -373,10 +236,9 @@ class TrajectoryWalk(statemachine.State):
                     angle = vals[0]
                     a = lookup_defs("ANGLE", angle) if angle else None
                     d = lookup_defs("DIRECTION", direction) if direction else None
-                    logger.log("Traj : {0}, {1}, {2}, {3}".format(x, y, a, d))
                     self.goto(x, y, angle, direction)
         except Exception, e :
-            logger.log( "Error decoding trajectory '{0}' : Exception is {1}".format(str(vals),str(e)))
+            logger.log("Error decoding trajectory '{}' : Exception is {}".format(str(vals), str(e)))
             logger.log_exception(e)
 
 
@@ -410,7 +272,7 @@ class TrajectoryWalk(statemachine.State):
                     if hasattr(self.robot(), method):
                         self.current_goto_packet = getattr(self.robot(), method)(*(args + (self.reference_team,)))
                     else:
-                        logger.log("Unknown move method: {O}{1}".format(method, args))
+                        logger.log("Unknown move method: {}{}".format(method, args))
                         self.exit_reason = TRAJECTORY_WALK_DESTINATION_REACHED
                         self.exit_substate()
         else:
@@ -439,55 +301,16 @@ class TrajectoryWalk(statemachine.State):
             direction = self.current_goto_packet.direction
             is_in_front = self.event_loop.opponent_detector.is_opponent_in_front(angle)
             is_in_back = self.event_loop.opponent_detector.is_opponent_in_back(angle)
-            logger.log("TrajectoryWalk self.current_goto_packet != None - is_in_front={0} - is_in_back={1}".format(is_in_front, is_in_back))
+            logger.log("TrajectoryWalk self.current_goto_packet != None - is_in_front={} - is_in_back={}".format(is_in_front, is_in_back))
             if direction == DIRECTION_FORWARD and is_in_front or \
                 direction == DIRECTION_BACKWARD and is_in_back:
                 self.robot().stop()
                 logger.log("TrajectoryWalk robot stopped")
                 if self.opponent_blocking_current_retries < self.opponent_blocking_max_retries :
-                    logger.log("TrajectoryWalk self.opponent_blocking_current_retries={0} < self.opponent_blocking_max_retries={1}".format(self.opponent_blocking_current_retries, self.opponent_blocking_max_retries))
+                    logger.log("TrajectoryWalk self.opponent_blocking_current_retries={} < self.opponent_blocking_max_retries={}".format(self.opponent_blocking_current_retries, self.opponent_blocking_max_retries))
                     self.opponent_blocking_current_retries += 1
                     self.switch_to_substate(WaitForOpponentLeave(self.opponent_wait_time, direction))
                 else :
                     logger.log("TrajectoryWalk TRAJECTORY_WALK_OPPONENT_DETECTED")
                     self.exit_reason = TRAJECTORY_WALK_OPPONENT_DETECTED
                     self.exit_substate()
-
-
-
-
-class EnableFigureDetector(statemachine.State):
-
-    def __init__(self, sensor, column, reference_team = TEAM_RED):
-        statemachine.State.__init__(self)
-        self.sensor = sensor
-        self.column = column
-        self.reference_team = reference_team
-
-
-    def on_enter(self):
-        sensor = self.robot().convert_sensor(self.sensor, self.reference_team)
-        self.event_loop.figure_detector.enable(self.sensor, self.column)
-        self.switch_to_substate(EnableLateralSensors())
-
-
-    def on_exit_substate(self, substate):
-        self.exit_substate()
-
-
-
-
-class DisableFigureDetector(statemachine.State):
-
-    def __init__(self, fix_column):
-        statemachine.State.__init__(self)
-        self.fix_column = fix_column
-
-
-    def on_enter(self):
-        self.switch_to_substate(DisableLateralSensors())
-
-
-    def on_exit_substate(self, substate):
-        self.event_loop.figure_detector.disable(self.fix_column)
-        self.exit_substate()
