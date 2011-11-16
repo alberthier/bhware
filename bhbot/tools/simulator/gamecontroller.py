@@ -5,7 +5,6 @@ from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 from PyQt4.QtNetwork import *
 
-import config
 from definitions import *
 
 from robotcontroller import *
@@ -18,7 +17,7 @@ class GameController(object):
     def __init__(self, main_window):
         self.server = QTcpServer()
         self.server.newConnection.connect(self.brewery_connected)
-        self.server.listen(QHostAddress.Any, config.remote_port)
+        self.server.listen(QHostAddress.Any, REMOTE_PORT)
         self.purple_robot = RobotController(TEAM_PURPLE,
                                             self,
                                             main_window.purple_robot_view,

@@ -1,16 +1,19 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
-
+import os
 import math
+import socket
 
 
 ########################################################################
 # Constants
 
-EVENT_LOOP_TICK_RESOLUTION             = 0.05
+# Field
 FIELD_WIDTH                            = 3.0
 FIELD_HEIGHT                           = 2.0
+
+# Robot
 ROBOT_WIDTH                            = 0.276
 ROBOT_HEIGHT                           = 0.322
 ROBOT_CENTER_X                         = 0.099
@@ -19,18 +22,75 @@ ROBOT_GYRATION_RADIUS                  = 0.2386
 ROBOT_EXPANDED_GRIPPER_GYRATION_RADIUS = 0.321965
 ROBOT_EXPANDED_SWEEPER_GYRATION_RADIUS = 0.289355
 ROBOT_EXPANDED_GYRATION_RADIUS         = max(ROBOT_EXPANDED_GRIPPER_GYRATION_RADIUS, ROBOT_EXPANDED_SWEEPER_GYRATION_RADIUS)
+
+# Start positons (the robot starts 90 degrees rotated that's why *_START_Y use ROBOT_WIDTH and ROBOT_CENTER_X)
 RED_START_X                            = 0.310
 RED_START_Y                            = FIELD_WIDTH - (ROBOT_WIDTH - ROBOT_CENTER_X)
 RED_START_ANGLE                        = math.pi / 2.0
 PURPLE_START_X                         = 0.310
 PURPLE_START_Y                         = ROBOT_WIDTH - ROBOT_CENTER_X
 PURPLE_START_ANGLE                     = -math.pi / 2.0
-OPPONENT_DETECTION_ANGLE               = math.pi / 6.0
-OPPONENT_DETECTION_DISAPEARING_TICKS   = 800 * EVENT_LOOP_TICK_RESOLUTION
-KEEP_ALIVE_DELAY_MS                    = 200
+
+# Rule specific
 MATCH_DURATION_MS                      = 90000
 TEAM_COLOR_RED                         = "#ff3b3d"
 TEAM_COLOR_PURPLE                      = "#9632f6"
+
+# Timing
+KEEP_ALIVE_DELAY_MS                    = 200
+EVENT_LOOP_TICK_RESOLUTION_S           = 0.05
+
+# Brewery execution host
+if socket.gethostname() == "drunkstar":
+    IS_HOST_DEVICE_ARM                 = True
+    IS_HOST_DEVICE_PC                  = False
+else:
+    IS_HOST_DEVICE_ARM                 = False
+    IS_HOST_DEVICE_PC                  = True
+
+# Remote device connection
+if IS_HOST_DEVICE_ARM:
+    REMOTE_IP                          = "192.168.2.200"
+else:
+    REMOTE_IP                          = "127.0.0.1"
+REMOTE_PORT                            = 7001
+REMOTE_LOG_PORT                        = 23
+
+# Serial port
+if IS_HOST_DEVICE_ARM:
+    SERIAL_PORT_PATH                   = "/dev/ttyUSB0"
+else:
+    SERIAL_PORT_PATH                   = None
+SERIAL_PORT_SPEED                      = 115200
+
+# Leds:
+if IS_HOST_DEVICE_ARM:
+    ORANGE_LED_DEVICE_PATH             = "/sys/class/leds/dockstar:orange:health/brightness"
+    GREEN_LED_DEVICE_PATH              = "/sys/class/leds/dockstar:green:health/brightness"
+else:
+    ORANGE_LED_DEVICE_PATH             = None
+    GREEN_LED_DEVICE_PATH              = None
+
+# Log directory
+if IS_HOST_DEVICE_ARM:
+    LOG_DIR                            = "/root/logs"
+else:
+    LOG_DIR                            = os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file__))), "logs")
+
+# Brewery's web sever
+WEB_SERVER_PORT                        = 80
+
+# Default state machine name
+STATE_MACHINE                          = "default"
+
+# Opponent detection
+OPPONENT_DETECTION_ANGLE               = math.pi / 6.0
+OPPONENT_DETECTION_DISAPEARING_TICKS   = 800 * EVENT_LOOP_TICK_RESOLUTION_S
+
+# Blocking opponent handling
+DEFAULT_OPPONENT_WAIT_MS               = 3000
+DEFAULT_OPPONENT_MAX_RETRIES           = 5
+
 
 ########################################################################
 # Enums
@@ -62,11 +122,6 @@ Enum("REMOTE_DEVICE",
     REMOTE_DEVICE_UNKNOWN   = 2,
 )
 
-Enum("HOST_DEVICE",
-    "Host hardware type",
-    HOST_DEVICE_ARM = 0,
-    HOST_DEVICE_PC  = 1,
-)
 
 Enum("TEAM",
     "Team color",

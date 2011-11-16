@@ -3,14 +3,12 @@
 
 
 import datetime
-import config
 from collections import deque
 
 import statemachine
 import packets
 import trajectory
 import logger
-import figuredetector
 from definitions import *
 
 
@@ -157,8 +155,8 @@ class TrajectoryWalk(statemachine.State):
         statemachine.State.__init__(self)
         self.jobs = deque()
         self.current_goto_packet = None
-        self.opponent_wait_time = config.default_opponent_wait_time
-        self.opponent_blocking_max_retries = config.default_opponent_max_retries
+        self.opponent_wait_time = DEFAULT_OPPONENT_WAIT_MS
+        self.opponent_blocking_max_retries = DEFAULT_OPPONENT_MAX_RETRIES
         self.opponent_blocking_current_retries = 0
         self.exit_reason = TRAJECTORY_WALK_DESTINATION_REACHED
         self.reference_team = reference_team

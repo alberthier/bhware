@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
-import config
 import packets
 
 from definitions import *
@@ -17,9 +16,9 @@ orange = None
 def initialize(event_loop):
     global green
     global orange
-    if config.host_device == HOST_DEVICE_ARM:
-        green = HardwareLed(config.green_led_device_path)
-        orange = HardwareLed(config.orange_led_device_path)
+    if IS_HOST_DEVICE_ARM:
+        green = HardwareLed(GREEN_LED_DEVICE_PATH)
+        orange = HardwareLed(ORANGE_LED_DEVICE_PATH)
     else:
         green = SimulatorLed(event_loop, SimulatorLed.COLOR_GREEN)
         orange = SimulatorLed(event_loop, SimulatorLed.COLOR_ORANGE)

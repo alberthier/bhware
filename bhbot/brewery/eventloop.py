@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
-import config
 import asyncore
 import os
 import socket
@@ -17,7 +16,6 @@ import ctypes
 
 import logger
 import packets
-import config
 import statemachine
 import asyncwsgiserver
 import web.webinterface
@@ -153,7 +151,7 @@ class Timer(object):
 class RobotControlDeviceStarter(object):
 
     def __init__(self, eventloop):
-        logger.log("Connecting to {}:{} ...".format(config.remote_ip, config.remote_port))
+        logger.log("Connecting to {}:{} ...".format(REMOTE_IP, REMOTE_PORT))
         self.control_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.log_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.eventloop = eventloop
@@ -165,21 +163,21 @@ class RobotControlDeviceStarter(object):
     def try_connect(self):
         connected = False
         try:
-            self.control_socket.connect((config.remote_ip, config.remote_port))
+            self.control_socket.connect((REMOTE_IP, REMOTE_PORT))
             self.eventloop.robot_control_channel = RobotControlDeviceChannel(self.eventloop, self.control_socket)
             leds.orange.off()
             connected = True
         except Exception as e:
-            logger.log("Unable to connect to {}:{} ({}), retrying".format(config.remote_ip, config.remote_port, e))
+            logger.log("Unable to connect to {}:{} ({}), retrying".format(REMOTE_IP, REMOTE_PORT, e))
             leds.orange.toggle()
         if connected:
             try:
-                self.log_socket.connect((config.remote_ip, config.remote_log_port))
+                self.log_socket.connect((REMOTE_IP, REMOTE_LOG_PORT))
                 self.eventloop.robot_log_channel = RobotLogDeviceChannel(self.log_socket)
-                logger.log("Connected to the log stocket {}:{}".format(config.remote_ip, config.remote_log_port))
+                logger.log("Connected to the log stocket {}:{}".format(REMOTE_IP, REMOTE_LOG_PORT))
             except Exception as e:
                 # Log socket is not mandatory. If the connection fails, continue without it.
-                logger.log("Unable to connect to the log stocket {}:{} ({}), continuing without PIC logs".format(config.remote_ip, config.remote_log_port, e))
+                logger.log("Unable to connect to the log stocket {}:{} ({}), continuing without PIC logs".format(REMOTE_IP, REMOTE_LOG_PORT, e))
             self.eventloop.create_fsm()
         return connected
 
@@ -344,16 +342,16 @@ class EventLoop(object):
     def start(self):
         logger.log("Starting internal web server on port {}".format(self.webserver_port))
         self.web_server = asyncwsgiserver.WsgiServer("", self.webserver_port, web.webinterface.create_app(self))
-        if (config.serial_port_path != None):
+        if (SERIAL_PORT_PATH != None):
             try:
-                self.turret_channel = TurretChannel(config.serial_port_path, config.serial_port_speed, self)
+                self.turret_channel = TurretChannel(SERIAL_PORT_PATH, SERIAL_PORT_SPEED, self)
             except serial.SerialException:
-                logger.log("Unable to open serial port {}".format(config.serial_port_path))
+                logger.log("Unable to open serial port {}".format(SERIAL_PORT_PATH))
                 self.turret_channel = None
         RobotControlDeviceStarter(self)
         logger.log("Starting brewery with state machine '{}'".format(self.state_machine_name))
         while not self.stopping:
-            asyncore.loop(EVENT_LOOP_TICK_RESOLUTION, True, None, 1)
+            asyncore.loop(EVENT_LOOP_TICK_RESOLUTION_S, True, None, 1)
             self.get_current_state().on_timer_tick()
             self.opponent_detector.on_timer_tick()
             while len(self.timers) != 0:

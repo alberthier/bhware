@@ -9,7 +9,6 @@ import subprocess
 import traceback
 
 import packets
-import config
 from definitions import *
 
 
@@ -99,10 +98,10 @@ def log_packet(packet, sender = "ARM"):
 
 def get_next_log_filepath():
     index = 0
-    if not os.path.exists(config.log_dir):
-        os.mkdir(config.log_dir)
+    if not os.path.exists(LOG_DIR):
+        os.mkdir(LOG_DIR)
     while True:
-        filepath = os.path.join(config.log_dir, "brewerylog_{:=#04}.py".format(index))
+        filepath = os.path.join(LOG_DIR, "brewerylog_{:=#04}.py".format(index))
         if os.path.exists(filepath):
             index += 1
         else:
