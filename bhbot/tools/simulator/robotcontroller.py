@@ -202,17 +202,17 @@ class RobotController(object):
 
 
     def pause(self):
-        if self.robot_layer.move_animation.state() == QAbstractAnimation.Running:
-            self.robot_layer.move_animation.pause()
+        if self.robot_layer.robot.move_animation.state() == QAbstractAnimation.Running:
+            self.robot_layer.robot.move_animation.pause()
 
     def stop(self):
-        if self.robot_layer.move_animation.state() == QAbstractAnimation.Running:
-            self.robot_layer.move_animation.stop()
+        if self.robot_layer.robot.move_animation.state() == QAbstractAnimation.Running:
+            self.robot_layer.robot.move_animation.stop()
 
 
     def resume(self):
-        if self.robot_layer.move_animation.state() == QAbstractAnimation.Paused:
-            self.robot_layer.move_animation.resume()
+        if self.robot_layer.robot.move_animation.state() == QAbstractAnimation.Paused:
+            self.robot_layer.robot.move_animation.resume()
 
 
     def send_goto_finished(self, reason):
