@@ -525,6 +525,7 @@ class BasePacket(object):
     LOGVIEW_COLOR = "#000000"
     LOGVIEW_DEFAULT_ENABLED = True
     STRUCT = None
+    HANDLER_METHOD = None
 
     def __init__(self, **kwargs):
         cls = type(self)
@@ -537,6 +538,14 @@ class BasePacket(object):
             if pad_size != 0:
                 fmt += str(pad_size) + "x"
             cls.STRUCT = struct.Struct(fmt)
+
+        if cls.HANDLER_METHOD == None:
+            cls.HANDLER_METHOD = "on"
+            for c in cls.__name__:
+                if c.isupper():
+                    cls.HANDLER_METHOD += "_" + c.lower()
+                else:
+                    cls.HANDLER_METHOD += c
 
         for elt in self.DEFINITION:
             if kwargs.has_key(elt.name):
@@ -599,6 +608,11 @@ class BasePacket(object):
             code += elt.name + " = " + str(getattr(self, elt.name))
         code += ")"
         return code
+
+
+    def dispatch(self, obj):
+        if hasattr(obj, self.HANDLER_METHOD):
+            getattr(obj, self.HANDLER_METHOD)(self)
 
 
 
@@ -830,6 +844,8 @@ PACKETS_LIST = []
 
 for (item_name, item_type) in inspect.getmembers(sys.modules[__name__]):
     if inspect.isclass(item_type) and issubclass(item_type, BasePacket) and item_type != BasePacket:
+        # Create a packet instance a first time to finish the setup
+        item_type()
         PACKETS_BY_NAME[item_name] = item_type
         PACKETS_BY_TYPE[item_type.TYPE] = item_type
         PACKETS_LIST.append(item_type)

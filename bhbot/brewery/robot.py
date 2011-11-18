@@ -143,3 +143,18 @@ class Robot(object):
         else:
             return math.atan2(-math.sin(angle), math.cos(angle))
 
+
+    def on_device_ready(self, packet):
+        self.team = packet.team
+
+
+    def on_start(self, packet):
+        self.team = packet.team
+
+
+    def on_goto_finished(self, packet):
+        self.pose = packet.current_pose
+
+
+    def on_keep_alive(self, packet):
+        self.pose = packet.current_pose

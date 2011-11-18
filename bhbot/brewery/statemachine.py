@@ -83,54 +83,6 @@ class State(object):
         pass
 
 
-    def on_device_busy(self):
-        pass
-
-
-    def on_device_ready(self, team):
-        pass
-
-
-    def on_start(self, team):
-        pass
-
-
-    def on_goto_started(self):
-        pass
-
-
-    def on_goto_finished(self, reason, current_pose, current_point_index):
-        pass
-
-
-    def on_blocked(self, side):
-        pass
-
-
-    def on_anti_blocking_enabled(self):
-        pass
-
-
-    def on_anti_blocking_disabled(self):
-        pass
-
-
-    def on_keep_alive(self, current_pose, match_started, match_time):
-        pass
-
-
-    def on_position_control_configured(self):
-        pass
-
-
-    def on_resettled(self, axis, position, angle):
-        pass
-
-
-    def on_reinitialized(self):
-        pass
-
-
     def on_opponent_entered(self, angle):
         pass
 

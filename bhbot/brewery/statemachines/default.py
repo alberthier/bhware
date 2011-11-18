@@ -18,7 +18,7 @@ from definitions import *
 
 class Main(statemachine.State):
 
-    def on_device_ready(self, team):
+    def on_device_ready(self, packet):
         self.switch_to_substate(commonstates.DefinePosition())
 
 
@@ -30,7 +30,7 @@ class Main(statemachine.State):
 
 class WaitStart(statemachine.State):
 
-    def on_start(self, team):
+    def on_start(self, packet):
         self.switch_to_substate(commonstates.DefinePosition())
 
 
@@ -42,7 +42,7 @@ class WaitStart(statemachine.State):
 
 class WaitFirstKeepAlive(statemachine.State):
 
-    def on_keep_alive(self, current_pose, match_started, match_time):
+    def on_keep_alive(self, packet):
         self.switch_to_state(GotoField())
 
 

@@ -72,7 +72,7 @@ class Sequence(statemachine.State):
         self.process_next_substate()
 
 
-    def on_exit_substate(self,finished_substate):
+    def on_exit_substate(self, finished_substate):
         self.process_next_substate()
 
 
@@ -96,7 +96,7 @@ class SetupPositionControl(statemachine.State):
         self.send_packet(self.packet)
 
 
-    def on_position_control_configured(self):
+    def on_position_control_configured(self, packet):
         self.exit_substate()
 
 
@@ -123,7 +123,7 @@ class DefinePosition(statemachine.State):
         self.process()
 
 
-    def on_resettled(self, axis, position, angle):
+    def on_resettle(self, packet):
         self.process()
 
 
@@ -244,12 +244,12 @@ class TrajectoryWalk(statemachine.State):
         self.process_next_job()
 
 
-    def on_goto_finished(self, reason, current_pose, current_point_index):
-        if reason == REASON_DESTINATION_REACHED:
+    def on_goto_finished(self, packet):
+        if packet.reason == REASON_DESTINATION_REACHED:
             self.exit_reason = TRAJECTORY_WALK_DESTINATION_REACHED
             self.current_goto_packet = None
             self.process_next_job()
-        elif reason == REASON_PIECE_FOUND:
+        elif packet.reason == REASON_PIECE_FOUND:
             if self.current_goto_packet.direction == DIRECTION_BACKWARD:
                 self.process_next_job()
             else:
@@ -277,7 +277,7 @@ class TrajectoryWalk(statemachine.State):
             self.send_packet(self.current_goto_packet)
 
 
-    def on_blocked(self, side):
+    def on_blocked(self, packet):
         self.exit_reason = TRAJECTORY_WALK_BLOCKED
         self.exit_substate()
 
