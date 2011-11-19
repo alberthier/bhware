@@ -155,6 +155,10 @@ class RobotLayer(fieldview.Layer):
             self.color = TEAM_COLOR_RED
         self.robot = GraphicsRobotObject(self)
         self.robot.item.setVisible(False)
+        self.robot.movement_finished.connect(self.movement_finished)
+        self.goto_packet = None
+        self.goto_packet_point_index = 0
+        self.robot_controller = None
 
 
     def reset(self):
@@ -167,41 +171,48 @@ class RobotLayer(fieldview.Layer):
         self.robot.item.setVisible(True)
 
 
-    def set_x(self, x):
-        if self.robot:
-            self.robot.item.setY(x * 1000.0)
-
-
-    def set_y(self, y):
-        if self.robot:
-            self.robot.item.setX(y * 1000.0)
-
-
-    def set_rotation(self, angle):
-        if self.robot:
-            angle_deg = self.robot.convert_angle(angle) / math.pi * 180.0
-            self.robot.set_rotation(angle_deg)
-
-
-    def robot_rotation(self, angle):
-        if self.robot:
-            self.robot.robot_rotation(angle)
-
-
-    def robot_line(self, x, y):
-        if self.robot:
-            self.robot.robot_line(x, y)
-
-
-    def robot_move(self, x, y, angle):
-        if self.robot:
-            self.robot.robot_move(x, y, angle)
-
-
     def get_pose(self):
-        if self.robot:
-            return self.robot.get_pose()
-        return trajectory.Pose(0.0, 0.0, 0.0)
+        return self.robot.get_pose()
+
+
+    def on_goto(self, packet):
+        self.goto_packet = packet
+        self.goto_packet_point_index = 0
+        self.process_goto()
+
+
+    def on_resettle(self, packet):
+        if packet.axis == AXIS_X:
+            self.robot.item.setY(packet.position * 1000.0)
+        elif packet.axis == AXIS_Y:
+            self.robot.item.setX(packet.position * 1000.0)
+        angle_deg = self.robot.convert_angle(packet.angle) / math.pi * 180.0
+        self.robot.set_rotation(angle_deg)
+
+
+    def process_goto(self):
+        if self.goto_packet != None:
+            # direction is ignored for the moment
+            if self.goto_packet_point_index != len(self.goto_packet.points):
+                point = self.goto_packet.points[self.goto_packet_point_index]
+                if self.goto_packet.direction == DIRECTION_BACKWARD:
+                    point.angle += math.pi
+                if self.goto_packet.movement == MOVEMENT_ROTATE:
+                    self.robot.robot_rotation(point.angle)
+                elif self.goto_packet.movement == MOVEMENT_LINE:
+                    self.robot.robot_line(point.x, point.y)
+                elif self.goto_packet.movement == MOVEMENT_MOVE:
+                    if point.angle != None:
+                        self.robot.robot_move(point.x, point.y, point.angle)
+                    else:
+                        self.robot.robot_line(point.x, point.y)
+            else:
+                self.robot_controller.send_goto_finished(REASON_DESTINATION_REACHED, self.goto_packet_point_index)
+
+
+    def movement_finished(self):
+        self.goto_packet_point_index += 1
+        self.process_goto()
 
 
 

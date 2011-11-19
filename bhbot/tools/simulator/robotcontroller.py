@@ -20,18 +20,14 @@ class RobotController(object):
         self.view = view
         self.robot_layer = robot_layer
         self.robot_trajectory_layer = robot_trajectory_layer
-
+        robot_layer.robot_controller = self
         self.process = None
         self.socket = None
         self.incoming_packet_buffer = ""
         self.incoming_packet = None
         self.ready = False
-        self.goto_packet = None
-        self.goto_packet_point_index = 0
 
         self.resettle_count = 0
-
-        self.robot_layer.robot.movement_finished.connect(self.movement_finished)
 
 
     def is_process_started(self):
@@ -103,39 +99,36 @@ class RobotController(object):
                     packet = self.incoming_packet
                     self.incoming_packet = None
                     packet.deserialize(buf)
-                    self.on_packet(packet)
-                    self.read_packet()
+                    packet.dispatch(self)
+                    packet.dispatch(self.robot_layer)
 
 
-    def on_packet(self, packet):
-        if isinstance(packet, packets.ControllerReady):
-            self.try_device_ready()
-        elif isinstance(packet, packets.Goto):
-            self.goto_packet = packet
-            self.goto_packet_point_index = 0
-            self.send_packet(packets.GotoStarted())
-            self.process_goto()
-        elif isinstance(packet, packets.KeepAlive):
-            pass
-        elif isinstance(packet, packets.PositionControlConfig):
-            self.send_packet(packet)
-        elif isinstance(packet, packets.Stop):
-            self.stop()
-        elif isinstance(packet, packets.Resettle):
-            if packet.axis == AXIS_X:
-                self.robot_layer.set_x(packet.position)
-            elif packet.axis == AXIS_Y:
-                self.robot_layer.set_y(packet.position)
-            self.robot_layer.set_rotation(packet.angle)
-            self.send_packet(packet)
-            self.resettle_count += 1
-            if self.resettle_count == 2:
-                self.ready = True
-                self.game_controller.try_start()
-        elif isinstance(packet, packets.SimulatorData):
-            self.view.handle_led(packet.leds)
-        else:
-            print("Unhandled packet type : {}".format(type(packet).__name__))
+    def on_goto(self, packet):
+        self.send_packet(packets.GotoStarted())
+
+
+    def on_controller_ready(self, packet):
+        self.try_device_ready()
+
+
+    def on_position_control_config(self, packet):
+        self.send_packet(packet)
+
+
+    def on_stop(self, packet):
+        self.stop()
+
+
+    def on_resettle(self, packet):
+        self.send_packet(packet)
+        self.resettle_count += 1
+        if self.resettle_count == 2:
+            self.ready = True
+            self.game_controller.try_start()
+
+
+    def on_simulator_data(self, packet):
+        self.view.handle_led(packet.leds)
 
 
     def send_packet(self, packet):
@@ -176,34 +169,25 @@ class RobotController(object):
         self.send_packet(packet)
 
 
-    def movement_finished(self):
-        self.goto_packet_point_index += 1
-        self.process_goto()
+    def send_goto_finished(self, reason, current_point_index):
+        self.goto_packet = None
+        packet = packets.GotoFinished()
+        packet.reason = reason
+        packet.current_pose = self.robot_layer.get_pose()
+        packet.current_point_index = current_point_index
+        self.send_packet(packet)
 
 
-    def process_goto(self):
-        if self.goto_packet != None:
-            # direction is ignored for the moment
-            if self.goto_packet_point_index != len(self.goto_packet.points):
-                point = self.goto_packet.points[self.goto_packet_point_index]
-                if self.goto_packet.direction == DIRECTION_BACKWARD:
-                    point.angle += math.pi
-                if self.goto_packet.movement == MOVEMENT_ROTATE:
-                    self.robot_layer.robot_rotation(point.angle)
-                elif self.goto_packet.movement == MOVEMENT_LINE:
-                    self.robot_layer.robot_line(point.x, point.y)
-                elif self.goto_packet.movement == MOVEMENT_MOVE:
-                    if point.angle != None:
-                        self.robot_layer.robot_move(point.x, point.y, point.angle)
-                    else:
-                        self.robot_layer.robot_line(point.x, point.y)
-            else:
-                self.send_goto_finished(REASON_DESTINATION_REACHED)
+    def send_opponent_detected(self):
+        packet = packets.TurretDetect()
+        packet.angle = math.pi
+        self.send_packet(packet)
 
 
     def pause(self):
         if self.robot_layer.robot.move_animation.state() == QAbstractAnimation.Running:
             self.robot_layer.robot.move_animation.pause()
+
 
     def stop(self):
         if self.robot_layer.robot.move_animation.state() == QAbstractAnimation.Running:
@@ -213,18 +197,3 @@ class RobotController(object):
     def resume(self):
         if self.robot_layer.robot.move_animation.state() == QAbstractAnimation.Paused:
             self.robot_layer.robot.move_animation.resume()
-
-
-    def send_goto_finished(self, reason):
-        self.goto_packet = None
-        packet = packets.GotoFinished()
-        packet.reason = reason
-        packet.current_pose = self.robot_layer.get_pose()
-        packet.current_point_index = self.goto_packet_point_index
-        self.send_packet(packet)
-
-
-    def send_opponent_detected(self):
-        packet = packets.TurretDetect()
-        packet.angle = math.pi
-        self.send_packet(packet)

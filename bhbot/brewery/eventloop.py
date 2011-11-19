@@ -247,9 +247,9 @@ class EventLoop(object):
                         logger.log_packet(channel.packet, "PIC")
 
                         channel.packet.dispatch(self)
-                        channel.packet.dispatch(self.get_current_state())
-                        channel.packet.dispatch(self.opponent_detector)
                         channel.packet.dispatch(self.robot)
+                        channel.packet.dispatch(self.opponent_detector)
+                        channel.packet.dispatch(self.get_current_state())
 
                         channel.packet = None
                 except Exception, e:
