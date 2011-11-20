@@ -127,6 +127,7 @@ class PacketTestMixin(object):
 
 
 
+
 class ControllerReadyPacketTestCase(unittest.TestCase, PacketTestMixin):
 
     def create_packet(self):
@@ -262,33 +263,6 @@ class PositionControlConfigPacketTestCase(unittest.TestCase, PacketTestMixin):
     def initialize_packet(self, packet):
         packet.t_acc = 453.45
         packet.f_va_max = 684.2
-        packet.u_max = 4857.3
-        packet.k1 = 85404.2
-        packet.k2 = 64.5
-        packet.k3 = 6874.5
-        packet.g_re_1 = 0.2854
-        packet.g_re_2 = 0.587
-        packet.dist_min = 354.3
-        packet.angle_min = 354.584
-        packet.nbr_pas_evit_detect = 84
-        packet.ecart_roue_libre = 84.354
-        packet.ecart_roue_motrice = 684.3541
-        packet.k_p_d = 6874.3554
-        packet.k_i_d = 684.684
-        packet.v_max_d = 687.123
-        packet.d_roue_d = 9873.669
-        packet.nb_pas_d = 6832
-        packet.k_p_g = 912.415
-        packet.k_i_g = 97.1
-        packet.v_max_g = 0.684
-        packet.d_roue_g = 1.6387
-        packet.nb_pas_g = 3
-        packet.app_net_ip = 3456874
-        packet.app_net_mask = 1234698
-        packet.app_net_gateway = 988769
-        packet.app_net_port = 9867
-        packet.test_mode = 890
-        packet.coefficient_glissement_lateral = 2345.66
 
 
 
@@ -311,6 +285,87 @@ class ResettlePacketTestCase(unittest.TestCase, PacketTestMixin):
         packet.axis = AXIS_Y
         packet.position = 684.87
         packet.angle = 156.5
+
+
+
+
+class GripperControlTestCase(unittest.TestCase, PacketTestMixin):
+
+    def create_packet(self):
+        return packets.GripperControl()
+
+
+    def initialize_packet(self, packet):
+        packet.move = GRIPPER_OPEN
+        packet.which = GRIPPER_SIDE_BOTH
+
+
+
+
+class SweeperControlTestCase(unittest.TestCase, PacketTestMixin):
+
+    def create_packet(self):
+        return packets.SweeperControl()
+
+
+    def initialize_packet(self, packet):
+        packet.move = SWEEPER_OPEN
+
+
+
+
+class MapArmControlTestCase(unittest.TestCase, PacketTestMixin):
+
+    def create_packet(self):
+        return packets.MapArmControl()
+
+
+    def initialize_packet(self, packet):
+        packet.move = MAP_ARM_OPEN
+
+
+
+
+class MapGripperControlTestCase(unittest.TestCase, PacketTestMixin):
+
+    def create_packet(self):
+        return packets.MapGripperControl()
+
+
+    def initialize_packet(self, packet):
+        packet.move = MAP_GRIPPER_OPEN
+
+
+
+
+class EmptyTankControlTestCase(unittest.TestCase, PacketTestMixin):
+
+    def create_packet(self):
+        return packets.EmptyTankControl()
+
+
+    def initialize_packet(self, packet):
+        packet.move = TANK_DEPLOY
+
+
+
+
+class GoldBullionDetectedTestCase(unittest.TestCase, PacketTestMixin):
+
+    def create_packet(self):
+        return packets.GoldBullionDetected()
+
+
+
+
+class TissueStoreControlTestCase(unittest.TestCase, PacketTestMixin):
+
+    def create_packet(self):
+        return packets.TissueStoreControl()
+
+
+    def initialize_packet(self, packet):
+        packet.move = TISSUE_STORE_LOW
 
 
 
@@ -342,4 +397,5 @@ class TurretDetectPacketTestCase(unittest.TestCase, PacketTestMixin):
 
 
     def initialize_packet(self, packet):
-        packet.angle = 8.64
+        packet.distance = 26
+        packet.angle = 3

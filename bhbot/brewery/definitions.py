@@ -116,53 +116,96 @@ class Enum(object):
 
 
 Enum("REMOTE_DEVICE",
-    "Remote hardware type",
-    REMOTE_DEVICE_PIC       = 0,
-    REMOTE_DEVICE_SIMULATOR = 1,
-    REMOTE_DEVICE_UNKNOWN   = 2,
+     "Remote hardware type",
+     REMOTE_DEVICE_PIC       = 0,
+     REMOTE_DEVICE_SIMULATOR = 1,
+     REMOTE_DEVICE_UNKNOWN   = 2,
 )
 
 
 Enum("TEAM",
-    "Team color",
-    TEAM_PURPLE  = 0,
-    TEAM_RED     = 1,
-    TEAM_UNKNOWN = 2,
+     "Team color",
+     TEAM_PURPLE  = 0,
+     TEAM_RED     = 1,
+     TEAM_UNKNOWN = 2,
 )
 
 Enum("MOVEMENT",
-    "Movement",
-    MOVEMENT_ROTATE = 0,
-    MOVEMENT_MOVE   = 1,
-    MOVEMENT_LINE   = 2
+     "Movement",
+     MOVEMENT_ROTATE = 0,
+     MOVEMENT_MOVE   = 1,
+     MOVEMENT_LINE   = 2
 )
 
 Enum("DIRECTION",
-    "Direction",
-    DIRECTION_FORWARD  = 1,
-    DIRECTION_BACKWARD = -1,
+     "Direction",
+     DIRECTION_FORWARD  =  1,
+     DIRECTION_BACKWARD = -1,
 )
 
 Enum("REASON",
-    "Goto finished reason",
-    REASON_DESTINATION_REACHED = 0,
+     "Goto finished reason",
+     REASON_DESTINATION_REACHED = 0,
 )
 
 Enum("BLOCKING",
-    "Blocking side",
-    BLOCKED_FRONT = 1,
-    BLOCKED_BACK  = -1,
+     "Blocking side",
+     BLOCKED_FRONT =  1,
+     BLOCKED_BACK  = -1,
 )
 
 Enum("AXIS",
-    "Axis",
-    AXIS_X = 0,
-    AXIS_Y = 1,
+     "Axis",
+     AXIS_X = 0,
+     AXIS_Y = 1,
+)
+
+Enum("GRIPPER",
+     "Gripper Position",
+     GRIPPER_CLOSE = 0,
+     GRIPPER_OPEN  = 1,
+)
+
+Enum("GRIPPER_SIDE",
+     "Gripper side",
+     GRIPPER_SIDE_LEFT  = 1,
+     GRIPPER_SIDE_RIGHT = 2,
+     GRIPPER_SIDE_BOTH  = 3,
+)
+
+Enum("SWEEPER",
+     "Sweeper position",
+     SWEEPER_CLOSE = 0,
+     SWEEPER_OPEN  = 1,
+)
+
+Enum("MAP_ARM",
+     "Map arm position",
+     MAP_ARM_CLOSE = 0,
+     MAP_ARM_OPEN  = 1,
+)
+
+Enum("MAP_GRIPPER",
+     "Map gripper position",
+     MAP_GRIPPER_CLOSE = 0,
+     MAP_GRIPPER_OPEN  = 1,
+)
+
+Enum("TANK",
+     "Tank position",
+     TANK_RETRACT = 0,
+     TANK_DEPLOY  = 1,
+)
+
+Enum("TISSUE_STORE",
+     "Tissue store control",
+     TISSUE_STORE_LOW  = 0,
+     TISSUE_STORE_HIGH = 1,
 )
 
 Enum("TRAJECTORY_WALK",
     "Trajectory walk result",
     TRAJECTORY_WALK_DESTINATION_REACHED = 0,
-    TRAJECTORY_WALK_BLOCKED             = 2,
-    TRAJECTORY_WALK_OPPONENT_DETECTED   = 3,
+    TRAJECTORY_WALK_BLOCKED             = 1,
+    TRAJECTORY_WALK_OPPONENT_DETECTED   = 2,
 )

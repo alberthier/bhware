@@ -23,58 +23,58 @@ import trajectory
 #      #f0ffff azure                             #778899 lightslategrey
 #      #f5f5dc beige                             #ffffe0 lightyellow
 #      #ffe4c4 bisque                            #00ff00 lime
-#      #000000 black                             #32cd32 limegreen
+#      #000000 black                          X  #32cd32 limegreen
 #      #0000ff blue                              #faf0e6 linen
-#   X  #8a2be2 blueviolet                        #ff00ff magenta
+#      #8a2be2 blueviolet                        #ff00ff magenta
 #   X  #a52a2a brown                             #800000 maroon
-#   X  #deb887 burlywood                         #66cdaa mediumaquamarine
+#      #deb887 burlywood                         #66cdaa mediumaquamarine
 #   X  #5f9ea0 cadetblue                         #0000cd mediumblue
 #   X  #7fff00 chartreuse                        #ba55d3 mediumorchid
 #   X  #d2691e chocolate                         #9370db mediumpurple
 #   X  #ff7f50 coral                             #3cb371 mediumseagreen
-#   X  #6495ed cornflowerblue                    #7b68ee mediumslateblue
+#      #6495ed cornflowerblue                    #7b68ee mediumslateblue
 #      #fff8dc cornsilk                          #00fa9a mediumspringgreen
 #   X  #dc143c crimson                           #48d1cc mediumturquoise
 #   X  #00ffff cyan                              #c71585 mediumvioletred
 #   X  #00008b darkblue                          #191970 midnightblue
-#   X  #008b8b darkcyan                          #f5fffa mintcream
-#   X  #b8860b darkgoldenrod                     #ffe4e1 mistyrose
-#   X  #a9a9a9 darkgray                          #ffe4b5 moccasin
-#   X  #006400 darkgreen                         #ffdead navajowhite
-#   X  #a9a9a9 darkgrey                          #000080 navy
-#   X  #bdb76b darkkhaki                         #fdf5e6 oldlace
+#      #008b8b darkcyan                          #f5fffa mintcream
+#      #b8860b darkgoldenrod                     #ffe4e1 mistyrose
+#      #a9a9a9 darkgray                          #ffe4b5 moccasin
+#      #006400 darkgreen                         #ffdead navajowhite
+#      #a9a9a9 darkgrey                          #000080 navy
+#      #bdb76b darkkhaki                         #fdf5e6 oldlace
 #   X  #8b008b darkmagenta                       #808000 olive
 #   X  #556b2f darkolivegreen                    #6b8e23 olivedrab
-#   X  #ff8c00 darkorange                        #ffa500 orange
-#   X  #9932cc darkorchid                        #ff4500 orangered
-#   X  #8b0000 darkred                           #da70d6 orchid
-#   X  #e9967a darksalmon                        #eee8aa palegoldenrod
-#   X  #8fbc8f darkseagreen                      #98fb98 palegreen
-#   X  #483d8b darkslateblue                     #afeeee paleturquoise
-#   X  #2f4f4f darkslategray                     #db7093 palevioletred
-#   X  #2f4f4f darkslategrey                     #ffefd5 papayawhip
+#      #ff8c00 darkorange                     X  #ffa500 orange
+#      #9932cc darkorchid                     X  #ff4500 orangered
+#      #8b0000 darkred                           #da70d6 orchid
+#      #e9967a darksalmon                        #eee8aa palegoldenrod
+#      #8fbc8f darkseagreen                   X  #98fb98 palegreen
+#      #483d8b darkslateblue                     #afeeee paleturquoise
+#      #2f4f4f darkslategray                  X  #db7093 palevioletred
+#      #2f4f4f darkslategrey                     #ffefd5 papayawhip
 #      #9400d3 darkviolet                        #ffdab9 peachpuff
 #   X  #ff1493 deeppink                          #cd853f peru
 #      #00bfff deepskyblue                       #ffc0cb pink
 #      #696969 dimgray                           #dda0dd plum
 #      #696969 dimgrey                           #b0e0e6 powderblue
 #      #1e90ff dodgerblue                        #800080 purple
-#      #b22222 firebrick                         #ff0000 red
+#   X  #b22222 firebrick                         #ff0000 red
 #      #fffaf0 floralwhite                       #bc8f8f rosybrown
-#      #228b22 forestgreen                       #4169e1 royalblue
+#      #228b22 forestgreen                    X  #4169e1 royalblue
 #      #ff00ff fuchsia                           #8b4513 saddlebrown
 #      #dcdcdc gainsboro                         #fa8072 salmon
 #      #f8f8ff ghostwhite                        #f4a460 sandybrown
-#   X  #ffd700 gold                           X  #2e8b57 seagreen
-#   X  #daa520 goldenrod                         #fff5ee seashell
+#   X  #ffd700 gold                              #2e8b57 seagreen
+#      #daa520 goldenrod                         #fff5ee seashell
 #      #808080 gray                              #a0522d sienna
 #      #008000 green                             #c0c0c0 silver
 #      #adff2f greenyellow                       #87ceeb skyblue
-#      #808080 grey                              #6a5acd slateblue
+#      #808080 grey                           X  #6a5acd slateblue
 #      #f0fff0 honeydew                          #708090 slategray
 #      #ff69b4 hotpink                           #708090 slategrey
 #      #cd5c5c indianred                         #fffafa snow
-#      #4b0082 indigo                         X  #00ff7f springgreen
+#      #4b0082 indigo                            #00ff7f springgreen
 #      #fffff0 ivory                          X  #4682b4 steelblue
 #      #f0e68c khaki                             #d2b48c tan
 #      #e6e6fa lavender                          #008080 teal
@@ -86,7 +86,7 @@ import trajectory
 #      #e0ffff lightcyan                         #ffffff white
 #      #fafad2 lightgoldenrodyellow              #f5f5f5 whitesmoke
 #      #90ee90 lightgreen                        #ffff00 yellow
-#      #d3d3d3 lightgrey                         #9acd32 yellowgreen
+#      #d3d3d3 lightgrey                      X  #9acd32 yellowgreen
 #      #ffb6c1 lightpink
 
 
@@ -681,7 +681,7 @@ class Goto(BasePacket):
 class GotoStarted(BasePacket):
 
     TYPE = 5
-    LOGVIEW_COLOR = "#ff7f50"
+    LOGVIEW_COLOR = "#6495ed"
 
 
 
@@ -730,7 +730,7 @@ class DisableAntiBlocking(BasePacket):
 class KeepAlive(BasePacket):
 
     TYPE = 10
-    LOGVIEW_COLOR = "#8a2be2"
+    LOGVIEW_COLOR = "#8b008b"
     LOGVIEW_DEFAULT_ENABLED = False
     DEFINITION = (
         PoseItem  ('current_pose',         "Current robot pose"),
@@ -744,37 +744,10 @@ class KeepAlive(BasePacket):
 class PositionControlConfig(BasePacket):
 
     TYPE = 11
-    LOGVIEW_COLOR = "#008b8b"
+    LOGVIEW_COLOR = "#556b2f"
     DEFINITION = (
         FloatItem ('t_acc',                             0.0),
         FloatItem ('f_va_max',                          0.0),
-        FloatItem ('u_max',                             0.0),
-        FloatItem ('k1',                                0.0),
-        FloatItem ('k2',                                0.0),
-        FloatItem ('k3',                                0.0),
-        FloatItem ('g_re_1',                            0.0),
-        FloatItem ('g_re_2',                            0.0),
-        FloatItem ('dist_min',                          0.0),
-        FloatItem ('angle_min',                         0.0),
-        UInt16Item('nbr_pas_evit_detect',               0),
-        FloatItem ('ecart_roue_libre',                  0.0),
-        FloatItem ('ecart_roue_motrice',                0.0),
-        FloatItem ('k_p_d',                             0.0),
-        FloatItem ('k_i_d',                             0.0),
-        FloatItem ('v_max_d',                           0.0),
-        FloatItem ('d_roue_d',                          0.0),
-        UInt16Item('nb_pas_d',                          0),
-        FloatItem ('k_p_g',                             0.0),
-        FloatItem ('k_i_g',                             0.0),
-        FloatItem ('v_max_g',                           0.0),
-        FloatItem ('d_roue_g',                          0.0),
-        UInt16Item('nb_pas_g',                          0),
-        UInt32Item('app_net_ip',                        0),
-        UInt32Item('app_net_mask',                      0),
-        UInt32Item('app_net_gateway',                   0),
-        UInt32Item('app_net_port',                      0),
-        UInt32Item('test_mode',                         0),
-        FloatItem ('coefficient_glissement_lateral',    0.0),
     )
 
 
@@ -783,7 +756,7 @@ class PositionControlConfig(BasePacket):
 class Stop(BasePacket):
 
     TYPE = 12
-    LOGVIEW_COLOR = "#b8860b"
+    LOGVIEW_COLOR = "#b22222"
 
 
 
@@ -801,10 +774,85 @@ class Resettle(BasePacket):
 
 
 
+class GripperControl(BasePacket):
+
+    TYPE = 14
+    LOGVIEW_COLOR = "#ffa500"
+    DEFINITION = (
+        UEnum8Item('move',  GRIPPER_CLOSE,     'GRIPPER'),
+        UEnum8Item('which', GRIPPER_SIDE_BOTH, 'GRIPPER_SIDE'),
+    )
+
+
+
+
+class SweeperControl(BasePacket):
+
+    TYPE = 15
+    LOGVIEW_COLOR = "#ff4500"
+    DEFINITION = (
+        UEnum8Item('move',  SWEEPER_CLOSE,     'SWEEPER'),
+    )
+
+
+
+
+class MapArmControl(BasePacket):
+
+    TYPE = 16
+    LOGVIEW_COLOR = "#98fb98"
+    DEFINITION = (
+        UEnum8Item('move',  MAP_ARM_CLOSE,     'MAP_ARM'),
+    )
+
+
+
+
+class MapGripperControl(BasePacket):
+
+    TYPE = 17
+    LOGVIEW_COLOR = "#6a5acd"
+    DEFINITION = (
+        UEnum8Item('move',  MAP_GRIPPER_CLOSE,     'MAP_GRIPPER'),
+    )
+
+
+
+
+class EmptyTankControl(BasePacket):
+
+    TYPE = 18
+    LOGVIEW_COLOR = "#4682b4"
+    DEFINITION = (
+        UEnum8Item('move',  TANK_RETRACT,     'TANK'),
+    )
+
+
+
+
+class GoldBullionDetected(BasePacket):
+
+    TYPE = 19
+    LOGVIEW_COLOR = "#ffd700"
+
+
+
+
+class TissueStoreControl(BasePacket):
+
+    TYPE = 20
+    LOGVIEW_COLOR = "#32cd32"
+    DEFINITION = (
+        UEnum8Item('move',  TISSUE_STORE_HIGH,     'TISSUE_STORE'),
+    )
+
+
+
+
 class Reinitialize(BasePacket):
 
-    TYPE = 102
-    LOGVIEW_COLOR = "#483d8b"
+    TYPE = 100
+    LOGVIEW_COLOR = "#db7093"
 
 
 
@@ -813,7 +861,7 @@ class SimulatorData(BasePacket):
 
     TYPE = 103
     LOGVIEW_DEFAULT_ENABLED = False
-    LOGVIEW_COLOR = "#a52a2a"
+    LOGVIEW_COLOR = "#4169e1"
     DEFINITION = (
         UInt8Item('leds', 0, "Dockstar leds status"),
     )
@@ -825,9 +873,10 @@ class TurretDetect(BasePacket):
 
     MAX_SIZE = 5
     TYPE = 32
-    LOGVIEW_COLOR = "#2f4f4f"
+    LOGVIEW_COLOR = "#9acd32"
     DEFINITION = (
-        FloatRadianItem('angle', 0.0, "Opponent detection angle"),
+        UInt8Item('distance', 0, "Detection distance"),
+        UInt8Item('angle',    0, "Detection angle index (0 <= angle <= 17; 20 deg resolution)"),
     )
 
 
