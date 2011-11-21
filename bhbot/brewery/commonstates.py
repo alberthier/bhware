@@ -87,9 +87,11 @@ class Sequence(statemachine.State):
 
 class SetupPositionControl(statemachine.State):
 
-    def __init__(self):
+    def __init__(self, t_acc = 0.0, f_va_max = 0.0):
         statemachine.State.__init__(self)
         self.packet = packets.PositionControlConfig()
+        self.packet.t_acc = t_acc
+        self.packet.f_va_max = f_va_max
 
 
     def on_enter(self):
@@ -144,6 +146,115 @@ class DefinePosition(statemachine.State):
             self.y_sent = True
         else:
             self.exit_substate()
+
+
+
+
+class Gripper(statemachine.State):
+
+    def __init__(self, which, move):
+        statemachine.State.__init__(self)
+        self.packet = packets.GripperControl()
+        self.packet.which = which
+        self.packet.move = move
+
+
+    def on_enter(self):
+        self.send_packet(self.packet)
+
+
+    def on_gripper_control(self, packet):
+        self.exit_substate()
+
+
+
+
+class Sweeper(statemachine.State):
+
+    def __init__(self, move):
+        statemachine.State.__init__(self)
+        self.packet = packets.SweeperControl()
+        self.packet.move = move
+
+
+    def on_enter(self):
+        self.send_packet(self.packet)
+
+
+    def on_sweeper_control(self, packet):
+        self.exit_substate()
+
+
+
+
+class MapArm(statemachine.State):
+
+    def __init__(self, move):
+        statemachine.State.__init__(self)
+        self.packet = packets.MapArmControl()
+        self.packet.move = move
+
+
+    def on_enter(self):
+        self.send_packet(self.packet)
+
+
+    def on_map_arm_control(self, packet):
+        self.exit_substate()
+
+
+
+
+class MapGripper(statemachine.State):
+
+    def __init__(self, move):
+        statemachine.State.__init__(self)
+        self.packet = packets.MapGripperControl()
+        self.packet.move = move
+
+
+    def on_enter(self):
+        self.send_packet(self.packet)
+
+
+    def on_map_gripper_control(self, packet):
+        self.exit_substate()
+
+
+
+
+class EmptyTank(statemachine.State):
+
+    def __init__(self, move):
+        statemachine.State.__init__(self)
+        self.packet = packets.EmptyTankControl()
+        self.packet.move = move
+
+
+    def on_enter(self):
+        self.send_packet(self.packet)
+
+
+    def on_empty_tank_control(self, packet):
+        self.exit_substate()
+
+
+
+
+class StoreTissue(statemachine.State):
+
+    def __init__(self, position):
+        statemachine.State.__init__(self)
+        self.packet = packets.TissueStoreControl()
+        self.packet.position = position
+
+
+    def on_enter(self):
+        self.send_packet(self.packet)
+
+
+    def on_tissue_store_control(self, packet):
+        self.exit_substate()
 
 
 
@@ -312,3 +423,4 @@ class TrajectoryWalk(statemachine.State):
                     logger.log("TrajectoryWalk TRAJECTORY_WALK_OPPONENT_DETECTED")
                     self.exit_reason = TRAJECTORY_WALK_OPPONENT_DETECTED
                     self.exit_substate()
+
