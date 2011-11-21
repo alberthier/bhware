@@ -14,12 +14,12 @@ import fieldview
 
 
 
-class ExpectedTrajectoryLayer(fieldview.Layer):
+class RealTrajectoryLayer(fieldview.Layer):
 
     def __init__(self, parent = None):
         fieldview.Layer.__init__(self, parent)
-        self.name = "Expected trajectory"
-        self.color = "#73d216"
+        self.name = "Real trajectory"
+        self.color = "#edd400"
         self.has_first_goto = False
         self.path = QPainterPath()
 
@@ -43,27 +43,28 @@ class ExpectedTrajectoryLayer(fieldview.Layer):
 
 
 
-class RealTrajectoryLayer(fieldview.Layer):
+class ExpectedTrajectoryLayer(fieldview.Layer):
 
     def __init__(self, parent = None):
         fieldview.Layer.__init__(self, parent)
-        self.name = "Real trajectory"
-        self.color = "#edd400"
-        self.has_first_goto = False
+        self.name = "Expected trajectory"
+        self.color = "#73d216"
         self.path = QPainterPath()
 
 
     def process_log_line(self, log_line, lineno, last_lineno):
         data = log_line[logger.LOG_LINE_DATA]
+        if isinstance(data, packets.Resettle):
+            if data.axis == AXIS_X:
+                self.path.moveTo(self.path.currentPosition().x(), data.position * 1000.0)
+                print data.position
+            else:
+                self.path.moveTo(data.position * 1000.0, self.path.currentPosition().y())
         if isinstance(data, packets.Goto) and data.movement != MOVEMENT_ROTATE:
             for pose in data.points:
                 x = pose.x * 1000.0
                 y = pose.y * 1000.0
-                if not self.has_first_goto:
-                    self.has_first_goto = True
-                    self.path.moveTo(y, x)
-                else:
-                    self.path.lineTo(y, x)
+                self.path.lineTo(y, x)
 
         if lineno == last_lineno:
             path_item = QGraphicsPathItem(self)
