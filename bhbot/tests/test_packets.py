@@ -350,10 +350,10 @@ class EmptyTankControlTestCase(unittest.TestCase, PacketTestMixin):
 
 
 
-class GoldBullionDetectedTestCase(unittest.TestCase, PacketTestMixin):
+class GoldBarDetectedTestCase(unittest.TestCase, PacketTestMixin):
 
     def create_packet(self):
-        return packets.GoldBullionDetected()
+        return packets.GoldBarDetected()
 
 
 
