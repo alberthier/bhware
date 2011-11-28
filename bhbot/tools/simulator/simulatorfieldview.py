@@ -224,10 +224,10 @@ class RobotTrajectoryLayer(fieldview.Layer):
         self.team = team
         if self.team == TEAM_PURPLE:
             self.name = "Purple robot trajectory"
-            self.color = QColor(TEAM_COLOR_PURPLE).darker().name()
+            self.color = QColor(TEAM_COLOR_PURPLE).darker(150).name()
         else:
             self.name = "Red robot trajectory"
-            self.color = QColor(TEAM_COLOR_RED).darker().name()
+            self.color = QColor(TEAM_COLOR_RED).darker(150).name()
 
 
     def setup(self):
