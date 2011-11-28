@@ -830,7 +830,7 @@ class EmptyTankControl(BasePacket):
 
 
 
-class GoldBullionDetected(BasePacket):
+class GoldBarDetected(BasePacket):
 
     TYPE = 19
     LOGVIEW_COLOR = "#ffd700"

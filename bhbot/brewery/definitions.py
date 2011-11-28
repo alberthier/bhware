@@ -13,6 +13,14 @@ import socket
 FIELD_WIDTH                            = 3.0
 FIELD_HEIGHT                           = 2.0
 
+# Game elements
+COIN_RADIUS                            = 0.060
+COIN_COLOR_WHITE                       = "#ffffff"
+COIN_COLOR_BLACK                       = "#000000"
+GOLD_BAR_WIDTH                         = 0.070
+GOLD_BAR_LENGTH                        = 0.150
+GOLD_BAR_COLOR                         = "#ffdd00"
+
 # Robot
 ROBOT_WIDTH                            = 0.276
 ROBOT_HEIGHT                           = 0.322
