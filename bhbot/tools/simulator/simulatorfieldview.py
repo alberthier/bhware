@@ -236,15 +236,128 @@ class RobotTrajectoryLayer(fieldview.Layer):
 
 
 
+class Coin(QGraphicsItemGroup):
+
+    def __init__(self, parent, x, y, is_white):
+        QGraphicsItemGroup.__init__(self, parent)
+        self.is_white = is_white
+
+        r = COIN_RADIUS * 1000.0
+        x = x * 1000.0 - r
+        y = y * 1000.0 - r
+        path = QPainterPath()
+        path.addEllipse(y, x, 2.0 * r, 2.0 * r)
+        path.addEllipse(y + r - 7.5, x + r - 7.5, 15.0, 15.0)
+        disc = QGraphicsPathItem(path, self)
+        if is_white:
+            disc.setBrush(QColor(COIN_COLOR_WHITE))
+            disc.setPen(QColor(COIN_COLOR_WHITE).darker())
+        else:
+            disc.setBrush(QColor(COIN_COLOR_BLACK))
+            disc.setPen(QColor(COIN_COLOR_BLACK).lighter())
+        self.addToGroup(disc)
+
+
+
+
+class GoldBar(QGraphicsItemGroup):
+
+    def __init__(self, parent, x, y, angle):
+        QGraphicsItemGroup.__init__(self, parent)
+
+        dark_gold = QColor(GOLD_BAR_COLOR).darker()
+        w = GOLD_BAR_WIDTH * 1000.0
+        l = GOLD_BAR_LENGTH * 1000.0
+        x = x * 1000.0
+        y = y * 1000.0
+        rect = QGraphicsRectItem(-l / 2.0, -w / 2.0, l, w, self)
+        rect.setBrush(QColor(GOLD_BAR_COLOR))
+        rect.setPen(dark_gold)
+        self.addToGroup(rect)
+        rect = QGraphicsRectItem(-119.0 / 2.0, -44.0 / 2.0, 119.0, 44.0, self)
+        rect.setBrush(QColor(GOLD_BAR_COLOR))
+        rect.setPen(dark_gold)
+        self.addToGroup(rect)
+        line = QGraphicsLineItem(-l / 2.0, -w / 2.0, -119.0 / 2.0, -44.0 / 2.0)
+        line.setPen(dark_gold)
+        self.addToGroup(line)
+        line = QGraphicsLineItem(l / 2.0, -w / 2.0, 119.0 / 2.0, -44.0 / 2.0)
+        line.setPen(dark_gold)
+        self.addToGroup(line)
+        line = QGraphicsLineItem(-l / 2.0, w / 2.0, -119.0 / 2.0, 44.0 / 2.0)
+        line.setPen(dark_gold)
+        self.addToGroup(line)
+        line = QGraphicsLineItem(l / 2.0, w / 2.0, 119.0 / 2.0, 44.0 / 2.0)
+        line.setPen(dark_gold)
+        self.addToGroup(line)
+        self.setPos(y, x)
+        self.setRotation(angle)
+
+
+
+
 class GameElementsLayer(fieldview.Layer):
 
     def __init__(self, parent = None):
         fieldview.Layer.__init__(self, parent)
         self.name = "Game elements"
+        self.color = GOLD_BAR_COLOR
+        self.elements = []
+        self.setup()
 
 
     def setup(self):
-        pass
+        for elt in self.elements:
+            self.removeFromGroup(elt)
+        self.elements = []
+        pieces_coords = [# Near start
+                         (0.500, 1.000),
+                         # Circle
+                         (0.830, 1.270),
+                         (0.760, 1.100),
+                         (0.830, 0.930),
+                         (1.000, 0.860),
+                         (1.170, 0.930),
+                         (1.240, 1.100),
+                         (1.170, 1.270),
+                         # Totem
+                         (0.915, 1.015),
+                         (1.085, 1.015),
+                         (0.915, 1.185),
+                         (1.085, 1.185),
+                         (0.915, 1.015),
+                         (1.085, 1.015),
+                         (0.915, 1.185),
+                         (1.085, 1.185),
+                         # Near hold
+                         (1.700, 0.450),
+                         # Bottom center
+                         (1.700, 1.415)]
+
+        for (x, y) in pieces_coords:
+            coin = Coin(self, x, y, True)
+            self.addToGroup(coin)
+            self.elements.append(coin)
+            coin = Coin(self, x, FIELD_WIDTH - y, True)
+            self.addToGroup(coin)
+            self.elements.append(coin)
+
+        for (x, y) in [(1.615, 1.500), (1.785, 1.500)]:
+            coin = Coin(self, x, y, True)
+            self.addToGroup(coin)
+            self.elements.append(coin)
+
+        gold_bars_coords = [(1.353, 1.500,  0.00),
+                            (0.910, 1.100,  0.00),
+                            (1.090, 1.100,  0.00),
+                            (0.910, 1.900,  0.00),
+                            (1.090, 1.900,  0.00),
+                            (0.860, 0.412, 92.86),
+                            (0.860, 2.588, 87.13)]
+        for (x, y, angle) in gold_bars_coords:
+            bar = GoldBar(self, x, y, angle)
+            self.addToGroup(bar)
+            self.elements.append(bar)
 
 
 
