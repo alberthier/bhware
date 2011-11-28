@@ -22,7 +22,7 @@ class FieldScene(QGraphicsScene):
         self.addItem(self.root)
         field = QGraphicsSvgItem(os.path.join(os.path.dirname(__file__), "field.svg"))
         self.root.addToGroup(field)
-        field.setPos(-102.0, -102.0)
+        field.setPos(-100.0, -135.0)
 
         pen = QPen(QColor("#2e3436"), 10)
         pen.setCapStyle(Qt.RoundCap)
@@ -84,15 +84,15 @@ class GhostRobotLayer(Layer):
         font = QFont()
         font.setPointSize(50)
         self.x_label = QGraphicsSimpleTextItem()
-        self.x_label.setPos(700.0, -200.0)
+        self.x_label.setPos(700.0, -250.0)
         self.x_label.setFont(font)
         self.addToGroup(self.x_label)
         self.y_label = QGraphicsSimpleTextItem()
-        self.y_label.setPos(1100.0, -200.0)
+        self.y_label.setPos(1100.0, -250.0)
         self.y_label.setFont(font)
         self.addToGroup(self.y_label)
         self.angle_label = QGraphicsSimpleTextItem()
-        self.angle_label.setPos(1500.0, -200.0)
+        self.angle_label.setPos(1500.0, -250.0)
         self.angle_label.setFont(font)
         self.addToGroup(self.angle_label)
 
@@ -150,7 +150,7 @@ class FieldView(QGraphicsView):
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.setRenderHints(QPainter.Antialiasing | QPainter.SmoothPixmapTransform)
-        self.setSceneRect(-200.0, -200.0, 3404, 2504)
+        self.setSceneRect(-200.0, -250.0, 3404, 2450)
 
         self.enterEventListeners = []
         self.leaveEventListeners = []
