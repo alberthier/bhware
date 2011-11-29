@@ -243,11 +243,11 @@ class Coin(QGraphicsItemGroup):
         self.is_white = is_white
 
         r = COIN_RADIUS * 1000.0
-        x = x * 1000.0 - r
-        y = y * 1000.0 - r
+        x = x * 1000.0
+        y = y * 1000.0
         path = QPainterPath()
-        path.addEllipse(y, x, 2.0 * r, 2.0 * r)
-        path.addEllipse(y + r - 7.5, x + r - 7.5, 15.0, 15.0)
+        path.addEllipse(-r, -r, 2.0 * r, 2.0 * r)
+        path.addEllipse(-7.5, -7.5, 15.0, 15.0)
         disc = QGraphicsPathItem(path, self)
         if is_white:
             disc.setBrush(QColor(COIN_COLOR_WHITE))
@@ -256,6 +256,12 @@ class Coin(QGraphicsItemGroup):
             disc.setBrush(QColor(COIN_COLOR_BLACK))
             disc.setPen(QColor(COIN_COLOR_BLACK).lighter())
         self.addToGroup(disc)
+        self.x = x
+        self.y = y
+
+
+    def setup(self):
+        self.setPos(self.y, self.x)
 
 
 
@@ -290,8 +296,14 @@ class GoldBar(QGraphicsItemGroup):
         line = QGraphicsLineItem(l / 2.0, w / 2.0, 119.0 / 2.0, 44.0 / 2.0)
         line.setPen(dark_gold)
         self.addToGroup(line)
-        self.setPos(y, x)
-        self.setRotation(angle)
+        self.x = x
+        self.y = y
+        self.angle = angle
+
+
+    def setup(self):
+        self.setPos(self.y, self.x)
+        self.setRotation(self.angle)
 
 
 
@@ -303,13 +315,7 @@ class GameElementsLayer(fieldview.Layer):
         self.name = "Game elements"
         self.color = GOLD_BAR_COLOR
         self.elements = []
-        self.setup()
 
-
-    def setup(self):
-        for elt in self.elements:
-            self.removeFromGroup(elt)
-        self.elements = []
         pieces_coords = [# Near start
                          (0.500, 1.000),
                          # Circle
@@ -358,6 +364,14 @@ class GameElementsLayer(fieldview.Layer):
             bar = GoldBar(self, x, y, angle)
             self.addToGroup(bar)
             self.elements.append(bar)
+
+        self.setup()
+
+
+    def setup(self):
+        for elt in self.elements:
+            elt.setup()
+
 
 
 
