@@ -205,10 +205,10 @@ Enum("TANK",
      TANK_DEPLOY  = 1,
 )
 
-Enum("TISSUE_STORE",
-     "Tissue store control",
-     TISSUE_STORE_LOW  = 0,
-     TISSUE_STORE_HIGH = 1,
+Enum("FABRIC_STORE",
+     "Fabric store control",
+     FABRIC_STORE_LOW  = 0,
+     FABRIC_STORE_HIGH = 1,
 )
 
 Enum("TRAJECTORY_WALK",

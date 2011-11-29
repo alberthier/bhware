@@ -241,11 +241,11 @@ class EmptyTank(statemachine.State):
 
 
 
-class StoreTissue(statemachine.State):
+class StoreFabric(statemachine.State):
 
     def __init__(self, position):
         statemachine.State.__init__(self)
-        self.packet = packets.TissueStoreControl()
+        self.packet = packets.FabricStoreControl()
         self.packet.position = position
 
 
@@ -253,7 +253,7 @@ class StoreTissue(statemachine.State):
         self.send_packet(self.packet)
 
 
-    def on_tissue_store_control(self, packet):
+    def on_fabric_store_control(self, packet):
         self.exit_substate()
 
 

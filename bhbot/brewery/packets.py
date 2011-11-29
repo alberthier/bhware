@@ -838,12 +838,12 @@ class GoldBarDetected(BasePacket):
 
 
 
-class TissueStoreControl(BasePacket):
+class FabricStoreControl(BasePacket):
 
     TYPE = 20
     LOGVIEW_COLOR = "#32cd32"
     DEFINITION = (
-        UEnum8Item('move',  TISSUE_STORE_HIGH,     'TISSUE_STORE'),
+        UEnum8Item('move',  FABRIC_STORE_HIGH,     'FABRIC_STORE'),
     )
 
 

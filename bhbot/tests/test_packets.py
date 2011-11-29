@@ -358,14 +358,14 @@ class GoldBarDetectedTestCase(unittest.TestCase, PacketTestMixin):
 
 
 
-class TissueStoreControlTestCase(unittest.TestCase, PacketTestMixin):
+class FabricStoreControlTestCase(unittest.TestCase, PacketTestMixin):
 
     def create_packet(self):
-        return packets.TissueStoreControl()
+        return packets.FabricStoreControl()
 
 
     def initialize_packet(self, packet):
-        packet.move = TISSUE_STORE_LOW
+        packet.move = FABRIC_STORE_LOW
 
 
 
