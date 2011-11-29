@@ -101,6 +101,7 @@ class RobotController(object):
                     packet.deserialize(buf)
                     packet.dispatch(self)
                     packet.dispatch(self.robot_layer)
+                    packet.dispatch(self.robot_trajectory_layer)
 
 
     def on_goto(self, packet):

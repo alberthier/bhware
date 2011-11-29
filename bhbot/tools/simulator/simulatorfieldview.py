@@ -228,10 +228,30 @@ class RobotTrajectoryLayer(fieldview.Layer):
         else:
             self.name = "Red robot trajectory"
             self.color = QColor(TEAM_COLOR_RED).darker(150).name()
+        self.item = QGraphicsPathItem()
+        self.item.setPen(QPen(QColor(self.color), 8.0))
+        self.addToGroup(self.item)
 
 
     def setup(self):
-        pass
+        self.item.setPath(QPainterPath())
+
+
+    def on_resettle(self, packet):
+        path = self.item.path()
+        current = path.currentPosition()
+        if packet.axis == AXIS_X:
+            path.moveTo(current.x(), packet.position * 1000.0)
+        else:
+            path.moveTo(packet.position * 1000.0, current.y())
+        self.item.setPath(path)
+
+
+    def on_goto(self, packet):
+        path = self.item.path()
+        for point in packet.points:
+            path.lineTo(point.y * 1000.0, point.x * 1000.0)
+        self.item.setPath(path)
 
 
 
