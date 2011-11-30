@@ -328,6 +328,25 @@ class GoldBar(QGraphicsItemGroup):
 
 
 
+class Fabric(QGraphicsRectItem):
+
+    def __init__(self, team, parent = None):
+        QGraphicsRectItem.__init__(self, parent)
+        if team == TEAM_PURPLE:
+            self.setBrush(QColor(TEAM_COLOR_PURPLE))
+            self.setRect(1250, -135, 250, 148)
+        else:
+            self.setBrush(QColor(TEAM_COLOR_RED))
+            self.setRect(1500, -135, 250, 148)
+        self.setPen(QPen(0))
+
+
+    def setup(self):
+        self.setVisible(True)
+
+
+
+
 class GameElementsLayer(fieldview.Layer):
 
     def __init__(self, parent = None):
@@ -385,13 +404,19 @@ class GameElementsLayer(fieldview.Layer):
             self.addToGroup(bar)
             self.elements.append(bar)
 
+        fabric = Fabric(TEAM_PURPLE)
+        self.addToGroup(fabric)
+        self.elements.append(fabric)
+        fabric = Fabric(TEAM_RED)
+        self.addToGroup(fabric)
+        self.elements.append(fabric)
+
         self.setup()
 
 
     def setup(self):
         for elt in self.elements:
             elt.setup()
-
 
 
 
