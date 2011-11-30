@@ -195,17 +195,15 @@ class RobotLayer(fieldview.Layer):
             # direction is ignored for the moment
             if self.goto_packet_point_index != len(self.goto_packet.points):
                 point = self.goto_packet.points[self.goto_packet_point_index]
+                angle = point.angle
+                if angle == None:
+                    angle = self.robot.get_pose().angle
                 if self.goto_packet.direction == DIRECTION_BACKWARD:
-                    point.angle += math.pi
+                    angle += math.pi
                 if self.goto_packet.movement == MOVEMENT_ROTATE:
-                    self.robot.robot_rotation(point.angle)
-                elif self.goto_packet.movement == MOVEMENT_LINE:
-                    self.robot.robot_line(point.x, point.y)
-                elif self.goto_packet.movement == MOVEMENT_MOVE:
-                    if point.angle != None:
-                        self.robot.robot_move(point.x, point.y, point.angle)
-                    else:
-                        self.robot.robot_line(point.x, point.y)
+                    self.robot.robot_rotation(angle)
+                else:
+                    self.robot.robot_move(point.x, point.y, angle)
             else:
                 self.robot_controller.send_goto_finished(REASON_DESTINATION_REACHED, self.goto_packet_point_index)
 
