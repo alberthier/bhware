@@ -21,7 +21,6 @@ def get_last_remote_logfile():
     if len(logs) != 0:
         logs.sort()
         log = logs[-1]
-        print log
         if not os.path.exists("/tmp/bh"):
             os.makedirs("/tmp/bh")
         local_file = "/tmp/bh/remote_{}".format(os.path.basename(log))

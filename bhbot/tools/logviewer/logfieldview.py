@@ -57,7 +57,6 @@ class ExpectedTrajectoryLayer(fieldview.Layer):
         if isinstance(data, packets.Resettle):
             if data.axis == AXIS_X:
                 self.path.moveTo(self.path.currentPosition().x(), data.position * 1000.0)
-                print data.position
             else:
                 self.path.moveTo(data.position * 1000.0, self.path.currentPosition().y())
         if isinstance(data, packets.Goto) and data.movement != MOVEMENT_ROTATE:
