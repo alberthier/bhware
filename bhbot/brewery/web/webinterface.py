@@ -9,6 +9,7 @@ import socket
 sys.path.append(os.path.dirname(__file__))
 
 import cherrypy
+from definitions import *
 
 
 
@@ -31,7 +32,8 @@ class BHWeb(object):
     <h1>BH Team</h1>
     <ul>
       <li><a href="statemachine" target="linktarget">State Machine</a></li>
-      <li><a href="http://{0}:42080" target="linktarget">PIC</a></li>
+      <li><a href="logs" target="linktarget">Logs</a></li>
+      <li><a href="http://{}:42080" target="linktarget">PIC</a></li>
     </ul>
   </div>
   <iframe src="statemachine" name="linktarget" />
@@ -56,8 +58,35 @@ class BHWeb(object):
 """
         state = self.eventloop.get_current_state()
         while state != self.eventloop.root_state:
-            html += """<li>{0}</li>""".format(type(state).__name__)
+            html += "<li>{}</li>\n".format(type(state).__name__)
             state = state.parent_state
+        html + """</ul>
+  </div>
+  <iframe name="linktarget" />
+</body>
+</html>
+"""
+        return html
+
+
+    @cherrypy.expose
+    def logs(self):
+        html = """<!DOCTYPE html>
+<html>
+<head>
+  <title>BH Team robot web interface</title>
+  <link rel="stylesheet" type="text/css" href="bhweb.css" />
+</head>
+<body>
+  <div>
+    <h2>Logs:</h2>
+    <ul>
+"""
+        files = os.listdir(LOG_DIR)
+        files.sort()
+        for f in reversed(files):
+            html += '<li><a href="logs/{0}">{0}</a></li>\n'.format(f)
+
         html + """</ul>
   </div>
   <iframe name="linktarget" />
@@ -69,9 +98,15 @@ class BHWeb(object):
 
 
 
-
 def create_app(eventloop):
-    return cherrypy.tree.mount(BHWeb(eventloop), script_name = "/", config = { "/" : {
-        "tools.staticdir.on"  : True,
-        "tools.staticdir.dir" : os.path.join(os.path.dirname(__file__), "static"),
-    } })
+    return cherrypy.tree.mount(BHWeb(eventloop), script_name = "/", config = {
+        "/" : {
+            "tools.staticdir.on"  : True,
+            "tools.staticdir.dir" : os.path.join(os.path.dirname(__file__), "static"),
+        },
+        "/logs" : {
+            "tools.staticdir.on"  : True,
+            "tools.staticdir.dir" : LOG_DIR,
+            "tools.staticdir.content_types" : { "py": "text/plain" },
+        }
+    })
