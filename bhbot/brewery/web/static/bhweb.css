@@ -1,7 +1,12 @@
+html {
+  height: 100%;
+}
+
 body {
   background-color: #efefef;
   font-family: "Sans";
   font-size: 9pt;
+  height: 100%;
   margin: 0;
 }
 
