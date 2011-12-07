@@ -75,12 +75,18 @@ def MSG_init_pose(x=0.0, y=0.0, angle=0.0) :
     poseInit.addPose(str(x) + " " + str(y) + " " + str(angle) + " " + "0.0")
     return poseInit.cmdMsgGeneration()
     
+def send_init_pose(process, x=0.0, y=0.0, angle=0.0) :
+    process.stdin.write(MSG_init_pose(x, y, angle))
+    
 def MSG_config_PI(Kp, Ki) :
     #generation d'un message de configuration des gains de l'asser de vitesse PI
     parametersPI = commandMsg("PARAMETERS_PI")
     parametersPI.addPose("KP" + " " + str(Kp))
     parametersPI.addPose("KI" + " " + str(Ki))
     return parametersPI.cmdMsgGeneration()
+
+def send_config_PI(process, Kp, Ki) :
+    process.stdin.write(MSG_config_PI(Kp, Ki))
     
 def MSG_config_AsserTrajectoire(K1, K2, K3) :
     #generation d'un message de configuration des gains de l'asser de déplacement longitudinal
@@ -89,6 +95,9 @@ def MSG_config_AsserTrajectoire(K1, K2, K3) :
     parametersK.addPose("GAIN_K2" + " " + str(K2))
     parametersK.addPose("GAIN_K3" + " " + str(K3))
     return parametersK.cmdMsgGeneration()
+
+def send_config_AsserTrajectoire(process, K1, K2, K3) :
+    process.stdin.write(MSG_config_AsserTrajectoire(K1, K2, K3))
     
 def MSG_config_AsserRotation(R1, R2) :
     #generation d'un message de configuration des gains de l'asser de rotation
@@ -97,6 +106,9 @@ def MSG_config_AsserRotation(R1, R2) :
     parametersR.addPose("GAIN_R2" + " " + str(R2))
     return parametersR.cmdMsgGeneration()
     
+def send_config_AsserRotation(process, R1, R2) :
+    process.stdin.write(MSG_config_AsserRotation(R1, R2))
+    
 def MSG_config_profilVitesse(T_Acc, F_VA_Max, Umax) :
     #generation d'un message de configuration des parametres du profil de vitesse
     parametersT = commandMsg("PARAMETERS_TIME")
@@ -104,6 +116,9 @@ def MSG_config_profilVitesse(T_Acc, F_VA_Max, Umax) :
     parametersT.addPose("VITANGMAX" + " " + str(F_VA_Max))
     parametersT.addPose("UMAX" + " " + str(Umax))
     return parametersT.cmdMsgGeneration()
+    
+def send_config_profilVitesse(process, T_Acc, F_VA_Max, Umax) :
+    process.stdin.write(MSG_config_profilVitesse(T_Acc, F_VA_Max, Umax))
     
 def MSG_config_modeleMoteurCC(masse,
                                 rayon_roue,
@@ -128,55 +143,70 @@ def MSG_config_modeleMoteurCC(masse,
     parametersMotor.addPose("RAPPORT_REDUCTION" + " " + str(rapport_reduction))
     return parametersMotor.cmdMsgGeneration()
     
+def send_config_modeleMoteurCC(process,
+                                masse,
+                                rayon_roue,
+                                frottement_fluide,
+                                force_resistante,
+                                resistance_induit,
+                                inductance_induit,
+                                constance_couple,
+                                constante_vitesse,
+                                rapport_reduction) :
+    process.stdin.write(MSG_config_modeleMoteurCC(masse,
+                                                    rayon_roue,
+                                                    frottement_fluide,
+                                                    force_resistante,
+                                                    resistance_induit,
+                                                    inductance_induit,
+                                                    constance_couple,
+                                                    constante_vitesse,
+                                                    rapport_reduction))
+    
+def send_config_simulator(simulator_process, d_cfgTraj) :
+    # envoie au simulateur de la configuration des gains de l'asser de vitesse PI
+    send_config_PI(simulator_process, d_cfgTraj['Kp'], d_cfgTraj['Ki'])
+    
+    # envoie au simulateur de la configuration des gains de l'asser de déplacement longitudinal (l'asser haut niveau)
+    send_config_AsserTrajectoire(simulator_process, d_cfgTraj['K1'], d_cfgTraj['K2'], d_cfgTraj['K3'])
+
+    # envoie au simulateur de la configuration des gains de l'asser de rotation
+    send_config_AsserRotation(simulator_process, d_cfgTraj['R1'], d_cfgTraj['R2'])
+    
+    # envoie au simulateur de la configuration des parametres du profil de vitesse
+    send_config_profilVitesse(simulator_process, d_cfgTraj['TempsAcc'], d_cfgTraj['Facteur_vitesse_angulaire'], d_cfgTraj['Umax'])
+    
+    # envoie au simulateur des parametres du modele des moteurs à courant continu de déplacement
+    send_config_modeleMoteurCC(simulator_process,
+                                d_cfgTraj['Masse'],
+                                d_cfgTraj['Rayon_roue'],
+                                d_cfgTraj['Frottement_fluide'],
+                                d_cfgTraj['Force_resistante'],
+                                d_cfgTraj['Resistance_induit'],
+                                d_cfgTraj['Inductance_induit'],
+                                d_cfgTraj['Constance_couple'],
+                                d_cfgTraj['Constante_vitesse'],
+                                d_cfgTraj['Rapport_reduction'])
+                                                    
+    
 def trajFunction(d_cfgTraj, Kp = 10.0, Ki = 5.0, K1 = 20.0, K2 = 75.0, K3 = 50.0, R1 = -10.2, R2 = -10.2, T1=2.0, T2=4.48, T3=900.0):
-    #generation d'un message d'init de pose
-    initPoseMessage = MSG_init_pose()
-    
-    #generation d'un message de configuration des gains de l'asser de vitesse PI
-    msg_parametersPI = MSG_config_PI(d_cfgTraj['Kp'], d_cfgTraj['Ki'])
-    
-    #generation d'un message de configuration des gains de l'asser de déplacement longitudinal
-    msg_parametersK = MSG_config_AsserTrajectoire(d_cfgTraj['K1'], d_cfgTraj['K2'], d_cfgTraj['K3'])
-    
-    #generation d'un message de configuration des gains de l'asser de rotation
-    msg_parametersR = MSG_config_AsserRotation(d_cfgTraj['R1'], d_cfgTraj['R2'])
-    
-    #generation d'un message de configuration des parametres du profil de vitesse
-    msg_parametersT = MSG_config_profilVitesse(d_cfgTraj['TempsAcc'], d_cfgTraj['Facteur_vitesse_angulaire'], d_cfgTraj['Umax'])
-    
-    #generation d'un message d'init des parametres du modele des moteurs
-    msg_parametersMotor = MSG_config_modeleMoteurCC(d_cfgTraj['Masse'],
-                                                    d_cfgTraj['Rayon_roue'],
-                                                    d_cfgTraj['Frottement_fluide'],
-                                                    d_cfgTraj['Force_resistante'],
-                                                    d_cfgTraj['Resistance_induit'],
-                                                    d_cfgTraj['Inductance_induit'],
-                                                    d_cfgTraj['Constance_couple'],
-                                                    d_cfgTraj['Constante_vitesse'],
-                                                    d_cfgTraj['Rapport_reduction'])
-    
-    #generation d'un message de commande de deplacement
-    # "MSG_MAIN_GOTO 0:'DEPLACEMENT'/1:'ROTATION' 0:'MARCHE_AVANT'/1:'MARCHE_ARRIERE'"
-    dep = commandMsg("MSG_MAIN_GOTO 1 1")   # 'DEPLACEMENT' en 'MARCHE_AVANT'
-    dep.addPose(str(d_cfgTraj['Distance']) + " 0.0 0.0 0") # deplacement rectiligne sur la distance d_cfgTraj['Distance']
-    depMessage = dep.cmdMsgGeneration()
     
     #lancement du simulateur de deplacement
     print("Lancement du simulateur")
     simulator_process = subprocess.Popen('./simulator_trajAsser', shell=True, stdin = subprocess.PIPE, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
     
-    #configuration de l'asser de trajectoire
-    simulator_process.stdin.write(msg_parametersPI)
-    simulator_process.stdin.write(msg_parametersK)
-    simulator_process.stdin.write(msg_parametersR)
-    simulator_process.stdin.write(msg_parametersT)
-    simulator_process.stdin.write(msg_parametersMotor)
+    # envoie de la configuration du simulateur
+    send_config_simulator(simulator_process, d_cfgTraj)
     
-    #transmission de l'init de pose par l'entree standard
-    simulator_process.stdin.write(initPoseMessage)
+    # envoie au simulateur de l'init de pose
+    send_init_pose(simulator_process, x=0.0, y=0.0, angle=0.0)
     
+    #generation d'un message de commande de deplacement
+    # "MSG_MAIN_GOTO 0:'DEPLACEMENT'/1:'ROTATION' 0:'MARCHE_AVANT'/1:'MARCHE_ARRIERE'"
+    deplacement = commandMsg("MSG_MAIN_GOTO 1 1")   # 'DEPLACEMENT' en 'MARCHE_AVANT'
+    deplacement.addPose(str(d_cfgTraj['Distance']) + " 0.0 0.0 0") # deplacement rectiligne sur la distance d_cfgTraj['Distance']
     #transmission de commandes de deplacement par l'entree standard
-    simulator_process.stdin.write(depMessage)
+    simulator_process.stdin.write(deplacement.cmdMsgGeneration())
     
     #transmission de la commande de d'arret du simulateur
     (stdoutdata, stderrdata) = simulator_process.communicate("QUIT\n")
@@ -188,40 +218,21 @@ def trajFunction(d_cfgTraj, Kp = 10.0, Ki = 5.0, K1 = 20.0, K2 = 75.0, K3 = 50.0
     
     return d_traj
 
-def testPI(d_cfgTraj):
-    
-    #generation d'un message de configuration des gains de l'asser de vitesse PI
-    msg_parametersPI = MSG_config_PI(d_cfgTraj['Kp'], d_cfgTraj['Ki'])
-        
-    #generation d'un message de configuration des parametres du profil de vitesse
-    msg_parametersT = MSG_config_profilVitesse(d_cfgTraj['TempsAcc'], d_cfgTraj['Facteur_vitesse_angulaire'], d_cfgTraj['Umax'])
-    
-    #generation d'un message d'init des parametres du modele des moteurs
-    msg_parametersMotor = MSG_config_modeleMoteurCC(d_cfgTraj['Masse'],
-                                                    d_cfgTraj['Rayon_roue'],
-                                                    d_cfgTraj['Frottement_fluide'],
-                                                    d_cfgTraj['Force_resistante'],
-                                                    d_cfgTraj['Resistance_induit'],
-                                                    d_cfgTraj['Inductance_induit'],
-                                                    d_cfgTraj['Constance_couple'],
-                                                    d_cfgTraj['Constante_vitesse'],
-                                                    d_cfgTraj['Rapport_reduction'])
-    
-    #generation d'un message d'execution du test PI
-    cmdTestPI = commandMsg("MSG_TEST_PI 0 0")
-    msgTestPI = cmdTestPI.cmdMsgGeneration()
+def testPI(d_cfgTraj) :
     
     #lancement du simulateur de deplacement
     print("Lancement du simulateur")
     simulator_process = subprocess.Popen('./simulator_trajAsser', shell=True, stdin = subprocess.PIPE, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
     
-    #initilisation des parametres de l'asser de trajectoire
-    simulator_process.stdin.write(msg_parametersPI)
-    simulator_process.stdin.write(msg_parametersT)
-    simulator_process.stdin.write(msg_parametersMotor)
+    # envoie de la configuration du simulateur
+    send_config_simulator(simulator_process, d_cfgTraj)
+    print("Config envoyee")
     
+    #generation d'un message d'execution du test PI
+    cmdTestPI = commandMsg("MSG_TEST_PI 0 0")
     #transmission de commandes de deplacement par l'entree standard
-    simulator_process.stdin.write(msgTestPI)
+    simulator_process.stdin.write(cmdTestPI.cmdMsgGeneration())
+    print("Test PI lance")
     
     #transmission de la commande d'arret du simulateur
     (stdoutdata, stderrdata) = simulator_process.communicate("QUIT\n")
