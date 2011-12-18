@@ -571,6 +571,8 @@ extern void ASSER_TRAJ_AsservissementMouvementRobot(Pose poseRobot, VitessesRobo
     */
 //    ASSER_TRAJ_LogAsser("xErreurPoseCentreRobot", erreurPoseCentreRobot.x);
 //    ASSER_TRAJ_LogAsser("yErreurPoseCentreRobot", erreurPoseCentreRobot.y);
+
+    ASSER_TRAJ_LogAsser("segmentCourant", NBR_ASSER_LOG_VALUE, segmentCourant);
 }
 
 /**********************************************************************/
