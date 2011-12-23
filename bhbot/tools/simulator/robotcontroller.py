@@ -75,6 +75,7 @@ class RobotController(object):
             self.process = None
             self.socket = None
             self.ready = False
+            self.robot_layer.terminate()
 
 
     def connected(self, socket):

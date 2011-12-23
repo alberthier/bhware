@@ -9,24 +9,28 @@ from PyQt4.QtGui import *
 from PyQt4.QtSvg import *
 
 import trajectory
+import tools
 
 import fieldview
 import helpers
-
+import dynamics
 
 
 
 class GraphicsRobotObject(QObject):
 
-    movement_finished = pyqtSignal()
+    movement_finished = pyqtSignal(int)
 
     def __init__(self, layer):
         QObject.__init__(self)
 
         self.move_animation = QParallelAnimationGroup()
-        self.move_animation.finished.connect(self.movement_finished)
+        self.move_animation.finished.connect(self.animation_finished)
+        self.layer = layer
 
-        self.item = helpers.create_robot_base_item(QColor("#838383"), QColor("#e9eaff"), QColor(layer.color).darker(150))
+        self.item = QGraphicsItemGroup(layer)
+        self.structure = helpers.create_robot_base_item(QColor("#838383"), QColor("#e9eaff"), QColor(layer.color).darker(150))
+        self.item.addToGroup(self.structure)
         self.item.setParentItem(layer)
 
         tower = QGraphicsRectItem(0.0, -40.0, 80.0, 80.0)
@@ -72,6 +76,46 @@ class GraphicsRobotObject(QObject):
         # Map from Qt reference to field reference
         angle = self.convert_angle(angle)
         return trajectory.Pose(x, y, angle)
+
+
+    def animate(self, points):
+        self.move_animation.clear()
+
+        end_time = points[-1][0]
+
+        rotate_animation = QPropertyAnimation()
+        self.move_animation.addAnimation(rotate_animation)
+        rotate_animation.setDuration(end_time * 1000.0)
+        rotate_animation.setTargetObject(self)
+        rotate_animation.setPropertyName("angle")
+
+        pos_animation = QPropertyAnimation()
+        self.move_animation.addAnimation(pos_animation)
+        pos_animation.setDuration(end_time * 1000.0)
+        pos_animation.setTargetObject(self)
+        pos_animation.setPropertyName("position")
+
+        current = self.item.rotation() % 360.0
+        rotate_animation.setKeyValueAt(0.0, current)
+        for (time, pose) in points:
+            pos_animation.setKeyValueAt(time / end_time, QPointF(pose.y * 1000.0, pose.x * 1000.0))
+            ref_angle = self.convert_angle(pose.angle)
+            angle_deg = ((ref_angle) / math.pi * 180.0) % 360.0
+            final_angle = angle_deg
+            if abs(current - angle_deg) > 180.0:
+                if current > angle_deg:
+                    final_angle += 360.0
+                else:
+                    final_angle -= 360.0
+            current = angle_deg
+            rotate_animation.setKeyValueAt(time / end_time, final_angle)
+
+        self.move_animation.start()
+
+
+    def animation_finished(self):
+        t = self.move_animation.currentLoopTime() / 1000.0
+        self.movement_finished.emit(0)
 
 
     def create_rotation_animation(self, angle):
@@ -144,8 +188,8 @@ class GraphicsRobotObject(QObject):
 
 class RobotLayer(fieldview.Layer):
 
-    def __init__(self, parent, team):
-        fieldview.Layer.__init__(self, parent)
+    def __init__(self, scene, team):
+        fieldview.Layer.__init__(self, scene)
         self.team = team
         if self.team == TEAM_PURPLE:
             self.name = "Purple robot"
@@ -156,9 +200,10 @@ class RobotLayer(fieldview.Layer):
         self.robot = GraphicsRobotObject(self)
         self.robot.item.setVisible(False)
         self.robot.movement_finished.connect(self.movement_finished)
-        self.goto_packet = None
-        self.goto_packet_point_index = 0
         self.robot_controller = None
+
+        self.dynamics = dynamics.BasicDynamics()
+        self.dynamics.simulation_finished.connect(self.robot.animate)
 
 
     def reset(self):
@@ -176,23 +221,22 @@ class RobotLayer(fieldview.Layer):
 
 
     def on_goto(self, packet):
-        self.goto_packet = packet
-        self.goto_packet_point_index = 0
-        self.process_goto()
+        self.dynamics.goto(packet)
 
 
     def on_resettle(self, packet):
         if packet.axis == AXIS_X:
             self.robot.item.setY(packet.position * 1000.0)
+            self.dynamics.resettle(packet)
         elif packet.axis == AXIS_Y:
             self.robot.item.setX(packet.position * 1000.0)
+            self.dynamics.resettle(packet)
         angle_deg = self.robot.convert_angle(packet.angle) / math.pi * 180.0
         self.robot.set_rotation(angle_deg)
 
 
     def process_goto(self):
         if self.goto_packet != None:
-            # direction is ignored for the moment
             if self.goto_packet_point_index != len(self.goto_packet.points):
                 point = self.goto_packet.points[self.goto_packet_point_index]
                 angle = point.angle
@@ -208,17 +252,20 @@ class RobotLayer(fieldview.Layer):
                 self.robot_controller.send_goto_finished(REASON_DESTINATION_REACHED, self.goto_packet_point_index)
 
 
-    def movement_finished(self):
-        self.goto_packet_point_index += 1
-        self.process_goto()
+    def movement_finished(self, goto_packet_point_index):
+        self.robot_controller.send_goto_finished(REASON_DESTINATION_REACHED, goto_packet_point_index)
+
+
+    def terminate(self):
+        self.dynamics.terminate()
 
 
 
 
 class RobotTrajectoryLayer(fieldview.Layer):
 
-    def __init__(self, parent, team):
-        fieldview.Layer.__init__(self, parent)
+    def __init__(self, scene, team):
+        fieldview.Layer.__init__(self, scene)
         self.team = team
         if self.team == TEAM_PURPLE:
             self.name = "Purple robot trajectory"
@@ -347,11 +394,13 @@ class Fabric(QGraphicsRectItem):
 
 class GameElementsLayer(fieldview.Layer):
 
-    def __init__(self, parent = None):
-        fieldview.Layer.__init__(self, parent)
+    def __init__(self, purple_robot_item, red_robot_item, scene = None):
+        fieldview.Layer.__init__(self, scene)
         self.name = "Game elements"
         self.color = GOLD_BAR_COLOR
         self.elements = []
+        self.purple_robot_item = purple_robot_item
+        self.red_robot_item = red_robot_item
 
         pieces_coords = [# Near start
                          (0.500, 1.000),
@@ -411,10 +460,20 @@ class GameElementsLayer(fieldview.Layer):
 
         self.setup()
 
+        #scene.changed.connect(self.scene_changed)
+
 
     def setup(self):
         for elt in self.elements:
             elt.setup()
+
+
+    def scene_changed(self):
+        for elt in self.elements:
+            if elt.collidesWithItem(self.purple_robot_item):
+                self.purple_robot_item.addToGroup(elt)
+            if elt.collidesWithItem(self.red_robot_item):
+                self.red_robot_item.addToGroup(elt)
 
 
 
@@ -434,7 +493,9 @@ class SimulatorFieldViewController(fieldview.FieldViewController):
         self.red_robot_trajectrory_layer = RobotTrajectoryLayer(self.field_scene, TEAM_RED)
         self.field_scene.add_layer(self.red_robot_trajectrory_layer)
 
-        self.game_elements_layer = GameElementsLayer(self.field_scene)
+        self.game_elements_layer = GameElementsLayer(self.purple_robot_layer.robot.structure,
+                                                     self.red_robot_layer.robot.structure,
+                                                     self.field_scene)
         self.field_scene.add_layer(self.game_elements_layer)
 
         self.update_layers_list()
