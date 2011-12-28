@@ -27,6 +27,12 @@
  *  @{
  */
  
+/* MACROS */
+#define SQUARE(a) ((a)*(a))
+#define CUBE(a) ((a)*(a)*(a))
+#define POWER4(a) ((a)*(a)*(a)*(a))
+#define POWER5(a) ((a)*(a)*(a)*(a)*(a))
+
 /* Nombre max de points pouvant definir la trajectoire */
 #ifndef PIC32_BUILD
 #define NBRE_MAX_PTS_TRAJ           70

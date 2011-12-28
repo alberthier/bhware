@@ -122,7 +122,6 @@ int main(void)
             POS_InitialisationPoseRobot(ptRobotInitial.pose);
             ASSER_TRAJ_InitialisationGenerale();
             SIMU_InitialisationLogRobot();
-            ASSER_TRAJ_InitialisationLogAsser();
             printf("asserSimulator: Initialisation effectuee\n");
         }
         else if (strcmp(command, "MSG_MAIN_GOTO") == 0)

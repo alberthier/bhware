@@ -6,10 +6,7 @@
 #include "define.h"
 #include "simuAsser.h"
 
-//#ifdef ASSER_POS
-//    #include "asserv_position-2.h"
-//#endif
-    #include "asserv_trajectoire.h"
+#include "asserv_trajectoire.h"
 #include "task_asser.h"
 
 #ifndef TEMPS_SIMULATION
@@ -282,6 +279,7 @@ void SIMU_SimulationMoteurCC_ordre2_complet(signed int tensionPWM,
 
     float K, S1, S2, T1, T2, alpha1, alpha2, C1, C2, N0, N1;
     float vTemp;
+    float square_R;
 
     m = masse;
     R = rayon_roue;
@@ -295,9 +293,10 @@ void SIMU_SimulationMoteurCC_ordre2_complet(signed int tensionPWM,
 
     //K = (R/Rred) * (kc / (kc*kv + f*r));
     K = SIMU_gain();
-    S1 = (pow(R,2)*L*m) / (Rred *(f*r + kc*kv));
-    S2 = ( ( (pow(R,2)*r*m) / Rred) + f*L ) / (f*r + kc*kv);
-    T1 = 0.5*(S2 + sqrt(pow(S2,2) -4*S1));
+    square_R = SQUARE(R);
+    S1 = (square_R*L*m) / (Rred *(f*r + kc*kv));
+    S2 = ( ( (square_R*r*m) / Rred) + f*L ) / (f*r + kc*kv);
+    T1 = 0.5*(S2 + sqrt(SQUARE(S2) -4*S1));
     T2 = S2 - T1;
     alpha1 = exp(-periode/T1);
     alpha2 = exp(-periode/T2);
