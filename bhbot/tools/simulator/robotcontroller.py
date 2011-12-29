@@ -5,6 +5,7 @@ import os
 import random
 
 from PyQt4.QtCore import *
+from PyQt4.QtNetwork import *
 
 import packets
 from definitions import *
@@ -80,6 +81,7 @@ class RobotController(object):
 
     def connected(self, socket):
         self.socket = socket
+        self.socket.setSocketOption(QAbstractSocket.LowDelayOption, 1)
         self.socket.disconnected.connect(self.shutdown)
         self.socket.readyRead.connect(self.read_packet)
 

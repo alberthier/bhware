@@ -153,7 +153,9 @@ class RobotControlDeviceStarter(object):
     def __init__(self, eventloop):
         logger.log("Connecting to {}:{} ...".format(REMOTE_IP, REMOTE_PORT))
         self.control_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.control_socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
         self.log_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.log_socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
         self.eventloop = eventloop
         self.timer = Timer(eventloop, 1000, self.try_connect, False)
         if not self.try_connect():
