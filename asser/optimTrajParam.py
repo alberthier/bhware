@@ -457,7 +457,13 @@ def affichageTestPI2012(d_traj):
     plot(temps, d_traj["vitconsPI"], label="vitconsPI")
     plot(temps, d_traj["vitesseMoteurGauche"], label="vitesseG")
     grid(True)
-    legend(loc="lower right")
+    legend(loc="lower center")
+    
+    figure(3)
+    plot(temps, d_traj["distPI"], label="distance parcourue")
+    grid(True)
+    legend(loc="upper left")
+    title("Distance parcourue")
     
     print("dist finale: " + str(d_traj["distPI"][-1]))
     
@@ -530,7 +536,9 @@ def optimParam_TempsAcc(d_cfgTraj_local) :
 
 
 #########################################################################
-#~ affichageTestPI2012(testPI(d_cfgTraj))
+#~ traj = testPI(d_cfgTraj)
+#~ affichageGabaritVitesse_2012(traj)
+#~ affichageTestPI2012(traj)
 #~ sys.exit(2)
 
 #~ optimRayonRoue(d_cfgTraj)

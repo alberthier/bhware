@@ -417,7 +417,7 @@ extern void ASSER_TRAJ_AsservissementMouvementRobot(Pose poseRobot, VitessesRobo
 
                 parametrePositionSegmentTrajectoireAv = parametrePositionSegmentTrajectoire;
                 segmentCourantAv = segmentCourant;
-                delta_distance_Av = ASSER_TRAJ_GabaritVitesse_getVitesse_vs_Distance(&chemin, chemin.profilVitesse.distance_parcourue) * TE; //g_tab_gabarit_vitesse[g_index_tab_gabarit_vitesse] * TE;
+                delta_distance_Av = ASSER_TRAJ_GabaritVitesse_getVitesse_vs_Distance(chemin.profilVitesse.distance_parcourue) * TE; //g_tab_gabarit_vitesse[g_index_tab_gabarit_vitesse] * TE;
                 ASSER_TRAJ_ParcoursTrajectoire(&chemin, delta_distance_Av, &segmentCourantAv, &parametrePositionSegmentTrajectoireAv);
                 ASSER_TRAJ_LogAsser("segTrajAv", NBR_ASSER_LOG_VALUE, parametrePositionSegmentTrajectoireAv);
                 diff1BS = ASSER_TRAJ_DiffCourbeBSpline(&chemin.segmentTrajBS[segmentCourantAv], parametrePositionSegmentTrajectoireAv);
@@ -435,7 +435,7 @@ extern void ASSER_TRAJ_AsservissementMouvementRobot(Pose poseRobot, VitessesRobo
 
                 parametrePositionSegmentTrajectoireAv = parametrePositionSegmentTrajectoire;
                 segmentCourantAv = segmentCourant;
-                delta_distance_Av = ASSER_TRAJ_GabaritVitesse_getVitesse_vs_Distance(&chemin, chemin.profilVitesse.distance_parcourue) * TE;
+                delta_distance_Av = ASSER_TRAJ_GabaritVitesse_getVitesse_vs_Distance(chemin.profilVitesse.distance_parcourue) * TE;
                 ASSER_TRAJ_ParcoursTrajectoire(&chemin, delta_distance_Av, &segmentCourantAv, &parametrePositionSegmentTrajectoireAv);
                 poseReferenceAv = ASSER_TRAJ_TrajectoireRotation(&(chemin.rotation), parametrePositionSegmentTrajectoireAv);
             }
@@ -1616,18 +1616,18 @@ static void ASSER_TRAJ_GabaritVitesse(Trajectoire *traj, unsigned int flag_init)
  *  \return
  */
 /**********************************************************************/
-extern float ASSER_TRAJ_GabaritVitesse_getVitesse_vs_Distance(Trajectoire *traj, float distance)
+extern float ASSER_TRAJ_GabaritVitesse_getVitesse_vs_Distance(float distance)
 {
     unsigned int index;
     float vitesse, delta_distance;
 
-    if (distance < traj->profilVitesse.D_AP)
+    if (distance < chemin.profilVitesse.D_AP)
     {
-        index = floor(distance / traj->profilVitesse.pas_echantillon_distance);
+        index = floor(distance / chemin.profilVitesse.pas_echantillon_distance);
     }
     else
     {
-        index = floor( (distance + (traj->profilVitesse.pas_echantillon_distance - traj->profilVitesse.pas_reduit)) / traj->profilVitesse.pas_echantillon_distance);
+        index = floor( (distance + (chemin.profilVitesse.pas_echantillon_distance - chemin.profilVitesse.pas_reduit)) / chemin.profilVitesse.pas_echantillon_distance);
     }
 
 
@@ -1639,21 +1639,21 @@ extern float ASSER_TRAJ_GabaritVitesse_getVitesse_vs_Distance(Trajectoire *traj,
     else
     {
         // interpolation de la vitesse de consigne
-        if (index < traj->profilVitesse.iFin_P)
+        if (index < chemin.profilVitesse.iFin_P)
         {
             delta_distance = distance - index * chemin.profilVitesse.pas_echantillon_distance;
         }
         else
         {
-            delta_distance = distance - ((index - 1) * traj->profilVitesse.pas_echantillon_distance + traj->profilVitesse.pas_reduit);
+            delta_distance = distance - ((index - 1) * chemin.profilVitesse.pas_echantillon_distance + chemin.profilVitesse.pas_reduit);
         }
-        if (index != (traj->profilVitesse.iFin_P - 1))
+        if (index != (chemin.profilVitesse.iFin_P - 1))
         {
-            vitesse = g_tab_gabarit_vitesse[index] + (g_tab_gabarit_vitesse[index+1] - g_tab_gabarit_vitesse[index])*(delta_distance/traj->profilVitesse.pas_echantillon_distance);
+            vitesse = g_tab_gabarit_vitesse[index] + (g_tab_gabarit_vitesse[index+1] - g_tab_gabarit_vitesse[index])*(delta_distance/chemin.profilVitesse.pas_echantillon_distance);
         }
         else
         {
-            vitesse = g_tab_gabarit_vitesse[index] + (g_tab_gabarit_vitesse[index+1] - g_tab_gabarit_vitesse[index])*(delta_distance/traj->profilVitesse.pas_reduit);
+            vitesse = g_tab_gabarit_vitesse[index] + (g_tab_gabarit_vitesse[index+1] - g_tab_gabarit_vitesse[index])*(delta_distance/chemin.profilVitesse.pas_reduit);
         }
     }
     ASSER_TRAJ_LogAsser("index_get_vitesseGabarit", NBR_ASSER_LOG_VALUE, vitesse);

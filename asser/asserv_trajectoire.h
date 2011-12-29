@@ -169,7 +169,7 @@ extern unsigned int         ASSER_TRAJ_GetSegmentCourant(void);
 extern void                 ASSER_TRAJ_LogAsser(char *keyWord, unsigned char index, float val);
 extern void                 ASSER_TRAJ_ResetLogAsserTable(void);
 extern unsigned int         ASSER_TRAJ_GetCompteur(void);
-extern float                ASSER_TRAJ_GabaritVitesse_getVitesse_vs_Distance(Trajectoire *traj, float distance);
+extern float                ASSER_TRAJ_GabaritVitesse_getVitesse_vs_Distance(float distance);
 
 #ifndef PIC32_BUILD
 #define                     ASSER_TRAJ_LogStr(...) printf("LOG " __VA_ARGS__)

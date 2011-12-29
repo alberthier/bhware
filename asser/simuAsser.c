@@ -622,61 +622,40 @@ void SIMU_CalculPeriodiqueAsserVitessePI(void)
 int SIMU_AsserVitessePI(void)
 {
     int p;
-    float len_parcours = 6.0;
+    float len_parcours = 1.0;
     float distance_parcourue = 0.0;
 
-    PtTraj chemin[30];
+    Pose    poseInit;
+    PtTraj chemin[1];
     unsigned char mouvement;
     char marche;
     unsigned int nbrePtsChemin;
-    float vitesse_cons_mps = 0.0, vitesse_cons_mps_memo;
+    float vitesse_cons_mps = 0.0;
 
-    chemin[0].pose.x = len_parcours;
-    chemin[0].pose.y = 0.0;
+    poseInit.x = 0.0;
+    poseInit.y = 0.0;
+    poseInit.angle = 0.0;
+    POS_InitialisationPoseRobot(poseInit);
+    ASSER_TRAJ_InitialisationGenerale();
+    chemin[0].pose.x = poseInit.x + len_parcours;
+    chemin[0].pose.y = poseInit.y;
     chemin[0].pose.angle = 0.0;
     chemin[0].mask = 1u;
     nbrePtsChemin = 1u;
     mouvement = DEPLACEMENT;
     marche = MARCHE_AVANT;
-    ASSER_TRAJ_InitialisationGenerale();
     SIMU_REDEF_ASSER_GoTo(chemin, nbrePtsChemin, mouvement, marche);
 
     compteurPeriodePI = 0;
     ASSER_TRAJ_LogAsser("distPI", NBR_ASSER_LOG_VALUE, distance_parcourue);
     ASSER_TRAJ_LogAsser("vitconsPI", NBR_ASSER_LOG_VALUE, vitesse_cons_mps);
-    //while (compteurPeriodePI < floor((6.0*tempsAcc)/TE)) /* -> simulation pendant 5 secondes */
-    while (distance_parcourue < len_parcours) /* -> simulation pendant 5 secondes */
+    while ((distance_parcourue < len_parcours) && (compteurPeriodePI < (unsigned int)(TEMPS_SIMULATION / TE))) /* -> simulation pendant TEMPS_SIMULATION secondes au max */
     {
         compteurPeriodePI = compteurPeriodePI + 1;
-        //SIMU_CalculPeriodiqueAsserVitessePI();
-
-        //determination de la vitesse de consigne
-        /* if (distance_parcourue < 0.0003)
-        {
-            vitesse_cons_mps = ASSER_TRAJ_GabaritVitesse_getVitesse_vs_Distance(0.0003);
-        }
-        else
-        {
-            vitesse_cons_mps = ASSER_TRAJ_GabaritVitesse_getVitesse_vs_Distance(distance_parcourue);
-        }*/
-
-        vitesse_cons_mps_memo = vitesse_cons_mps;
-        Trajectoire chemin_testPI;
-        vitesse_cons_mps = ASSER_TRAJ_GabaritVitesse_getVitesse_vs_Distance(&chemin_testPI, distance_parcourue);
-        if (vitesse_cons_mps < 0.05)
-        {
-            vitesse_cons_mps = 0.05;
-        }
-        if (vitesse_cons_mps_memo > vitesse_cons_mps)
-        {
-            vitesse_cons_mps = vitesse_cons_mps_memo;
-        }
+        vitesse_cons_mps = ASSER_TRAJ_GabaritVitesse_getVitesse_vs_Distance(distance_parcourue);
 
         ASSER_TRAJ_LogAsser("vitconsPI", NBR_ASSER_LOG_VALUE, vitesse_cons_mps);
-        /* if (compteurPeriodePI < floor(tempsAcc / TE))
-        {
-            g_ConsigneMoteurG = (unsigned int)((float)Umax * ((float)compteurPeriodePI / (float)floor(tempsAcc / TE))) + OffsetPWM;
-        } */
+
         g_ConsigneMoteurG = (unsigned int)(vitesse_cons_mps / SIMU_gain()) + OffsetPWM;
 
         SIMU_REDEF_ASSER_SendConsigne(g_ConsigneMoteurD, g_ConsigneMoteurG);
