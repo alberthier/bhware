@@ -185,9 +185,7 @@ extern void ASSER_TRAJ_InitialisationGenerale(void)
 
     chemin.profilVitesse.tempsAcc = tempsAcc;
 
-#ifdef PIC32_BUILD
-    POS_SetGainStatiqueMoteur(GAIN_STATIQUE_MOTEUR_DEFAULT_VAL);
-#endif
+    POS_InitialisationConfigRobot();
 }
 
 /**********************************************************************/

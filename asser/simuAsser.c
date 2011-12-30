@@ -322,7 +322,7 @@ void SIMU_SimulationMoteurCC_ordre2_complet(signed int tensionPWM,
 
 void SIMU_InitialisationLogRobot(void)
 {
-    POS_SetGainStatiqueMoteur(SIMU_gain());
+    //POS_SetGainStatiqueMoteur(SIMU_gain(), SIMU_gain());
     poseRobot = POS_GetPoseRobot();
 
     ASSER_TRAJ_LogAsser("vitesseMoteurGauche", NBR_ASSER_LOG_VALUE + 1, vitesseMoteurG);
@@ -396,8 +396,8 @@ extern void ASSER_TRAJ_AfficheInfoFinAsser(void)
 /**********************************************************************/
 void SIMU_BoucleVitesse(void)
 {
-    erreurVitesseMoteurG = SIMU_ErreurVitesseConsPWMVToVitMS(simu_consigneMoteurG, vitesseMoteurG, SIMU_gain());
-    erreurVitesseMoteurD = SIMU_ErreurVitesseConsPWMVToVitMS(simu_consigneMoteurD, vitesseMoteurD, SIMU_gain());
+    erreurVitesseMoteurG = SIMU_ErreurVitesseConsPWMVToVitMS(simu_consigneMoteurG, vitesseMoteurG, GAIN_STATIQUE_MOTEUR_G);
+    erreurVitesseMoteurD = SIMU_ErreurVitesseConsPWMVToVitMS(simu_consigneMoteurD, vitesseMoteurD, GAIN_STATIQUE_MOTEUR_D);
 
     tensionPWM_G = (signed int)SIMU_RegulateurPI_BHT(erreurVitesseMoteurG, &integPI_G, KI_GAUCHE, KP_GAUCHE, OffsetPWM, TE_PI);
 

@@ -28,6 +28,7 @@
 #include <stdlib.h>
 #endif /* PIC32_BUILD */
 #include "pic18.h"
+#include "simuAsser.h"
 #include "asserv_trajectoire.h"
 
 /*! \addtogroup Task_Asser
@@ -44,9 +45,15 @@
 
 /**********************************************************************/
 
-/* Constantes */
+#ifndef MIN
+#define                 MIN(_a,_b)              ((_a)<(_b)?(_a):(_b))
+#endif
 
-#define                 GAIN_STATIQUE_MOTEUR_DEFAULT_VAL    (((DonneeVmaxDroite + DonneeVmaxGauche) / 2.0) / 1023.0)   /* Gain statique des moteurs CC du deplacement 1 m.s-1 / 1023 */
+#ifndef MAX
+#define                 MAX(_a,_b)              ((_a)>(_b)?(_a):(_b))
+#endif
+
+/* Constantes */
 #define                 PERIMETRE_DROIT         (PI * (DonneeDRoueDroite / 1000))                          /* Perimetre en m de la roue libre du codeur droit */
 #define                 PERIMETRE_GAUCHE        (PI * (DonneeDRoueGauche / 1000))                          /* Perimetre en m de la roue libre du codeur gauche */
     
@@ -55,7 +62,9 @@ const   float           TE                      = 0.020;                        
 /**********************************************************************/
 
 /* Variables globales */
-float                   GAIN_STATIQUE_MOTEUR    = 0.001;
+float                   GAIN_STATIQUE_MOTEUR_D;                                 /* Gain statique du moteur CC droit en (m/s)/unitePWM */
+float                   GAIN_STATIQUE_MOTEUR_G;                                 /* Gain statique du moteur CC gauche en (m/s)/unitePWM */
+float                   GAIN_STATIQUE_MOTEUR;
 
 float                   ECART_ROUE_LIBRE        = 0.1704;                                                   /* Ecart entre les roues libres des codeurs incrementaux */
 float                   ECART_ROUE_MOTRICE      = 0.339;                                                    /* Entraxe des roues motrices */
@@ -77,6 +86,23 @@ float                   Umax                    = 900.0;                /* Vites
 /**********************************************************************
  * Definition dedicated to the local functions.
  **********************************************************************/
+
+/**********************************************************************/
+/*! \brief POS_InitialisationConfigRobot
+ *
+ *  \note   Configuration des parametres lies au materiel du robot
+ *
+ *  \return None
+ */
+/**********************************************************************/
+void POS_InitialisationConfigRobot(void)
+{
+#ifdef PIC32_BUILD
+    POS_SetGainStatiqueMoteur((DonneeVmaxGauche / 1023.0), (DonneeVmaxDroite / 1023.0));
+#else
+    POS_SetGainStatiqueMoteur(SIMU_gain(), SIMU_gain());
+#endif
+}
 
 /**********************************************************************/
 /*! \brief POS_InitialisationPoseRobot
@@ -178,9 +204,11 @@ Pose POS_GetPoseAsserRobot(void)
  *  \param [in] gain     Gain statique du moteur de deplacement
  */
 /**********************************************************************/
-void POS_SetGainStatiqueMoteur(float gain)
+void POS_SetGainStatiqueMoteur(float gain_G, float gain_D)
 {
-     GAIN_STATIQUE_MOTEUR = gain;
+     GAIN_STATIQUE_MOTEUR_G = gain_G;
+     GAIN_STATIQUE_MOTEUR_D = gain_D;
+     GAIN_STATIQUE_MOTEUR = MIN(GAIN_STATIQUE_MOTEUR_G, GAIN_STATIQUE_MOTEUR_D);
 }
 
 /**********************************************************************/
@@ -206,7 +234,7 @@ float POS_GetConsVitesseMax(void)
 /**********************************************************************/
 float POS_GetConsVitesseAngulaireMax(void)
 {
-    return ((float)((Umax * GAIN_STATIQUE_MOTEUR * 2.0) / ECART_ROUE_MOTRICE));
+    return ((float)((Umax * GAIN_STATIQUE_MOTEUR * 2.0) / ECART_ROUE_LIBRE));
 }
 
 /**********************************************************************/
@@ -349,15 +377,33 @@ float POS_ErreurOrientation(Pose poseRobot, Vecteur posArrivee)
  *  \param [in] consPWMRoueDroite       tension de consigne du moteur droit en unite PWM, transmise par pointeur
  */
 /**********************************************************************/
-void POS_ConversionVitessesLongRotToConsignesPWMRouesRobotUnicycle(float vitesseLongitudinale, float vitesseRotation, unsigned short *consPWMRoueGauche, unsigned short *consPWMRoueDroite)
+void POS_ConversionVitessesLongRotToConsignesPWMRouesRobotUnicycle(float vitesseLongitudinale, float vitesseAngulaireRotation, unsigned short *consPWMRoueGauche, unsigned short *consPWMRoueDroite)
 {
     float vitRoueGauche, vitRoueDroite;
+    /*
+    float vMax;
+    float vitRoue_maxAbs, vitRoue_sup = 0.0;
+    */
 
-    vitRoueGauche = (m_sensMarcheMouvement * vitesseLongitudinale) - ((vitesseRotation * ECART_ROUE_MOTRICE) / 2.0);
-    vitRoueDroite = (m_sensMarcheMouvement * vitesseLongitudinale) + ((vitesseRotation * ECART_ROUE_MOTRICE) / 2.0);
-    
-    vitRoueGauche = (vitRoueGauche / GAIN_STATIQUE_MOTEUR) + (float)OffsetPWM;
-    vitRoueDroite = (vitRoueDroite / GAIN_STATIQUE_MOTEUR) + (float)OffsetPWM;
+    vitRoueGauche = (m_sensMarcheMouvement * vitesseLongitudinale) - ((vitesseAngulaireRotation * ECART_ROUE_LIBRE) / 2.0);
+    vitRoueDroite = (m_sensMarcheMouvement * vitesseLongitudinale) + ((vitesseAngulaireRotation * ECART_ROUE_LIBRE) / 2.0);
+
+    /*
+    vMax = POS_GetConsVitesseMax();
+    vitRoue_maxAbs = MAX(fabs(vitRoueGauche), fabs(vitRoueDroite));
+    vitRoue_sup = vitRoue_maxAbs - vMax;
+    if (vitRoue_sup > 0.0)
+    {
+        vitesseLongitudinale = vitesseLongitudinale - vitRoue_sup/2.0;
+        vitesseAngulaireRotation = vitesseAngulaireRotation - (2.0/ECART_ROUE_LIBRE)*(vitRoue_sup/2.0);
+
+        vitRoueGauche = (m_sensMarcheMouvement * vitesseLongitudinale) - ((vitesseAngulaireRotation * ECART_ROUE_LIBRE) / 2.0);
+        vitRoueDroite = (m_sensMarcheMouvement * vitesseLongitudinale) + ((vitesseAngulaireRotation * ECART_ROUE_LIBRE) / 2.0);
+    }
+    */
+
+    vitRoueGauche = (vitRoueGauche / GAIN_STATIQUE_MOTEUR_G) + (float)OffsetPWM;
+    vitRoueDroite = (vitRoueDroite / GAIN_STATIQUE_MOTEUR_D) + (float)OffsetPWM;
 
     /* Saturation des consignes PWM de vitesse */
     /* Consigne roue gauche */
