@@ -105,6 +105,7 @@ int main(void)
     Parameter paramPI[2], paramK[3], paramR[2], paramT[3], paramMotor[9];
 
     printf("asserSimulator: Demarrage simulateur\n");
+    fflush(stdout);
 
     while (strcmp(command, "QUIT") != 0)
     {
@@ -114,6 +115,7 @@ int main(void)
         /* extraction du type de commande */
         sscanf(buffer, "%s", command);
         printf("asserSimulator: Command %s\n", command);
+        fflush(stdout);
 
         if (strcmp(command, "INIT_POSE_ROBOT") == 0)
         {
@@ -123,6 +125,7 @@ int main(void)
             ASSER_TRAJ_InitialisationGenerale();
             SIMU_InitialisationLogRobot();
             printf("asserSimulator: Initialisation effectuee\n");
+            fflush(stdout);
         }
         else if (strcmp(command, "MSG_MAIN_GOTO") == 0)
         {
@@ -208,5 +211,6 @@ int main(void)
     }
 
     printf("asserSimulator: Simulateur arrete.\n");
+    fflush(stdout);
     return(0);
 }

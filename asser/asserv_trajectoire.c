@@ -2055,6 +2055,7 @@ extern void ASSER_TRAJ_LogAsser(char *keyWord, unsigned char index, float val)
     }
 #else /* PIC32_BUILD */
     printf("log_%s: %1.5f\n", keyWord, val);
+    fflush(stdout);
 #endif /* PIC32_BUILD */
 }
 

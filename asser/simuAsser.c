@@ -384,6 +384,7 @@ extern void ASSER_TRAJ_AfficheInfoFinAsser(void)
     poseRobot = POS_GetPoseRobot();
 //    ASSER_TRAJ_LogAsser("time", ASSER_TRAJ_GetCompteur() * TE);
     printf("Motion accomplished. Pose x:%1.3fm y:%1.3fm theta:%1.3f time:%1.2fs.\n", poseRobot.x, poseRobot.y, ((poseRobot.angle * 180.0) / PI), (ASSER_TRAJ_GetCompteur() * TE));
+    fflush(stdout);
 }
 
 /**********************************************************************/
@@ -683,6 +684,7 @@ int SIMU_Mouvement(void)
     {
 //        ASSER_TRAJ_LogAsser("time", -1.0);
         printf("Motion failed: timeout.\n");
+        fflush(stdout);
         ASSER_Running = False;
         return 0;
     }
