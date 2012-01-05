@@ -81,7 +81,7 @@ class GraphicsRobotObject(QObject):
     def animate(self, points):
         self.move_animation.clear()
 
-        end_time = points[-1][0]
+        end_time = points[-1][1]
 
         rotate_animation = QPropertyAnimation()
         self.move_animation.addAnimation(rotate_animation)
@@ -97,7 +97,7 @@ class GraphicsRobotObject(QObject):
 
         current = self.item.rotation() % 360.0
         rotate_animation.setKeyValueAt(0.0, current)
-        for (time, pose) in points:
+        for (segmentNb, time, pose) in points:
             pos_animation.setKeyValueAt(time / end_time, QPointF(pose.y * 1000.0, pose.x * 1000.0))
             ref_angle = self.convert_angle(pose.angle)
             angle_deg = ((ref_angle) / math.pi * 180.0) % 360.0
@@ -203,6 +203,7 @@ class RobotLayer(fieldview.Layer):
         self.robot_controller = None
 
         self.dynamics = dynamics.BasicDynamics()
+        #self.dynamics = dynamics.PositionControlSimulatorDynamics()
         self.dynamics.simulation_finished.connect(self.robot.animate)
 
 
@@ -292,10 +293,11 @@ class RobotTrajectoryLayer(fieldview.Layer):
         self.item.setPath(path)
 
 
-    def on_goto(self, packet):
+    def set_points(self, points):
         path = self.item.path()
-        for point in packet.points:
-            path.lineTo(point.y * 1000.0, point.x * 1000.0)
+        for point in points:
+            pose = point[2]
+            path.lineTo(pose.y * 1000.0, pose.x * 1000.0)
         self.item.setPath(path)
 
 
@@ -487,11 +489,13 @@ class SimulatorFieldViewController(fieldview.FieldViewController):
         self.field_scene.add_layer(self.purple_robot_layer)
         self.purple_robot_trajectrory_layer = RobotTrajectoryLayer(self.field_scene, TEAM_PURPLE)
         self.field_scene.add_layer(self.purple_robot_trajectrory_layer)
+        self.purple_robot_layer.dynamics.simulation_finished.connect(self.purple_robot_trajectrory_layer.set_points)
 
         self.red_robot_layer = RobotLayer(self.field_scene, TEAM_RED)
         self.field_scene.add_layer(self.red_robot_layer)
         self.red_robot_trajectrory_layer = RobotTrajectoryLayer(self.field_scene, TEAM_RED)
         self.field_scene.add_layer(self.red_robot_trajectrory_layer)
+        self.red_robot_layer.dynamics.simulation_finished.connect(self.red_robot_trajectrory_layer.set_points)
 
         self.game_elements_layer = GameElementsLayer(self.purple_robot_layer.robot.structure,
                                                      self.red_robot_layer.robot.structure,
