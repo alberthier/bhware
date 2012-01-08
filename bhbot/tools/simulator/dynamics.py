@@ -65,7 +65,7 @@ class BasicDynamics(QObject):
 
 class PositionControlSimulatorDynamics(QObject):
 
-    TIMER_RESOLUTION = 0.10
+    TIMER_RESOLUTION = 0.010
 
     simulation_finished = pyqtSignal(list)
 
@@ -77,6 +77,8 @@ class PositionControlSimulatorDynamics(QObject):
         self.right_x = 0.0
         self.right_y = 0.0
         self.previous_pose = trajectory.Pose()
+        self.current_pose = trajectory.Pose()
+        self.current_segment_nb = None
         self.elapsed_time = 0.0
         self.poses = []
 
@@ -163,16 +165,21 @@ class PositionControlSimulatorDynamics(QObject):
             elif output.startswith("log_yRoueDroite:"):
                 self.right_y = self.read_value(output)
             elif output.startswith("log_segmentCourant:"):
-                segmentNb = int(self.read_value(output))
-                x = abs(self.left_x + self.right_x) / 2.0
-                y = abs(self.left_y + self.right_y) / 2.0
-                angle = math.atan2(self.left_y - self.right_y, self.left_x - self.right_x)
-                self.elapsed_time += PositionControlSimulatorDynamics.TIMER_RESOLUTION
-                if tools.distance(self.previous_pose.x, self.previous_pose.y, x, y) > 0.100 or abs(self.previous_pose.angle - angle) > 0.20:
-                    self.previous_pose.x = x
-                    self.previous_pose.y = y
-                    self.previous_pose.angle = angle
-                    self.poses.append((segmentNb, self.elapsed_time / 1000.0, trajectory.Pose(x, y, angle)))
+                self.current_segment_nb = int(self.read_value(output))
+                self.current_pose.x = abs(self.left_x + self.right_x) / 2.0
+                self.current_pose.y = abs(self.left_y + self.right_y) / 2.0
+                self.current_pose.angle = math.atan2(self.right_x - self.left_x, self.left_y - self.right_y)
+                #self.elapsed_time += PositionControlSimulatorDynamics.TIMER_RESOLUTION
+                if tools.distance(self.previous_pose.x, self.previous_pose.y, self.current_pose.x, self.current_pose.y) > 0.100 or abs(self.previous_pose.angle - self.current_pose.angle) > 0.20:
+                    self.previous_pose.x = self.current_pose.x
+                    self.previous_pose.y = self.current_pose.y
+                    self.previous_pose.angle = self.current_pose.angle
+                    self.poses.append((self.current_segment_nb, self.elapsed_time, trajectory.Pose(self.current_pose.x, self.current_pose.y, self.current_pose.angle)))
+                    self.current_segment_nb = None
+                    self.elapsed_time += PositionControlSimulatorDynamics.TIMER_RESOLUTION * 10.0
             elif output.startswith("Motion"):
+                if self.current_segment_nb != None:
+                    self.poses.append((self.current_segment_nb, self.elapsed_time, trajectory.Pose(self.current_pose.x, self.current_pose.y, self.current_pose.angle)))
+                    self.current_segment_nb = None
                 self.simulation_finished.emit(self.poses)
                 self.poses = []
