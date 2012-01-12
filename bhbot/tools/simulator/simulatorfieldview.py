@@ -97,16 +97,18 @@ class GraphicsRobotObject(QObject):
 
         current = self.item.rotation() % 360.0
         rotate_animation.setKeyValueAt(0.0, current)
+        offset = 0.0
         for (segmentNb, time, pose) in points:
             pos_animation.setKeyValueAt(time / end_time, QPointF(pose.y * 1000.0, pose.x * 1000.0))
             ref_angle = self.convert_angle(pose.angle)
             angle_deg = ((ref_angle) / math.pi * 180.0) % 360.0
             if abs(current - angle_deg) > 180.0:
                 if current > angle_deg:
-                    angle_deg += 360.0
+                    offset += 360.0
                 else:
-                    angle_deg -= 360.0
+                    offset -= 360.0
             current = angle_deg
+            angle_deg += offset
             rotate_animation.setKeyValueAt(time / end_time, angle_deg)
 
         self.move_animation.start()
