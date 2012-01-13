@@ -32,7 +32,7 @@
          <item>
           <widget class="QListView" name="layers_view">
            <property name="sizePolicy">
-            <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+            <sizepolicy hsizetype="Ignored" vsizetype="Expanding">
              <horstretch>1</horstretch>
              <verstretch>0</verstretch>
             </sizepolicy>
@@ -50,7 +50,7 @@
        <widget class="QWidget" name="field_view_container" native="true">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
-          <horstretch>6</horstretch>
+          <horstretch>1</horstretch>
           <verstretch>0</verstretch>
          </sizepolicy>
         </property>
