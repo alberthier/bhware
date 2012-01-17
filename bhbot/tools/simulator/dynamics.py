@@ -84,16 +84,21 @@ class PositionControlSimulatorDynamics(QObject):
 
         self.simulator_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
         self.simulator_dir = os.path.join(self.simulator_dir, "asser")
-        file_path = os.path.join(self.simulator_dir, "simulator_trajAsser")
+        self.process = None
+
+
+    def setup(self):
+        self.build()
         self.process = QProcess(self)
         self.process.setProcessChannelMode(QProcess.MergedChannels)
 
         self.process.readyRead.connect(self.read_stdout)
 
+        file_path = os.path.join(self.simulator_dir, "simulator_trajAsser")
         self.process.start(file_path)
         self.process.waitForStarted()
         # Wait until the simulator is properly initialized.
-        time.sleep(0.2)
+        self.process.waitForReadyRead()
 
         module = imp.load_source("params_module", os.path.join(self.simulator_dir, "config.py"))
         params = module.d_cfgTraj
@@ -103,6 +108,25 @@ class PositionControlSimulatorDynamics(QObject):
         self.invoke_setup("PARAMETERS_TIME", "ACC", params["TempsAcc"],  "VITANGMAX", params["Facteur_vitesse_angulaire"], "UMAX", params["Umax"])
         self.invoke_setup("PARAMETERS_MOTOR", "MASSE", params["Masse"], "RAYON_ROUE", params["Rayon_roue"], "FROTTEMENT_FLUIDE", params["Frottement_fluide"], "FORCE_RESISTANTE", params["Force_resistante"], "RESISTANCE_INDUIT", params["Resistance_induit"], "INDUCTANCE_INDUIT", params["Inductance_induit"] , "CONSTANTE_COUPLE", params["Constance_couple"], "CONSTANTE_VITESSE", params["Constante_vitesse"], "RAPPORT_REDUCTION", params["Rapport_reduction"])
         self.process.waitForBytesWritten()
+
+
+    def build(self):
+        sources = ["asserv_trajectoire.c", "mainSimuAsserBin.c", "position.c", "simuAsser.c", "simu_task_asser.c", "pic18.c"]
+        binary = "simulator_trajAsser"
+        binary_mtime = os.stat(os.path.join(self.simulator_dir, binary)).st_mtime
+        for source in sources:
+            mtime = os.stat(os.path.join(self.simulator_dir, source)).st_mtime
+            if mtime > binary_mtime:
+                args = ["-o", binary] + sources
+                comp = QProcess()
+                comp.setWorkingDirectory(self.simulator_dir)
+                comp.start("g++", args)
+                comp.waitForFinished()
+                if comp.exitCode() == 0:
+                    print("Compilation succeeded")
+                else:
+                    print("Compilation failed")
+                break
 
 
     def resettle(self, packet):
