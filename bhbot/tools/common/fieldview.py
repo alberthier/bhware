@@ -98,7 +98,7 @@ class GhostRobotLayer(Layer):
 
         # Ghost robot
         ghost_pen = QPen(QColor(self.color))
-        self.mouse_item = helpers.create_robot_base_item(ghost_pen, QBrush(), ghost_pen)
+        (self.mouse_item, robot_item, gyration_item) = helpers.create_robot_base_item(ghost_pen, QBrush(), ghost_pen)
 
         line = QGraphicsLineItem(-50.0, 0.0, 50.0, 0.0)
         line.setPen(ghost_pen)

@@ -29,7 +29,7 @@ class GraphicsRobotObject(QObject):
         self.layer = layer
 
         self.item = QGraphicsItemGroup(layer)
-        self.structure = helpers.create_robot_base_item(QColor("#838383"), QColor("#e9eaff"), QColor(layer.color).darker(150))
+        (self.structure, self.robot_item, self.gyration_item) = helpers.create_robot_base_item(QColor("#838383"), QColor("#e9eaff"), QColor(layer.color).darker(150))
         self.item.addToGroup(self.structure)
         self.item.setParentItem(layer)
 

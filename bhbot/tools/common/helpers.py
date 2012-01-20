@@ -110,20 +110,26 @@ def create_robot_base_item(pen, brush, gyration_pen):
     expanded_sweeper_gyration = QGraphicsEllipseItem(-expanded_sweeper_gyration_radius, -expanded_sweeper_gyration_radius, 2.0 * expanded_sweeper_gyration_radius, 2.0 * expanded_sweeper_gyration_radius)
     expanded_sweeper_gyration.setPen(gyration_pen)
 
-    group = QGraphicsItemGroup()
+    robot_group = QGraphicsItemGroup()
 
     base_item = QGraphicsPathItem(base)
     base_item.setPen(pen)
     base_item.setBrush(brush)
-    group.addToGroup(base_item)
+    robot_group.addToGroup(base_item)
 
     top_item = QGraphicsPathItem(top)
     top_item.setPen(pen)
     top_item.setBrush(brush)
-    group.addToGroup(top_item)
+    robot_group.addToGroup(top_item)
 
-    group.addToGroup(gyration)
-    group.addToGroup(expanded_gripper_gyration)
-    group.addToGroup(expanded_sweeper_gyration)
+    gyration_group = QGraphicsItemGroup()
 
-    return group
+    gyration_group.addToGroup(gyration)
+    gyration_group.addToGroup(expanded_gripper_gyration)
+    gyration_group.addToGroup(expanded_sweeper_gyration)
+
+    all_group = QGraphicsItemGroup()
+    all_group.addToGroup(robot_group)
+    all_group.addToGroup(gyration_group)
+
+    return (all_group, robot_group, gyration_group)
