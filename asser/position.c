@@ -13,6 +13,7 @@
  ************************************************************************************************/
 
 /* Fichier *.h qui sont utilises par le module Position */
+
 #include "define.h"
 #ifdef PIC32_BUILD
 #include "includes.h"
@@ -26,9 +27,9 @@
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include "simuAsser.h"
 #endif /* PIC32_BUILD */
 #include "pic18.h"
-#include "simuAsser.h"
 #include "asserv_trajectoire.h"
 
 /*! \addtogroup Task_Asser
@@ -45,29 +46,23 @@
 
 /**********************************************************************/
 
-#ifndef MIN
-#define                 MIN(_a,_b)              ((_a)<(_b)?(_a):(_b))
-#endif
-
-#ifndef MAX
-#define                 MAX(_a,_b)              ((_a)>(_b)?(_a):(_b))
-#endif
-
 /* Constantes */
-#define                 PERIMETRE_DROIT         (PI * (DonneeDRoueDroite / 1000))                          /* Perimetre en m de la roue libre du codeur droit */
-#define                 PERIMETRE_GAUCHE        (PI * (DonneeDRoueGauche / 1000))                          /* Perimetre en m de la roue libre du codeur gauche */
+
+#define                 PERIMETRE_DROIT         (PI * (DonneeDRoueDroite / 1000))   /* Perimetre en m de la roue libre du codeur droit */
+#define                 PERIMETRE_GAUCHE        (PI * (DonneeDRoueGauche / 1000))   /* Perimetre en m de la roue libre du codeur gauche */
     
-const   float           TE                      = 0.020;                                                    /* Periode de l'asservissement en seconde */
+const   float           TE                      = 0.010;                            /* Periode de l'asservissement en seconde */
 
 /**********************************************************************/
 
 /* Variables globales */
-float                   GAIN_STATIQUE_MOTEUR_D;                                 /* Gain statique du moteur CC droit en (m/s)/unitePWM */
-float                   GAIN_STATIQUE_MOTEUR_G;                                 /* Gain statique du moteur CC gauche en (m/s)/unitePWM */
+
+float                   GAIN_STATIQUE_MOTEUR_D;                                     /* Gain statique du moteur CC droit en (m/s) / unitePWM */
+float                   GAIN_STATIQUE_MOTEUR_G;                                     /* Gain statique du moteur CC gauche en (m/s) / unitePWM */
 float                   GAIN_STATIQUE_MOTEUR;
 
-float                   ECART_ROUE_LIBRE        = 0.1704;                                                   /* Ecart entre les roues libres des codeurs incrementaux */
-float                   ECART_ROUE_MOTRICE      = 0.339;                                                    /* Entraxe des roues motrices */
+float                   ECART_ROUE_LIBRE        = 0.1704;                           /* Ecart entre les roues libres des codeurs incrementaux */
+float                   ECART_ROUE_MOTRICE      = 0.339;                            /* Entraxe des roues motrices */
 float                   COEFFICIENT_DE_GLISSEMENT_LATERAL = 0.0;
 
 /** Tolerances de la condition d'arret des asservissements */
@@ -81,7 +76,7 @@ Pose                    m_poseRobot             = {0.0, 0.0, 0.0};
 signed char             m_sensMarcheMouvement   = MARCHE_AVANT;
 
 /** Vitesse maximale a demander aux moteurs */
-float                   Umax                    = 900.0;                /* Vitesse maximale a demander aux moteurs, image de la tension (en unite PWM) etant donne le gain statique des moteurs */
+float                   Umax                    = 900.0;                            /* Vitesse maximale a demander aux moteurs, image de la tension (en unite PWM) etant donne le gain statique des moteurs */
 
 /**********************************************************************
  * Definition dedicated to the local functions.
@@ -98,10 +93,14 @@ float                   Umax                    = 900.0;                /* Vites
 void POS_InitialisationConfigRobot(void)
 {
 #ifdef PIC32_BUILD
+
     POS_SetGainStatiqueMoteur((DonneeVmaxGauche / 1023.0), (DonneeVmaxDroite / 1023.0));
-#else
+
+#else /* PIC32_BUILD */
+
     POS_SetGainStatiqueMoteur(SIMU_gain(), SIMU_gain());
-#endif
+
+#endif  /* PIC32_BUILD */
 }
 
 /**********************************************************************/
@@ -116,30 +115,9 @@ void POS_InitialisationConfigRobot(void)
 /**********************************************************************/
 void POS_InitialisationPoseRobot(Pose poseRobot)
 {   
-#ifdef PIC32_BUILD
-
-#if OS_CRITICAL_METHOD == 3                      /* Allocate storage for CPU status register           */
-    OS_CPU_SR  cpu_sr = 0;
-#endif 
-
-    OS_ENTER_CRITICAL();
-
-
-#endif /* PIC32_BUILD */
-
-    ASSER_TRAJ_LogAsser("poseRobotInitX", NBR_ASSER_LOG_VALUE, poseRobot.x);
-    ASSER_TRAJ_LogAsser("poseRobotInitY", NBR_ASSER_LOG_VALUE, poseRobot.y);
-
-
     m_poseRobot.x = poseRobot.x;
     m_poseRobot.y = poseRobot.y;
     m_poseRobot.angle = poseRobot.angle;
-
-#ifdef PIC32_BUILD
-
-    OS_EXIT_CRITICAL();
-
-#endif /* PIC32_BUILD */
 }
 
 /**********************************************************************/
@@ -201,7 +179,8 @@ Pose POS_GetPoseAsserRobot(void)
  *
  *  \note   Calcul et retourne la vitesse maximale de consigne des moteurs de deplacement
  *
- *  \param [in] gain     Gain statique du moteur de deplacement
+ *  \param [in] gain_G     Gain statique du moteur de deplacement gauche 
+ *  \param [in] gain_D     Gain statique du moteur de deplacement droit
  */
 /**********************************************************************/
 void POS_SetGainStatiqueMoteur(float gain_G, float gain_D)
@@ -272,7 +251,7 @@ void POS_Positionnement(signed int delta_impDroite, signed int delta_impGauche)
     m_poseRobot.y = m_poseRobot.y + Dy + Deviation_y;
     m_poseRobot.angle = POS_ModuloAngle(m_poseRobot.angle + Dtheta);
 
-    if (Test_mode == (unsigned long)1)
+    if (Test_mode == (unsigned long)2)
     {
         if (TakeMesure == True)
         {
@@ -350,8 +329,8 @@ float POS_ErreurDistance(Pose poseRobot, Vecteur posArrivee)
  * 
  *  \note ecart d'angle entre l'angle absolu de la droite passant par le robot et le point d'arrivee, et l'orientation du robot
  *
- *  \param [in] poseRobot   pose du robot
- *  \param [in] posArrivee  position d'arrivee
+ *  \param [in] poseRobot    pose du robot
+ *  \param [in] posArrivee   position d'arrivee
  *
  *  \return Erreur Orientation
  */
@@ -371,13 +350,13 @@ float POS_ErreurOrientation(Pose poseRobot, Vecteur posArrivee)
  * 
  *  \note conversion des vitesses longitudinale et de rotation, en tensions de consignes des moteurs gauche et droit
  *
- *  \param [in] vitesseLongitudinale    vitesse longitudinale de consigne en m/s
- *  \param [in] vitesseRotation         vitesse de rotation de consigne en rd/s
- *  \param [in] consPWMRoueGauche       tension de consigne du moteur gauche en unite PWM, transmise par pointeur
- *  \param [in] consPWMRoueDroite       tension de consigne du moteur droit en unite PWM, transmise par pointeur
+ *  \param [in] vitesseLongitudinale      vitesse longitudinale de consigne en m/s
+ *  \param [in] vitesseRotation             vitesse de rotation de consigne en rd/s
+ *  \param [in] consPWMRoueGauche    tension de consigne du moteur gauche en unite PWM, transmise par pointeur
+ *  \param [in] consPWMRoueDroite      tension de consigne du moteur droit en unite PWM, transmise par pointeur
  */
 /**********************************************************************/
-void POS_ConversionVitessesLongRotToConsignesPWMRouesRobotUnicycle(float vitesseLongitudinale, float vitesseAngulaireRotation, unsigned short *consPWMRoueGauche, unsigned short *consPWMRoueDroite)
+void POS_ConversionVitessesLongRotToConsignesPWMRouesRobotUnicycle(float vitesseLongitudinale, float vitesseAngulaireRotation, unsigned short * consPWMRoueGauche, unsigned short * consPWMRoueDroite)
 {
     float vitRoueGauche, vitRoueDroite;
     /*

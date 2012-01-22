@@ -110,16 +110,20 @@ def MSG_config_AsserRotation(R1, R2) :
 def send_config_AsserRotation(process, R1, R2) :
     process.stdin.write(MSG_config_AsserRotation(R1, R2))
     
-def MSG_config_profilVitesse(T_Acc, F_VA_Max, Umax) :
+def MSG_config_profilVitesse(Amax, Dmax, coeff_vi1, coeff_decc_finale, decc_min, Umax, F_VA_Max) :
     #generation d'un message de configuration des parametres du profil de vitesse
     parametersT = commandMsg("PARAMETERS_TIME")
-    parametersT.addPose("ACC" + " " + str(T_Acc))
-    parametersT.addPose("VITANGMAX" + " " + str(F_VA_Max))
+    parametersT.addPose("A_MAX" + " " + str(Amax))
+    parametersT.addPose("D_MAX" + " " + str(Dmax))
+    parametersT.addPose("COEFF_VI1" + " " + str(coeff_vi1))
+    parametersT.addPose("COEFF_DECC_FINALE" + " " + str(coeff_decc_finale))
+    parametersT.addPose("DECC_MIN" + " " + str(decc_min))
     parametersT.addPose("UMAX" + " " + str(Umax))
+    parametersT.addPose("VITANGMAX" + " " + str(F_VA_Max))
     return parametersT.cmdMsgGeneration()
     
-def send_config_profilVitesse(process, T_Acc, F_VA_Max, Umax) :
-    process.stdin.write(MSG_config_profilVitesse(T_Acc, F_VA_Max, Umax))
+def send_config_profilVitesse(process, Amax, Dmax, coeff_vi1, coeff_decc_finale, decc_min, Umax, F_VA_Max) :
+    process.stdin.write(MSG_config_profilVitesse(Amax, Dmax, coeff_vi1, coeff_decc_finale, decc_min, Umax, F_VA_Max))
     
 def MSG_config_modeleMoteurCC(masse,
                                 rayon_roue,
@@ -175,7 +179,7 @@ def send_config_simulator(simulator_process, d_cfgTraj) :
     send_config_AsserRotation(simulator_process, d_cfgTraj['R1'], d_cfgTraj['R2'])
     
     # envoie au simulateur de la configuration des parametres du profil de vitesse
-    send_config_profilVitesse(simulator_process, d_cfgTraj['TempsAcc'], d_cfgTraj['Facteur_vitesse_angulaire'], d_cfgTraj['Umax'])
+    send_config_profilVitesse(simulator_process, d_cfgTraj['Amax'], d_cfgTraj['Dmax'], d_cfgTraj['coeff_vi1'], d_cfgTraj['coeff_decc_finale'], d_cfgTraj['decc_min'], d_cfgTraj['Umax'], d_cfgTraj['Facteur_vitesse_angulaire'])
     
     # envoie au simulateur des parametres du modele des moteurs à courant continu de déplacement
     send_config_modeleMoteurCC(simulator_process,
@@ -201,11 +205,16 @@ def trajFunction(d_cfgTraj, Kp = 10.0, Ki = 5.0, K1 = 20.0, K2 = 75.0, K3 = 50.0
     
     # envoie au simulateur de l'init de pose
     send_init_pose(simulator_process, x=0.0, y=0.0, angle=0.0)
+    #~ send_init_pose(simulator_process, x=0.310000002384, y=0.177000001073, angle=-1.57079637051)
     
     #generation d'un message de commande de deplacement
     # "MSG_MAIN_GOTO 0:'DEPLACEMENT'/1:'ROTATION' 0:'MARCHE_AVANT'/1:'MARCHE_ARRIERE'"
     deplacement = commandMsg("MSG_MAIN_GOTO 1 1")   # 'DEPLACEMENT' en 'MARCHE_AVANT'
     deplacement.addPose(str(d_cfgTraj['Distance']) + " 0.0 0.0 0") # deplacement rectiligne sur la distance d_cfgTraj['Distance']
+    
+    #~ deplacement = commandMsg("MSG_MAIN_GOTO 2 1")   # 'DEPLACEMENT_LIGNE_DROITE' en 'MARCHE_AVANT'
+    #~ deplacement.addPose("0.310000002384 0.589999973774 -1.57079637051 1.0")
+    
     #transmission de commandes de deplacement par l'entree standard
     simulator_process.stdin.write(deplacement.cmdMsgGeneration())
     
@@ -338,15 +347,7 @@ def coutOptim_TempsAcc(param, d_cfgTraj_local) :
 
 def affichageTraj2011(d_traj):
     print("duree: " + str(d_traj["time"][0]) + "s")
-    
-    nbMaxPeriode = 0
-    for log_list in d_traj.values() :
-        if len(log_list) > nbMaxPeriode :
-            nbMaxPeriode = len(log_list)
     periode = d_traj['periode'][0]
-    duree = nbMaxPeriode * periode
-    print[nbMaxPeriode, periode, str(nbMaxPeriode * d_traj['periode'][0]) + "s"]
-    #~ sys.exit(2)
 	
 	#nombre de variable loguer
     print("Nombre de variable loguer: " + str(len(d_traj.keys())))
@@ -374,10 +375,12 @@ def affichageTraj2011(d_traj):
     grid(True)
     title("trajectoire")
     
+    temps = [index*periode for index in range(len(d_traj["vitesseMoteurGauche"]))]
     figure(2)
-    plot([index*periode for index in range(len(d_traj["vitesseMoteurGauche"]))], d_traj["vitesseMoteurGauche"], '-', label='mesure gauche')
-    hold(True)
-    plot([index*periode for index in range(len(d_traj["vitesseMoteurDroit"]))], d_traj["vitesseMoteurDroit"], label='mesure droit')
+    subplot(2,1,1)
+    plot(temps, d_traj["vitesseMoteurGauche"], '-', label='mesure gauche')
+    #~ hold(True)
+    plot(temps, d_traj["vitesseMoteurDroit"], label='mesure droit')
     #~ plot([index*periode for index in range(len(d_traj["ConsigneMoteurDroit"]))], [(cons-1024.0)*0.000985 for cons in d_traj["ConsigneMoteurDroit"]], label='consigne droit')
     #~ plot([index*periode for index in range(len(d_traj["vitesseProfilConsigne"]))], d_traj["vitesseProfilConsigne"], 'o', label='vitesse profil')
     #~ plot([index*periode for index in range(len(d_traj["vitLongitudinale"]))], d_traj["vitLongitudinale"], label='consigne long calculee')
@@ -392,7 +395,7 @@ def affichageTraj2011(d_traj):
     
     #~ plot([index*periode for index in range(len(d_traj["ASSER_Running"]))], d_traj["ASSER_Running"], 'o', label='ASSER_Running')
     
-    plot([index*periode for index in range(len(d_traj["val_tab_vit"]))], d_traj["val_tab_vit"], '-', label='vitesse profil')
+    plot(temps, d_traj["val_tab_vit"], '-', label='vitesse profil')
     
     #~ print("decc_tempsAcc_float: " + str(d_traj["decc_tempsAcc_float"]))
     #~ print("decc_tempsAcc: " + str(d_traj["decc_tempsAcc"]))
@@ -409,10 +412,11 @@ def affichageTraj2011(d_traj):
     grid(True)
     title("vitesses")
     
-    figure(3)
-    plot([index*periode for index in range(len(d_traj["tensionPWM_MoteurGauche"]))], d_traj["tensionPWM_MoteurGauche"], label='moteur gauche')
-    hold(True)
-    plot([index*periode for index in range(len(d_traj["tensionPWM_MoteurDroit"]))], d_traj["tensionPWM_MoteurDroit"], label='moteur droit')
+    #~ figure(3)
+    subplot(2,1,2)
+    plot(temps, d_traj["tensionPWM_MoteurGauche"], label='moteur gauche')
+    #~ hold(True)
+    plot(temps, d_traj["tensionPWM_MoteurDroit"], label='moteur droit')
     legend()
     grid(True)
     title("tensions moteurs")
@@ -433,6 +437,64 @@ def affichageTraj2011(d_traj):
     print("poseRobotInitX: " + str(d_traj["poseRobotInitX"]))
     print("poseRobotInitY: " + str(d_traj["poseRobotInitY"]))
     #~ plot(d_traj["thetaPoseReference"], label="thetaPoseReference")
+    legend()
+    
+    #~ affichageGabaritVitesse(d_traj)
+    
+    show()
+    
+def affichageTestAccDcecc(d_traj):
+    print("duree: " + str(d_traj["time"][0]) + "s")
+    periode = d_traj['periode'][0]
+	
+	#nombre de variable loguer
+    print("Nombre de variable loguer: " + str(len(d_traj.keys())))
+    #~ print("CPTvitesseAnglePtArret: " + str(d_traj["CPTvitesseAnglePtArret"]))
+    #~ print("vitesseAnglePtArret: " + str(d_traj["vitesseAnglePtArret"]))
+    if (d_traj.keys().count('finAsser') == 1): 
+        print("Test fin asser OK")
+        print(d_traj['finAsser'])
+    else : print("Test fin asser negatif")
+    
+    print(len(d_traj["xRoueDroite"]))
+    
+    temps = [index*periode for index in range(len(d_traj["vitesseMoteurGauche"]))]
+    figure(2)
+    subplot(2,1,1)
+    plot(temps, d_traj["vitesseMoteurGauche"], '-', label='mesure gauche')
+    hold(True)
+    plot(temps, d_traj["vitesseMoteurDroit"], label='mesure droit')
+    
+    
+    plot([index*periode for index in range(len(d_traj["val_tab_vit"]))], d_traj["val_tab_vit"], '-', label='vitesse profil')
+    
+    #~ print("decc_tempsAcc_float: " + str(d_traj["decc_tempsAcc_float"]))
+    #~ print("decc_tempsAcc: " + str(d_traj["decc_tempsAcc"]))
+    #~ print("decc_vmax: " + str(d_traj["decc_vmax"]))
+    
+    v = axis()
+    limits = []
+    for val in v:
+        limits.append(val)
+    limits[2] = -1.2    
+    limits[3] = 1.2
+    axis(limits)
+    legend(loc="lower center")
+    grid(True)
+    title("vitesses")
+    
+    #~ figure(3)
+    subplot(2,1,2)
+    plot(temps, d_traj["tensionPWM_MoteurGauche"], label='moteur gauche')
+    hold(True)
+    plot(temps, d_traj["tensionPWM_MoteurDroit"], label='moteur droit')
+    legend(loc='lower center')
+    grid(True)
+    title("tensions moteurs")
+    
+    figure(5)
+    plot(d_traj["index_get_vitesseGabarit"])
+    
     legend()
     
     #~ affichageGabaritVitesse(d_traj)
@@ -482,11 +544,14 @@ def affichageGabaritVitesse_2012(d_traj):
         
     figure(4)
     # affichage avec un pas de 2cm
-    pas = 0.005
+    pas = d_traj["pas_ech"][0]
     print("pas ech: " + str(pas))
     plot([index * pas for index in range(len(d_traj["gabarit_vitesse"]))], d_traj["gabarit_vitesse"], '-o', label='vit')
-    
+    print("taille tab gabarit vitesse : " + str(len(d_traj["gabarit_vitesse"])))
+    for val in d_traj["init_gabarit"] :
+        print(val)
     grid()
+    title("Gabarit vitesse")
     legend()
     
     
@@ -558,8 +623,8 @@ def optimParam_TempsAcc(d_cfgTraj_local) :
 #~ d_cfgTraj = optimParam_TempsAcc(d_cfgTraj)
 traj = trajFunction(d_cfgTraj)
 affichageGabaritVitesse_2012(traj)
-#~ show()
-affichageTraj2011(traj)
+#~ affichageTraj2011(traj)
+affichageTestAccDcecc(traj)
 
 
 sys.exit(2)

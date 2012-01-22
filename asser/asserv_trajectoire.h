@@ -46,52 +46,33 @@
 #define NBR_ASSER_LOG_VALUE         ((NET_BUF_CFG_DATA_SIZE_SMALL - (3 * sizeof(float)) - (2 * sizeof(unsigned char)) - sizeof(int)) / sizeof(float))
 #endif
 
-#define TAILLE_TAB_GABARIT_VITESSE  1001
-#define PAS_TEMPS                   0
-#define PAS_DISTANCE                1
+/** Parametres du profil de vitesse des trajectoires */
+#define TAILLE_TAB_GABARIT_VITESSE  201
+
 
 /** Structure de parametres du profil de vitesse des trajectoires */
 typedef struct
 {
     //unsigned int n;
     float           vmax;
-    float           acc;
-    float           delta_tmax;
-    unsigned int    pmax;
-    float           delta_t;
-    float           delta2t;
     unsigned int    p;
     float           diffThetaCourant;
     int             etat;
     float           distNormaliseeRestante;
-
     float           distance_parcourue;
-    signed int      phase;
     float           pas_echantillon_distance;
-    float           acc_alpha;
-    float           acc_a1;
-    float           acc_a2;
-    float           decc_alpha;
-    float           decc_a1;
-    float           decc_a2;
     float           vitesse_courante;
-    float           decc_vmax;
-    float           decc_tempsAcc;
-    float           acc_D1;
-    float           acc_D2;
-    float           acc_Dtot;
-    float           decc_D3;
-    float           decc_D4;
-    float           decc_Dtot;
 
     float           tempsAcc;
-    //unsigned int m;
 
     // parametre gene profil 2012
     float           Amax;
     float           Dmax;
-    float           coeffDecc_v1;
-    float           D_AP;
+    float           coeff_vi1;
+    float           coeff_decc_finale;
+    float           decc_min_finale;
+    float           vitesse_seuil_decc_finale;
+    float           Dist_AccPlat;
     float           pas_reduit;
     unsigned int    iFin_P;
 } ParametresProfilVitesse;
@@ -146,9 +127,12 @@ extern float                gainDeplacement2;
 extern float                gainDeplacement3;
 
 extern float                tempsAcc;               /* Acceleration du deplacement sur la trajectoire, -> temps en secondes pour passer de 0 a la vitesse max retournee par POS_GetConsVitesseMax() */
-extern float                ALPHA_ACC;
-extern float                ALPHA_DECC;
 extern float                facteurVitesseAngulaireMax;
+extern float                A_MAX;
+extern float                D_MAX;
+extern float                COEFF_VI1;
+extern float                COEFF_DECC_FINALE;
+extern float                DECC_MIN;
 
 /** Table pour le log asser */
 extern float                tabLogAsser[NBR_ASSER_LOG_VALUE];

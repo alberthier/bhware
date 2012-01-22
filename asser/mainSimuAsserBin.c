@@ -102,7 +102,7 @@ int main(void)
     char marche, marcheNull;
     unsigned int nbrPtsChemin, nbrPtsNull, nbrParameters, iParam;
     float angleArrivee;
-    Parameter paramPI[2], paramK[3], paramR[2], paramT[3], paramMotor[9];
+    Parameter paramPI[2], paramK[3], paramR[2], paramT[7], paramMotor[9];
 
     printf("asserSimulator: Demarrage simulateur\n");
     fflush(stdout);
@@ -178,12 +178,16 @@ int main(void)
         }
         else if (strcmp(command, "PARAMETERS_TIME") == 0)
         {
-            parameterMsgTreatment(buffer, &nbrParameters, paramT, 3);
-            if (nbrParameters == 3)
+            parameterMsgTreatment(buffer, &nbrParameters, paramT, 7);
+            if (nbrParameters == 7)
             {
-                tempsAcc = paramT[0].value;
-                facteurVitesseAngulaireMax = paramT[1].value;
-                Umax = (unsigned int)paramT[2].value;
+                A_MAX = paramT[0].value;
+                D_MAX = paramT[1].value;
+                COEFF_VI1 = paramT[2].value;
+                COEFF_DECC_FINALE = paramT[3].value;
+                DECC_MIN = paramT[4].value;
+                Umax = (unsigned int)paramT[5].value;
+                facteurVitesseAngulaireMax = paramT[6].value;
             }
         }
         else if (strcmp(command, "PARAMETERS_MOTOR") == 0)

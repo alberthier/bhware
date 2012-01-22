@@ -18,7 +18,13 @@
  *  @{
  */
 
+/* #define */
+
 #define                         NbrMesuresMax           100u   
+
+/************************************************************************************************/
+
+/* Variables globales */
 
 /** Flag Test mode */ 
 extern unsigned long            Test_mode;

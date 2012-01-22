@@ -50,6 +50,7 @@
 /** I/O */
 #define IO_EVENT                    (OS_FLAGS) 0x01
 #define IO_STOP_ROBOT               (OS_FLAGS) 0x02
+#define IO_UPDATE_IO                (OS_FLAGS) 0x03
 
 /** UART RS232 */
 #define UART_EVENT                  (OS_FLAGS) 0x01
@@ -69,8 +70,8 @@
 #define TASK_MAIN_ID                (INT16U) 7
 #define TASK_EVIT_ID                (INT16U) 6
 #define TASK_IO_ID                  (INT16U) 5
-#define TASK_ASSER_ID               (INT16U) 2
-#define TASK_UART_ID                (INT16U) 1
+#define TASK_ASSER_ID               (INT16U) 1
+#define TASK_UART_ID                (INT16U) 0
 
 /** Task Priority */
 
@@ -79,26 +80,36 @@
 #define TASK_MAIN_PRIO               (INT8U) 7
 #define TASK_EVIT_PRIO               (INT8U) 6
 #define TASK_IO_PRIO                 (INT8U) 5
-#define TASK_ASSER_PRIO              (INT8U) 4
+#define TASK_ASSER_PRIO              (INT8U) 2
 #define TASK_UART_PRIO               (INT8U) 1
 
 /***********************************************************************
  * ----------------------------- Defines globaux -----------------------
  **********************************************************************/
 
-/** Defines globaux */
-
-#define True                (unsigned char) 1u
-#define False               (unsigned char) 0u
-
-#ifndef NULL
-#define NULL                                0
-#endif
-
 /* Constantes */
 
+#define True                         ((unsigned char) 1u)
+#define False                        ((unsigned char) 0u)
+
+#ifndef NULL
+#define NULL                          0
+#endif
+
 #ifndef PI
-#define PI                                  3.14159265358979323846
+#define PI                            3.14159265358979323846
+#endif
+
+/**********************************************************************/
+
+/* Macros */
+
+#ifndef MIN                             
+#define MIN(_a,_b)                   ((_a)<(_b)?(_a):(_b))
+#endif
+
+#ifndef MAX             
+#define MAX(a, b)                    (a > b ? a : b) 
 #endif
 
 /**********************************************************************/
@@ -112,13 +123,16 @@
 /** Utilisation des DMA pour l'emission UART */
 #define UART_DMA_TX
 
+/** Utilisation des interruptions DMA pour la reception UART */
+//#define  DMA_REVEIVE_INT
+
 /**********************************************************************/
 
 /** Active le fonctionnement du capteur de couleur */ 
 //#define Capteur_Couleur_connected
 
-/** Flag de test des IO */
-//#define Test_IO
+/** Active les actionneurs */
+//#define Actionneurs
 
 /**********************************************************************/
 

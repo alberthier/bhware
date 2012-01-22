@@ -534,7 +534,7 @@ void SIMU_CalculPeriodique(void)
             /*************************************************************************************************/
 
             /* Boucle de vitesse, avec une periode de 1ms sachant que la periode de l'asser trajectoire est de 20x 1ms */
-            for (p = 0; p < 20; p++)
+            for (p = 0; p < floor(TE/TE_PI); p++)
             {
                 SIMU_BoucleVitesse();
             }
@@ -661,7 +661,7 @@ int SIMU_AsserVitessePI(void)
 
         SIMU_REDEF_ASSER_SendConsigne(g_ConsigneMoteurD, g_ConsigneMoteurG);
         /* Boucle de vitesse, avec une periode de 1ms sachant que la periode de l'asser trajectoire est de 20x 1ms */
-        for (p = 0; p < 20; p++)
+        for (p = 0; p < floor(TE/TE_PI); p++)
         {
             SIMU_BoucleVitesse();
             distance_parcourue += vitesseMoteurG * TE_PI;
