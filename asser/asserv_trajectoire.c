@@ -68,10 +68,10 @@ float                           tempsDecc                               =   1.0;
 
 float                           facteurVitesseAngulaireMax              =   4.0;
 
-float                           COEFF_VI1                               =   0.9;
+float                           COEFF_VI1                               =   0.95;
 float                           VITESSE_SEUIL_DECC                      =   0.2;
-float                           COEFF_DECC_FINALE                       =   0.1;
-float                           DECC_MIN                                =   -0.5;       /* Decceleration en m/s^2 du profil de vitesse au point d'arrivee */
+float                           COEFF_DECC_FINALE                       =   0.08;
+float                           DECC_MIN                                =   -0.3;       /* Decceleration en m/s^2 du profil de vitesse au point d'arrivee */
 
 /***********************************************************************************************/
 /**************************** Fin de la definition des parametres de l'asservissement de trajectoire *********/
@@ -183,7 +183,7 @@ static unsigned char            ASSER_TRAJ_isDeplacement(Trajectoire *traj);
 /**********************************************************************/
 /*! \brief ASSER_TRAJ_InitialisationGenerale
  * 
- *  \note  Fonction d'initialisation generale de l'asser traj
+ *  \note  Fonction d'initialisation generale de l'asser trajectoire
  *
  *  \return None
  */
@@ -208,11 +208,11 @@ extern void ASSER_TRAJ_InitialisationGenerale(void)
  * 
  *  \param [in] traj              type de trajectoire
  *
- *  \return  True or False
+ *  \return  True (Deplacement) or False (Rotation)
  */
 /**********************************************************************/
 
-static unsigned char ASSER_TRAJ_isDeplacement(Trajectoire *traj)
+static unsigned char ASSER_TRAJ_isDeplacement(Trajectoire * traj)
 {
     if (traj->mouvement > ROTATION)
     {
@@ -229,7 +229,7 @@ static unsigned char ASSER_TRAJ_isDeplacement(Trajectoire *traj)
  * 
  *  \note  Fonction qui renvoie le compteur de periode
  *
- *  \return compteurPeriode
+ *  \return compteur de Periode
  */
 /**********************************************************************/
 
@@ -243,7 +243,7 @@ extern unsigned int ASSER_TRAJ_GetCompteur(void)
  * 
  *  \note  Fonction qui renvoie le segment de traj courant
  *
- *  \return segmentCourant
+ *  \return segment Courant
  */
 /**********************************************************************/
 
@@ -256,12 +256,12 @@ extern unsigned int ASSER_TRAJ_GetSegmentCourant(void)
 /*! \brief AsservissementMouvementRobot
  * 
  *  \note  Fonction centrale de l'asservissement de trajectoire: bloc d'instructions a executer periodiquement,
- * contenant toute la loi de commande et la condition d'arret de l'asservissement.
+ *           contenant toute la loi de commande et la condition d'arret de l'asservissement.
  *
- *  \param [in] poseRobot              pose du robot etant donne le choix de la marche AVANT ou ARRIERE pour l'orientation du robot
- *  \param [in] vitessesConsignes   pointeur sur une structure pour fournir les vitesses longitudinale et de rotation, de consignes
+ *  \param [in]   poseRobot              pose du robot etant donne le choix de la marche AVANT ou ARRIERE pour l'orientation du robot
+ *  \param [in]   vitessesConsignes   pointeur sur une structure pour fournir les vitesses longitudinale et de rotation, de consignes
  *
- *  \return ASSER_Running             flag d'etat de l'asservissement
+ *  \return         None
  */
 /**********************************************************************/
  
@@ -395,9 +395,11 @@ extern void ASSER_TRAJ_AsservissementMouvementRobot(Pose poseRobot, VitessesRobo
                 {
                     g_index_tab_gabarit_vitesse = (TAILLE_TAB_GABARIT_VITESSE-1u);
                 }
+
                 ASSER_TRAJ_LogAsser("dist_parcourue", NBR_ASSER_LOG_VALUE, chemin.profilVitesse.distance_parcourue);
                 ASSER_TRAJ_LogAsser("nbdepas", NBR_ASSER_LOG_VALUE, chemin.profilVitesse.pas_echantillon_distance);
                 ASSER_TRAJ_LogAsser("index_tab_vit", NBR_ASSER_LOG_VALUE, g_index_tab_gabarit_vitesse);
+
                 /* distance normalisee restant a parcourir */
                 chemin.profilVitesse.distNormaliseeRestante = chemin.profilVitesse.distNormaliseeRestante - (delta_distance / chemin.distance);
                 ASSER_TRAJ_ParcoursTrajectoire(&chemin, delta_distance, &segmentCourant, &parametrePositionSegmentTrajectoire);
@@ -547,11 +549,12 @@ extern void ASSER_TRAJ_AsservissementMouvementRobot(Pose poseRobot, VitessesRobo
  *  \param [in]     poseRobot       pose courante du robot integrant le choix de la marche (AVANT ou ARRIERE)
  *  \param [in]     point               pointeur du tableau des points imposes du chemin dont le point a atteindre en dernier
  *  \param [in]     nbrePts           nombre de points intermediaires du chemin par lesquelles passer +1 pour le point d'arrvee
- *  \param [in]     mouvement     type de mouvement a executer: un deplacement (DEPLACEMENT)
-                                    , une pure rotation (ROTATION) ou un déplacement qui finit en ligne droite (DEPLACEMENT_LIGNE_DROITE)
+ *  \param [in]     mouvement     type de mouvement a executer: un deplacement (DEPLACEMENT), une pure rotation (ROTATION) ou un déplacement qui finit en ligne droite (DEPLACEMENT_LIGNE_DROITE)
+ *
+ *  \return           None
  */
 /**********************************************************************/
-extern void ASSER_TRAJ_InitialisationTrajectoire(Pose poseRobot, PtTraj *point, unsigned int nbrePts, unsigned int mouvement)
+extern void ASSER_TRAJ_InitialisationTrajectoire(Pose poseRobot, PtTraj * point, unsigned int nbrePts, unsigned int mouvement)
 {
     Vecteur         diff1BS, diff2BS;
     unsigned int    iSegment, j, iCurrentGPoint_n0, iCurrentGPoint_n1;
@@ -846,7 +849,13 @@ extern void ASSER_TRAJ_InitialisationTrajectoire(Pose poseRobot, PtTraj *point, 
     chemin.profilVitesse.distNormaliseeRestante = 1.0;                                                          /* -> la distance totale normalisee */ 
     
     /* Initialisation du profil de vitessee */
-    chemin.profilVitesse.pas_echantillon_distance = chemin.distance / ((float)(TAILLE_TAB_GABARIT_VITESSE - 1));
+    chemin.profilVitesse.pas_echantillon_distance = (chemin.distance * 1000.0) / ((float)(TAILLE_TAB_GABARIT_VITESSE - 1));
+    if (chemin.profilVitesse.pas_echantillon_distance < 1.0)
+    {
+        chemin.profilVitesse.pas_echantillon_distance = 1.0;
+    }
+    chemin.profilVitesse.pas_echantillon_distance = chemin.profilVitesse.pas_echantillon_distance / 1000.0;
+
     ASSER_TRAJ_LogAsser("pas_ech", NBR_ASSER_LOG_VALUE, chemin.profilVitesse.pas_echantillon_distance);
     g_index_tab_gabarit_vitesse = 0;
 
@@ -885,10 +894,10 @@ extern void ASSER_TRAJ_InitialisationTrajectoire(Pose poseRobot, PtTraj *point, 
  *  \param [in]     qF                  derivee seconde de la position (fixe la vitesse de variation de l'angle de la tangente a  la trajectoire)
  *  \param [in]     segmentTraj
  *
- *  \return None
+ *  \return           None
  */
 /**********************************************************************/
-static void ASSER_TRAJ_InitialisationCourbeBS_5(Vecteur ptI, Vecteur ptF, Vecteur deltaPtI, Vecteur deltaPtF, Vecteur qI, Vecteur qF, segmentTrajectoireBS *segmentTraj)
+static void ASSER_TRAJ_InitialisationCourbeBS_5(Vecteur ptI, Vecteur ptF, Vecteur deltaPtI, Vecteur deltaPtF, Vecteur qI, Vecteur qF, segmentTrajectoireBS * segmentTraj)
 {
     segmentTraj->bx = ptI.x - (qI.x / 20.0);
     segmentTraj->by = ptI.y - (qI.y / 20.0);
@@ -913,10 +922,10 @@ static void ASSER_TRAJ_InitialisationCourbeBS_5(Vecteur ptI, Vecteur ptF, Vecteu
  * 
  *  \note   Affectation de la matrice carre intervenant dans la determination des fonctions de la trajectoire selon des interpolations
  *
- *  \param [in]     iPtI         
- *  \param [in]     iPtF
+ *  \param [in]     iPtI         position
+ *  \param [in]     iPtF         position
  *
- *  \reurn  None
+ *  \return            None
  */
 /**********************************************************************/
 static void ASSER_TRAJ_InitialisationMatriceInterpolation(unsigned int iPtI, unsigned int iPtF)
@@ -954,9 +963,9 @@ static void ASSER_TRAJ_InitialisationMatriceInterpolation(unsigned int iPtI, uns
  * 
  *  \note   Inversion de la matrice g_matriceT
  *
- *  \param [in]     nbrePts     nombre de points de la trajectoire pour la definition de la taille de la matrice
+ *  \param [in]    nbrePts     nombre de points de la trajectoire pour la definition de la taille de la matrice
  *
- *  \return None
+ *  \return           None
  */
 /**********************************************************************/
 static void ASSER_TRAJ_InversionMatriceT(unsigned int nbrePts)
@@ -1010,7 +1019,7 @@ static void ASSER_TRAJ_InversionMatriceT(unsigned int nbrePts)
  *  \param [in]     iPtI         indice du premier point d'une portion de trajectoire pour la definition de la taille de la matrice
  *  \param [in]     iPtF         indice du dernier point d'une portion de trajectoire pour la definition de la taille de la matrice
  *
- *  \return None
+ *  \return            None
  */
 /**********************************************************************/
 static void ASSER_TRAJ_InterpolationBSpline3(unsigned int iPtI, unsigned int iPtF)
@@ -1108,10 +1117,10 @@ static void ASSER_TRAJ_InterpolationBSpline3(unsigned int iPtI, unsigned int iPt
  *  \param [in]     diffThetaBSRobot
  *  \param [in]     poseTrajRobot
  *
- *  \return     poseTraj   pose de la courbe a laquelle doit etre asservi le point deporte du robot en fonction de t
+ *  \return            Pose                     pose de la courbe a laquelle doit etre asservi le point deporte du robot en fonction de t
  */
 /**********************************************************************/
-static Pose ASSER_TRAJ_TrajectoireRemorqueBS(segmentTrajectoireBS *segmentTraj, float t, Vecteur diff1BS, float diffThetaBSRobot, Pose *poseTrajRobot)
+static Pose ASSER_TRAJ_TrajectoireRemorqueBS(segmentTrajectoireBS * segmentTraj, float t, Vecteur diff1BS, float diffThetaBSRobot, Pose * poseTrajRobot)
 {   
     Pose    poseTraj;
 
@@ -1132,9 +1141,9 @@ static Pose ASSER_TRAJ_TrajectoireRemorqueBS(segmentTrajectoireBS *segmentTraj, 
  * 
  *  \note   equation parametrique de type B-Spline
  *
- *  \param [in]     t        parametre de la courbe: 0-> depart, 1-> arrivee.
+ *  \param [in]    t        parametre de la courbe: 0-> depart, 1-> arrivee.
  *
- *  \return     poseTraj   pose de la courbe fonction de l'argument t
+ *  \return          Pose   pose de la courbe fonction de l'argument t
  */
 /**********************************************************************/
 extern Pose ASSER_TRAJ_Trajectoire(float t)
@@ -1160,7 +1169,7 @@ extern Pose ASSER_TRAJ_Trajectoire(float t)
  *  \return           Pose              pose de la courbe de Bezier fonction de l'argument t
  */
 /**********************************************************************/
-static Pose ASSER_TRAJ_TrajectoireBSpline(segmentTrajectoireBS *segmentTraj, float t)
+static Pose ASSER_TRAJ_TrajectoireBSpline(segmentTrajectoireBS * segmentTraj, float t)
 {   
     float   theta_P, tl;
     Vecteur derivPositionTraj;
@@ -1254,11 +1263,11 @@ static Vecteur ASSER_TRAJ_DiffCourbeBSpline(segmentTrajectoireBS * segmentTraj, 
  *  \param [in]     segmentTraj  pointeur de structure definissant un segment de trajectoire
  *  \param [in]     t                   parametre de la courbe parametrique [0; 1]: 0-> pose de depart, 1-> pose d'arrivee.
  *
- *  \return            derivP          derivee des coordonnees de la position sur la courbe de B-Spline fonction de t,
+ *  \return            Vecteur        derivee des coordonnees de la position sur la courbe de B-Spline fonction de t,
  *                                           par rapport au parametre t.
  */
 /**********************************************************************/
-static Vecteur ASSER_TRAJ_Diff2CourbeBSpline(segmentTrajectoireBS *segmentTraj, float t)
+static Vecteur ASSER_TRAJ_Diff2CourbeBSpline(segmentTrajectoireBS * segmentTraj, float t)
 {
     Vecteur deriv2P;
     float   tl;
@@ -1370,7 +1379,7 @@ static float ASSER_TRAJ_VitesseLimiteEnVirage(Trajectoire *traj, float diffTheta
  *  \param [in]     segmentCourant     
  *  \param [in]     paramPoseSegTraj    
  *
- *  \return True or False
+ *  \return            True or False
  */
 /**********************************************************************/
 static unsigned char ASSER_TRAJ_ParcoursTrajectoire(Trajectoire *traj, float delta_distance, unsigned int *segmentCourant, float *paramPoseSegTraj)
@@ -1430,14 +1439,14 @@ static unsigned char ASSER_TRAJ_ParcoursTrajectoire(Trajectoire *traj, float del
 /*! \brief ASSER_TRAJ_GabaritVitesse
  *
  *  \note   Determination du gabarit de la vitesse longitudinale de consigne, dependant de la courbure de trajectoire
- *  et des fonctions d'acceleration et de decceleration.
+ *             et des fonctions d'acceleration et de decceleration.
  *
  *  \param [in]     traj            pointeur de structure definissant la trajectoire
  *
- *  \return None
+ *  \return           None
  */
 /**********************************************************************/
-static void ASSER_TRAJ_GabaritVitesse(Trajectoire *traj)
+static void ASSER_TRAJ_GabaritVitesse(Trajectoire * traj)
 {
     unsigned int    numSegment              = 0;
     float           acc_courant             = 0.0;
@@ -1464,7 +1473,7 @@ static void ASSER_TRAJ_GabaritVitesse(Trajectoire *traj)
         if (g_tab_vpointe[i][0] < traj->distance)
         {
             vpointe = g_tab_vpointe[i][1];
-            N_plateau = floor((traj->distance - g_tab_vpointe[i][0]) / traj->profilVitesse.pas_echantillon_distance) + 1;
+            N_plateau = floor((traj->distance - g_tab_vpointe[i][0]) / traj->profilVitesse.pas_echantillon_distance) + 1 +1;
             traj->profilVitesse.pas_reduit = traj->distance - floor(traj->distance / traj->profilVitesse.pas_echantillon_distance) * traj->profilVitesse.pas_echantillon_distance;
             traj->profilVitesse.Dist_AccPlat = traj->distance - g_tab_vpointe[i][2]; 		// distance des phases d'acceleration et de plateau(ou phase de vitesse max)
             ASSER_TRAJ_LogAsser("init_gabarit", NBR_ASSER_LOG_VALUE, traj->distance);
@@ -1476,6 +1485,7 @@ static void ASSER_TRAJ_GabaritVitesse(Trajectoire *traj)
     }
 
     /* Parcourir la trajectoire en l'echantillonnant sur N pas de distance pas_echantillon_distance */
+    vitesse_consigne = 0.4 * vpointe;
     while (flag_finTraj == 0)
     {
         flag_finTraj = ASSER_TRAJ_ParcoursTrajectoire(traj, traj->profilVitesse.pas_echantillon_distance, &numSegment, &paramPosition);
@@ -1554,13 +1564,17 @@ static void ASSER_TRAJ_GabaritVitesse(Trajectoire *traj)
 /**********************************************************************/
 static void ASSER_TRAJ_InitTabVPointe(Trajectoire *traj)
 {   // tableau de 1: distance des phases d'acc et de decc reunies, 2: vitesse max(de pointe), 3; distance de decc
-    unsigned char   i;
+    unsigned int    i;
     float           vpointe;
     float           distanceAcc, distanceDecc;
 
     for(i = 0; i < 5; i++)
     {
         vpointe = 0.2 + i * 0.1;
+        if (vpointe > traj->profilVitesse.vmax)
+        {
+            vpointe = traj->profilVitesse.vmax;
+        }
         distanceAcc = ASSER_TRAJ_DistanceAcceleration(traj, vpointe);
         distanceDecc = ASSER_TRAJ_DistanceDecceleration(traj, vpointe);
         g_tab_vpointe[i][0] = distanceAcc + distanceDecc;
@@ -1632,11 +1646,11 @@ extern float ASSER_TRAJ_GabaritVitesse_getVitesse_vs_Distance(float distance)
  *
  *  \note   Determination de la vitesse longitudinale de consigne en phase d'acceleration
  *
- *  \param [in]     traj            pointeur de structure definissant la trajectoire
- *  \param [in]     vpointe         vitesse de pointe du profil de vitesse en acceleration
- *  \param [in]     *vitesse_n      vitesse courante
+ *  \param [in]     traj             pointeur de structure definissant la trajectoire
+ *  \param [in]     vpointe        vitesse de pointe du profil de vitesse en acceleration
+ *  \param [in]     *vitesse_n   vitesse courante
  *
- *  \return         flag_fin        info de la fin de la phase d'acceleration
+ *  \return            flag_fin        info de la fin de la phase d'acceleration
  */
 /**********************************************************************/
 static unsigned char ASSER_TRAJ_ProfilAcceleration_2012(Trajectoire * traj, float vpointe, float * vitesse_n)
@@ -1805,7 +1819,7 @@ static float ASSER_TRAJ_ProfilConsigneAccelerationVitesse(Trajectoire * traj, fl
 /**********************************************************************/
 /*! \brief ASSER_TRAJ_DiffTemporelleTrajectoire
  * 
- *  \note           derivee temporelle discrete d'une pose
+ *  \note              derivee temporelle discrete d'une pose
  *
  *  \param [in]     posePrecedente      pose a une periode i-1
  *  \param [in]     poseActuelle           pose a une periode i
@@ -1835,7 +1849,7 @@ static Pose ASSER_TRAJ_DiffTemporelleTrajectoire(Pose posePrecedente, Pose poseA
  *  \param [in]     angle               angle de la rotation en rd
  */
 /**********************************************************************/
-static void ASSER_TRAJ_MatriceRotation(Vecteur *matrice2p2, float angle)
+static void ASSER_TRAJ_MatriceRotation(Vecteur * matrice2p2, float angle)
 {
     matrice2p2[0].x = cos(angle);
     matrice2p2[0].y = sin(angle);
@@ -1846,8 +1860,8 @@ static void ASSER_TRAJ_MatriceRotation(Vecteur *matrice2p2, float angle)
 /**********************************************************************/
 /*! \brief ASSER_TRAJ_ProduitMatriceVecteur
  * 
- *  \note           produit matriciel entre une matrice 2x2 a gauche, et un vecteur a droite. 
- *  Outil permettant un changement de repere suivant une rotation de la base du repere.
+ *  \note              produit matriciel entre une matrice 2x2 a gauche, et un vecteur a droite. 
+ *                       Outil permettant un changement de repere suivant une rotation de la base du repere.
  *
  *  \param [in]     matrice     pointeur d'un tableau de vecteurs
  *  \param [in]     vecteur     coordonnees sur lesquelles est appliquee la matrice (une matrice de rotation initialisee par la fonction ASSER_TRAJ_MatriceRotation)
@@ -1909,10 +1923,10 @@ static Pose ASSER_TRAJ_ErreurPose(Pose poseRobot_P, Pose poseRef)
   *  \param [in]     longueurBarreSuivi  distance entre le centre de l'axe des roues motrices/libres et le point du robot a asservir
   *  \param [in]     diagMatriceGain       gain matriciel du retour d'etat
   *
-  *  \return     vitessesCons                  Structure de vitesses avec les consignes de vitesse longitudinale (en m/s) et de vitesse de rotation (en rd/s)
+  *  \return            vitessesCons           Structure de vitesses avec les consignes de vitesse longitudinale (en m/s) et de vitesse de rotation (en rd/s)
   */
  /**********************************************************************/
- static VitessesRobotUnicycle ASSER_TRAJ_RetourDetat(Pose erreurPose, Pose poseRef, Pose diffPoseRef, float longueurBarreSuivi, float *diagMatriceGain)
+ static VitessesRobotUnicycle ASSER_TRAJ_RetourDetat(Pose erreurPose, Pose poseRef, Pose diffPoseRef, float longueurBarreSuivi, float * diagMatriceGain)
  {
      VitessesRobotUnicycle   vitesseTemp;
      VitessesRobotUnicycle   vitessesCons;
@@ -1948,13 +1962,13 @@ static Pose ASSER_TRAJ_ErreurPose(Pose poseRobot_P, Pose poseRef)
 /**********************************************************************/
 /*! \brief ASSER_TRAJ_RetourDetatOrientation
  * 
- *  \note           loi de commande par retour d'etat du suivi de trajectoire avec asservissement de l'angle de la tangente a la trajectoire
+ *  \note              loi de commande par retour d'etat du suivi de trajectoire avec asservissement de l'angle de la tangente a la trajectoire
  *
- *  \param [in]     erreurPose                erreur calculee par la fonction ASSER_TRAJ_ErreurPose
- *  \param [in]     diffPoseRef                derivee temporelle de la pose de reference
- *  \param [in]     gain                          gain matriciel du retour d'etat
+ *  \param [in]     erreurPose      erreur calculee par la fonction ASSER_TRAJ_ErreurPose
+ *  \param [in]     diffPoseRef      derivee temporelle de la pose de reference
+ *  \param [in]     gain                gain matriciel du retour d'etat
  *
- *  \return     vitessesCons                    Structure de vitesses avec les consignes de vitesse longitudinale (en m/s) et de vitesse de rotation (en rd/s)
+ *  \return           vitessesCons    Structure de vitesses avec les consignes de vitesse longitudinale (en m/s) et de vitesse de rotation (en rd/s)
  */
 /**********************************************************************/
 static VitessesRobotUnicycle ASSER_TRAJ_RetourDetatOrientation(Pose erreurPose, Pose diffPoseRef, float *gain)
@@ -2000,7 +2014,7 @@ static VitessesRobotUnicycle ASSER_TRAJ_RetourDetatOrientation(Pose erreurPose, 
  *  \return  True (si asser fini) or False (si asser non fini)
  */
 /**********************************************************************/
-static unsigned char ASSER_TRAJ_TestFinAsservissement(Trajectoire *traj, float erDist, float memo_erDist, float tolDist, float erAngle, float memo_erAngle, float tolAngle)
+static unsigned char ASSER_TRAJ_TestFinAsservissement(Trajectoire * traj, float erDist, float memo_erDist, float tolDist, float erAngle, float memo_erAngle, float tolAngle)
 {
     unsigned char   ret                 = False;
     Pose            poseRobot_asserEnd;
@@ -2044,7 +2058,7 @@ static unsigned char ASSER_TRAJ_TestFinAsservissement(Trajectoire *traj, float e
  *  \return None
  */
 /**********************************************************************/
-static void ASSER_TRAJ_DistanceTrajectoire(segmentTrajectoireBS *segmentTraj)
+static void ASSER_TRAJ_DistanceTrajectoire(segmentTrajectoireBS * segmentTraj)
 {
     float           distance = 0.000001;    /* toutes les divisions par la distance ne pourront pas etre des divisions par zero */
     unsigned char   param; 
@@ -2073,7 +2087,7 @@ static void ASSER_TRAJ_DistanceTrajectoire(segmentTrajectoireBS *segmentTraj)
  *  \return  nbAsserValue Nombre de donnees contenu dans le tabelau de log
  */
 /**********************************************************************/
-extern void ASSER_TRAJ_LogAsser(char *keyWord, unsigned char index, float val)
+extern void ASSER_TRAJ_LogAsser(char * keyWord, unsigned char index, float val)
 {
 #ifdef PIC32_BUILD
     keyWord = keyWord;

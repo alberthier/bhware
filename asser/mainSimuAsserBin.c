@@ -102,9 +102,26 @@ int main(void)
     char marche, marcheNull;
     unsigned int nbrPtsChemin, nbrPtsNull, nbrParameters, iParam;
     float angleArrivee;
-    Parameter paramPI[2], paramK[3], paramR[2], paramT[7], paramMotor[9];
+    Parameter paramPI[2], paramK[3], paramR[2], paramT[8], paramMotor[9];
 
     printf("asserSimulator: Demarrage simulateur\n");
+
+    /* Config des parametres par défaut  */
+    // param des PI # 1:Kp, 2:Ki
+    SIMU_SetGainsPI(3.0, 16.0);
+    // param des gains asser haut niveau
+    gainDeplacement1 = 20.0;
+    gainDeplacement2 = 50.0;
+    gainDeplacement3 = 20.0;
+    // param des gains asser rotation
+    gainRotation1 = -6.0;
+    gainRotation2 = -6.0;
+    // param du profil de vitesse # 1:A_MAX, 2:D_MAX, 3:COEFF_VI1, 4:VITESSE_SEUIL_DECC, 5:COEFF_DECC_FINALE, 6:DECC_MIN, 7:Umax, 8:facteurVitesseAngulaireMax
+    SIMU_SetParamProfilVitesse(4.0, -2.0, 0.95, 0.15, 0.08, -0.3, 900.0, 1.2);
+    // param du moteur de deplacement # 1:MASSE, 2:RAYON_ROUE, 3:FROTTEMENT_FLUIDE, 4:FORCE_RESISTANTE, 5:RESISTANCE_INDUIT, 6:INDUCTANCE_INDUIT, 7:CONSTANTE_COUPLE, 8:CONSTANTE_VITESSE, 9:RAPPORT_REDUCTION
+    SIMU_SetParamMoteur(1.2, 0.03, 0.0000504, 0.4, 2.18, 0.00024, 0.0234, 0.02346, 20.0);
+
+
     fflush(stdout);
 
     while (strcmp(command, "QUIT") != 0)
@@ -178,16 +195,17 @@ int main(void)
         }
         else if (strcmp(command, "PARAMETERS_TIME") == 0)
         {
-            parameterMsgTreatment(buffer, &nbrParameters, paramT, 7);
-            if (nbrParameters == 7)
+            parameterMsgTreatment(buffer, &nbrParameters, paramT, 8);
+            if (nbrParameters == 8)
             {
                 A_MAX = paramT[0].value;
                 D_MAX = paramT[1].value;
                 COEFF_VI1 = paramT[2].value;
-                COEFF_DECC_FINALE = paramT[3].value;
-                DECC_MIN = paramT[4].value;
-                Umax = (unsigned int)paramT[5].value;
-                facteurVitesseAngulaireMax = paramT[6].value;
+                VITESSE_SEUIL_DECC = paramT[3].value;
+                COEFF_DECC_FINALE = paramT[4].value;
+                DECC_MIN = paramT[5].value;
+                Umax = (unsigned int)paramT[6].value;
+                facteurVitesseAngulaireMax = paramT[7].value;
             }
         }
         else if (strcmp(command, "PARAMETERS_MOTOR") == 0)
@@ -205,7 +223,6 @@ int main(void)
                                     , paramMotor[7].value
                                     , paramMotor[8].value);
             }
-
         }
         else
         {

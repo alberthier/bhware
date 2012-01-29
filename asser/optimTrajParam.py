@@ -110,20 +110,21 @@ def MSG_config_AsserRotation(R1, R2) :
 def send_config_AsserRotation(process, R1, R2) :
     process.stdin.write(MSG_config_AsserRotation(R1, R2))
     
-def MSG_config_profilVitesse(Amax, Dmax, coeff_vi1, coeff_decc_finale, decc_min, Umax, F_VA_Max) :
+def MSG_config_profilVitesse(Amax, Dmax, coeff_vi1, vitesse_seuil_decc, coeff_decc_finale, decc_min, Umax, F_VA_Max) :
     #generation d'un message de configuration des parametres du profil de vitesse
     parametersT = commandMsg("PARAMETERS_TIME")
     parametersT.addPose("A_MAX" + " " + str(Amax))
     parametersT.addPose("D_MAX" + " " + str(Dmax))
     parametersT.addPose("COEFF_VI1" + " " + str(coeff_vi1))
+    parametersT.addPose("VITESSE_SEUIL_DECC" + " " + str(vitesse_seuil_decc))
     parametersT.addPose("COEFF_DECC_FINALE" + " " + str(coeff_decc_finale))
     parametersT.addPose("DECC_MIN" + " " + str(decc_min))
     parametersT.addPose("UMAX" + " " + str(Umax))
     parametersT.addPose("VITANGMAX" + " " + str(F_VA_Max))
     return parametersT.cmdMsgGeneration()
     
-def send_config_profilVitesse(process, Amax, Dmax, coeff_vi1, coeff_decc_finale, decc_min, Umax, F_VA_Max) :
-    process.stdin.write(MSG_config_profilVitesse(Amax, Dmax, coeff_vi1, coeff_decc_finale, decc_min, Umax, F_VA_Max))
+def send_config_profilVitesse(process, Amax, Dmax, coeff_vi1, vitesse_seuil_decc, coeff_decc_finale, decc_min, Umax, F_VA_Max) :
+    process.stdin.write(MSG_config_profilVitesse(Amax, Dmax, coeff_vi1, vitesse_seuil_decc, coeff_decc_finale, decc_min, Umax, F_VA_Max))
     
 def MSG_config_modeleMoteurCC(masse,
                                 rayon_roue,
@@ -179,7 +180,7 @@ def send_config_simulator(simulator_process, d_cfgTraj) :
     send_config_AsserRotation(simulator_process, d_cfgTraj['R1'], d_cfgTraj['R2'])
     
     # envoie au simulateur de la configuration des parametres du profil de vitesse
-    send_config_profilVitesse(simulator_process, d_cfgTraj['Amax'], d_cfgTraj['Dmax'], d_cfgTraj['coeff_vi1'], d_cfgTraj['coeff_decc_finale'], d_cfgTraj['decc_min'], d_cfgTraj['Umax'], d_cfgTraj['Facteur_vitesse_angulaire'])
+    send_config_profilVitesse(simulator_process, d_cfgTraj['Amax'], d_cfgTraj['Dmax'], d_cfgTraj['coeff_vi1'], d_cfgTraj['vitesse_seuil_decc'], d_cfgTraj['coeff_decc_finale'], d_cfgTraj['decc_min'], d_cfgTraj['Umax'], d_cfgTraj['Facteur_vitesse_angulaire'])
     
     # envoie au simulateur des parametres du modele des moteurs à courant continu de déplacement
     send_config_modeleMoteurCC(simulator_process,
@@ -365,7 +366,7 @@ def affichageTraj2011(d_traj):
     plot(d_traj["xRoueGauche"], d_traj["yRoueGauche"])
     hold(True)
     plot(d_traj["xRoueDroite"], d_traj["yRoueDroite"])
-    plot(d_traj["xPoseReferenceRobot"], d_traj["yPoseReferenceRobot"], '-or')
+    plot(d_traj["xPoseReferenceRobot"], d_traj["yPoseReferenceRobot"], '--r')
     xCentre = [(d_traj["xRoueGauche"][index] + d_traj["xRoueDroite"][index])/2.0 for index in range(len(d_traj["xRoueDroite"]))]
     yCentre = [(d_traj["yRoueGauche"][index] + d_traj["yRoueDroite"][index])/2.0 for index in range(len(d_traj["yRoueDroite"]))]
     plot(xCentre, yCentre, '-m')
@@ -395,7 +396,7 @@ def affichageTraj2011(d_traj):
     
     #~ plot([index*periode for index in range(len(d_traj["ASSER_Running"]))], d_traj["ASSER_Running"], 'o', label='ASSER_Running')
     
-    plot(temps, d_traj["val_tab_vit"], '-', label='vitesse profil')
+    plot([index*periode for index in range(len(d_traj["val_tab_vit"]))], d_traj["val_tab_vit"], '-', label='vitesse profil')
     
     #~ print("decc_tempsAcc_float: " + str(d_traj["decc_tempsAcc_float"]))
     #~ print("decc_tempsAcc: " + str(d_traj["decc_tempsAcc"]))
@@ -421,8 +422,8 @@ def affichageTraj2011(d_traj):
     grid(True)
     title("tensions moteurs")
     
-    figure(5)
-    plot(d_traj["index_get_vitesseGabarit"])
+    #figure(5)
+    #plot(d_traj["index_get_vitesseGabarit"])
     #~ plot(d_traj["index_tab_vit"])
     #~ plot(d_traj["dist_parcourue"], d_traj["val_tab_vit"])
     #~ plot(d_traj["val_tab_vit"])
@@ -434,10 +435,10 @@ def affichageTraj2011(d_traj):
     #~ plot(d_traj["poseRobotX"], 'x', label="poseRobotX")
     #~ plot(d_traj["poseRefY"], 'o', label="poseRefY")
     #~ plot(d_traj["poseRobotY"], label="poseRobotY")
-    print("poseRobotInitX: " + str(d_traj["poseRobotInitX"]))
-    print("poseRobotInitY: " + str(d_traj["poseRobotInitY"]))
+    #~ print("poseRobotInitX: " + str(d_traj["poseRobotInitX"]))
+    #~ print("poseRobotInitY: " + str(d_traj["poseRobotInitY"]))
     #~ plot(d_traj["thetaPoseReference"], label="thetaPoseReference")
-    legend()
+    #legend()
     
     #~ affichageGabaritVitesse(d_traj)
     
@@ -623,8 +624,8 @@ def optimParam_TempsAcc(d_cfgTraj_local) :
 #~ d_cfgTraj = optimParam_TempsAcc(d_cfgTraj)
 traj = trajFunction(d_cfgTraj)
 affichageGabaritVitesse_2012(traj)
-#~ affichageTraj2011(traj)
-affichageTestAccDcecc(traj)
+affichageTraj2011(traj)
+#~ affichageTestAccDcecc(traj)
 
 
 sys.exit(2)

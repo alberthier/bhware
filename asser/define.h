@@ -50,7 +50,6 @@
 /** I/O */
 #define IO_EVENT                    (OS_FLAGS) 0x01
 #define IO_STOP_ROBOT               (OS_FLAGS) 0x02
-#define IO_UPDATE_IO                (OS_FLAGS) 0x03
 
 /** UART RS232 */
 #define UART_EVENT                  (OS_FLAGS) 0x01

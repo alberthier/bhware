@@ -66,7 +66,7 @@ float                   ECART_ROUE_MOTRICE      = 0.339;                        
 float                   COEFFICIENT_DE_GLISSEMENT_LATERAL = 0.0;
 
 /** Tolerances de la condition d'arret des asservissements */
-float                   DIST_MIN                = 0.005;
+float                   DIST_MIN                = 0.003;
 float                   ANGLE_MIN               = 0.080;
 
 /** Coordonnees de la pose actuelle du robot */
@@ -350,10 +350,10 @@ float POS_ErreurOrientation(Pose poseRobot, Vecteur posArrivee)
  * 
  *  \note conversion des vitesses longitudinale et de rotation, en tensions de consignes des moteurs gauche et droit
  *
- *  \param [in] vitesseLongitudinale      vitesse longitudinale de consigne en m/s
- *  \param [in] vitesseRotation             vitesse de rotation de consigne en rd/s
- *  \param [in] consPWMRoueGauche    tension de consigne du moteur gauche en unite PWM, transmise par pointeur
- *  \param [in] consPWMRoueDroite      tension de consigne du moteur droit en unite PWM, transmise par pointeur
+ *  \param [in] vitesseLongitudinale            vitesse longitudinale de consigne en m/s
+ *  \param [in] vitesseAngulaireRotation     vitesse de rotation de consigne en rd/s
+ *  \param [in] consPWMRoueGauche         tension de consigne du moteur gauche en unite PWM, transmise par pointeur
+ *  \param [in] consPWMRoueDroite           tension de consigne du moteur droit en unite PWM, transmise par pointeur
  */
 /**********************************************************************/
 void POS_ConversionVitessesLongRotToConsignesPWMRouesRobotUnicycle(float vitesseLongitudinale, float vitesseAngulaireRotation, unsigned short * consPWMRoueGauche, unsigned short * consPWMRoueDroite)

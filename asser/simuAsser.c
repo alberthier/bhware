@@ -96,6 +96,18 @@ extern void SIMU_SetParamMoteur(float m, float R, float f, float Fr, float r, fl
     RAPPORT_REDUCTION   = Rred;
 }
 
+extern void SIMU_SetParamProfilVitesse(float Amax, float Dmax, float coeff_vi1, float vit_seuil_decc, float coeff_decc_finale, float decc_min, float umax, float fvam)
+{
+    A_MAX = Amax;
+    D_MAX = Dmax;
+    COEFF_VI1 = coeff_vi1;
+    VITESSE_SEUIL_DECC = vit_seuil_decc;
+    COEFF_DECC_FINALE = coeff_decc_finale;
+    DECC_MIN = decc_min;
+    Umax = (unsigned int)umax;
+    facteurVitesseAngulaireMax = fvam;
+}
+
 
 /*
 Convertit la vitesse (en Udist_ent/s) des roues en nombre de pas codeur par période TE (en s)

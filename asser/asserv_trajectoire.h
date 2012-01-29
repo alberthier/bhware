@@ -131,6 +131,7 @@ extern float                facteurVitesseAngulaireMax;
 extern float                A_MAX;
 extern float                D_MAX;
 extern float                COEFF_VI1;
+extern float                VITESSE_SEUIL_DECC;
 extern float                COEFF_DECC_FINALE;
 extern float                DECC_MIN;
 
