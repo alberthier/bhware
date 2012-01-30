@@ -17,6 +17,7 @@ import dynamics
 
 
 
+
 class GraphicsRobotObject(QObject):
 
     movement_finished = pyqtSignal(int)
@@ -205,6 +206,7 @@ class RobotLayer(fieldview.Layer):
 
         self.dynamics = dynamics.BasicDynamics()
         #self.dynamics = dynamics.PositionControlSimulatorDynamics()
+        self.dynamics.setup()
         self.dynamics.simulation_finished.connect(self.robot.animate)
 
 
@@ -397,13 +399,13 @@ class Fabric(QGraphicsRectItem):
 
 class GameElementsLayer(fieldview.Layer):
 
-    def __init__(self, purple_robot_item, red_robot_item, scene = None):
+    def __init__(self, purple_robot, red_robot, scene = None):
         fieldview.Layer.__init__(self, scene)
         self.name = "Game elements"
         self.color = GOLD_BAR_COLOR
         self.elements = []
-        self.purple_robot_item = purple_robot_item
-        self.red_robot_item = red_robot_item
+        self.purple_robot = purple_robot
+        self.red_robot = red_robot
 
         pieces_coords = [# Near start
                          (0.500, 1.000),
@@ -463,7 +465,7 @@ class GameElementsLayer(fieldview.Layer):
 
         self.setup()
 
-        #scene.changed.connect(self.scene_changed)
+        scene.changed.connect(self.scene_changed)
 
 
     def setup(self):
@@ -473,10 +475,31 @@ class GameElementsLayer(fieldview.Layer):
 
     def scene_changed(self):
         for elt in self.elements:
-            if elt.collidesWithItem(self.purple_robot_item):
-                self.purple_robot_item.addToGroup(elt)
-            if elt.collidesWithItem(self.red_robot_item):
-                self.red_robot_item.addToGroup(elt)
+            robot = None
+            if elt.collidesWithItem(self.purple_robot.robot_item):
+                robot = self.purple_robot
+            elif elt.collidesWithItem(self.red_robot.robot_item):
+                robot = self.red_robot
+            if robot != None:
+                angle = (robot.item.rotation() / 180.0 * math.pi) % (math.pi * 2.0)
+
+                ex = elt.pos().x() - robot.item.x()
+                ey = elt.pos().y() - robot.item.y()
+                elt_angle = math.atan2(ey, ex) % (math.pi * 2.0)
+
+                ref = abs(angle - elt_angle)
+
+                if ref > math.pi:
+                    x_sign = -1
+                    y_sign = -1
+                else:
+                    x_sign = 1
+                    y_sign = 1
+
+                dist = 20
+                dx = x_sign * math.cos(angle) * dist
+                dy = y_sign * math.sin(angle) * dist
+                elt.setPos(elt.pos().x() + dx, elt.pos().y() + dy)
 
 
 
@@ -498,8 +521,8 @@ class SimulatorFieldViewController(fieldview.FieldViewController):
         self.field_scene.add_layer(self.red_robot_trajectrory_layer)
         self.red_robot_layer.dynamics.simulation_finished.connect(self.red_robot_trajectrory_layer.set_points)
 
-        self.game_elements_layer = GameElementsLayer(self.purple_robot_layer.robot.structure,
-                                                     self.red_robot_layer.robot.structure,
+        self.game_elements_layer = GameElementsLayer(self.purple_robot_layer.robot,
+                                                     self.red_robot_layer.robot,
                                                      self.field_scene)
         self.field_scene.add_layer(self.game_elements_layer)
 

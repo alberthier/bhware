@@ -27,6 +27,10 @@ class BasicDynamics(QObject):
         self.angle = 0.0
 
 
+    def setup(self):
+        pass
+
+
     def resettle(self, packet):
         if packet.axis == AXIS_X:
             self.x = packet.position
