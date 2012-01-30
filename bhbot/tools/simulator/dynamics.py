@@ -104,15 +104,6 @@ class PositionControlSimulatorDynamics(QObject):
         # Wait until the simulator is properly initialized.
         self.process.waitForReadyRead()
 
-        module = imp.load_source("params_module", os.path.join(self.simulator_dir, "config.py"))
-        params = module.d_cfgTraj
-        self.invoke_setup("PARAMETERS_PI", "KP", params["Kp"], "KI", params["Ki"])
-        self.invoke_setup("PARAMETERS_GAIN_K", "GAIN_K1", params["K1"], "GAIN_K2", params["K2"], "GAIN_K3", params["K3"])
-        self.invoke_setup("PARAMETERS_GAIN_ROT", "GAIN_R1", params["R1"], "GAIN_R2", params["R2"])
-        self.invoke_setup("PARAMETERS_TIME", "ACC", params["TempsAcc"],  "VITANGMAX", params["Facteur_vitesse_angulaire"], "UMAX", params["Umax"])
-        self.invoke_setup("PARAMETERS_MOTOR", "MASSE", params["Masse"], "RAYON_ROUE", params["Rayon_roue"], "FROTTEMENT_FLUIDE", params["Frottement_fluide"], "FORCE_RESISTANTE", params["Force_resistante"], "RESISTANCE_INDUIT", params["Resistance_induit"], "INDUCTANCE_INDUIT", params["Inductance_induit"] , "CONSTANTE_COUPLE", params["Constance_couple"], "CONSTANTE_VITESSE", params["Constante_vitesse"], "RAPPORT_REDUCTION", params["Rapport_reduction"])
-        self.process.waitForBytesWritten()
-
 
     def build(self):
         sources = ["asserv_trajectoire.c", "mainSimuAsserBin.c", "position.c", "simuAsser.c", "simu_task_asser.c", "pic18.c"]
