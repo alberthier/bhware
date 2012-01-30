@@ -489,16 +489,20 @@ class GameElementsLayer(fieldview.Layer):
 
                 ref = abs(angle - elt_angle)
 
-                if ref > math.pi:
-                    x_sign = -1
-                    y_sign = -1
+                if ref < math.pi / 4.0 or ref >= 7.0 * math.pi / 4.0:
+                    sign = 1.0
+                elif ref >= math.pi / 4.0 and ref < 3.0 * math.pi / 4.0:
+                    sign = -1.0
+                    angle += math.pi / 2.0
+                elif ref >= 3.0 * math.pi / 4.0 and ref < 5.0 * math.pi / 4.0:
+                    sign = -1.0
                 else:
-                    x_sign = 1
-                    y_sign = 1
+                    sign = 1.0
+                    angle -= math.pi / 2.0
 
                 dist = 20
-                dx = x_sign * math.cos(angle) * dist
-                dy = y_sign * math.sin(angle) * dist
+                dx = sign * math.cos(angle) * dist
+                dy = sign * math.sin(angle) * dist
                 elt.setPos(elt.pos().x() + dx, elt.pos().y() + dy)
 
 
