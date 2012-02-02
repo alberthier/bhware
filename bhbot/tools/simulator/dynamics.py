@@ -90,6 +90,8 @@ class PositionControlSimulatorDynamics(QObject):
         self.simulator_dir = os.path.join(self.simulator_dir, "asser")
         self.process = None
 
+        self.build()
+
 
     def setup(self):
         self.build()
@@ -108,7 +110,12 @@ class PositionControlSimulatorDynamics(QObject):
     def build(self):
         sources = ["asserv_trajectoire.c", "mainSimuAsserBin.c", "position.c", "simuAsser.c", "simu_task_asser.c", "pic18.c"]
         binary = "simulator_trajAsser"
-        binary_mtime = os.stat(os.path.join(self.simulator_dir, binary)).st_mtime
+        requires_link = False
+        binary_path = os.path.join(self.simulator_dir, binary)
+        if os.path.exists(binary_path):
+            binary_mtime = os.stat(binary_path).st_mtime
+        else:
+            binary_mtime = 0
         for source in sources:
             mtime = os.stat(os.path.join(self.simulator_dir, source)).st_mtime
             if mtime > binary_mtime:
