@@ -27,6 +27,11 @@ class MainBar(QWidget, MainBar_Ui):
         self.set_color_icon(self.purple_robot, TEAM_COLOR_PURPLE)
         self.set_color_icon(self.red_robot, TEAM_COLOR_RED)
 
+        self.button_group = QButtonGroup(self)
+        self.button_group.setExclusive(True)
+        self.button_group.addButton(self.basic_dynamics)
+        self.button_group.addButton(self.advanced_dynamics)
+
 
     def set_icon(self, button, icon_name):
         icons_dir = os.path.join(os.path.dirname(__file__), "icons")
@@ -37,4 +42,3 @@ class MainBar(QWidget, MainBar_Ui):
         pixmap = QPixmap(QSize(16, 16))
         pixmap.fill(QColor(color))
         button.setIcon(QIcon(pixmap))
-

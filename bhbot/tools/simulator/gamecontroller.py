@@ -51,8 +51,10 @@ class GameController(object):
             self.time = MATCH_DURATION_MS
             self.main_bar.chronograph.setText(str(round(self.time/1000.0, 1)))
             self.setting_up = True
+            self.red_robot.robot_layer.use_advanced_dynamics(self.main_bar.advanced_dynamics.isChecked())
             self.red_robot.setup()
         elif not self.purple_robot.is_process_started():
+            self.purple_robot.robot_layer.use_advanced_dynamics(self.main_bar.advanced_dynamics.isChecked())
             self.purple_robot.setup()
         else:
             self.setting_up = False

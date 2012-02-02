@@ -190,6 +190,7 @@ class GraphicsRobotObject(QObject):
 
 class RobotLayer(fieldview.Layer):
 
+
     def __init__(self, scene, team):
         fieldview.Layer.__init__(self, scene)
         self.team = team
@@ -203,11 +204,7 @@ class RobotLayer(fieldview.Layer):
         self.robot.item.setVisible(False)
         self.robot.movement_finished.connect(self.movement_finished)
         self.robot_controller = None
-
-        self.dynamics = dynamics.BasicDynamics()
-        #self.dynamics = dynamics.PositionControlSimulatorDynamics()
-        self.dynamics.setup()
-        self.dynamics.simulation_finished.connect(self.robot.animate)
+        self.dynamics = None
 
 
     def reset(self):
@@ -218,6 +215,16 @@ class RobotLayer(fieldview.Layer):
 
     def setup(self):
         self.robot.item.setVisible(True)
+
+
+    def use_advanced_dynamics(self, advanced):
+        if advanced:
+            self.dynamics = dynamics.PositionControlSimulatorDynamics()
+        else:
+            self.dynamics = dynamics.BasicDynamics()
+        self.dynamics.setup()
+        self.dynamics.simulation_finished.connect(self.robot.animate)
+        self.dynamics.simulation_finished.connect(self.robot_controller.robot_trajectory_layer.set_points)
 
 
     def get_pose(self):
@@ -517,13 +524,11 @@ class SimulatorFieldViewController(fieldview.FieldViewController):
         self.field_scene.add_layer(self.purple_robot_layer)
         self.purple_robot_trajectrory_layer = RobotTrajectoryLayer(self.field_scene, TEAM_PURPLE)
         self.field_scene.add_layer(self.purple_robot_trajectrory_layer)
-        self.purple_robot_layer.dynamics.simulation_finished.connect(self.purple_robot_trajectrory_layer.set_points)
 
         self.red_robot_layer = RobotLayer(self.field_scene, TEAM_RED)
         self.field_scene.add_layer(self.red_robot_layer)
         self.red_robot_trajectrory_layer = RobotTrajectoryLayer(self.field_scene, TEAM_RED)
         self.field_scene.add_layer(self.red_robot_trajectrory_layer)
-        self.red_robot_layer.dynamics.simulation_finished.connect(self.red_robot_trajectrory_layer.set_points)
 
         self.game_elements_layer = GameElementsLayer(self.purple_robot_layer.robot,
                                                      self.red_robot_layer.robot,
