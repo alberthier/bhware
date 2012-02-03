@@ -38,6 +38,7 @@ class GameController(object):
         self.started = False
         self.setting_up = False
         self.time = MATCH_DURATION_MS
+        self.expected_teams = []
         self.keep_alive_timer = QTimer()
         self.keep_alive_timer.setInterval(KEEP_ALIVE_DELAY_MS)
         self.keep_alive_timer.timeout.connect(self.timer_tick)
@@ -46,14 +47,18 @@ class GameController(object):
     def setup(self):
         if not self.start_requested and not self.setting_up:
             self.user_stop()
-        if not self.red_robot.is_process_started():
+        if not self.red_robot.is_process_started() and not self.purple_robot.is_process_started():
             self.game_elements_layer.setup()
             self.time = MATCH_DURATION_MS
             self.main_bar.chronograph.setText(str(round(self.time/1000.0, 1)))
             self.setting_up = True
+            self.expected_teams = []
+        if not self.red_robot.is_process_started() and self.main_bar.red_robot.isChecked():
+            self.expected_teams.append(TEAM_RED)
             self.red_robot.robot_layer.use_advanced_dynamics(self.main_bar.advanced_dynamics.isChecked())
             self.red_robot.setup()
-        elif not self.purple_robot.is_process_started():
+        elif not self.purple_robot.is_process_started() and self.main_bar.purple_robot.isChecked():
+            self.expected_teams.append(TEAM_PURPLE)
             self.purple_robot.robot_layer.use_advanced_dynamics(self.main_bar.advanced_dynamics.isChecked())
             self.purple_robot.setup()
         else:
@@ -106,16 +111,18 @@ class GameController(object):
 
 
     def try_start(self):
-        if self.start_requested and self.red_robot.is_ready() and self.purple_robot.is_ready():
+        red = TEAM_RED in self.expected_teams and self.red_robot.is_ready() or not TEAM_RED in self.expected_teams
+        purple = TEAM_PURPLE in self.expected_teams and self.purple_robot.is_ready() or not TEAM_PURPLE in self.expected_teams
+        if self.start_requested and red and purple:
             self.start_requested = False
             self.send_start_signal()
 
 
     def brewery_connected(self):
-        if not self.red_robot.is_connected():
+        if TEAM_RED in self.expected_teams and not self.red_robot.is_connected():
             self.red_robot.connected(self.server.nextPendingConnection())
             self.setup()
-        elif not self.purple_robot.is_connected():
+        elif TEAM_PURPLE in self.expected_teams and not self.purple_robot.is_connected():
             self.purple_robot.connected(self.server.nextPendingConnection())
             self.setup()
         else:

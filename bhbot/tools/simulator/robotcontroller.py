@@ -70,7 +70,8 @@ class RobotController(object):
 
     def shutdown(self):
         if self.process != None:
-            self.socket.disconnected.disconnect(self.shutdown)
+            if self.socket != None:
+                self.socket.disconnected.disconnect(self.shutdown)
             self.process.terminate()
             self.process.waitForFinished()
             self.process = None
