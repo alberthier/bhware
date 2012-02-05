@@ -40,8 +40,11 @@ class WsgiRequestHandler(asynchat.async_chat):
         if self.state == WsgiRequestHandler.READING_HTTP_HEADER:
             self.parse_header()
             if self.environ["REQUEST_METHOD"] == "POST":
-                clen = int(self.environ["CONTENT_LENGTH"])
-                self.set_terminator(content_length)
+                if self.environ.has_key("CONTENT_LENGTH"):
+                    content_length = int(self.environ["CONTENT_LENGTH"])
+                    self.set_terminator(content_length)
+                else:
+                    self.set_terminator("\0")
                 self.state = WsgiRequestHandler.READING_HTTP_POST_DATA
             else:
                 self.set_terminator(None)
