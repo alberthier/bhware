@@ -173,9 +173,9 @@ static void                     ASSER_TRAJ_InitialisationCourbeBS_5(Vecteur ptI,
 static void                     ASSER_TRAJ_InterpolationBSpline3(unsigned int iPtI, unsigned int iPtF);
 static unsigned char            ASSER_TRAJ_ProfilAcceleration_2012(Trajectoire *traj, float vpointe, float *vitesse_n);
 static unsigned char            ASSER_TRAJ_ProfilDecceleration_2012(Trajectoire *traj, float vpointe, float *vitesse_n);
-static float                    ASSER_TRAJ_DistanceAcceleration(Trajectoire * traj, float vpointe);
+static float                    ASSER_TRAJ_DistanceAcceleration(Trajectoire * traj, float vpointe, float vit_ini);
 static float                    ASSER_TRAJ_DistanceDecceleration(Trajectoire * traj, float vpointe);
-static void                     ASSER_TRAJ_InitTabVPointe(Trajectoire *traj);
+static void                     ASSER_TRAJ_InitTabVPointe(Trajectoire *traj, float coeff_vit_ini);
 static unsigned char            ASSER_TRAJ_isDeplacement(Trajectoire *traj);
 
 /*----------------------------------------------------------------------------------------------*/
@@ -386,15 +386,16 @@ extern void ASSER_TRAJ_AsservissementMouvementRobot(Pose poseRobot, VitessesRobo
                 }
 
                 chemin.profilVitesse.distance_parcourue = chemin.profilVitesse.distance_parcourue + delta_distance;
-                g_index_tab_gabarit_vitesse = floor(chemin.profilVitesse.distance_parcourue / chemin.profilVitesse.pas_echantillon_distance);
+                //g_index_tab_gabarit_vitesse = floor(chemin.profilVitesse.distance_parcourue / chemin.profilVitesse.pas_echantillon_distance);
                 /* if(g_index_tab_gabarit_vitesse < 30u)
                 {
                     g_index_tab_gabarit_vitesse = 30u;
                 }*/
+                /*
                 if(g_index_tab_gabarit_vitesse > (TAILLE_TAB_GABARIT_VITESSE-1u))
                 {
                     g_index_tab_gabarit_vitesse = (TAILLE_TAB_GABARIT_VITESSE-1u);
-                }
+                }*/
 
                 ASSER_TRAJ_LogAsser("dist_parcourue", NBR_ASSER_LOG_VALUE, chemin.profilVitesse.distance_parcourue);
                 ASSER_TRAJ_LogAsser("nbdepas", NBR_ASSER_LOG_VALUE, chemin.profilVitesse.pas_echantillon_distance);
@@ -850,11 +851,7 @@ extern void ASSER_TRAJ_InitialisationTrajectoire(Pose poseRobot, PtTraj * point,
     
     /* Initialisation du profil de vitessee */
     chemin.profilVitesse.pas_echantillon_distance = (chemin.distance * 1000.0) / ((float)(TAILLE_TAB_GABARIT_VITESSE - 1));
-    if (chemin.profilVitesse.pas_echantillon_distance < 1.0)
-    {
-        chemin.profilVitesse.pas_echantillon_distance = 1.0;
-    }
-    chemin.profilVitesse.pas_echantillon_distance = chemin.profilVitesse.pas_echantillon_distance / 1000.0;
+    chemin.profilVitesse.pas_echantillon_distance = (floor(chemin.profilVitesse.pas_echantillon_distance) + 1.0) / 1000.0;
 
     ASSER_TRAJ_LogAsser("pas_ech", NBR_ASSER_LOG_VALUE, chemin.profilVitesse.pas_echantillon_distance);
     g_index_tab_gabarit_vitesse = 0;
@@ -1463,29 +1460,27 @@ static void ASSER_TRAJ_GabaritVitesse(Trajectoire * traj)
     float           vpointe                 = 0.0;
     unsigned int    i                       = 0u;
     unsigned int    N_plateau               = 0.0;
+    float           coeff_vit_ini           = 0.4;
 
-    ASSER_TRAJ_InitTabVPointe(traj);
+    ASSER_TRAJ_InitTabVPointe(traj, coeff_vit_ini);
     distanceRestante = traj->distance;
     ASSER_TRAJ_LogAsser("distanceRestante_FD", NBR_ASSER_LOG_VALUE, distanceRestante);
 
-    for (i = 4; i >= 0; i--)
+    for (i = 4; i >= 0; i--) // de la plus grande vitesse de pointe a la plus petite (de i=4 à i=0)
     {
         if (g_tab_vpointe[i][0] < traj->distance)
         {
             vpointe = g_tab_vpointe[i][1];
-            N_plateau = floor((traj->distance - g_tab_vpointe[i][0]) / traj->profilVitesse.pas_echantillon_distance) + 1 +1;
-            traj->profilVitesse.pas_reduit = traj->distance - floor(traj->distance / traj->profilVitesse.pas_echantillon_distance) * traj->profilVitesse.pas_echantillon_distance;
-            traj->profilVitesse.Dist_AccPlat = traj->distance - g_tab_vpointe[i][2]; 		// distance des phases d'acceleration et de plateau(ou phase de vitesse max)
+            N_plateau = floor((traj->distance - g_tab_vpointe[i][0]) / traj->profilVitesse.pas_echantillon_distance) + 1;
             ASSER_TRAJ_LogAsser("init_gabarit", NBR_ASSER_LOG_VALUE, traj->distance);
             ASSER_TRAJ_LogAsser("init_gabarit", NBR_ASSER_LOG_VALUE, N_plateau);
-            ASSER_TRAJ_LogAsser("init_gabarit", NBR_ASSER_LOG_VALUE, traj->profilVitesse.Dist_AccPlat);
             ASSER_TRAJ_LogAsser("init_gabarit", NBR_ASSER_LOG_VALUE, g_tab_vpointe[i][2]);
             break;
         }
     }
 
     /* Parcourir la trajectoire en l'echantillonnant sur N pas de distance pas_echantillon_distance */
-    vitesse_consigne = 0.4 * vpointe;
+    vitesse_consigne = coeff_vit_ini * vpointe;
     while (flag_finTraj == 0)
     {
         flag_finTraj = ASSER_TRAJ_ParcoursTrajectoire(traj, traj->profilVitesse.pas_echantillon_distance, &numSegment, &paramPosition);
@@ -1504,7 +1499,6 @@ static void ASSER_TRAJ_GabaritVitesse(Trajectoire * traj)
             }
             if (N_plateau == 0)
             {
-                traj->profilVitesse.iFin_P = g_index_tab_gabarit_vitesse;
                 flag_phase = 1;
             }
         }
@@ -1562,7 +1556,7 @@ static void ASSER_TRAJ_GabaritVitesse(Trajectoire * traj)
  *  \return None
  */
 /**********************************************************************/
-static void ASSER_TRAJ_InitTabVPointe(Trajectoire *traj)
+static void ASSER_TRAJ_InitTabVPointe(Trajectoire *traj, float coeff_vit_ini)
 {   // tableau de 1: distance des phases d'acc et de decc reunies, 2: vitesse max(de pointe), 3; distance de decc
     unsigned int    i;
     float           vpointe;
@@ -1575,7 +1569,7 @@ static void ASSER_TRAJ_InitTabVPointe(Trajectoire *traj)
         {
             vpointe = traj->profilVitesse.vmax;
         }
-        distanceAcc = ASSER_TRAJ_DistanceAcceleration(traj, vpointe);
+        distanceAcc = ASSER_TRAJ_DistanceAcceleration(traj, vpointe, vpointe * coeff_vit_ini);
         distanceDecc = ASSER_TRAJ_DistanceDecceleration(traj, vpointe);
         g_tab_vpointe[i][0] = distanceAcc + distanceDecc;
         g_tab_vpointe[i][1] = vpointe;
@@ -1599,15 +1593,7 @@ extern float ASSER_TRAJ_GabaritVitesse_getVitesse_vs_Distance(float distance)
     unsigned int index;
     float vitesse, delta_distance;
 
-    if (distance < chemin.profilVitesse.Dist_AccPlat)
-    {
-        index = floor(distance / chemin.profilVitesse.pas_echantillon_distance);
-    }
-    else
-    {
-        index = floor((distance + (chemin.profilVitesse.pas_echantillon_distance - chemin.profilVitesse.pas_reduit)) / chemin.profilVitesse.pas_echantillon_distance);
-    }
-
+    index = floor(distance / chemin.profilVitesse.pas_echantillon_distance);
 
     if (index > (TAILLE_TAB_GABARIT_VITESSE - 1))
     {
@@ -1617,23 +1603,9 @@ extern float ASSER_TRAJ_GabaritVitesse_getVitesse_vs_Distance(float distance)
     else
     {
         /* Interpolation de la vitesse de consigne */
-        if (index < chemin.profilVitesse.iFin_P)
-        {
-            delta_distance = distance - (index * chemin.profilVitesse.pas_echantillon_distance);
-        }
-        else
-        {
-            delta_distance = distance - (((index - 1) * chemin.profilVitesse.pas_echantillon_distance) + chemin.profilVitesse.pas_reduit);
-        }
-        
-        if (index != (chemin.profilVitesse.iFin_P - 1))
-        {
-            vitesse = g_tab_gabarit_vitesse[index] + (g_tab_gabarit_vitesse[(index + 1)] - g_tab_gabarit_vitesse[index]) * (delta_distance / chemin.profilVitesse.pas_echantillon_distance);
-        }
-        else
-        {
-            vitesse = g_tab_gabarit_vitesse[index] + (g_tab_gabarit_vitesse[(index + 1)] - g_tab_gabarit_vitesse[index]) * (delta_distance / chemin.profilVitesse.pas_reduit);
-        }
+        delta_distance = distance - ( ((float)index) * chemin.profilVitesse.pas_echantillon_distance );
+
+        vitesse = g_tab_gabarit_vitesse[index] + (g_tab_gabarit_vitesse[(index + 1)] - g_tab_gabarit_vitesse[index]) * (delta_distance / chemin.profilVitesse.pas_echantillon_distance);
     }
     
     ASSER_TRAJ_LogAsser("index_get_vitesseGabarit", NBR_ASSER_LOG_VALUE, vitesse);
@@ -1754,12 +1726,13 @@ static unsigned char ASSER_TRAJ_ProfilDecceleration_2012(Trajectoire * traj, flo
  *  \return                         distance
  */
 /**********************************************************************/
-static float ASSER_TRAJ_DistanceAcceleration(Trajectoire * traj, float vpointe)
+static float ASSER_TRAJ_DistanceAcceleration(Trajectoire * traj, float vpointe, float vit_ini)
 {
     unsigned int    nbrePas = 0u;
-    float           vitesse = 0.0;
+    float           vitesse;
     unsigned char   flag_fin = False;
 
+    vitesse = vit_ini;
     while( (flag_fin == False) && (nbrePas < 65535) )
     {
         flag_fin = ASSER_TRAJ_ProfilAcceleration_2012(traj, vpointe, &vitesse);

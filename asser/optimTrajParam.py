@@ -212,6 +212,8 @@ def trajFunction(d_cfgTraj, Kp = 10.0, Ki = 5.0, K1 = 20.0, K2 = 75.0, K3 = 50.0
     # "MSG_MAIN_GOTO 0:'DEPLACEMENT'/1:'ROTATION' 0:'MARCHE_AVANT'/1:'MARCHE_ARRIERE'"
     deplacement = commandMsg("MSG_MAIN_GOTO 1 1")   # 'DEPLACEMENT' en 'MARCHE_AVANT'
     deplacement.addPose(str(d_cfgTraj['Distance']) + " 0.0 0.0 0") # deplacement rectiligne sur la distance d_cfgTraj['Distance']
+    #~ deplacement = commandMsg("MSG_MAIN_GOTO 0 1")   # 'DEPLACEMENT' en 'MARCHE_AVANT'
+    #~ deplacement.addPose("0.0 0.0 -1.57 0")
     
     #~ deplacement = commandMsg("MSG_MAIN_GOTO 2 1")   # 'DEPLACEMENT_LIGNE_DROITE' en 'MARCHE_AVANT'
     #~ deplacement.addPose("0.310000002384 0.589999973774 -1.57079637051 1.0")
