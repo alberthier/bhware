@@ -9,6 +9,8 @@ import socket
 sys.path.append(os.path.dirname(__file__))
 
 import cherrypy
+
+import packets
 from definitions import *
 
 
@@ -33,6 +35,7 @@ class BHWeb(object):
     <ul>
       <li><a href="statemachine" target="linktarget">State Machine</a></li>
       <li><a href="logs" target="linktarget">Logs</a></li>
+      <li><a href="packets" target="linktarget">Packets</a></li>
       <li><a href="http://{}:42080" target="linktarget">PIC</a></li>
     </ul>
   </div>
@@ -48,7 +51,7 @@ class BHWeb(object):
         html = """<!DOCTYPE html>
 <html>
 <head>
-  <title>BH Team robot web interface</title>
+  <title>Statemachine</title>
   <link rel="stylesheet" type="text/css" href="bhweb.css" />
 </head>
 <body>
@@ -60,9 +63,8 @@ class BHWeb(object):
         while state != self.eventloop.root_state:
             html += "<li>{}</li>\n".format(type(state).__name__)
             state = state.parent_state
-        html + """</ul>
+        html += """</ul>
   </div>
-  <iframe name="linktarget" />
 </body>
 </html>
 """
@@ -74,7 +76,7 @@ class BHWeb(object):
         html = """<!DOCTYPE html>
 <html>
 <head>
-  <title>BH Team robot web interface</title>
+  <title>Logs</title>
   <link rel="stylesheet" type="text/css" href="bhweb.css" />
 </head>
 <body>
@@ -87,15 +89,80 @@ class BHWeb(object):
         for f in reversed(files):
             html += '<li><a href="logs/{0}">{0}</a></li>\n'.format(f)
 
-        html + """</ul>
+        html += """</ul>
   </div>
-  <iframe name="linktarget" />
 </body>
 </html>
 """
         return html
 
 
+    @cherrypy.expose
+    def packets(self):
+        html = """<!DOCTYPE html>
+<html>
+<head>
+  <title>Packets</title>
+  <link rel="stylesheet" type="text/css" href="bhweb.css" />
+</head>
+<body>
+  <div>
+    <h2>Packets:</h2><hr/>
+"""
+        for packet in packets.PACKETS_LIST:
+            html += """<h3>{} ({})</h3>""".format(packet.__name__, packet.TYPE)
+            html += """<form method="POST" action="send_packet">"""
+            html += """<table>"""
+            for item in packet.DEFINITION:
+                html += self.build_item_form_element(item)
+            html += """</table>"""
+            html += """<input type="hidden" name="packet" value="{}"/><br/>""".format(packet.__name__)
+            html += """<input type="submit" value="Send"/><br/>"""
+            html += """</form><hr/>"""
+        html += """</div>
+</body>
+</html>
+"""
+        return html
+
+
+    def build_item_form_element(self, item, name = None):
+        html = ""
+        if name == None:
+            name = item.name
+        if isinstance(item, packets.BoolItem):
+            if item.default_value:
+                checked = 'checked="checked"'
+            else:
+                checked = ""
+            html += """<tr><td>{} ({})</td><td><input type="checkbox" name="{}" {}/></td></tr>""".format(name, item.C_TYPE, name, checked)
+        elif isinstance(item, packets.Enum8Item) or isinstance(item, packets.UEnum8Item):
+            html += """<tr><td>{} ({})</td><td><select name="{}">""".format(name, item.C_TYPE, name)
+            for value, name in item.enum.lookup_by_value.iteritems():
+                html += """<option value="{}">{} ({})</option>""".format(value, name, value)
+            html += """</select></td></tr>"""
+        elif isinstance(item, packets.PoseWithOptionalAngleItem):
+            html += """<tr><td>{}.x (f)</td><td><input type="text" name="{}.x" value="{}"/></td></tr>""".format(name, name, item.default_value.x)
+            html += """<tr><td>{}.y (f)</td><td><input type="text" name="{}.y" value="{}"/></td></tr>""".format(name, name, item.default_value.y)
+            if item.default_value.angle != None:
+                default_angle = item.default_value.angle
+            else:
+                default_angle = ""
+            html += """<tr><td>{}.angle (f)</td><td><input type="text" name="{}.angle" value="{}"/></td></tr>""".format(name, name, default_angle)
+            if not isinstance(item, packets.PoseItem):
+                html += """<tr><td>{}.use_angle (B)</td><td><input type="checkbox" name="{}.use_angle" checked="checked"/></td></tr>""".format(name, name)
+        elif isinstance(item, packets.ListItem):
+            html += """<tr><td>{}.count (B)</td><td><input type="text" name="{}.count" value="{}"/></td></tr>""".format(name, name, 1)
+            for sub_item_index in xrange(item.max_elements):
+                html += self.build_item_form_element(item.element_type, "{}[{}]".format(name, sub_item_index))
+        else:
+            html += """<tr><td>{} ({})</td><td><input type="text" name="{}" value="{}"/></td></tr>""".format(name, item.C_TYPE, name, item.default_value)
+        return html
+
+
+    @cherrypy.expose
+    def send_packet(self, **kwargs):
+        return str(kwargs)
 
 
 def create_app(eventloop):
