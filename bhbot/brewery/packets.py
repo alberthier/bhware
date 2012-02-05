@@ -897,7 +897,7 @@ for (item_name, item_type) in inspect.getmembers(sys.modules[__name__]):
         item_type()
         PACKETS_BY_NAME[item_name] = item_type
         PACKETS_BY_TYPE[item_type.TYPE] = item_type
-        PACKETS_LIST.append(item_type)
+    PACKETS_LIST = PACKETS_BY_TYPE.values()
 
 
 def create_packet(buffer):
