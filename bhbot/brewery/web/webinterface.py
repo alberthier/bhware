@@ -167,7 +167,8 @@ class BHWeb(object):
         packet = packet_type()
         for item in packet_type.DEFINITION:
             setattr(packet, item.name, self.build_item_from_query(kwargs, item))
-        return str(packet.__dict__)
+        self.eventloop.send_packet(packet)
+        return self.packets()
 
 
     def build_item_from_query(self, query, item, name = None):
