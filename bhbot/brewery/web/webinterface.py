@@ -37,6 +37,7 @@ class BHWeb(object):
       <li><a href="statemachine" target="linktarget">State Machine</a></li>
       <li><a href="logs" target="linktarget">Logs</a></li>
       <li><a href="packets" target="linktarget">Packets</a></li>
+      <li><a href="remote_control" target="linktarget">Remote Control</a></li>
       <li><a href="http://{}:42080" target="linktarget">PIC</a></li>
     </ul>
   </div>
@@ -198,6 +199,63 @@ class BHWeb(object):
             return int(query[name])
 
 
+    @cherrypy.expose
+    def remote_control(self):
+        html = """<!DOCTYPE html>
+<html>
+<head>
+  <title>Remote Control</title>
+  <link rel="stylesheet" type="text/css" href="bhweb.css" />
+</head>
+<body>
+    <form method="POST" action="process_remote_control">
+        <input type="hidden" name="type" value="Rotate"/>
+        Angle (deg) <input type="text" name="angle" value="45" /><br/>
+        <input type="submit" value="Rotate" />
+    </form>
+    <hr/>
+    <form method="POST" action="process_remote_control">
+        <input type="hidden" name="type" value="Move"/>
+        Distance (m) <input type="text" name="distance" value="0.5" /><br/>
+        Forward <input type="checkbox" name="forward" checked="checked" /><br/>
+        <input type="submit" value="Move" />
+    </form>
+    <hr/>
+</body>
+</html>
+"""
+        return html
+
+
+    @cherrypy.expose
+    def process_remote_control(self, **kwargs):
+        command = kwargs["type"]
+        if command == "Rotate":
+            angle = float(kwargs["angle"]) / 180.0 * math.pi
+            pose = trajectory.Pose()
+            pose.x = self.eventloop.robot.pose.x
+            pose.y = self.eventloop.robot.pose.y
+            pose.angle = self.eventloop.robot.pose.angle + angle
+            packet = packets.Goto()
+            packet.movement = MOVEMENT_ROTATE
+            packet.direction = DIRECTION_FORWARD
+            packet.points = [ pose ]
+            self.eventloop.send_packet(packet)
+        elif command == "Move":
+            distance = float(kwargs["distance"])
+            pose = trajectory.Pose()
+            pose.x = self.eventloop.robot.pose.x + math.cos(self.eventloop.robot.pose.angle) * distance
+            pose.y = self.eventloop.robot.pose.y + math.sin(self.eventloop.robot.pose.angle) * distance
+            pose.angle = None
+            packet = packets.Goto()
+            packet.movement = MOVEMENT_LINE
+            if kwargs.has_key("forward"):
+                packet.direction = DIRECTION_FORWARD
+            else:
+                packet.direction = DIRECTION_BACKWARD
+            packet.points = [ pose ]
+            self.eventloop.send_packet(packet)
+        return self.remote_control()
 
 
 def create_app(eventloop):
