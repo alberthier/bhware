@@ -50,7 +50,9 @@ class BasicDynamics(QObject):
             if not tools.quasi_null(d):
                 time = d / linear_speed
             else:
-                a = abs(self.angle - pose.angle)
+                a = (self.angle  - pose.angle) % (2.0 * math.pi)
+                if a > math.pi:
+                    a -= math.pi
                 time = a / angular_speed
             traj.append((segmentNb, time, pose))
             self.x = pose.x
