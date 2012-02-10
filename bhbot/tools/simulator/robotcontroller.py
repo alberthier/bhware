@@ -124,6 +124,30 @@ class RobotController(object):
         self.stop()
 
 
+    def on_gripper_control(self, packet):
+        self.send_packet(packet)
+
+
+    def on_sweeper_control(self, packet):
+        self.send_packet(packet)
+
+
+    def on_map_arm_control(self, packet):
+        self.send_packet(packet)
+
+
+    def on_map_gripper_control(self, packet):
+        self.send_packet(packet)
+
+
+    def on_empty_tank_control(self, packet):
+        self.send_packet(packet)
+
+
+    def on_fabric_store_control(self, packet):
+        self.send_packet(packet)
+
+
     def on_resettle(self, packet):
         self.send_packet(packet)
         self.resettle_count += 1
