@@ -217,3 +217,15 @@ Enum("TRAJECTORY_WALK",
     TRAJECTORY_WALK_BLOCKED             = 1,
     TRAJECTORY_WALK_OPPONENT_DETECTED   = 2,
 )
+
+Enum("OPPONENT_ROBOT",
+     "Detected opponent robot",
+     OPPONENT_ROBOT_MAIN = 0,
+     OPPONENT_ROBOT_SECONDARY = 1,
+)
+
+Enum("TURRET_INIT_MODE",
+     "Turret initialization read/write mode",
+    TURRET_INIT_MODE_READ  = 0,
+    TURRET_INIT_MODE_WRITE = 1,
+)

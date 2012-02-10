@@ -17,9 +17,9 @@ import trajectory
 # Mozilla Colors (http://colors.bravo9.com/mozilla/)
 # Used  Color   Name                        Used  Color   Name
 #      #f0f8ff aliceblue                         #ffa07a lightsalmon
-#      #faebd7 antiquewhite                      #20b2aa lightseagreen
+#      #faebd7 antiquewhite                   X  #20b2aa lightseagreen
 #      #00ffff aqua                              #87cefa lightskyblue
-#      #7fffd4 aquamarine                        #778899 lightslategray
+#   X  #7fffd4 aquamarine                        #778899 lightslategray
 #      #f0ffff azure                             #778899 lightslategrey
 #      #f5f5dc beige                             #ffffe0 lightyellow
 #      #ffe4c4 bisque                            #00ff00 lime
@@ -36,7 +36,7 @@ import trajectory
 #      #fff8dc cornsilk                          #00fa9a mediumspringgreen
 #   X  #dc143c crimson                           #48d1cc mediumturquoise
 #   X  #00ffff cyan                              #c71585 mediumvioletred
-#   X  #00008b darkblue                          #191970 midnightblue
+#   X  #00008b darkblue                       X  #191970 midnightblue
 #      #008b8b darkcyan                          #f5fffa mintcream
 #      #b8860b darkgoldenrod                     #ffe4e1 mistyrose
 #      #a9a9a9 darkgray                          #ffe4b5 moccasin
@@ -875,9 +875,46 @@ class TurretDetect(BasePacket):
     TYPE = 32
     LOGVIEW_COLOR = "#9acd32"
     DEFINITION = (
-        UInt8Item('distance', 0, "Detection distance"),
-        UInt8Item('angle',    0, "Detection angle index (0 <= angle <= 17; 20 deg resolution)"),
+        UInt8Item ('distance', 0, "Detection distance"),
+        UInt8Item ('angle',    0, "Detection angle index (0 <= angle <= 17; 20 deg resolution)"),
+        UEnum8Item('robot',    OPPONENT_ROBOT_MAIN, 'OPPONENT_ROBOT'),
     )
+
+
+
+
+class TurretInit(BasePacket):
+
+    MAX_SIZE = 5
+    TYPE = 33
+    LOGVIEW_COLOR = "#7fffd4"
+    DEFINITION = (
+        UEnum8Item('mode',           TURRET_INIT_MODE_READ, 'TURRET_INIT_MODE'),
+        UInt8Item ('short_distance', 0, "Short distance detection range"),
+        UInt8Item ('long_distance',  0, "Long distance detection range"),
+    )
+
+
+
+
+class TurretDistances(BasePacket):
+
+    MAX_SIZE = 5
+    TYPE = 34
+    LOGVIEW_COLOR = "#191970"
+    DEFINITION = (
+        UInt8Item ('short_distance', 0, "Short distance detection range"),
+        UInt8Item ('long_distance',  0, "Long distance detection range"),
+    )
+
+
+
+
+class TurretBoot(BasePacket):
+
+    MAX_SIZE = 5
+    TYPE = 35
+    LOGVIEW_COLOR = "#20b2aa"
 
 
 
