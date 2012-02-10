@@ -271,7 +271,11 @@ class EventLoop(object):
 
 
     def inject_goto_finished(self):
-        self.get_current_state().on_goto_finished(REASON_DESTINATION_REACHED, self.robot.pose, 0)
+        packet = packets.GotoFinished()
+        packet.reason = REASON_DESTINATION_REACHED
+        packet.current_pose = self.robot.pose
+        packet.current_point_index = 0
+        packet.dispatch(self.get_current_state())
 
 
     def get_current_state(self):
