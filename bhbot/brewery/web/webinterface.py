@@ -12,7 +12,24 @@ import cherrypy
 
 import packets
 import trajectory
+import statemachine
+import commonstates
 from definitions import *
+
+
+
+
+class WebState(statemachine.State):
+
+    def __init__(self, event_loop):
+        statemachine.State.__init__(self)
+        self.event_loop = event_loop
+        self.old_root_state = self.event_loop.root_state
+        self.event_loop.root_state = self
+
+
+    def on_exit_substate(self, substate):
+        self.event_loop.root_state = self.old_root_state
 
 
 
@@ -21,6 +38,12 @@ class BHWeb(object):
 
     def __init__(self, eventloop):
         self.eventloop = eventloop
+
+
+    def execute_statemachine(self, state):
+        ws = WebState(self.eventloop)
+        ws.switch_to_substate(state)
+
 
     @cherrypy.expose
     def index(self):
@@ -209,6 +232,11 @@ class BHWeb(object):
 </head>
 <body>
     <form method="POST" action="process_remote_control">
+        <input type="hidden" name="type" value="GotoStart"/>
+        <input type="submit" value="Goto initial position" />
+    </form>
+    <hr/>
+    <form method="POST" action="process_remote_control">
         <input type="hidden" name="type" value="Rotate"/>
         Angle (deg) <input type="text" name="angle" value="45" /><br/>
         <input type="submit" value="Rotate" />
@@ -230,7 +258,9 @@ class BHWeb(object):
     @cherrypy.expose
     def process_remote_control(self, **kwargs):
         command = kwargs["type"]
-        if command == "Rotate":
+        if command == "GotoStart":
+            self.execute_statemachine(commonstates.GotoHome())
+        elif command == "Rotate":
             angle = float(kwargs["angle"]) / 180.0 * math.pi
             pose = trajectory.Pose()
             pose.x = self.eventloop.robot.pose.x

@@ -3,6 +3,7 @@
 
 
 import datetime
+import math
 from collections import deque
 
 import statemachine
@@ -418,3 +419,30 @@ class TrajectoryWalk(statemachine.State):
                     self.exit_reason = TRAJECTORY_WALK_OPPONENT_DETECTED
                     self.exit_substate()
 
+
+
+
+class GotoHome(statemachine.State):
+
+    def on_enter(self):
+        current_pose = self.event_loop.robot.pose
+        walk = TrajectoryWalk()
+        if current_pose.x < 1.0:
+            if math.cos(current_pose.angle) < 0.0:
+                walk.goto(PURPLE_START_X, 0.70, math.pi / 2.0)
+            else:
+                walk.goto(PURPLE_START_X, 0.70, -math.pi / 2.0, DIRECTION_BACKWARD)
+        else:
+            if math.cos(current_pose.angle) < 0.0:
+                walk.goto(1.5, 0.70, math.pi / 2.0, DIRECTION_BACKWARD)
+            else:
+                walk.goto(1.5, 0.70, -math.pi / 2.0)
+            #walk.rotate_to(math.pi)
+            #walk.move_to(PURPLE_START_X, 0.70)
+        #walk.rotate_to(PURPLE_START_ANGLE)
+        #walk.move_to(PURPLE_START_X, PURPLE_START_Y)
+        self.switch_to_substate(walk)
+
+
+    def on_exit_substate(self, substate):
+        self.exit_substate()
