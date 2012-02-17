@@ -95,11 +95,11 @@ unsigned char                   TakeMesure                              =   Fals
 /** Variables locales */
 
 /** Le point du robot asservit a la trajectoire n'est pas le centre de l'axe des roues, mais un point sur la droite perpendiculaire a cet axe et passant par son centre, situe a la distance NORME_BARRE_SUIVI_TRAJ en avant de l'axe des roues */
-static const float              NORME_BARRE_SUIVI_TRAJ                  =   0.3;
+static float                    NORME_BARRE_SUIVI_TRAJ                  =   0.0852; //0.3;
 
 /** Variables globales de l'asservissement de trajectoire */
 static unsigned int             compteurPeriode                         =   0;
-static float                    errDist, memo_errDist, errAngle, memo_errAngle;
+static float                    errDist, memo_errDist, errAngle, memo_errAngle, memo_angleRobot;
 
 /** Vecteurs associees au depart et a l'arrivee, et parametrage du profil de vitesse de la trajectoire */
 static Trajectoire              chemin;
@@ -194,11 +194,15 @@ extern void ASSER_TRAJ_InitialisationGenerale(void)
     /* Initialisation du profil de vitesse */
     chemin.profilVitesse.p = 0;
 
+    NORME_BARRE_SUIVI_TRAJ = ECART_ROUE_LIBRE / 2.0;
+
     ASSER_TRAJ_ResetLogAsserTable();
 
     chemin.profilVitesse.tempsAcc = tempsAcc;
 
     POS_InitialisationConfigRobot();
+
+    memo_angleRobot = m_poseRobot.angle;
 }
 
 /**********************************************************************/
@@ -287,10 +291,11 @@ extern void ASSER_TRAJ_AsservissementMouvementRobot(Pose poseRobot, VitessesRobo
     float           diffThetaCourantAv                      = 0.0;
     Pose            poseReferenceRobotAv;
 
-    ASSER_TRAJ_LogAsser("xRoueGauche", NBR_ASSER_LOG_VALUE, poseRobot.x + (0.339 / 2.0) * cos(poseRobot.angle + (PI / 2)));
-    ASSER_TRAJ_LogAsser("yRoueGauche", NBR_ASSER_LOG_VALUE, poseRobot.y + (0.339 / 2.0) * sin(poseRobot.angle + (PI / 2)));
-    ASSER_TRAJ_LogAsser("xRoueDroite", NBR_ASSER_LOG_VALUE, poseRobot.x + (0.339 / 2.0) * cos(poseRobot.angle - (PI / 2)));
-    ASSER_TRAJ_LogAsser("yRoueDroite", NBR_ASSER_LOG_VALUE, poseRobot.y + (0.339 / 2.0) * sin(poseRobot.angle - (PI / 2)));
+    ASSER_TRAJ_LogAsser("xRoueGauche", NBR_ASSER_LOG_VALUE, poseRobot.x + (ECART_ROUE_MOTRICE / 2.0) * cos(poseRobot.angle + (PI / 2)));
+    ASSER_TRAJ_LogAsser("yRoueGauche", NBR_ASSER_LOG_VALUE, poseRobot.y + (ECART_ROUE_MOTRICE / 2.0) * sin(poseRobot.angle + (PI / 2)));
+    ASSER_TRAJ_LogAsser("xRoueDroite", NBR_ASSER_LOG_VALUE, poseRobot.x + (ECART_ROUE_MOTRICE / 2.0) * cos(poseRobot.angle - (PI / 2)));
+    ASSER_TRAJ_LogAsser("yRoueDroite", NBR_ASSER_LOG_VALUE, poseRobot.y + (ECART_ROUE_MOTRICE / 2.0) * sin(poseRobot.angle - (PI / 2)));
+    ASSER_TRAJ_LogAsser("angle", NBR_ASSER_LOG_VALUE, poseRobot.angle);
 
     erreurPoseCentreRobot.x = 0.0;    
     erreurPoseCentreRobot.y = 0.0;
@@ -375,7 +380,8 @@ extern void ASSER_TRAJ_AsservissementMouvementRobot(Pose poseRobot, VitessesRobo
                 }
                 else
                 {
-                    delta_distance = NORME_BARRE_SUIVI_TRAJ * fabs(poseRobot.angle - poseReference.angle);
+                    delta_distance = NORME_BARRE_SUIVI_TRAJ * fabs(POS_ModuloAngle(poseRobot.angle - memo_angleRobot));
+                    memo_angleRobot = poseRobot.angle;
                     ASSER_TRAJ_LogAsser("angleRobot", NBR_ASSER_LOG_VALUE, poseRobot.angle);
                     ASSER_TRAJ_LogAsser("angleRef", NBR_ASSER_LOG_VALUE, poseReference.angle);
                 }

@@ -230,6 +230,42 @@ def trajFunction(d_cfgTraj, Kp = 10.0, Ki = 5.0, K1 = 20.0, K2 = 75.0, K3 = 50.0
     d_traj = stdoutParser(lines)
     
     return d_traj
+    
+def trajTest(d_cfgTraj):
+    
+    #lancement du simulateur de deplacement
+    print("Lancement du simulateur")
+    simulator_process = subprocess.Popen('./simulator_trajAsser', shell=True, stdin = subprocess.PIPE, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+    
+    # envoie de la configuration du simulateur
+    send_config_simulator(simulator_process, d_cfgTraj)
+    
+    # envoie au simulateur de l'init de pose
+    send_init_pose(simulator_process, x=0.31, y=2.823, angle=1.5708) #1.5708
+    
+    #generation d'un message de commande de deplacement
+    # "MSG_MAIN_GOTO 0:'DEPLACEMENT'/1:'ROTATION' 0:'MARCHE_AVANT'/1:'MARCHE_ARRIERE'"
+    #~ deplacement = commandMsg("MSG_MAIN_GOTO 1 1")   # 'DEPLACEMENT' en 'MARCHE_AVANT'
+    #~ deplacement.addPose(str(d_cfgTraj['Distance']) + " 0.0 0.0 0") # deplacement rectiligne sur la distance d_cfgTraj['Distance']
+    deplacement = commandMsg("MSG_MAIN_GOTO 0 1")   # 'DEPLACEMENT' en 'MARCHE_AVANT'
+    deplacement.addPose("0.31 2.823 -1.5808 0")
+    #~ deplacement.addPose("0.31 2.823 -1.5608 0")
+    #3.1415927
+    #~ deplacement = commandMsg("MSG_MAIN_GOTO 2 1")   # 'DEPLACEMENT_LIGNE_DROITE' en 'MARCHE_AVANT'
+    #~ deplacement.addPose("0.310000002384 0.589999973774 -1.57079637051 1.0")
+    
+    #transmission de commandes de deplacement par l'entree standard
+    simulator_process.stdin.write(deplacement.cmdMsgGeneration())
+    
+    #transmission de la commande de d'arret du simulateur
+    (stdoutdata, stderrdata) = simulator_process.communicate("QUIT\n")
+    
+    print("Simulation terminee.")
+    #traitement des donnees de stdout
+    lines = lineForm(stdoutdata)
+    d_traj = stdoutParser(lines)
+    
+    return d_traj
 
 def testPI(d_cfgTraj) :
     
@@ -373,6 +409,7 @@ def affichageTraj2011(d_traj):
     yCentre = [(d_traj["yRoueGauche"][index] + d_traj["yRoueDroite"][index])/2.0 for index in range(len(d_traj["yRoueDroite"]))]
     plot(xCentre, yCentre, '-m')
     posIndex = 70
+    print("angle_final: " + str(d_traj["angle"][-1]))
     
     #~ plot((d_traj["xRoueGauche"][posIndex]+d_traj["xRoueDroite"][posIndex])/2.0, (d_traj["yRoueGauche"][posIndex]+d_traj["yRoueDroite"][posIndex])/2.0, 'ro')
     grid(True)
@@ -424,12 +461,12 @@ def affichageTraj2011(d_traj):
     grid(True)
     title("tensions moteurs")
     
-    #figure(5)
+    figure(5)
     #plot(d_traj["index_get_vitesseGabarit"])
     #~ plot(d_traj["index_tab_vit"])
     #~ plot(d_traj["dist_parcourue"], d_traj["val_tab_vit"])
     #~ plot(d_traj["val_tab_vit"])
-    #~ plot(d_traj["dist_parcourue"])
+    plot([index*periode for index in range(len(d_traj["dist_parcourue"]))], d_traj["dist_parcourue"])
     #~ plot(d_traj["angleRobot"], '-o')
     #~ plot(d_traj["angleRef"], '-o')
     #~ plot(d_traj["nbdepas"])
@@ -441,6 +478,8 @@ def affichageTraj2011(d_traj):
     #~ print("poseRobotInitY: " + str(d_traj["poseRobotInitY"]))
     #~ plot(d_traj["thetaPoseReference"], label="thetaPoseReference")
     #legend()
+    grid(True)
+    title("Distance parcourue")
     
     #~ affichageGabaritVitesse(d_traj)
     
@@ -624,7 +663,8 @@ def optimParam_TempsAcc(d_cfgTraj_local) :
 #~ sys.exit(2)
 
 #~ d_cfgTraj = optimParam_TempsAcc(d_cfgTraj)
-traj = trajFunction(d_cfgTraj)
+#~ traj = trajFunction(d_cfgTraj)
+traj = trajTest(d_cfgTraj)
 affichageGabaritVitesse_2012(traj)
 affichageTraj2011(traj)
 #~ affichageTestAccDcecc(traj)
