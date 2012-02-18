@@ -241,21 +241,74 @@ def trajTest(d_cfgTraj):
     send_config_simulator(simulator_process, d_cfgTraj)
     
     # envoie au simulateur de l'init de pose
-    send_init_pose(simulator_process, x=0.31, y=2.823, angle=1.5708) #1.5708
+    # send_init_pose(simulator_process, x=0.31, y=2.823, angle=1.5708) #1.5708
     
-    #generation d'un message de commande de deplacement
-    # "MSG_MAIN_GOTO 0:'DEPLACEMENT'/1:'ROTATION' 0:'MARCHE_AVANT'/1:'MARCHE_ARRIERE'"
-    #~ deplacement = commandMsg("MSG_MAIN_GOTO 1 1")   # 'DEPLACEMENT' en 'MARCHE_AVANT'
+    
+    #~ send_init_pose(simulator_process, x=0.0, y=0.0, angle=3.1415927)
+    #~ 
+    #~ #generation d'un message de commande de deplacement
+    #~ # "MSG_MAIN_GOTO 0:'ROTATION'/1:'DEPLACEMENT'/2:'DEPLACEMENT_LIGNE_DROITE' 0:'MARCHE_AVANT'/1:'MARCHE_ARRIERE'"
+    #~ deplacement = commandMsg("MSG_MAIN_GOTO 1 -1")   # 'DEPLACEMENT' en 'MARCHE_AVANT'
     #~ deplacement.addPose(str(d_cfgTraj['Distance']) + " 0.0 0.0 0") # deplacement rectiligne sur la distance d_cfgTraj['Distance']
-    deplacement = commandMsg("MSG_MAIN_GOTO 0 1")   # 'DEPLACEMENT' en 'MARCHE_AVANT'
-    deplacement.addPose("0.31 2.823 -1.5808 0")
-    #~ deplacement.addPose("0.31 2.823 -1.5608 0")
+    #~ #transmission de commandes de deplacement par l'entree standard
+    #~ simulator_process.stdin.write(deplacement.cmdMsgGeneration())
+    
+    #~ #Test rotation
+    #~ deplacement = commandMsg("MSG_MAIN_GOTO 0 1")
+    #~ deplacement.addPose("0.31 2.823 -1.5808 0")
+    
     #3.1415927
     #~ deplacement = commandMsg("MSG_MAIN_GOTO 2 1")   # 'DEPLACEMENT_LIGNE_DROITE' en 'MARCHE_AVANT'
     #~ deplacement.addPose("0.310000002384 0.589999973774 -1.57079637051 1.0")
     
+#******************* Test ***********************************************************
+    #INIT_POSE_ROBOT 0 0 1 0.310000002384 2.82299995422 1.57079637051 1.0
+    send_init_pose(simulator_process, x=0.310000002384, y=2.82299995422, angle=1.57079637051)
+    
+    #MSG_MAIN_GOTO 2 1 1 0.310000002384 2.41000008583 1.57079637051 1.0
+    deplacement = commandMsg("MSG_MAIN_GOTO 2 -1")
+    deplacement.addPose("0.310000002384 2.41000008583 1.57079637051 1")
     #transmission de commandes de deplacement par l'entree standard
     simulator_process.stdin.write(deplacement.cmdMsgGeneration())
+    
+    #MSG_MAIN_GOTO 0 1 1 0.31468001008 2.40945506096 -3.14159274101 1.0
+    deplacement = commandMsg("MSG_MAIN_GOTO 0 1")
+    deplacement.addPose("0.31468001008 2.40945506096 -3.14159274101 1")
+    #transmission de commandes de deplacement par l'entree standard
+    simulator_process.stdin.write(deplacement.cmdMsgGeneration())
+    
+    #MSG_MAIN_GOTO 2 1 1 1.03999996185 2.41000008583 3.06248354912 1.0
+    deplacement = commandMsg("MSG_MAIN_GOTO 2 -1")
+    deplacement.addPose("1.03999996185 2.41000008583 3.06248354912 1")
+    #transmission de commandes de deplacement par l'entree standard
+    simulator_process.stdin.write(deplacement.cmdMsgGeneration())
+    
+#~ #******************* Test ***********************************************************    
+    #~ #INIT_POSE_ROBOT 0 0 1 0.5 1.10000002384 0.259999990463 1.0
+    #~ send_init_pose(simulator_process, x=0.5, y=1.10000002384, angle=0.259999990463)
+    #~ 
+    #~ #MSG_MAIN_GOTO 1 1 1 0.310000002384 2.29999995232 1.57079637051 1.0
+    #~ deplacement = commandMsg("MSG_MAIN_GOTO 1 1")
+    #~ deplacement.addPose("0.310000002384 2.29999995232 1.57079637051 1")
+    #~ #transmission de commandes de deplacement par l'entree standard
+    #~ simulator_process.stdin.write(deplacement.cmdMsgGeneration())
+    #~ 
+    #~ #MSG_MAIN_GOTO 0 1 1 0.307770013809 2.29856991768 1.57079637051 1.0
+    #~ deplacement = commandMsg("MSG_MAIN_GOTO 0 1")
+    #~ deplacement.addPose("0.307770013809 2.29856991768 1.57079637051 1")
+    #~ #transmission de commandes de deplacement par l'entree standard
+    #~ simulator_process.stdin.write(deplacement.cmdMsgGeneration())
+    
+#~ #******************* Test ***********************************************************    
+    #~ #INIT_POSE_ROBOT 0 0 1 1.60000002384 1.10000002384 0.259999990463 1.0
+    #~ send_init_pose(simulator_process, x=1.60000002384, y=1.10000002384, angle=0.259999990463)
+    #~ 
+    #~ #MSG_MAIN_GOTO 1 1 1 1.5 0.699999988079 1.57079637051 1.0
+    #~ deplacement = commandMsg("MSG_MAIN_GOTO 1 1")
+    #~ deplacement.addPose("1.5 0.699999988079 1.57079637051 1")
+    #~ #transmission de commandes de deplacement par l'entree standard
+    #~ simulator_process.stdin.write(deplacement.cmdMsgGeneration())
+    
     
     #transmission de la commande de d'arret du simulateur
     (stdoutdata, stderrdata) = simulator_process.communicate("QUIT\n")
@@ -401,18 +454,19 @@ def affichageTraj2011(d_traj):
     print(len(d_traj["xRoueGauche"]))
     
     figure(1)
-    plot(d_traj["xRoueGauche"], d_traj["yRoueGauche"])
+    plot(d_traj["xRoueGauche"], d_traj["yRoueGauche"], label="Rgauche")
     hold(True)
-    plot(d_traj["xRoueDroite"], d_traj["yRoueDroite"])
-    plot(d_traj["xPoseReferenceRobot"], d_traj["yPoseReferenceRobot"], '--r')
+    plot(d_traj["xRoueDroite"], d_traj["yRoueDroite"], label="Rdroite")
+    plot(d_traj["xPoseReferenceRobot"], d_traj["yPoseReferenceRobot"], '--r', label="TrajRref")
     xCentre = [(d_traj["xRoueGauche"][index] + d_traj["xRoueDroite"][index])/2.0 for index in range(len(d_traj["xRoueDroite"]))]
     yCentre = [(d_traj["yRoueGauche"][index] + d_traj["yRoueDroite"][index])/2.0 for index in range(len(d_traj["yRoueDroite"]))]
-    plot(xCentre, yCentre, '-m')
+    #~ plot(xCentre, yCentre, '-m', label="Rcentre")
     posIndex = 70
     print("angle_final: " + str(d_traj["angle"][-1]))
     
     #~ plot((d_traj["xRoueGauche"][posIndex]+d_traj["xRoueDroite"][posIndex])/2.0, (d_traj["yRoueGauche"][posIndex]+d_traj["yRoueDroite"][posIndex])/2.0, 'ro')
     grid(True)
+    legend(loc='upper right')
     title("trajectoire")
     
     temps = [index*periode for index in range(len(d_traj["vitesseMoteurGauche"]))]

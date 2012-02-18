@@ -168,7 +168,7 @@ Pose POS_GetPoseAsserRobot(void)
     
     if (m_sensMarcheMouvement == MARCHE_ARRIERE)
     {
-        poseRobot.angle = m_poseRobot.angle + PI;
+        poseRobot.angle = POS_ModuloAngle(m_poseRobot.angle + PI);
     }
 
     return poseRobot;
