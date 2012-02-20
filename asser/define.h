@@ -64,21 +64,21 @@
 
 /** Task ID */
 
-#define TASK_HTTP_ID                (INT16U) 9
-#define TASK_DEBUG_ID               (INT16U) 8
-#define TASK_MAIN_ID                (INT16U) 7
-#define TASK_EVIT_ID                (INT16U) 6
-#define TASK_IO_ID                  (INT16U) 5
-#define TASK_ASSER_ID               (INT16U) 1
-#define TASK_UART_ID                (INT16U) 0
+#define TASK_HTTP_ID                (INT16U) 10
+#define TASK_DEBUG_ID               (INT16U) 9
+#define TASK_MAIN_ID                (INT16U) 8
+#define TASK_EVIT_ID                (INT16U) 7
+#define TASK_IO_ID                  (INT16U) 6
+#define TASK_ASSER_ID               (INT16U) 2
+#define TASK_UART_ID                (INT16U) 1
 
 /** Task Priority */
 
-#define TASK_HTTP_PRIO               (INT8U) 9
-#define TASK_DEBUG_PRIO              (INT8U) 8
-#define TASK_MAIN_PRIO               (INT8U) 7
-#define TASK_EVIT_PRIO               (INT8U) 6
-#define TASK_IO_PRIO                 (INT8U) 5
+#define TASK_HTTP_PRIO               (INT8U) 10
+#define TASK_DEBUG_PRIO              (INT8U) 9
+#define TASK_MAIN_PRIO               (INT8U) 8
+#define TASK_EVIT_PRIO               (INT8U) 7
+#define TASK_IO_PRIO                 (INT8U) 6
 #define TASK_ASSER_PRIO              (INT8U) 2
 #define TASK_UART_PRIO               (INT8U) 1
 
@@ -132,6 +132,9 @@
 
 /** Active les actionneurs */
 //#define Actionneurs
+
+/** Active l'auto maintien pour les pinces pelle */
+//#define Auto_Maintien_Pelle
 
 /**********************************************************************/
 

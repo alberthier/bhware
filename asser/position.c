@@ -61,13 +61,13 @@ float                   GAIN_STATIQUE_MOTEUR_D;                                 
 float                   GAIN_STATIQUE_MOTEUR_G;                                     /* Gain statique du moteur CC gauche en (m/s) / unitePWM */
 float                   GAIN_STATIQUE_MOTEUR;
 
-float                   ECART_ROUE_LIBRE        = 0.240; //0.1704;                           /* Ecart entre les roues libres des codeurs incrementaux */
+float                   ECART_ROUE_LIBRE        = 0.240;                            /* Ecart entre les roues libres des codeurs incrementaux */
 float                   ECART_ROUE_MOTRICE      = 0.174;                            /* Entraxe des roues motrices */
 float                   COEFFICIENT_DE_GLISSEMENT_LATERAL = 0.0;
 
 /** Tolerances de la condition d'arret des asservissements */
 float                   DIST_MIN                = 0.003;
-float                   ANGLE_MIN               = 0.020; //0.08
+float                   ANGLE_MIN               = 0.020;
 
 /** Coordonnees de la pose actuelle du robot */
 Pose                    m_poseRobot             = {0.0, 0.0, 0.0};

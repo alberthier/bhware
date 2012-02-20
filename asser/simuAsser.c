@@ -108,6 +108,11 @@ extern void SIMU_SetParamProfilVitesse(float Amax, float Dmax, float coeff_vi1, 
     facteurVitesseAngulaireMax = fvam;
 }
 
+extern void SIMU_SetConfigGeneraleProfilVitesse(float Ratio_Acc, float Ratio_Decc)
+{
+    RATIO_ACC = Ratio_Acc;
+    RATIO_DECC = Ratio_Decc;
+}
 
 /*
 Convertit la vitesse (en Udist_ent/s) des roues en nombre de pas codeur par période TE (en s)

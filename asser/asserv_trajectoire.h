@@ -72,15 +72,12 @@ typedef struct
     float           coeff_decc_finale;
     float           decc_min_finale;
     float           vitesse_seuil_decc_finale;
-    float           Dist_AccPlat;
-    float           pas_reduit;
-    unsigned int    iFin_P;
 } ParametresProfilVitesse;
 
 typedef struct
 {
-    Pose    poseDepartRobot;
-    float   angle;
+    Pose                    poseDepartRobot;
+    float                   angle;
 } ParametresRotation;
 
 typedef struct
@@ -120,6 +117,7 @@ typedef struct
 } Trajectoire;
 
 /* Variables globales de reglage de l'asser */
+
 extern float                gainRotation1;          /* Gain de l'asservissement de la vitesse longitudinale */
 extern float                gainRotation2;          /* Gain de l'asservissement de la vitesse de rotation */
 extern float                gainDeplacement1;
@@ -135,6 +133,9 @@ extern float                VITESSE_SEUIL_DECC;
 extern float                COEFF_DECC_FINALE;
 extern float                DECC_MIN;
 
+extern float                RATIO_ACC;
+extern float                RATIO_DECC;
+
 /** Table pour le log asser */
 extern float                tabLogAsser[NBR_ASSER_LOG_VALUE];
 
@@ -144,14 +145,14 @@ extern unsigned char        Sample;
 /** Pour prendre les mesures 1/2 */
 extern unsigned char        TakeMesure;
 
-/** Prototypes de function globales asserv_trajectoire */
+/* Prototypes de function globales asserv_trajectoire */
 
 extern void                 ASSER_TRAJ_InitialisationGenerale(void);
-extern void                 ASSER_TRAJ_InitialisationTrajectoire(Pose poseRobot, PtTraj *point, unsigned int nbrePts, unsigned int mouvement);
-extern void                 ASSER_TRAJ_AsservissementMouvementRobot(Pose poseRobot, VitessesRobotUnicycle *vitessesConsignes);
+extern void                 ASSER_TRAJ_InitialisationTrajectoire(Pose poseRobot, PtTraj * point, unsigned int nbrePts, unsigned int mouvement);
+extern void                 ASSER_TRAJ_AsservissementMouvementRobot(Pose poseRobot, VitessesRobotUnicycle * vitessesConsignes);
 extern Pose                 ASSER_TRAJ_Trajectoire(float t);
 extern unsigned int         ASSER_TRAJ_GetSegmentCourant(void);
-extern void                 ASSER_TRAJ_LogAsser(char *keyWord, unsigned char index, float val);
+extern void                 ASSER_TRAJ_LogAsser(char * keyWord, unsigned char index, float val);
 extern void                 ASSER_TRAJ_ResetLogAsserTable(void);
 extern unsigned int         ASSER_TRAJ_GetCompteur(void);
 extern float                ASSER_TRAJ_GabaritVitesse_getVitesse_vs_Distance(float distance);

@@ -32,6 +32,9 @@
 #define     MARCHE_AVANT                ((signed char)       1)
 #define     MARCHE_ARRIERE              ((signed char)       -1)
 
+#define     ANGLE_ACTIF                 ((unsigned char)     1u)
+#define     ANGLE_INACTIF               ((unsigned char)     0u)
+
 /** Parametres materiels */
 #define     NBRE_PAS                    ((unsigned int)      20000u)
 

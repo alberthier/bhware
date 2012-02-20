@@ -123,8 +123,18 @@ def MSG_config_profilVitesse(Amax, Dmax, coeff_vi1, vitesse_seuil_decc, coeff_de
     parametersT.addPose("VITANGMAX" + " " + str(F_VA_Max))
     return parametersT.cmdMsgGeneration()
     
+def MSG_configGenerale(Ratio_Acc, Ratio_Decc) :
+    #generation d'un message de configuration des parametres haut niveau du profil de vitesse
+    parametersT = commandMsg("CONFIG_ASSER")
+    parametersT.addPose("RATIO_ACC" + " " + str(Ratio_Acc))
+    parametersT.addPose("RATIO_DECC" + " " + str(Ratio_Decc))
+    return parametersT.cmdMsgGeneration()
+    
 def send_config_profilVitesse(process, Amax, Dmax, coeff_vi1, vitesse_seuil_decc, coeff_decc_finale, decc_min, Umax, F_VA_Max) :
     process.stdin.write(MSG_config_profilVitesse(Amax, Dmax, coeff_vi1, vitesse_seuil_decc, coeff_decc_finale, decc_min, Umax, F_VA_Max))
+    
+def send_configGenerale(process, Ratio_Acc, Ratio_Decc) :
+    process.stdin.write(MSG_configGenerale(Ratio_Acc, Ratio_Decc))
     
 def MSG_config_modeleMoteurCC(masse,
                                 rayon_roue,
@@ -181,6 +191,9 @@ def send_config_simulator(simulator_process, d_cfgTraj) :
     
     # envoie au simulateur de la configuration des parametres du profil de vitesse
     send_config_profilVitesse(simulator_process, d_cfgTraj['Amax'], d_cfgTraj['Dmax'], d_cfgTraj['coeff_vi1'], d_cfgTraj['vitesse_seuil_decc'], d_cfgTraj['coeff_decc_finale'], d_cfgTraj['decc_min'], d_cfgTraj['Umax'], d_cfgTraj['Facteur_vitesse_angulaire'])
+    
+    # envoie au simulateur de la configuration des parametres haut niveau du profil de vitesse
+    send_configGenerale(simulator_process, d_cfgTraj['RatioAcc'], d_cfgTraj['RatioDecc'])
     
     # envoie au simulateur des parametres du modele des moteurs à courant continu de déplacement
     send_config_modeleMoteurCC(simulator_process,
@@ -245,13 +258,13 @@ def trajTest(d_cfgTraj):
     
     
     #~ send_init_pose(simulator_process, x=0.0, y=0.0, angle=3.1415927)
-    #~ 
+    send_init_pose(simulator_process)
     #~ #generation d'un message de commande de deplacement
     #~ # "MSG_MAIN_GOTO 0:'ROTATION'/1:'DEPLACEMENT'/2:'DEPLACEMENT_LIGNE_DROITE' 0:'MARCHE_AVANT'/1:'MARCHE_ARRIERE'"
-    #~ deplacement = commandMsg("MSG_MAIN_GOTO 1 -1")   # 'DEPLACEMENT' en 'MARCHE_AVANT'
-    #~ deplacement.addPose(str(d_cfgTraj['Distance']) + " 0.0 0.0 0") # deplacement rectiligne sur la distance d_cfgTraj['Distance']
-    #~ #transmission de commandes de deplacement par l'entree standard
-    #~ simulator_process.stdin.write(deplacement.cmdMsgGeneration())
+    deplacement = commandMsg("MSG_MAIN_GOTO 1 1")   # 'DEPLACEMENT' en 'MARCHE_AVANT'
+    deplacement.addPose(str(d_cfgTraj['Distance']) + " 0.0 0.0 0") # deplacement rectiligne sur la distance d_cfgTraj['Distance']
+    #transmission de commandes de deplacement par l'entree standard
+    simulator_process.stdin.write(deplacement.cmdMsgGeneration())
     
     #~ #Test rotation
     #~ deplacement = commandMsg("MSG_MAIN_GOTO 0 1")
@@ -261,27 +274,27 @@ def trajTest(d_cfgTraj):
     #~ deplacement = commandMsg("MSG_MAIN_GOTO 2 1")   # 'DEPLACEMENT_LIGNE_DROITE' en 'MARCHE_AVANT'
     #~ deplacement.addPose("0.310000002384 0.589999973774 -1.57079637051 1.0")
     
-#******************* Test ***********************************************************
-    #INIT_POSE_ROBOT 0 0 1 0.310000002384 2.82299995422 1.57079637051 1.0
-    send_init_pose(simulator_process, x=0.310000002384, y=2.82299995422, angle=1.57079637051)
-    
-    #MSG_MAIN_GOTO 2 1 1 0.310000002384 2.41000008583 1.57079637051 1.0
-    deplacement = commandMsg("MSG_MAIN_GOTO 2 -1")
-    deplacement.addPose("0.310000002384 2.41000008583 1.57079637051 1")
-    #transmission de commandes de deplacement par l'entree standard
-    simulator_process.stdin.write(deplacement.cmdMsgGeneration())
-    
-    #MSG_MAIN_GOTO 0 1 1 0.31468001008 2.40945506096 -3.14159274101 1.0
-    deplacement = commandMsg("MSG_MAIN_GOTO 0 1")
-    deplacement.addPose("0.31468001008 2.40945506096 -3.14159274101 1")
-    #transmission de commandes de deplacement par l'entree standard
-    simulator_process.stdin.write(deplacement.cmdMsgGeneration())
-    
-    #MSG_MAIN_GOTO 2 1 1 1.03999996185 2.41000008583 3.06248354912 1.0
-    deplacement = commandMsg("MSG_MAIN_GOTO 2 -1")
-    deplacement.addPose("1.03999996185 2.41000008583 3.06248354912 1")
-    #transmission de commandes de deplacement par l'entree standard
-    simulator_process.stdin.write(deplacement.cmdMsgGeneration())
+#~ #******************* Test ***********************************************************
+    #~ #INIT_POSE_ROBOT 0 0 1 0.310000002384 2.82299995422 1.57079637051 1.0
+    #~ send_init_pose(simulator_process, x=0.310000002384, y=2.82299995422, angle=1.57079637051)
+    #~ 
+    #~ #MSG_MAIN_GOTO 2 1 1 0.310000002384 2.41000008583 1.57079637051 1.0
+    #~ deplacement = commandMsg("MSG_MAIN_GOTO 2 -1")
+    #~ deplacement.addPose("0.310000002384 2.41000008583 1.57079637051 1")
+    #~ #transmission de commandes de deplacement par l'entree standard
+    #~ simulator_process.stdin.write(deplacement.cmdMsgGeneration())
+    #~ 
+    #~ #MSG_MAIN_GOTO 0 1 1 0.31468001008 2.40945506096 -3.14159274101 1.0
+    #~ deplacement = commandMsg("MSG_MAIN_GOTO 0 1")
+    #~ deplacement.addPose("0.31468001008 2.40945506096 -3.14159274101 1")
+    #~ #transmission de commandes de deplacement par l'entree standard
+    #~ simulator_process.stdin.write(deplacement.cmdMsgGeneration())
+    #~ 
+    #~ #MSG_MAIN_GOTO 2 1 1 1.03999996185 2.41000008583 3.06248354912 1.0
+    #~ deplacement = commandMsg("MSG_MAIN_GOTO 2 -1")
+    #~ deplacement.addPose("1.03999996185 2.41000008583 3.06248354912 1")
+    #~ #transmission de commandes de deplacement par l'entree standard
+    #~ simulator_process.stdin.write(deplacement.cmdMsgGeneration())
     
 #~ #******************* Test ***********************************************************    
     #~ #INIT_POSE_ROBOT 0 0 1 0.5 1.10000002384 0.259999990463 1.0

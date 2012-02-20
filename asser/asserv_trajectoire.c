@@ -73,6 +73,9 @@ float                           VITESSE_SEUIL_DECC                      =   0.2;
 float                           COEFF_DECC_FINALE                       =   0.08;
 float                           DECC_MIN                                =   -0.3;       /* Decceleration en m/s^2 du profil de vitesse au point d'arrivee */
 
+float                           RATIO_ACC                               =   1.0;
+float                           RATIO_DECC                              =   1.0;
+
 /***********************************************************************************************/
 /**************************** Fin de la definition des parametres de l'asservissement de trajectoire *********/
 /***********************************************************************************************/
@@ -95,7 +98,7 @@ unsigned char                   TakeMesure                              =   Fals
 /** Variables locales */
 
 /** Le point du robot asservit a la trajectoire n'est pas le centre de l'axe des roues, mais un point sur la droite perpendiculaire a cet axe et passant par son centre, situe a la distance NORME_BARRE_SUIVI_TRAJ en avant de l'axe des roues */
-static float                    NORME_BARRE_SUIVI_TRAJ                  =   0.0852; //0.3;
+static float                    NORME_BARRE_SUIVI_TRAJ;									/* Initialise dans ASSER_TRAJ_InitialisationGenerale() */
 
 /** Variables globales de l'asservissement de trajectoire */
 static unsigned int             compteurPeriode                         =   0;
@@ -862,9 +865,9 @@ extern void ASSER_TRAJ_InitialisationTrajectoire(Pose poseRobot, PtTraj * point,
     ASSER_TRAJ_LogAsser("pas_ech", NBR_ASSER_LOG_VALUE, chemin.profilVitesse.pas_echantillon_distance);
     g_index_tab_gabarit_vitesse = 0;
 
-    /* 2012 */
-    chemin.profilVitesse.Amax = A_MAX;
-    chemin.profilVitesse.Dmax = D_MAX;
+    /* Initialisation du profil de vitesse 2012 */
+    chemin.profilVitesse.Amax = A_MAX * RATIO_ACC;
+    chemin.profilVitesse.Dmax = D_MAX * RATIO_DECC;
     chemin.profilVitesse.vitesse_seuil_decc_finale = VITESSE_SEUIL_DECC;
     chemin.profilVitesse.coeff_decc_finale = COEFF_DECC_FINALE;
     chemin.profilVitesse.decc_min_finale = DECC_MIN;
@@ -1538,7 +1541,14 @@ static void ASSER_TRAJ_GabaritVitesse(Trajectoire * traj)
 //            {
 //                vitesse_consigne_gabarit = vitesse_consigne;
 //            }
-            vitesse_consigne_gabarit = vitesse_consigne;
+            if (vitesse_consigne < 0.05)
+            {
+                vitesse_consigne_gabarit = 0.05;
+            }
+            else
+            {
+                vitesse_consigne_gabarit = vitesse_consigne;
+            }
 
             g_tab_gabarit_vitesse[g_index_tab_gabarit_vitesse] = vitesse_consigne_gabarit;
             ASSER_TRAJ_LogAsser("gabarit_vitesse", NBR_ASSER_LOG_VALUE, g_tab_gabarit_vitesse[g_index_tab_gabarit_vitesse]);
