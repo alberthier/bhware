@@ -70,6 +70,8 @@ int compteurPeriodePI = 0;
 
 char asserRunning_ant = False;
 
+float tempsAcc  =   1.0;      /* Acceleration du deplacement sur la trajectoire,
+                                 -> temps en secondes pour passer de 0 a la vitesse max retournee par POS_GetConsVitesseMax() */
 float L = 0.339;
 Pose poseRobot;
 
@@ -108,10 +110,10 @@ extern void SIMU_SetParamProfilVitesse(float Amax, float Dmax, float coeff_vi1, 
     facteurVitesseAngulaireMax = fvam;
 }
 
-extern void SIMU_SetConfigGeneraleProfilVitesse(float Ratio_Acc, float Ratio_Decc)
+extern void SIMU_SetConfigGeneraleProfilVitesse(float ratioAcc, float ratioDecc)
 {
-    RATIO_ACC = Ratio_Acc;
-    RATIO_DECC = Ratio_Decc;
+    Ratio_Acc = ratioAcc;
+    Ratio_Decc = ratioDecc;
 }
 
 /*

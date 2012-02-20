@@ -63,9 +63,7 @@ typedef struct
     float           pas_echantillon_distance;
     float           vitesse_courante;
 
-    float           tempsAcc;
-
-    // parametre gene profil 2012
+    // parametres gene profil 2012
     float           Amax;
     float           Dmax;
     float           coeff_vi1;
@@ -124,7 +122,8 @@ extern float                gainDeplacement1;
 extern float                gainDeplacement2;
 extern float                gainDeplacement3;
 
-extern float                tempsAcc;               /* Acceleration du deplacement sur la trajectoire, -> temps en secondes pour passer de 0 a la vitesse max retournee par POS_GetConsVitesseMax() */
+extern float                Ratio_Acc;            
+extern float                Ratio_Decc;
 extern float                facteurVitesseAngulaireMax;
 extern float                A_MAX;
 extern float                D_MAX;
@@ -132,9 +131,6 @@ extern float                COEFF_VI1;
 extern float                VITESSE_SEUIL_DECC;
 extern float                COEFF_DECC_FINALE;
 extern float                DECC_MIN;
-
-extern float                RATIO_ACC;
-extern float                RATIO_DECC;
 
 /** Table pour le log asser */
 extern float                tabLogAsser[NBR_ASSER_LOG_VALUE];

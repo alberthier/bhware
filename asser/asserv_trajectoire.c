@@ -60,11 +60,8 @@ float                           gainDeplacement2                        =   50.0
 float                           gainDeplacement3                        =   20.0;
     
 /** Parametres de la generation de trajectoire */
-float                           tempsAcc                                =   1.0;      /* Acceleration du deplacement sur la trajectoire,
-                                                                                         -> temps en secondes pour passer de 0 a la vitesse max retournee par POS_GetConsVitesseMax() */
-float                           A_MAX                                   =   4.0;
-float                           D_MAX                                   =   -2.0;
-float                           tempsDecc                               =   1.0;
+float                           A_MAX                                   =   3.0;
+float                           D_MAX                                   =   -1.5;
 
 float                           facteurVitesseAngulaireMax              =   4.0;
 
@@ -73,8 +70,8 @@ float                           VITESSE_SEUIL_DECC                      =   0.2;
 float                           COEFF_DECC_FINALE                       =   0.08;
 float                           DECC_MIN                                =   -0.3;       /* Decceleration en m/s^2 du profil de vitesse au point d'arrivee */
 
-float                           RATIO_ACC                               =   1.0;
-float                           RATIO_DECC                              =   1.0;
+float                           Ratio_Acc                               =   1.0;
+float                           Ratio_Decc                              =   1.0;
 
 /***********************************************************************************************/
 /**************************** Fin de la definition des parametres de l'asservissement de trajectoire *********/
@@ -98,7 +95,7 @@ unsigned char                   TakeMesure                              =   Fals
 /** Variables locales */
 
 /** Le point du robot asservit a la trajectoire n'est pas le centre de l'axe des roues, mais un point sur la droite perpendiculaire a cet axe et passant par son centre, situe a la distance NORME_BARRE_SUIVI_TRAJ en avant de l'axe des roues */
-static float                    NORME_BARRE_SUIVI_TRAJ;									/* Initialise dans ASSER_TRAJ_InitialisationGenerale() */
+static float                    NORME_BARRE_SUIVI_TRAJ;                                         /* Initialise dans ASSER_TRAJ_InitialisationGenerale() */
 
 /** Variables globales de l'asservissement de trajectoire */
 static unsigned int             compteurPeriode                         =   0;
@@ -200,8 +197,6 @@ extern void ASSER_TRAJ_InitialisationGenerale(void)
     NORME_BARRE_SUIVI_TRAJ = ECART_ROUE_LIBRE / 2.0;
 
     ASSER_TRAJ_ResetLogAsserTable();
-
-    chemin.profilVitesse.tempsAcc = tempsAcc;
 
     POS_InitialisationConfigRobot();
 
@@ -580,9 +575,6 @@ extern void ASSER_TRAJ_InitialisationTrajectoire(Pose poseRobot, PtTraj * point,
     float           g_tableauH_iCurrentGPoint_n0_x_sq, g_tableauH_iCurrentGPoint_n0_y_sq;
     float           g_tableauH_iCurrentGPoint_n1_m1_x_sq, g_tableauH_iCurrentGPoint_n1_m1_y_sq;
 
-    /* Temps d'acceleration / decceration par defaut */
-    tempsAcc = chemin.profilVitesse.tempsAcc;
-    tempsDecc = chemin.profilVitesse.tempsAcc * 6.0; //6.0;
 
     chemin.mouvement = mouvement;
     chemin.nbreSegments = nbrePts;
@@ -817,9 +809,6 @@ extern void ASSER_TRAJ_InitialisationTrajectoire(Pose poseRobot, PtTraj * point,
     }
     else
     {
-        /* Temps d'acceleration / decceration reduit pour la rotation */
-        tempsDecc = tempsDecc * 2.0;
-
         /* Position a atteindre (condition d'arret du test de fin d'asservissment) */
         chemin.posArrivee.x = poseRobot.x + NORME_BARRE_SUIVI_TRAJ * cos(point[0].pose.angle);
         chemin.posArrivee.y = poseRobot.y + NORME_BARRE_SUIVI_TRAJ * sin(point[0].pose.angle);
@@ -866,8 +855,8 @@ extern void ASSER_TRAJ_InitialisationTrajectoire(Pose poseRobot, PtTraj * point,
     g_index_tab_gabarit_vitesse = 0;
 
     /* Initialisation du profil de vitesse 2012 */
-    chemin.profilVitesse.Amax = A_MAX * RATIO_ACC;
-    chemin.profilVitesse.Dmax = D_MAX * RATIO_DECC;
+    chemin.profilVitesse.Amax = A_MAX * Ratio_Acc;
+    chemin.profilVitesse.Dmax = D_MAX * Ratio_Decc;
     chemin.profilVitesse.vitesse_seuil_decc_finale = VITESSE_SEUIL_DECC;
     chemin.profilVitesse.coeff_decc_finale = COEFF_DECC_FINALE;
     chemin.profilVitesse.decc_min_finale = DECC_MIN;
@@ -1475,7 +1464,7 @@ static void ASSER_TRAJ_GabaritVitesse(Trajectoire * traj)
     distanceRestante = traj->distance;
     ASSER_TRAJ_LogAsser("distanceRestante_FD", NBR_ASSER_LOG_VALUE, distanceRestante);
 
-    for (i = 4; i >= 0; i--) // de la plus grande vitesse de pointe a la plus petite (de i=4 à i=0)
+    for (i = 4; i >= 0; i--) /* de la plus grande vitesse de pointe a la plus petite (de i=4 à i=0) */
     {
         if (g_tab_vpointe[i][0] < traj->distance)
         {
@@ -1572,7 +1561,7 @@ static void ASSER_TRAJ_GabaritVitesse(Trajectoire * traj)
  *  \return None
  */
 /**********************************************************************/
-static void ASSER_TRAJ_InitTabVPointe(Trajectoire *traj, float coeff_vit_ini)
+static void ASSER_TRAJ_InitTabVPointe(Trajectoire * traj, float coeff_vit_ini)
 {   // tableau de 1: distance des phases d'acc et de decc reunies, 2: vitesse max(de pointe), 3; distance de decc
     unsigned int    i;
     float           vpointe;
@@ -1585,7 +1574,7 @@ static void ASSER_TRAJ_InitTabVPointe(Trajectoire *traj, float coeff_vit_ini)
         {
             vpointe = traj->profilVitesse.vmax;
         }
-        distanceAcc = ASSER_TRAJ_DistanceAcceleration(traj, vpointe, vpointe * coeff_vit_ini);
+        distanceAcc = ASSER_TRAJ_DistanceAcceleration(traj, vpointe, (vpointe * coeff_vit_ini));
         distanceDecc = ASSER_TRAJ_DistanceDecceleration(traj, vpointe);
         g_tab_vpointe[i][0] = distanceAcc + distanceDecc;
         g_tab_vpointe[i][1] = vpointe;
@@ -1745,10 +1734,9 @@ static unsigned char ASSER_TRAJ_ProfilDecceleration_2012(Trajectoire * traj, flo
 static float ASSER_TRAJ_DistanceAcceleration(Trajectoire * traj, float vpointe, float vit_ini)
 {
     unsigned int    nbrePas = 0u;
-    float           vitesse;
+    float           vitesse = vit_ini;
     unsigned char   flag_fin = False;
 
-    vitesse = vit_ini;
     while( (flag_fin == False) && (nbrePas < 65535) )
     {
         flag_fin = ASSER_TRAJ_ProfilAcceleration_2012(traj, vpointe, &vitesse);
