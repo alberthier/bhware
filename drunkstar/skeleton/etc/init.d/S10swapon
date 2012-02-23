@@ -1,2 +1,0 @@
-#!/bin/sh
-swapon /dev/sda3
