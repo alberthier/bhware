@@ -859,7 +859,7 @@ class SimulatorData(BasePacket):
 
 class TurretDetect(BasePacket):
 
-    MAX_SIZE = 5
+    MAX_SIZE = 4
     TYPE = 32
     LOGVIEW_COLOR = "#9acd32"
     DEFINITION = (
@@ -873,7 +873,7 @@ class TurretDetect(BasePacket):
 
 class TurretInit(BasePacket):
 
-    MAX_SIZE = 5
+    MAX_SIZE = 4
     TYPE = 33
     LOGVIEW_COLOR = "#7fffd4"
     DEFINITION = (
@@ -887,7 +887,7 @@ class TurretInit(BasePacket):
 
 class TurretDistances(BasePacket):
 
-    MAX_SIZE = 5
+    MAX_SIZE = 3
     TYPE = 34
     LOGVIEW_COLOR = "#191970"
     DEFINITION = (
@@ -900,7 +900,7 @@ class TurretDistances(BasePacket):
 
 class TurretBoot(BasePacket):
 
-    MAX_SIZE = 5
+    MAX_SIZE = 1
     TYPE = 35
     LOGVIEW_COLOR = "#20b2aa"
 
