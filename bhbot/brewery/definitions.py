@@ -46,7 +46,7 @@ TEAM_COLOR_PURPLE                      = "#9632f6"
 
 # Timing
 KEEP_ALIVE_DELAY_MS                    = 200
-EVENT_LOOP_TICK_RESOLUTION_S           = 0.05
+EVENT_LOOP_TICK_RESOLUTION_S           = 0.500
 
 # Brewery execution host
 if socket.gethostname() == "drunkstar":
@@ -73,7 +73,7 @@ SERIAL_PORT_SPEED                      = 115200
 
 # Leds:
 if IS_HOST_DEVICE_ARM:
-    ORANGE_LED_DEVICE_PATH             = "/sys/class/leds/dockstar:orange:health/brightness"
+    ORANGE_LED_DEVICE_PATH             = "/sys/class/leds/dockstar:orange:misc/brightness"
     GREEN_LED_DEVICE_PATH              = "/sys/class/leds/dockstar:green:health/brightness"
 else:
     ORANGE_LED_DEVICE_PATH             = None
