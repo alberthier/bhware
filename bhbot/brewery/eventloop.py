@@ -13,6 +13,7 @@ import bisect
 import fcntl
 import termios
 import ctypes
+import struct
 import serial
 
 import logger
@@ -37,6 +38,8 @@ class TurretChannel(asyncore.file_dispatcher):
         self.eventloop = eventloop
         self.buffer = ""
         self.packet = None
+        self.synchronized = False
+        self.turret_packets = [ packets.TurretDetect.TYPE, packets.TurretInit.TYPE, packets.TurretDistances.TYPE, packets.TurretBoot.TYPE ]
 
 
     def bytes_available(self):
@@ -48,6 +51,15 @@ class TurretChannel(asyncore.file_dispatcher):
 
 
     def handle_read(self):
+        if not self.synchronized:
+            while self.bytes_available():
+                data = self.recv(1)
+                (packet_type,) = struct.unpack("<B", data)
+                if packet_type in self.turret_packets:
+                    self.synchronized = True
+                    self.buffer += data
+                    self.packet = packets.create_packet(self.buffer)
+                    break
         self.eventloop.handle_read(self)
 
 
