@@ -93,6 +93,10 @@ class RobotLogDeviceChannel(asyncore.dispatcher):
         return available.value
 
 
+    def writable(self):
+        return False
+
+
     def handle_read(self):
         try:
             self.buffer += self.recv(self.bytes_available())
