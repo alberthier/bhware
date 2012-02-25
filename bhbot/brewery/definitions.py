@@ -46,7 +46,7 @@ TEAM_COLOR_PURPLE                      = "#9632f6"
 
 # Timing
 KEEP_ALIVE_DELAY_MS                    = 200
-EVENT_LOOP_TICK_RESOLUTION_S           = 0.500
+EVENT_LOOP_TICK_RESOLUTION_S           = 0.05
 
 # Brewery execution host
 if socket.gethostname() == "drunkstar":
