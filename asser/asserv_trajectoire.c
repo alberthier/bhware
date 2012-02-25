@@ -153,7 +153,7 @@ static float*                   ASSER_TRAJ_getGabaritVitesse(void);
 
 static Pose                     ASSER_TRAJ_TrajectoireRotation(ParametresRotation *p_rotation, float t);
 static void                     ASSER_TRAJ_GabaritVitesse(Trajectoire *traj);
-static unsigned char            ASSER_TRAJ_ParcoursTrajectoire(Trajectoire *traj, float delta_distance, unsigned int *segmentCourant, float *paramPoseSegTraj);
+static void                     ASSER_TRAJ_ParcoursTrajectoire(Trajectoire *traj, float delta_distance, unsigned int *segmentCourant, float *paramPoseSegTraj, unsigned char * pReturn);
 static Pose                     ASSER_TRAJ_DiffTemporelleTrajectoire(Pose posePrecedente, Pose poseActuelle, float periode);
 static void                     ASSER_TRAJ_MatriceRotation(Vecteur *matrice2p2, float angle);
 static Vecteur                  ASSER_TRAJ_ProduitMatriceVecteur(Vecteur *matrice, Vecteur vecteur);
@@ -407,7 +407,7 @@ extern void ASSER_TRAJ_AsservissementMouvementRobot(Pose poseRobot, VitessesRobo
 
                 /* distance normalisee restant a parcourir */
                 chemin.profilVitesse.distNormaliseeRestante = chemin.profilVitesse.distNormaliseeRestante - (delta_distance / chemin.distance);
-                ASSER_TRAJ_ParcoursTrajectoire(&chemin, delta_distance, &segmentCourant, &parametrePositionSegmentTrajectoire);
+                ASSER_TRAJ_ParcoursTrajectoire(&chemin, delta_distance, &segmentCourant, &parametrePositionSegmentTrajectoire, NULL);
             }
             else
             {   
@@ -433,7 +433,7 @@ extern void ASSER_TRAJ_AsservissementMouvementRobot(Pose poseRobot, VitessesRobo
                 parametrePositionSegmentTrajectoireAv = parametrePositionSegmentTrajectoire;
                 segmentCourantAv = segmentCourant;
                 delta_distance_Av = ASSER_TRAJ_GabaritVitesse_getVitesse_vs_Distance(chemin.profilVitesse.distance_parcourue) * TE; //g_tab_gabarit_vitesse[g_index_tab_gabarit_vitesse] * TE;
-                ASSER_TRAJ_ParcoursTrajectoire(&chemin, delta_distance_Av, &segmentCourantAv, &parametrePositionSegmentTrajectoireAv);
+                ASSER_TRAJ_ParcoursTrajectoire(&chemin, delta_distance_Av, &segmentCourantAv, &parametrePositionSegmentTrajectoireAv, NULL);
                 ASSER_TRAJ_LogAsser("segTrajAv", NBR_ASSER_LOG_VALUE, parametrePositionSegmentTrajectoireAv);
                 diff1BS = ASSER_TRAJ_DiffCourbeBSpline(&chemin.segmentTrajBS[segmentCourantAv], parametrePositionSegmentTrajectoireAv);
                 diff2BS = ASSER_TRAJ_Diff2CourbeBSpline(&chemin.segmentTrajBS[segmentCourantAv], parametrePositionSegmentTrajectoireAv);
@@ -451,7 +451,7 @@ extern void ASSER_TRAJ_AsservissementMouvementRobot(Pose poseRobot, VitessesRobo
                 parametrePositionSegmentTrajectoireAv = parametrePositionSegmentTrajectoire;
                 segmentCourantAv = segmentCourant;
                 delta_distance_Av = ASSER_TRAJ_GabaritVitesse_getVitesse_vs_Distance(chemin.profilVitesse.distance_parcourue) * TE;
-                ASSER_TRAJ_ParcoursTrajectoire(&chemin, delta_distance_Av, &segmentCourantAv, &parametrePositionSegmentTrajectoireAv);
+                ASSER_TRAJ_ParcoursTrajectoire(&chemin, delta_distance_Av, &segmentCourantAv, &parametrePositionSegmentTrajectoireAv, NULL);
                 poseReferenceAv = ASSER_TRAJ_TrajectoireRotation(&(chemin.rotation), parametrePositionSegmentTrajectoireAv);
             }
             ASSER_TRAJ_LogAsser("val_tab_vit", NBR_ASSER_LOG_VALUE, delta_distance_Av/TE);
@@ -1372,12 +1372,13 @@ static float ASSER_TRAJ_VitesseLimiteEnVirage(Trajectoire *traj, float diffTheta
  *  \param [in]     traj                        pointeur de structure definissant la trajectoire
  *  \param [in]     delta_distance         distance de deplacement sur la periode en metre
  *  \param [in]     segmentCourant     
- *  \param [in]     paramPoseSegTraj    
+ *  \param [in]     paramPoseSegTraj   
+ *  \param [in]     pReturn                 Flag de fin de trajectoire
  *
- *  \return            True or False
+ *  \return            None
  */
 /**********************************************************************/
-static unsigned char ASSER_TRAJ_ParcoursTrajectoire(Trajectoire *traj, float delta_distance, unsigned int *segmentCourant, float *paramPoseSegTraj)
+static void ASSER_TRAJ_ParcoursTrajectoire(Trajectoire *traj, float delta_distance, unsigned int *segmentCourant, float *paramPoseSegTraj, unsigned char * pReturn)
 {
     unsigned int    memoSegmentCourant;
     Vecteur         diffD_T;
@@ -1427,7 +1428,10 @@ static unsigned char ASSER_TRAJ_ParcoursTrajectoire(Trajectoire *traj, float del
         }
     } while ((*segmentCourant != memoSegmentCourant) && (flag_trajectoireTerminee != True));
 
-    return flag_trajectoireTerminee;
+    if (pReturn != NULL)
+    {
+        *pReturn = flag_trajectoireTerminee;
+    }
 }
 
 /**********************************************************************/
@@ -1449,7 +1453,7 @@ static void ASSER_TRAJ_GabaritVitesse(Trajectoire * traj)
     float           vitesse_consigne        = 0.0;
 //    float           vitesse_limite          = 0.0;
     float           distanceRestante;
-    unsigned int    flag_finTraj            = 0u;
+    unsigned char   flag_finTraj            = False;
     unsigned char   phase                   = 0u;
     unsigned char   flag_phase              = 0u;
     Vecteur         diff1BS, diff2BS;
@@ -1481,7 +1485,7 @@ static void ASSER_TRAJ_GabaritVitesse(Trajectoire * traj)
     vitesse_consigne = coeff_vit_ini * vpointe;
     while (flag_finTraj == 0)
     {
-        flag_finTraj = ASSER_TRAJ_ParcoursTrajectoire(traj, traj->profilVitesse.pas_echantillon_distance, &numSegment, &paramPosition);
+        ASSER_TRAJ_ParcoursTrajectoire(traj, traj->profilVitesse.pas_echantillon_distance, &numSegment, &paramPosition, &flag_finTraj);
 
         if (phase == 0)
         {
