@@ -311,7 +311,7 @@ class EventLoop(object):
         RobotControlDeviceStarter(self)
         logger.log("Starting brewery with state machine '{}'".format(self.state_machine_name))
         while not self.stopping:
-            asyncore.loop(EVENT_LOOP_TICK_RESOLUTION_S, False, None, None)
+            asyncore.loop(EVENT_LOOP_TICK_RESOLUTION_S, True, None, 1)
             self.get_current_state().on_timer_tick()
             self.opponent_detector.on_timer_tick()
             while len(self.timers) != 0:
