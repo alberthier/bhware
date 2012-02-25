@@ -39,6 +39,7 @@ class TurretChannel(asyncore.file_dispatcher):
         self.buffer = ""
         self.packet = None
         self.synchronized = False
+        self.out_buffer = ""
         self.turret_packets = [ packets.TurretDetect.TYPE, packets.TurretInit.TYPE, packets.TurretDistances.TYPE, packets.TurretBoot.TYPE ]
 
 
@@ -46,8 +47,23 @@ class TurretChannel(asyncore.file_dispatcher):
         return self.port.inWaiting()
 
 
+    def initiate_send(self):
+        num_sent = 0
+        num_sent = asyncore.file_dispatcher.send(self, self.out_buffer[:512])
+        self.out_buffer = self.out_buffer[num_sent:]
+
+
+    def handle_write(self):
+        self.initiate_send()
+
+
+    def send(self, data):
+        self.out_buffer = self.out_buffer + data
+        self.initiate_send()
+
+
     def writable(self):
-        return False
+        return (not self.connected) or len(self.out_buffer) != 0
 
 
     def handle_read(self):
@@ -61,6 +77,11 @@ class TurretChannel(asyncore.file_dispatcher):
                     self.packet = packets.create_packet(self.buffer)
                     break
         self.eventloop.handle_read(self)
+
+
+    def close(self):
+        self.port.close()
+        asyncore.file_dispatcher.close(self)
 
 
     def handle_close(self):
@@ -196,6 +217,7 @@ class RobotControlDeviceStarter(object):
             except Exception as e:
                 # Log socket is not mandatory. If the connection fails, continue without it.
                 logger.log("Unable to connect to the log stocket {}:{} ({}), continuing without PIC logs".format(REMOTE_IP, REMOTE_LOG_PORT, e))
+            self.eventloop.on_turret_boot(packets.TurretBoot())
             self.eventloop.create_fsm()
         return connected
 
@@ -277,6 +299,16 @@ class EventLoop(object):
     def on_keep_alive(self, packet):
         self.send_packet(packet)
         leds.green.heartbeat_tick()
+
+
+    def on_turret_boot(self, packet):
+        packet = packets.TurretInit()
+        packet.mode = TURRET_INIT_MODE_WRITE
+        packet.short_distance = TURRET_SHORT_DISTANCE_DETECTION_RANGE
+        packet.long_distance = TURRET_LONG_DISTANCE_DETECTION_RANGE
+        buffer = packet.serialize()
+        logger.log_packet(packet, "ARM")
+        self.turret_channel.send(buffer)
 
 
     def send_packet(self, packet):
