@@ -206,7 +206,7 @@ extern void ASSER_TRAJ_InitialisationGenerale(void)
 /**********************************************************************/
 /*! \brief ASSER_TRAJ_isDeplacement
  * 
- *  \note  Test le d�placement
+ *  \note  Test le déplacement
  * 
  *  \param [in] traj              type de trajectoire
  *
@@ -289,11 +289,11 @@ extern void ASSER_TRAJ_AsservissementMouvementRobot(Pose poseRobot, VitessesRobo
     float           diffThetaCourantAv                      = 0.0;
     Pose            poseReferenceRobotAv;
 
-    ASSER_TRAJ_LogAsser("xRoueGauche", NBR_ASSER_LOG_VALUE, poseRobot.x + (ECART_ROUE_MOTRICE / 2.0) * cos(poseRobot.angle + (PI / 2)));
-    ASSER_TRAJ_LogAsser("yRoueGauche", NBR_ASSER_LOG_VALUE, poseRobot.y + (ECART_ROUE_MOTRICE / 2.0) * sin(poseRobot.angle + (PI / 2)));
-    ASSER_TRAJ_LogAsser("xRoueDroite", NBR_ASSER_LOG_VALUE, poseRobot.x + (ECART_ROUE_MOTRICE / 2.0) * cos(poseRobot.angle - (PI / 2)));
-    ASSER_TRAJ_LogAsser("yRoueDroite", NBR_ASSER_LOG_VALUE, poseRobot.y + (ECART_ROUE_MOTRICE / 2.0) * sin(poseRobot.angle - (PI / 2)));
-    ASSER_TRAJ_LogAsser("angle", NBR_ASSER_LOG_VALUE, poseRobot.angle);
+    ASSER_TRAJ_LogAsser("xRoueGauche", NBR_ASSER_LOG_VALUE, m_poseRobot.x + (ECART_ROUE_MOTRICE / 2.0) * cos(m_poseRobot.angle + (PI / 2)));
+    ASSER_TRAJ_LogAsser("yRoueGauche", NBR_ASSER_LOG_VALUE, m_poseRobot.y + (ECART_ROUE_MOTRICE / 2.0) * sin(m_poseRobot.angle + (PI / 2)));
+    ASSER_TRAJ_LogAsser("xRoueDroite", NBR_ASSER_LOG_VALUE, m_poseRobot.x + (ECART_ROUE_MOTRICE / 2.0) * cos(m_poseRobot.angle - (PI / 2)));
+    ASSER_TRAJ_LogAsser("yRoueDroite", NBR_ASSER_LOG_VALUE, m_poseRobot.y + (ECART_ROUE_MOTRICE / 2.0) * sin(m_poseRobot.angle - (PI / 2)));
+    ASSER_TRAJ_LogAsser("angle", NBR_ASSER_LOG_VALUE, m_poseRobot.angle);
 
     erreurPoseCentreRobot.x = 0.0;    
     erreurPoseCentreRobot.y = 0.0;
@@ -554,7 +554,7 @@ extern void ASSER_TRAJ_AsservissementMouvementRobot(Pose poseRobot, VitessesRobo
  *  \param [in]     poseRobot       pose courante du robot integrant le choix de la marche (AVANT ou ARRIERE)
  *  \param [in]     point               pointeur du tableau des points imposes du chemin dont le point a atteindre en dernier
  *  \param [in]     nbrePts           nombre de points intermediaires du chemin par lesquelles passer +1 pour le point d'arrvee
- *  \param [in]     mouvement     type de mouvement a executer: un deplacement (DEPLACEMENT), une pure rotation (ROTATION) ou un déplacement qui finit en ligne droite (DEPLACEMENT_LIGNE_DROITE)
+ *  \param [in]     mouvement     type de mouvement a executer: un deplacement (DEPLACEMENT), une pure rotation (ROTATION) ou un dÃ©placement qui finit en ligne droite (DEPLACEMENT_LIGNE_DROITE)
  *
  *  \return           None
  */
@@ -575,6 +575,13 @@ extern void ASSER_TRAJ_InitialisationTrajectoire(Pose poseRobot, PtTraj * point,
     float           g_tableauH_iCurrentGPoint_n0_x_sq, g_tableauH_iCurrentGPoint_n0_y_sq;
     float           g_tableauH_iCurrentGPoint_n1_m1_x_sq, g_tableauH_iCurrentGPoint_n1_m1_y_sq;
 
+    if (m_sensMarcheMouvement == MARCHE_ARRIERE)
+    {
+        for (j=0; j<nbrePts; j++)
+        {
+            point[j].pose.angle = POS_ModuloAngle(point[j].pose.angle + PI);
+        }
+    }
 
     chemin.mouvement = mouvement;
     chemin.nbreSegments = nbrePts;
@@ -1468,7 +1475,7 @@ static void ASSER_TRAJ_GabaritVitesse(Trajectoire * traj)
     distanceRestante = traj->distance;
     ASSER_TRAJ_LogAsser("distanceRestante_FD", NBR_ASSER_LOG_VALUE, distanceRestante);
 
-    for (i = 4; i >= 0; i--) /* de la plus grande vitesse de pointe a la plus petite (de i=4 � i=0) */
+    for (i = 4; i >= 0; i--) /* de la plus grande vitesse de pointe a la plus petite (de i=4 à i=0) */
     {
         if (g_tab_vpointe[i][0] < traj->distance)
         {
