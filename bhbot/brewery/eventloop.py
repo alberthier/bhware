@@ -63,7 +63,7 @@ class TurretChannel(asyncore.file_dispatcher):
 
 
     def writable(self):
-        return (not self.connected) or len(self.out_buffer) != 0
+        return self.connected and len(self.out_buffer) != 0
 
 
     def handle_read(self):
@@ -86,8 +86,6 @@ class TurretChannel(asyncore.file_dispatcher):
 
     def handle_close(self):
         logger.log("handle_close")
-        for l in traceback.format_stack() :
-            logger.log(l)
 
 
 
@@ -217,7 +215,7 @@ class RobotControlDeviceStarter(object):
             except Exception as e:
                 # Log socket is not mandatory. If the connection fails, continue without it.
                 logger.log("Unable to connect to the log stocket {}:{} ({}), continuing without PIC logs".format(REMOTE_IP, REMOTE_LOG_PORT, e))
-            self.eventloop.on_turret_boot(packets.TurretBoot())
+            self.eventloop.on_turret_boot(None)
             self.eventloop.create_fsm()
         return connected
 
@@ -371,4 +369,6 @@ class EventLoop(object):
             self.turret_channel.close()
         if self.robot_control_channel != None:
             self.robot_control_channel.close()
+        if self.robot_log_channel != None:
+            self.robot_log_channel.close()
         logger.close()
