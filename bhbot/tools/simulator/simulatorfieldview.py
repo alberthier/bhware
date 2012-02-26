@@ -101,8 +101,11 @@ class GraphicsRobotObject(QObject):
         offset = 0.0
         for (segmentNb, time, pose) in points:
             pos_animation.setKeyValueAt(time / end_time, QPointF(pose.y * 1000.0, pose.x * 1000.0))
-            ref_angle = self.convert_angle(pose.angle)
-            angle_deg = ((ref_angle) / math.pi * 180.0) % 360.0
+            if pose.angle != None:
+                ref_angle = self.convert_angle(pose.angle)
+                angle_deg = ((ref_angle) / math.pi * 180.0) % 360.0
+            else:
+                angle_deg = current
             if abs(current - angle_deg) > 180.0:
                 if current > angle_deg:
                     offset += 360.0
