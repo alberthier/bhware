@@ -302,13 +302,14 @@ class EventLoop(object):
 
 
     def on_turret_boot(self, packet):
-        packet = packets.TurretInit()
-        packet.mode = TURRET_INIT_MODE_WRITE
-        packet.short_distance = TURRET_SHORT_DISTANCE_DETECTION_RANGE
-        packet.long_distance = TURRET_LONG_DISTANCE_DETECTION_RANGE
-        buffer = packet.serialize()
-        logger.log_packet(packet, "ARM")
-        self.turret_channel.send(buffer)
+        if self.turret_channel != None:
+            packet = packets.TurretInit()
+            packet.mode = TURRET_INIT_MODE_WRITE
+            packet.short_distance = TURRET_SHORT_DISTANCE_DETECTION_RANGE
+            packet.long_distance = TURRET_LONG_DISTANCE_DETECTION_RANGE
+            buffer = packet.serialize()
+            logger.log_packet(packet, "ARM")
+            self.turret_channel.send(buffer)
 
 
     def send_packet(self, packet):
