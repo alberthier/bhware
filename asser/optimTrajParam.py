@@ -262,7 +262,8 @@ def trajTest(d_cfgTraj):
     #~ #generation d'un message de commande de deplacement
     #~ # "MSG_MAIN_GOTO 0:'ROTATION'/1:'DEPLACEMENT'/2:'DEPLACEMENT_LIGNE_DROITE' 0:'MARCHE_AVANT'/1:'MARCHE_ARRIERE'"
     deplacement = commandMsg("MSG_MAIN_GOTO 1 1")   # 'DEPLACEMENT' en 'MARCHE_AVANT'
-    deplacement.addPose(str(d_cfgTraj['Distance']) + " 0.0 0.0 0") # deplacement rectiligne sur la distance d_cfgTraj['Distance']
+    #~ deplacement.addPose(str(d_cfgTraj['Distance']) + " 0.0 0.0 0") # deplacement rectiligne sur la distance d_cfgTraj['Distance']
+    deplacement.addPose("1.0 0.3 0.0 1")
     #transmission de commandes de deplacement par l'entree standard
     simulator_process.stdin.write(deplacement.cmdMsgGeneration())
     
@@ -656,7 +657,13 @@ def affichageGabaritVitesse_2012(d_traj):
     pas = d_traj["pas_ech"][0]
     print("pas ech: " + str(pas))
     plot([index * pas for index in range(len(d_traj["gabarit_vitesse"]))], d_traj["gabarit_vitesse"], '-o', label='vit')
+    plot([index * pas for index in range(len(d_traj["gabarit_acceleration"]))], d_traj["gabarit_acceleration"], '-o', label='acc')
+    plot([index * pas for index in range(len(d_traj["gabarit_acceleration_new"]))], d_traj["gabarit_acceleration_new"], '-o', label='acc2')
+    #~ plot([index * pas for index in range(len(d_traj["gabarit_vitesse_new"]))], d_traj["gabarit_vitesse_new"], '-o', label='vit2')
+    #~ plot([index * pas for index in range(len(d_traj["gabarit_delta_acceleration"]))], d_traj["gabarit_delta_acceleration"], '-om', label='delta')
+    #~ plot(d_traj["gabarit_acceleration_max"], [0 for index in range(len(d_traj["gabarit_acceleration_max"]))], '-or')
     print("taille tab gabarit vitesse : " + str(len(d_traj["gabarit_vitesse"])))
+    #~ print("nb acc max : " + str(len(d_traj["gabarit_acceleration_max"])))
     for val in d_traj["init_gabarit"] :
         print(val)
     grid()
