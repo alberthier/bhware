@@ -1,9 +1,9 @@
 /.*\.pyc$
 /.*\.o$
 /logs/
-drunkstar/host
-drunkstar/dl
-drunkstar/buildroot-2012.02
+drunkstar/host/
+drunkstar/dl/
+drunkstar/buildroot-2012.02/
 asser/log.txt
 asser/Makefile
 asser/simulator_trajAsser
