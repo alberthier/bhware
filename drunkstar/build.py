@@ -10,10 +10,10 @@ from subprocess import *
 MERCURIAL_VERSION = "2.1"
 MERCURIAL_ARCHIVE = "mercurial-{}.tar.gz".format(MERCURIAL_VERSION)
 MERCURIAL_URL     = "http://mercurial.selenic.com/release/{}".format(MERCURIAL_ARCHIVE)
-BUILDROOT_VERSION = "2012.02-rc3"
+BUILDROOT_VERSION = "2012.02"
 BUILDROOT         = "buildroot-{}".format(BUILDROOT_VERSION)
 BUILDROOT_ARCHIVE = "{}.tar.bz2".format(BUILDROOT)
-BUILDROOT_URL     = "http://buildroot.uclibc.org/downloads/{}".format(BUILDROOT_ARCHIVE)
+BUILDROOT_URL     = "http://buildroot.net/downloads/{}".format(BUILDROOT_ARCHIVE)
 
 PACKAGES = [
              (MERCURIAL_ARCHIVE, MERCURIAL_URL),
