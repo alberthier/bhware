@@ -1513,6 +1513,7 @@ static void ASSER_TRAJ_GabaritVitesse(Trajectoire * traj)
         if (g_tab_vpointe[i][0] < traj->distance)
         {
             vpointe = g_tab_vpointe[i][1];
+            traj->profilVitesse.vpointe = vpointe;
             N_plateau = floor((traj->distance - g_tab_vpointe[i][0]) / traj->profilVitesse.pas_echantillon_distance) + 1;
             ASSER_TRAJ_LogAsser("init_gabarit", NBR_ASSER_LOG_VALUE, traj->distance);
             ASSER_TRAJ_LogAsser("init_gabarit", NBR_ASSER_LOG_VALUE, N_plateau);
@@ -1587,7 +1588,7 @@ static void ASSER_TRAJ_GabaritVitesse(Trajectoire * traj)
     }
 
     ASSER_TRAJ_SmoothGabaritAcceleration(traj);
-    //ASSER_TRAJ_CreateGabaritVitesseFromGabaritAcceleration(traj);
+    ASSER_TRAJ_CreateGabaritVitesseFromGabaritAcceleration(traj);
     
 }
 
@@ -1637,84 +1638,87 @@ static void ASSER_TRAJ_InitTabVPointe(Trajectoire * traj, float coeff_vit_ini)
 /**********************************************************************/
 static void ASSER_TRAJ_SmoothGabaritAcceleration(Trajectoire * traj)
 {
-    unsigned int    i                   = 0.0, k, m, n;
+    int             i                   = 0.0, k, m, n;
     float           delta_acc           = 0.0, memo_delta_acc           = 0.0;
-    float           delta_acc_seuilMax  = 0.3;
+    float           delta_acc_seuilMax  = 0.2;
+    float           acc_max = 1.0;
     float           delta;
     float           sum_acc;
-    float           vsquare_final = 1.0;
     unsigned int    N;
     unsigned int    cpt = 0;
 
     delta_acc = fabs(g_tab_gabarit_acceleration[1] - g_tab_gabarit_acceleration[0]);
-    ASSER_TRAJ_LogAsser("gabarit_delta_acceleration", NBR_ASSER_LOG_VALUE, delta_acc);
     i = 1;
-    while( (i < (g_index_tab_gabarit_acceleration - 1u)) && (i<TAILLE_TAB_GABARIT_VITESSE) )
+    while( i < (g_index_tab_gabarit_acceleration - 1u) )
     {
         memo_delta_acc = delta_acc;
         delta_acc = fabs(g_tab_gabarit_acceleration[i+1] - g_tab_gabarit_acceleration[i]);
-        ASSER_TRAJ_LogAsser("gabarit_delta_acceleration", NBR_ASSER_LOG_VALUE, delta_acc);
         // recherche d'un maximum local
         if (delta_acc < memo_delta_acc)
         {
             if (memo_delta_acc > delta_acc_seuilMax)
             {
                 m = (i - 1) - 1;
-                n = i;
-
-                cpt = 0;
-                do
+                if (m < 0)
                 {
-                    sum_acc = 0.0;
-                    for (k=m; k<(n+1); k++)
-                    {
-                        sum_acc = sum_acc + g_tab_gabarit_acceleration[k];
-                    }
-                    //vsquare_final = pow(g_tab_gabarit_vitesse[m], 2.0) + 2.0 * traj->profilVitesse.pas_echantillon_distance * sum_acc;
-                    vsquare_final = 1.0;
+                    m = 0;
+                }
+                n = i;
+                if (n < 1)
+                {
+                    n = 1;
+                }
 
-                    N = n - m + 1;
+                if ((g_tab_gabarit_acceleration[m] * g_tab_gabarit_acceleration[n]) < 0.0)
+                {
 
-                    if ( ((float)(n+m)/2.0) < ((float)g_index_tab_gabarit_acceleration/2.0))
+                    cpt = 0;
+                    do
                     {
-                        if (vsquare_final > 0.0)
+                        acc_max = traj->profilVitesse.Amax - ((traj->profilVitesse.Amax / pow(traj->profilVitesse.vpointe, 2.0)) * pow(g_tab_gabarit_vitesse[m], 2.0));
+                        sum_acc = 0.0;
+                        for (k=m; k<(n+1); k++)
                         {
+                            sum_acc = sum_acc + g_tab_gabarit_acceleration[k];
+                        }
+
+                        N = n - m + 1;
+
+                        if ( ((float)(n+m)/2.0) < ((float)g_index_tab_gabarit_acceleration/2.0))
+                        {
+                            delta = (N * g_tab_gabarit_acceleration[n] - sum_acc) / ((N * (N - 1)) / 2.0);
                             for (k=1; k<N; k++)
                             {
-                                delta = (N * g_tab_gabarit_acceleration[n] - sum_acc) / ((N * (N - 1)) / 2.0);
                                 g_tab_gabarit_acceleration[n-k] = g_tab_gabarit_acceleration[n] - k * delta;
                             }
                         }
-                    }
-                    else
-                    {
-                        if (vsquare_final > 0.0)
+                        else
                         {
+                            delta = (sum_acc - N * g_tab_gabarit_acceleration[m]) / ((N * (N - 1)) / 2.0);
                             for (k=1; k<N; k++)
                             {
-                                delta = (sum_acc - N * g_tab_gabarit_acceleration[m]) / ((N * (N - 1)) / 2.0);
                                 g_tab_gabarit_acceleration[m+k] = g_tab_gabarit_acceleration[m] + k * delta;
                             }
                         }
-                    }
 
-                    if (m > 0)
-                    {
-                        m = m - 1;
-                    }
-                    if (n < (g_index_tab_gabarit_acceleration - 1u))
-                    {
-                        n = n + 1;
-                    }
+                        if (m > 0)
+                        {
+                            m = m - 1;
+                        }
+                        if (n < (g_index_tab_gabarit_acceleration - 1u))
+                        {
+                            n = n + 1;
+                        }
 
-                    cpt++;
+                        cpt++;
+                    }
+                    while ( ( (fabs(delta) > delta_acc_seuilMax) || (g_tab_gabarit_acceleration[m] > acc_max) ) && (cpt < 30u) );
+
+                    ASSER_TRAJ_LogAsser("gabarit_acceleration_max", NBR_ASSER_LOG_VALUE, i * chemin.profilVitesse.pas_echantillon_distance);
+                    memo_delta_acc = 0.0;
+                    delta_acc = 0.0;
+                    i = m;
                 }
-                while ( (fabs(delta) > delta_acc_seuilMax) && (N < 50u) );
-
-                ASSER_TRAJ_LogAsser("gabarit_acceleration_max", NBR_ASSER_LOG_VALUE, i * chemin.profilVitesse.pas_echantillon_distance);
-                memo_delta_acc = 0.0;
-                delta_acc = 0.0;
-                i = m;
             }
         }
 

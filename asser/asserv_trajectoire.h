@@ -70,6 +70,7 @@ typedef struct
     float           coeff_decc_finale;
     float           decc_min_finale;
     float           vitesse_seuil_decc_finale;
+    float           vpointe;
 } ParametresProfilVitesse;
 
 typedef struct
