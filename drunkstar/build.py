@@ -7,16 +7,12 @@ import shutil
 from subprocess import *
 
 
-MERCURIAL_VERSION = "2.1"
-MERCURIAL_ARCHIVE = "mercurial-{}.tar.gz".format(MERCURIAL_VERSION)
-MERCURIAL_URL     = "http://mercurial.selenic.com/release/{}".format(MERCURIAL_ARCHIVE)
 BUILDROOT_VERSION = "2012.02"
 BUILDROOT         = "buildroot-{}".format(BUILDROOT_VERSION)
 BUILDROOT_ARCHIVE = "{}.tar.bz2".format(BUILDROOT)
 BUILDROOT_URL     = "http://buildroot.net/downloads/{}".format(BUILDROOT_ARCHIVE)
 
 PACKAGES = [
-             (MERCURIAL_ARCHIVE, MERCURIAL_URL),
              (BUILDROOT_ARCHIVE, BUILDROOT_URL)
            ]
 
@@ -33,29 +29,16 @@ def download():
         archive_file = "dl/{}".format(BUILDROOT_ARCHIVE)
         call(["tar", "xjf", archive_file])
         call(["patch", "-d", BUILDROOT, "-p1", "-i", "../buildroot-2012.02-fix-microperl-compilation.patch"])
+        call(["patch", "-d", BUILDROOT, "-p1", "-i", "../buildroot-2012.02-fix-library-copy.patch"])
+        call(["patch", "-d", BUILDROOT, "-p1", "-i", "../buildroot-2012.02-mercurial.patch"])
 
 
 def build():
-    # Cleanup
-    #for (archive_name, url) in PACKAGES:
-        #archive_file = "{}/{}".format(OUTPUT_DIR, archive_name)
-        #if os.path.exists(archive_file):
-            #os.remove(archive_file)
-    #ubi_target = "{}/target/{}".format(OUTPUT_DIR, "rootfs.ubifs")
-    #if os.path.exists(ubi_target):
-        #os.remove(ubi_target)
-
     # Build
     os.chdir(BUILDROOT)
     if not os.path.exists(".config"):
         shutil.copyfile("../{0}.config".format(BUILDROOT), ".config")
     call(["make"])
-
-    #ubi_image = "{}/images/{}".format(OUTPUT_DIR, "rootfs.ubifs")
-    #shutil.copyfile(ubi_image, ubi_target)
-    #call(["make"])
-
-
 
 
 if __name__ == "__main__":

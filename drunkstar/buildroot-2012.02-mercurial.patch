@@ -1,5 +1,5 @@
 diff --git a/package/Config.in b/package/Config.in
-index 8a7c9c4..8ea4a48 100644
+index 41cbb8c..a84c178 100644
 --- a/package/Config.in
 +++ b/package/Config.in
 @@ -85,6 +85,7 @@ source "package/sstrip/Config.in"
@@ -59,10 +59,10 @@ index 0000000..fbda36b
 + import tempfile
 diff --git a/package/mercurial/mercurial.mk b/package/mercurial/mercurial.mk
 new file mode 100644
-index 0000000..1787786
+index 0000000..8d392f3
 --- /dev/null
 +++ b/package/mercurial/mercurial.mk
-@@ -0,0 +1,21 @@
+@@ -0,0 +1,26 @@
 +#############################################################
 +#
 +# mercurial
@@ -76,7 +76,12 @@ index 0000000..1787786
 +MERCURIAL_DEPENDENCIES = python
 +
 +define MERCURIAL_BUILD_CMDS
-+	(cd $(@D); $(HOST_DIR)/usr/bin/python setup.py build)
++	(cd $(@D); \
++		CC="$(TARGET_CC)"		\
++		CFLAGS="$(TARGET_CFLAGS) -I$(STAGING_DIR)/usr/include/python$(PYTHON_VERSION_MAJOR)" 	\
++		LDSHARED="$(TARGET_CC) -shared" \
++		LDFLAGS="$(TARGET_LDFLAGS)" 	\
++	$(HOST_DIR)/usr/bin/python setup.py build)
 +endef
 +
 +define MERCURIAL_INSTALL_TARGET_CMDS
