@@ -1,0 +1,13 @@
+diff --git a/support/scripts/copy.sh b/support/scripts/copy.sh
+index 508ed56..b6636f1 100755
+--- a/support/scripts/copy.sh
++++ b/support/scripts/copy.sh
+@@ -8,7 +8,7 @@ echo "Copying development files to target..."
+ cp -af ${STAGING_DIR}/usr/include ${TARGET_DIR}/usr
+ 
+ for LIBSDIR in /lib /usr/lib; do
+-	for WILDCARD in *.a *.la; do
++	for WILDCARD in *.a *.la *.so; do
+ 		for FILE_PATH in `find ${STAGING_DIR}${LIBSDIR} -name ${WILDCARD}`; do
+ 			STAGING_STRIPPED=${FILE_PATH##${STAGING_DIR}}
+ 			EXTENDED_DIR=${STAGING_STRIPPED%/${WILDCARD}}
