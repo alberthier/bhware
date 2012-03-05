@@ -91,6 +91,9 @@ WEB_SERVER_PORT                        = 80
 # Default state machine name
 STATE_MACHINE                          = "default"
 
+# Router map resolution
+ROUTER_MAP_RESOLUTION                  = 0.01
+
 # Opponent detection
 OPPONENT_DETECTION_ANGLE               = math.pi / 6.0
 OPPONENT_DETECTION_DISAPEARING_TICKS   = 800 * EVENT_LOOP_TICK_RESOLUTION_S

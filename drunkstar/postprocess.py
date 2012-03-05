@@ -16,7 +16,6 @@ def copy_skeleton():
     for item in os.listdir(skeleton):
         call(["cp", "-rf", os.path.join(skeleton, item), dest_root]) 
     call(["ln", "-s", "../lib/sftp-server", os.path.join(dest_root, "usr", "libexec")])
-    call(["ln", "-s", "/lib/libc.so.0", os.path.join(dest_root, "usr", "lib", "libc.so")])
 
 
 if __name__ == "__main__":
