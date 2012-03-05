@@ -26,6 +26,6 @@ d_cfgTraj = {'Masse': 1.2
                 , 'RatioAcc': 1.0
                 , 'RatioDecc': 1.0
                 , 'Umax': 900.0	# Umax
-                , 'Facteur_vitesse_angulaire': 1.2	# facteur de vitesse angulaire
+                , 'Facteur_vitesse_angulaire': 0.3	# facteur de vitesse angulaire
                 , 'Distance': 0.5
                 }

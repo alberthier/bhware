@@ -13,6 +13,8 @@ import bisect
 import fcntl
 import termios
 import ctypes
+import struct
+import serial
 
 import logger
 import packets
@@ -30,31 +32,60 @@ from definitions import *
 class TurretChannel(asyncore.file_dispatcher):
 
     def __init__(self, serial_port_path, serial_port_speed, eventloop):
-        import serial
         self.port = serial.PosixPollSerial(serial_port_path, serial_port_speed, timeout = 0)
         self.port.nonblocking()
         asyncore.file_dispatcher.__init__(self, self.port)
         self.eventloop = eventloop
         self.buffer = ""
         self.packet = None
+        self.synchronized = False
+        self.out_buffer = ""
+        self.turret_packets = [ packets.TurretDetect.TYPE, packets.TurretInit.TYPE, packets.TurretDistances.TYPE, packets.TurretBoot.TYPE ]
 
 
     def bytes_available(self):
         return self.port.inWaiting()
 
 
+    def initiate_send(self):
+        num_sent = 0
+        num_sent = asyncore.file_dispatcher.send(self, self.out_buffer[:512])
+        self.out_buffer = self.out_buffer[num_sent:]
+
+
+    def handle_write(self):
+        self.initiate_send()
+
+
+    def send(self, data):
+        self.out_buffer = self.out_buffer + data
+        self.initiate_send()
+
+
     def writable(self):
-        return False
+        return self.connected and len(self.out_buffer) != 0
 
 
     def handle_read(self):
+        if not self.synchronized:
+            while self.bytes_available():
+                data = self.recv(1)
+                (packet_type,) = struct.unpack("<B", data)
+                if packet_type in self.turret_packets:
+                    self.synchronized = True
+                    self.buffer += data
+                    self.packet = packets.create_packet(self.buffer)
+                    break
         self.eventloop.handle_read(self)
+
+
+    def close(self):
+        self.port.close()
+        asyncore.file_dispatcher.close(self)
 
 
     def handle_close(self):
         logger.log("handle_close")
-        for l in traceback.format_stack() :
-            logger.log(l)
 
 
 
@@ -91,6 +122,10 @@ class RobotLogDeviceChannel(asyncore.dispatcher):
         available = ctypes.c_int()
         fcntl.ioctl(self.socket.fileno(), termios.FIONREAD, available)
         return available.value
+
+
+    def writable(self):
+        return False
 
 
     def handle_read(self):
@@ -180,6 +215,7 @@ class RobotControlDeviceStarter(object):
             except Exception as e:
                 # Log socket is not mandatory. If the connection fails, continue without it.
                 logger.log("Unable to connect to the log stocket {}:{} ({}), continuing without PIC logs".format(REMOTE_IP, REMOTE_LOG_PORT, e))
+            self.eventloop.on_turret_boot(None)
             self.eventloop.create_fsm()
         return connected
 
@@ -263,6 +299,17 @@ class EventLoop(object):
         leds.green.heartbeat_tick()
 
 
+    def on_turret_boot(self, packet):
+        if self.turret_channel != None:
+            packet = packets.TurretInit()
+            packet.mode = TURRET_INIT_MODE_WRITE
+            packet.short_distance = TURRET_SHORT_DISTANCE_DETECTION_RANGE
+            packet.long_distance = TURRET_LONG_DISTANCE_DETECTION_RANGE
+            buffer = packet.serialize()
+            logger.log_packet(packet, "ARM")
+            self.turret_channel.send(buffer)
+
+
     def send_packet(self, packet):
         if self.root_state.sub_state != None:
             logger.log_packet(packet, "ARM")
@@ -322,4 +369,6 @@ class EventLoop(object):
             self.turret_channel.close()
         if self.robot_control_channel != None:
             self.robot_control_channel.close()
+        if self.robot_log_channel != None:
+            self.robot_log_channel.close()
         logger.close()

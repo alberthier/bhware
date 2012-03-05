@@ -73,7 +73,7 @@ SERIAL_PORT_SPEED                      = 115200
 
 # Leds:
 if IS_HOST_DEVICE_ARM:
-    ORANGE_LED_DEVICE_PATH             = "/sys/class/leds/dockstar:orange:health/brightness"
+    ORANGE_LED_DEVICE_PATH             = "/sys/class/leds/dockstar:orange:misc/brightness"
     GREEN_LED_DEVICE_PATH              = "/sys/class/leds/dockstar:green:health/brightness"
 else:
     ORANGE_LED_DEVICE_PATH             = None
@@ -98,6 +98,10 @@ OPPONENT_DETECTION_DISAPEARING_TICKS   = 800 * EVENT_LOOP_TICK_RESOLUTION_S
 # Blocking opponent handling
 DEFAULT_OPPONENT_WAIT_MS               = 3000
 DEFAULT_OPPONENT_MAX_RETRIES           = 5
+
+# Turret detection ranges
+TURRET_SHORT_DISTANCE_DETECTION_RANGE  = 100
+TURRET_LONG_DISTANCE_DETECTION_RANGE   = 200
 
 
 ########################################################################

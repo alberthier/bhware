@@ -15,13 +15,13 @@ class OpponentDetector(object):
         self.detection_tick = 0
 
 
-    def on_turret_detect(self, angle):
-        logger.log("OpponentDetector.on_turret_detect {}".format(angle))
-        if self.is_opponent_in_front(angle) or self.is_opponent_in_back(angle):
+    def on_turret_detect(self, packet):
+        logger.log("OpponentDetector.on_turret_detect {}".format(packet.angle))
+        if self.is_opponent_in_front(packet.angle) or self.is_opponent_in_back(packet.angle):
             if self.detection_tick == 0:
                 self.detection_tick = OPPONENT_DETECTION_DISAPEARING_TICKS
-                self.event_loop.get_current_state().on_opponent_entered(angle)
-            self.event_loop.get_current_state().on_opponent_detected(angle)
+                self.event_loop.get_current_state().on_opponent_entered(packet.angle)
+            self.event_loop.get_current_state().on_opponent_detected(packet.angle)
 
 
     def on_timer_tick(self):

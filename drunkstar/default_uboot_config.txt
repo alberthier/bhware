@@ -1,0 +1,32 @@
+bootcmd=run bootcmd_usb; usb stop; run bootcmd_pogo; reset
+bootdelay=3
+baudrate=115200
+arcNumber=2097
+mainlineLinux=yes
+console=ttyS0,115200
+usb_init=usb start
+usb_device=0:1
+usb_root=/dev/sda1
+usb_rootfstype=ext2
+usb_rootdelay=10
+mtdparts=mtdparts=orion_nand:1M(u-boot),4M(uImage),32M(rootfs),-(data)
+mtdids=nand0=orion_nand
+partition=nand0,2
+bootcmd_pogo=fsload uboot-original-mtd0.kwb; go 0x800200
+usb_load_uimage=mw 0x800000 0 1; ext2load usb $usb_device 0x800000 /boot/uImage
+usb_boot=if ext2load usb $usb_device 0x1100000 /boot/uInitrd; then bootm 0x800000 0x1100000;else bootm 0x800000;fi;
+set_bootargs_usb=setenv bootargs console=$console root=$usb_root rootdelay=$usb_rootdelay rootfstype=$usb_rootfstype $mtdparts
+bootcmd_usb=run usb_init; run usb_load_uimage; run set_bootargs_usb; run usb_boot;
+led_init=green blinking
+led_exit=green off
+led_error=orange blinking
+stdin=serial
+stdout=serial
+stderr=serial
+ethact=egiga0
+ethaddr=00:10:75:1A:87:59
+serverip=192.168.0.2
+ipaddr=192.168.0.42
+if_netconsole=ping $serverip
+start_netconsole=setenv ncip $serverip; setenv stdin nc; setenv stdout nc; setenv stderr nc; version;
+preboot=run if_netconsole start_netconsole

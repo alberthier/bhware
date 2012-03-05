@@ -211,7 +211,7 @@ extern void ASSER_TRAJ_InitialisationGenerale(void)
 /**********************************************************************/
 /*! \brief ASSER_TRAJ_isDeplacement
  * 
- *  \note  Test le déplacement
+ *  \note  Test le dÃ©placement
  * 
  *  \param [in] traj              type de trajectoire
  *
@@ -549,7 +549,7 @@ extern void ASSER_TRAJ_AsservissementMouvementRobot(Pose poseRobot, VitessesRobo
  *  \param [in]     poseRobot       pose courante du robot integrant le choix de la marche (AVANT ou ARRIERE)
  *  \param [in]     point               pointeur du tableau des points imposes du chemin dont le point a atteindre en dernier
  *  \param [in]     nbrePts           nombre de points intermediaires du chemin par lesquelles passer +1 pour le point d'arrvee
- *  \param [in]     mouvement     type de mouvement a executer: un deplacement (DEPLACEMENT), une pure rotation (ROTATION) ou un dÃ©placement qui finit en ligne droite (DEPLACEMENT_LIGNE_DROITE)
+ *  \param [in]     mouvement     type de mouvement a executer: un deplacement (DEPLACEMENT), une pure rotation (ROTATION) ou un dÃƒÂ©placement qui finit en ligne droite (DEPLACEMENT_LIGNE_DROITE)
  *
  *  \return           None
  */
@@ -1508,7 +1508,7 @@ static void ASSER_TRAJ_GabaritVitesse(Trajectoire * traj)
     distanceRestante = traj->distance;
     ASSER_TRAJ_LogAsser("distanceRestante_FD", NBR_ASSER_LOG_VALUE, distanceRestante);
 
-    for (i = 4; i >= 0; i--) /* de la plus grande vitesse de pointe a la plus petite (de i=4 à i=0) */
+    for (i = 4; i >= 0; i--) /* de la plus grande vitesse de pointe a la plus petite (de i=4 Ã  i=0) */
     {
         if (g_tab_vpointe[i][0] < traj->distance)
         {
@@ -1599,7 +1599,7 @@ static void ASSER_TRAJ_GabaritVitesse(Trajectoire * traj)
  *  et des fonctions d'acceleration et de decceleration.
  *
  *  \param [in]     traj            pointeur de structure definissant la trajectoire
- *  \param [in]     coeff_vit_ini   coefficient applique à la vitesse de pointe pour déterminer la vitesse de consigne au depart
+ *  \param [in]     coeff_vit_ini   coefficient applique Ã  la vitesse de pointe pour dÃ©terminer la vitesse de consigne au depart
  *
  *  \return None
  */

@@ -1,17 +1,10 @@
 export PATH=\
 /bin:\
 /sbin:\
+/usr/local/bin:\
 /usr/bin:\
 /usr/sbin:\
-/usr/bin/X11:\
-/usr/local/bin
-
-do_exit()
-{
-    mount -o remount,ro,noatime,sync /dev/root /
-    unalias exit
-    exit
-}
+/usr/bin/X11:
 
 # If running interactively, then:
 if [ "$PS1" ]; then
@@ -41,7 +34,6 @@ if [ "$PS1" ]; then
     alias halt='busybox halt'
     alias reboot='busybox reboot'
     alias remountro='mount -o remount,ro,noatime /dev/root /'
+    alias remountrw='mount -o remount,rw,noatime /dev/root /'
 
-    alias exit='do_exit'
-    mount -o remount,rw,noatime,sync /dev/root /
 fi;
