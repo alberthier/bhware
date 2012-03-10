@@ -66,10 +66,10 @@ class Map(object):
         self.opponents = []
         if Map.DISTANCE_MAP == None:
             Map.DISTANCE_MAP = []
-            for x in xrange(int(FIELD_HEIGHT / MAP_CELL_RESOLUTION) + 1):
+            for x in xrange(Map.MAP_HEIGHT + 1):
                 row = []
                 x2 = x ** 2
-                for y in xrange(int(FIELD_WIDTH / MAP_CELL_RESOLUTION) + 1):
+                for y in xrange(Map.MAP_WIDTH + 1):
                     row.append(math.sqrt(x2 + y ** 2))
                 Map.DISTANCE_MAP.append(row)
 
@@ -129,7 +129,6 @@ class Map(object):
                     tentative_g_score = current.g_score + self.effective_cost(current.x, current.y, neighbor.x, neighbor.y)
                     if not neighbor.key in openset_keys:
                         neighbor.h_score = self.heuristic_cost_estimate(neighbor.x, neighbor.y, goal_cell_x, goal_cell_y)
-                        tentative_is_better = True
                         neighbor.g_score = tentative_g_score
                         neighbor.f_score = neighbor.g_score + neighbor.h_score
                         neighbor.came_from = current
