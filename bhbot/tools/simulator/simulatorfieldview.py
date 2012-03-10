@@ -290,6 +290,7 @@ class RobotTrajectoryLayer(fieldview.Layer):
         self.item = QGraphicsPathItem()
         self.item.setPen(QPen(QColor(self.color), 8.0))
         self.addToGroup(self.item)
+        self.path_blocks = []
 
 
     def setup(self):
@@ -312,6 +313,24 @@ class RobotTrajectoryLayer(fieldview.Layer):
             pose = point[2]
             path.lineTo(pose.y * 1000.0, pose.x * 1000.0)
         self.item.setPath(path)
+
+
+    def on_simulator_reset_route_path(self, packet):
+        for item in self.path_blocks:
+            self.scene().removeItem(item)
+        self.path_blocks = []
+
+
+    def on_simulator_route_path(self, packet):
+        cell_size = MAP_CELL_RESOLUTION * 1000.0
+        brush = QBrush(QColor(self.color).lighter(180))
+        pen = QPen(QBrush(), 0)
+        for (x, y) in packet.points:
+            item = QGraphicsRectItem(y * cell_size, x * cell_size, cell_size, cell_size)
+            item.setBrush(brush)
+            item.setPen(pen)
+            self.addToGroup(item)
+            self.path_blocks.append(item)
 
 
 

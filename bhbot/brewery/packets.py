@@ -25,7 +25,7 @@ import trajectory
 #      #ffe4c4 bisque                            #00ff00 lime
 #      #000000 black                          X  #32cd32 limegreen
 #      #0000ff blue                              #faf0e6 linen
-#      #8a2be2 blueviolet                        #ff00ff magenta
+#      #8a2be2 blueviolet                     X  #ff00ff magenta
 #   X  #a52a2a brown                             #800000 maroon
 #      #deb887 burlywood                         #66cdaa mediumaquamarine
 #   X  #5f9ea0 cadetblue                         #0000cd mediumblue
@@ -62,7 +62,7 @@ import trajectory
 #   X  #b22222 firebrick                         #ff0000 red
 #      #fffaf0 floralwhite                       #bc8f8f rosybrown
 #      #228b22 forestgreen                    X  #4169e1 royalblue
-#      #ff00ff fuchsia                           #8b4513 saddlebrown
+#      #ff00ff fuchsia                        X  #8b4513 saddlebrown
 #      #dcdcdc gainsboro                         #fa8072 salmon
 #      #f8f8ff ghostwhite                        #f4a460 sandybrown
 #   X  #ffd700 gold                              #2e8b57 seagreen
@@ -445,6 +445,28 @@ class PoseItem(PoseWithOptionalAngleItem):
         value = trajectory.Pose(buf[0], buf[1], buf[2])
         del buf[0:3]
         return value
+
+
+
+
+class SimulatorRoutePointItem(PacketItem):
+
+    C_TYPE = 'BH'
+    DESCRIPTION = "Route point"
+
+    def __init__(self, name, description = None):
+        PacketItem.__init__(self, name, (0, 0), description)
+
+
+    def to_value_list(self, value, buf):
+        buf.append(value[0])
+        buf.append(value[1])
+
+
+    def from_value_list(self, buf):
+        (x, y) = buf[:2]
+        del buf[:2]
+        return (x, y)
 
 
 
@@ -852,6 +874,27 @@ class SimulatorData(BasePacket):
     LOGVIEW_COLOR = "#4169e1"
     DEFINITION = (
         UInt8Item('leds', 0, "Dockstar leds status"),
+    )
+
+
+
+
+class SimulatorResetRoutePath(BasePacket):
+
+    TYPE = 104
+    LOGVIEW_DEFAULT_ENABLED = False
+    LOGVIEW_COLOR = "#ff00ff"
+
+
+
+
+class SimulatorRoutePath(BasePacket):
+
+    TYPE = 105
+    LOGVIEW_DEFAULT_ENABLED = False
+    LOGVIEW_COLOR = "#8b4513"
+    DEFINITION = (
+        ListItem('points', [], SimulatorRoutePointItem(""), 84, "Route path points"),
     )
 
 

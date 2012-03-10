@@ -49,12 +49,8 @@ KEEP_ALIVE_DELAY_MS                    = 200
 EVENT_LOOP_TICK_RESOLUTION_S           = 0.05
 
 # Brewery execution host
-if socket.gethostname() == "drunkstar":
-    IS_HOST_DEVICE_ARM                 = True
-    IS_HOST_DEVICE_PC                  = False
-else:
-    IS_HOST_DEVICE_ARM                 = False
-    IS_HOST_DEVICE_PC                  = True
+IS_HOST_DEVICE_ARM                     = socket.gethostname() == "drunkstar"
+IS_HOST_DEVICE_PC                      = not IS_HOST_DEVICE_ARM
 
 # Remote device connection
 if IS_HOST_DEVICE_ARM:
@@ -92,7 +88,7 @@ WEB_SERVER_PORT                        = 80
 STATE_MACHINE                          = "default"
 
 # Router map resolution
-ROUTER_MAP_RESOLUTION                  = 0.01
+MAP_CELL_RESOLUTION                    = 0.01
 
 # Opponent detection
 OPPONENT_DETECTION_ANGLE               = math.pi / 6.0

@@ -24,6 +24,7 @@ import web.webinterface
 import leds
 import robot
 import opponentdetector
+import trajectory
 from definitions import *
 
 
@@ -236,6 +237,7 @@ class EventLoop(object):
         self.webserver_port = webserver_port
         self.opponent_detector = opponentdetector.OpponentDetector(self)
         self.stopping = False
+        self.map = trajectory.Map(self)
         self.timers = []
 
 
