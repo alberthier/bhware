@@ -89,7 +89,7 @@ STATE_MACHINE                          = "default"
 
 # Router map resolution
 MAP_CELL_RESOLUTION                    = 0.01
-ASTAR_HEURISTIC_VS_EFFECTIVE_TRADEOFF  = 1.5
+ASTAR_HEURISTIC_VS_EFFECTIVE_TRADEOFF  = 1.1
 
 # Opponent detection
 OPPONENT_DETECTION_ANGLE               = math.pi / 6.0
