@@ -75,7 +75,7 @@ class Map(object):
 
 
     def heuristic_cost_estimate(self, x1, y1, x2, y2):
-        return Map.DISTANCE_MAP[abs(x1 - x2)][abs(y1 - y2)]
+        return Map.DISTANCE_MAP[abs(x1 - x2)][abs(y1 - y2)] * ASTAR_HEURISTIC_VS_EFFECTIVE_TRADEOFF
 
 
     def effective_cost(self, x1, y1, x2, y2):
