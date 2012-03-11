@@ -290,7 +290,6 @@ class RobotTrajectoryLayer(fieldview.Layer):
         self.item = QGraphicsPathItem()
         self.item.setPen(QPen(QColor(self.color), 8.0))
         self.addToGroup(self.item)
-        self.path_blocks = []
 
 
     def setup(self):
@@ -315,6 +314,23 @@ class RobotTrajectoryLayer(fieldview.Layer):
         self.item.setPath(path)
 
 
+
+class RoutingLayer(fieldview.Layer):
+
+    def __init__(self, scene, team):
+        fieldview.Layer.__init__(self, scene)
+        self.team = team
+        if self.team == TEAM_PURPLE:
+            self.name = "Purple robot routing"
+            self.color = QColor(TEAM_COLOR_PURPLE).lighter(120).name()
+        else:
+            self.name = "Red robot routing"
+            self.color = QColor(TEAM_COLOR_RED).lighter(120).name()
+        self.path_blocks = []
+        self.walls = []
+        #self.setVisible(False)
+
+
     def on_simulator_reset_route_path(self, packet):
         for item in self.path_blocks:
             self.scene().removeItem(item)
@@ -323,7 +339,7 @@ class RobotTrajectoryLayer(fieldview.Layer):
 
     def on_simulator_route_path(self, packet):
         cell_size = MAP_CELL_RESOLUTION * 1000.0
-        brush = QBrush(QColor(self.color).lighter(180))
+        brush = QBrush(QColor(self.color))
         pen = QPen(QBrush(), 0)
         for (x, y) in packet.points:
             item = QGraphicsRectItem(y * cell_size, x * cell_size, cell_size, cell_size)
@@ -331,6 +347,24 @@ class RobotTrajectoryLayer(fieldview.Layer):
             item.setPen(pen)
             self.addToGroup(item)
             self.path_blocks.append(item)
+
+
+    def on_simulator_route_walls(self, packet):
+        cell_size = MAP_CELL_RESOLUTION * 1000.0
+        brushColor = QColor(QColor("#ab471d"))
+        brushColor.setAlpha(80)
+        brush = QBrush(brushColor)
+        pen = QPen(QBrush(), 0)
+        for wall in self.walls:
+            self.scene().removeItem(wall)
+        self.walls = []
+        for (x1, y1, x2, y2) in packet.walls:
+            item = QGraphicsRectItem(y1 * cell_size, x1 * cell_size, abs(y2 - y1) * cell_size,  abs(x2 - x1) * cell_size)
+            item.setBrush(brush)
+            item.setPen(pen)
+            self.addToGroup(item)
+            self.walls.append(item)
+
 
 
 
@@ -546,11 +580,15 @@ class SimulatorFieldViewController(fieldview.FieldViewController):
         self.field_scene.add_layer(self.purple_robot_layer)
         self.purple_robot_trajectrory_layer = RobotTrajectoryLayer(self.field_scene, TEAM_PURPLE)
         self.field_scene.add_layer(self.purple_robot_trajectrory_layer)
+        self.purple_robot_routing_layer = RoutingLayer(self.field_scene, TEAM_PURPLE)
+        self.field_scene.add_layer(self.purple_robot_routing_layer)
 
         self.red_robot_layer = RobotLayer(self.field_scene, TEAM_RED)
         self.field_scene.add_layer(self.red_robot_layer)
         self.red_robot_trajectrory_layer = RobotTrajectoryLayer(self.field_scene, TEAM_RED)
         self.field_scene.add_layer(self.red_robot_trajectrory_layer)
+        self.red_robot_routing_layer = RoutingLayer(self.field_scene, TEAM_RED)
+        self.field_scene.add_layer(self.red_robot_routing_layer)
 
         self.game_elements_layer = GameElementsLayer(self.purple_robot_layer.robot,
                                                      self.red_robot_layer.robot,

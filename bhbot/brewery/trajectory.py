@@ -59,11 +59,27 @@ class Map(object):
     MAP_WIDTH  = int(FIELD_WIDTH  / MAP_CELL_RESOLUTION)
     MAP_HEIGHT = int(FIELD_HEIGHT / MAP_CELL_RESOLUTION)
     DISTANCE_MAP = None
+    MAP_WALLS_CELLS = 9 # int(MAP_WALLS_DISTANCE / MAP_CELL_RESOLUTION)
+    MAIN_OPPONENT_AVOIDANCE_CELLS = MAIN_OPPONENT_AVOIDANCE_RANGE
+    SECONDARY_OPPONENT_AVOIDANCE_CELLS = SECONDARY_OPPONENT_AVOIDANCE_RANGE
 
     def __init__(self, eventloop):
         self.eventloop = eventloop
+
         self.walls = []
-        self.opponents = []
+        self.walls.append([0.5 - MAP_WALLS_DISTANCE, 0.0, 0.52 + MAP_WALLS_DISTANCE, 0.5 + MAP_WALLS_DISTANCE])
+        self.walls.append([0.5 - MAP_WALLS_DISTANCE, 2.5 - MAP_WALLS_DISTANCE, 0.52 + MAP_WALLS_DISTANCE, 3.0])
+        self.walls.append([1.25 - MAP_WALLS_DISTANCE, 0.0, 2.0, 0.380 + MAP_WALLS_DISTANCE])
+        self.walls.append([1.25 - MAP_WALLS_DISTANCE, 2.62 - MAP_WALLS_DISTANCE, 2.0, 3.0])
+        self.walls.append([0.875 - MAP_WALLS_DISTANCE, 0.975 - MAP_WALLS_DISTANCE, 1.125 + MAP_WALLS_DISTANCE, 2.025 + MAP_WALLS_DISTANCE])
+        for wall in self.walls:
+            for i in xrange(len(wall)):
+                wall[i] = int(wall[i] / MAP_CELL_RESOLUTION)
+
+
+        self.main_opponent = None
+        self.secondary_opponent = None
+
         if Map.DISTANCE_MAP == None:
             Map.DISTANCE_MAP = []
             for x in xrange(Map.MAP_HEIGHT + 1):
@@ -75,7 +91,7 @@ class Map(object):
 
 
     def heuristic_cost_estimate(self, x1, y1, x2, y2):
-        return Map.DISTANCE_MAP[abs(x1 - x2)][abs(y1 - y2)] * ASTAR_HEURISTIC_VS_EFFECTIVE_TRADEOFF
+        return Map.DISTANCE_MAP[abs(x1 - x2)][abs(y1 - y2)] * ASTAR_EFFECTIVE_VS_HEURISTIC_TRADEOFF
 
 
     def effective_cost(self, x1, y1, x2, y2):
@@ -141,6 +157,7 @@ class Map(object):
                         neighbor.f_score = neighbor.g_score + neighbor.h_score
                         neighbor.came_from = current
 
+        logger.log("No route found")
         self.send_route_to_simulator([])
         return []
 
@@ -154,22 +171,36 @@ class Map(object):
 
         if prev_x >= 0:
             if prev_y >= 0:
-                n.append(MapCell(prev_x, prev_y))
-            n.append(MapCell(prev_x, node.y))
+                self.append_if_valid(n, MapCell(prev_x, prev_y))
+            self.append_if_valid(n, MapCell(prev_x, node.y))
             if next_y < Map.MAP_WIDTH:
-                n.append(MapCell(prev_x, next_y))
+                self.append_if_valid(n, MapCell(prev_x, next_y))
         if prev_y >= 0:
-            n.append(MapCell(node.x, prev_y))
+            self.append_if_valid(n, MapCell(node.x, prev_y))
         if next_y < Map.MAP_WIDTH:
-            n.append(MapCell(node.x, next_y))
+            self.append_if_valid(n, MapCell(node.x, next_y))
         if next_x < Map.MAP_HEIGHT:
             if prev_y >= 0:
-                n.append(MapCell(next_x, prev_y))
-            n.append(MapCell(next_x, node.y))
+                self.append_if_valid(n, MapCell(next_x, prev_y))
+            self.append_if_valid(n, MapCell(next_x, node.y))
             if next_y < Map.MAP_WIDTH:
-                n.append(MapCell(next_x, next_y))
+                self.append_if_valid(n, MapCell(next_x, next_y))
 
         return n
+
+
+    def append_if_valid(self, container, node):
+        if node.x < Map.MAP_WALLS_CELLS or node.x > (Map.MAP_HEIGHT - Map.MAP_WALLS_CELLS) or node.y < Map.MAP_WALLS_CELLS or node.y > (Map.MAP_WIDTH - Map.MAP_WALLS_CELLS):
+            return
+        if self.main_opponent != None and Map.DISTANCE_MAP[abs(node.x - self.main_opponent[0])][abs(node.y - self.main_opponent[1])] < Map.MAIN_OPPONENT_AVOIDANCE_CELLS:
+            return
+        if self.secondary_opponent != None and Map.DISTANCE_MAP[abs(node.x - self.main_opponent[0])][abs(node.y - self.main_opponent[1])] < Map.SECONDARY_OPPONENT_AVOIDANCE_CELLS:
+            return
+        for wall in self.walls:
+            in_wall = node.x >= wall[0] and node.x <= wall[2] and node.y >= wall[1] and node.y <= wall[3]
+            if in_wall:
+                return
+        container.append(node)
 
 
     def send_route_to_simulator(self, path):
@@ -182,3 +213,10 @@ class Map(object):
             packet.points.append((cell.x, cell.y))
         if len(packet.points) != 0:
             self.eventloop.send_packet(packet)
+
+
+    def send_walls_to_simulator(self):
+        packet = packets.SimulatorRouteWalls()
+        for wall in self.walls:
+            packet.walls.append(wall)
+        self.eventloop.send_packet(packet)

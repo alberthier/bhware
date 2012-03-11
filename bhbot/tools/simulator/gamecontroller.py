@@ -22,12 +22,14 @@ class GameController(object):
                                             self,
                                             main_window.purple_robot_view,
                                             main_window.field_controller.purple_robot_layer,
-                                            main_window.field_controller.purple_robot_trajectrory_layer)
+                                            main_window.field_controller.purple_robot_trajectrory_layer,
+                                            main_window.field_controller.purple_robot_routing_layer)
         self.red_robot = RobotController(TEAM_RED,
                                          self,
                                          main_window.red_robot_view,
                                          main_window.field_controller.red_robot_layer,
-                                         main_window.field_controller.red_robot_trajectrory_layer)
+                                         main_window.field_controller.red_robot_trajectrory_layer,
+                                         main_window.field_controller.red_robot_routing_layer)
         self.game_elements_layer = main_window.field_controller.game_elements_layer
         self.main_bar = main_window.main_bar
         self.main_bar.reload.clicked.connect(self.setup)

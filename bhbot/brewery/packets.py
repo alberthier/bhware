@@ -78,7 +78,7 @@ import trajectory
 #      #fffff0 ivory                          X  #4682b4 steelblue
 #      #f0e68c khaki                             #d2b48c tan
 #      #e6e6fa lavender                          #008080 teal
-#      #fff0f5 lavenderblush                     #d8bfd8 thistle
+#      #fff0f5 lavenderblush                  X  #d8bfd8 thistle
 #      #7cfc00 lawngreen                         #ff6347 tomato
 #      #fffacd lemonchiffon                      #40e0d0 turquoise
 #      #add8e6 lightblue                         #ee82ee violet
@@ -467,6 +467,30 @@ class SimulatorRoutePointItem(PacketItem):
         (x, y) = buf[:2]
         del buf[:2]
         return (x, y)
+
+
+
+
+class SimulatorRouteRectItem(PacketItem):
+
+    C_TYPE = 'BHBH'
+    DESCRIPTION = "Route point"
+
+    def __init__(self, name, description = None):
+        PacketItem.__init__(self, name, (0, 0, 0, 0), description)
+
+
+    def to_value_list(self, value, buf):
+        buf.append(value[0])
+        buf.append(value[1])
+        buf.append(value[2])
+        buf.append(value[3])
+
+
+    def from_value_list(self, buf):
+        (x1, y1, x2, y2) = buf[:4]
+        del buf[:4]
+        return (x1, y1, x2, y2)
 
 
 
@@ -895,6 +919,18 @@ class SimulatorRoutePath(BasePacket):
     LOGVIEW_COLOR = "#8b4513"
     DEFINITION = (
         ListItem('points', [], SimulatorRoutePointItem(""), 84, "Route path points"),
+    )
+
+
+
+
+class SimulatorRouteWalls(BasePacket):
+
+    TYPE = 106
+    LOGVIEW_DEFAULT_ENABLED = False
+    LOGVIEW_COLOR = "#d8bfd8"
+    DEFINITION = (
+        ListItem('walls', [], SimulatorRouteRectItem(""), 42, "Route walls"),
     )
 
 
