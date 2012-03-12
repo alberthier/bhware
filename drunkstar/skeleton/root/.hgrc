@@ -1,0 +1,8 @@
+[extensions]
+hgext.rebase=
+hgext.record=
+color=
+hgshelve=/root/.hgext/hgshelve.py
+
+[ui]
+editor=vim
