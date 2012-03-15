@@ -98,42 +98,34 @@ class Map(object):
         return Map.DISTANCE_MAP[abs(x1 - x2)][abs(y1 - y2)]
 
 
-    # route
     def simplified_route(self, start_x, start_y, goal_x, goal_y):
         path = self.route(start_x, start_y, goal_x, goal_y)
         logger.log(str(path))
         simplified_path = []
-        if len(path) > 2:
-            segment_start_x = path[0].x
-            segment_start_y = path[0].y
-            for i in xrange(2, len(path)):
-                dx = path[i].x - segment_start_x
-                dy = path[i].y - segment_start_y
-                if dx != 0:
-                    a = float(dy) / float(dx)
-                    expected_y = a * float(path[i - 1].x - segment_start_x) + float(segment_start_y)
-                    inline = round(expected_y) == path[i - 1].y
-                    logger.log("path[i-1].x={} segment_start_x={} segment_start_y={}".format(path[i - 1].x*2, segment_start_x*2, segment_start_y*2))
-                    logger.log("dx={} a={} ey={} y={} x={} inline={}".format(dx, a, expected_y*2, path[i - 1].y*2, path[i - 1].x*2, inline))
-
-
-                else:
-                    a = float(dx) / float(dy)
-                    expected_x = a * float(path[i - 1].y - segment_start_y) + float(segment_start_x)
-                    inline = round(expected_x) == path[i - 1].x
-                    logger.log("path[i-1].y={} segment_start_x={} segment_start_y={}".format(path[i - 1].y*2, segment_start_x*2, segment_start_y*2))
-                    logger.log("dy={} a={} ex={} x={} y={} inline={}".format(dy, a, expected_x*2, path[i - 1].x*2, path[i - 1].y*2, inline))
-                if not inline:
-                    segment_start_x = path[i].x
-                    segment_start_y = path[i].y
-                    simplified_path.append(path[i - 1])
-            simplified_path.append(path[-1])
+        if len(path) > 1:
+            cleaned_path = [ path[0] ]
+            for i in xrange(1, len(path)):
+                if path[i].x != path[i - 1].x and path[i].y != path[i - 1].y:
+                    cleaned_path.append(path[i])
+            p1 = cleaned_path[0]
+            p2 = None
+            p3 = None
+            simplified_path.append(p1)
+            for i in xrange(2, len(cleaned_path)):
+                p2 = cleaned_path[i - 1]
+                p3 = cleaned_path[i]
+                a1 = math.atan2(p2.y - p1.y, p2.x - p1.x)
+                a2 = math.atan2(p3.y - p2.y, p3.x - p2.x)
+                if abs(a1 - a2) > 0.1:
+                   simplified_path.append(p2)
+                   p1 = p2
+            if p3 != None:
+                simplified_path.append(p3)
         if IS_HOST_DEVICE_PC:
             self.send_route_to_simulator(simplified_path)
         return simplified_path
 
 
-    # find path | breadcrumb
     def route(self, start_x, start_y, goal_x, goal_y):
         if IS_HOST_DEVICE_PC:
             self.eventloop.send_packet(packets.SimulatorResetRoutePath())
