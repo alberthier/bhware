@@ -121,10 +121,10 @@ class PositionControlSimulatorDynamics(QObject):
         for source in sources:
             mtime = os.stat(os.path.join(self.simulator_dir, source)).st_mtime
             if mtime > binary_mtime:
-                args = ["-o", binary] + sources
+                args = ["-o", binary] + sources + [ "-lm" ]
                 comp = QProcess()
                 comp.setWorkingDirectory(self.simulator_dir)
-                comp.start("g++", args)
+                comp.start("gcc", args)
                 comp.waitForFinished()
                 if comp.exitCode() == 0:
                     print("Compilation succeeded")
