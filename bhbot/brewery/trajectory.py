@@ -60,8 +60,8 @@ class Map(object):
     MAP_HEIGHT = int(FIELD_HEIGHT / MAP_CELL_RESOLUTION)
     DISTANCE_MAP = None
     MAP_WALLS_CELLS = 9 # int(MAP_WALLS_DISTANCE / MAP_CELL_RESOLUTION)
-    MAIN_OPPONENT_AVOIDANCE_CELLS = MAIN_OPPONENT_AVOIDANCE_RANGE
-    SECONDARY_OPPONENT_AVOIDANCE_CELLS = SECONDARY_OPPONENT_AVOIDANCE_RANGE
+    MAIN_OPPONENT_AVOIDANCE_CELLS = MAIN_OPPONENT_AVOIDANCE_RANGE / MAP_CELL_RESOLUTION
+    SECONDARY_OPPONENT_AVOIDANCE_CELLS = SECONDARY_OPPONENT_AVOIDANCE_RANGE / MAP_CELL_RESOLUTION
 
     def __init__(self, eventloop):
         self.eventloop = eventloop
@@ -98,6 +98,42 @@ class Map(object):
         return Map.DISTANCE_MAP[abs(x1 - x2)][abs(y1 - y2)]
 
 
+    # route
+    def simplified_route(self, start_x, start_y, goal_x, goal_y):
+        path = self.route(start_x, start_y, goal_x, goal_y)
+        logger.log(str(path))
+        simplified_path = []
+        if len(path) > 2:
+            segment_start_x = path[0].x
+            segment_start_y = path[0].y
+            for i in xrange(2, len(path)):
+                dx = path[i].x - segment_start_x
+                dy = path[i].y - segment_start_y
+                if dx != 0:
+                    a = float(dy) / float(dx)
+                    expected_y = a * float(path[i - 1].x - segment_start_x) + float(segment_start_y)
+                    inline = round(expected_y) == path[i - 1].y
+                    logger.log("path[i-1].x={} segment_start_x={} segment_start_y={}".format(path[i - 1].x*2, segment_start_x*2, segment_start_y*2))
+                    logger.log("dx={} a={} ey={} y={} x={} inline={}".format(dx, a, expected_y*2, path[i - 1].y*2, path[i - 1].x*2, inline))
+
+
+                else:
+                    a = float(dx) / float(dy)
+                    expected_x = a * float(path[i - 1].y - segment_start_y) + float(segment_start_x)
+                    inline = round(expected_x) == path[i - 1].x
+                    logger.log("path[i-1].y={} segment_start_x={} segment_start_y={}".format(path[i - 1].y*2, segment_start_x*2, segment_start_y*2))
+                    logger.log("dy={} a={} ex={} x={} y={} inline={}".format(dy, a, expected_x*2, path[i - 1].x*2, path[i - 1].y*2, inline))
+                if not inline:
+                    segment_start_x = path[i].x
+                    segment_start_y = path[i].y
+                    simplified_path.append(path[i - 1])
+            simplified_path.append(path[-1])
+        if IS_HOST_DEVICE_PC:
+            self.send_route_to_simulator(simplified_path)
+        return simplified_path
+
+
+    # find path | breadcrumb
     def route(self, start_x, start_y, goal_x, goal_y):
         if IS_HOST_DEVICE_PC:
             self.eventloop.send_packet(packets.SimulatorResetRoutePath())
@@ -131,8 +167,6 @@ class Map(object):
                 while p.came_from != None:
                     path.append(Pose(p.x, p.y))
                     p = p.came_from
-                if IS_HOST_DEVICE_PC:
-                    self.send_route_to_simulator(path)
                 logger.log("Route computed. Length: {}. Max openset size: {}".format(len(path), max_openset_size))
                 return path
 
