@@ -924,9 +924,21 @@ class SimulatorRoutePath(BasePacket):
 
 
 
-class SimulatorRouteWalls(BasePacket):
+class SimulatorSimplifiedRoutePath(BasePacket):
 
     TYPE = 106
+    LOGVIEW_DEFAULT_ENABLED = False
+    LOGVIEW_COLOR = "#8b4513"
+    DEFINITION = (
+        ListItem('points', [], SimulatorRoutePointItem(""), 84, "Route path points"),
+    )
+
+
+
+
+class SimulatorRouteWalls(BasePacket):
+
+    TYPE = 107
     LOGVIEW_DEFAULT_ENABLED = False
     LOGVIEW_COLOR = "#d8bfd8"
     DEFINITION = (

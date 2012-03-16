@@ -122,7 +122,8 @@ class Map(object):
             if p3 != None:
                 simplified_path.append(p3)
         if IS_HOST_DEVICE_PC:
-            self.send_route_to_simulator(simplified_path)
+            self.send_route_to_simulator(path, False)
+            self.send_route_to_simulator(simplified_path, True)
         return simplified_path
 
 
@@ -184,7 +185,6 @@ class Map(object):
                         neighbor.came_from = current
 
         logger.log("No route found")
-        self.send_route_to_simulator([])
         return []
 
 
@@ -229,9 +229,12 @@ class Map(object):
         container.append(node)
 
 
-    def send_route_to_simulator(self, path):
+    def send_route_to_simulator(self, path, is_simplified):
         max_elements = packets.SimulatorRoutePath.DEFINITION[0].max_elements
-        packet = packets.SimulatorRoutePath()
+        if is_simplified:
+            packet = packets.SimulatorSimplifiedRoutePath()
+        else:
+            packet = packets.SimulatorRoutePath()
         for cell in path:
             if len(packet.points) == max_elements:
                 self.eventloop.send_packet(packet)

@@ -322,10 +322,10 @@ class RoutingLayer(fieldview.Layer):
         self.team = team
         if self.team == TEAM_PURPLE:
             self.name = "Purple robot routing"
-            self.color = QColor(TEAM_COLOR_PURPLE).lighter(120).name()
+            self.color = TEAM_COLOR_PURPLE
         else:
             self.name = "Red robot routing"
-            self.color = QColor(TEAM_COLOR_RED).lighter(120).name()
+            self.color = TEAM_COLOR_RED
         self.path_blocks = []
         self.walls = []
         #self.setVisible(False)
@@ -338,8 +338,16 @@ class RoutingLayer(fieldview.Layer):
 
 
     def on_simulator_route_path(self, packet):
+        self.display_path_blocks(packet, QColor(self.color).lighter(120))
+
+
+    def on_simulator_simplified_route_path(self, packet):
+        self.display_path_blocks(packet, QColor(self.color).darker(150))
+
+
+    def display_path_blocks(self, packet, color):
         cell_size = MAP_CELL_RESOLUTION * 1000.0
-        brush = QBrush(QColor(self.color))
+        brush = QBrush(color)
         pen = QPen(QBrush(), 0)
         for (x, y) in packet.points:
             item = QGraphicsRectItem(y * cell_size, x * cell_size, cell_size, cell_size)
