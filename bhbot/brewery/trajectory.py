@@ -45,7 +45,12 @@ class MapCell(object):
         self.h_score = 0
         self.f_score = 0
         self.came_from = None
-        self.key = (self.x << 16) + self.y
+        self.key = MapCell.make_key(x, y)
+
+
+    @staticmethod
+    def make_key(x, y):
+        return (x << 16) + y
 
 
     def __lt__(self, other):
@@ -65,6 +70,7 @@ class Map(object):
 
     def __init__(self, eventloop):
         self.eventloop = eventloop
+        self.cells = []
 
         self.walls = []
         self.walls.append([0.5 - MAP_WALLS_DISTANCE, 0.0, 0.52 + MAP_WALLS_DISTANCE, 0.5 + MAP_WALLS_DISTANCE])
@@ -133,6 +139,8 @@ class Map(object):
 
         logger.log("Compute route from ({}, {}) to ({}, {})".format(start_x, start_y, goal_x, goal_y))
 
+        self.cells = {}
+
         closedset_keys = set()
         openset = []
         openset_keys = set()
@@ -147,9 +155,10 @@ class Map(object):
         start = MapCell(start_cell_x, start_cell_y)
         start.g_score = 0
         start.h_score = self.heuristic_cost_estimate(start_cell_x, start_cell_y, goal_cell_x, goal_cell_y)
-        start.f_score = start.g_score + start.f_score
+        start.f_score = start.g_score + start.h_score
 
         openset.append(start)
+        self.cells[start.key] = start
         openset_keys.add(start.key)
 
         while len(openset) != 0:
@@ -197,36 +206,42 @@ class Map(object):
 
         if prev_x >= 0:
             if prev_y >= 0:
-                self.append_if_valid(n, MapCell(prev_x, prev_y))
-            self.append_if_valid(n, MapCell(prev_x, node.y))
+                self.append_if_valid(n, prev_x, prev_y)
+            self.append_if_valid(n, prev_x, node.y)
             if next_y < Map.MAP_WIDTH:
-                self.append_if_valid(n, MapCell(prev_x, next_y))
+                self.append_if_valid(n, prev_x, next_y)
         if prev_y >= 0:
-            self.append_if_valid(n, MapCell(node.x, prev_y))
+            self.append_if_valid(n, node.x, prev_y)
         if next_y < Map.MAP_WIDTH:
-            self.append_if_valid(n, MapCell(node.x, next_y))
+            self.append_if_valid(n, node.x, next_y)
         if next_x < Map.MAP_HEIGHT:
             if prev_y >= 0:
-                self.append_if_valid(n, MapCell(next_x, prev_y))
-            self.append_if_valid(n, MapCell(next_x, node.y))
+                self.append_if_valid(n, next_x, prev_y)
+            self.append_if_valid(n, next_x, node.y)
             if next_y < Map.MAP_WIDTH:
-                self.append_if_valid(n, MapCell(next_x, next_y))
+                self.append_if_valid(n, next_x, next_y)
 
         return n
 
 
-    def append_if_valid(self, container, node):
-        if node.x < Map.MAP_WALLS_CELLS or node.x > (Map.MAP_HEIGHT - Map.MAP_WALLS_CELLS) or node.y < Map.MAP_WALLS_CELLS or node.y > (Map.MAP_WIDTH - Map.MAP_WALLS_CELLS):
+    def append_if_valid(self, container, x, y):
+        if x < Map.MAP_WALLS_CELLS or x > (Map.MAP_HEIGHT - Map.MAP_WALLS_CELLS) or y < Map.MAP_WALLS_CELLS or y > (Map.MAP_WIDTH - Map.MAP_WALLS_CELLS):
             return
-        if self.main_opponent != None and Map.DISTANCE_MAP[abs(node.x - self.main_opponent[0])][abs(node.y - self.main_opponent[1])] < Map.MAIN_OPPONENT_AVOIDANCE_CELLS:
+        if self.main_opponent != None and Map.DISTANCE_MAP[abs(x - self.main_opponent[0])][abs(y - self.main_opponent[1])] < Map.MAIN_OPPONENT_AVOIDANCE_CELLS:
             return
-        if self.secondary_opponent != None and Map.DISTANCE_MAP[abs(node.x - self.main_opponent[0])][abs(node.y - self.main_opponent[1])] < Map.SECONDARY_OPPONENT_AVOIDANCE_CELLS:
+        if self.secondary_opponent != None and Map.DISTANCE_MAP[abs(x - self.main_opponent[0])][abs(y - self.main_opponent[1])] < Map.SECONDARY_OPPONENT_AVOIDANCE_CELLS:
             return
         for wall in self.walls:
-            in_wall = node.x >= wall[0] and node.x <= wall[2] and node.y >= wall[1] and node.y <= wall[3]
+            in_wall = x >= wall[0] and x <= wall[2] and y >= wall[1] and y <= wall[3]
             if in_wall:
                 return
-        container.append(node)
+        key = MapCell.make_key(x, y)
+        if self.cells.has_key(key):
+            container.append(self.cells[key])
+        else:
+            node = MapCell(x, y)
+            self.cells[node.key] = node
+            container.append(node)
 
 
     def send_route_to_simulator(self, path, is_simplified):
