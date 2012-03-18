@@ -130,9 +130,16 @@ class Map(object):
 
         if IS_HOST_DEVICE_PC:
             self.send_route_to_simulator(path, False)
-            self.send_route_to_simulator(simplified_path, True)
+            self.send_route_to_simulator(simplified_path[1:], True)
 
-        return simplified_path
+        if len(simplified_path) > 0:
+            for i in xrange(1, len(simplified_path) - 1):
+                simplified_path[i].x = simplified_path[i].x * MAP_CELL_RESOLUTION + MAP_CELL_RESOLUTION / 2.0
+                simplified_path[i].y = simplified_path[i].y * MAP_CELL_RESOLUTION + MAP_CELL_RESOLUTION / 2.0
+            simplified_path[-1].x = goal_x
+            simplified_path[-1].y = goal_y
+
+        return simplified_path[1:]
 
 
     def send_route_to_simulator(self, path, is_simplified):
