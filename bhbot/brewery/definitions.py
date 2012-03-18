@@ -88,7 +88,7 @@ WEB_SERVER_PORT                        = 80
 STATE_MACHINE                          = "default"
 
 # Router map resolution
-MAP_CELL_RESOLUTION                    = 0.01
+MAP_CELL_RESOLUTION                    = 0.02
 MAP_WALLS_DISTANCE                     = ROBOT_WIDTH / 2.0
 ASTAR_EFFECTIVE_VS_HEURISTIC_TRADEOFF  = 1.5
 MAIN_OPPONENT_AVOIDANCE_RANGE          = 0.6
