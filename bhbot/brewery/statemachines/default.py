@@ -111,3 +111,46 @@ class GotoCaptainRoom(statemachine.State):
         self.walk.rotate_to(PURPLE_START_ANGLE)
         self.walk.move_to(PURPLE_START_X, PURPLE_START_Y)
         self.switch_to_substate(self.walk)
+
+class FindNextGoal(statemachine.State):
+    """ Find next goal
+    """
+    def on_enter(self):
+        pass
+
+class TakeMap(statemachine.State):
+    """ Take the map
+    """
+    def on_enter(self):
+        pass
+
+class GrapMap(statemachine.State):
+    """ Physically grab the map
+    """
+    def on_enter(self):
+        pass
+
+class TakeGoldBar(statemachine.State):
+    """ Take a gold bar
+    """
+    def on_enter(self):
+        pass
+
+class GradGoldbarAndStuff(statemachine.State):
+    """ Grab the gold bar and all the coins
+    """
+    def on_enter(self):
+        pass
+
+class GotoWithPathFinding(statemachine.State):
+    """ Goto in the captain's lair
+    """
+    def on_enter(self):
+        pass
+
+class EmptyTank(statemachine.State):
+    """ Empty the tank
+    """
+    def on_enter(self):
+        pass
+
