@@ -107,9 +107,12 @@ class Map(object):
         if len(path) > 1:
             cleaned_path = [ Pose(path[0][0], path[0][1]) ]
             for i in xrange(1, len(path)):
-                if path[i][0] != path[i - 1][0] and path[i][1] != path[i - 1][1]:
-                    (x, y) = path[i]
+                (prev_x, prev_y) = path[i - 1]
+                (x, y) = path[i]
+                if x != prev_x and y != prev_y:
                     cleaned_path.append(Pose(x, y))
+            if cleaned_path[-1].x != path[-1][0] or cleaned_path[-1].y != path[-1][1]:
+                cleaned_path.append(Pose(path[-1][0], path[-1][1]))
             p1 = cleaned_path[0]
             p2 = None
             p3 = None
@@ -124,8 +127,6 @@ class Map(object):
                    p1 = p2
             if p3 != None:
                 simplified_path.append(p3)
-
-        logger.log(str(simplified_path))
 
         if IS_HOST_DEVICE_PC:
             self.send_route_to_simulator(path, False)
