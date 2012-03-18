@@ -17,18 +17,6 @@ typedef struct _Cell
 typedef int (*LessFunction)(Cell*, Cell*);
 
 
-Cell* cell_init(Cell* self)
-{
-    self->h_score = 0.0;
-    self->g_score = 0.0;
-    self->f_score = 0.0;
-    self->came_from = NULL;
-    self->next = NULL;
-
-    return self;
-}
-
-
 int cell_f_score_less(Cell* a, Cell* b)
 {
     return a->f_score < b->f_score;
@@ -279,8 +267,6 @@ static float pathfinder_effective_cost(PathFinder* self, int x1, int y1, int x2,
 
 static PyObject* pathfinder_find(PathFinder* self, PyObject* args)
 {
-    int x = 0;
-    int y = 0;
     int start_x = 0;
     int start_y = 0;
     int goal_x = 0;
@@ -298,15 +284,12 @@ static PyObject* pathfinder_find(PathFinder* self, PyObject* args)
         return PyList_New(0);
     }
 
-    for (x = 0; x < self->map_max_x; ++x) {
-        for (y = 0; y < self->map_max_y; ++y) {
-            cell_init(&self->map[x][y]);
-        }
-    }
-
     open_set = &self->map[start_x][start_y];
     open_set->h_score = pathfinder_heuristic_cost_estimate(self, start_x, start_y, goal_x, goal_y);
-    open_set->f_score = open_set->g_score + open_set->h_score;
+    open_set->g_score = 0.0;
+    open_set->f_score = open_set->h_score;
+    open_set->next = NULL;
+    open_set->came_from = NULL;
 
     while (open_set != NULL) {
         Cell* current = open_set;
