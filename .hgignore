@@ -1,5 +1,6 @@
 /.*\.pyc$
 /.*\.o$
+/.*\.so$
 /logs/
 drunkstar/host/
 drunkstar/dl/
