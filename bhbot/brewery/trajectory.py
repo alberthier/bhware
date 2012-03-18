@@ -1,13 +1,15 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
+import sys
+import os
+import subprocess
 import math
 import bisect
 
 import tools
 import packets
 import logger
-import pathfinding
 from definitions import *
 
 
@@ -71,6 +73,11 @@ class Map(object):
 
     def __init__(self, eventloop):
         self.eventloop = eventloop
+
+        self.build_module()
+
+        import pathfinding
+
         self.pathfinder = pathfinding.PathFinder(Map.MAP_HEIGHT,
                                                  Map.MAP_WIDTH,
                                                  ASTAR_EFFECTIVE_VS_HEURISTIC_TRADEOFF,
@@ -165,3 +172,19 @@ class Map(object):
         for wall in self.walls:
             packet.walls.append(wall)
         self.eventloop.send_packet(packet)
+
+
+    def build_module(self):
+        pyversion = "python{}.{}".format(sys.version_info.major, sys.version_info.minor)
+        include_dir = sys.exec_prefix + "/include/" + pyversion
+        lib_dir = sys.exec_prefix + "/lib"
+        working_dir = os.path.dirname(__file__)
+        cmd = ["gcc", "-shared", "-fPIC", "-o", "pathfinding.so", "-I" + include_dir, "-L" + lib_dir, "pathfinding.c", "-l" + pyversion]
+        gcc = subprocess.Popen(cmd, stdout = subprocess.PIPE, stderr = subprocess.PIPE, cwd=working_dir)
+        (out, err) = gcc.communicate()
+        if gcc.returncode == 0:
+            logger.log("Pathfinding C module compiled successfully")
+        for l in out.splitlines():
+            logger.log(l)
+        for l in err.splitlines():
+            logger.log(l)
