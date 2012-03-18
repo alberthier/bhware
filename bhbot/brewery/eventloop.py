@@ -2,19 +2,14 @@
 # encoding: utf-8
 
 import asyncore
-import os
 import socket
-import imp
-import inspect
 import errno
-import traceback
 import datetime
 import bisect
 import fcntl
 import termios
 import ctypes
 import struct
-import serial
 
 import logger
 import packets
@@ -27,8 +22,8 @@ import opponentdetector
 import trajectory
 from definitions import *
 
-
-
+if IS_HOST_DEVICE_ARM :
+    import serial
 
 class TurretChannel(asyncore.file_dispatcher):
 
@@ -138,7 +133,7 @@ class RobotLogDeviceChannel(asyncore.dispatcher):
                     logger.log(self.buffer[:i], "PIC")
                     self.buffer = self.buffer[i + 1:]
                 else:
-                    break;
+                    break
         except:
             pass
 
@@ -337,7 +332,6 @@ class EventLoop(object):
     def create_fsm(self):
         state = statemachine.instantiate_state_machine(self.state_machine_name, self)
         if state == None :
-            logger.log("No 'Main' state machine found in '{}'".format(state_machine_file))
             self.stop()
         else:
             self.root_state.switch_to_substate(state)

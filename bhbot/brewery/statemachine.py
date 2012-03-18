@@ -20,6 +20,7 @@ def instantiate_state_machine(state_machine_name, eventloop):
             return root_state
     else:
         logger.log("No 'Main' state found in '{}'".format(state_machine_file))
+    return None
 
 
 
