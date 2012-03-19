@@ -25,6 +25,9 @@ from definitions import *
 if IS_HOST_DEVICE_ARM :
     import serial
 
+
+
+
 class TurretChannel(asyncore.file_dispatcher):
 
     def __init__(self, serial_port_path, serial_port_speed, eventloop):

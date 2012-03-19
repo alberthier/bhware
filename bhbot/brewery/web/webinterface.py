@@ -47,6 +47,7 @@ class BHWeb(object):
 
     @cherrypy.expose
     def index(self):
+        host = self.eventloop.web_server.current_environ["HTTP_HOST"].split(":")[0]
         html = """<!DOCTYPE html>
 <html>
 <head>
@@ -67,7 +68,7 @@ class BHWeb(object):
   <iframe src="statemachine" name="linktarget" />
 </body>
 </html>
-""".format(socket.gethostname())
+""".format(host)
         return html
 
 
