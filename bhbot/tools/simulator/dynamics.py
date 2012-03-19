@@ -144,7 +144,7 @@ class PositionControlSimulatorDynamics(QObject):
 
     def goto(self, packet):
         self.poses = []
-        self.elapsed_time = 0.0
+        self.elapsed_time = PositionControlSimulatorDynamics.TIMER_RESOLUTION
         self.invoke_move("MSG_MAIN_GOTO", packet.movement, packet.direction, packet.points)
 
 
