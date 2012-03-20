@@ -134,15 +134,7 @@ class RobotController(object):
         self.send_packet(packet)
 
 
-    def on_map_gripper_control(self, packet):
-        self.send_packet(packet)
-
-
     def on_empty_tank_control(self, packet):
-        self.send_packet(packet)
-
-
-    def on_fabric_store_control(self, packet):
         self.send_packet(packet)
 
 

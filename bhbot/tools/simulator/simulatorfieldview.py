@@ -22,13 +22,25 @@ import dynamics
 class GraphicsRobotArmObject(QObject):
 
     arm_movement_finished = pyqtSignal()
+    gripper_movement_finished = pyqtSignal()
 
     def __init__(self):
         QObject.__init__(self)
-        self.arm_item = QGraphicsRectItem(0.0, 0.0, 124.0, 100.0);
+
+        self.item = QGraphicsItemGroup()
+
+        self.arm_item = QGraphicsRectItem(0.0, -50.0, 124.0, 100.0);
         self.arm_item.setPen(QColor("#838383"))
         self.arm_item.setBrush(QColor("#e9eaff"))
+        self.item.addToGroup(self.arm_item)
         self.is_arm_retracted = True
+
+        self.gripper_item = QGraphicsRectItem(-40.0, -40.0, 40.0, 80.0);
+        self.gripper_item.setPen(QPen(0))
+        self.gripper_item.setBrush(QColor("#838383"))
+        self.gripper_item.setRotation(180.0)
+        self.item.addToGroup(self.gripper_item)
+        self.is_gripper_retracted = True
 
         self.arm_animation = QPropertyAnimation()
         self.arm_animation.setDuration(500.0)
@@ -36,22 +48,43 @@ class GraphicsRobotArmObject(QObject):
         self.arm_animation.setPropertyName("arm_position")
         self.arm_animation.finished.connect(self.arm_movement_finished)
 
+        self.gripper_animation = QPropertyAnimation()
+        self.gripper_animation.setDuration(500.0)
+        self.gripper_animation.setTargetObject(self)
+        self.gripper_animation.setPropertyName("gripper_position")
+        self.gripper_animation.finished.connect(self.gripper_movement_finished)
+
 
     def reset(self):
-        self.arm_item.setPos(-99.0, -50.0)
+        self.set_arm_position(-99.0)
+        self.set_gripper_position(40.0)
         self.is_arm_retracted = True
 
 
     def get_arm_position(self):
-        return self.arm_item.x()
+        return self.item.x()
 
 
     def set_arm_position(self, p):
-        self.arm_item.setX(p)
+        self.item.setX(p)
 
 
     #declare 'arm_position' to Qt's property system
     arm_position = pyqtProperty('qreal', get_arm_position, set_arm_position)
+
+
+    def get_gripper_position(self):
+        return self.gripper_item.rect().width()
+
+
+    def set_gripper_position(self, w):
+        rect = self.gripper_item.rect()
+        rect.setWidth(w)
+        self.gripper_item.setRect(rect)
+
+
+    #declare 'gripper_position' to Qt's property system
+    gripper_position = pyqtProperty('qreal', get_gripper_position, set_gripper_position)
 
 
     def deploy_arm(self):
@@ -66,6 +99,20 @@ class GraphicsRobotArmObject(QObject):
         self.arm_animation.setEndValue(-99.0)
         self.arm_animation.start()
         self.is_arm_retracted = True
+
+
+    def deploy_gripper(self):
+        self.gripper_animation.setStartValue(40.0)
+        self.gripper_animation.setEndValue(70.0)
+        self.gripper_animation.start()
+        self.is_gripper_retracted = False
+
+
+    def retract_gripper(self):
+        self.gripper_animation.setStartValue(70.0)
+        self.gripper_animation.setEndValue(40.0)
+        self.gripper_animation.start()
+        self.is_gripper_retracted = True
 
 
 
@@ -84,7 +131,7 @@ class GraphicsRobotObject(QObject):
         self.item = QGraphicsItemGroup(layer)
 
         self.arm = GraphicsRobotArmObject()
-        self.item.addToGroup(self.arm.arm_item)
+        self.item.addToGroup(self.arm.item)
 
         (self.structure, self.robot_item, self.gyration_item) = helpers.create_robot_base_item(QColor("#838383"), QColor("#e9eaff"), QColor(layer.color).darker(150))
         self.item.addToGroup(self.structure)
@@ -257,8 +304,9 @@ class GraphicsRobotObject(QObject):
 class RobotLayer(fieldview.Layer):
 
 
-    def __init__(self, scene, team):
+    def __init__(self, scene, field_view_controller, team):
         fieldview.Layer.__init__(self, scene)
+        self.field_view_controller =  field_view_controller
         self.team = team
         if self.team == TEAM_PURPLE:
             self.name = "Purple robot"
@@ -269,7 +317,8 @@ class RobotLayer(fieldview.Layer):
         self.robot = GraphicsRobotObject(self)
         self.robot.item.setVisible(False)
         self.robot.movement_finished.connect(self.movement_finished)
-        self.robot.arm.arm_movement_finished.connect(self.arm_movement_finished)
+        self.robot.arm.arm_movement_finished.connect(self.map_arm_movement_finished)
+        self.robot.arm.gripper_movement_finished.connect(self.map_gripper_movement_finished)
         self.robot_controller = None
         self.dynamics = None
 
@@ -341,12 +390,31 @@ class RobotLayer(fieldview.Layer):
             self.robot_controller.send_packet(packet)
 
 
-    def arm_movement_finished(self):
+    def map_arm_movement_finished(self):
         packet = packets.MapArmControl()
         if self.robot.arm.is_arm_retracted:
             packet.move = MAP_ARM_CLOSE
         else:
             packet.move = MAP_ARM_OPEN
+        self.robot_controller.send_packet(packet)
+
+
+    def on_map_gripper_control(self, packet):
+        if self.robot.arm.is_gripper_retracted and packet.move == MAP_GRIPPER_OPEN:
+            self.robot.arm.deploy_gripper()
+        elif not self.robot.arm.is_gripper_retracted and packet.move == MAP_GRIPPER_CLOSE:
+            self.robot.arm.retract_gripper()
+        else:
+            self.robot_controller.send_packet(packet)
+
+
+    def map_gripper_movement_finished(self):
+        packet = packets.MapGripperControl()
+        if self.robot.arm.is_gripper_retracted:
+            packet.move = MAP_GRIPPER_CLOSE
+            self.field_view_controller.game_elements_layer.remove_fabric(self.team)
+        else:
+            packet.move = MAP_GRIPPER_OPEN
         self.robot_controller.send_packet(packet)
 
 
@@ -607,12 +675,12 @@ class GameElementsLayer(fieldview.Layer):
             self.addToGroup(bar)
             self.elements.append(bar)
 
-        fabric = Fabric(TEAM_PURPLE)
-        self.addToGroup(fabric)
-        self.elements.append(fabric)
-        fabric = Fabric(TEAM_RED)
-        self.addToGroup(fabric)
-        self.elements.append(fabric)
+        self.purple_fabric = Fabric(TEAM_PURPLE)
+        self.addToGroup(self.purple_fabric)
+        self.elements.append(self.purple_fabric)
+        self.red_fabric = Fabric(TEAM_RED)
+        self.addToGroup(self.red_fabric)
+        self.elements.append(self.red_fabric)
 
         self.setup()
 
@@ -620,6 +688,8 @@ class GameElementsLayer(fieldview.Layer):
 
 
     def setup(self):
+        self.purple_fabric.show()
+        self.red_fabric.show()
         for elt in self.elements:
             elt.setup()
 
@@ -657,6 +727,13 @@ class GameElementsLayer(fieldview.Layer):
                 elt.setPos(elt.pos().x() + dx, elt.pos().y() + dy)
 
 
+    def remove_fabric(self, team):
+        if team == TEAM_PURPLE:
+            self.purple_fabric.hide()
+        else:
+            self.red_fabric.hide()
+
+
 
 
 class SimulatorFieldViewController(fieldview.FieldViewController):
@@ -664,14 +741,14 @@ class SimulatorFieldViewController(fieldview.FieldViewController):
     def __init__(self, ui):
         fieldview.FieldViewController.__init__(self, ui)
 
-        self.purple_robot_layer = RobotLayer(self.field_scene, TEAM_PURPLE)
+        self.purple_robot_layer = RobotLayer(self.field_scene, self, TEAM_PURPLE)
         self.field_scene.add_layer(self.purple_robot_layer)
         self.purple_robot_trajectrory_layer = RobotTrajectoryLayer(self.field_scene, TEAM_PURPLE)
         self.field_scene.add_layer(self.purple_robot_trajectrory_layer)
         self.purple_robot_routing_layer = RoutingLayer(self.field_scene, TEAM_PURPLE)
         self.field_scene.add_layer(self.purple_robot_routing_layer)
 
-        self.red_robot_layer = RobotLayer(self.field_scene, TEAM_RED)
+        self.red_robot_layer = RobotLayer(self.field_scene, self, TEAM_RED)
         self.field_scene.add_layer(self.red_robot_layer)
         self.red_robot_trajectrory_layer = RobotTrajectoryLayer(self.field_scene, TEAM_RED)
         self.field_scene.add_layer(self.red_robot_trajectrory_layer)
