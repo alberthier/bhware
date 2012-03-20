@@ -134,10 +134,6 @@ class RobotController(object):
         self.send_packet(packet)
 
 
-    def on_map_arm_control(self, packet):
-        self.send_packet(packet)
-
-
     def on_map_gripper_control(self, packet):
         self.send_packet(packet)
 

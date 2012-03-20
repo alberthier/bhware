@@ -9,11 +9,63 @@ from PyQt4.QtGui import *
 from PyQt4.QtSvg import *
 
 import trajectory
+import packets
 import tools
 
 import fieldview
 import helpers
 import dynamics
+
+
+
+
+class GraphicsRobotArmObject(QObject):
+
+    arm_movement_finished = pyqtSignal()
+
+    def __init__(self):
+        QObject.__init__(self)
+        self.arm_item = QGraphicsRectItem(0.0, 0.0, 124.0, 100.0);
+        self.arm_item.setPen(QColor("#838383"))
+        self.arm_item.setBrush(QColor("#e9eaff"))
+        self.is_arm_retracted = True
+
+        self.arm_animation = QPropertyAnimation()
+        self.arm_animation.setDuration(500.0)
+        self.arm_animation.setTargetObject(self)
+        self.arm_animation.setPropertyName("arm_position")
+        self.arm_animation.finished.connect(self.arm_movement_finished)
+
+
+    def reset(self):
+        self.arm_item.setPos(-99.0, -50.0)
+        self.is_arm_retracted = True
+
+
+    def get_arm_position(self):
+        return self.arm_item.x()
+
+
+    def set_arm_position(self, p):
+        self.arm_item.setX(p)
+
+
+    #declare 'arm_position' to Qt's property system
+    arm_position = pyqtProperty('qreal', get_arm_position, set_arm_position)
+
+
+    def deploy_arm(self):
+        self.arm_animation.setStartValue(-99.0)
+        self.arm_animation.setEndValue(-224.0)
+        self.arm_animation.start()
+        self.is_arm_retracted = False
+
+
+    def retract_arm(self):
+        self.arm_animation.setStartValue(-224.0)
+        self.arm_animation.setEndValue(-99.0)
+        self.arm_animation.start()
+        self.is_arm_retracted = True
 
 
 
@@ -30,6 +82,10 @@ class GraphicsRobotObject(QObject):
         self.layer = layer
 
         self.item = QGraphicsItemGroup(layer)
+
+        self.arm = GraphicsRobotArmObject()
+        self.item.addToGroup(self.arm.arm_item)
+
         (self.structure, self.robot_item, self.gyration_item) = helpers.create_robot_base_item(QColor("#838383"), QColor("#e9eaff"), QColor(layer.color).darker(150))
         self.item.addToGroup(self.structure)
         self.item.setParentItem(layer)
@@ -43,6 +99,13 @@ class GraphicsRobotObject(QObject):
         team_indicator.setBrush(QColor(layer.color))
         team_indicator.setPen(QPen(0))
         self.item.addToGroup(team_indicator)
+
+
+    def reset(self):
+        self.item.setVisible(False)
+        self.item.setPos(0.0, 0.0)
+        self.set_rotation(0.0)
+        self.arm.reset()
 
 
     def get_position(self):
@@ -206,14 +269,13 @@ class RobotLayer(fieldview.Layer):
         self.robot = GraphicsRobotObject(self)
         self.robot.item.setVisible(False)
         self.robot.movement_finished.connect(self.movement_finished)
+        self.robot.arm.arm_movement_finished.connect(self.arm_movement_finished)
         self.robot_controller = None
         self.dynamics = None
 
 
     def reset(self):
-        self.robot.item.setVisible(False)
-        self.robot.item.setPos(0.0, 0.0)
-        self.robot.set_rotation(0.0)
+        self.robot.reset()
 
 
     def setup(self):
@@ -268,6 +330,24 @@ class RobotLayer(fieldview.Layer):
 
     def movement_finished(self, goto_packet_point_index):
         self.robot_controller.send_goto_finished(REASON_DESTINATION_REACHED, goto_packet_point_index)
+
+
+    def on_map_arm_control(self, packet):
+        if self.robot.arm.is_arm_retracted and packet.move == MAP_ARM_OPEN:
+            self.robot.arm.deploy_arm()
+        elif not self.robot.arm.is_arm_retracted and packet.move == MAP_ARM_CLOSE:
+            self.robot.arm.retract_arm()
+        else:
+            self.robot_controller.send_packet(packet)
+
+
+    def arm_movement_finished(self):
+        packet = packets.MapArmControl()
+        if self.robot.arm.is_arm_retracted:
+            packet.move = MAP_ARM_CLOSE
+        else:
+            packet.move = MAP_ARM_OPEN
+        self.robot_controller.send_packet(packet)
 
 
     def terminate(self):
