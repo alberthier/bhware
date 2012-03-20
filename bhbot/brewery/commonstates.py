@@ -244,10 +244,10 @@ class EmptyTank(statemachine.State):
 
 class StoreFabric(statemachine.State):
 
-    def __init__(self, position):
+    def __init__(self, move):
         statemachine.State.__init__(self)
         self.packet = packets.FabricStoreControl()
-        self.packet.position = position
+        self.packet.move = move
 
 
     def on_enter(self):

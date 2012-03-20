@@ -147,8 +147,14 @@ class GraphicsRobotObject(QObject):
         team_indicator.setPen(QPen(0))
         self.item.addToGroup(team_indicator)
 
+        self.fabric = QGraphicsRectItem(-60.0, -100.0, 40.0, 200.0)
+        self.fabric.setPen(QPen(0))
+        self.fabric.setBrush(QColor(layer.color))
+        self.item.addToGroup(self.fabric)
+
 
     def reset(self):
+        self.fabric.setVisible(False)
         self.item.setVisible(False)
         self.item.setPos(0.0, 0.0)
         self.set_rotation(0.0)
@@ -415,6 +421,12 @@ class RobotLayer(fieldview.Layer):
             self.field_view_controller.game_elements_layer.remove_fabric(self.team)
         else:
             packet.move = MAP_GRIPPER_OPEN
+        self.robot_controller.send_packet(packet)
+
+
+    def on_fabric_store_control(self, packet):
+        if packet.move == FABRIC_STORE_HIGH:
+            self.robot.fabric.show()
         self.robot_controller.send_packet(packet)
 
 
