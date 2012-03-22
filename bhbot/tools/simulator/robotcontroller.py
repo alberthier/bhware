@@ -126,10 +126,6 @@ class RobotController(object):
         self.stop()
 
 
-    def on_gripper_control(self, packet):
-        self.send_packet(packet)
-
-
     def on_sweeper_control(self, packet):
         self.send_packet(packet)
 

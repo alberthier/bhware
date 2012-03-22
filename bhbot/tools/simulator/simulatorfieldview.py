@@ -117,6 +117,68 @@ class GraphicsRobotArmObject(QObject):
 
 
 
+class GraphicsRobotGripperObject(QObject):
+
+    movement_finished = pyqtSignal()
+
+    def __init__(self, is_right):
+        QObject.__init__(self)
+        path = QPainterPath()
+
+        if is_right:
+            path.arcTo(-61.0, -125.0, 122.0, 125.0, -90.0, 160.0)
+            self.item = QGraphicsPathItem(path)
+            self.item.setPos(150.0, 125.0)
+            self.item.rotate(-40)
+            self.end_angle = 180
+        else:
+            path.arcTo(-61.0, 125.0, 122.0, -125.0, -90.0, 160.0)
+            self.item = QGraphicsPathItem(path)
+            self.item.setPos(150.0, -125.0)
+            self.item.rotate(40)
+            self.end_angle = -180
+
+        pen = QPen(QColor("#838383"), 15.0)
+        pen.setCapStyle(Qt.RoundCap)
+        self.item.setPen(pen)
+
+        self.is_retracted = True
+
+        self.animation = QPropertyAnimation()
+        self.animation.setDuration(1000.0)
+        self.animation.setTargetObject(self)
+        self.animation.setPropertyName("position")
+        self.animation.finished.connect(self.movement_finished)
+
+
+    def get_position(self):
+        return self.item.rotation()
+
+
+    def set_position(self, p):
+        self.item.setRotation(p)
+
+
+    #declare 'arm_position' to Qt's property system
+    position = pyqtProperty('qreal', get_position, set_position)
+
+
+    def deploy(self):
+        self.animation.setStartValue(0.0)
+        self.animation.setEndValue(self.end_angle)
+        self.animation.start()
+        self.is_retracted = False
+
+
+    def retract(self):
+        self.animation.setStartValue(self.end_angle)
+        self.animation.setEndValue(0.0)
+        self.animation.start()
+        self.is_retracted = True
+
+
+
+
 class GraphicsRobotObject(QObject):
 
     movement_finished = pyqtSignal(int)
@@ -132,6 +194,11 @@ class GraphicsRobotObject(QObject):
 
         self.arm = GraphicsRobotArmObject()
         self.item.addToGroup(self.arm.item)
+
+        self.right_gripper = GraphicsRobotGripperObject(True)
+        self.item.addToGroup(self.right_gripper.item)
+        self.left_gripper = GraphicsRobotGripperObject(False)
+        self.item.addToGroup(self.left_gripper.item)
 
         (self.structure, self.robot_item, self.gyration_item) = helpers.create_robot_base_item(QColor("#838383"), QColor("#e9eaff"), QColor(layer.color).darker(150))
         self.item.addToGroup(self.structure)
@@ -325,8 +392,12 @@ class RobotLayer(fieldview.Layer):
         self.robot.movement_finished.connect(self.movement_finished)
         self.robot.arm.arm_movement_finished.connect(self.map_arm_movement_finished)
         self.robot.arm.gripper_movement_finished.connect(self.map_gripper_movement_finished)
+        self.robot.left_gripper.movement_finished.connect(self.gripper_movement_finished)
+        self.robot.right_gripper.movement_finished.connect(self.gripper_movement_finished)
         self.robot_controller = None
         self.dynamics = None
+        self.expected_gripper_movements = 0
+        self.gripper_packet = None
 
 
     def reset(self):
@@ -428,6 +499,29 @@ class RobotLayer(fieldview.Layer):
         if packet.move == FABRIC_STORE_HIGH:
             self.robot.fabric.show()
         self.robot_controller.send_packet(packet)
+
+
+    def on_gripper_control(self, packet):
+        if packet.which == GRIPPER_SIDE_LEFT or packet.which == GRIPPER_SIDE_BOTH:
+            if packet.move == GRIPPER_CLOSE:
+                self.robot.left_gripper.retract()
+            else:
+                self.robot.left_gripper.deploy()
+            self.expected_gripper_movements += 1
+        if packet.which == GRIPPER_SIDE_RIGHT or packet.which == GRIPPER_SIDE_BOTH:
+            if packet.move == GRIPPER_CLOSE:
+                self.robot.right_gripper.retract()
+            else:
+                self.robot.right_gripper.deploy()
+            self.expected_gripper_movements += 1
+        self.gripper_packet = packet
+
+
+    def gripper_movement_finished(self):
+        self.expected_gripper_movements -= 1
+        if self.expected_gripper_movements == 0:
+            self.robot_controller.send_packet(self.gripper_packet)
+            self.gripper_packet = None
 
 
     def terminate(self):
