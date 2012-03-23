@@ -103,6 +103,17 @@ typedef struct _Wall
 } Wall;
 
 
+typedef struct _PenalizedZone
+{
+    int x1;
+    int y1;
+    int x2;
+    int y2;
+    float cost;
+    struct _PenalizedZone* next;
+} PenalizedZone;
+
+
 /********************/
 /* Pathfinder class */
 /********************/
@@ -123,7 +134,7 @@ typedef struct
     float** distance_map;
     Cell** map;
     Wall* walls;
-
+    PenalizedZone* penalized_zones;
 } PathFinder;
 
 
@@ -143,6 +154,13 @@ static void pathfinder_dealloc(PathFinder* self)
         Wall* tmp = wall->next;
         free(wall);
         wall = tmp;
+    }
+
+    PenalizedZone* penalized_zone = self->penalized_zones;
+    while (penalized_zone != NULL) {
+        PenalizedZone* tmp = penalized_zone->next;
+        free(penalized_zone);
+        penalized_zone = tmp;
     }
 
     self->ob_type->tp_free((PyObject*) self);
@@ -265,6 +283,23 @@ static float pathfinder_effective_cost(PathFinder* self, int x1, int y1, int x2,
 }
 
 
+static float pathfinder_penalized_cost(PathFinder* self, int x, int y)
+{
+    float cost = 0.0;
+    PenalizedZone* penalized_zone = NULL;
+
+    for (penalized_zone = self->penalized_zones; penalized_zone != NULL; penalized_zone = penalized_zone->next) {
+        if (x >= penalized_zone->x1 && x <= penalized_zone->x2 && y >= penalized_zone->y1 && y <= penalized_zone->y2) {
+            if (penalized_zone->cost > cost) {
+                cost = penalized_zone->cost;
+            }
+        }
+    }
+ 
+    return cost;
+}
+
+
 static PyObject* pathfinder_find(PathFinder* self, PyObject* args)
 {
     int start_x = 0;
@@ -312,6 +347,7 @@ static PyObject* pathfinder_find(PathFinder* self, PyObject* args)
             Cell* neighbor = *nit;
             if (!cell_contains_sorted(closed_set, neighbor, cell_pointer_less)) {
                 float tentative_g_score = current->g_score + pathfinder_effective_cost(self, current->x, current->y, neighbor->x, neighbor->y);
+                tentative_g_score += pathfinder_penalized_cost(self, neighbor->x, neighbor->y);
                 if (!cell_contains(open_set, neighbor)) {
                     neighbor->h_score = pathfinder_heuristic_cost_estimate(self, neighbor->x, neighbor->y, goal_x, goal_y);
                     neighbor->g_score = tentative_g_score;
@@ -331,6 +367,21 @@ static PyObject* pathfinder_find(PathFinder* self, PyObject* args)
 }
 
 
+static void pathfinder_normalize_rectangle(int* x1, int* y1, int* x2, int* y2)
+{
+    if (*x1 > *x2) {
+        int tmp = *x1;
+        *x1 = *x2;
+        *x2 = tmp;
+    }
+    if (*y1 > *y2) {
+        int tmp = *y1;
+        *y1 = *y2;
+        *y2 = tmp;
+    }
+}
+
+
 static PyObject* pathfinder_add_wall(PathFinder* self, PyObject* args)
 {
     Wall* wall = (Wall*) malloc(sizeof(Wall));
@@ -339,20 +390,27 @@ static PyObject* pathfinder_add_wall(PathFinder* self, PyObject* args)
         return NULL;
     }
 
-    /* Normalize the rectangle */
-    if (wall->x1 > wall->x2) {
-        int tmp = wall->x1;
-        wall->x1 = wall->x2;
-        wall->x2 = tmp;
-    }
-    if (wall->y1 > wall->y2) {
-        int tmp = wall->y1;
-        wall->y1 = wall->y2;
-        wall->y2 = tmp;
-    }
+    pathfinder_normalize_rectangle(&wall->x1, &wall->y1, &wall->x2, &wall->y2);
 
     wall->next = self->walls;
     self->walls = wall;
+
+    Py_RETURN_NONE;
+}
+
+
+static PyObject* pathfinder_add_penalized_zone(PathFinder* self, PyObject* args)
+{
+    PenalizedZone* penalized_zone = (PenalizedZone*) malloc(sizeof(PenalizedZone));
+
+    if (!PyArg_ParseTuple(args, "iiiif", &penalized_zone->x1, &penalized_zone->y1, &penalized_zone->x2, &penalized_zone->y2, &penalized_zone->cost)) {
+        return NULL;
+    }
+
+    pathfinder_normalize_rectangle(&penalized_zone->x1, &penalized_zone->y1, &penalized_zone->x2, &penalized_zone->y2);
+
+    penalized_zone->next = self->penalized_zones;
+    self->penalized_zones = penalized_zone;
 
     Py_RETURN_NONE;
 }
@@ -403,12 +461,13 @@ static PyObject* pathfinder_clear_secondary_opponent_position(PathFinder* self)
 
 /* Object methods */
 static PyMethodDef PathFinder_methods[] = {
-    { "find"    , (PyCFunction) pathfinder_find    , METH_VARARGS, "Find the route from (x1, y1) to (x2, y2)" },
-    { "add_wall", (PyCFunction) pathfinder_add_wall, METH_VARARGS, "Add a wall (x1, y1) to (x2, y2)" },
-    { "set_main_opponent_position", (PyCFunction) pathfinder_set_main_opponent_position, METH_VARARGS, "Sets the main opponent position" },
-    { "clear_main_opponent_position", (PyCFunction) pathfinder_clear_main_opponent_position, METH_NOARGS, "Clears the main opponent position" },
-    { "set_secondary_opponent_position", (PyCFunction) pathfinder_set_secondary_opponent_position, METH_VARARGS, "Sets the secondary opponent position" },
-    { "clear_secondary_opponent_position", (PyCFunction) pathfinder_clear_secondary_opponent_position, METH_NOARGS, "Clears the main opponent position" },
+    { "find"                             , (PyCFunction) pathfinder_find                             , METH_VARARGS, "Find the route from (x1, y1) to (x2, y2)" },
+    { "add_wall"                         , (PyCFunction) pathfinder_add_wall                         , METH_VARARGS, "Add a wall (x1, y1) to (x2, y2)" },
+    { "add_penalized_zone"               , (PyCFunction) pathfinder_add_penalized_zone               , METH_VARARGS, "Add a penalized zone (x1, y1) to (x2, y2) with the given cost" },
+    { "set_main_opponent_position"       , (PyCFunction) pathfinder_set_main_opponent_position       , METH_VARARGS, "Sets the main opponent position" },
+    { "clear_main_opponent_position"     , (PyCFunction) pathfinder_clear_main_opponent_position     , METH_NOARGS , "Clears the main opponent position" },
+    { "set_secondary_opponent_position"  , (PyCFunction) pathfinder_set_secondary_opponent_position  , METH_VARARGS, "Sets the secondary opponent position" },
+    { "clear_secondary_opponent_position", (PyCFunction) pathfinder_clear_secondary_opponent_position, METH_NOARGS , "Clears the main opponent position" },
     {NULL}  /* Sentinel */
 };
 
