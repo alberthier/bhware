@@ -178,7 +178,7 @@ class Map(object):
         include_dir = sys.exec_prefix + "/include/" + pyversion
         lib_dir = sys.exec_prefix + "/lib"
         working_dir = os.path.dirname(__file__)
-        cmd = ["gcc", "-shared", "-fPIC", "-o", "pathfinding.so", "-I" + include_dir, "-L" + lib_dir, "pathfinding.c", "-l" + pyversion]
+        cmd = ["gcc", "-O2", "-shared", "-fPIC", "-o", "pathfinding.so", "-I" + include_dir, "-L" + lib_dir, "pathfinding.c", "-l" + pyversion]
         gcc = subprocess.Popen(cmd, stdout = subprocess.PIPE, stderr = subprocess.PIPE, cwd=working_dir)
         (out, err) = gcc.communicate()
         if gcc.returncode == 0:
