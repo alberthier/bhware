@@ -597,7 +597,8 @@ class BasePacket(object):
             if kwargs.has_key(elt.name):
                 value = kwargs[elt.name]
             else:
-                value = elt.default_value
+                # Call the constructor of the value to duplicate it. This is necessary for lists
+                value = type(elt.default_value)(elt.default_value)
             setattr(self, elt.name, value)
 
 
