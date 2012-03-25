@@ -108,6 +108,8 @@ class Map(object):
 
         path = self.pathfinder.find(start_cell_x, start_cell_y, goal_cell_x, goal_cell_y)
 
+        logger.log("Found route length: {}".format(len(path)))
+
         simplified_path = []
 
         if len(path) > 1:
