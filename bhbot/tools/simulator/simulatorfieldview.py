@@ -285,8 +285,13 @@ class GraphicsRobotObject(QObject):
         self.fabric.setBrush(QColor(layer.color))
         self.item.addToGroup(self.fabric)
 
+        self.carried_treasure = []
+
 
     def reset(self):
+        for elt in self.carried_treasure:
+            self.item.removeFromGroup(elt)
+        self.carried_treasure = []
         self.fabric.setVisible(False)
         self.item.setVisible(False)
         self.item.setPos(0.0, 0.0)
@@ -587,6 +592,22 @@ class RobotLayer(fieldview.Layer):
     def gripper_movement_finished(self):
         self.expected_gripper_movements -= 1
         if self.expected_gripper_movements == 0:
+            if self.gripper_packet.which == GRIPPER_SIDE_BOTH and self.gripper_packet.move == GRIPPER_CLOSE:
+                pos = self.robot.item.pos()
+                if pos.y() < 1000:
+                    if pos.x() < 1500:
+                        elements = self.field_view_controller.game_elements_layer.purple_map_tower_treasure
+                    else:
+                        elements = self.field_view_controller.game_elements_layer.red_map_tower_treasure
+                else:
+                    if pos.x() < 1500:
+                        elements = self.field_view_controller.game_elements_layer.purple_bottle_tower_treasure
+                    else:
+                        elements = self.field_view_controller.game_elements_layer.red_bottle_tower_treasure
+                self.robot.carried_treasure = elements
+                for elt in elements:
+                    elt.setPos(pos)
+                    self.robot.item.addToGroup(elt)
             self.robot_controller.send_packet(self.gripper_packet)
             self.gripper_packet = None
 
@@ -604,6 +625,16 @@ class RobotLayer(fieldview.Layer):
             packet.move = SWEEPER_CLOSE
         else:
             packet.move = SWEEPER_OPEN
+        self.robot_controller.send_packet(packet)
+
+
+    def on_empty_tank_control(self, packet):
+        angle = self.robot.item.rotation() / 180.0 * math.pi
+        dest_x = self.robot.item.x() + math.cos(angle) * 300
+        dest_y = self.robot.item.y() + math.sin(angle) * 300
+        for elt in self.robot.carried_treasure:
+            elt.setPos(dest_x, dest_y)
+            self.robot.item.removeFromGroup(elt)
         self.robot_controller.send_packet(packet)
 
 
@@ -815,6 +846,38 @@ class GameElementsLayer(fieldview.Layer):
         self.purple_robot = purple_robot
         self.red_robot = red_robot
 
+        self.purple_map_tower_treasure = [Coin(self, 0.915, 1.015, True),
+                                          Coin(self, 0.915, 1.185, True),
+                                          Coin(self, 0.915, 1.015, True),
+                                          Coin(self, 0.915, 1.185, True),
+                                          GoldBar(self, 0.910, 1.100,  0.00)]
+
+        self.purple_bottle_tower_treasure = [Coin(self, 1.085, 1.015, True),
+                                             Coin(self, 1.085, 1.185, True),
+                                             Coin(self, 1.085, 1.015, True),
+                                             Coin(self, 1.085, 1.185, True),
+                                             GoldBar(self, 1.090, 1.100,  0.00)]
+
+        self.red_map_tower_treasure = [Coin(self, 0.915, FIELD_WIDTH - 1.015, True),
+                                       Coin(self, 0.915, FIELD_WIDTH - 1.185, True),
+                                       Coin(self, 0.915, FIELD_WIDTH - 1.015, True),
+                                       Coin(self, 0.915, FIELD_WIDTH - 1.185, True),
+                                       GoldBar(self, 0.910, FIELD_WIDTH - 1.100,  0.00)]
+
+        self.red_bottle_tower_treasure = [Coin(self, 1.085, FIELD_WIDTH - 1.015, True),
+                                          Coin(self, 1.085, FIELD_WIDTH - 1.185, True),
+                                          Coin(self, 1.085, FIELD_WIDTH - 1.015, True),
+                                          Coin(self, 1.085, FIELD_WIDTH - 1.185, True),
+                                          GoldBar(self, 1.090, FIELD_WIDTH - 1.100,  0.00)]
+
+        self.elements.extend(self.purple_map_tower_treasure)
+        self.elements.extend(self.purple_bottle_tower_treasure)
+        self.elements.extend(self.red_map_tower_treasure)
+        self.elements.extend(self.red_bottle_tower_treasure)
+
+        for piece in self.elements:
+            self.addToGroup(piece)
+
         pieces_coords = [# Near start
                          (0.500, 1.000),
                          # Circle
@@ -825,15 +888,6 @@ class GameElementsLayer(fieldview.Layer):
                          (1.170, 0.930),
                          (1.240, 1.100),
                          (1.170, 1.270),
-                         # Totem
-                         (0.915, 1.015),
-                         (1.085, 1.015),
-                         (0.915, 1.185),
-                         (1.085, 1.185),
-                         (0.915, 1.015),
-                         (1.085, 1.015),
-                         (0.915, 1.185),
-                         (1.085, 1.185),
                          # Near hold
                          (1.700, 0.450),
                          # Bottom center
@@ -853,10 +907,6 @@ class GameElementsLayer(fieldview.Layer):
             self.elements.append(coin)
 
         gold_bars_coords = [(1.353, 1.500,  0.00),
-                            (0.910, 1.100,  0.00),
-                            (1.090, 1.100,  0.00),
-                            (0.910, 1.900,  0.00),
-                            (1.090, 1.900,  0.00),
                             (0.860, 0.412, 92.86),
                             (0.860, 2.588, 87.13)]
         for (x, y, angle) in gold_bars_coords:
@@ -886,9 +936,9 @@ class GameElementsLayer(fieldview.Layer):
     def scene_changed(self):
         for elt in self.elements:
             robot = None
-            if elt.collidesWithItem(self.purple_robot.robot_item):
+            if not elt in self.purple_robot.carried_treasure and elt.collidesWithItem(self.purple_robot.robot_item):
                 robot = self.purple_robot
-            elif elt.collidesWithItem(self.red_robot.robot_item):
+            elif not elt in self.red_robot.carried_treasure and elt.collidesWithItem(self.red_robot.robot_item):
                 robot = self.red_robot
             if robot != None:
                 angle = (robot.item.rotation() / 180.0 * math.pi) % (math.pi * 2.0)
