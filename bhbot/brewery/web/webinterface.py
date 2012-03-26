@@ -113,7 +113,8 @@ class BHWeb(object):
         files = os.listdir(LOG_DIR)
         files.sort()
         for f in reversed(files):
-            html += '<li><a href="logs/{0}">{0}</a></li>\n'.format(f)
+            if f.endswith(".py"):
+                html += '<li><a href="logs/{0}">{0}</a></li>\n'.format(f)
 
         html += """</ul>
   </div>
@@ -121,6 +122,17 @@ class BHWeb(object):
 </html>
 """
         return html
+
+
+    @cherrypy.expose
+    def logurls(self):
+        text = ""
+        files = os.listdir(LOG_DIR)
+        files.sort()
+        for f in reversed(files):
+            if f.endswith(".py"):
+                text += 'logs/{0}\n'.format(f)
+        return text
 
 
     @cherrypy.expose
