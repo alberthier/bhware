@@ -935,35 +935,36 @@ class GameElementsLayer(fieldview.Layer):
 
     def scene_changed(self):
         for elt in self.elements:
-            robot = None
-            if not elt in self.purple_robot.carried_treasure and elt.collidesWithItem(self.purple_robot.robot_item):
-                robot = self.purple_robot
-            elif not elt in self.red_robot.carried_treasure and elt.collidesWithItem(self.red_robot.robot_item):
-                robot = self.red_robot
-            if robot != None:
-                angle = (robot.item.rotation() / 180.0 * math.pi) % (math.pi * 2.0)
+            if not elt in self.purple_robot.carried_treasure and not elt in self.red_robot.carried_treasure:
+                robot = None
+                if elt.collidesWithItem(self.purple_robot.robot_item):
+                    robot = self.purple_robot
+                elif elt.collidesWithItem(self.red_robot.robot_item):
+                    robot = self.red_robot
+                if robot != None:
+                    angle = (robot.item.rotation() / 180.0 * math.pi) % (math.pi * 2.0)
 
-                ex = elt.pos().x() - robot.item.x()
-                ey = elt.pos().y() - robot.item.y()
-                elt_angle = math.atan2(ey, ex) % (math.pi * 2.0)
+                    ex = elt.pos().x() - robot.item.x()
+                    ey = elt.pos().y() - robot.item.y()
+                    elt_angle = math.atan2(ey, ex) % (math.pi * 2.0)
 
-                ref = abs(angle - elt_angle)
+                    ref = abs(angle - elt_angle)
 
-                if ref < math.pi / 4.0 or ref >= 7.0 * math.pi / 4.0:
-                    sign = 1.0
-                elif ref >= math.pi / 4.0 and ref < 3.0 * math.pi / 4.0:
-                    sign = -1.0
-                    angle += math.pi / 2.0
-                elif ref >= 3.0 * math.pi / 4.0 and ref < 5.0 * math.pi / 4.0:
-                    sign = -1.0
-                else:
-                    sign = 1.0
-                    angle -= math.pi / 2.0
+                    if ref < math.pi / 4.0 or ref >= 7.0 * math.pi / 4.0:
+                        sign = 1.0
+                    elif ref >= math.pi / 4.0 and ref < 3.0 * math.pi / 4.0:
+                        sign = -1.0
+                        angle += math.pi / 2.0
+                    elif ref >= 3.0 * math.pi / 4.0 and ref < 5.0 * math.pi / 4.0:
+                        sign = -1.0
+                    else:
+                        sign = 1.0
+                        angle -= math.pi / 2.0
 
-                dist = 20
-                dx = sign * math.cos(angle) * dist
-                dy = sign * math.sin(angle) * dist
-                elt.setPos(elt.pos().x() + dx, elt.pos().y() + dy)
+                    dist = 20
+                    dx = sign * math.cos(angle) * dist
+                    dy = sign * math.sin(angle) * dist
+                    elt.setPos(elt.pos().x() + dx, elt.pos().y() + dy)
 
 
     def remove_fabric(self, team):
