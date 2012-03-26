@@ -64,8 +64,8 @@ class MapCell(object):
 
 class Map(object):
 
-    MAP_WIDTH  = int(FIELD_WIDTH  / MAP_CELL_RESOLUTION)
-    MAP_HEIGHT = int(FIELD_HEIGHT / MAP_CELL_RESOLUTION)
+    MAP_X_SIZE = int(FIELD_X_SIZE / MAP_CELL_RESOLUTION)
+    MAP_Y_SIZE = int(FIELD_Y_SIZE / MAP_CELL_RESOLUTION)
     MAIN_OPPONENT_AVOIDANCE_CELLS = int(MAIN_OPPONENT_AVOIDANCE_RANGE / MAP_CELL_RESOLUTION)
     SECONDARY_OPPONENT_AVOIDANCE_CELLS = int(SECONDARY_OPPONENT_AVOIDANCE_RANGE / MAP_CELL_RESOLUTION)
 
@@ -77,8 +77,8 @@ class Map(object):
 
         import pathfinding
 
-        self.pathfinder = pathfinding.PathFinder(Map.MAP_HEIGHT,
-                                                 Map.MAP_WIDTH,
+        self.pathfinder = pathfinding.PathFinder(Map.MAP_X_SIZE,
+                                                 Map.MAP_Y_SIZE,
                                                  ASTAR_EFFECTIVE_VS_HEURISTIC_TRADEOFF,
                                                  Map.MAIN_OPPONENT_AVOIDANCE_CELLS,
                                                  Map.SECONDARY_OPPONENT_AVOIDANCE_CELLS)

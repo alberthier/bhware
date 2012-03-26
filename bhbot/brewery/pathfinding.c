@@ -122,8 +122,8 @@ typedef struct _PenalizedZone
 typedef struct
 {
     PyObject_HEAD
-    int map_max_y;
-    int map_max_x;
+    int map_y_size;
+    int map_x_size;
     float effective_vs_heuristic_tradeoff;
     int main_opponent_avoidance_cells;
     int secondary_opponent_avoidance_cells;
@@ -142,7 +142,7 @@ static void pathfinder_dealloc(PathFinder* self)
 {
     int x = 0;
 
-    for (x = 0; x < self->map_max_x; ++x) {
+    for (x = 0; x < self->map_x_size; ++x) {
         free(self->distance_map[x]);
         free(self->map[x]);
     }
@@ -173,8 +173,8 @@ static int pathfinder_init(PathFinder* self, PyObject* args, PyObject* kwds)
     int y = 0;
 
     if (!PyArg_ParseTuple(args, "iifii",
-                          &self->map_max_x,
-                          &self->map_max_y,
+                          &self->map_x_size,
+                          &self->map_y_size,
                           &self->effective_vs_heuristic_tradeoff,
                           &self->main_opponent_avoidance_cells,
                           &self->secondary_opponent_avoidance_cells)) {
@@ -187,15 +187,15 @@ static int pathfinder_init(PathFinder* self, PyObject* args, PyObject* kwds)
     self->secondary_opponent_y = -1;
 
     /* Setup the map and the distance cache */
-    self->distance_map = (float**) malloc(sizeof(float*) * self->map_max_x);
-    self->map = (Cell**) malloc(sizeof(Cell*) * self->map_max_x);
-    for (x = 0; x < self->map_max_x; ++x) {
-        float* distance_row = (float*) malloc(sizeof(float) * self->map_max_y);
-        Cell* row = (Cell*) malloc(sizeof(Cell) * self->map_max_y);
+    self->distance_map = (float**) malloc(sizeof(float*) * self->map_x_size);
+    self->map = (Cell**) malloc(sizeof(Cell*) * self->map_x_size);
+    for (x = 0; x < self->map_x_size; ++x) {
+        float* distance_row = (float*) malloc(sizeof(float) * self->map_y_size);
+        Cell* row = (Cell*) malloc(sizeof(Cell) * self->map_y_size);
         float x_squared = x * x;
         self->distance_map[x] = distance_row;
         self->map[x] = row;
-        for (y = 0; y < self->map_max_y; ++y) {
+        for (y = 0; y < self->map_y_size; ++y) {
             distance_row[y] = sqrt(x_squared + y * y);
             row[y].x = x;
             row[y].y = y;
@@ -211,10 +211,10 @@ static int pathfinder_init(PathFinder* self, PyObject* args, PyObject* kwds)
 Cell** pathfinder_append_if_valid(PathFinder* self, Cell** it, int x, int y)
 {
     Wall* wall = NULL;
-    if (x < 0 || x >= self->map_max_x) {
+    if (x < 0 || x >= self->map_x_size) {
         return it;
     }
-    if (y < 0 || y >= self->map_max_y) {
+    if (y < 0 || y >= self->map_y_size) {
         return it;
     }
     if (self->main_opponent_x != -1 && self->distance_map[abs(x - self->main_opponent_x)][abs(y - self->main_opponent_y)] < self->main_opponent_avoidance_cells) {
@@ -247,22 +247,22 @@ static void pathfinder_find_neighbor_nodes(PathFinder* self, Cell* node, Cell** 
             it = pathfinder_append_if_valid(self, it, prev_x, prev_y);
         }
         it = pathfinder_append_if_valid(self, it, prev_x, node->y);
-        if (next_y < self->map_max_y) {
+        if (next_y < self->map_y_size) {
             it = pathfinder_append_if_valid(self, it, prev_x, next_y);
         }
     }
     if (prev_y >= 0) {
         it = pathfinder_append_if_valid(self, it, node->x, prev_y);
     }
-    if (next_y < self->map_max_y) {
+    if (next_y < self->map_y_size) {
         it = pathfinder_append_if_valid(self, it, node->x, next_y);
     }
-    if (next_x < self->map_max_x) {
+    if (next_x < self->map_x_size) {
         if (prev_y >= 0) {
             it = pathfinder_append_if_valid(self, it, next_x, prev_y);
         }
         it = pathfinder_append_if_valid(self, it, next_x, node->y);
-        if (next_y < self->map_max_y) {
+        if (next_y < self->map_y_size) {
             it = pathfinder_append_if_valid(self, it, next_x, next_y);
         }
     }
@@ -295,7 +295,7 @@ static float pathfinder_penalized_cost(PathFinder* self, int x, int y)
             }
         }
     }
- 
+
     return cost;
 }
 
@@ -313,8 +313,8 @@ static PyObject* pathfinder_find(PathFinder* self, PyObject* args)
         return NULL;
     }
 
-    if (start_x < 0 || start_x >= self->map_max_x || goal_x < 0 || goal_x >= self->map_max_x ||
-        start_y < 0 || start_y >= self->map_max_y || goal_y < 0 || goal_y >= self->map_max_y) {
+    if (start_x < 0 || start_x >= self->map_x_size || goal_x < 0 || goal_x >= self->map_x_size ||
+        start_y < 0 || start_y >= self->map_y_size || goal_y < 0 || goal_y >= self->map_y_size) {
         /* Coordinates out of range */
         return PyList_New(0);
     }

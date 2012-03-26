@@ -134,7 +134,7 @@ class Robot(object):
         if y == None or reference_team == TEAM_UNKNOWN or self.team == TEAM_UNKNOWN or reference_team == self.team:
             return y
         else:
-            return FIELD_WIDTH - y
+            return FIELD_Y_SIZE - y
 
 
     def convert_angle(self, angle, reference_team):

@@ -858,17 +858,17 @@ class GameElementsLayer(fieldview.Layer):
                                              Coin(self, 1.085, 1.185, True),
                                              GoldBar(self, 1.090, 1.100,  0.00)]
 
-        self.red_map_tower_treasure = [Coin(self, 0.915, FIELD_WIDTH - 1.015, True),
-                                       Coin(self, 0.915, FIELD_WIDTH - 1.185, True),
-                                       Coin(self, 0.915, FIELD_WIDTH - 1.015, True),
-                                       Coin(self, 0.915, FIELD_WIDTH - 1.185, True),
-                                       GoldBar(self, 0.910, FIELD_WIDTH - 1.100,  0.00)]
+        self.red_map_tower_treasure = [Coin(self, 0.915, FIELD_Y_SIZE - 1.015, True),
+                                       Coin(self, 0.915, FIELD_Y_SIZE - 1.185, True),
+                                       Coin(self, 0.915, FIELD_Y_SIZE - 1.015, True),
+                                       Coin(self, 0.915, FIELD_Y_SIZE - 1.185, True),
+                                       GoldBar(self, 0.910, FIELD_Y_SIZE - 1.100,  0.00)]
 
-        self.red_bottle_tower_treasure = [Coin(self, 1.085, FIELD_WIDTH - 1.015, True),
-                                          Coin(self, 1.085, FIELD_WIDTH - 1.185, True),
-                                          Coin(self, 1.085, FIELD_WIDTH - 1.015, True),
-                                          Coin(self, 1.085, FIELD_WIDTH - 1.185, True),
-                                          GoldBar(self, 1.090, FIELD_WIDTH - 1.100,  0.00)]
+        self.red_bottle_tower_treasure = [Coin(self, 1.085, FIELD_Y_SIZE - 1.015, True),
+                                          Coin(self, 1.085, FIELD_Y_SIZE - 1.185, True),
+                                          Coin(self, 1.085, FIELD_Y_SIZE - 1.015, True),
+                                          Coin(self, 1.085, FIELD_Y_SIZE - 1.185, True),
+                                          GoldBar(self, 1.090, FIELD_Y_SIZE - 1.100,  0.00)]
 
         self.elements.extend(self.purple_map_tower_treasure)
         self.elements.extend(self.purple_bottle_tower_treasure)
@@ -897,7 +897,7 @@ class GameElementsLayer(fieldview.Layer):
             coin = Coin(self, x, y, True)
             self.addToGroup(coin)
             self.elements.append(coin)
-            coin = Coin(self, x, FIELD_WIDTH - y, True)
+            coin = Coin(self, x, FIELD_Y_SIZE - y, True)
             self.addToGroup(coin)
             self.elements.append(coin)
 

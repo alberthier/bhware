@@ -30,6 +30,22 @@ class Main(statemachine.State):
 
 class WaitStart(statemachine.State):
 
+    def on_enter(self):
+        self.sent = False
+
+
+    def on_keep_alive(self, packet):
+#        pass
+        if not self.sent:
+            self.sent = True
+            import cProfile
+            import sys
+            cProfile.runctx("self.event_loop.map.route(self.robot().pose.x, self.robot().pose.y, 1.6, 2.0)", None, { "self": self })
+            sys.stdout.flush()
+            self.event_loop.map.route(self.robot().pose.x, self.robot().pose.y, 0.5, 1.0)
+            #self.event_loop.map.route(self.robot().pose.x, self.robot().pose.y, 1.8, 2.8)
+
+
     def on_start(self, packet):
         self.switch_to_substate(commonstates.DefinePosition())
 
@@ -43,9 +59,65 @@ class WaitStart(statemachine.State):
 class WaitFirstKeepAlive(statemachine.State):
 
     def on_keep_alive(self, packet):
-        self.switch_to_state(GotoStartPoint())
+        #self.switch_to_state(GotoStartPoint())
+        #self.switch_to_state(TestTraj())
+        self.switch_to_state(TestCommands())
 
 
+
+
+class TestTraj(statemachine.State):
+
+    def on_enter(self):
+        walk = commonstates.TrajectoryWalk(None, TEAM_UNKNOWN)
+        points = self.event_loop.map.route(self.robot().pose.x, self.robot().pose.y, 1.6, 2.0)
+        x = self.robot().pose.x
+        y = self.robot().pose.y
+        logger.log("{}".format(self.robot().team))
+        for p in points:
+            x = p.x
+            y = p.y
+            walk.look_at_opposite(x, y)
+            walk.move_to(x, y, DIRECTION_BACKWARD)
+        g = packets.Goto()
+        g.direction = DIRECTION_BACKWARD
+        g.points = points
+        #self.send_packet(g)
+        self.switch_to_substate(walk)
+
+
+
+
+class TestCommands(statemachine.State):
+
+    def on_enter(self):
+        seq = commonstates.Sequence()
+
+#        seq.add(commonstates.StoreFabric(FABRIC_STORE_LOW))
+#        seq.add(commonstates.MapArm(MAP_ARM_OPEN))
+#        seq.add(commonstates.MapGripper(MAP_GRIPPER_OPEN))
+#        seq.add(commonstates.MapGripper(MAP_GRIPPER_CLOSE))
+#        seq.add(commonstates.MapArm(MAP_ARM_CLOSE))
+#        seq.add(commonstates.StoreFabric(FABRIC_STORE_HIGH))
+#
+#        seq.add(commonstates.Gripper(GRIPPER_SIDE_LEFT, GRIPPER_OPEN))
+#        seq.add(commonstates.Gripper(GRIPPER_SIDE_RIGHT, GRIPPER_OPEN))
+#        seq.add(commonstates.Gripper(GRIPPER_SIDE_LEFT, GRIPPER_CLOSE))
+#        seq.add(commonstates.Gripper(GRIPPER_SIDE_RIGHT, GRIPPER_CLOSE))
+        seq.add(commonstates.Gripper(GRIPPER_SIDE_BOTH, GRIPPER_OPEN))
+        seq.add(commonstates.Gripper(GRIPPER_SIDE_BOTH, GRIPPER_CLOSE))
+#        seq.add(commonstates.EmptyTank(TANK_DEPLOY))
+#        seq.add(commonstates.EmptyTank(TANK_RETRACT))
+
+#        seq.add(commonstates.Sweeper(SWEEPER_OPEN))
+#        seq.add(commonstates.Sweeper(SWEEPER_CLOSE))
+
+
+        self.switch_to_substate(seq)
+
+
+    def on_exit_substate(self, substate):
+        self.switch_to_state(TestTraj())
 
 
 class GotoStartPoint(statemachine.State):

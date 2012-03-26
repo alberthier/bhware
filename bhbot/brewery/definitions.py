@@ -10,8 +10,8 @@ import socket
 # Constants
 
 # Field
-FIELD_WIDTH                            = 3.0
-FIELD_HEIGHT                           = 2.0
+FIELD_Y_SIZE                           = 3.0
+FIELD_X_SIZE                           = 2.0
 
 # Game elements
 COIN_RADIUS                            = 0.060
@@ -22,8 +22,8 @@ GOLD_BAR_LENGTH                        = 0.150
 GOLD_BAR_COLOR                         = "#ffdd00"
 
 # Robot
-ROBOT_WIDTH                            = 0.276
-ROBOT_HEIGHT                           = 0.322
+ROBOT_X_SIZE                           = 0.276
+ROBOT_Y_SIZE                           = 0.322
 ROBOT_CENTER_X                         = 0.099
 ROBOT_CENTER_Y                         = 0.161
 ROBOT_GYRATION_RADIUS                  = 0.2386
@@ -31,12 +31,12 @@ ROBOT_EXPANDED_GRIPPER_GYRATION_RADIUS = 0.321965
 ROBOT_EXPANDED_SWEEPER_GYRATION_RADIUS = 0.289355
 ROBOT_EXPANDED_GYRATION_RADIUS         = max(ROBOT_EXPANDED_GRIPPER_GYRATION_RADIUS, ROBOT_EXPANDED_SWEEPER_GYRATION_RADIUS)
 
-# Start positons (the robot starts 90 degrees rotated that's why *_START_Y use ROBOT_WIDTH and ROBOT_CENTER_X)
+# Start positons (the robot starts 90 degrees rotated that's why *_START_Y use ROBOT_X_SIZE and ROBOT_CENTER_X)
 RED_START_X                            = 0.310
-RED_START_Y                            = FIELD_WIDTH - (ROBOT_WIDTH - ROBOT_CENTER_X)
+RED_START_Y                            = FIELD_Y_SIZE - (ROBOT_X_SIZE - ROBOT_CENTER_X)
 RED_START_ANGLE                        = math.pi / 2.0
 PURPLE_START_X                         = 0.310
-PURPLE_START_Y                         = ROBOT_WIDTH - ROBOT_CENTER_X
+PURPLE_START_Y                         = ROBOT_X_SIZE - ROBOT_CENTER_X
 PURPLE_START_ANGLE                     = -math.pi / 2.0
 
 # Rule specific
