@@ -9,6 +9,7 @@ case "$1" in
 	/sbin/mdev -s
 	mkdir /dev/pts
 	mount /dev/pts
+	echo /etc/hotplug > /proc/sys/kernel/hotplug
 	;;
   stop)
 	;;
