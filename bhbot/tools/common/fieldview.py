@@ -151,9 +151,11 @@ class FieldView(QGraphicsView):
         self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.setRenderHints(QPainter.Antialiasing | QPainter.SmoothPixmapTransform)
         self.setSceneRect(-200.0, -250.0, 3404, 2450)
+        self.setCursor(Qt.BlankCursor)
 
         self.enterEventListeners = []
         self.leaveEventListeners = []
+        self.userEventListeners = []
 
 
     def resizeEvent(self, event):
@@ -171,6 +173,24 @@ class FieldView(QGraphicsView):
             listener.sceneLeaveEvent(event)
 
 
+    def mousePressEvent(self, event):
+        p = self.mapToScene(self.mapFromGlobal(QCursor.pos()))
+        if event.button() == Qt.LeftButton:
+            button = 'left-button'
+        elif event.button() == Qt.RightButton:
+            button = 'right-button'
+        elif event.button() == Qt.MidButton:
+            button = 'mid-button'
+        for listener in self.userEventListeners:
+            listener.userEvent(button, p.x(), p.y())
+
+
+    def keyPressEvent(self, event):
+        p = self.mapToScene(self.mapFromGlobal(QCursor.pos()))
+        for listener in self.userEventListeners:
+            listener.userEvent(event.text(), p.x(), p.y())
+
+
 
 
 class FieldViewController(QObject):
@@ -184,15 +204,15 @@ class FieldViewController(QObject):
         layout = QHBoxLayout(self.ui.field_view_container)
         layout.setContentsMargins(0, 0, 0, 0)
 
-        field_view = FieldView(self.ui.field_view_container)
-        layout.addWidget(field_view)
+        self.field_view = FieldView(self.ui.field_view_container)
+        layout.addWidget(self.field_view)
 
         self.field_scene = FieldScene(self)
-        field_view.setScene(self.field_scene)
+        self.field_view.setScene(self.field_scene)
 
         ghost_layer = GhostRobotLayer()
-        field_view.enterEventListeners.append(ghost_layer)
-        field_view.leaveEventListeners.append(ghost_layer)
+        self.field_view.enterEventListeners.append(ghost_layer)
+        self.field_view.leaveEventListeners.append(ghost_layer)
         self.field_scene.mouseMoveEventListeners.append(ghost_layer)
         self.field_scene.wheelEventListeners.append(ghost_layer)
         self.field_scene.add_layer(ghost_layer)

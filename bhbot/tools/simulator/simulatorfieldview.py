@@ -638,6 +638,38 @@ class RobotLayer(fieldview.Layer):
         self.robot_controller.send_packet(packet)
 
 
+    def userEvent(self, key, x, y):
+        dx = x - self.robot.item.x()
+        dy = y - self.robot.item.y()
+        angle = (self.robot.item.rotation() / 180.0 * math.pi + math.atan2(dy, dx)) % (2.0 * math.pi)
+        angle = math.atan2(-math.sin(angle), math.cos(angle)) % ( 2.0 * math.pi )
+        angle = int(angle / (2.0 * math.pi) * 18.0)
+
+        packet = packets.TurretDetect()
+        packet.angle = angle
+
+        if self.team == TEAM_PURPLE and key == 'q' or self.team == TEAM_RED and key == 's':
+            # Main opponent - short distance
+            packet.distance = 0
+            packet.robot = OPPONENT_ROBOT_MAIN
+            self.robot_controller.send_packet(packet)
+        elif self.team == TEAM_PURPLE and key == 'Q' or self.team == TEAM_RED and key == 'S':
+            # Main opponent - long distance
+            packet.distance = 1
+            packet.robot = OPPONENT_ROBOT_MAIN
+            self.robot_controller.send_packet(packet)
+        elif self.team == TEAM_PURPLE and key == 'w' or self.team == TEAM_RED and key == 'x':
+            # Secondary opponent - short distance
+            packet.distance = 0
+            packet.robot = OPPONENT_ROBOT_SECONDARY
+            self.robot_controller.send_packet(packet)
+        elif self.team == TEAM_PURPLE and key == 'W' or self.team == TEAM_RED and key == 'X':
+            # Secondary opponent - long distance
+            packet.distance = 1
+            packet.robot = OPPONENT_ROBOT_SECONDARY
+            self.robot_controller.send_packet(packet)
+
+
     def terminate(self):
         self.dynamics.terminate()
 
@@ -999,5 +1031,8 @@ class SimulatorFieldViewController(fieldview.FieldViewController):
                                                      self.red_robot_layer.robot,
                                                      self.field_scene)
         self.field_scene.add_layer(self.game_elements_layer)
+
+        self.field_view.userEventListeners.append(self.purple_robot_layer)
+        self.field_view.userEventListeners.append(self.red_robot_layer)
 
         self.update_layers_list()
