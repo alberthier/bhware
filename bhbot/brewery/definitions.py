@@ -218,6 +218,12 @@ Enum("FABRIC_STORE",
      FABRIC_STORE_HIGH = 1,
 )
 
+Enum("GOLD_BAR",
+     "Gold bar sensor",
+     GOLD_BAR_MISSING = 0,
+     GOLD_BAR_PRESENT = 1,
+)
+
 Enum("TRAJECTORY_WALK",
     "Trajectory walk result",
     TRAJECTORY_WALK_DESTINATION_REACHED = 0,

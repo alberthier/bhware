@@ -866,10 +866,13 @@ class EmptyTankControl(BasePacket):
 
 
 
-class GoldBarDetected(BasePacket):
+class GoldBarDetection(BasePacket):
 
     TYPE = 19
     LOGVIEW_COLOR = "#ffd700"
+    DEFINITION = (
+        UEnum8Item('status',  GOLD_BAR_MISSING,     'GOLD_BAR'),
+    )
 
 
 
