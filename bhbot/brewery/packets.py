@@ -4,6 +4,7 @@
 import sys
 import struct
 import inspect
+import copy
 import math
 from collections import OrderedDict
 
@@ -598,7 +599,7 @@ class BasePacket(object):
                 value = kwargs[elt.name]
             else:
                 # Call the constructor of the value to duplicate it. This is necessary for lists
-                value = type(elt.default_value)(elt.default_value)
+                value = copy.deepcopy(elt.default_value)
             setattr(self, elt.name, value)
 
 
