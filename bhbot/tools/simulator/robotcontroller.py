@@ -185,12 +185,6 @@ class RobotController(object):
         self.send_packet(packet)
 
 
-    def send_opponent_detected(self):
-        packet = packets.TurretDetect()
-        packet.angle = math.pi
-        self.send_packet(packet)
-
-
     def pause(self):
         if self.robot_layer.robot.move_animation.state() == QAbstractAnimation.Running:
             self.robot_layer.robot.move_animation.pause()

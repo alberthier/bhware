@@ -142,7 +142,3 @@ class GameController(object):
         if self.time == 0:
             self.stop()
 
-
-    def opponent_detected(self):
-        self.purple_robot.send_opponent_detected()
-        self.red_robot.send_opponent_detected()
