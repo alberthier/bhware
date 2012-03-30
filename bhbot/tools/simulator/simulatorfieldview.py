@@ -594,16 +594,21 @@ class RobotLayer(fieldview.Layer):
         if self.expected_gripper_movements == 0:
             if self.gripper_packet.which == GRIPPER_SIDE_BOTH and self.gripper_packet.move == GRIPPER_CLOSE:
                 pos = self.robot.item.pos()
+                elements_layer = self.field_view_controller.game_elements_layer
                 if pos.y() < 1000:
                     if pos.x() < 1500:
-                        elements = self.field_view_controller.game_elements_layer.purple_map_tower_treasure
+                        elements = elements_layer.purple_map_tower_treasure
+                        elements_layer.purple_map_tower_treasure_present = False
                     else:
-                        elements = self.field_view_controller.game_elements_layer.red_map_tower_treasure
+                        elements = elements_layer.red_map_tower_treasure
+                        elements_layer.red_map_tower_treasure_present = False
                 else:
                     if pos.x() < 1500:
-                        elements = self.field_view_controller.game_elements_layer.purple_bottle_tower_treasure
+                        elements = elements_layer.purple_bottle_tower_treasure
+                        elements_layer.purple_bottle_tower_treasure_present = False
                     else:
-                        elements = self.field_view_controller.game_elements_layer.red_bottle_tower_treasure
+                        elements = elements_layer.red_bottle_tower_treasure
+                        elements_layer.red_bottle_tower_treasure_present = False
                 self.robot.carried_treasure = elements
                 for elt in elements:
                     elt.setPos(pos)
@@ -635,6 +640,26 @@ class RobotLayer(fieldview.Layer):
         for elt in self.robot.carried_treasure:
             elt.setPos(dest_x, dest_y)
             self.robot.item.removeFromGroup(elt)
+        self.robot_controller.send_packet(packet)
+
+
+    def on_gold_bar_detection(self, packet):
+        pos = self.robot.item.pos()
+        elements_layer = self.field_view_controller.game_elements_layer
+        if pos.y() < 1000:
+            if pos.x() < 1500:
+                gold_bar_present = elements_layer.purple_map_tower_treasure_present
+            else:
+                gold_bar_present = elements_layer.red_map_tower_treasure_present
+        else:
+            if pos.x() < 1500:
+                gold_bar_present = elements_layer.purple_bottle_tower_treasure_present
+            else:
+                gold_bar_present = elements_layer.red_bottle_tower_treasure_present
+        if gold_bar_present:
+            packet.status = GOLD_BAR_PRESENT
+        else:
+            packet.status = GOLD_BAR_MISSING
         self.robot_controller.send_packet(packet)
 
 
@@ -902,6 +927,11 @@ class GameElementsLayer(fieldview.Layer):
                                           Coin(self, 1.085, FIELD_Y_SIZE - 1.185, True),
                                           GoldBar(self, 1.090, FIELD_Y_SIZE - 1.100,  0.00)]
 
+        self.purple_map_tower_treasure_present = True
+        self.purple_bottle_tower_treasure_present = True
+        self.red_map_tower_treasure_present = True
+        self.red_bottle_tower_treasure_present = True
+
         self.elements.extend(self.purple_map_tower_treasure)
         self.elements.extend(self.purple_bottle_tower_treasure)
         self.elements.extend(self.red_map_tower_treasure)
@@ -963,6 +993,10 @@ class GameElementsLayer(fieldview.Layer):
         self.red_fabric.show()
         for elt in self.elements:
             elt.setup()
+        self.purple_map_tower_treasure_present = True
+        self.purple_bottle_tower_treasure_present = True
+        self.red_map_tower_treasure_present = True
+        self.red_bottle_tower_treasure_present = True
 
 
     def scene_changed(self):

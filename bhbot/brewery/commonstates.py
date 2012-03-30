@@ -242,6 +242,24 @@ class EmptyTank(statemachine.State):
 
 
 
+class GetGoldBarStatus(statemachine.State):
+
+    def __init__(self):
+        statemachine.State.__init__(self)
+        self.status = GOLD_BAR_PRESENT
+
+
+    def on_enter(self):
+        self.send_packet(packets.GoldBarDetection())
+
+
+    def on_gold_bar_detection(self, packet):
+        self.status = packet.status
+        self.exit_substate()
+
+
+
+
 class StoreFabric(statemachine.State):
 
     def __init__(self, move):
