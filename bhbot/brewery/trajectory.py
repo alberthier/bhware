@@ -150,6 +150,20 @@ class Map(object):
         return simplified_path[1:]
 
 
+    def opponent_detected(self, opponent, x, y):
+        if opponent == OPPONENT_ROBOT_MAIN:
+            self.pathfinder.set_main_opponent_position(int(x / MAP_CELL_RESOLUTION), int(y / MAP_CELL_RESOLUTION))
+        else:
+            self.pathfinder.set_secondary_opponent_position(int(x / MAP_CELL_RESOLUTION), int(y / MAP_CELL_RESOLUTION))
+
+
+    def opponent_disapeared(self, opponent):
+        if opponent == OPPONENT_ROBOT_MAIN:
+            self.pathfinder.clear_main_opponent_position()
+        else:
+            self.pathfinder.clear_secondary_opponent_position()
+
+
     def send_route_to_simulator(self, path, is_simplified):
         max_elements = packets.SimulatorRoutePath.DEFINITION[0].max_elements
         if is_simplified:

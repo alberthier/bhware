@@ -84,13 +84,13 @@ class State(object):
         pass
 
 
-    def on_opponent_entered(self, angle):
+    def on_opponent_in_front(self, packet):
         pass
 
 
-    def on_opponent_detected(self, angle):
+    def on_opponent_in_back(self, packet):
         pass
 
 
-    def on_opponent_left(self):
+    def on_opponent_disapeared(self, opponent):
         pass

@@ -450,13 +450,13 @@ class PoseItem(PoseWithOptionalAngleItem):
 
 
 
-class SimulatorRoutePointItem(PacketItem):
+class SimulatorPointItem(PacketItem):
 
     C_TYPE = 'BH'
     DESCRIPTION = "Route point"
 
-    def __init__(self, name, description = None):
-        PacketItem.__init__(self, name, (0, 0), description)
+    def __init__(self, name, default_value, description = None):
+        PacketItem.__init__(self, name, default_value, description)
 
 
     def to_value_list(self, value, buf):
@@ -472,13 +472,13 @@ class SimulatorRoutePointItem(PacketItem):
 
 
 
-class SimulatorRouteRectItem(PacketItem):
+class SimulatorRectItem(PacketItem):
 
     C_TYPE = 'BHBH'
     DESCRIPTION = "Route point"
 
-    def __init__(self, name, description = None):
-        PacketItem.__init__(self, name, (0, 0, 0, 0), description)
+    def __init__(self, name, default_value, description = None):
+        PacketItem.__init__(self, name, default_value, description)
 
 
     def to_value_list(self, value, buf):
@@ -923,7 +923,7 @@ class SimulatorRoutePath(BasePacket):
     LOGVIEW_DEFAULT_ENABLED = False
     LOGVIEW_COLOR = "#8b4513"
     DEFINITION = (
-        ListItem('points', [], SimulatorRoutePointItem(""), 84, "Route path points"),
+        ListItem('points', [], SimulatorPointItem("", (0, 0)), 84, "Route path points"),
     )
 
 
@@ -935,7 +935,7 @@ class SimulatorSimplifiedRoutePath(BasePacket):
     LOGVIEW_DEFAULT_ENABLED = False
     LOGVIEW_COLOR = "#8b4513"
     DEFINITION = (
-        ListItem('points', [], SimulatorRoutePointItem(""), 84, "Route path points"),
+        ListItem('points', [], SimulatorPointItem("", (0, 0)), 84, "Route path points"),
     )
 
 
@@ -947,7 +947,22 @@ class SimulatorRouteWalls(BasePacket):
     LOGVIEW_DEFAULT_ENABLED = False
     LOGVIEW_COLOR = "#d8bfd8"
     DEFINITION = (
-        ListItem('walls', [], SimulatorRouteRectItem(""), 42, "Route walls"),
+        ListItem('walls', [], SimulatorRectItem("", (0, 0, 0, 0)), 42, "Route walls"),
+    )
+
+
+
+
+class SimulatorOpponentsPositions(BasePacket):
+
+    TYPE = 108
+    LOGVIEW_DEFAULT_ENABLED = False
+    LOGVIEW_COLOR = "#ba55d3"
+    DEFINITION = (
+        UEnum8Item('robot',   OPPONENT_ROBOT_MAIN, 'OPPONENT_ROBOT'),
+        FloatItem('x',        -1.0,                "Opponent X coordinate"),
+        FloatItem('y',        -1.0,                "Opponent Y coordinate"),
+        FloatItem('distance', -1.0,                "Estimated distannce"),
     )
 
 
