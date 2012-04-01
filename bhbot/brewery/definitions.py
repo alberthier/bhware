@@ -102,8 +102,8 @@ DEFAULT_OPPONENT_WAIT_MS               = 3000
 DEFAULT_OPPONENT_MAX_RETRIES           = 5
 
 # Turret detection ranges
-TURRET_SHORT_DISTANCE_DETECTION_RANGE  = 100
-TURRET_LONG_DISTANCE_DETECTION_RANGE   = 200
+TURRET_SHORT_DISTANCE_DETECTION_RANGE  = 0.55
+TURRET_LONG_DISTANCE_DETECTION_RANGE   = 1.0
 
 
 ########################################################################

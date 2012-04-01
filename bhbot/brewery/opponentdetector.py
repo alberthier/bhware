@@ -48,6 +48,7 @@ class OpponentDetector(object):
         if IS_HOST_DEVICE_PC:
             sim_packet = packets.SimulatorOpponentsPositions()
             sim_packet.robot = packet.robot
+            sim_packet.present = True
             sim_packet.x = x
             sim_packet.y = y
             sim_packet.distance = distance
@@ -84,3 +85,8 @@ class OpponentDetector(object):
 
         for opponent in disapeared_opponents:
             self.event_loop.map.opponent_disapeared(opponent)
+            if IS_HOST_DEVICE_PC:
+                sim_packet = packets.SimulatorOpponentsPositions()
+                sim_packet.robot = opponent
+                sim_packet.present = False
+                self.event_loop.send_packet(sim_packet)

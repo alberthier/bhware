@@ -959,10 +959,11 @@ class SimulatorOpponentsPositions(BasePacket):
     LOGVIEW_DEFAULT_ENABLED = False
     LOGVIEW_COLOR = "#ba55d3"
     DEFINITION = (
-        UEnum8Item('robot',   OPPONENT_ROBOT_MAIN, 'OPPONENT_ROBOT'),
-        FloatItem('x',        -1.0,                "Opponent X coordinate"),
-        FloatItem('y',        -1.0,                "Opponent Y coordinate"),
-        FloatItem('distance', -1.0,                "Estimated distannce"),
+        UEnum8Item('robot',    OPPONENT_ROBOT_MAIN, 'OPPONENT_ROBOT'),
+        BoolItem  ('present',  True,                "Opponent present"),
+        FloatItem ('x',        -1.0,                "Opponent X coordinate"),
+        FloatItem ('y',        -1.0,                "Opponent Y coordinate"),
+        FloatItem ('distance', -1.0,                "Estimated distannce"),
     )
 
 
