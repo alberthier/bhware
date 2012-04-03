@@ -266,7 +266,7 @@ class GraphicsRobotObject(QObject):
         self.item.addToGroup(self.sweeper.right_item)
         self.item.addToGroup(self.sweeper.left_item)
 
-        (self.structure, self.robot_item, self.gyration_item) = helpers.create_robot_base_item(QColor("#838383"), QColor("#e9eaff"), QColor(layer.color).darker(150))
+        (self.structure, self.robot_item, self.gyration_item) = helpers.create_main_robot_base_item(QColor("#838383"), QColor("#e9eaff"), QColor(layer.color).darker(150))
         self.item.addToGroup(self.structure)
         self.item.setParentItem(layer)
 
@@ -1082,6 +1082,7 @@ class SimulatorFieldViewController(fieldview.FieldViewController):
 
     def __init__(self, ui):
         fieldview.FieldViewController.__init__(self, ui)
+        self.add_ghost_layer()
 
         self.purple_robot_layer = RobotLayer(self.field_scene, self, TEAM_PURPLE)
         self.field_scene.add_layer(self.purple_robot_layer)

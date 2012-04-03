@@ -77,7 +77,7 @@ def packet_dump_to_text(dump):
 
 
 
-def create_robot_base_item(pen, brush, gyration_pen):
+def create_main_robot_base_item(pen, brush, gyration_pen):
 
     base = QPainterPath()
     base.moveTo(177.0, -161.0)
@@ -131,5 +131,32 @@ def create_robot_base_item(pen, brush, gyration_pen):
     all_group = QGraphicsItemGroup()
     all_group.addToGroup(robot_group)
     all_group.addToGroup(gyration_group)
+
+    return (all_group, robot_group, gyration_group)
+
+
+
+
+def create_secondary_robot_base_item(pen, brush, gyration_pen):
+    all_group = QGraphicsItemGroup()
+    robot_group = QGraphicsItemGroup()
+    gyration_group = QGraphicsItemGroup()
+
+    base_item = QGraphicsRectItem(-59, -202 / 2, 188, 202)
+    base_item.setPen(pen)
+    base_item.setBrush(brush)
+    robot_group.addToGroup(base_item)
+
+    gyration = QGraphicsEllipseItem(-164, -164, 328, 328)
+    gyration.setPen(pen)
+    gripper_gyration = QGraphicsEllipseItem(-261, -261, 522, 522)
+    gripper_gyration.setPen(pen)
+
+    gyration_group.addToGroup(gyration)
+    gyration_group.addToGroup(gripper_gyration)
+
+    all_group.addToGroup(robot_group)
+    all_group.addToGroup(gyration_group)
+    all_group.addToGroup(gripper_gyration)
 
     return (all_group, robot_group, gyration_group)

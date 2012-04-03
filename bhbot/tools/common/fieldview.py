@@ -74,7 +74,7 @@ class Layer(QGraphicsItemGroup):
 
 class GhostRobotLayer(Layer):
 
-    def __init__(self, parent = None):
+    def __init__(self, main_robot = True, parent = None):
         Layer.__init__(self, parent)
 
         self.name = "Ghost robot"
@@ -98,7 +98,10 @@ class GhostRobotLayer(Layer):
 
         # Ghost robot
         ghost_pen = QPen(QColor(self.color))
-        (self.mouse_item, robot_item, gyration_item) = helpers.create_robot_base_item(ghost_pen, QBrush(), ghost_pen)
+        if main_robot:
+            (self.mouse_item, robot_item, gyration_item) = helpers.create_main_robot_base_item(ghost_pen, QBrush(), ghost_pen)
+        else:
+            (self.mouse_item, robot_item, gyration_item) = helpers.create_secondary_robot_base_item(ghost_pen, QBrush(), ghost_pen)
 
         line = QGraphicsLineItem(-50.0, 0.0, 50.0, 0.0)
         line.setPen(ghost_pen)
@@ -111,7 +114,6 @@ class GhostRobotLayer(Layer):
         self.mouse_item.setVisible(False)
         self.addToGroup(self.mouse_item)
 
-
     def sceneEnterEvent(self, event):
         self.mouse_item.setVisible(True)
 
@@ -121,10 +123,13 @@ class GhostRobotLayer(Layer):
 
 
     def sceneMouseMoveEvent(self, event):
-        pos = event.scenePos()
-        self.mouse_item.setPos(pos)
-        self.x_label.setText("x = {:=0.04f}".format(pos.y() / 1000.0))
-        self.y_label.setText("y = {:=0.04f}".format(pos.x() / 1000.0))
+        self.set_position(event.scenePos().x(), event.scenePos().y())
+
+
+    def set_position(self, x, y):
+        self.mouse_item.setPos(x, y)
+        self.x_label.setText("x = {:=0.04f}".format(y / 1000.0))
+        self.y_label.setText("y = {:=0.04f}".format(x / 1000.0))
         angle = self.convert_angle()
         self.angle_label.setText("angle = {:=0.04f} ({:=0.01f} deg)".format(angle, angle / math.pi * 180.0))
 
@@ -210,7 +215,10 @@ class FieldViewController(QObject):
         self.field_scene = FieldScene(self)
         self.field_view.setScene(self.field_scene)
 
-        ghost_layer = GhostRobotLayer()
+
+    def add_ghost_layer(self, ghost_layer = None):
+        if ghost_layer == None:
+            ghost_layer = GhostRobotLayer()
         self.field_view.enterEventListeners.append(ghost_layer)
         self.field_view.leaveEventListeners.append(ghost_layer)
         self.field_scene.mouseMoveEventListeners.append(ghost_layer)
