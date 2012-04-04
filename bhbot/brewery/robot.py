@@ -20,7 +20,7 @@ class Robot(object):
         self.pose = trajectory.Pose(0.0, 0.0, 0.0)
         self.team = TEAM_UNKNOWN
         self.event_loop = event_loop
-        self.stored_piece_count = 0
+        self.tank_full = False
 
 
     def move(self, dx, dy, direction = DIRECTION_FORWARD, reference_team = TEAM_UNKNOWN):
@@ -130,6 +130,24 @@ class Robot(object):
         return packet
 
 
+    def is_looking_at(self, x, y, reference_team = TEAM_UNKNOWN):
+        current_y = self.convert_y(self.pose.y, reference_team)
+        dx = x - self.pose.x
+        dy = y - current_y
+        angle = self.convert_angle(math.atan2(dy, dx), reference_team) % (2.0 * math.pi)
+        current_angle = self.pose.angle % (2.0 * math.pi)
+        return abs(current_angle - angle) < (math.pi / 16.0)
+
+
+    def is_looking_at_opposite(self, x, y, reference_team = TEAM_UNKNOWN):
+        current_y = self.convert_y(self.pose.y, reference_team)
+        dx = x - self.pose.x
+        dy = y - current_y
+        angle = self.convert_angle(math.atan2(dy, dx), reference_team) % (2.0 * math.pi)
+        current_opposite_angle = (self.pose.angle + math.pi) % (2.0 * math.pi)
+        return abs(current_opposite_angle - angle) < (math.pi / 16.0)
+
+
     def convert_y(self, y, reference_team):
         if y == None or reference_team == TEAM_UNKNOWN or self.team == TEAM_UNKNOWN or reference_team == self.team:
             return y
@@ -158,3 +176,7 @@ class Robot(object):
 
     def on_keep_alive(self, packet):
         self.pose = packet.current_pose
+
+
+    def on_empty_tank_control(self, packet):
+        self.tank_full = False

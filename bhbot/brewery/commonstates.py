@@ -440,6 +440,63 @@ class TrajectoryWalk(statemachine.State):
 
 
 
+class Navigate(statemachine.State):
+
+    def __init__(self, x, y, direction = DIRECTION_FORWARD, reference_team = TEAM_PURPLE):
+        self.x = x
+        self.y = y
+        self.direction = direction
+        self.reference_team = reference_team
+        self.path = None
+        self.rotation_packet = None
+        self.exit_reason = NAVIGATE_DESTINATION_REACHED
+
+
+    def on_enter(self):
+        self.path = self.event_loop.map.route(self.robot().pose.x, self.robot().pose.y, self.x, self.y)
+        if len(path) == 0:
+            self.exit_reason = NAVIGATE_DESTINATION_UNREACHABLE
+            self.exit_substate()
+        else:
+            if direction == DIRECTION_FORWARD:
+                if not self.robot().is_looking_at(path[0].x, path[0].y, self.reference_team):
+                    self.rotation_packet = self.robot().look_at(path[0].x, path[0].y, self.reference_team)
+            else:
+                if not self.robot().is_looking_at_opposite(path[0].x, path[0].y, self.reference_team):
+                    self.rotation_packet = self.robot().look_at_opposite(path[0].x, path[0].y, self.reference_team)
+            if self.rotation_packet == None:
+                self.send_path()
+
+
+    def on_goto_finished(self, packet):
+        if self.rotation_packet != None:
+            self.rotation_packet = None
+            self.send_path()
+        else:
+            self.exit_reason = NAVIGATE_DESTINATION_REACHED
+            self.exit_substate()
+
+
+    def on_opponent_in_front(self, packet):
+        if self.direction == DIRECTION_FORWARD:
+            self.robot().stop()
+            self.exit_reason = NAVIGATE_OPPONENT_IN_THE_WAY
+            self.exit_substate()
+
+
+    def on_opponent_in_back(self, packet):
+        if self.direction == DIRECTION_BACKWARD:
+            self.robot().stop()
+            self.exit_reason = NAVIGATE_OPPONENT_IN_THE_WAY
+            self.exit_substate()
+
+
+    def send_path(self):
+        self.robot().follow(self.path, self.direction, self.reference_team)
+
+
+
+
 class GotoHome(statemachine.State):
 
     def on_enter(self):
