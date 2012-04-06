@@ -108,7 +108,7 @@ class PacketItem(object):
     def __init__(self, name, default_value, description = None):
         self.name = name
         self.default_value = default_value
-        if description == None:
+        if description is None:
             description = self.DESCRIPTION
         else:
             self.description = description
@@ -377,7 +377,7 @@ class PoseWithOptionalAngleItem(PacketItem):
     def to_value_list(self, value, buf):
         buf.append(value.x)
         buf.append(value.y)
-        if value.angle == None:
+        if value.angle is None:
             buf.append(0.0)
             buf.append(0)
         else:
@@ -398,7 +398,7 @@ class PoseWithOptionalAngleItem(PacketItem):
         if pretty:
             ret["x"]     = "{:0.4f}".format(value.x)
             ret["y"]     = "{:0.4f}".format(value.y)
-            if value.angle != None:
+            if value.angle is not None:
                 ret["angle"] = "{:0.4f} ({:0.4f} deg)".format(value.angle, value.angle / math.pi * 180.0)
             else:
                 ret["angle"] = "None"
@@ -414,7 +414,7 @@ class PoseWithOptionalAngleItem(PacketItem):
         pose.x = float(value["x"])
         pose.y = float(value["y"])
         angle  = value["angle"]
-        if angle != None:
+        if angle is not None:
             if pretty:
                 pose.angle = float(angle[:angle.find(" (")])
             else:
@@ -467,7 +467,7 @@ class SimulatorPointItem(PacketItem):
     def from_value_list(self, buf):
         (x, y) = buf[:2]
         del buf[:2]
-        return (x, y)
+        return x, y
 
 
 
@@ -491,7 +491,7 @@ class SimulatorRectItem(PacketItem):
     def from_value_list(self, buf):
         (x1, y1, x2, y2) = buf[:4]
         del buf[:4]
-        return (x1, y1, x2, y2)
+        return x1, y1, x2, y2
 
 
 
@@ -504,7 +504,7 @@ class ListItem(PacketItem):
     def __init__(self, name, default_value, element_type, max_elements, description = None):
         self.element_type = element_type
         self.max_elements = max_elements
-        if self.C_TYPE == None:
+        if self.C_TYPE is None:
             self.C_TYPE = "B"
             for i in xrange(self.max_elements):
                 self.C_TYPE += self.element_type.C_TYPE
@@ -576,7 +576,7 @@ class BasePacket(object):
 
     def __init__(self, **kwargs):
         cls = type(self)
-        if cls.STRUCT == None:
+        if cls.STRUCT is None:
             fmt = "<B"
             for elt in self.DEFINITION:
                 fmt += elt.C_TYPE
@@ -586,7 +586,7 @@ class BasePacket(object):
                 fmt += str(pad_size) + "x"
             cls.STRUCT = struct.Struct(fmt)
 
-        if cls.HANDLER_METHOD == None:
+        if cls.HANDLER_METHOD is None:
             cls.HANDLER_METHOD = "on"
             for c in cls.__name__:
                 if c.isupper():

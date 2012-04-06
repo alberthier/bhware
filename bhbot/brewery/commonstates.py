@@ -109,7 +109,7 @@ class DefinePosition(statemachine.State):
 
     def __init__(self, x = None, y = None, angle = None):
         statemachine.State.__init__(self)
-        if x == None or y == None or angle == None:
+        if x is None or y is None or angle is None:
             self.pose = None
         else:
             self.pose = trajectory.Pose(x, y, angle)
@@ -118,7 +118,7 @@ class DefinePosition(statemachine.State):
 
 
     def on_enter(self):
-        if self.pose == None:
+        if self.pose is None:
             if self.robot().team == TEAM_RED:
                 self.pose = trajectory.Pose(RED_START_X, RED_START_Y, RED_START_ANGLE)
             else:
@@ -290,7 +290,7 @@ class TrajectoryWalk(statemachine.State):
         self.opponent_blocking_current_retries = 0
         self.exit_reason = TRAJECTORY_WALK_DESTINATION_REACHED
         self.reference_team = reference_team
-        if points != None:
+        if points is not None:
             self.load_points(points)
 
 
@@ -382,7 +382,7 @@ class TrajectoryWalk(statemachine.State):
 
 
     def process_next_job(self):
-        if self.current_goto_packet == None:
+        if self.current_goto_packet is None:
             if len(self.jobs) == 0:
                 self.exit_reason = TRAJECTORY_WALK_DESTINATION_REACHED
                 self.exit_substate()
@@ -407,7 +407,7 @@ class TrajectoryWalk(statemachine.State):
 
 
     def on_exit_substate(self, substate):
-        if self.current_goto_packet != None and isinstance(substate, WaitForOpponentLeave):
+        if self.current_goto_packet is not None and isinstance(substate, WaitForOpponentLeave):
             if substate.exit_reason == WaitForOpponentLeave.OPPONENT_LEFT:
                 self.opponent_blocking_current_retries = 0
                 self.send_packet(self.current_goto_packet)
@@ -419,7 +419,7 @@ class TrajectoryWalk(statemachine.State):
 
     def on_opponent_detected(self, angle):
         logger.log("TrajectoryWalk call on_opponent_entered")
-        if self.current_goto_packet != None:
+        if self.current_goto_packet is not None:
             direction = self.current_goto_packet.direction
             is_in_front = self.event_loop.opponent_detector.is_opponent_in_front(angle)
             is_in_back = self.event_loop.opponent_detector.is_opponent_in_back(angle)
@@ -442,7 +442,8 @@ class TrajectoryWalk(statemachine.State):
 
 class Navigate(statemachine.State):
 
-    def __init__(self, x, y, direction = DIRECTION_FORWARD, reference_team = TEAM_PURPLE):
+    def __init__(self, x, y, direction=DIRECTION_FORWARD, reference_team=TEAM_PURPLE):
+        super(Navigate, self).__init__()
         self.x = x
         self.y = y
         self.direction = direction
@@ -464,12 +465,12 @@ class Navigate(statemachine.State):
             else:
                 if not self.robot().is_looking_at_opposite(path[0].x, path[0].y, self.reference_team):
                     self.rotation_packet = self.robot().look_at_opposite(path[0].x, path[0].y, self.reference_team)
-            if self.rotation_packet == None:
+            if self.rotation_packet is None:
                 self.send_path()
 
 
     def on_goto_finished(self, packet):
-        if self.rotation_packet != None:
+        if self.rotation_packet is not None:
             self.rotation_packet = None
             self.send_path()
         else:

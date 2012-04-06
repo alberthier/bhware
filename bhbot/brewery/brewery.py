@@ -16,7 +16,7 @@ loop = None
 
 def signal_handler(signum, frame):
     global loop
-    if loop != None:
+    if loop is not None:
         loop.stop()
 
 

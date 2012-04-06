@@ -210,10 +210,10 @@ class RobotControlDeviceStarter(object):
             try:
                 self.log_socket.connect((REMOTE_IP, REMOTE_LOG_PORT))
                 self.eventloop.robot_log_channel = RobotLogDeviceChannel(self.log_socket)
-                logger.log("Connected to the log stocket {}:{}".format(REMOTE_IP, REMOTE_LOG_PORT))
+                logger.log("Connected to the log socket {}:{}".format(REMOTE_IP, REMOTE_LOG_PORT))
             except Exception as e:
                 # Log socket is not mandatory. If the connection fails, continue without it.
-                logger.log("Unable to connect to the log stocket {}:{} ({}), continuing without PIC logs".format(REMOTE_IP, REMOTE_LOG_PORT, e))
+                logger.log("Unable to connect to the log socket {}:{} ({}), continuing without PIC logs".format(REMOTE_IP, REMOTE_LOG_PORT, e))
             self.eventloop.on_turret_boot(None)
             self.eventloop.create_fsm()
         return connected
@@ -248,7 +248,7 @@ class EventLoop(object):
 
     def do_read(self, channel):
         while True :
-            if channel.packet == None:
+            if channel.packet is None:
                 try:
                     b = channel.bytes_available()
                     if b == 0:
@@ -300,7 +300,7 @@ class EventLoop(object):
 
 
     def on_turret_boot(self, packet):
-        if self.turret_channel != None:
+        if self.turret_channel is not None:
             packet = packets.TurretInit()
             packet.mode = TURRET_INIT_MODE_WRITE
             packet.short_distance = TURRET_SHORT_DISTANCE_DETECTION_RANGE
@@ -311,7 +311,7 @@ class EventLoop(object):
 
 
     def send_packet(self, packet):
-        if self.root_state.sub_state != None:
+        if self.root_state.sub_state is not None:
             logger.log_packet(packet, "ARM")
             buffer = packet.serialize()
             self.robot_control_channel.send(buffer)
@@ -327,14 +327,14 @@ class EventLoop(object):
 
     def get_current_state(self):
         state = self.root_state
-        while state.sub_state != None:
+        while state.sub_state is not None:
             state = state.sub_state
         return state
 
 
     def create_fsm(self):
         state = statemachine.instantiate_state_machine(self.state_machine_name, self)
-        if state == None :
+        if state is None:
             self.stop()
         else:
             self.root_state.switch_to_substate(state)
@@ -346,7 +346,7 @@ class EventLoop(object):
     def start(self):
         logger.log("Starting internal web server on port {}".format(self.webserver_port))
         self.web_server = asyncwsgiserver.WsgiServer("", self.webserver_port, web.webinterface.create_app(self))
-        if (SERIAL_PORT_PATH != None):
+        if SERIAL_PORT_PATH is not None:
             try:
                 self.turret_channel = TurretChannel(SERIAL_PORT_PATH, SERIAL_PORT_SPEED, self)
             except serial.SerialException:
@@ -366,10 +366,10 @@ class EventLoop(object):
     def stop(self):
         logger.log("Stopping...")
         self.stopping = True
-        if self.turret_channel != None:
+        if self.turret_channel is not None:
             self.turret_channel.close()
-        if self.robot_control_channel != None:
+        if self.robot_control_channel is not None:
             self.robot_control_channel.close()
-        if self.robot_log_channel != None:
+        if self.robot_log_channel is not None:
             self.robot_log_channel.close()
         logger.close()

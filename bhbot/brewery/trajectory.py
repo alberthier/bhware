@@ -32,7 +32,7 @@ class Pose(object):
 
 
     def __eq__(self, other):
-        if other == None:
+        if other is None:
             return False
         return self.x == other.x and self.y == other.y and self.angle == other.angle
 
@@ -133,7 +133,7 @@ class Map(object):
                 if abs(a1 - a2) > 0.1:
                    simplified_path.append(p2)
                    p1 = p2
-            if p3 != None:
+            if p3 is not None:
                 simplified_path.append(p3)
 
         if IS_HOST_DEVICE_PC:

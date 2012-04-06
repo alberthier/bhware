@@ -22,6 +22,7 @@ class Main(statemachine.State):
         self.switch_to_substate(commonstates.DefinePosition())
 
 
+    #noinspection PyUnusedLocal
     def on_exit_substate(self, substate):
         self.switch_to_state(WaitStart())
 

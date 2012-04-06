@@ -26,9 +26,10 @@ def initialize():
     global filepath
     global log_file
     global start_time
-    if log_file == None:
+    if log_file is None:
         start_time = datetime.datetime.now()
         filepath = get_next_log_filepath()
+        #noinspection PyBroadException
         try:
             log_file = file(filepath, "w")
             os.chmod(filepath, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR | stat.S_IRGRP | stat.S_IXGRP | stat.S_IROTH | stat.S_IXOTH)
@@ -52,7 +53,7 @@ def initialize():
 def close():
     global log_file
     global filepath
-    if log_file == None:
+    if log_file is None:
         return
     log_file.close()
     filepath = None
@@ -66,6 +67,7 @@ def log(text, sender = "ARM"):
     initialize()
     delta = datetime.datetime.now() - start_time
     time = "'{:=0.02f}'".format(float(delta.seconds) + (float(delta.microseconds)/1000000.0))
+    #noinspection PyBroadException
     try:
         log_file.write("l([" + time + ",'" + sender + "','# " + text.replace("'", "\\'") + "'])\n")
     except:
@@ -75,7 +77,7 @@ def log(text, sender = "ARM"):
 
 
 def log_exception(exc, msg = None):
-    if msg == None:
+    if msg is None:
         msg = "Exception "
     log(msg + str(exc))
     for l in traceback.format_exc(exc).split("\n") :
@@ -87,6 +89,7 @@ def log_packet(packet, sender = "ARM"):
     delta = datetime.datetime.now() - start_time
     time = "'{:=0.02f}'".format(float(delta.seconds) + (float(delta.microseconds)/1000000.0))
     text = "'" + sender + "'," + packet.to_code() + "]"
+    #noinspection PyBroadException
     try:
         log_file.write("l([" + time + "," + text + ")\n")
     except:

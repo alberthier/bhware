@@ -89,21 +89,21 @@ class Robot(object):
     def goto(self, x, y, angle, direction = DIRECTION_FORWARD, reference_team = TEAM_UNKNOWN):
         y = self.convert_y(y, reference_team)
         angle = self.convert_angle(angle, reference_team)
-        if angle != None:
+        if angle is not None:
             angle = math.fmod(angle, 2.0 * math.pi)
         packet = packets.Goto()
         packet.movement = None
-        if x == None or tools.quasi_equal(x, self.pose.x):
+        if x is None or tools.quasi_equal(x, self.pose.x):
             x = self.pose.x
         else:
             packet.movement = MOVEMENT_LINE
-        if y == None or tools.quasi_equal(y, self.pose.y):
+        if y is None or tools.quasi_equal(y, self.pose.y):
             y = self.pose.y
         else:
             packet.movement = MOVEMENT_LINE
-        if angle == None or tools.quasi_equal(angle, self.pose.angle):
+        if angle is None or tools.quasi_equal(angle, self.pose.angle):
             angle = self.pose.angle
-            if packet.movement == None:
+            if packet.movement is None:
                 self.event_loop.inject_goto_finished()
                 return None
         elif packet.movement == MOVEMENT_LINE:
@@ -149,14 +149,14 @@ class Robot(object):
 
 
     def convert_y(self, y, reference_team):
-        if y == None or reference_team == TEAM_UNKNOWN or self.team == TEAM_UNKNOWN or reference_team == self.team:
+        if y is None or reference_team == TEAM_UNKNOWN or self.team == TEAM_UNKNOWN or reference_team == self.team:
             return y
         else:
             return FIELD_Y_SIZE - y
 
 
     def convert_angle(self, angle, reference_team):
-        if angle == None or reference_team == TEAM_UNKNOWN or self.team == TEAM_UNKNOWN or reference_team == self.team:
+        if angle is None or reference_team == TEAM_UNKNOWN or self.team == TEAM_UNKNOWN or reference_team == self.team:
             return angle
         else:
             return math.atan2(-math.sin(angle), math.cos(angle))

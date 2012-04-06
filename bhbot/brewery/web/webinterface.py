@@ -28,6 +28,7 @@ class WebState(statemachine.State):
         self.event_loop.root_state = self
 
 
+    #noinspection PyUnusedLocal
     def on_exit_substate(self, substate):
         self.event_loop.root_state = self.old_root_state
 
@@ -166,7 +167,7 @@ class BHWeb(object):
 
     def build_element_from_item(self, item, name = None):
         html = ""
-        if name == None:
+        if name is None:
             name = item.name
         if isinstance(item, packets.BoolItem):
             if item.default_value:
@@ -182,7 +183,7 @@ class BHWeb(object):
         elif isinstance(item, packets.PoseWithOptionalAngleItem):
             html += """<tr><td>{}.x (f)</td><td><input type="text" name="{}.x" value="{}"/></td></tr>""".format(name, name, item.default_value.x)
             html += """<tr><td>{}.y (f)</td><td><input type="text" name="{}.y" value="{}"/></td></tr>""".format(name, name, item.default_value.y)
-            if item.default_value.angle != None:
+            if item.default_value.angle is not None:
                 default_angle = item.default_value.angle
             else:
                 default_angle = "0.0"
@@ -209,7 +210,7 @@ class BHWeb(object):
 
 
     def build_item_from_query(self, query, item, name = None):
-        if name == None:
+        if name is None:
             name = item.name
         if isinstance(item, packets.BoolItem):
             return query.has_key(name)
