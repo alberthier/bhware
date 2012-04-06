@@ -343,8 +343,8 @@ class TrajectoryWalk(statemachine.State):
 
 
     def load_points(self, points):
-        try :
-            for vals in points :
+        for vals in points :
+            try :
                 angle = None
                 x, y = 0.0, 0.0
                 direction = DIRECTION_FORWARD
@@ -365,9 +365,10 @@ class TrajectoryWalk(statemachine.State):
                     a = lookup_defs("ANGLE", angle) if angle else None
                     d = lookup_defs("DIRECTION", direction) if direction else None
                     self.goto(x, y, angle, direction)
-        except Exception, e :
-            logger.log("Error decoding trajectory '{}' : Exception is {}".format(str(vals), str(e)))
-            logger.log_exception(e)
+            except Exception, e :
+                logger.log("Error decoding trajectory '{}' : Exception is {}".format(str(vals), str(e)))
+                logger.log_exception(e)
+                # TODO : exit loop if exception occurred ?
 
 
     def on_enter(self):
