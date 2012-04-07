@@ -205,21 +205,9 @@ class GotoFinishedPacketTestCase(unittest.TestCase, PacketTestMixin):
 
 
     def initialize_packet(self, packet):
-        packet.reason = REASON_DESTINATION_REACHED
+        packet.reason = REASON_STOP_REQUESTED
         packet.current_pose = trajectory.Pose(20.0, 30.0, 5.5)
         packet.current_point_index = 12
-
-
-
-
-class BlockedPacketTestCase(unittest.TestCase, PacketTestMixin):
-
-    def create_packet(self):
-        return packets.Blocked()
-
-
-    def initialize_packet(self, packet):
-        packet.side = BLOCKED_BACK
 
 
 
@@ -350,10 +338,10 @@ class EmptyTankControlTestCase(unittest.TestCase, PacketTestMixin):
 
 
 
-class GoldBarDetectedTestCase(unittest.TestCase, PacketTestMixin):
+class GoldBarDetectionTestCase(unittest.TestCase, PacketTestMixin):
 
     def create_packet(self):
-        return packets.GoldBarDetected()
+        return packets.GoldBarDetection()
 
 
 
