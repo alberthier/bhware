@@ -35,7 +35,7 @@ import trajectory
 #   X  #ff7f50 coral                             #3cb371 mediumseagreen
 #      #6495ed cornflowerblue                    #7b68ee mediumslateblue
 #      #fff8dc cornsilk                          #00fa9a mediumspringgreen
-#   X  #dc143c crimson                           #48d1cc mediumturquoise
+#      #dc143c crimson                           #48d1cc mediumturquoise
 #   X  #00ffff cyan                              #c71585 mediumvioletred
 #   X  #00008b darkblue                       X  #191970 midnightblue
 #      #008b8b darkcyan                          #f5fffa mintcream
@@ -731,18 +731,6 @@ class GotoFinished(BasePacket):
         PoseItem  ('current_pose'),
         UInt8Item ('current_point_index', 0,                          "Last reached point index of the point list given in the Goto packet"),
     )
-
-
-
-
-class Blocked(BasePacket):
-
-    TYPE = 7
-    LOGVIEW_COLOR = "#dc143c"
-    DEFINITION = (
-        Enum8Item('side', BLOCKED_FRONT, 'BLOCKING'),
-    )
-
 
 
 

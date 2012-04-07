@@ -160,12 +160,9 @@ Enum("DIRECTION",
 Enum("REASON",
      "Goto finished reason",
      REASON_DESTINATION_REACHED = 0,
-)
-
-Enum("BLOCKING",
-     "Blocking side",
-     BLOCKED_FRONT =  1,
-     BLOCKED_BACK  = -1,
+     REASON_BLOCKED_FRONT       = 1,
+     REASON_BLOCKED_BACK        = 2,
+     REASON_STOP_REQUESTED      = 3,
 )
 
 Enum("AXIS",
