@@ -129,8 +129,10 @@ typedef struct
     int secondary_opponent_avoidance_cells;
     int main_opponent_x;
     int main_opponent_y;
+    float main_opponent_collision_cost;
     int secondary_opponent_x;
     int secondary_opponent_y;
+    float secondary_opponent_collision_cost;
     float** distance_map;
     Cell** map;
     Wall* walls;
@@ -172,12 +174,14 @@ static int pathfinder_init(PathFinder* self, PyObject* args, PyObject* kwds)
     int x = 0;
     int y = 0;
 
-    if (!PyArg_ParseTuple(args, "iifii",
+    if (!PyArg_ParseTuple(args, "iifiiff",
                           &self->map_x_size,
                           &self->map_y_size,
                           &self->effective_vs_heuristic_tradeoff,
                           &self->main_opponent_avoidance_cells,
-                          &self->secondary_opponent_avoidance_cells)) {
+                          &self->secondary_opponent_avoidance_cells,
+                          &self->main_opponent_collision_cost,
+                          &self->secondary_opponent_collision_cost)) {
         return -1;
     }
 
@@ -203,6 +207,7 @@ static int pathfinder_init(PathFinder* self, PyObject* args, PyObject* kwds)
     }
 
     self->walls = NULL;
+    self->penalized_zones = NULL;
 
     return 0;
 }
@@ -215,12 +220,6 @@ Cell** pathfinder_append_if_valid(PathFinder* self, Cell** it, int x, int y)
         return it;
     }
     if (y < 0 || y >= self->map_y_size) {
-        return it;
-    }
-    if (self->main_opponent_x != -1 && self->distance_map[abs(x - self->main_opponent_x)][abs(y - self->main_opponent_y)] < self->main_opponent_avoidance_cells) {
-        return it;
-    }
-    if (self->secondary_opponent_x != -1 && self->distance_map[abs(x - self->secondary_opponent_x)][abs(y - self->secondary_opponent_y)] < self->secondary_opponent_avoidance_cells) {
         return it;
     }
     for (wall = self->walls; wall != NULL; wall = wall->next) {
@@ -293,6 +292,16 @@ static float pathfinder_penalized_cost(PathFinder* self, int x, int y)
             if (penalized_zone->cost > cost) {
                 cost = penalized_zone->cost;
             }
+        }
+    }
+    if (self->main_opponent_x != -1 && self->distance_map[abs(x - self->main_opponent_x)][abs(y - self->main_opponent_y)] < self->main_opponent_avoidance_cells) {
+        if (self->main_opponent_collision_cost > cost) {
+            cost = self->main_opponent_collision_cost;
+        }
+    }
+    if (self->secondary_opponent_x != -1 && self->distance_map[abs(x - self->secondary_opponent_x)][abs(y - self->secondary_opponent_y)] < self->secondary_opponent_avoidance_cells) {
+        if (self->secondary_opponent_collision_cost > cost) {
+            cost = self->secondary_opponent_collision_cost;
         }
     }
 

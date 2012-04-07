@@ -77,11 +77,17 @@ class Map(object):
 
         import pathfinding
 
+        wall_cost = float(Map.MAP_X_SIZE * Map.MAP_Y_SIZE)
+        main_opponent_collision_cost = wall_cost
+        secondary_opponent_collision_cost = main_opponent_collision_cost
+
         self.pathfinder = pathfinding.PathFinder(Map.MAP_X_SIZE,
                                                  Map.MAP_Y_SIZE,
                                                  ASTAR_EFFECTIVE_VS_HEURISTIC_TRADEOFF,
                                                  Map.MAIN_OPPONENT_AVOIDANCE_CELLS,
-                                                 Map.SECONDARY_OPPONENT_AVOIDANCE_CELLS)
+                                                 Map.SECONDARY_OPPONENT_AVOIDANCE_CELLS,
+                                                 main_opponent_collision_cost,
+                                                 secondary_opponent_collision_cost)
 
         self.walls = []
         self.walls.append([0.5 - MAP_WALLS_DISTANCE, 0.0, 0.52 + MAP_WALLS_DISTANCE, 0.4 + MAP_WALLS_DISTANCE])
@@ -92,7 +98,7 @@ class Map(object):
         for wall in self.walls:
             for i in xrange(len(wall)):
                 wall[i] = int(wall[i] / MAP_CELL_RESOLUTION)
-            self.pathfinder.add_wall(wall[0], wall[1], wall[2], wall[3])
+            self.pathfinder.add_penalized_zone(wall[0], wall[1], wall[2], wall[3], wall_cost)
 
 
     def route(self, start_x, start_y, goal_x, goal_y):
