@@ -20,6 +20,7 @@ class Robot(object):
         self.pose = trajectory.Pose(0.0, 0.0, 0.0)
         self.team = TEAM_UNKNOWN
         self.event_loop = event_loop
+        self.moving = False
         self.tank_full = False
 
 
@@ -170,7 +171,12 @@ class Robot(object):
         self.team = packet.team
 
 
+    def on_goto_started(self, packet):
+        self.moving = True
+
+
     def on_goto_finished(self, packet):
+        self.moving = False
         self.pose = packet.current_pose
 
 

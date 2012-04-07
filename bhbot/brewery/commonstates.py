@@ -37,10 +37,10 @@ class WaitForOpponentLeave(Timer):
 
     OPPONENT_LEFT = 1
 
-    def __init__(self, miliseconds, current_move_direction):
-        Timer.__init__(self,miliseconds)
-        self.exit_reason=self.TIMEOUT
-        self.current_move_direction = current_move_direction
+    def __init__(self, opponent, miliseconds, current_move_direction):
+        Timer.__init__(self, miliseconds)
+        self.opponent = opponent
+        self.exit_reason = self.TIMEOUT
 
 
     def on_enter(self):
@@ -50,10 +50,11 @@ class WaitForOpponentLeave(Timer):
             self.robot().forward(0.100)
 
 
-    def on_opponent_left(self):
-        self.exit_reason=self.OPPONENT_LEFT
-        logger.log("WaitForOpponentLeave : exit on opponent leave")
-        self.exit_substate(self.exit_reason)
+    def on_opponent_disapeared(self, opponent):
+        if opponent == self.opponent:
+            self.exit_reason = self.OPPONENT_LEFT
+            logger.log("WaitForOpponentLeave : exit on opponent leave")
+            self.exit_substate(self.exit_reason)
 
 
 
@@ -380,6 +381,9 @@ class TrajectoryWalk(statemachine.State):
             self.exit_reason = TRAJECTORY_WALK_DESTINATION_REACHED
             self.current_goto_packet = None
             self.process_next_job()
+        elif packet.reason == REASON_BLOCKED_FRONT or packet.reason == REASON_BLOCKED_BACK:
+            self.exit_reason = TRAJECTORY_WALK_BLOCKED
+            self.exit_substate()
 
 
     def process_next_job(self):
@@ -402,11 +406,6 @@ class TrajectoryWalk(statemachine.State):
             self.send_packet(self.current_goto_packet)
 
 
-    def on_blocked(self, packet):
-        self.exit_reason = TRAJECTORY_WALK_BLOCKED
-        self.exit_substate()
-
-
     def on_exit_substate(self, substate):
         if self.current_goto_packet is not None and isinstance(substate, WaitForOpponentLeave):
             if substate.exit_reason == WaitForOpponentLeave.OPPONENT_LEFT:
@@ -418,23 +417,27 @@ class TrajectoryWalk(statemachine.State):
             self.process_next_job()
 
 
-    def on_opponent_detected(self, angle):
-        logger.log("TrajectoryWalk call on_opponent_entered")
+    def on_opponent_in_front(self, packet):
+        self.on_opponent_detected(packet, DIRECTION_FORWARD)
+
+
+    def on_opponent_in_back(self, packet):
+        self.on_opponent_detected(packet, DIRECTION_BACKWARD)
+
+
+    def on_opponent_detected(self, packet, opponent_direction):
         if self.current_goto_packet is not None:
             direction = self.current_goto_packet.direction
-            is_in_front = self.event_loop.opponent_detector.is_opponent_in_front(angle)
-            is_in_back = self.event_loop.opponent_detector.is_opponent_in_back(angle)
-            logger.log("TrajectoryWalk self.current_goto_packet != None - is_in_front={} - is_in_back={}".format(is_in_front, is_in_back))
-            if direction == DIRECTION_FORWARD and is_in_front or \
-                direction == DIRECTION_BACKWARD and is_in_back:
+            if self.current_goto_packet.movement != MOVEMENT_ROTATE and self.current_goto_packet.direction == opponent_direction:
+                logger.log("Opponent detected. direction = {}".format(opponent_direction))
                 self.robot().stop()
                 logger.log("TrajectoryWalk robot stopped")
                 if self.opponent_blocking_current_retries < self.opponent_blocking_max_retries :
-                    logger.log("TrajectoryWalk self.opponent_blocking_current_retries={} < self.opponent_blocking_max_retries={}".format(self.opponent_blocking_current_retries, self.opponent_blocking_max_retries))
+                    logger.log("TrajectoryWalk retries ({}/{})".format(self.opponent_blocking_current_retries, self.opponent_blocking_max_retries))
                     self.opponent_blocking_current_retries += 1
-                    self.switch_to_substate(WaitForOpponentLeave(self.opponent_wait_time, direction))
+                    self.switch_to_substate(WaitForOpponentLeave(packet.robot, self.opponent_wait_time, direction))
                 else :
-                    logger.log("TrajectoryWalk TRAJECTORY_WALK_OPPONENT_DETECTED")
+                    logger.log("TrajectoryWalk failed")
                     self.exit_reason = TRAJECTORY_WALK_OPPONENT_DETECTED
                     self.exit_substate()
 
@@ -474,8 +477,11 @@ class Navigate(statemachine.State):
         if self.rotation_packet is not None:
             self.rotation_packet = None
             self.send_path()
-        else:
+        elif packet.reason == REASON_DESTINATION_REACHED:
             self.exit_reason = NAVIGATE_DESTINATION_REACHED
+            self.exit_substate()
+        else:
+            self.exit_reason = NAVIGATE_BLOCKED
             self.exit_substate()
 
 
