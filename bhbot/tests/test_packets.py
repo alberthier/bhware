@@ -182,10 +182,11 @@ class GotoPacketTestCase(unittest.TestCase, PacketTestMixin):
     def initialize_packet(self, packet):
         packet.movement = MOVEMENT_ROTATE
         packet.direction = DIRECTION_BACKWARD
-        packet.points.append(trajectory.Pose(10.5, 20.3, 56.4))
-        packet.points.append(trajectory.Pose(84.6, 45.7, 85.0))
-        packet.points.append(trajectory.Pose(75.4, 75.2, 12.8))
-        packet.points.append(trajectory.Pose(85.4, 45.7, 89.4))
+        packet.angle = 2.56
+        packet.points.append(trajectory.Pose(1.5, 2.3))
+        packet.points.append(trajectory.Pose(0.6, 1.7))
+        packet.points.append(trajectory.Pose(2.0, 0.2))
+        packet.points.append(trajectory.Pose(1.2, 2.7))
 
 
 

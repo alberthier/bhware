@@ -23,5 +23,9 @@ def manathan_distance(x1, y1, x2, y2):
     return abs(x2 - x1) + abs(y2 - y1)
 
 
+def angle_between(x1, y1, x2, y2):
+    return math.atan2(y2 - y1, x2 - x1)
+
+
 def normalize_angle(a):
     return a % (math.pi * 2.0)

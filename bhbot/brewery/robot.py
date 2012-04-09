@@ -97,36 +97,36 @@ class Robot(object):
         if x is None or tools.quasi_equal(x, self.pose.x):
             x = self.pose.x
         else:
-            packet.movement = MOVEMENT_LINE
+            packet.movement = MOVEMENT_MOVE
         if y is None or tools.quasi_equal(y, self.pose.y):
             y = self.pose.y
         else:
-            packet.movement = MOVEMENT_LINE
+            packet.movement = MOVEMENT_MOVE
         if angle is None or tools.quasi_equal(angle, self.pose.angle):
             angle = self.pose.angle
             if packet.movement is None:
                 self.event_loop.inject_goto_finished()
                 return None
-        elif packet.movement == MOVEMENT_LINE:
-            packet.movement = MOVEMENT_MOVE
-        else:
+        elif packet.movement is None:
             packet.movement = MOVEMENT_ROTATE
 
         packet.direction = direction
-        packet.points = [trajectory.Pose(x, y, angle)]
+        packet.angle = angle
+        packet.points = [trajectory.Pose(x, y)]
         self.event_loop.send_packet(packet)
         return packet
 
 
-    def follow(self, points, direction = DIRECTION_FORWARD, reference_team = TEAM_UNKNOWN):
+    def follow(self, points, angle = None, direction = DIRECTION_FORWARD, reference_team = TEAM_UNKNOWN):
         packet = packets.Goto()
 
         for p in points:
-            converted_point = trajectory.Pose(p.x, self.convert_y(p.y, reference_team), self.convert_angle(p.angle, reference_team))
+            converted_point = trajectory.Pose(p.x, self.convert_y(p.y, reference_team))
             packet.points.append(converted_point)
 
         packet.movement = MOVEMENT_MOVE
         packet.direction = direction
+        packet.angle = None
         self.event_loop.send_packet(packet)
         return packet
 

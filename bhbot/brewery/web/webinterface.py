@@ -295,8 +295,7 @@ class BHWeb(object):
                 packet.direction = DIRECTION_BACKWARD
             pose.x = self.eventloop.robot.pose.x + packet.direction * math.cos(self.eventloop.robot.pose.angle) * distance
             pose.y = self.eventloop.robot.pose.y + packet.direction * math.sin(self.eventloop.robot.pose.angle) * distance
-            pose.angle = None
-            packet.movement = MOVEMENT_LINE
+            packet.movement = MOVEMENT_MOVE
             packet.points = [ pose ]
             self.eventloop.send_packet(packet)
         return self.remote_control()

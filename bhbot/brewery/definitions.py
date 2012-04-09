@@ -148,7 +148,6 @@ Enum("MOVEMENT",
      "Movement",
      MOVEMENT_ROTATE = 0,
      MOVEMENT_MOVE   = 1,
-     MOVEMENT_LINE   = 2
 )
 
 Enum("DIRECTION",

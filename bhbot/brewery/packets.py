@@ -365,74 +365,35 @@ class UEnum8Item(UInt8Item):
 
 
 
-class PoseWithOptionalAngleItem(PacketItem):
+class PointItem(PacketItem):
 
-    C_TYPE = 'fffB'
-    DESCRIPTION = "Robot pose with optional angle"
+    C_TYPE = 'HH'
+    DESCRIPTION = "Field coordinates"
 
     def __init__(self, name, description = None):
         PacketItem.__init__(self, name, trajectory.Pose(), description)
 
 
     def to_value_list(self, value, buf):
-        buf.append(value.x)
-        buf.append(value.y)
-        if value.angle is None:
-            buf.append(0.0)
-            buf.append(0)
-        else:
-            buf.append(value.angle)
-            buf.append(1)
+        buf.append(int(value.x * 10000.0))
+        buf.append(int(value.y * 10000.0))
 
 
     def from_value_list(self, buf):
-        value = trajectory.Pose(buf[0], buf[1], buf[2])
-        if buf[3] == 0:
-            value.angle = None
-        del buf[0:4]
+        value = trajectory.Pose(float(buf[0]) / 10000.0, float(buf[1]) / 10000.0)
+        del buf[0:2]
         return value
 
 
-    def to_dict_value(self, value, pretty = False):
-        ret = OrderedDict()
-        if pretty:
-            ret["x"]     = "{:0.4f}".format(value.x)
-            ret["y"]     = "{:0.4f}".format(value.y)
-            if value.angle is not None:
-                ret["angle"] = "{:0.4f} ({:0.4f} deg)".format(value.angle, value.angle / math.pi * 180.0)
-            else:
-                ret["angle"] = "None"
-        else:
-            ret["x"]     = value.x
-            ret["y"]     = value.y
-            ret["angle"] = value.angle
-        return ret
 
 
-    def from_dict_value(self, value, pretty = False):
-        pose = trajectory.Pose()
-        pose.x = float(value["x"])
-        pose.y = float(value["y"])
-        angle  = value["angle"]
-        if angle is not None:
-            if pretty:
-                pose.angle = float(angle[:angle.find(" (")])
-            else:
-                pose.angle = float(angle)
-        else:
-            pose.angle = None
-        return pose
-
-
-
-
-class PoseItem(PoseWithOptionalAngleItem):
+class PoseItem(PacketItem):
 
     C_TYPE = 'fff'
     DESCRIPTION = "Robot pose"
 
     def __init__(self, name, description = None):
-        PoseWithOptionalAngleItem.__init__(self, name, description)
+        PacketItem.__init__(self, name, trajectory.Pose(), description)
         self.default_value.angle = 0.0
 
 
@@ -446,6 +407,56 @@ class PoseItem(PoseWithOptionalAngleItem):
         value = trajectory.Pose(buf[0], buf[1], buf[2])
         del buf[0:3]
         return value
+
+
+    def to_dict_value(self, value, pretty = False):
+        ret = OrderedDict()
+        if pretty:
+            ret["x"]     = "{:0.4f}".format(value.x)
+            ret["y"]     = "{:0.4f}".format(value.y)
+            ret["angle"] = "{:0.4f} ({:0.4f} deg)".format(value.angle, value.angle / math.pi * 180.0)
+        else:
+            ret["x"]     = value.x
+            ret["y"]     = value.y
+            ret["angle"] = value.angle
+        return ret
+
+
+    def from_dict_value(self, value, pretty = False):
+        pose = trajectory.Pose()
+        pose.x = float(value["x"])
+        pose.y = float(value["y"])
+        angle  = value["angle"]
+        if pretty:
+            pose.angle = float(angle[:angle.find(" (")])
+        else:
+            pose.angle = float(angle)
+        return pose
+
+
+
+
+class OptionalAngle(FloatRadianItem):
+
+    DESCRIPTION = "Optional angle"
+
+    def __init__(self, name, default_value, description = None):
+        FloatRadianItem.__init__(self, name, default_value, description)
+
+
+    def to_value_list(self, value, buf):
+        if value is not None:
+            buf.append(value)
+        else:
+            buf.append(-1100000.0)
+
+
+    def from_value_list(self, buf):
+        angle = buf[0]
+        del buf[0]
+        if angle < -1000000.0:
+            angle = None
+        return angle
 
 
 
@@ -548,12 +559,12 @@ class ListItem(PacketItem):
 
 
 
-class PoseListItem(ListItem):
+class PointListItem(ListItem):
 
     DESCRIPTION = "Pose list"
 
     def __init__(self, name, default_value, max_elements, description = None):
-        ListItem.__init__(self, name, default_value, PoseWithOptionalAngleItem(""), max_elements, description)
+        ListItem.__init__(self, name, default_value, PointItem(""), max_elements, description)
 
 
 
@@ -582,7 +593,7 @@ class BasePacket(object):
                 fmt += elt.C_TYPE
             size = struct.calcsize(fmt)
             pad_size = cls.MAX_SIZE - size
-            if pad_size != 0:
+            if pad_size > 0:
                 fmt += str(pad_size) + "x"
             cls.STRUCT = struct.Struct(fmt)
 
@@ -706,9 +717,10 @@ class Goto(BasePacket):
     TYPE = 4
     LOGVIEW_COLOR = "#ff7f50"
     DEFINITION = (
-        UEnum8Item  ('movement',   MOVEMENT_MOVE,     'MOVEMENT'),
-        Enum8Item   ('direction',  DIRECTION_FORWARD, 'DIRECTION'),
-        PoseListItem('points', [], 19),
+        UEnum8Item   ('movement',   MOVEMENT_MOVE,     'MOVEMENT'),
+        Enum8Item    ('direction',  DIRECTION_FORWARD, 'DIRECTION'),
+        OptionalAngle('angle',      None,              "Destination angle"),
+        PointListItem('points', [], 62),
     )
 
 
