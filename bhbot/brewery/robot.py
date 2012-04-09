@@ -160,7 +160,7 @@ class Robot(object):
         if angle is None or reference_team == TEAM_UNKNOWN or self.team == TEAM_UNKNOWN or reference_team == self.team:
             return angle
         else:
-            return math.atan2(-math.sin(angle), math.cos(angle))
+            return -angle
 
 
     def on_device_ready(self, packet):
