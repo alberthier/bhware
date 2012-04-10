@@ -755,8 +755,8 @@ class RoutingLayer(fieldview.Layer):
         self.walls = []
         #self.setVisible(False)
 
-        self.main_opponent_zone = self.create_opponent_zone(MAIN_OPPONENT_AVOIDANCE_RANGE * 1000.0)
-        self.secondary_opponent_zone = self.create_opponent_zone(SECONDARY_OPPONENT_AVOIDANCE_RANGE * 1000.0)
+        self.main_opponent_zone = self.create_opponent_zone(MAIN_OPPONENT_AVOIDANCE_RANGE * 2.0 * 1000.0)
+        self.secondary_opponent_zone = self.create_opponent_zone(SECONDARY_OPPONENT_AVOIDANCE_RANGE * 2.0 * 1000.0)
 
 
     def create_opponent_zone(self, distance):
