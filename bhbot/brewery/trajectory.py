@@ -66,16 +66,22 @@ class Map(object):
                                                  main_opponent_collision_cost,
                                                  secondary_opponent_collision_cost)
 
+        lateral_distance = ROBOT_X_SIZE - ROBOT_CENTER_X - MAP_CELL_RESOLUTION
+
         self.walls = []
-        self.walls.append([0.5 - MAP_WALLS_DISTANCE, 0.0, 0.52 + MAP_WALLS_DISTANCE, 0.4 + MAP_WALLS_DISTANCE])
-        self.walls.append([0.5 - MAP_WALLS_DISTANCE, 2.6 - MAP_WALLS_DISTANCE, 0.52 + MAP_WALLS_DISTANCE, 3.0])
-        self.walls.append([1.25 - MAP_WALLS_DISTANCE, 0.0, 2.0, 0.380 + MAP_WALLS_DISTANCE])
-        self.walls.append([1.25 - MAP_WALLS_DISTANCE, 2.62 - MAP_WALLS_DISTANCE, 2.0, 3.0])
-        self.walls.append([0.875 - MAP_WALLS_DISTANCE, 0.975 - MAP_WALLS_DISTANCE, 1.125 + MAP_WALLS_DISTANCE, 2.025 + MAP_WALLS_DISTANCE])
+        self.walls.append([0.5 - MAP_WALLS_DISTANCE, 0.0, 0.52 + MAP_WALLS_DISTANCE, 0.4 + MAP_WALLS_DISTANCE]) # Purple captain room
+        self.walls.append([0.5 - MAP_WALLS_DISTANCE, 2.6 - MAP_WALLS_DISTANCE, 0.52 + MAP_WALLS_DISTANCE, 3.0]) # Red captain room
+        self.walls.append([1.25 - MAP_WALLS_DISTANCE, 0.0, 2.0, 0.380 + MAP_WALLS_DISTANCE]) # Purple bridge
+        self.walls.append([1.25 - MAP_WALLS_DISTANCE, 2.62 - MAP_WALLS_DISTANCE, 2.0, 3.0])  # Red bridge
+        self.walls.append([0.875 - MAP_WALLS_DISTANCE, 0.975 - MAP_WALLS_DISTANCE, 1.125 + MAP_WALLS_DISTANCE, 2.025 + MAP_WALLS_DISTANCE]) # Island
+        self.walls.append([0.0, 0.0, MAP_WALLS_DISTANCE, FIELD_Y_SIZE]) # Top edge
+        self.walls.append([FIELD_X_SIZE - MAP_WALLS_DISTANCE, 0.0, FIELD_X_SIZE, FIELD_Y_SIZE]) # Bottom edge
+        self.walls.append([0.0, 0.0, FIELD_X_SIZE, lateral_distance]) # Purple edge
+        self.walls.append([0.0, FIELD_Y_SIZE - lateral_distance, FIELD_X_SIZE, FIELD_Y_SIZE]) # Red edge
         for wall in self.walls:
             for i in xrange(len(wall)):
-                wall[i] = int(wall[i] / MAP_CELL_RESOLUTION)
-            self.pathfinder.add_penalized_zone(wall[0], wall[1], wall[2], wall[3], wall_cost)
+                wall[i] = int(round(wall[i] / MAP_CELL_RESOLUTION))
+            self.pathfinder.add_wall(wall[0], wall[1], wall[2], wall[3])
 
 
     def route(self, start_x, start_y, goal_x, goal_y, reference_team = TEAM_PURPLE):
