@@ -39,29 +39,6 @@ class Pose(object):
 
 
 
-class MapCell(object):
-
-    def __init__(self, x, y):
-        self.x = x
-        self.y = y
-        self.g_score = 0
-        self.h_score = 0
-        self.f_score = 0
-        self.came_from = None
-        self.key = MapCell.make_key(x, y)
-
-
-    @staticmethod
-    def make_key(x, y):
-        return (x << 16) + y
-
-
-    def __lt__(self, other):
-        return self.f_score < other.f_score
-
-
-
-
 class Map(object):
 
     MAP_X_SIZE = int(FIELD_X_SIZE / MAP_CELL_RESOLUTION)
