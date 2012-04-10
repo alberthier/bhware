@@ -48,7 +48,10 @@ class BasicDynamics(QObject):
         if packet.movement == MOVEMENT_MOVE:
             time = 0.0
             for pose in packet.points:
-                pose.angle = tools.angle_between(pose.x, pose.y, self.x, self.y)
+                if packet.direction == DIRECTION_FORWARD:
+                    pose.angle = tools.angle_between(self.x, self.y, pose.x, pose.y)
+                else:
+                    pose.angle = tools.angle_between(pose.x, pose.y, self.x, self.y)
                 d = tools.distance(self.x, self.y, pose.x, pose.y)
                 time += d / linear_speed
                 traj.append((segmentNb, time, pose))
@@ -57,8 +60,12 @@ class BasicDynamics(QObject):
                 self.angle = pose.angle
                 segmentNb += 1
             if packet.angle is not None:
-                traj[-1][2].angle = packet.angle
-                self.angle = packet.angle
+                if packet.direction == DIRECTION_FORWARD:
+                    angle = packet.angle
+                else:
+                    angle = packet.angle + math.pi
+                traj[-1][2].angle = angle
+                self.angle = angle
         else:
             time = abs(self.angle - packet.angle) / angular_speed
             traj.append((segmentNb, time, trajectory.Pose(self.x, self.y, packet.angle)))
