@@ -101,16 +101,19 @@ class Map(object):
             self.pathfinder.add_penalized_zone(wall[0], wall[1], wall[2], wall[3], wall_cost)
 
 
-    def route(self, start_x, start_y, goal_x, goal_y):
+    def route(self, start_x, start_y, goal_x, goal_y, reference_team = TEAM_PURPLE):
         if IS_HOST_DEVICE_PC:
             self.eventloop.send_packet(packets.SimulatorResetRoutePath())
 
-        logger.log("Compute route from ({}, {}) to ({}, {})".format(start_x, start_y, goal_x, goal_y))
+        real_start_y = start_y #self.eventloop.robot.convert_y(start_y, reference_team)
+        real_goal_y = self.eventloop.robot.convert_y(goal_y, reference_team)
+
+        logger.log("Compute route from ({}, {}) to ({}, {})".format(start_x, real_start_y, goal_x, real_goal_y))
 
         start_cell_x = int(start_x / MAP_CELL_RESOLUTION)
-        start_cell_y = int(start_y / MAP_CELL_RESOLUTION)
+        start_cell_y = int(real_start_y / MAP_CELL_RESOLUTION)
         goal_cell_x = int(goal_x / MAP_CELL_RESOLUTION)
-        goal_cell_y = int(goal_y / MAP_CELL_RESOLUTION)
+        goal_cell_y = int(real_goal_y / MAP_CELL_RESOLUTION)
 
         path = self.pathfinder.find(start_cell_x, start_cell_y, goal_cell_x, goal_cell_y)
 
@@ -149,7 +152,8 @@ class Map(object):
         if len(simplified_path) > 0:
             for i in xrange(1, len(simplified_path) - 1):
                 simplified_path[i].x = simplified_path[i].x * MAP_CELL_RESOLUTION + MAP_CELL_RESOLUTION / 2.0
-                simplified_path[i].y = simplified_path[i].y * MAP_CELL_RESOLUTION + MAP_CELL_RESOLUTION / 2.0
+                y = self.eventloop.robot.convert_y(simplified_path[i].y * MAP_CELL_RESOLUTION + MAP_CELL_RESOLUTION / 2.0, reference_team)
+                simplified_path[i].y = y
             simplified_path[-1].x = goal_x
             simplified_path[-1].y = goal_y
 

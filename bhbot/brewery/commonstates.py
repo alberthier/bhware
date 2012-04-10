@@ -335,8 +335,8 @@ class TrajectoryWalk(statemachine.State):
         self.jobs.append(('goto_looking_at', (x, y, look_at_x, look_at_y, direction)))
 
 
-    def follow(self, points, direction = DIRECTION_FORWARD):
-        self.jobs.append(('follow', (points, direction)))
+    def follow(self, points, angle = None, direction = DIRECTION_FORWARD):
+        self.jobs.append(('follow', (points, angle, direction)))
 
 
     def wait_for(self, substate):
