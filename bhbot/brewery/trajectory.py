@@ -81,7 +81,7 @@ class Map(object):
         for wall in self.walls:
             for i in xrange(len(wall)):
                 wall[i] = int(round(wall[i] / MAP_CELL_RESOLUTION))
-            self.pathfinder.add_wall(wall[0], wall[1], wall[2], wall[3])
+            self.pathfinder.add_wall(wall[0], wall[1], wall[2], wall[3], wall_cost)
 
 
     def route(self, start_x, start_y, goal_x, goal_y, reference_team = TEAM_PURPLE):
