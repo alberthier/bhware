@@ -793,7 +793,7 @@ class RoutingLayer(fieldview.Layer):
 
 
     def display_path_blocks(self, packet, color):
-        cell_size = MAP_CELL_RESOLUTION * 1000.0
+        cell_size = ROUTING_MAP_RESOLUTION * 1000.0
         brush = QBrush(color)
         pen = QPen(QBrush(), 0)
         for (x, y) in packet.points:
@@ -805,7 +805,7 @@ class RoutingLayer(fieldview.Layer):
 
 
     def on_simulator_route_walls(self, packet):
-        cell_size = MAP_CELL_RESOLUTION * 1000.0
+        cell_size = ROUTING_MAP_RESOLUTION * 1000.0
         brushColor = QColor(QColor("#ab471d"))
         brushColor.setAlpha(80)
         brush = QBrush(brushColor)

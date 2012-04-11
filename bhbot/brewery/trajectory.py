@@ -41,47 +41,53 @@ class Pose(object):
 
 class Map(object):
 
-    MAP_X_SIZE = int(FIELD_X_SIZE / MAP_CELL_RESOLUTION)
-    MAP_Y_SIZE = int(FIELD_Y_SIZE / MAP_CELL_RESOLUTION)
-    MAIN_OPPONENT_AVOIDANCE_CELLS = int(MAIN_OPPONENT_AVOIDANCE_RANGE / MAP_CELL_RESOLUTION)
-    SECONDARY_OPPONENT_AVOIDANCE_CELLS = int(SECONDARY_OPPONENT_AVOIDANCE_RANGE / MAP_CELL_RESOLUTION)
-
-
     def __init__(self, eventloop):
         self.eventloop = eventloop
 
         self.build_module()
 
+        (self.pathfinder, self.walls) = self.create_pathfinder(ROUTING_MAP_RESOLUTION)
+        (self.evaluator, walls) = self.create_pathfinder(EVALUATOR_MAP_RESOLUTION)
+
+
+    def create_pathfinder(self, map_resolution):
         import pathfinding
 
-        wall_cost = float(Map.MAP_X_SIZE * Map.MAP_Y_SIZE)
+        map_x_size = int(math.ceil(FIELD_X_SIZE / map_resolution))
+        map_y_size = int(math.ceil(FIELD_Y_SIZE / map_resolution))
+        main_opponent_avoidance_cells      = int(round(MAIN_OPPONENT_AVOIDANCE_RANGE      / map_resolution))
+        secondary_opponent_avoidance_cells = int(round(SECONDARY_OPPONENT_AVOIDANCE_RANGE / map_resolution))
+
+        wall_cost = float(map_x_size * map_y_size)
         main_opponent_collision_cost = wall_cost
         secondary_opponent_collision_cost = main_opponent_collision_cost
 
-        self.pathfinder = pathfinding.PathFinder(Map.MAP_X_SIZE,
-                                                 Map.MAP_Y_SIZE,
-                                                 ASTAR_EFFECTIVE_VS_HEURISTIC_TRADEOFF,
-                                                 Map.MAIN_OPPONENT_AVOIDANCE_CELLS,
-                                                 Map.SECONDARY_OPPONENT_AVOIDANCE_CELLS,
-                                                 main_opponent_collision_cost,
-                                                 secondary_opponent_collision_cost)
+        pathfinder = pathfinding.PathFinder(map_x_size,
+                                            map_y_size,
+                                            ASTAR_EFFECTIVE_VS_HEURISTIC_TRADEOFF,
+                                            main_opponent_avoidance_cells,
+                                            secondary_opponent_avoidance_cells,
+                                            main_opponent_collision_cost,
+                                            secondary_opponent_collision_cost)
 
-        lateral_distance = ROBOT_X_SIZE - ROBOT_CENTER_X - MAP_CELL_RESOLUTION
-
-        self.walls = []
-        self.walls.append([0.5 - MAP_WALLS_DISTANCE, 0.0, 0.52 + MAP_WALLS_DISTANCE, 0.4 + MAP_WALLS_DISTANCE]) # Purple captain room
-        self.walls.append([0.5 - MAP_WALLS_DISTANCE, 2.6 - MAP_WALLS_DISTANCE, 0.52 + MAP_WALLS_DISTANCE, 3.0]) # Red captain room
-        self.walls.append([1.25 - MAP_WALLS_DISTANCE, 0.0, 2.0, 0.380 + MAP_WALLS_DISTANCE]) # Purple bridge
-        self.walls.append([1.25 - MAP_WALLS_DISTANCE, 2.62 - MAP_WALLS_DISTANCE, 2.0, 3.0])  # Red bridge
-        self.walls.append([0.875 - MAP_WALLS_DISTANCE, 0.975 - MAP_WALLS_DISTANCE, 1.125 + MAP_WALLS_DISTANCE, 2.025 + MAP_WALLS_DISTANCE]) # Island
-        self.walls.append([0.0, 0.0, MAP_WALLS_DISTANCE, FIELD_Y_SIZE]) # Top edge
-        self.walls.append([FIELD_X_SIZE - MAP_WALLS_DISTANCE, 0.0, FIELD_X_SIZE, FIELD_Y_SIZE]) # Bottom edge
-        self.walls.append([0.0, 0.0, FIELD_X_SIZE, lateral_distance]) # Purple edge
-        self.walls.append([0.0, FIELD_Y_SIZE - lateral_distance, FIELD_X_SIZE, FIELD_Y_SIZE]) # Red edge
-        for wall in self.walls:
+        lateral_distance = ROBOT_X_SIZE - ROBOT_CENTER_X - map_resolution
+        captain_room_reduction = 0.01
+        walls = []
+        walls.append([0.5 - MAP_WALLS_DISTANCE + captain_room_reduction, 0.0, 0.52 + MAP_WALLS_DISTANCE - captain_room_reduction, 0.4 + MAP_WALLS_DISTANCE]) # Purple captain room
+        walls.append([0.5 - MAP_WALLS_DISTANCE + captain_room_reduction, 2.6 - MAP_WALLS_DISTANCE, 0.52 + MAP_WALLS_DISTANCE - captain_room_reduction, 3.0]) # Red captain room
+        walls.append([1.25 - MAP_WALLS_DISTANCE, 0.0, 2.0, 0.380 + MAP_WALLS_DISTANCE]) # Purple bridge
+        walls.append([1.25 - MAP_WALLS_DISTANCE, 2.62 - MAP_WALLS_DISTANCE, 2.0, 3.0])  # Red bridge
+        walls.append([0.875 - MAP_WALLS_DISTANCE, 0.975 - MAP_WALLS_DISTANCE, 1.125 + MAP_WALLS_DISTANCE, 2.025 + MAP_WALLS_DISTANCE]) # Island
+        walls.append([0.0, 0.0, MAP_WALLS_DISTANCE, FIELD_Y_SIZE]) # Top edge
+        walls.append([FIELD_X_SIZE - MAP_WALLS_DISTANCE, 0.0, FIELD_X_SIZE, FIELD_Y_SIZE]) # Bottom edge
+        walls.append([0.0, 0.0, FIELD_X_SIZE, lateral_distance]) # Purple edge
+        walls.append([0.0, FIELD_Y_SIZE - lateral_distance, FIELD_X_SIZE, FIELD_Y_SIZE]) # Red edge
+        for wall in walls:
             for i in xrange(len(wall)):
-                wall[i] = int(round(wall[i] / MAP_CELL_RESOLUTION))
-            self.pathfinder.add_wall(wall[0], wall[1], wall[2], wall[3], wall_cost)
+                wall[i] = int(round(wall[i] / map_resolution))
+            pathfinder.add_wall(wall[0], wall[1], wall[2], wall[3], wall_cost * 2.0)
+
+        return (pathfinder, walls)
 
 
     def route(self, start_x, start_y, goal_x, goal_y, reference_team = TEAM_PURPLE):
@@ -93,10 +99,10 @@ class Map(object):
 
         logger.log("Compute route from ({}, {}) to ({}, {})".format(start_x, real_start_y, goal_x, real_goal_y))
 
-        start_cell_x = int(start_x / MAP_CELL_RESOLUTION)
-        start_cell_y = int(real_start_y / MAP_CELL_RESOLUTION)
-        goal_cell_x = int(goal_x / MAP_CELL_RESOLUTION)
-        goal_cell_y = int(real_goal_y / MAP_CELL_RESOLUTION)
+        start_cell_x = int(round(start_x / ROUTING_MAP_RESOLUTION))
+        start_cell_y = int(round(real_start_y / ROUTING_MAP_RESOLUTION))
+        goal_cell_x = int(round(goal_x / ROUTING_MAP_RESOLUTION))
+        goal_cell_y = int(round(real_goal_y / ROUTING_MAP_RESOLUTION))
 
         path = self.pathfinder.find(start_cell_x, start_cell_y, goal_cell_x, goal_cell_y)
 
@@ -134,8 +140,8 @@ class Map(object):
 
         if len(simplified_path) > 0:
             for i in xrange(1, len(simplified_path) - 1):
-                simplified_path[i].x = simplified_path[i].x * MAP_CELL_RESOLUTION + MAP_CELL_RESOLUTION / 2.0
-                y = self.eventloop.robot.convert_y(simplified_path[i].y * MAP_CELL_RESOLUTION + MAP_CELL_RESOLUTION / 2.0, reference_team)
+                simplified_path[i].x = simplified_path[i].x * ROUTING_MAP_RESOLUTION + ROUTING_MAP_RESOLUTION / 2.0
+                y = self.eventloop.robot.convert_y(simplified_path[i].y * ROUTING_MAP_RESOLUTION + ROUTING_MAP_RESOLUTION / 2.0, reference_team)
                 simplified_path[i].y = y
             simplified_path[-1].x = goal_x
             simplified_path[-1].y = goal_y
@@ -143,18 +149,35 @@ class Map(object):
         return simplified_path[1:]
 
 
+    def evaluate(self, start_x, start_y, goal_x, goal_y, reference_team = TEAM_PURPLE):
+        real_start_y = start_y #self.eventloop.robot.convert_y(start_y, reference_team)
+        real_goal_y = self.eventloop.robot.convert_y(goal_y, reference_team)
+
+        start_cell_x = int(round(start_x / EVALUATOR_MAP_RESOLUTION))
+        start_cell_y = int(round(real_start_y / EVALUATOR_MAP_RESOLUTION))
+        goal_cell_x = int(round(goal_x / EVALUATOR_MAP_RESOLUTION))
+        goal_cell_y = int(round(real_goal_y / EVALUATOR_MAP_RESOLUTION))
+
+        path = self.evaluator.find(start_cell_x, start_cell_y, goal_cell_x, goal_cell_y)
+        return len(path)
+
+
     def opponent_detected(self, opponent, x, y):
         if opponent == OPPONENT_ROBOT_MAIN:
-            self.pathfinder.set_main_opponent_position(int(x / MAP_CELL_RESOLUTION), int(y / MAP_CELL_RESOLUTION))
+            self.pathfinder.set_main_opponent_position(int(round(x / ROUTING_MAP_RESOLUTION)), int(round(y / ROUTING_MAP_RESOLUTION)))
+            self.evaluator.set_main_opponent_position(int(round(x / EVALUATOR_MAP_RESOLUTION)), int(round(y / EVALUATOR_MAP_RESOLUTION)))
         else:
-            self.pathfinder.set_secondary_opponent_position(int(x / MAP_CELL_RESOLUTION), int(y / MAP_CELL_RESOLUTION))
+            self.pathfinder.set_secondary_opponent_position(int(round(x / ROUTING_MAP_RESOLUTION)), int(round(y / ROUTING_MAP_RESOLUTION)))
+            self.evaluator.set_secondary_opponent_position(int(round(x / EVALUATOR_MAP_RESOLUTION)), int(round(y / EVALUATOR_MAP_RESOLUTION)))
 
 
     def opponent_disapeared(self, opponent):
         if opponent == OPPONENT_ROBOT_MAIN:
             self.pathfinder.clear_main_opponent_position()
+            self.evaluator.clear_main_opponent_position()
         else:
             self.pathfinder.clear_secondary_opponent_position()
+            self.evaluator.clear_secondary_opponent_position()
 
 
     def send_route_to_simulator(self, path, is_simplified):
