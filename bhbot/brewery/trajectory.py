@@ -5,7 +5,6 @@ import sys
 import os
 import subprocess
 import math
-import bisect
 
 import tools
 import packets
@@ -16,8 +15,11 @@ from definitions import *
 class Pose(object):
     match_team = TEAM_UNKNOWN
     def __init__(self, x = 0.0, y = 0.0, angle = None, virtual=False):
-        self.real = RealPose(self)
+#        self.real = RealPose(self)
         self.virt = VirtualPose(self)
+        self.x = 0.0
+        self.y = 0.0
+        self.angle = 0.0
         if not virtual :
             self.x = x
             self.y = y
@@ -40,52 +42,52 @@ class Pose(object):
             return False
         return self.x == other.x and self.y == other.y and self.angle == other.angle
 
-class RealPose(object):
-    def __init__(self, virt_pose):
-
-        """
-        Initialize the RealPose with a virtual Pose
-
-        @type virt_pose: Pose
-        """
-        self.virt_pose = virt_pose
-        
-    def set_x(self, x):
-        self.virt_pose.x = x
-    
-    def get_x(self):
-        return self.virt_pose.x
-
-    def set_y(self, y):
-        if Pose.match_team == TEAM_RED :
-            self.virt_pose.y = FIELD_Y_SIZE - y
-        else :
-            self.virt_pose.y = y
-
-    def get_y(self):
-        if Pose.match_team == TEAM_RED :
-            return FIELD_Y_SIZE - self.virt_pose.y
-        else :
-            return self.virt_pose.y
-
-
-    def set_angle(self, angle):
-        angle = tools.normalize_angle(angle)
-        if Pose.match_team == TEAM_RED :
-            self.virt_pose.angle = -angle
-        else :
-            self.virt_pose.y = angle
-
-    def get_angle(self):
-        if Pose.match_team == TEAM_RED :
-            return -self.virt_pose.angle
-        else :
-            return self.virt_pose.angle
-
-    
-    x = property(get_x, set_x)
-    y = property(get_y, set_y)
-    angle = property(get_angle, set_angle)
+#class RealPose(object):
+#    def __init__(self, virt_pose):
+#
+#        """
+#        Initialize the RealPose with a virtual Pose
+#
+#        @type virt_pose: Pose
+#        """
+#        self.virt_pose = virt_pose
+#
+#    def set_x(self, x):
+#        self.virt_pose.x = x
+#
+#    def get_x(self):
+#        return self.virt_pose.x
+#
+#    def set_y(self, y):
+#        if Pose.match_team == TEAM_RED :
+#            self.virt_pose.y = FIELD_Y_SIZE - y
+#        else :
+#            self.virt_pose.y = y
+#
+#    def get_y(self):
+#        if Pose.match_team == TEAM_RED :
+#            return FIELD_Y_SIZE - self.virt_pose.y
+#        else :
+#            return self.virt_pose.y
+#
+#
+#    def set_angle(self, angle):
+#        angle = tools.normalize_angle(angle)
+#        if Pose.match_team == TEAM_RED :
+#            self.virt_pose.angle = -angle
+#        else :
+#            self.virt_pose.y = angle
+#
+#    def get_angle(self):
+#        if Pose.match_team == TEAM_RED :
+#            return -self.virt_pose.angle
+#        else :
+#            return self.virt_pose.angle
+#
+#
+#    x = property(get_x, set_x)
+#    y = property(get_y, set_y)
+#    angle = property(get_angle, set_angle)
 
 class VirtualPose(object):
     def __init__(self, virt_pose):
@@ -93,7 +95,7 @@ class VirtualPose(object):
         """
         Initialize the VirtualPose with a real Pose
 
-        @type real_pose: Pose
+        @type virt_pose: Pose
         """
         self.real_pose = virt_pose
 
@@ -117,14 +119,15 @@ class VirtualPose(object):
 
 
     def set_angle(self, angle):
-        angle = tools.normalize_angle(angle)
-        if Pose.match_team == TEAM_RED :
+        if angle :
+            angle = tools.normalize_angle(angle)
+        if angle and Pose.match_team == TEAM_RED :
             self.real_pose.angle = -angle
         else :
-            self.real_pose.y = angle
+            self.real_pose.angle = angle
 
     def get_angle(self):
-        if Pose.match_team == TEAM_RED :
+        if self.real_pose.angle and Pose.match_team == TEAM_RED :
             return -self.real_pose.angle
         else :
             return self.real_pose.angle

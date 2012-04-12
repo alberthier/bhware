@@ -113,14 +113,14 @@ class DefinePosition(statemachine.State):
         if x is None or y is None or angle is None:
             self.pose = None
         else:
-            self.pose = trajectory.Pose(x, y, angle)
+            self.pose = trajectory.Pose(x, y, angle, True)
         self.x_sent = False
         self.y_sent = False
 
 
     def on_enter(self):
         if self.pose is None:
-            self.pose = trajectory.Pose(PURPLE_START_X, PURPLE_START_Y, PURPLE_START_ANGLE, virtual=True)
+            self.pose = trajectory.Pose(PURPLE_START_X, PURPLE_START_Y, PURPLE_START_ANGLE, True)
         self.process()
 
 
