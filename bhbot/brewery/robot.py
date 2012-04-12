@@ -18,7 +18,7 @@ class Robot(object):
 
     def __init__(self, event_loop):
         self.pose = trajectory.Pose(0.0, 0.0, 0.0)
-        self.team = TEAM_UNKNOWN
+        self._team = TEAM_UNKNOWN
         self.event_loop = event_loop
         self.moving = False
         self.tank_full = False
@@ -186,3 +186,12 @@ class Robot(object):
 
     def on_empty_tank_control(self, packet):
         self.tank_full = False
+
+    def set_team(self, team):
+        trajectory.Pose.match_team = team
+        self._team = team
+
+    def get_team(self):
+        return self._team
+
+    team = property(get_team, set_team)

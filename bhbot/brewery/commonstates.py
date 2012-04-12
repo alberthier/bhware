@@ -120,10 +120,7 @@ class DefinePosition(statemachine.State):
 
     def on_enter(self):
         if self.pose is None:
-            if self.robot().team == TEAM_RED:
-                self.pose = trajectory.Pose(RED_START_X, RED_START_Y, RED_START_ANGLE)
-            else:
-                self.pose = trajectory.Pose(PURPLE_START_X, PURPLE_START_Y, PURPLE_START_ANGLE)
+            self.pose = trajectory.Pose(PURPLE_START_X, PURPLE_START_Y, PURPLE_START_ANGLE, virtual=True)
         self.process()
 
 

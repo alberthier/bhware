@@ -2,6 +2,9 @@
 # encoding: utf-8
 
 import unittest
+import run_tests
+run_tests.patch_pythonpath()
+
 
 import packets
 import trajectory
