@@ -28,4 +28,7 @@ def angle_between(x1, y1, x2, y2):
 
 
 def normalize_angle(a):
-    return a % (math.pi * 2.0)
+    if a < 0:
+        return a % (-2.0 * math.pi)
+    else:
+        return a % (2.0 * math.pi)

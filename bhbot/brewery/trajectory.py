@@ -12,13 +12,6 @@ import packets
 import logger
 from definitions import *
 
-def normalize_angle(a):
-    if a < 0:
-        return a % (-2.0 * math.pi)
-    else:
-        return a % (2.0 * math.pi)
-
-
 
 class Pose(object):
     match_team = TEAM_UNKNOWN
@@ -77,7 +70,7 @@ class RealPose(object):
 
 
     def set_angle(self, angle):
-        angle = normalize_angle(angle)
+        angle = tools.normalize_angle(angle)
         if Pose.match_team == TEAM_RED :
             self.virt_pose.angle = -angle
         else :
@@ -124,7 +117,7 @@ class VirtualPose(object):
 
 
     def set_angle(self, angle):
-        angle = normalize_angle(angle)
+        angle = tools.normalize_angle(angle)
         if Pose.match_team == TEAM_RED :
             self.real_pose.angle = -angle
         else :
