@@ -293,51 +293,99 @@ class TrajectoryWalk(statemachine.State):
 
 
     def move(self, dx, dy, direction = DIRECTION_FORWARD):
-        self.jobs.append(('move', (dx, dy, direction)))
+        current_pose = self.robot().pose
+        self.move_to(current_pose.virt.x + dx, current_pose.virt.y + dy, direction)
 
 
     def move_to(self, x, y, direction = DIRECTION_FORWARD):
-        self.jobs.append(('move_to', (x, y, direction)))
+        packet = packets.Goto()
+        packet.movement = MOVEMENT_MOVE
+        packet.direction = direction
+        packet.points = [ trajectory.Pose(x, y, None, True) ]
+        self.jobs.append(packet)
 
 
     def forward(self, distance):
-        self.jobs.append(('forward', (distance,)))
+        current_pose = self.robot().pose
+        dx = math.cos(current_pose.virt.angle) * distance
+        dy = math.sin(current_pose.virt.angle) * distance
+        self.move(dx, dy)
 
 
     def backward(self, distance):
-        self.jobs.append(('backward', (distance,)))
+        current_pose = self.robot().pose
+        dx = -math.cos(current_pose.virt.angle) * distance
+        dy = -math.sin(current_pose.virt.angle) * distance
+        self.move(dx, dy, DIRECTION_BACKWARD)
 
 
     def look_at(self, x, y):
-        self.jobs.append(('look_at', (x, y)))
+        current_pose = self.robot().pose
+        dest = trajectory.Pose(x, y, None, True)
+        dx = dest.virt.x - current_pose.virt.x
+        dy = dest.virt.y - current_pose.virt.y
+        self.rotate_to(math.atan2(dy, dx))
 
 
     def look_at_opposite(self, x, y):
-        self.jobs.append(('look_at_opposite', (x, y)))
+        current_pose = self.robot().pose
+        dest = trajectory.Pose(x, y, None, True)
+        dx = dest.virt.x - current_pose.virt.x
+        dy = dest.virt.y - current_pose.virt.y
+        self.rotate_to(math.atan2(dy, dx) + math.pi)
 
 
     def rotate(self, da):
-        self.jobs.append(('rotate', (da,)))
+        current_pose = self.robot().pose
+        self.rotate_to(current_pose.virt.angle + da)
 
 
     def rotate_to(self, angle):
-        self.jobs.append(('rotate_to', (angle,)))
+        dest = trajectory.Pose(0.0, 0.0, angle, True)
+        packet = packets.Goto()
+        packet.movement = MOVEMENT_ROTATE
+        packet.angle = dest.angle
+        self.jobs.append(packet)
 
 
     def goto(self, x, y, angle, direction = DIRECTION_FORWARD):
-        self.jobs.append(('goto', (x, y, angle, direction)))
+        dest = trajectory.Pose(x, y, angle, True)
+        packet = packets.Goto()
+        packet.movement = MOVEMENT_MOVE
+        packet.direction = direction
+        packet.angle = dest.angle
+        packet.points = [ dest ]
+        self.jobs.append(packet)
 
 
     def goto_looking_at(self, x, y, look_at_x, look_at_y, direction = DIRECTION_FORWARD):
-        self.jobs.append(('goto_looking_at', (x, y, look_at_x, look_at_y, direction)))
+        current_pose = self.robot().pose
+        dest = trajectory.Pose(look_at_x, look_at_y, None, True)
+        dx = dest.virt.x - current_pose.virt.x
+        dy = dest.virt.y - current_pose.virt.y
+        self.goto(x, y, math.atan2(dy, dx))
+
+
+    def goto_looking_at_opposite(self, x, y, look_at_x, look_at_y, direction = DIRECTION_FORWARD):
+        current_pose = self.robot().pose
+        dest = trajectory.Pose(look_at_x, look_at_y, None, True)
+        dx = dest.virt.x - current_pose.virt.x
+        dy = dest.virt.y - current_pose.virt.y
+        self.goto(x, y, math.atan2(dy, dx) + math.pi)
 
 
     def follow(self, points, angle = None, direction = DIRECTION_FORWARD):
-        self.jobs.append(('follow', (points, angle, direction)))
+        dest = trajectory.Pose(0.0, 0.0, angle, True)
+        packet = packets.Goto()
+        packet.movement = MOVEMENT_MOVE
+        packet.direction = direction
+        packet.angle = dest.angle
+        packet.points = [ points ]
+        self.jobs.append(packet)
 
 
     def wait_for(self, substate):
-        self.jobs.append(('wait_for', (substate,)))
+        self.jobs.append(substate)
 
 
     def load_points(self, points):
@@ -389,16 +437,12 @@ class TrajectoryWalk(statemachine.State):
                 self.exit_reason = TRAJECTORY_WALK_DESTINATION_REACHED
                 self.exit_substate()
             else:
-                (method, args) = self.jobs.popleft()
-                if method == 'wait_for':
-                    self.switch_to_substate(*args)
+                job = self.jobs.popleft()
+                if isinstance(job, statemachine.State):
+                    self.switch_to_substate(job)
                 else:
-                    if hasattr(self.robot(), method):
-                        self.current_goto_packet = getattr(self.robot(), method)(*(args + (self.reference_team,)))
-                    else:
-                        logger.log("Unknown move method: {}{}".format(method, args))
-                        self.exit_reason = TRAJECTORY_WALK_DESTINATION_REACHED
-                        self.exit_substate()
+                    self.current_goto_packet = job
+                    self.send_packet(job)
         else:
             self.send_packet(self.current_goto_packet)
 
