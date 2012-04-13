@@ -204,9 +204,15 @@ class Map(object):
         goal_cell_x = int(round(goal_x / ROUTING_MAP_RESOLUTION))
         goal_cell_y = int(round(real_goal_y / ROUTING_MAP_RESOLUTION))
 
-        path = self.pathfinder.find(start_cell_x, start_cell_y, goal_cell_x, goal_cell_y)
+        pathfinding_result = self.pathfinder.find(start_cell_x, start_cell_y, goal_cell_x, goal_cell_y)
 
-        logger.log("Found route length: {}".format(len(path)))
+        if pathfinding_result is None:
+            logger.log("No route found")
+            return []
+
+        path = pathfinding_result[1]
+
+        logger.log("Found route: length={} cost={}".format(len(path), pathfinding_result[0]))
 
         simplified_path = []
 
@@ -258,8 +264,13 @@ class Map(object):
         goal_cell_x = int(round(goal_x / EVALUATOR_MAP_RESOLUTION))
         goal_cell_y = int(round(real_goal_y / EVALUATOR_MAP_RESOLUTION))
 
-        path = self.evaluator.find(start_cell_x, start_cell_y, goal_cell_x, goal_cell_y)
-        return len(path)
+        pathfinding_result = self.evaluator.find(start_cell_x, start_cell_y, goal_cell_x, goal_cell_y)
+        if pathfinding_result is None:
+            max_cost = (FIELD_X_SIZE / EVALUATOR_MAP_RESOLUTION) * (FIELD_Y_SIZE / EVALUATOR_MAP_RESOLUTION)
+            max_cost = max_cost ** 2
+            return max_cost
+        else:
+            return pathfinding_result[0]
 
 
     def opponent_detected(self, opponent, x, y):

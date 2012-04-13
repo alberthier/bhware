@@ -326,7 +326,7 @@ static PyObject* pathfinder_find(PathFinder* self, PyObject* args)
     if (start_x < 0 || start_x >= self->map_x_size || goal_x < 0 || goal_x >= self->map_x_size ||
         start_y < 0 || start_y >= self->map_y_size || goal_y < 0 || goal_y >= self->map_y_size) {
         /* Coordinates out of range */
-        return PyList_New(0);
+        Py_RETURN_NONE;
     }
 
     for (zone = self->zones; zone != NULL; zone = zone->next) {
@@ -343,7 +343,7 @@ static PyObject* pathfinder_find(PathFinder* self, PyObject* args)
         if (zone->runtime_zone_type == ZoneWall) {
             if (zone_contains(zone, goal_x, goal_y)) {
                 /* Unreachable point */
-                return PyList_New(0);
+                Py_RETURN_NONE;
             }
         }
     }
@@ -361,11 +361,12 @@ static PyObject* pathfinder_find(PathFinder* self, PyObject* args)
         Cell** nit = NULL;
 
         if (current->x == goal_x && current->y == goal_y) {
+            float cost = current->f_score;
             PyObject* path = PyList_New(0);
             for (; current != NULL; current = current->came_from) {
                 PyList_Insert(path, 0, Py_BuildValue("(ii)", current->x, current->y));
             }
-            return path;
+            return Py_BuildValue("(fN)", cost, path);
         }
 
         open_set = open_set->next;
@@ -392,7 +393,7 @@ static PyObject* pathfinder_find(PathFinder* self, PyObject* args)
         }
     }
 
-    return PyList_New(0);
+    Py_RETURN_NONE;
 }
 
 
