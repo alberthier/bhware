@@ -380,7 +380,7 @@ class TrajectoryWalk(statemachine.State):
         packet.movement = MOVEMENT_MOVE
         packet.direction = direction
         packet.angle = dest.angle
-        packet.points = [ points ]
+        packet.points = points
         self.jobs.append(packet)
 
 
