@@ -186,10 +186,8 @@ class RobotControlDeviceStarter(object):
 
     def __init__(self, eventloop):
         logger.log("Connecting to {}:{} ...".format(REMOTE_IP, REMOTE_PORT))
-        self.control_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.control_socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
-        self.log_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.log_socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
+        self.control_socket = None
+        self.log_socket = None
         self.eventloop = eventloop
         self.timer = Timer(eventloop, 1000, self.try_connect, False)
         if not self.try_connect():
@@ -199,6 +197,8 @@ class RobotControlDeviceStarter(object):
     def try_connect(self):
         connected = False
         try:
+            self.control_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self.control_socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
             self.control_socket.connect((REMOTE_IP, REMOTE_PORT))
             self.eventloop.robot_control_channel = RobotControlDeviceChannel(self.eventloop, self.control_socket)
             leds.orange.off()
@@ -208,12 +208,15 @@ class RobotControlDeviceStarter(object):
             leds.orange.toggle()
         if connected:
             try:
+                self.log_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                self.log_socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
                 self.log_socket.connect((REMOTE_IP, REMOTE_LOG_PORT))
                 self.eventloop.robot_log_channel = RobotLogDeviceChannel(self.log_socket)
                 logger.log("Connected to the log socket {}:{}".format(REMOTE_IP, REMOTE_LOG_PORT))
             except Exception as e:
                 # Log socket is not mandatory. If the connection fails, continue without it.
                 logger.log("Unable to connect to the log socket {}:{} ({}), continuing without PIC logs".format(REMOTE_IP, REMOTE_LOG_PORT, e))
+            self.timer.stop()
             self.eventloop.on_turret_boot(None)
             self.eventloop.create_fsm()
         return connected
