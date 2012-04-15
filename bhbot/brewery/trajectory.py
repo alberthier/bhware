@@ -190,19 +190,19 @@ class Map(object):
         return (pathfinder, walls)
 
 
-    def route(self, start_x, start_y, goal_x, goal_y, reference_team = TEAM_PURPLE):
+    def route(self, start_x, start_y, goal_x, goal_y, virtual = True):
         if IS_HOST_DEVICE_PC:
             self.eventloop.send_packet(packets.SimulatorResetRoutePath())
 
-        real_start_y = start_y #self.eventloop.robot.convert_y(start_y, reference_team)
-        real_goal_y = self.eventloop.robot.convert_y(goal_y, reference_team)
+        real_start = Pose(start_x, start_y, virtual)
+        real_goal = Pose(goal_x, goal_y, virtual)
 
-        logger.log("Compute route from ({}, {}) to ({}, {})".format(start_x, real_start_y, goal_x, real_goal_y))
+        logger.log("Compute route from ({}, {}) to ({}, {})".format(real_start.x, real_start.y, real_goal.x, real_goal.y))
 
-        start_cell_x = int(round(start_x / ROUTING_MAP_RESOLUTION))
-        start_cell_y = int(round(real_start_y / ROUTING_MAP_RESOLUTION))
-        goal_cell_x = int(round(goal_x / ROUTING_MAP_RESOLUTION))
-        goal_cell_y = int(round(real_goal_y / ROUTING_MAP_RESOLUTION))
+        start_cell_x = int(round(real_start.x / ROUTING_MAP_RESOLUTION))
+        start_cell_y = int(round(real_start.y / ROUTING_MAP_RESOLUTION))
+        goal_cell_x = int(round(real_goal.x / ROUTING_MAP_RESOLUTION))
+        goal_cell_y = int(round(real_goal.y / ROUTING_MAP_RESOLUTION))
 
         pathfinding_result = self.pathfinder.find(start_cell_x, start_cell_y, goal_cell_x, goal_cell_y)
 
@@ -249,23 +249,22 @@ class Map(object):
         for simplified_path in simplified_paths:
             for i in xrange(len(simplified_path)):
                 simplified_path[i].x = simplified_path[i].x * ROUTING_MAP_RESOLUTION + ROUTING_MAP_RESOLUTION / 2.0
-                y = self.eventloop.robot.convert_y(simplified_path[i].y * ROUTING_MAP_RESOLUTION + ROUTING_MAP_RESOLUTION / 2.0, reference_team)
-                simplified_path[i].y = y
+                simplified_path[i].y = simplified_path[i].y * ROUTING_MAP_RESOLUTION + ROUTING_MAP_RESOLUTION / 2.0
         if len(simplified_paths[-1]) > 0:
-            simplified_paths[-1][-1].x = goal_x
-            simplified_paths[-1][-1].y = goal_y
+            simplified_paths[-1][-1].x = real_goal.x
+            simplified_paths[-1][-1].y = real_goal.y
 
         return simplified_paths
 
 
-    def evaluate(self, start_x, start_y, goal_x, goal_y, reference_team = TEAM_PURPLE):
-        real_start_y = start_y #self.eventloop.robot.convert_y(start_y, reference_team)
-        real_goal_y = self.eventloop.robot.convert_y(goal_y, reference_team)
+    def evaluate(self, start_x, start_y, goal_x, goal_y, virtual = True):
+        real_start = Pose(start_x, start_y, virtual)
+        real_goal = Pose(goal_x, goal_y, virtual)
 
-        start_cell_x = int(round(start_x / EVALUATOR_MAP_RESOLUTION))
-        start_cell_y = int(round(real_start_y / EVALUATOR_MAP_RESOLUTION))
-        goal_cell_x = int(round(goal_x / EVALUATOR_MAP_RESOLUTION))
-        goal_cell_y = int(round(real_goal_y / EVALUATOR_MAP_RESOLUTION))
+        start_cell_x = int(round(real_start.x / EVALUATOR_MAP_RESOLUTION))
+        start_cell_y = int(round(real_start.y / EVALUATOR_MAP_RESOLUTION))
+        goal_cell_x = int(round(real_goal.x / EVALUATOR_MAP_RESOLUTION))
+        goal_cell_y = int(round(real_goal.y / EVALUATOR_MAP_RESOLUTION))
 
         pathfinding_result = self.evaluator.find(start_cell_x, start_cell_y, goal_cell_x, goal_cell_y)
         if pathfinding_result is None:
