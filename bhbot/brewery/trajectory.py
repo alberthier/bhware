@@ -214,7 +214,7 @@ class Map(object):
 
         logger.log("Found route: length={} cost={}".format(len(path), pathfinding_result[0]))
 
-        simplified_path = []
+        simplified_paths = [ [] ]
 
         if len(path) > 1:
             cleaned_path = [ Pose(path[0][0], path[0][1]) ]
@@ -228,31 +228,34 @@ class Map(object):
             p1 = cleaned_path[0]
             p2 = None
             p3 = None
-            simplified_path.append(p1)
             for i in xrange(2, len(cleaned_path)):
                 p2 = cleaned_path[i - 1]
                 p3 = cleaned_path[i]
                 a1 = math.atan2(p2.y - p1.y, p2.x - p1.x)
                 a2 = math.atan2(p3.y - p2.y, p3.x - p2.x)
                 if abs(a1 - a2) > 0.1:
-                   simplified_path.append(p2)
-                   p1 = p2
+                    simplified_paths[-1].append(p2)
+                    if abs(a1 - a2) > ROUTE_SPLIT_ANGLE:
+                        simplified_paths.append([])
+                    p1 = p2
             if p3 is not None:
-                simplified_path.append(p3)
+                simplified_paths[-1].append(p3)
 
         if IS_HOST_DEVICE_PC:
             self.send_route_to_simulator(path, False)
-            self.send_route_to_simulator(simplified_path[1:], True)
+            for simplified_path in simplified_paths:
+                self.send_route_to_simulator(simplified_path, True)
 
-        if len(simplified_path) > 0:
-            for i in xrange(1, len(simplified_path) - 1):
+        for simplified_path in simplified_paths:
+            for i in xrange(len(simplified_path)):
                 simplified_path[i].x = simplified_path[i].x * ROUTING_MAP_RESOLUTION + ROUTING_MAP_RESOLUTION / 2.0
                 y = self.eventloop.robot.convert_y(simplified_path[i].y * ROUTING_MAP_RESOLUTION + ROUTING_MAP_RESOLUTION / 2.0, reference_team)
                 simplified_path[i].y = y
-            simplified_path[-1].x = goal_x
-            simplified_path[-1].y = goal_y
+        if len(simplified_paths[-1]) > 0:
+            simplified_paths[-1][-1].x = goal_x
+            simplified_paths[-1][-1].y = goal_y
 
-        return simplified_path[1:]
+        return simplified_paths
 
 
     def evaluate(self, start_x, start_y, goal_x, goal_y, reference_team = TEAM_PURPLE):
