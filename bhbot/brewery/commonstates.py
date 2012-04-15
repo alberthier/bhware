@@ -279,7 +279,7 @@ class StoreFabric(statemachine.State):
 class TrajectoryWalk(statemachine.State):
     """Walk a path"""
 
-    def __init__(self, points = None, reference_team = TEAM_PURPLE):
+    def __init__(self):
         statemachine.State.__init__(self)
         self.jobs = deque()
         self.current_goto_packet = None
@@ -287,12 +287,9 @@ class TrajectoryWalk(statemachine.State):
         self.opponent_blocking_max_retries = DEFAULT_OPPONENT_MAX_RETRIES
         self.opponent_blocking_current_retries = 0
         self.exit_reason = TRAJECTORY_WALK_DESTINATION_REACHED
-        self.reference_team = reference_team
-        if points is not None:
-            self.load_points(points)
 
 
-    def move(self, dx, dy, direction = DIRECTION_FORWARD):
+    def move(self, dx, dy, virtual = DIRECTION_FORWARD):
         current_pose = self.robot().pose
         self.move_to(current_pose.virt.x + dx, current_pose.virt.y + dy, direction)
 
@@ -388,35 +385,6 @@ class TrajectoryWalk(statemachine.State):
         self.jobs.append(substate)
 
 
-    def load_points(self, points):
-        for vals in points :
-            try :
-                angle = None
-                x, y = 0.0, 0.0
-                direction = DIRECTION_FORWARD
-                if len(vals) > 1 or type(vals) is dict:
-                    if type(vals) is dict:
-                        x, y = vals.get("pos", (x, y))
-                        angle = vals.get("angle", angle)
-                        direction = vals.get("dir", direction)
-                    else :
-                        if len(vals) == 2:
-                            x, y = vals
-                        elif len(vals) == 3:
-                            x, y, angle = vals
-                        elif len(vals) == 4:
-                            x, y, angle, direction = vals
-                else:
-                    angle = vals[0]
-                    a = lookup_defs("ANGLE", angle) if angle else None
-                    d = lookup_defs("DIRECTION", direction) if direction else None
-                    self.goto(x, y, angle, direction)
-            except Exception, e :
-                logger.log("Error decoding trajectory '{}' : Exception is {}".format(str(vals), str(e)))
-                logger.log_exception(e)
-                # TODO : exit loop if exception occurred ?
-
-
     def on_enter(self):
         self.process_next_job()
 
@@ -487,12 +455,11 @@ class TrajectoryWalk(statemachine.State):
 
 class Navigate(statemachine.State):
 
-    def __init__(self, x, y, direction=DIRECTION_FORWARD, reference_team=TEAM_PURPLE):
+    def __init__(self, x, y, direction = DIRECTION_FORWARD):
         super(Navigate, self).__init__()
         self.x = x
         self.y = y
         self.direction = direction
-        self.reference_team = reference_team
         self.path = None
         self.rotation_packet = None
         self.exit_reason = NAVIGATE_DESTINATION_REACHED
@@ -500,7 +467,7 @@ class Navigate(statemachine.State):
 
     def on_enter(self):
         self.path = self.event_loop.map.route(self.robot().pose.x, self.robot().pose.y, self.x, self.y)
-        if len(path) == 0:
+        if len(path) == 0 or len(path[0]) == 0:
             self.exit_reason = NAVIGATE_DESTINATION_UNREACHABLE
             self.exit_substate()
         else:
