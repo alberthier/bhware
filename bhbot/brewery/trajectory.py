@@ -227,9 +227,12 @@ class Map(object):
                 cleaned_path.append(Pose(path[-1][0], path[-1][1]))
             p1 = cleaned_path[0]
             p2 = None
-            p3 = None
+            if len(cleaned_path) >= 2:
+                p3 = cleaned_path[1]
+            else:
+                p3 = None
             for i in xrange(2, len(cleaned_path)):
-                p2 = cleaned_path[i - 1]
+                p2 = p3
                 p3 = cleaned_path[i]
                 a1 = math.atan2(p2.y - p1.y, p2.x - p1.x)
                 a2 = math.atan2(p3.y - p2.y, p3.x - p2.x)
