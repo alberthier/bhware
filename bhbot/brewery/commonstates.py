@@ -490,7 +490,7 @@ class TrajectoryWalk(statemachine.State):
             direction = self.current_goto_packet.direction
             if self.current_goto_packet.movement != MOVEMENT_ROTATE and self.current_goto_packet.direction == opponent_direction:
                 logger.log("Opponent detected. direction = {}".format(opponent_direction))
-                self.robot().stop()
+                self.send_packet(packets.Stop())
                 logger.log("TrajectoryWalk robot stopped")
                 if self.opponent_blocking_current_retries < self.opponent_blocking_max_retries :
                     logger.log("TrajectoryWalk retries ({}/{})".format(self.opponent_blocking_current_retries, self.opponent_blocking_max_retries))
