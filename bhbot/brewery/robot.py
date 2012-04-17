@@ -40,20 +40,6 @@ class Robot(object):
         return abs(current_angle - angle) < (math.pi / 16.0)
 
 
-    def convert_y(self, y, reference_team):
-        if y is None or reference_team == TEAM_UNKNOWN or self.team == TEAM_UNKNOWN or reference_team == self.team:
-            return y
-        else:
-            return FIELD_Y_SIZE - y
-
-
-    def convert_angle(self, angle, reference_team):
-        if angle is None or reference_team == TEAM_UNKNOWN or self.team == TEAM_UNKNOWN or reference_team == self.team:
-            return angle
-        else:
-            return -angle
-
-
     def on_device_ready(self, packet):
         self.team = packet.team
 
@@ -78,11 +64,14 @@ class Robot(object):
     def on_empty_tank_control(self, packet):
         self.tank_full = False
 
+
     def set_team(self, team):
         trajectory.Pose.match_team = team
         self._team = team
 
+
     def get_team(self):
         return self._team
+
 
     team = property(get_team, set_team)
