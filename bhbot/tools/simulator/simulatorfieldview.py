@@ -666,8 +666,8 @@ class RobotLayer(fieldview.Layer):
     def userEvent(self, key, x, y):
         dx = x - self.robot.item.x()
         dy = y - self.robot.item.y()
-        angle = (self.robot.item.rotation() / 180.0 * math.pi + math.atan2(dy, dx)) % (2.0 * math.pi)
-        angle = math.atan2(-math.sin(angle), math.cos(angle)) % ( 2.0 * math.pi )
+        angle = (self.robot.item.rotation() / 180.0 * math.pi) - math.atan2(dy, dx)
+        angle %= 2.0 * math.pi
         angle = int(angle / (2.0 * math.pi) * 18.0)
 
         packet = packets.TurretDetect()
