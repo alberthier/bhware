@@ -286,103 +286,154 @@ class TrajectoryWalk(statemachine.State):
         self.opponent_wait_time = DEFAULT_OPPONENT_WAIT_MS
         self.opponent_blocking_max_retries = DEFAULT_OPPONENT_MAX_RETRIES
         self.opponent_blocking_current_retries = 0
-        self.exit_reason = TRAJECTORY_WALK_DESTINATION_REACHED
+        self.exit_reason = TRAJECTORY_DESTINATION_REACHED
 
 
-    def move(self, dx, dy, virtual = DIRECTION_FORWARD):
-        current_pose = self.robot().pose
-        self.move_to(current_pose.virt.x + dx, current_pose.virt.y + dy, direction)
+    def move(self, dx, dy, direction = DIRECTION_FORWARD):
+        self.jobs.append(('create_move_packet', (dx, dy, direction)))
 
 
     def move_to(self, x, y, direction = DIRECTION_FORWARD):
+        self.jobs.append(('create_move_to_packet', (x, y, direction)))
+
+
+    def forward(self, distance):
+        self.jobs.append(('create_forward_packet', (distance,)))
+
+
+    def backward(self, distance):
+        self.jobs.append(('create_backward_packet', (distance,)))
+
+
+    def look_at(self, x, y):
+        self.jobs.append(('create_look_at_packet', (x, y)))
+
+
+    def look_at_opposite(self, x, y):
+        self.jobs.append(('create_look_at_opposite_packet', (x, y)))
+
+
+    def rotate(self, da):
+        self.jobs.append(('create_rotate_packet', (da,)))
+
+
+    def rotate_to(self, angle):
+        self.jobs.append(('create_rotate_to_packet', (angle,)))
+
+
+    def goto(self, x, y, angle, direction = DIRECTION_FORWARD):
+        self.jobs.append(('create_goto_packet', (x, y, angle, direction)))
+
+
+    def goto_looking_at(self, x, y, look_at_x, look_at_y, direction = DIRECTION_FORWARD):
+        self.jobs.append(('create_goto_looking_at_packet', (dx, dy, look_at_x, look_at_y, direction)))
+
+
+    def goto_looking_at_opposite(self, x, y, look_at_x, look_at_y, direction = DIRECTION_FORWARD):
+        self.jobs.append(('create_goto_looking_at_opposite_packet', (dx, dy, look_at_x, look_at_y, direction)))
+
+
+    def follow(self, points, angle = None, direction = DIRECTION_FORWARD):
+        self.jobs.append(('create_follow_packet', (points, angle, direction)))
+
+
+    def wait_for(self, substate):
+        self.jobs.append(substate)
+
+
+    def create_move_packet(self, dx, dy, direction = DIRECTION_FORWARD):
+        current_pose = self.robot().pose
+        return self.create_move_to_packet(current_pose.virt.x + dx, current_pose.virt.y + dy, direction)
+
+
+    def create_move_to_packet(self, x, y, direction = DIRECTION_FORWARD):
         packet = packets.Goto()
         packet.movement = MOVEMENT_MOVE
         packet.direction = direction
         packet.points = [ trajectory.Pose(x, y, None, True) ]
-        self.jobs.append(packet)
+        return packet
 
 
-    def forward(self, distance):
+    def create_forward_packet(self, distance):
         current_pose = self.robot().pose
         dx = math.cos(current_pose.virt.angle) * distance
         dy = math.sin(current_pose.virt.angle) * distance
-        self.move(dx, dy)
+        return self.create_move_packet(dx, dy)
 
 
-    def backward(self, distance):
+    def create_backward_packet(self, distance):
         current_pose = self.robot().pose
         dx = -math.cos(current_pose.virt.angle) * distance
         dy = -math.sin(current_pose.virt.angle) * distance
-        self.move(dx, dy, DIRECTION_BACKWARD)
+        return self.create_move_packet(dx, dy, DIRECTION_BACKWARD)
 
 
-    def look_at(self, x, y):
+    def create_look_at_packet(self, x, y):
         current_pose = self.robot().pose
         dest = trajectory.Pose(x, y, None, True)
         dx = dest.virt.x - current_pose.virt.x
         dy = dest.virt.y - current_pose.virt.y
-        self.rotate_to(math.atan2(dy, dx))
+        return self.create_rotate_to_packet(math.atan2(dy, dx))
 
 
-    def look_at_opposite(self, x, y):
+    def create_look_at_opposite_packet(self, x, y):
         current_pose = self.robot().pose
         dest = trajectory.Pose(x, y, None, True)
         dx = dest.virt.x - current_pose.virt.x
         dy = dest.virt.y - current_pose.virt.y
-        self.rotate_to(math.atan2(dy, dx) + math.pi)
+        angle = math.atan2(dy, dx) + math.pi
+        if angle > math.pi:
+            angle -= 2.0 * math.pi
+        return self.create_rotate_to_packet(angle)
 
 
-    def rotate(self, da):
+    def create_rotate_packet(self, da):
         current_pose = self.robot().pose
-        self.rotate_to(current_pose.virt.angle + da)
+        return self.create_rotate_to_packet(current_pose.virt.angle + da)
 
 
-    def rotate_to(self, angle):
+    def create_rotate_to_packet(self, angle):
         dest = trajectory.Pose(0.0, 0.0, angle, True)
         packet = packets.Goto()
         packet.movement = MOVEMENT_ROTATE
         packet.angle = dest.angle
-        self.jobs.append(packet)
+        return packet
 
 
-    def goto(self, x, y, angle, direction = DIRECTION_FORWARD):
+    def create_goto_packet(self, x, y, angle, direction = DIRECTION_FORWARD):
         dest = trajectory.Pose(x, y, angle, True)
         packet = packets.Goto()
         packet.movement = MOVEMENT_MOVE
         packet.direction = direction
         packet.angle = dest.angle
         packet.points = [ dest ]
-        self.jobs.append(packet)
+        return packet
 
 
-    def goto_looking_at(self, x, y, look_at_x, look_at_y, direction = DIRECTION_FORWARD):
+    def create_goto_looking_at_packet(self, x, y, look_at_x, look_at_y, direction = DIRECTION_FORWARD):
         current_pose = self.robot().pose
         dest = trajectory.Pose(look_at_x, look_at_y, None, True)
         dx = dest.virt.x - current_pose.virt.x
         dy = dest.virt.y - current_pose.virt.y
-        self.goto(x, y, math.atan2(dy, dx))
+        return self.create_goto_packet(x, y, math.atan2(dy, dx))
 
 
-    def goto_looking_at_opposite(self, x, y, look_at_x, look_at_y, direction = DIRECTION_FORWARD):
+    def create_goto_looking_at_opposite_packet(self, x, y, look_at_x, look_at_y, direction = DIRECTION_FORWARD):
         current_pose = self.robot().pose
         dest = trajectory.Pose(look_at_x, look_at_y, None, True)
         dx = dest.virt.x - current_pose.virt.x
         dy = dest.virt.y - current_pose.virt.y
-        self.goto(x, y, math.atan2(dy, dx) + math.pi)
+        return self.create_goto_packet(x, y, math.atan2(dy, dx) + math.pi)
 
 
-    def follow(self, points, angle = None, direction = DIRECTION_FORWARD):
+    def create_follow_packet(self, points, angle = None, direction = DIRECTION_FORWARD):
         dest = trajectory.Pose(0.0, 0.0, angle, True)
         packet = packets.Goto()
         packet.movement = MOVEMENT_MOVE
         packet.direction = direction
         packet.angle = dest.angle
         packet.points = points
-        self.jobs.append(packet)
-
-
-    def wait_for(self, substate):
-        self.jobs.append(substate)
+        return packet
 
 
     def on_enter(self):
@@ -391,26 +442,26 @@ class TrajectoryWalk(statemachine.State):
 
     def on_goto_finished(self, packet):
         if packet.reason == REASON_DESTINATION_REACHED:
-            self.exit_reason = TRAJECTORY_WALK_DESTINATION_REACHED
+            self.exit_reason = TRAJECTORY_DESTINATION_REACHED
             self.current_goto_packet = None
             self.process_next_job()
         elif packet.reason == REASON_BLOCKED_FRONT or packet.reason == REASON_BLOCKED_BACK:
-            self.exit_reason = TRAJECTORY_WALK_BLOCKED
+            self.exit_reason = TRAJECTORY_BLOCKED
             self.exit_substate()
 
 
     def process_next_job(self):
         if self.current_goto_packet is None:
             if len(self.jobs) == 0:
-                self.exit_reason = TRAJECTORY_WALK_DESTINATION_REACHED
+                self.exit_reason = TRAJECTORY_DESTINATION_REACHED
                 self.exit_substate()
             else:
                 job = self.jobs.popleft()
                 if isinstance(job, statemachine.State):
                     self.switch_to_substate(job)
                 else:
-                    self.current_goto_packet = job
-                    self.send_packet(job)
+                    self.current_goto_packet = getattr(self, job[0])(*job[1])
+                    self.send_packet(self.current_goto_packet)
         else:
             self.send_packet(self.current_goto_packet)
 
@@ -447,7 +498,7 @@ class TrajectoryWalk(statemachine.State):
                     self.switch_to_substate(WaitForOpponentLeave(packet.robot, self.opponent_wait_time, direction))
                 else :
                     logger.log("TrajectoryWalk failed")
-                    self.exit_reason = TRAJECTORY_WALK_OPPONENT_DETECTED
+                    self.exit_reason = TRAJECTORY_OPPONENT_DETECTED
                     self.exit_substate()
 
 
@@ -456,59 +507,35 @@ class TrajectoryWalk(statemachine.State):
 class Navigate(statemachine.State):
 
     def __init__(self, x, y, direction = DIRECTION_FORWARD):
-        super(Navigate, self).__init__()
-        self.x = x
-        self.y = y
+        statemachine.State.__init__(self)
+        self.destination = trajectory.Pose(x, y, None, True)
         self.direction = direction
-        self.path = None
-        self.rotation_packet = None
-        self.exit_reason = NAVIGATE_DESTINATION_REACHED
+        self.walk = TrajectoryWalk()
+        self.walk.opponent_blocking_max_retries = 0
+        self.exit_reason = TRAJECTORY_DESTINATION_REACHED
 
 
     def on_enter(self):
-        self.path = self.event_loop.map.route(self.robot().pose.x, self.robot().pose.y, self.x, self.y)
-        if len(path) == 0 or len(path[0]) == 0:
-            self.exit_reason = NAVIGATE_DESTINATION_UNREACHABLE
+        path = self.event_loop.map.route(self.robot().pose.virt.x, self.robot().pose.virt.y, self.destination.virt.x, self.destination.virt.y)
+        if len(path) == 0:
+            self.exit_reason = TRAJECTORY_DESTINATION_UNREACHABLE
             self.exit_substate()
         else:
-            if direction == DIRECTION_FORWARD:
-                if not self.robot().is_looking_at(path[0].x, path[0].y, self.reference_team):
-                    self.rotation_packet = self.robot().look_at(path[0].x, path[0].y, self.reference_team)
-            else:
-                if not self.robot().is_looking_at_opposite(path[0].x, path[0].y, self.reference_team):
-                    self.rotation_packet = self.robot().look_at_opposite(path[0].x, path[0].y, self.reference_team)
-            if self.rotation_packet is None:
-                self.send_path()
+            for sub_path in path:
+                first_point = sub_path[0]
+                if self.direction == DIRECTION_FORWARD:
+                    if not self.robot().is_looking_at(first_point.virt.x, first_point.virt.y):
+                        self.walk.look_at(first_point.virt.x, first_point.virt.y)
+                else:
+                    if not self.robot().is_looking_at_opposite(first_point.virt.x, first_point.virt.y):
+                        self.walk.look_at_opposite(first_point.virt.x, first_point.virt.y)
+                self.walk.follow(sub_path, None, self.direction)
+            self.switch_to_substate(self.walk)
 
 
-    def on_goto_finished(self, packet):
-        if self.rotation_packet is not None:
-            self.rotation_packet = None
-            self.send_path()
-        elif packet.reason == REASON_DESTINATION_REACHED:
-            self.exit_reason = NAVIGATE_DESTINATION_REACHED
-            self.exit_substate()
-        else:
-            self.exit_reason = NAVIGATE_BLOCKED
-            self.exit_substate()
-
-
-    def on_opponent_in_front(self, packet):
-        if self.direction == DIRECTION_FORWARD:
-            self.robot().stop()
-            self.exit_reason = NAVIGATE_OPPONENT_IN_THE_WAY
-            self.exit_substate()
-
-
-    def on_opponent_in_back(self, packet):
-        if self.direction == DIRECTION_BACKWARD:
-            self.robot().stop()
-            self.exit_reason = NAVIGATE_OPPONENT_IN_THE_WAY
-            self.exit_substate()
-
-
-    def send_path(self):
-        self.robot().follow(self.path, self.direction, self.reference_team)
+    def on_exit_substate(self, substate):
+        self.exit_reason = self.walk.exit_reason
+        self.exit_substate()
 
 
 
@@ -516,23 +543,7 @@ class Navigate(statemachine.State):
 class GotoHome(statemachine.State):
 
     def on_enter(self):
-        current_pose = self.event_loop.robot.pose
-        walk = TrajectoryWalk()
-        if current_pose.x < 1.0:
-            if math.cos(current_pose.angle) < 0.0:
-                walk.goto(PURPLE_START_X, 0.70, math.pi / 2.0)
-            else:
-                walk.goto(PURPLE_START_X, 0.70, -math.pi / 2.0, DIRECTION_BACKWARD)
-        else:
-            if math.cos(current_pose.angle) < 0.0:
-                walk.goto(1.5, 0.70, math.pi / 2.0, DIRECTION_BACKWARD)
-            else:
-                walk.goto(1.5, 0.70, -math.pi / 2.0)
-            #walk.rotate_to(math.pi)
-            #walk.move_to(PURPLE_START_X, 0.70)
-        #walk.rotate_to(PURPLE_START_ANGLE)
-        #walk.move_to(PURPLE_START_X, PURPLE_START_Y)
-        self.switch_to_substate(walk)
+        self.switch_to_substate(Navigate(PURPLE_START_X, PURPLE_START_Y))
 
 
     def on_exit_substate(self, substate):

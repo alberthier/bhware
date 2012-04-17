@@ -221,11 +221,12 @@ Enum("GOLD_BAR",
      GOLD_BAR_PRESENT = 1,
 )
 
-Enum("TRAJECTORY_WALK",
-    "Trajectory walk result",
-    TRAJECTORY_WALK_DESTINATION_REACHED = 0,
-    TRAJECTORY_WALK_BLOCKED             = 1,
-    TRAJECTORY_WALK_OPPONENT_DETECTED   = 2,
+Enum("TRAJECTORY",
+    "Trajectory walk or navigation result",
+    TRAJECTORY_DESTINATION_REACHED     = 0,
+    TRAJECTORY_BLOCKED                 = 1,
+    TRAJECTORY_OPPONENT_DETECTED       = 2,
+    TRAJECTORY_DESTINATION_UNREACHABLE = 3,
 )
 
 Enum("OPPONENT_ROBOT",
