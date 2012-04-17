@@ -516,7 +516,7 @@ class Navigate(statemachine.State):
 
 
     def on_enter(self):
-        path = self.event_loop.map.route(self.robot().pose.virt.x, self.robot().pose.virt.y, self.destination.virt.x, self.destination.virt.y)
+        path = self.event_loop.map.route(self.robot().pose, self.destination)
         if len(path) == 0:
             self.exit_reason = TRAJECTORY_DESTINATION_UNREACHABLE
             self.exit_substate()
@@ -524,10 +524,10 @@ class Navigate(statemachine.State):
             for sub_path in path:
                 first_point = sub_path[0]
                 if self.direction == DIRECTION_FORWARD:
-                    if not self.robot().is_looking_at(first_point.virt.x, first_point.virt.y):
+                    if not self.robot().is_looking_at(first_point):
                         self.walk.look_at(first_point.virt.x, first_point.virt.y)
                 else:
-                    if not self.robot().is_looking_at_opposite(first_point.virt.x, first_point.virt.y):
+                    if not self.robot().is_looking_at_opposite(first_point):
                         self.walk.look_at_opposite(first_point.virt.x, first_point.virt.y)
                 self.walk.follow(sub_path, None, self.direction)
             self.switch_to_substate(self.walk)

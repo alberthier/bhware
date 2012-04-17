@@ -24,22 +24,20 @@ class Robot(object):
         self.tank_full = False
 
 
-    def is_looking_at(self, x, y, reference_team = TEAM_UNKNOWN):
-        current_y = self.convert_y(self.pose.y, reference_team)
-        dx = x - self.pose.x
-        dy = y - current_y
-        angle = self.convert_angle(math.atan2(dy, dx), reference_team) % (2.0 * math.pi)
+    def is_looking_at(self, pose):
+        dx = pose.x - self.pose.x
+        dy = pose.y - self.pose.y
+        angle = math.atan2(dy, dx) % (2.0 * math.pi)
         current_angle = self.pose.angle % (2.0 * math.pi)
         return abs(current_angle - angle) < (math.pi / 16.0)
 
 
-    def is_looking_at_opposite(self, x, y, reference_team = TEAM_UNKNOWN):
-        current_y = self.convert_y(self.pose.y, reference_team)
-        dx = x - self.pose.x
-        dy = y - current_y
-        angle = self.convert_angle(math.atan2(dy, dx), reference_team) % (2.0 * math.pi)
-        current_opposite_angle = (self.pose.angle + math.pi) % (2.0 * math.pi)
-        return abs(current_opposite_angle - angle) < (math.pi / 16.0)
+    def is_looking_at_opposite(self, pose):
+        dx = pose.x - self.pose.x
+        dy = pose.y - self.pose.y
+        angle = math.atan2(dy, dx) % (2.0 * math.pi)
+        current_angle = (self.pose.angle + math.pi) % (2.0 * math.pi)
+        return abs(current_angle - angle) < (math.pi / 16.0)
 
 
     def convert_y(self, y, reference_team):

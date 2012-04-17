@@ -190,19 +190,16 @@ class Map(object):
         return (pathfinder, walls)
 
 
-    def route(self, start_x, start_y, goal_x, goal_y, virtual = True):
+    def route(self, start, goal):
         if IS_HOST_DEVICE_PC:
             self.eventloop.send_packet(packets.SimulatorResetRoutePath())
 
-        real_start = Pose(start_x, start_y, virtual)
-        real_goal = Pose(goal_x, goal_y, virtual)
+        logger.log("Compute route from ({}, {}) to ({}, {})".format(start.x, start.y, goal.x, goal.y))
 
-        logger.log("Compute route from ({}, {}) to ({}, {})".format(real_start.x, real_start.y, real_goal.x, real_goal.y))
-
-        start_cell_x = int(round(real_start.x / ROUTING_MAP_RESOLUTION))
-        start_cell_y = int(round(real_start.y / ROUTING_MAP_RESOLUTION))
-        goal_cell_x = int(round(real_goal.x / ROUTING_MAP_RESOLUTION))
-        goal_cell_y = int(round(real_goal.y / ROUTING_MAP_RESOLUTION))
+        start_cell_x = int(round(start.x / ROUTING_MAP_RESOLUTION))
+        start_cell_y = int(round(start.y / ROUTING_MAP_RESOLUTION))
+        goal_cell_x = int(round(goal.x / ROUTING_MAP_RESOLUTION))
+        goal_cell_y = int(round(goal.y / ROUTING_MAP_RESOLUTION))
 
         pathfinding_result = self.pathfinder.find(start_cell_x, start_cell_y, goal_cell_x, goal_cell_y)
 
@@ -254,20 +251,17 @@ class Map(object):
                 simplified_path[i].x = simplified_path[i].x * ROUTING_MAP_RESOLUTION + ROUTING_MAP_RESOLUTION / 2.0
                 simplified_path[i].y = simplified_path[i].y * ROUTING_MAP_RESOLUTION + ROUTING_MAP_RESOLUTION / 2.0
         if len(simplified_paths[-1]) > 0:
-            simplified_paths[-1][-1].x = real_goal.x
-            simplified_paths[-1][-1].y = real_goal.y
+            simplified_paths[-1][-1].x = goal.x
+            simplified_paths[-1][-1].y = goal.y
 
         return simplified_paths
 
 
-    def evaluate(self, start_x, start_y, goal_x, goal_y, virtual = True):
-        real_start = Pose(start_x, start_y, virtual)
-        real_goal = Pose(goal_x, goal_y, virtual)
-
-        start_cell_x = int(round(real_start.x / EVALUATOR_MAP_RESOLUTION))
-        start_cell_y = int(round(real_start.y / EVALUATOR_MAP_RESOLUTION))
-        goal_cell_x = int(round(real_goal.x / EVALUATOR_MAP_RESOLUTION))
-        goal_cell_y = int(round(real_goal.y / EVALUATOR_MAP_RESOLUTION))
+    def evaluate(self, start, goal):
+        start_cell_x = int(round(start.x / EVALUATOR_MAP_RESOLUTION))
+        start_cell_y = int(round(start.y / EVALUATOR_MAP_RESOLUTION))
+        goal_cell_x = int(round(goal.x / EVALUATOR_MAP_RESOLUTION))
+        goal_cell_y = int(round(goal.y / EVALUATOR_MAP_RESOLUTION))
 
         pathfinding_result = self.evaluator.find(start_cell_x, start_cell_y, goal_cell_x, goal_cell_y)
         if pathfinding_result is None:
