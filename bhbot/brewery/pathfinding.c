@@ -328,6 +328,10 @@ static PyObject* pathfinder_find(PathFinder* self, PyObject* args)
         /* Coordinates out of range */
         Py_RETURN_NONE;
     }
+    if (start_x == goal_x && start_y == goal_y) {
+        /* Already arrived */
+        Py_RETURN_NONE;
+    }
 
     for (zone = self->zones; zone != NULL; zone = zone->next) {
         /* Fix runtime zone types: If the start point is in a wall, convert it to a penalized zone

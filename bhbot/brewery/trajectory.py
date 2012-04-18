@@ -211,7 +211,7 @@ class Map(object):
 
         logger.log("Found route: length={} cost={}".format(len(path), pathfinding_result[0]))
 
-        simplified_paths = [ [] ]
+        simplified_paths = []
 
         if len(path) > 1:
             cleaned_path = [ Pose(path[0][0], path[0][1]) ]
@@ -228,6 +228,7 @@ class Map(object):
                 p3 = cleaned_path[1]
             else:
                 p3 = None
+            simplified_paths.append([])
             for i in xrange(2, len(cleaned_path)):
                 p2 = p3
                 p3 = cleaned_path[i]
@@ -246,11 +247,15 @@ class Map(object):
             for simplified_path in simplified_paths:
                 self.send_route_to_simulator(simplified_path, True)
 
-        for simplified_path in simplified_paths:
-            for i in xrange(len(simplified_path)):
-                simplified_path[i].x = simplified_path[i].x * ROUTING_MAP_RESOLUTION + ROUTING_MAP_RESOLUTION / 2.0
-                simplified_path[i].y = simplified_path[i].y * ROUTING_MAP_RESOLUTION + ROUTING_MAP_RESOLUTION / 2.0
-        if len(simplified_paths[-1]) > 0:
+        for i in xrange(len(simplified_paths)):
+            simplified_path = simplified_paths[i]
+            if len(simplified_path) == 0:
+                del simplified_paths[i]
+            else:
+                for j in xrange(len(simplified_path)):
+                    simplified_path[j].x = simplified_path[j].x * ROUTING_MAP_RESOLUTION + ROUTING_MAP_RESOLUTION / 2.0
+                    simplified_path[j].y = simplified_path[j].y * ROUTING_MAP_RESOLUTION + ROUTING_MAP_RESOLUTION / 2.0
+        if len(simplified_paths) > 0 and len(simplified_paths[-1]) > 0:
             simplified_paths[-1][-1].x = goal.x
             simplified_paths[-1][-1].y = goal.y
 
