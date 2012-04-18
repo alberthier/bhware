@@ -660,6 +660,8 @@ class BasePacket(object):
     def dispatch(self, obj):
         if hasattr(obj, self.HANDLER_METHOD):
             getattr(obj, self.HANDLER_METHOD)(self)
+        if hasattr(obj, 'on_packet'):
+            getattr(obj, 'on_packet')(self)
 
 
 

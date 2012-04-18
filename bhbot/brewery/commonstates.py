@@ -87,6 +87,38 @@ class Sequence(statemachine.State):
 
 
 
+class Parallel(statemachine.State):
+
+    def __init__(self, *args):
+        statemachine.State.__init__(self)
+        self.substates = list(args)
+        self.count = 0
+
+
+    def add(self, substate):
+        self.substates.append(substate)
+
+
+    def on_enter(self):
+        self.count = len(self.substates)
+        for state in self.substates:
+            self.switch_to_substate(state)
+        self.sub_state = None
+
+
+    def on_exit_substate(self, substate):
+        self.count -= 1
+        if self.count == 0:
+            self.exit_substate()
+
+
+    def on_packet(self, packet):
+        for state in self.substates:
+            packet.dispatch(state)
+
+
+
+
 class SetupPositionControl(statemachine.State):
 
     def __init__(self, t_acc = 0.0, f_va_max = 0.0):
