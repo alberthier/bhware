@@ -106,6 +106,7 @@ typedef struct _Zone
     int y1;
     int x2;
     int y2;
+    int id;
     float cost;
     ZoneType zone_type;
     ZoneType runtime_zone_type;
@@ -141,6 +142,7 @@ typedef struct
     float** distance_map;
     Cell** map;
     Zone* zones;
+    int next_zone_id;
 } PathFinder;
 
 
@@ -204,6 +206,7 @@ static int pathfinder_init(PathFinder* self, PyObject* args, PyObject* kwds)
     }
 
     self->zones = NULL;
+    self->next_zone_id = 0;
 
     return 0;
 }
@@ -430,9 +433,11 @@ static PyObject* pathfinder_add_zone(PathFinder* self, PyObject* args, ZoneType 
     zone->runtime_zone_type = zone_type;
 
     zone->next = self->zones;
+    zone->id = self->next_zone_id;
+    ++self->next_zone_id;
     self->zones = zone;
 
-    Py_RETURN_NONE;
+    return Py_BuildValue("i", zone->id);
 }
 
 
@@ -445,6 +450,34 @@ static PyObject* pathfinder_add_wall(PathFinder* self, PyObject* args)
 static PyObject* pathfinder_add_penalized_zone(PathFinder* self, PyObject* args)
 {
     return pathfinder_add_zone(self, args, ZonePenalized);
+}
+
+
+static PyObject* pathfinder_remove_zone(PathFinder* self, PyObject* args)
+{
+    int id = 0;
+    Zone* zone = NULL;
+    Zone* prev_zone = NULL;
+
+    if (!PyArg_ParseTuple(args, "i", &id)) {
+        return NULL;
+    }
+
+    for (zone = self->zones; zone != NULL; zone = zone->next) {
+        if (zone->id == id) {
+            if (zone == self->zones) {
+                self->zones = zone->next;
+                free(zone);
+            } else {
+                prev_zone->next = zone->next;
+                free(zone);
+            }
+            break;
+        }
+        prev_zone = zone;
+    }
+
+    Py_RETURN_NONE;
 }
 
 
@@ -495,7 +528,9 @@ static PyObject* pathfinder_clear_secondary_opponent_position(PathFinder* self)
 static PyMethodDef PathFinder_methods[] = {
     { "find"                             , (PyCFunction) pathfinder_find                             , METH_VARARGS, "Find the route from (x1, y1) to (x2, y2)" },
     { "add_wall"                         , (PyCFunction) pathfinder_add_wall                         , METH_VARARGS, "Add a wall (x1, y1) to (x2, y2)" },
+    { "remove_wall"                      , (PyCFunction) pathfinder_remove_zone                      , METH_VARARGS, "Remove a wall" },
     { "add_penalized_zone"               , (PyCFunction) pathfinder_add_penalized_zone               , METH_VARARGS, "Add a penalized zone (x1, y1) to (x2, y2) with the given cost" },
+    { "remove_penalized_zone"            , (PyCFunction) pathfinder_remove_zone                      , METH_VARARGS, "Remove a penalized zone" },
     { "set_main_opponent_position"       , (PyCFunction) pathfinder_set_main_opponent_position       , METH_VARARGS, "Sets the main opponent position" },
     { "clear_main_opponent_position"     , (PyCFunction) pathfinder_clear_main_opponent_position     , METH_NOARGS , "Clears the main opponent position" },
     { "set_secondary_opponent_position"  , (PyCFunction) pathfinder_set_secondary_opponent_position  , METH_VARARGS, "Sets the secondary opponent position" },

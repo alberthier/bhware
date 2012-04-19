@@ -96,6 +96,10 @@ ROUTE_SPLIT_ANGLE                      = math.pi / 3.0
 MAIN_OPPONENT_AVOIDANCE_RANGE          = 0.5
 SECONDARY_OPPONENT_AVOIDANCE_RANGE     = 0.4
 
+# Blocked zone
+BLOCKED_ZONE_SIZE                      = 0.08
+BLOCKED_ZONE_DISAPEARING_MS            = 1000
+
 # Opponent detection
 OPPONENT_DETECTION_DISAPEARING_TICKS   = int(0.5 / EVENT_LOOP_TICK_RESOLUTION_S)
 

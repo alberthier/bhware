@@ -9,6 +9,7 @@ import math
 import tools
 import packets
 import logger
+import eventloop
 from definitions import *
 
 
@@ -143,6 +144,7 @@ class Map(object):
 
     def __init__(self, eventloop):
         self.eventloop = eventloop
+        self.blocked_zones = []
 
         self.build_module()
 
@@ -275,6 +277,43 @@ class Map(object):
             return max_cost
         else:
             return pathfinding_result[0]
+
+
+    def on_goto_finished(self, packet):
+        angle = None
+        if packet.reason == REASON_BLOCKED_FRONT:
+            angle = self.eventloop.robot.pose.angle
+        elif packet.reason == REASON_BLOCKED_BACK:
+            angle = self.eventloop.robot.pose.angle + math.pi
+
+        if angle is not None:
+            distance = ROBOT_X_SIZE - ROBOT_CENTER_X
+            x1 = math.cos(angle) * distance + self.eventloop.robot.pose.x - BLOCKED_ZONE_SIZE / 2.0
+            y1 = math.sin(angle) * distance + self.eventloop.robot.pose.y - BLOCKED_ZONE_SIZE / 2.0
+            x2 = x1 + BLOCKED_ZONE_SIZE
+            y2 = y1 + BLOCKED_ZONE_SIZE
+            cost = FIELD_X_SIZE * FIELD_Y_SIZE
+            rz = self.pathfinder.add_penalized_zone(int(x1 / ROUTING_MAP_RESOLUTION),
+                                                    int(y1 / ROUTING_MAP_RESOLUTION),
+                                                    int(x2 / ROUTING_MAP_RESOLUTION),
+                                                    int(y2 / ROUTING_MAP_RESOLUTION),
+                                                    cost / ROUTING_MAP_RESOLUTION)
+            ez = self.evaluator.add_penalized_zone(int(x1 / EVALUATOR_MAP_RESOLUTION),
+                                                   int(y1 / EVALUATOR_MAP_RESOLUTION),
+                                                   int(x2 / EVALUATOR_MAP_RESOLUTION),
+                                                   int(y2 / EVALUATOR_MAP_RESOLUTION),
+                                                   cost / EVALUATOR_MAP_RESOLUTION)
+            self.blocked_zones.append((rz, ez))
+            timer = eventloop.Timer(self.eventloop, BLOCKED_ZONE_DISAPEARING_MS, self.pop_blocked_zone)
+            timer.start()
+
+
+    def pop_blocked_zone(self):
+        if len(self.blocked_zones) > 0:
+            (rz, ez) = self.blocked_zones[0]
+            del self.blocked_zones[0]
+            self.pathfinder.remove_penalized_zone(rz)
+            self.evaluator.remove_penalized_zone(ez)
 
 
     def opponent_detected(self, opponent, x, y):

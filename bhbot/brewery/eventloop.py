@@ -290,6 +290,7 @@ class EventLoop(object):
                         channel.packet.dispatch(self)
                         channel.packet.dispatch(self.robot)
                         channel.packet.dispatch(self.opponent_detector)
+                        channel.packet.dispatch(self.map)
                         channel.packet.dispatch(self.get_current_state())
 
                         channel.packet = None
