@@ -509,23 +509,6 @@ class RobotLayer(fieldview.Layer):
         self.robot.set_rotation(angle_deg)
 
 
-    def process_goto(self):
-        if self.goto_packet != None:
-            if self.goto_packet_point_index != len(self.goto_packet.points):
-                point = self.goto_packet.points[self.goto_packet_point_index]
-                angle = point.angle
-                if angle == None:
-                    angle = self.robot.get_pose().angle
-                if self.goto_packet.direction == DIRECTION_BACKWARD:
-                    angle += math.pi
-                if self.goto_packet.movement == MOVEMENT_ROTATE:
-                    self.robot.robot_rotation(angle)
-                else:
-                    self.robot.robot_move(point.x, point.y, angle)
-            else:
-                self.robot_controller.send_goto_finished(REASON_DESTINATION_REACHED, self.goto_packet_point_index)
-
-
     def movement_finished(self, goto_packet_point_index):
         self.robot_controller.send_goto_finished(REASON_DESTINATION_REACHED, goto_packet_point_index)
 
