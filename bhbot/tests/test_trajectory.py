@@ -87,7 +87,7 @@ class TestMap(unittest.TestCase):
 
 
     def test_strait_route(self):
-        route = self.map.route(PURPLE_START_X, PURPLE_START_Y, PURPLE_START_X, 1.5)
+        route = self.map.route(trajectory.Pose(PURPLE_START_X, PURPLE_START_Y), trajectory.Pose(PURPLE_START_X, 1.5))
         self.assertEquals(len(route), 1)
         self.assertTrue(len(route[0]) > 0)
         p = route[0][0]
@@ -96,7 +96,7 @@ class TestMap(unittest.TestCase):
 
 
     def test_unroutable(self):
-        route = self.map.route(PURPLE_START_X, PURPLE_START_Y, 1.6, 2.8)
+        route = self.map.route(trajectory.Pose(PURPLE_START_X, PURPLE_START_Y), trajectory.Pose(1.6, 2.8))
         self.assertEquals(len(route), 0)
 
 

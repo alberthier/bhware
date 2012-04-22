@@ -43,7 +43,7 @@ class WaitStart(statemachine.State):
             import sys
             cProfile.runctx("self.event_loop.map.route(self.robot().pose.x, self.robot().pose.y, 1.6, 2.0)", None, { "self": self })
             sys.stdout.flush()
-            self.event_loop.map.route(self.robot().pose.x, self.robot().pose.y, 0.5, 1.0)
+            self.event_loop.map.route(self.robot().pose, trajectory.Pose(0.5, 1.0, None, True))
             #self.event_loop.map.route(self.robot().pose.x, self.robot().pose.y, 1.8, 2.8)
 
 
@@ -71,7 +71,7 @@ class TestTraj(statemachine.State):
 
     def on_enter(self):
         walk = commonstates.TrajectoryWalk(None, TEAM_UNKNOWN)
-        points = self.event_loop.map.route(self.robot().pose.x, self.robot().pose.y, 1.6, 2.0)
+        points = self.event_loop.map.route(self.robot().pose, trajectory.Pose(1.6, 2.0, None, True))
         x = self.robot().pose.x
         y = self.robot().pose.y
         logger.log("{}".format(self.robot().team))
