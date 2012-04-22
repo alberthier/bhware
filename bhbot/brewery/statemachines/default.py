@@ -41,9 +41,9 @@ class WaitStart(statemachine.State):
             self.sent = True
             import cProfile
             import sys
-            cProfile.runctx("self.event_loop.map.route(self.robot().pose.x, self.robot().pose.y, 1.6, 2.0)", None, { "self": self })
+            cProfile.runctx("import trajectory;self.event_loop.map.route(self.robot().pose, trajectory.Pose(1.6, 2.0, virtual=True))", None, { "self": self })
             sys.stdout.flush()
-            self.event_loop.map.route(self.robot().pose, trajectory.Pose(0.5, 1.0, None, True))
+            self.event_loop.map.route(self.robot().pose, trajectory.Pose(0.5, 1.0, virtual=True))
             #self.event_loop.map.route(self.robot().pose.x, self.robot().pose.y, 1.8, 2.8)
 
 
