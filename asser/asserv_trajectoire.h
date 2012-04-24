@@ -34,11 +34,7 @@
 #define POWER5(a) ((a)*(a)*(a)*(a)*(a))
 
 /* Nombre max de points pouvant definir la trajectoire */
-#ifndef PIC32_BUILD
-#define NBRE_MAX_PTS_TRAJ           70
-#else
-#define NBRE_MAX_PTS_TRAJ           5
-#endif
+#define NBRE_MAX_PTS_TRAJ           62
 
 #ifndef PIC32_BUILD
 #define NBR_ASSER_LOG_VALUE         60
@@ -91,24 +87,24 @@ typedef struct
 typedef struct
 {
     float                   distance;
-    float                   mx[2];
-    float                   my[2];
-    float                   qx[2];                  /* Defini pour l'ordre 5 */
-    float                   qy[2];
+    float                   qx;                  /* Defini pour l'ordre 5 */
+    float                   qy;
     float                   ax;
     float                   ay;
     float                   bx;
     float                   by;
-    float                   t[2];
+    float                   aix;
+    float                   aiy;
+    float                   bix;
+    float                   biy;
     unsigned int            i;
-    unsigned int            ordre;
 } segmentTrajectoireBS;
 
 typedef struct
 {
     unsigned int            mouvement;
     ParametresProfilVitesse profilVitesse;
-    segmentTrajectoireBS    segmentTrajBS[NBRE_MAX_PTS_TRAJ];
+    segmentTrajectoireBS    segmentTrajBS[NBRE_MAX_PTS_TRAJ+1];
     unsigned int            nbreSegments;
     ParametresRotation      rotation;
     float                   distance;
@@ -142,12 +138,15 @@ extern unsigned char        Sample;
 /** Pour prendre les mesures 1/2 */
 extern unsigned char        TakeMesure;
 
+#define CONVERT_DISTANCE(d) (((float)d)/10000.0)
+#define CONVERT_FLOAT2SHORT_DISTANCE(d) ((unsigned short)((d) * 10000.0))
+
 /* Prototypes de function globales asserv_trajectoire */
 
 extern void                 ASSER_TRAJ_InitialisationGenerale(void);
-extern void                 ASSER_TRAJ_InitialisationTrajectoire(Pose poseRobot, PtTraj * point, unsigned int nbrePts, unsigned int mouvement);
+extern void                 ASSER_TRAJ_InitialisationTrajectoire(Pose poseRobot, PtTraj * point, unsigned int nbrePts, unsigned int mouvement, float angle_rad);
 extern void                 ASSER_TRAJ_AsservissementMouvementRobot(Pose poseRobot, VitessesRobotUnicycle * vitessesConsignes);
-extern Pose                 ASSER_TRAJ_Trajectoire(float t);
+extern Pose                 ASSER_TRAJ_Trajectoire(segmentTrajectoireBS * segmentTraj, unsigned int iSegment, float t);
 extern unsigned int         ASSER_TRAJ_GetSegmentCourant(void);
 extern void                 ASSER_TRAJ_LogAsser(char * keyWord, unsigned char index, float val);
 extern void                 ASSER_TRAJ_ResetLogAsserTable(void);

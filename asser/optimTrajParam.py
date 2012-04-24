@@ -72,8 +72,8 @@ def stdoutParser(l_line):
 
 def MSG_init_pose(x=0.0, y=0.0, angle=0.0) :
     #generation d'un message d'init de pose
-    poseInit = commandMsg("INIT_POSE_ROBOT 0 0")
-    poseInit.addPose(str(x) + " " + str(y) + " " + str(angle) + " " + "0.0")
+    poseInit = commandMsg("INIT_POSE_ROBOT 0 0 " + str(angle))
+    poseInit.addPose(str(x) + " " + str(y))
     return poseInit.cmdMsgGeneration()
 
 def send_init_pose(process, x=0.0, y=0.0, angle=0.0) :
@@ -208,7 +208,7 @@ def send_config_simulator(simulator_process, d_cfgTraj) :
                                 d_cfgTraj['Rapport_reduction'])
 
 
-def trajFunction(d_cfgTraj, Kp = 10.0, Ki = 5.0, K1 = 20.0, K2 = 75.0, K3 = 50.0, R1 = -10.2, R2 = -10.2, T1=2.0, T2=4.48, T3=900.0):
+def trajFunction(d_cfgTraj):
 
     #lancement du simulateur de deplacement
     print("Lancement du simulateur")
@@ -222,14 +222,12 @@ def trajFunction(d_cfgTraj, Kp = 10.0, Ki = 5.0, K1 = 20.0, K2 = 75.0, K3 = 50.0
     #~ send_init_pose(simulator_process, x=0.310000002384, y=0.177000001073, angle=-1.57079637051)
 
     #generation d'un message de commande de deplacement
-    # "MSG_MAIN_GOTO 0:'DEPLACEMENT'/1:'ROTATION' 0:'MARCHE_AVANT'/1:'MARCHE_ARRIERE'"
-    deplacement = commandMsg("MSG_MAIN_GOTO 1 1")   # 'DEPLACEMENT' en 'MARCHE_AVANT'
-    deplacement.addPose(str(d_cfgTraj['Distance']) + " 0.0 0.0 0") # deplacement rectiligne sur la distance d_cfgTraj['Distance']
-    #~ deplacement = commandMsg("MSG_MAIN_GOTO 0 1")   # 'DEPLACEMENT' en 'MARCHE_AVANT'
-    #~ deplacement.addPose("0.0 0.0 -1.57 0")
-
-    #~ deplacement = commandMsg("MSG_MAIN_GOTO 2 1")   # 'DEPLACEMENT_LIGNE_DROITE' en 'MARCHE_AVANT'
-    #~ deplacement.addPose("0.310000002384 0.589999973774 -1.57079637051 1.0")
+    # "MSG_MAIN_GOTO 
+    # 1) 0:'DEPLACEMENT'/1:'ROTATION' 
+    # 2) 1:'MARCHE_AVANT'/-1:'MARCHE_ARRIERE'"
+    # 3) angle d'arrivee
+    deplacement = commandMsg("MSG_MAIN_GOTO 1 1 0.0")   # 'DEPLACEMENT' en 'MARCHE_AVANT'
+    deplacement.addPose(str(d_cfgTraj['Distance']) + " 0.0") # deplacement rectiligne sur la distance d_cfgTraj['Distance']
 
     #transmission de commandes de deplacement par l'entree standard
     simulator_process.stdin.write(deplacement.cmdMsgGeneration())
@@ -514,7 +512,7 @@ def affichageTraj2011(d_traj):
 
     #~ plot([index*periode for index in range(len(d_traj["ASSER_Running"]))], d_traj["ASSER_Running"], 'o', label='ASSER_Running')
 
-    plot([index*periode for index in range(len(d_traj["val_tab_vit"]))], d_traj["val_tab_vit"], '-', label='vitesse profil')
+    #plot([index*periode for index in range(len(d_traj["val_tab_vit"]))], d_traj["val_tab_vit"], '-', label='vitesse profil')
 
     #~ print("decc_tempsAcc_float: " + str(d_traj["decc_tempsAcc_float"]))
     #~ print("decc_tempsAcc: " + str(d_traj["decc_tempsAcc"]))
@@ -540,12 +538,13 @@ def affichageTraj2011(d_traj):
     grid(True)
     title("tensions moteurs")
 
-    figure(5)
+    #~ figure(5)
+    
     #plot(d_traj["index_get_vitesseGabarit"])
     #~ plot(d_traj["index_tab_vit"])
     #~ plot(d_traj["dist_parcourue"], d_traj["val_tab_vit"])
     #~ plot(d_traj["val_tab_vit"])
-    plot([index*periode for index in range(len(d_traj["dist_parcourue"]))], d_traj["dist_parcourue"])
+#    plot([index*periode for index in range(len(d_traj["dist_parcourue"]))], d_traj["dist_parcourue"])
     #~ plot(d_traj["angleRobot"], '-o')
     #~ plot(d_traj["angleRef"], '-o')
     #~ plot(d_traj["nbdepas"])
@@ -556,9 +555,10 @@ def affichageTraj2011(d_traj):
     #~ print("poseRobotInitX: " + str(d_traj["poseRobotInitX"]))
     #~ print("poseRobotInitY: " + str(d_traj["poseRobotInitY"]))
     #~ plot(d_traj["thetaPoseReference"], label="thetaPoseReference")
+    
     #legend()
-    grid(True)
-    title("Distance parcourue")
+    #~ grid(True)
+    #~ title("Distance parcourue")
 
     #~ affichageGabaritVitesse(d_traj)
 
@@ -675,6 +675,7 @@ def affichageGabaritVitesse_2012(d_traj):
     #~ plot(d_traj["gabarit_acceleration_max"], [0 for index in range(len(d_traj["gabarit_acceleration_max"]))], '-or')
     print("taille tab gabarit vitesse : " + str(len(d_traj["gabarit_vitesse"])))
     #~ print("nb acc max : " + str(len(d_traj["gabarit_acceleration_max"])))
+    print("init_gabarit:")
     for val in d_traj["init_gabarit"] :
         print(val)
     grid()
@@ -756,11 +757,31 @@ def optimParam_TempsAcc(d_cfgTraj_local) :
 #~ sys.exit(2)
 
 #~ d_cfgTraj = optimParam_TempsAcc(d_cfgTraj)
-#~ traj = trajFunction(d_cfgTraj)
-traj = trajTest(d_cfgTraj)
+traj = trajFunction(d_cfgTraj)
+#~ traj = trajTest(d_cfgTraj)
 affichageGabaritVitesse_2012(traj)
+
+#~ print(len(traj["def_xTraj"]))
+#~ print([traj["def_xTraj"][0], traj["def_yTraj"][0]])
+#~ print([traj["def_xTraj"][1], traj["def_yTraj"][1]])
+#~ print([traj["def_xTraj"][2], traj["def_yTraj"][2]])
+#~ print([traj["def_xTraj"][-1], traj["def_yTraj"][-1]])
+
+#~ print(traj["pti"])
+#~ print(traj["disti"])
+print(traj["distance_seg"])
+#~ print(traj["vpointe"])
+
+#~ figure()
+#~ N = len(traj["def_xTraj"])
+#~ plot(traj["def_xTraj"][:N], traj["def_yTraj"][:N], '-o')
+#~ plot(traj["def_xTraj"][0], traj["def_yTraj"][0], '-oy')
+#~ plot(traj["def_xTraj"][-1], traj["def_yTraj"][-1], '-or')
+#~ # plot(traj["def_xTraj"][1], traj["def_yTraj"][1], '-og')
+#~ show()
+
 affichageTraj2011(traj)
 #~ affichageTestAccDcecc(traj)
 
 
-sys.exit(2)
+#~ sys.exit(2)

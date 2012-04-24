@@ -24,7 +24,7 @@ unsigned char   ASSER_FragmentTraj  =   False;
 //const float     PI              =   3.1415;
 
 //extern void SIMU_REDEF_ASSER_GoTo(Vecteur *pointInter, unsigned int nbrPtsInter, Pose poseArrivee, unsigned int Mouvement, signed int Marche)
-extern void SIMU_REDEF_ASSER_GoTo(PtTraj *p_chemin, unsigned int nbrePtsChemin, unsigned int Mouvement, signed int Marche)
+extern void SIMU_REDEF_ASSER_GoTo(PtTraj *p_chemin, unsigned int nbrePtsChemin, unsigned int Mouvement, signed int Marche, float angle_rad)
 {
 //    #ifdef ASSER_POS
 //        Vecteur arrivee;
@@ -44,7 +44,7 @@ extern void SIMU_REDEF_ASSER_GoTo(PtTraj *p_chemin, unsigned int nbrePtsChemin, 
 //    #endif
 
     //ASSER_TRAJ_InitialisationTrajectoire(POS_GetPoseAsserRobot(), pointInter, nbrPtsInter, poseArrivee, Mouvement);
-    ASSER_TRAJ_InitialisationTrajectoire(POS_GetPoseAsserRobot(), p_chemin, nbrePtsChemin, Mouvement);
+    ASSER_TRAJ_InitialisationTrajectoire(POS_GetPoseAsserRobot(), p_chemin, nbrePtsChemin, Mouvement, angle_rad);
 
     /* Declenchement de l'asservissement */
     ASSER_Running = True;

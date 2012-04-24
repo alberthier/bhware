@@ -290,6 +290,7 @@ void POS_Positionnement(signed int delta_impDroite, signed int delta_impGauche)
 /**********************************************************************/
 float POS_ModuloAngle(float angle)
 {
+    angle = fmodf(angle, (2.0 * PI));
     if (angle >= PI)
     {
         angle -= (2.0 * PI);

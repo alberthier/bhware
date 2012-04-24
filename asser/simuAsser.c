@@ -649,6 +649,7 @@ int SIMU_AsserVitessePI(void)
     PtTraj chemin[1];
     unsigned char mouvement;
     char marche;
+    float angle_arrivee;
     unsigned int nbrePtsChemin;
     float vitesse_cons_mps = 0.0;
 
@@ -657,14 +658,13 @@ int SIMU_AsserVitessePI(void)
     poseInit.angle = 0.0;
     POS_InitialisationPoseRobot(poseInit);
     ASSER_TRAJ_InitialisationGenerale();
-    chemin[0].pose.x = poseInit.x + len_parcours;
-    chemin[0].pose.y = poseInit.y;
-    chemin[0].pose.angle = 0.0;
-    chemin[0].mask = 1u;
+    chemin[0].x = CONVERT_FLOAT2SHORT_DISTANCE(poseInit.x + len_parcours);
+    chemin[0].y = CONVERT_FLOAT2SHORT_DISTANCE(poseInit.y);
+    angle_arrivee = 0.0;
     nbrePtsChemin = 1u;
     mouvement = DEPLACEMENT;
     marche = MARCHE_AVANT;
-    SIMU_REDEF_ASSER_GoTo(chemin, nbrePtsChemin, mouvement, marche);
+    SIMU_REDEF_ASSER_GoTo(chemin, nbrePtsChemin, mouvement, marche, angle_arrivee);
 
     compteurPeriodePI = 0;
     ASSER_TRAJ_LogAsser("distPI", NBR_ASSER_LOG_VALUE, distance_parcourue);

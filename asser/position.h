@@ -59,8 +59,8 @@ typedef struct __attribute__ ((packed))
 
 typedef struct __attribute__ ((packed))
 {
-    Pose            pose;
-    unsigned char   mask;
+    unsigned short  x;
+    unsigned short  y;
 } PtTraj;
 
 typedef struct __attribute__ ((packed))
