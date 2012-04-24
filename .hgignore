@@ -1,6 +1,8 @@
 /.*\.pyc$
 /.*\.o$
+/.*\.so$
 /logs/
+/remote_logs/
 drunkstar/host/
 drunkstar/dl/
 drunkstar/buildroot-2012.02/

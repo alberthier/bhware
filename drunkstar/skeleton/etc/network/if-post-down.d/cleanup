@@ -1,6 +1,0 @@
-#!/bin/sh
-
-if [ "$IFACE" = "wlan0" ]; then
-    rm /var/run/wpa_supplicant/wlan0
-fi
-

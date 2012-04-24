@@ -15,12 +15,13 @@ from definitions import *
 
 class RobotController(object):
 
-    def __init__(self, team, game_controller, view, robot_layer, robot_trajectory_layer):
+    def __init__(self, team, game_controller, view, robot_layer, robot_trajectory_layer, robot_routing_layer):
         self.team = team
         self.game_controller = game_controller
         self.view = view
         self.robot_layer = robot_layer
         self.robot_trajectory_layer = robot_trajectory_layer
+        self.robot_routing_layer = robot_routing_layer
         robot_layer.robot_controller = self
         self.process = None
         self.socket = None
@@ -106,6 +107,7 @@ class RobotController(object):
                     packet.dispatch(self)
                     packet.dispatch(self.robot_layer)
                     packet.dispatch(self.robot_trajectory_layer)
+                    packet.dispatch(self.robot_routing_layer)
 
 
     def on_goto(self, packet):
@@ -122,30 +124,6 @@ class RobotController(object):
 
     def on_stop(self, packet):
         self.stop()
-
-
-    def on_gripper_control(self, packet):
-        self.send_packet(packet)
-
-
-    def on_sweeper_control(self, packet):
-        self.send_packet(packet)
-
-
-    def on_map_arm_control(self, packet):
-        self.send_packet(packet)
-
-
-    def on_map_gripper_control(self, packet):
-        self.send_packet(packet)
-
-
-    def on_empty_tank_control(self, packet):
-        self.send_packet(packet)
-
-
-    def on_fabric_store_control(self, packet):
-        self.send_packet(packet)
 
 
     def on_resettle(self, packet):
@@ -204,12 +182,6 @@ class RobotController(object):
         packet.reason = reason
         packet.current_pose = self.robot_layer.get_pose()
         packet.current_point_index = current_point_index
-        self.send_packet(packet)
-
-
-    def send_opponent_detected(self):
-        packet = packets.TurretDetect()
-        packet.angle = math.pi
         self.send_packet(packet)
 
 

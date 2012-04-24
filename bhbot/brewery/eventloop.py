@@ -2,19 +2,14 @@
 # encoding: utf-8
 
 import asyncore
-import os
 import socket
-import imp
-import inspect
 import errno
-import traceback
 import datetime
 import bisect
 import fcntl
 import termios
 import ctypes
 import struct
-import serial
 
 import logger
 import packets
@@ -24,7 +19,11 @@ import web.webinterface
 import leds
 import robot
 import opponentdetector
+import trajectory
 from definitions import *
+
+if IS_HOST_DEVICE_ARM :
+    import serial
 
 
 
@@ -137,7 +136,7 @@ class RobotLogDeviceChannel(asyncore.dispatcher):
                     logger.log(self.buffer[:i], "PIC")
                     self.buffer = self.buffer[i + 1:]
                 else:
-                    break;
+                    break
         except:
             pass
 
@@ -187,10 +186,8 @@ class RobotControlDeviceStarter(object):
 
     def __init__(self, eventloop):
         logger.log("Connecting to {}:{} ...".format(REMOTE_IP, REMOTE_PORT))
-        self.control_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.control_socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
-        self.log_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.log_socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
+        self.control_socket = None
+        self.log_socket = None
         self.eventloop = eventloop
         self.timer = Timer(eventloop, 1000, self.try_connect, False)
         if not self.try_connect():
@@ -200,6 +197,8 @@ class RobotControlDeviceStarter(object):
     def try_connect(self):
         connected = False
         try:
+            self.control_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self.control_socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
             self.control_socket.connect((REMOTE_IP, REMOTE_PORT))
             self.eventloop.robot_control_channel = RobotControlDeviceChannel(self.eventloop, self.control_socket)
             leds.orange.off()
@@ -209,12 +208,15 @@ class RobotControlDeviceStarter(object):
             leds.orange.toggle()
         if connected:
             try:
+                self.log_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                self.log_socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
                 self.log_socket.connect((REMOTE_IP, REMOTE_LOG_PORT))
                 self.eventloop.robot_log_channel = RobotLogDeviceChannel(self.log_socket)
-                logger.log("Connected to the log stocket {}:{}".format(REMOTE_IP, REMOTE_LOG_PORT))
+                logger.log("Connected to the log socket {}:{}".format(REMOTE_IP, REMOTE_LOG_PORT))
             except Exception as e:
                 # Log socket is not mandatory. If the connection fails, continue without it.
-                logger.log("Unable to connect to the log stocket {}:{} ({}), continuing without PIC logs".format(REMOTE_IP, REMOTE_LOG_PORT, e))
+                logger.log("Unable to connect to the log socket {}:{} ({}), continuing without PIC logs".format(REMOTE_IP, REMOTE_LOG_PORT, e))
+            self.timer.stop()
             self.eventloop.on_turret_boot(None)
             self.eventloop.create_fsm()
         return connected
@@ -236,6 +238,7 @@ class EventLoop(object):
         self.webserver_port = webserver_port
         self.opponent_detector = opponentdetector.OpponentDetector(self)
         self.stopping = False
+        self.map = trajectory.Map(self)
         self.timers = []
 
 
@@ -248,7 +251,7 @@ class EventLoop(object):
 
     def do_read(self, channel):
         while True :
-            if channel.packet == None:
+            if channel.packet is None:
                 try:
                     b = channel.bytes_available()
                     if b == 0:
@@ -287,6 +290,7 @@ class EventLoop(object):
                         channel.packet.dispatch(self)
                         channel.packet.dispatch(self.robot)
                         channel.packet.dispatch(self.opponent_detector)
+                        channel.packet.dispatch(self.map)
                         channel.packet.dispatch(self.get_current_state())
 
                         channel.packet = None
@@ -300,7 +304,7 @@ class EventLoop(object):
 
 
     def on_turret_boot(self, packet):
-        if self.turret_channel != None:
+        if self.turret_channel is not None:
             packet = packets.TurretInit()
             packet.mode = TURRET_INIT_MODE_WRITE
             packet.short_distance = TURRET_SHORT_DISTANCE_DETECTION_RANGE
@@ -311,7 +315,7 @@ class EventLoop(object):
 
 
     def send_packet(self, packet):
-        if self.root_state.sub_state != None:
+        if self.root_state.sub_state is not None:
             logger.log_packet(packet, "ARM")
             buffer = packet.serialize()
             self.robot_control_channel.send(buffer)
@@ -327,25 +331,26 @@ class EventLoop(object):
 
     def get_current_state(self):
         state = self.root_state
-        while state.sub_state != None:
+        while state.sub_state is not None:
             state = state.sub_state
         return state
 
 
     def create_fsm(self):
         state = statemachine.instantiate_state_machine(self.state_machine_name, self)
-        if state == None :
-            logger.log("No 'Main' state machine found in '{}'".format(state_machine_file))
+        if state is None:
             self.stop()
         else:
             self.root_state.switch_to_substate(state)
             self.send_packet(packets.ControllerReady())
+        if IS_HOST_DEVICE_PC:
+            self.map.send_walls_to_simulator()
 
 
     def start(self):
         logger.log("Starting internal web server on port {}".format(self.webserver_port))
         self.web_server = asyncwsgiserver.WsgiServer("", self.webserver_port, web.webinterface.create_app(self))
-        if (SERIAL_PORT_PATH != None):
+        if SERIAL_PORT_PATH is not None:
             try:
                 self.turret_channel = TurretChannel(SERIAL_PORT_PATH, SERIAL_PORT_SPEED, self)
             except serial.SerialException:
@@ -365,10 +370,10 @@ class EventLoop(object):
     def stop(self):
         logger.log("Stopping...")
         self.stopping = True
-        if self.turret_channel != None:
+        if self.turret_channel is not None:
             self.turret_channel.close()
-        if self.robot_control_channel != None:
+        if self.robot_control_channel is not None:
             self.robot_control_channel.close()
-        if self.robot_log_channel != None:
+        if self.robot_log_channel is not None:
             self.robot_log_channel.close()
         logger.close()

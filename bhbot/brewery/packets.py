@@ -4,6 +4,7 @@
 import sys
 import struct
 import inspect
+import copy
 import math
 from collections import OrderedDict
 
@@ -25,7 +26,7 @@ import trajectory
 #      #ffe4c4 bisque                            #00ff00 lime
 #      #000000 black                          X  #32cd32 limegreen
 #      #0000ff blue                              #faf0e6 linen
-#      #8a2be2 blueviolet                        #ff00ff magenta
+#      #8a2be2 blueviolet                     X  #ff00ff magenta
 #   X  #a52a2a brown                             #800000 maroon
 #      #deb887 burlywood                         #66cdaa mediumaquamarine
 #   X  #5f9ea0 cadetblue                         #0000cd mediumblue
@@ -34,7 +35,7 @@ import trajectory
 #   X  #ff7f50 coral                             #3cb371 mediumseagreen
 #      #6495ed cornflowerblue                    #7b68ee mediumslateblue
 #      #fff8dc cornsilk                          #00fa9a mediumspringgreen
-#   X  #dc143c crimson                           #48d1cc mediumturquoise
+#      #dc143c crimson                           #48d1cc mediumturquoise
 #   X  #00ffff cyan                              #c71585 mediumvioletred
 #   X  #00008b darkblue                       X  #191970 midnightblue
 #      #008b8b darkcyan                          #f5fffa mintcream
@@ -62,7 +63,7 @@ import trajectory
 #   X  #b22222 firebrick                         #ff0000 red
 #      #fffaf0 floralwhite                       #bc8f8f rosybrown
 #      #228b22 forestgreen                    X  #4169e1 royalblue
-#      #ff00ff fuchsia                           #8b4513 saddlebrown
+#      #ff00ff fuchsia                        X  #8b4513 saddlebrown
 #      #dcdcdc gainsboro                         #fa8072 salmon
 #      #f8f8ff ghostwhite                        #f4a460 sandybrown
 #   X  #ffd700 gold                              #2e8b57 seagreen
@@ -78,7 +79,7 @@ import trajectory
 #      #fffff0 ivory                          X  #4682b4 steelblue
 #      #f0e68c khaki                             #d2b48c tan
 #      #e6e6fa lavender                          #008080 teal
-#      #fff0f5 lavenderblush                     #d8bfd8 thistle
+#      #fff0f5 lavenderblush                  X  #d8bfd8 thistle
 #      #7cfc00 lawngreen                         #ff6347 tomato
 #      #fffacd lemonchiffon                      #40e0d0 turquoise
 #      #add8e6 lightblue                         #ee82ee violet
@@ -107,7 +108,7 @@ class PacketItem(object):
     def __init__(self, name, default_value, description = None):
         self.name = name
         self.default_value = default_value
-        if description == None:
+        if description is None:
             description = self.DESCRIPTION
         else:
             self.description = description
@@ -364,74 +365,35 @@ class UEnum8Item(UInt8Item):
 
 
 
-class PoseWithOptionalAngleItem(PacketItem):
+class PointItem(PacketItem):
 
-    C_TYPE = 'fffB'
-    DESCRIPTION = "Robot pose with optional angle"
+    C_TYPE = 'HH'
+    DESCRIPTION = "Field coordinates"
 
     def __init__(self, name, description = None):
         PacketItem.__init__(self, name, trajectory.Pose(), description)
 
 
     def to_value_list(self, value, buf):
-        buf.append(value.x)
-        buf.append(value.y)
-        if value.angle == None:
-            buf.append(0.0)
-            buf.append(0)
-        else:
-            buf.append(value.angle)
-            buf.append(1)
+        buf.append(int(value.x * 10000.0))
+        buf.append(int(value.y * 10000.0))
 
 
     def from_value_list(self, buf):
-        value = trajectory.Pose(buf[0], buf[1], buf[2])
-        if buf[3] == 0:
-            value.angle = None
-        del buf[0:4]
+        value = trajectory.Pose(float(buf[0]) / 10000.0, float(buf[1]) / 10000.0)
+        del buf[0:2]
         return value
 
 
-    def to_dict_value(self, value, pretty = False):
-        ret = OrderedDict()
-        if pretty:
-            ret["x"]     = "{:0.4f}".format(value.x)
-            ret["y"]     = "{:0.4f}".format(value.y)
-            if value.angle != None:
-                ret["angle"] = "{:0.4f} ({:0.4f} deg)".format(value.angle, value.angle / math.pi * 180.0)
-            else:
-                ret["angle"] = "None"
-        else:
-            ret["x"]     = value.x
-            ret["y"]     = value.y
-            ret["angle"] = value.angle
-        return ret
 
 
-    def from_dict_value(self, value, pretty = False):
-        pose = trajectory.Pose()
-        pose.x = float(value["x"])
-        pose.y = float(value["y"])
-        angle  = value["angle"]
-        if angle != None:
-            if pretty:
-                pose.angle = float(angle[:angle.find(" (")])
-            else:
-                pose.angle = float(angle)
-        else:
-            pose.angle = None
-        return pose
-
-
-
-
-class PoseItem(PoseWithOptionalAngleItem):
+class PoseItem(PacketItem):
 
     C_TYPE = 'fff'
     DESCRIPTION = "Robot pose"
 
     def __init__(self, name, description = None):
-        PoseWithOptionalAngleItem.__init__(self, name, description)
+        PacketItem.__init__(self, name, trajectory.Pose(), description)
         self.default_value.angle = 0.0
 
 
@@ -447,6 +409,102 @@ class PoseItem(PoseWithOptionalAngleItem):
         return value
 
 
+    def to_dict_value(self, value, pretty = False):
+        ret = OrderedDict()
+        if pretty:
+            ret["x"]     = "{:0.4f}".format(value.x)
+            ret["y"]     = "{:0.4f}".format(value.y)
+            ret["angle"] = "{:0.4f} ({:0.4f} deg)".format(value.angle, value.angle / math.pi * 180.0)
+        else:
+            ret["x"]     = value.x
+            ret["y"]     = value.y
+            ret["angle"] = value.angle
+        return ret
+
+
+    def from_dict_value(self, value, pretty = False):
+        pose = trajectory.Pose()
+        pose.x = float(value["x"])
+        pose.y = float(value["y"])
+        angle  = value["angle"]
+        if pretty:
+            pose.angle = float(angle[:angle.find(" (")])
+        else:
+            pose.angle = float(angle)
+        return pose
+
+
+
+
+class OptionalAngle(FloatRadianItem):
+
+    DESCRIPTION = "Optional angle"
+
+    def __init__(self, name, default_value, description = None):
+        FloatRadianItem.__init__(self, name, default_value, description)
+
+
+    def to_value_list(self, value, buf):
+        if value is not None:
+            buf.append(value)
+        else:
+            buf.append(-1100000.0)
+
+
+    def from_value_list(self, buf):
+        angle = buf[0]
+        del buf[0]
+        if angle < -1000000.0:
+            angle = None
+        return angle
+
+
+
+
+class SimulatorPointItem(PacketItem):
+
+    C_TYPE = 'BH'
+    DESCRIPTION = "Route point"
+
+    def __init__(self, name, default_value, description = None):
+        PacketItem.__init__(self, name, default_value, description)
+
+
+    def to_value_list(self, value, buf):
+        buf.append(value[0])
+        buf.append(value[1])
+
+
+    def from_value_list(self, buf):
+        (x, y) = buf[:2]
+        del buf[:2]
+        return x, y
+
+
+
+
+class SimulatorRectItem(PacketItem):
+
+    C_TYPE = 'BHBH'
+    DESCRIPTION = "Route point"
+
+    def __init__(self, name, default_value, description = None):
+        PacketItem.__init__(self, name, default_value, description)
+
+
+    def to_value_list(self, value, buf):
+        buf.append(value[0])
+        buf.append(value[1])
+        buf.append(value[2])
+        buf.append(value[3])
+
+
+    def from_value_list(self, buf):
+        (x1, y1, x2, y2) = buf[:4]
+        del buf[:4]
+        return x1, y1, x2, y2
+
+
 
 
 class ListItem(PacketItem):
@@ -457,7 +515,7 @@ class ListItem(PacketItem):
     def __init__(self, name, default_value, element_type, max_elements, description = None):
         self.element_type = element_type
         self.max_elements = max_elements
-        if self.C_TYPE == None:
+        if self.C_TYPE is None:
             self.C_TYPE = "B"
             for i in xrange(self.max_elements):
                 self.C_TYPE += self.element_type.C_TYPE
@@ -501,12 +559,12 @@ class ListItem(PacketItem):
 
 
 
-class PoseListItem(ListItem):
+class PointListItem(ListItem):
 
     DESCRIPTION = "Pose list"
 
     def __init__(self, name, default_value, max_elements, description = None):
-        ListItem.__init__(self, name, default_value, PoseWithOptionalAngleItem(""), max_elements, description)
+        ListItem.__init__(self, name, default_value, PointItem(""), max_elements, description)
 
 
 
@@ -529,17 +587,17 @@ class BasePacket(object):
 
     def __init__(self, **kwargs):
         cls = type(self)
-        if cls.STRUCT == None:
+        if cls.STRUCT is None:
             fmt = "<B"
             for elt in self.DEFINITION:
                 fmt += elt.C_TYPE
             size = struct.calcsize(fmt)
             pad_size = cls.MAX_SIZE - size
-            if pad_size != 0:
+            if pad_size > 0:
                 fmt += str(pad_size) + "x"
             cls.STRUCT = struct.Struct(fmt)
 
-        if cls.HANDLER_METHOD == None:
+        if cls.HANDLER_METHOD is None:
             cls.HANDLER_METHOD = "on"
             for c in cls.__name__:
                 if c.isupper():
@@ -551,7 +609,8 @@ class BasePacket(object):
             if kwargs.has_key(elt.name):
                 value = kwargs[elt.name]
             else:
-                value = elt.default_value
+                # Call the constructor of the value to duplicate it. This is necessary for lists
+                value = copy.deepcopy(elt.default_value)
             setattr(self, elt.name, value)
 
 
@@ -601,6 +660,8 @@ class BasePacket(object):
     def dispatch(self, obj):
         if hasattr(obj, self.HANDLER_METHOD):
             getattr(obj, self.HANDLER_METHOD)(self)
+        if hasattr(obj, 'on_packet'):
+            getattr(obj, 'on_packet')(self)
 
 
 
@@ -658,9 +719,10 @@ class Goto(BasePacket):
     TYPE = 4
     LOGVIEW_COLOR = "#ff7f50"
     DEFINITION = (
-        UEnum8Item  ('movement',   MOVEMENT_MOVE,     'MOVEMENT'),
-        Enum8Item   ('direction',  DIRECTION_FORWARD, 'DIRECTION'),
-        PoseListItem('points', [], 19),
+        UEnum8Item   ('movement',   MOVEMENT_MOVE,     'MOVEMENT'),
+        Enum8Item    ('direction',  DIRECTION_FORWARD, 'DIRECTION'),
+        OptionalAngle('angle',      None,              "Destination angle"),
+        PointListItem('points', [], 62),
     )
 
 
@@ -683,18 +745,6 @@ class GotoFinished(BasePacket):
         PoseItem  ('current_pose'),
         UInt8Item ('current_point_index', 0,                          "Last reached point index of the point list given in the Goto packet"),
     )
-
-
-
-
-class Blocked(BasePacket):
-
-    TYPE = 7
-    LOGVIEW_COLOR = "#dc143c"
-    DEFINITION = (
-        Enum8Item('side', BLOCKED_FRONT, 'BLOCKING'),
-    )
-
 
 
 
@@ -818,10 +868,13 @@ class EmptyTankControl(BasePacket):
 
 
 
-class GoldBarDetected(BasePacket):
+class GoldBarDetection(BasePacket):
 
     TYPE = 19
     LOGVIEW_COLOR = "#ffd700"
+    DEFINITION = (
+        UEnum8Item('status',  GOLD_BAR_MISSING,     'GOLD_BAR'),
+    )
 
 
 
@@ -852,6 +905,67 @@ class SimulatorData(BasePacket):
     LOGVIEW_COLOR = "#4169e1"
     DEFINITION = (
         UInt8Item('leds', 0, "Dockstar leds status"),
+    )
+
+
+
+
+class SimulatorResetRoutePath(BasePacket):
+
+    TYPE = 104
+    LOGVIEW_DEFAULT_ENABLED = False
+    LOGVIEW_COLOR = "#ff00ff"
+
+
+
+
+class SimulatorRoutePath(BasePacket):
+
+    TYPE = 105
+    LOGVIEW_DEFAULT_ENABLED = False
+    LOGVIEW_COLOR = "#8b4513"
+    DEFINITION = (
+        ListItem('points', [], SimulatorPointItem("", (0, 0)), 84, "Route path points"),
+    )
+
+
+
+
+class SimulatorSimplifiedRoutePath(BasePacket):
+
+    TYPE = 106
+    LOGVIEW_DEFAULT_ENABLED = False
+    LOGVIEW_COLOR = "#8b4513"
+    DEFINITION = (
+        ListItem('points', [], SimulatorPointItem("", (0, 0)), 84, "Route path points"),
+    )
+
+
+
+
+class SimulatorRouteWalls(BasePacket):
+
+    TYPE = 107
+    LOGVIEW_DEFAULT_ENABLED = False
+    LOGVIEW_COLOR = "#d8bfd8"
+    DEFINITION = (
+        ListItem('walls', [], SimulatorRectItem("", (0, 0, 0, 0)), 42, "Route walls"),
+    )
+
+
+
+
+class SimulatorOpponentsPositions(BasePacket):
+
+    TYPE = 108
+    LOGVIEW_DEFAULT_ENABLED = False
+    LOGVIEW_COLOR = "#ba55d3"
+    DEFINITION = (
+        UEnum8Item('robot',    OPPONENT_ROBOT_MAIN, 'OPPONENT_ROBOT'),
+        BoolItem  ('present',  True,                "Opponent present"),
+        FloatItem ('x',        -1.0,                "Opponent X coordinate"),
+        FloatItem ('y',        -1.0,                "Opponent Y coordinate"),
+        FloatItem ('distance', -1.0,                "Estimated distannce"),
     )
 
 

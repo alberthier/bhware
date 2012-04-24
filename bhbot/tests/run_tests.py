@@ -8,15 +8,17 @@ import sys
 
 
 
-def update_pythonpath():
+def patch_pythonpath():
     brewery_root_path = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
-    sys.path.append(os.path.join(brewery_root_path, "brewery"))
+    to_append = os.path.join(brewery_root_path, "brewery")
+    if not to_append in sys.path :
+        sys.path.append(to_append)
 
 
 
 
 if __name__ == "__main__":
-    update_pythonpath()
+    patch_pythonpath()
     names = []
     for f in os.listdir(os.path.dirname(os.path.realpath(__file__))):
         if f.endswith(".py") and f.startswith("test"):

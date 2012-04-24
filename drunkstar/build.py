@@ -22,6 +22,8 @@ OUTPUT_DIR        = os.path.join(os.path.dirname(os.path.realpath(__file__)), BU
 def download():
     for (archive_name, url) in PACKAGES:
         archive_file = "dl/{}".format(archive_name)
+        if not os.path.exists("dl"):
+            os.mkdir("dl")
         if not os.path.exists(archive_file):
             call(["wget", url, "-O", archive_file])
 

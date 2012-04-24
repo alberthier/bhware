@@ -10,8 +10,8 @@ import socket
 # Constants
 
 # Field
-FIELD_WIDTH                            = 3.0
-FIELD_HEIGHT                           = 2.0
+FIELD_Y_SIZE                           = 3.0
+FIELD_X_SIZE                           = 2.0
 
 # Game elements
 COIN_RADIUS                            = 0.060
@@ -22,8 +22,8 @@ GOLD_BAR_LENGTH                        = 0.150
 GOLD_BAR_COLOR                         = "#ffdd00"
 
 # Robot
-ROBOT_WIDTH                            = 0.276
-ROBOT_HEIGHT                           = 0.322
+ROBOT_X_SIZE                           = 0.276
+ROBOT_Y_SIZE                           = 0.322
 ROBOT_CENTER_X                         = 0.099
 ROBOT_CENTER_Y                         = 0.161
 ROBOT_GYRATION_RADIUS                  = 0.2386
@@ -31,12 +31,12 @@ ROBOT_EXPANDED_GRIPPER_GYRATION_RADIUS = 0.321965
 ROBOT_EXPANDED_SWEEPER_GYRATION_RADIUS = 0.289355
 ROBOT_EXPANDED_GYRATION_RADIUS         = max(ROBOT_EXPANDED_GRIPPER_GYRATION_RADIUS, ROBOT_EXPANDED_SWEEPER_GYRATION_RADIUS)
 
-# Start positons (the robot starts 90 degrees rotated that's why *_START_Y use ROBOT_WIDTH and ROBOT_CENTER_X)
+# Start positons (the robot starts 90 degrees rotated that's why *_START_Y use ROBOT_X_SIZE and ROBOT_CENTER_X)
 RED_START_X                            = 0.310
-RED_START_Y                            = FIELD_WIDTH - (ROBOT_WIDTH - ROBOT_CENTER_X)
+RED_START_Y                            = FIELD_Y_SIZE - (ROBOT_X_SIZE - ROBOT_CENTER_X)
 RED_START_ANGLE                        = math.pi / 2.0
 PURPLE_START_X                         = 0.310
-PURPLE_START_Y                         = ROBOT_WIDTH - ROBOT_CENTER_X
+PURPLE_START_Y                         = ROBOT_X_SIZE - ROBOT_CENTER_X
 PURPLE_START_ANGLE                     = -math.pi / 2.0
 
 # Rule specific
@@ -49,12 +49,8 @@ KEEP_ALIVE_DELAY_MS                    = 200
 EVENT_LOOP_TICK_RESOLUTION_S           = 0.05
 
 # Brewery execution host
-if socket.gethostname() == "drunkstar":
-    IS_HOST_DEVICE_ARM                 = True
-    IS_HOST_DEVICE_PC                  = False
-else:
-    IS_HOST_DEVICE_ARM                 = False
-    IS_HOST_DEVICE_PC                  = True
+IS_HOST_DEVICE_ARM                     = socket.gethostname() == "drunkstar"
+IS_HOST_DEVICE_PC                      = not IS_HOST_DEVICE_ARM
 
 # Remote device connection
 if IS_HOST_DEVICE_ARM:
@@ -92,19 +88,28 @@ WEB_SERVER_PORT                        = 80
 STATE_MACHINE                          = "default"
 
 # Router map resolution
-ROUTER_MAP_RESOLUTION                  = 0.01
+ROUTING_MAP_RESOLUTION                 = 0.02
+EVALUATOR_MAP_RESOLUTION               = 0.04
+MAP_WALLS_DISTANCE                     = 0.18
+ASTAR_EFFECTIVE_VS_HEURISTIC_TRADEOFF  = 1.5
+ROUTE_SPLIT_ANGLE                      = math.pi / 3.0
+MAIN_OPPONENT_AVOIDANCE_RANGE          = 0.5
+SECONDARY_OPPONENT_AVOIDANCE_RANGE     = 0.4
+
+# Blocked zone
+BLOCKED_ZONE_SIZE                      = 0.08
+BLOCKED_ZONE_DISAPEARING_MS            = 1000
 
 # Opponent detection
-OPPONENT_DETECTION_ANGLE               = math.pi / 6.0
-OPPONENT_DETECTION_DISAPEARING_TICKS   = 800 * EVENT_LOOP_TICK_RESOLUTION_S
+OPPONENT_DETECTION_DISAPEARING_TICKS   = int(0.5 / EVENT_LOOP_TICK_RESOLUTION_S)
 
 # Blocking opponent handling
 DEFAULT_OPPONENT_WAIT_MS               = 3000
 DEFAULT_OPPONENT_MAX_RETRIES           = 5
 
 # Turret detection ranges
-TURRET_SHORT_DISTANCE_DETECTION_RANGE  = 100
-TURRET_LONG_DISTANCE_DETECTION_RANGE   = 200
+TURRET_SHORT_DISTANCE_DETECTION_RANGE  = 0.55
+TURRET_LONG_DISTANCE_DETECTION_RANGE   = 1.0
 
 
 ########################################################################
@@ -149,7 +154,6 @@ Enum("MOVEMENT",
      "Movement",
      MOVEMENT_ROTATE = 0,
      MOVEMENT_MOVE   = 1,
-     MOVEMENT_LINE   = 2
 )
 
 Enum("DIRECTION",
@@ -161,12 +165,9 @@ Enum("DIRECTION",
 Enum("REASON",
      "Goto finished reason",
      REASON_DESTINATION_REACHED = 0,
-)
-
-Enum("BLOCKING",
-     "Blocking side",
-     BLOCKED_FRONT =  1,
-     BLOCKED_BACK  = -1,
+     REASON_BLOCKED_FRONT       = 1,
+     REASON_BLOCKED_BACK        = 2,
+     REASON_STOP_REQUESTED      = 3,
 )
 
 Enum("AXIS",
@@ -218,11 +219,18 @@ Enum("FABRIC_STORE",
      FABRIC_STORE_HIGH = 1,
 )
 
-Enum("TRAJECTORY_WALK",
-    "Trajectory walk result",
-    TRAJECTORY_WALK_DESTINATION_REACHED = 0,
-    TRAJECTORY_WALK_BLOCKED             = 1,
-    TRAJECTORY_WALK_OPPONENT_DETECTED   = 2,
+Enum("GOLD_BAR",
+     "Gold bar sensor",
+     GOLD_BAR_MISSING = 0,
+     GOLD_BAR_PRESENT = 1,
+)
+
+Enum("TRAJECTORY",
+    "Trajectory walk or navigation result",
+    TRAJECTORY_DESTINATION_REACHED     = 0,
+    TRAJECTORY_BLOCKED                 = 1,
+    TRAJECTORY_OPPONENT_DETECTED       = 2,
+    TRAJECTORY_DESTINATION_UNREACHABLE = 3,
 )
 
 Enum("OPPONENT_ROBOT",

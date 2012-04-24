@@ -28,6 +28,7 @@ class WebState(statemachine.State):
         self.event_loop.root_state = self
 
 
+    #noinspection PyUnusedLocal
     def on_exit_substate(self, substate):
         self.event_loop.root_state = self.old_root_state
 
@@ -47,6 +48,7 @@ class BHWeb(object):
 
     @cherrypy.expose
     def index(self):
+        host = self.eventloop.web_server.current_environ["HTTP_HOST"].split(":")[0]
         html = """<!DOCTYPE html>
 <html>
 <head>
@@ -67,7 +69,7 @@ class BHWeb(object):
   <iframe src="statemachine" name="linktarget" />
 </body>
 </html>
-""".format(socket.gethostname())
+""".format(host)
         return html
 
 
@@ -112,7 +114,8 @@ class BHWeb(object):
         files = os.listdir(LOG_DIR)
         files.sort()
         for f in reversed(files):
-            html += '<li><a href="logs/{0}">{0}</a></li>\n'.format(f)
+            if f.endswith(".py"):
+                html += '<li><a href="logs/{0}">{0}</a></li>\n'.format(f)
 
         html += """</ul>
   </div>
@@ -120,6 +123,17 @@ class BHWeb(object):
 </html>
 """
         return html
+
+
+    @cherrypy.expose
+    def logurls(self):
+        text = ""
+        files = os.listdir(LOG_DIR)
+        files.sort()
+        for f in reversed(files):
+            if f.endswith(".py"):
+                text += 'logs/{0}\n'.format(f)
+        return text
 
 
     @cherrypy.expose
@@ -153,7 +167,7 @@ class BHWeb(object):
 
     def build_element_from_item(self, item, name = None):
         html = ""
-        if name == None:
+        if name is None:
             name = item.name
         if isinstance(item, packets.BoolItem):
             if item.default_value:
@@ -169,7 +183,7 @@ class BHWeb(object):
         elif isinstance(item, packets.PoseWithOptionalAngleItem):
             html += """<tr><td>{}.x (f)</td><td><input type="text" name="{}.x" value="{}"/></td></tr>""".format(name, name, item.default_value.x)
             html += """<tr><td>{}.y (f)</td><td><input type="text" name="{}.y" value="{}"/></td></tr>""".format(name, name, item.default_value.y)
-            if item.default_value.angle != None:
+            if item.default_value.angle is not None:
                 default_angle = item.default_value.angle
             else:
                 default_angle = "0.0"
@@ -196,7 +210,7 @@ class BHWeb(object):
 
 
     def build_item_from_query(self, query, item, name = None):
-        if name == None:
+        if name is None:
             name = item.name
         if isinstance(item, packets.BoolItem):
             return query.has_key(name)
@@ -281,8 +295,7 @@ class BHWeb(object):
                 packet.direction = DIRECTION_BACKWARD
             pose.x = self.eventloop.robot.pose.x + packet.direction * math.cos(self.eventloop.robot.pose.angle) * distance
             pose.y = self.eventloop.robot.pose.y + packet.direction * math.sin(self.eventloop.robot.pose.angle) * distance
-            pose.angle = None
-            packet.movement = MOVEMENT_LINE
+            packet.movement = MOVEMENT_MOVE
             packet.points = [ pose ]
             self.eventloop.send_packet(packet)
         return self.remote_control()

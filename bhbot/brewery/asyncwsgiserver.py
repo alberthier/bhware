@@ -58,6 +58,7 @@ class WsgiRequestHandler(asynchat.async_chat):
             self.state = WsgiRequestHandler.READING_DONE
         if self.state == WsgiRequestHandler.READING_DONE:
             errors = StringIO.StringIO()
+            self.server.current_environ = self.environ.copy()
             handler = wsgiref.handlers.SimpleHandler(self.post_data, self, errors, self.environ, False, False)
             handler.server_software = "BreweryHackerWebServer/2012" + " Python/" + sys.version.split()[0]
             handler.run(self.server.get_app())
@@ -119,6 +120,7 @@ class WsgiServer(asyncore.dispatcher):
         self.host = host
         self.port = port
         self.application = application
+        self.current_environ = {}
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
         self.set_reuse_addr()
         self.bind((self.host, self.port))

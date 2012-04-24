@@ -20,6 +20,7 @@ def instantiate_state_machine(state_machine_name, eventloop):
             return root_state
     else:
         logger.log("No 'Main' state found in '{}'".format(state_machine_file))
+    return None
 
 
 
@@ -83,13 +84,14 @@ class State(object):
         pass
 
 
-    def on_opponent_entered(self, angle):
+    def on_opponent_in_front(self, packet):
         pass
 
 
-    def on_opponent_detected(self, angle):
+    def on_opponent_in_back(self, packet):
         pass
 
 
-    def on_opponent_left(self):
+    #noinspection PyUnusedLocal
+    def on_opponent_disapeared(self, opponent):
         pass

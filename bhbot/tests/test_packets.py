@@ -2,6 +2,9 @@
 # encoding: utf-8
 
 import unittest
+import run_tests
+run_tests.patch_pythonpath()
+
 
 import packets
 import trajectory
@@ -182,10 +185,11 @@ class GotoPacketTestCase(unittest.TestCase, PacketTestMixin):
     def initialize_packet(self, packet):
         packet.movement = MOVEMENT_ROTATE
         packet.direction = DIRECTION_BACKWARD
-        packet.points.append(trajectory.Pose(10.5, 20.3, 56.4))
-        packet.points.append(trajectory.Pose(84.6, 45.7, 85.0))
-        packet.points.append(trajectory.Pose(75.4, 75.2, 12.8))
-        packet.points.append(trajectory.Pose(85.4, 45.7, 89.4))
+        packet.angle = 2.56
+        packet.points.append(trajectory.Pose(1.5, 2.3))
+        packet.points.append(trajectory.Pose(0.6, 1.7))
+        packet.points.append(trajectory.Pose(2.0, 0.2))
+        packet.points.append(trajectory.Pose(1.2, 2.7))
 
 
 
@@ -205,21 +209,9 @@ class GotoFinishedPacketTestCase(unittest.TestCase, PacketTestMixin):
 
 
     def initialize_packet(self, packet):
-        packet.reason = REASON_DESTINATION_REACHED
+        packet.reason = REASON_STOP_REQUESTED
         packet.current_pose = trajectory.Pose(20.0, 30.0, 5.5)
         packet.current_point_index = 12
-
-
-
-
-class BlockedPacketTestCase(unittest.TestCase, PacketTestMixin):
-
-    def create_packet(self):
-        return packets.Blocked()
-
-
-    def initialize_packet(self, packet):
-        packet.side = BLOCKED_BACK
 
 
 
@@ -350,10 +342,10 @@ class EmptyTankControlTestCase(unittest.TestCase, PacketTestMixin):
 
 
 
-class GoldBarDetectedTestCase(unittest.TestCase, PacketTestMixin):
+class GoldBarDetectionTestCase(unittest.TestCase, PacketTestMixin):
 
     def create_packet(self):
-        return packets.GoldBarDetected()
+        return packets.GoldBarDetection()
 
 
 

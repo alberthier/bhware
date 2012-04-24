@@ -77,6 +77,7 @@ class LogFieldViewController(fieldview.FieldViewController):
 
     def __init__(self, ui):
         fieldview.FieldViewController.__init__(self, ui)
+        self.add_ghost_layer()
 
         self.expected_trajectory = ExpectedTrajectoryLayer(self.field_scene)
         self.field_scene.add_layer(self.expected_trajectory)

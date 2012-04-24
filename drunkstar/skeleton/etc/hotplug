@@ -1,0 +1,20 @@
+#!/bin/sh
+
+
+update_wlan()
+{
+    if [ "$ACTION" = "add" -a "$SUBSYSTEM" = "net" -a "$INTERFACE" = "wlan0" ]; then
+        if [ -e /var/run/wpa_supplicant/wlan0 ]; then
+            rm /var/run/wpa_supplicant/wlan0
+        fi
+        ifup wlan0
+    elif [ "$ACTION" = "remove" -a "$SUBSYSTEM" = "net" -a "$INTERFACE" = "wlan0" ]; then
+        ifdown wlan0
+        if [ -e /var/run/wpa_supplicant/wlan0 ]; then
+            rm /var/run/wpa_supplicant/wlan0
+        fi
+    fi
+}
+
+update_wlan & 
+exec /sbin/mdev

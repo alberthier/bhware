@@ -45,19 +45,31 @@ class BasicDynamics(QObject):
         angular_speed = math.pi * 2.0 # rad/s
         segmentNb = 0
 
-        for pose in packet.points:
-            d = tools.distance(self.x, self.y, pose.x, pose.y)
-            if not tools.quasi_null(d):
-                time = d / linear_speed
-            else:
-                a = (self.angle  - pose.angle) % (2.0 * math.pi)
-                if a > math.pi:
-                    a -= math.pi
-                time = a / angular_speed
-            traj.append((segmentNb, time, pose))
-            self.x = pose.x
-            self.y = pose.y
-            self.angle = pose.angle
+        if packet.movement == MOVEMENT_MOVE:
+            time = 0.0
+            for pose in packet.points:
+                if packet.direction == DIRECTION_FORWARD:
+                    pose.angle = tools.angle_between(self.x, self.y, pose.x, pose.y)
+                else:
+                    pose.angle = tools.angle_between(pose.x, pose.y, self.x, self.y)
+                d = tools.distance(self.x, self.y, pose.x, pose.y)
+                time += d / linear_speed
+                traj.append((segmentNb, time, pose))
+                self.x = pose.x
+                self.y = pose.y
+                self.angle = pose.angle
+                segmentNb += 1
+            if packet.angle is not None:
+                if packet.direction == DIRECTION_FORWARD:
+                    angle = packet.angle
+                else:
+                    angle = packet.angle + math.pi
+                traj[-1][2].angle = angle
+                self.angle = angle
+        else:
+            time = abs(self.angle - packet.angle) / angular_speed
+            traj.append((segmentNb, time, trajectory.Pose(self.x, self.y, packet.angle)))
+            self.angle = packet.angle
             segmentNb += 1
 
         self.simulation_finished.emit(traj)
@@ -121,10 +133,10 @@ class PositionControlSimulatorDynamics(QObject):
         for source in sources:
             mtime = os.stat(os.path.join(self.simulator_dir, source)).st_mtime
             if mtime > binary_mtime:
-                args = ["-o", binary] + sources
+                args = ["-o", binary] + sources + [ "-lm" ]
                 comp = QProcess()
                 comp.setWorkingDirectory(self.simulator_dir)
-                comp.start("g++", args)
+                comp.start("gcc", args)
                 comp.waitForFinished()
                 if comp.exitCode() == 0:
                     print("Compilation succeeded")
@@ -144,7 +156,7 @@ class PositionControlSimulatorDynamics(QObject):
 
     def goto(self, packet):
         self.poses = []
-        self.elapsed_time = 0.0
+        self.elapsed_time = PositionControlSimulatorDynamics.TIMER_RESOLUTION
         self.invoke_move("MSG_MAIN_GOTO", packet.movement, packet.direction, packet.points)
 
 

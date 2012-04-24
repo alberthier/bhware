@@ -21,35 +21,35 @@ typedef struct
     float value;
 } Parameter;
 
-void ASSER_GoTo(PtTraj *p_chemin, unsigned int nbrePtsChemin, unsigned int Mouvement, signed int Marche)
+void ASSER_GoTo(PtTraj *p_chemin, unsigned int nbrePtsChemin, unsigned int Mouvement, signed int Marche, float angle_rad)
 {
-    SIMU_REDEF_ASSER_GoTo(p_chemin, nbrePtsChemin, Mouvement, Marche);
+    SIMU_REDEF_ASSER_GoTo(p_chemin, nbrePtsChemin, Mouvement, Marche, angle_rad);
 }
 
-int commandMsgTreatment(char *buffer, unsigned char *p_mouvement, char *p_marche, unsigned int *p_nbPts, PtTraj *p_chemin)
+int commandMsgTreatment(char *buffer, unsigned char *p_mouvement, char *p_marche, float *p_angle_rad, unsigned int *p_nbPts, PtTraj *p_chemin)
 {
-    char cmd[25], strMvt[30], strMarche[30], strNbPts[30], strValTemp[30];
+    char cmd[25], strMvt[30], strMarche[30], strAngleRad[30], strNbPts[30], strValTemp[30];
     int iVal, shiftChar = 0, msgSize = 0;
     float data[150], valTemp;
 
 //    printf("logStr_msgR: %s\n", buffer);
 
     /* decryptage du message de l'entree standard */
-    sscanf(buffer, "%s %hhu %s %u", cmd, p_mouvement, strMarche, p_nbPts);
+    sscanf(buffer, "%s %hhu %s %f %u", cmd, p_mouvement, strMarche, p_angle_rad, p_nbPts);
     if (strMarche[0] == '-')
         *p_marche = -1;
     else
         *p_marche = 1;
 
-    sscanf(buffer, "%s %s %s %s", cmd, strMvt, strMarche, strNbPts);
-    msgSize = strlen(cmd) + strlen(strMvt) + strlen(strMarche) + strlen(strNbPts) + 4;
-    for(iVal = 0; iVal < (*p_nbPts*4); iVal++)
+    sscanf(buffer, "%s %s %s %s %s", cmd, strMvt, strMarche, strAngleRad, strNbPts);
+    msgSize = strlen(cmd) + strlen(strMvt) + strlen(strMarche) + strlen(strAngleRad) + strlen(strNbPts) + 5;
+    for(iVal = 0; iVal < ((*p_nbPts)*2); iVal++)
     {
         sscanf(&(buffer[msgSize]), "%s", strValTemp);
         //printf("logStr_data: %s\n", strValTemp);
         sscanf(strValTemp, "%f", &valTemp);
         data[iVal] = valTemp;
-//        ASSER_TRAJ_LogAsser("data", valTemp);
+        //ASSER_TRAJ_LogAsser("init", NBR_ASSER_LOG_VALUE, data[iVal]);
         msgSize = msgSize + strlen(strValTemp) + 1;
     }
     /* msgSize = strlen(cmd) + strlen(strMvt) + strlen(strMarche) + strlen(strNbPts) + 4 + shiftChar; */
@@ -57,15 +57,10 @@ int commandMsgTreatment(char *buffer, unsigned char *p_mouvement, char *p_marche
     //printf("msg(%s): %s, %u, %d, %u:\n", buffer, cmd, *p_mouvement, *p_marche, *p_nbPts);
     for(iVal = 0; iVal < *p_nbPts; iVal++)
     {
-        p_chemin[iVal].pose.x = data[iVal*4];
-//        ASSER_TRAJ_LogAsser("x_traj", p_chemin[iVal].pose.x);
-        p_chemin[iVal].pose.y = data[iVal*4 + 1];
-//        ASSER_TRAJ_LogAsser("y_traj", p_chemin[iVal].pose.y);
-        p_chemin[iVal].pose.angle = data[iVal*4 + 2];
-//        ASSER_TRAJ_LogAsser("angle_traj", p_chemin[iVal].pose.angle);
-        p_chemin[iVal].mask = (unsigned char)data[iVal*4 + 3];
-//        ASSER_TRAJ_LogAsser("mask_traj", p_chemin[iVal].mask);
-        //printf("%d: x:%f, y:%f, angle:%f\n", iVal, p_chemin[iVal].x, p_chemin[iVal].y, p_chemin[iVal].angle);
+        p_chemin[iVal].x = CONVERT_FLOAT2SHORT_DISTANCE(data[iVal*2]);
+        //ASSER_TRAJ_LogAsser("x_traj", NBR_ASSER_LOG_VALUE, CONVERT_DISTANCE(p_chemin[iVal].x));
+        p_chemin[iVal].y = CONVERT_FLOAT2SHORT_DISTANCE(data[iVal*2 + 1]);
+        //ASSER_TRAJ_LogAsser("y_traj", NBR_ASSER_LOG_VALUE, CONVERT_DISTANCE(p_chemin[iVal].y));
     }
 
     return msgSize;
@@ -95,11 +90,13 @@ int parameterMsgTreatment(char *buffer, unsigned int *p_nbParam, Parameter *p_pa
 
 int main(void)
 {
-    char buffer[255], command[25]="";
-    PtTraj ptRobotInitial;
-    PtTraj chemin[30];
+    char buffer[10000], command[25]="";
+    PtTraj ptTraj_RobotInitial;
+    Pose poseInitiale;
+    PtTraj chemin[62];
     unsigned char mouvement, mvtNull;
     char marche, marcheNull;
+    float angle_rad;
     unsigned int nbrPtsChemin, nbrPtsNull, nbrParameters, iParam;
     float angleArrivee;
     Parameter paramPI[2], paramK[3], paramR[2], paramT[8], paramConfAsser[2], paramMotor[9];
@@ -136,9 +133,12 @@ int main(void)
 
         if (strcmp(command, "INIT_POSE_ROBOT") == 0)
         {
-            commandMsgTreatment(buffer, &mouvement, &marche, &nbrPtsChemin, &ptRobotInitial);
+            commandMsgTreatment(buffer, &mouvement, &marche, &angle_rad, &nbrPtsChemin, &ptTraj_RobotInitial);
             /* Initialisation de la pose du robot */
-            POS_InitialisationPoseRobot(ptRobotInitial.pose);
+            poseInitiale.x = CONVERT_DISTANCE(ptTraj_RobotInitial.x);
+            poseInitiale.y = CONVERT_DISTANCE(ptTraj_RobotInitial.y);
+            poseInitiale.angle = angle_rad;
+            POS_InitialisationPoseRobot(poseInitiale);
             ASSER_TRAJ_InitialisationGenerale();
             SIMU_InitialisationLogRobot();
             printf("asserSimulator: Initialisation effectuee\n");
@@ -146,13 +146,12 @@ int main(void)
         }
         else if (strcmp(command, "MSG_MAIN_GOTO") == 0)
         {
-            commandMsgTreatment(buffer, &mouvement, &marche, &nbrPtsChemin, chemin);
+            commandMsgTreatment(buffer, &mouvement, &marche, &angle_rad, &nbrPtsChemin, chemin);
 
             SIMU_InitialisationLogRobot();
             /* initialisation des données pour l'ordre de déplacement */
-            //angleArrivee = chemin[nbrPtsChemin-1].pose.angle;
             /* lancement du deplacement */
-            ASSER_GoTo(chemin, nbrPtsChemin, mouvement, marche);
+            ASSER_GoTo(chemin, nbrPtsChemin, mouvement, marche, angle_rad);
 
             // execution du deplacement
             SIMU_Mouvement();
