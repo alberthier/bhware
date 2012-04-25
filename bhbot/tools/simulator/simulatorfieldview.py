@@ -735,7 +735,7 @@ class RoutingLayer(fieldview.Layer):
             self.name = "Red robot routing"
             self.color = TEAM_COLOR_RED
         self.path_blocks = []
-        self.walls = []
+        self.zones = []
         #self.setVisible(False)
 
         self.main_opponent_zone = self.create_opponent_zone(MAIN_OPPONENT_AVOIDANCE_RANGE * 2.0 * 1000.0)
@@ -787,21 +787,41 @@ class RoutingLayer(fieldview.Layer):
             self.path_blocks.append(item)
 
 
-    def on_simulator_route_walls(self, packet):
+    def on_simulator_route_reset_zones(self, packet):
+        for zone in self.zones:
+            self.scene().removeItem(zone)
+        self.zones = []
+
+
+    def on_simulator_route_rects(self, packet):
+        self.add_zone(packet, True)
+
+
+    def on_simulator_route_circles(self, packet):
+        self.add_zone(packet, False)
+
+
+    def add_zone(self, packet, is_rect):
         cell_size = ROUTING_MAP_RESOLUTION * 1000.0
-        brushColor = QColor(QColor("#ab471d"))
-        brushColor.setAlpha(80)
+        if packet.is_forbidden_zone:
+            brushColor = QColor(QColor("#ab471d"))
+        else:
+            brushColor = QColor(QColor("#73ab1d"))
+        brushColor.setAlpha(50)
         brush = QBrush(brushColor)
         pen = QPen(QBrush(), 0)
-        for wall in self.walls:
-            self.scene().removeItem(wall)
-        self.walls = []
-        for (x1, y1, x2, y2) in packet.walls:
-            item = QGraphicsRectItem(y1 * cell_size, x1 * cell_size, abs(y2 - y1) * cell_size,  abs(x2 - x1) * cell_size)
+
+        for shape in packet.shapes:
+            if is_rect:
+                (x1, y1, x2, y2) = shape
+                item = QGraphicsRectItem(y1 * cell_size, x1 * cell_size, abs(y2 - y1) * cell_size,  abs(x2 - x1) * cell_size)
+            else:
+                (x, y, radius) = shape
+                item = QGraphicsEllipseItem((y - radius) * cell_size, (x - radius) * cell_size, radius * 2.0 * cell_size, radius * 2.0 * cell_size)
             item.setBrush(brush)
             item.setPen(pen)
             self.addToGroup(item)
-            self.walls.append(item)
+            self.zones.append(item)
 
 
     def on_simulator_opponents_positions(self, packet):

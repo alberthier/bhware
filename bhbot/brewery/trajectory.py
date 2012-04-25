@@ -18,7 +18,7 @@ from definitions import *
 class Pose(object):
 
     match_team = TEAM_UNKNOWN
-    
+
     def __init__(self, x = 0.0, y = 0.0, angle = None, virtual=False):
         self.virt = VirtualPose(self)
         self.x = 0.0
@@ -114,8 +114,8 @@ class Map(object):
 
         self.build_module()
 
-        (self.pathfinder, self.walls) = self.create_pathfinder(ROUTING_MAP_RESOLUTION)
-        (self.evaluator, walls) = self.create_pathfinder(EVALUATOR_MAP_RESOLUTION)
+        (self.pathfinder, self.forbidden_zones, self.penalized_zones) = self.create_pathfinder(ROUTING_MAP_RESOLUTION)
+        (self.evaluator, forbidden_zones, penalized_zones) = self.create_pathfinder(EVALUATOR_MAP_RESOLUTION)
 
 
     def create_pathfinder(self, map_resolution):
@@ -140,22 +140,54 @@ class Map(object):
 
         lateral_distance = ROBOT_X_SIZE - ROBOT_CENTER_X - map_resolution
         captain_room_reduction = 0.01
-        walls = []
-        walls.append([0.5 - MAP_WALLS_DISTANCE + captain_room_reduction, 0.0, 0.52 + MAP_WALLS_DISTANCE - captain_room_reduction, 0.4 + MAP_WALLS_DISTANCE]) # Purple captain room
-        walls.append([0.5 - MAP_WALLS_DISTANCE + captain_room_reduction, 2.6 - MAP_WALLS_DISTANCE, 0.52 + MAP_WALLS_DISTANCE - captain_room_reduction, 3.0]) # Red captain room
-        walls.append([1.25 - MAP_WALLS_DISTANCE, 0.0, 2.0, 0.380 + MAP_WALLS_DISTANCE]) # Purple bridge
-        walls.append([1.25 - MAP_WALLS_DISTANCE, 2.62 - MAP_WALLS_DISTANCE, 2.0, 3.0])  # Red bridge
-        walls.append([0.875 - MAP_WALLS_DISTANCE, 0.975 - MAP_WALLS_DISTANCE, 1.125 + MAP_WALLS_DISTANCE, 2.025 + MAP_WALLS_DISTANCE]) # Island
-        walls.append([0.0, 0.0, MAP_WALLS_DISTANCE, FIELD_Y_SIZE]) # Top edge
-        walls.append([FIELD_X_SIZE - MAP_WALLS_DISTANCE, 0.0, FIELD_X_SIZE, FIELD_Y_SIZE]) # Bottom edge
-        walls.append([0.0, 0.0, FIELD_X_SIZE, lateral_distance]) # Purple edge
-        walls.append([0.0, FIELD_Y_SIZE - lateral_distance, FIELD_X_SIZE, FIELD_Y_SIZE]) # Red edge
-        for wall in walls:
-            for i in xrange(len(wall)):
-                wall[i] = int(round(wall[i] / map_resolution))
-            pathfinder.add_wall(wall[0], wall[1], wall[2], wall[3], wall_cost * 2.0)
 
-        return (pathfinder, walls)
+        forbidden_zones_def = []
+        # Captain room
+        forbidden_zones_def.append(['rect', 0.5 - MAP_WALLS_DISTANCE + captain_room_reduction, 0.0, 0.52 + MAP_WALLS_DISTANCE - captain_room_reduction, 0.4])
+        forbidden_zones_def.append(['circle', 0.51, 0.4, MAP_WALLS_DISTANCE])
+        # Bridge
+        forbidden_zones_def.append(['rect', 1.25 - MAP_WALLS_DISTANCE, 0.0, 2.0, 0.380 + MAP_WALLS_DISTANCE])
+        # Island
+        forbidden_zones_def.append(['rect', 0.875 - MAP_WALLS_DISTANCE, 0.975 - MAP_WALLS_DISTANCE, 1.125 + MAP_WALLS_DISTANCE, 2.025 + MAP_WALLS_DISTANCE])
+        # Edges
+        forbidden_zones_def.append(['rect', 0.0, 0.0, MAP_WALLS_DISTANCE, FIELD_Y_SIZE / 2.0]) # Top edge
+        forbidden_zones_def.append(['rect', FIELD_X_SIZE - MAP_WALLS_DISTANCE, 0.0, FIELD_X_SIZE, FIELD_Y_SIZE / 2.0]) # Bottom edge
+        forbidden_zones_def.append(['rect', 0.0, 0.0, FIELD_X_SIZE, lateral_distance]) # Bridge edge
+
+        forbidden_zones = []
+        for zone in forbidden_zones_def:
+            if zone[0] == 'rect':
+                purple_shape = [ 'rect',
+                                int(round(zone[1] / map_resolution)),
+                                int(round(zone[2] / map_resolution)),
+                                int(round(zone[3] / map_resolution)),
+                                int(round(zone[4] / map_resolution)) ]
+                red_shape = [ 'rect',
+                             int(round(zone[1] / map_resolution)),
+                             int(round((FIELD_Y_SIZE - zone[4]) / map_resolution)),
+                             int(round(zone[3] / map_resolution)),
+                             int(round((FIELD_Y_SIZE - zone[2]) / map_resolution)) ]
+
+                pathfinder.add_forbidden_rect(purple_shape[1], purple_shape[2], purple_shape[3], purple_shape[4], wall_cost * 2.0)
+                pathfinder.add_forbidden_rect(red_shape[1], red_shape[2], red_shape[3], red_shape[4], wall_cost * 2.0)
+            else:
+                purple_shape = [ 'circle',
+                                 int(round(zone[1] / map_resolution)),
+                                 int(round(zone[2] / map_resolution)),
+                                 int(round(zone[3] / map_resolution)) ]
+                red_shape = [ 'circle',
+                             int(round(zone[1] / map_resolution)),
+                             int(round((FIELD_Y_SIZE - zone[2]) / map_resolution)),
+                             int(round(zone[3] / map_resolution)) ]
+
+                pathfinder.add_forbidden_circle(purple_shape[1], purple_shape[2], purple_shape[3], wall_cost * 2.0)
+                pathfinder.add_forbidden_circle(red_shape[1], red_shape[2], red_shape[3], wall_cost * 2.0)
+            forbidden_zones.append(purple_shape)
+            forbidden_zones.append(red_shape)
+
+        penalized_zones = []
+
+        return (pathfinder, forbidden_zones, penalized_zones)
 
 
     def route(self, start, goal):
@@ -318,11 +350,32 @@ class Map(object):
             self.eventloop.send_packet(packet)
 
 
-    def send_walls_to_simulator(self):
-        packet = packets.SimulatorRouteWalls()
-        for wall in self.walls:
-            packet.walls.append(wall)
-        self.eventloop.send_packet(packet)
+    def send_zones_to_simulator(self):
+        forbidden_rects_packet = packets.SimulatorRouteRects()
+        forbidden_circles_packet = packets.SimulatorRouteCircles()
+        penalized_rects_packet = packets.SimulatorRouteRects()
+        penalized_circles_packet = packets.SimulatorRouteCircles()
+
+        for zone in self.forbidden_zones:
+            if zone[0] == 'rect':
+                forbidden_rects_packet.shapes.append(zone[1:])
+            else:
+                forbidden_circles_packet.shapes.append(zone[1:])
+        for zone in self.penalized_zones:
+            if zone[0] == 'rect':
+                penalized_rects_packet.shapes.append(zone[1:])
+            else:
+                penalized_circles_packet.shapes.append(zone[1:])
+
+        self.eventloop.send_packet(packets.SimulatorRouteResetZones())
+        if len(forbidden_rects_packet.shapes) != 0:
+            self.eventloop.send_packet(forbidden_rects_packet)
+        if len(forbidden_circles_packet.shapes) != 0:
+            self.eventloop.send_packet(forbidden_circles_packet)
+        if len(penalized_rects_packet.shapes) != 0:
+            self.eventloop.send_packet(penalized_rects_packet)
+        if len(penalized_circles_packet.shapes) != 0:
+            self.eventloop.send_packet(penalized_circles_packet)
 
 
     def build_module(self):

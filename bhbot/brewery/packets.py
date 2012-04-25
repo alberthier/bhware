@@ -80,8 +80,8 @@ import trajectory
 #      #f0e68c khaki                             #d2b48c tan
 #      #e6e6fa lavender                          #008080 teal
 #      #fff0f5 lavenderblush                  X  #d8bfd8 thistle
-#      #7cfc00 lawngreen                         #ff6347 tomato
-#      #fffacd lemonchiffon                      #40e0d0 turquoise
+#      #7cfc00 lawngreen                      X  #ff6347 tomato
+#      #fffacd lemonchiffon                   X  #40e0d0 turquoise
 #      #add8e6 lightblue                         #ee82ee violet
 #      #f08080 lightcoral                        #f5deb3 wheat
 #      #e0ffff lightcyan                         #ffffff white
@@ -486,7 +486,7 @@ class SimulatorPointItem(PacketItem):
 class SimulatorRectItem(PacketItem):
 
     C_TYPE = 'BHBH'
-    DESCRIPTION = "Route point"
+    DESCRIPTION = "Route rectangle"
 
     def __init__(self, name, default_value, description = None):
         PacketItem.__init__(self, name, default_value, description)
@@ -503,6 +503,29 @@ class SimulatorRectItem(PacketItem):
         (x1, y1, x2, y2) = buf[:4]
         del buf[:4]
         return x1, y1, x2, y2
+
+
+
+
+class SimulatorCircleItem(PacketItem):
+
+    C_TYPE = 'BHB'
+    DESCRIPTION = "Route circle"
+
+    def __init__(self, name, default_value, description = None):
+        PacketItem.__init__(self, name, default_value, description)
+
+
+    def to_value_list(self, value, buf):
+        buf.append(value[0])
+        buf.append(value[1])
+        buf.append(value[2])
+
+
+    def from_value_list(self, buf):
+        (x, y, radius) = buf[:3]
+        del buf[:3]
+        return x, y, radius
 
 
 
@@ -900,7 +923,7 @@ class Reinitialize(BasePacket):
 
 class SimulatorData(BasePacket):
 
-    TYPE = 103
+    TYPE = 101
     LOGVIEW_DEFAULT_ENABLED = False
     LOGVIEW_COLOR = "#4169e1"
     DEFINITION = (
@@ -912,7 +935,7 @@ class SimulatorData(BasePacket):
 
 class SimulatorResetRoutePath(BasePacket):
 
-    TYPE = 104
+    TYPE = 102
     LOGVIEW_DEFAULT_ENABLED = False
     LOGVIEW_COLOR = "#ff00ff"
 
@@ -921,7 +944,7 @@ class SimulatorResetRoutePath(BasePacket):
 
 class SimulatorRoutePath(BasePacket):
 
-    TYPE = 105
+    TYPE = 103
     LOGVIEW_DEFAULT_ENABLED = False
     LOGVIEW_COLOR = "#8b4513"
     DEFINITION = (
@@ -933,7 +956,7 @@ class SimulatorRoutePath(BasePacket):
 
 class SimulatorSimplifiedRoutePath(BasePacket):
 
-    TYPE = 106
+    TYPE = 104
     LOGVIEW_DEFAULT_ENABLED = False
     LOGVIEW_COLOR = "#8b4513"
     DEFINITION = (
@@ -943,13 +966,36 @@ class SimulatorSimplifiedRoutePath(BasePacket):
 
 
 
-class SimulatorRouteWalls(BasePacket):
+class SimulatorRouteResetZones(BasePacket):
 
-    TYPE = 107
+    TYPE = 105
+    LOGVIEW_DEFAULT_ENABLED = False
+    LOGVIEW_COLOR = "#40e0d0"
+
+
+
+
+class SimulatorRouteRects(BasePacket):
+
+    TYPE = 106
     LOGVIEW_DEFAULT_ENABLED = False
     LOGVIEW_COLOR = "#d8bfd8"
     DEFINITION = (
-        ListItem('walls', [], SimulatorRectItem("", (0, 0, 0, 0)), 42, "Route walls"),
+        BoolItem('is_forbidden_zone', True, "Represents forbidden zones or not"),
+        ListItem('shapes', [], SimulatorRectItem("", (0, 0, 0, 0)), 42, "Route rects"),
+    )
+
+
+
+
+class SimulatorRouteCircles(BasePacket):
+
+    TYPE = 107
+    LOGVIEW_DEFAULT_ENABLED = False
+    LOGVIEW_COLOR = "#ff6347"
+    DEFINITION = (
+        BoolItem('is_forbidden_zone', True, "Represents forbidden zones or not"),
+        ListItem('shapes', [], SimulatorCircleItem("", (0, 0, 0)), 63, "Route circles"),
     )
 
 

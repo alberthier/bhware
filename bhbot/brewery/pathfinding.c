@@ -9,6 +9,8 @@ typedef struct _Cell
     float h_score;
     float g_score;
     float f_score;
+    int is_forbidden;
+    float cost;
     struct _Cell* came_from;
     struct _Cell* next;
 } Cell;
@@ -17,19 +19,19 @@ typedef struct _Cell
 typedef int (*LessFunction)(Cell*, Cell*);
 
 
-int cell_f_score_less(Cell* a, Cell* b)
+static int cell_f_score_less(Cell* a, Cell* b)
 {
     return a->f_score < b->f_score;
 }
 
 
-int cell_pointer_less(Cell* a, Cell* b)
+static int cell_pointer_less(Cell* a, Cell* b)
 {
     return a < b;
 }
 
 
-int cell_contains(Cell* self, Cell* other)
+static int cell_contains(Cell* self, Cell* other)
 {
     Cell* current = NULL;
 
@@ -43,7 +45,7 @@ int cell_contains(Cell* self, Cell* other)
 }
 
 
-int cell_contains_sorted(Cell* self, Cell* other, LessFunction less)
+static int cell_contains_sorted(Cell* self, Cell* other, LessFunction less)
 {
     Cell* current = NULL;
 
@@ -60,7 +62,7 @@ int cell_contains_sorted(Cell* self, Cell* other, LessFunction less)
 }
 
 
-Cell* cell_insert_sorted(Cell* self, Cell* other, LessFunction less)
+static Cell* cell_insert_sorted(Cell* self, Cell* other, LessFunction less)
 {
     Cell* previous = NULL;
     Cell* current = NULL;
@@ -95,27 +97,51 @@ Cell* cell_insert_sorted(Cell* self, Cell* other, LessFunction less)
 
 typedef enum
 {
-    ZoneWall,
+    ZoneForbidden,
     ZonePenalized
 } ZoneType;
 
 
+typedef enum
+{
+  ZoneCircle,
+  ZoneRect
+} ZoneShape;
+
+
 typedef struct _Zone
 {
-    int x1;
-    int y1;
-    int x2;
-    int y2;
+    union {
+        struct {
+            /* Rect definition */
+            int x1;
+            int y1;
+            int x2;
+            int y2;
+        };
+        struct {
+            /* Circle definition */
+            int x;
+            int y;
+            int radius;
+        };
+    };
     int id;
     float cost;
-    ZoneType zone_type;
-    ZoneType runtime_zone_type;
+    ZoneType type;
+    ZoneShape shape;
+    float** distance_map;
     struct _Zone* next;
 } Zone;
 
 
 static int zone_contains(Zone* self, int x, int y)
 {
+    if (self->shape == ZoneCircle) {
+        int dx = abs(self->x - x);
+        int dy = abs(self->y - y);
+        return self->distance_map[dx][dy] <= self->radius;
+    }
     return x >= self->x1 && x <= self->x2 && y >= self->y1 && y <= self->y2;
 }
 
@@ -148,6 +174,7 @@ typedef struct
 
 static void pathfinder_dealloc(PathFinder* self)
 {
+    Zone* zone = NULL;
     int x = 0;
 
     for (x = 0; x < self->map_x_size; ++x) {
@@ -157,7 +184,7 @@ static void pathfinder_dealloc(PathFinder* self)
     free(self->distance_map);
     free(self->map);
 
-    Zone* zone = self->zones;
+    zone = self->zones;
     while (zone != NULL) {
         Zone* tmp = zone->next;
         free(zone);
@@ -202,6 +229,8 @@ static int pathfinder_init(PathFinder* self, PyObject* args, PyObject* kwds)
             distance_row[y] = sqrt(x_squared + y * y);
             row[y].x = x;
             row[y].y = y;
+            row[y].is_forbidden = 0;
+            row[y].cost = 0.0;
         }
     }
 
@@ -212,23 +241,19 @@ static int pathfinder_init(PathFinder* self, PyObject* args, PyObject* kwds)
 }
 
 
-Cell** pathfinder_append_if_valid(PathFinder* self, Cell** it, int x, int y)
+static Cell** pathfinder_append_if_valid(PathFinder* self, Cell* node, Cell** it, int x, int y)
 {
-    Zone* zone = NULL;
+    Cell* neighbor = &self->map[x][y];
     if (x < 0 || x >= self->map_x_size) {
         return it;
     }
     if (y < 0 || y >= self->map_y_size) {
         return it;
     }
-    for (zone = self->zones; zone != NULL; zone = zone->next) {
-        if (zone->runtime_zone_type == ZoneWall) {
-            if (zone_contains(zone, x, y)) {
-                return it;
-            }
-        }
+    if (!node->is_forbidden && neighbor->is_forbidden) {
+        return it;
     }
-    *it = &self->map[x][y];
+    *it = neighbor;
     ++it;
     return it;
 }
@@ -244,26 +269,26 @@ static void pathfinder_find_neighbor_nodes(PathFinder* self, Cell* node, Cell** 
 
     if (prev_x >= 0) {
         if (prev_y >= 0) {
-            it = pathfinder_append_if_valid(self, it, prev_x, prev_y);
+            it = pathfinder_append_if_valid(self, node, it, prev_x, prev_y);
         }
-        it = pathfinder_append_if_valid(self, it, prev_x, node->y);
+        it = pathfinder_append_if_valid(self, node, it, prev_x, node->y);
         if (next_y < self->map_y_size) {
-            it = pathfinder_append_if_valid(self, it, prev_x, next_y);
+            it = pathfinder_append_if_valid(self, node, it, prev_x, next_y);
         }
     }
     if (prev_y >= 0) {
-        it = pathfinder_append_if_valid(self, it, node->x, prev_y);
+        it = pathfinder_append_if_valid(self, node, it, node->x, prev_y);
     }
     if (next_y < self->map_y_size) {
-        it = pathfinder_append_if_valid(self, it, node->x, next_y);
+        it = pathfinder_append_if_valid(self, node, it, node->x, next_y);
     }
     if (next_x < self->map_x_size) {
         if (prev_y >= 0) {
-            it = pathfinder_append_if_valid(self, it, next_x, prev_y);
+            it = pathfinder_append_if_valid(self, node, it, next_x, prev_y);
         }
-        it = pathfinder_append_if_valid(self, it, next_x, node->y);
+        it = pathfinder_append_if_valid(self, node, it, next_x, node->y);
         if (next_y < self->map_y_size) {
-            it = pathfinder_append_if_valid(self, it, next_x, next_y);
+            it = pathfinder_append_if_valid(self, node, it, next_x, next_y);
         }
     }
 
@@ -285,18 +310,8 @@ static float pathfinder_effective_cost(PathFinder* self, int x1, int y1, int x2,
 
 static float pathfinder_penalized_cost(PathFinder* self, int x, int y)
 {
-    float cost = 0.0;
-    Zone* zone = NULL;
+    float cost = self->map[x][y].cost;
 
-    for (zone = self->zones; zone != NULL; zone = zone->next) {
-        if (zone->runtime_zone_type == ZonePenalized) {
-            if (zone_contains(zone, x, y)) {
-                if (zone->cost > cost) {
-                    cost = zone->cost;
-                }
-            }
-        }
-    }
     if (self->main_opponent_x != -1 && self->distance_map[abs(x - self->main_opponent_x)][abs(y - self->main_opponent_y)] < self->main_opponent_avoidance_cells) {
         if (self->main_opponent_collision_cost > cost) {
             cost = self->main_opponent_collision_cost;
@@ -337,17 +352,8 @@ static PyObject* pathfinder_find(PathFinder* self, PyObject* args)
     }
 
     for (zone = self->zones; zone != NULL; zone = zone->next) {
-        /* Fix runtime zone types: If the start point is in a wall, convert it to a penalized zone
-         * for this time so that the robot will be able to escape. */
-        if (zone->zone_type == ZoneWall) {
-            if (zone_contains(zone, start_x, start_y)) {
-                zone->runtime_zone_type = ZonePenalized;
-            } else {
-                zone->runtime_zone_type = ZoneWall;
-            }
-        }
         /* If the destination point is in a wall, it is unreachable */
-        if (zone->runtime_zone_type == ZoneWall) {
+        if (zone->type == ZoneForbidden) {
             if (zone_contains(zone, goal_x, goal_y)) {
                 /* Unreachable point */
                 Py_RETURN_NONE;
@@ -419,37 +425,80 @@ static void pathfinder_normalize_rectangle(int* x1, int* y1, int* x2, int* y2)
 }
 
 
-static PyObject* pathfinder_add_zone(PathFinder* self, PyObject* args, ZoneType zone_type)
+static void pathfinder_rebuild_map(PathFinder* self)
+{
+    int x = 0;
+    int y = 0;
+
+    for (x = 0; x < self->map_x_size; ++x) {
+        for (y = 0; y < self->map_y_size; ++y) {
+            Zone* zone = NULL;
+            Cell* current = &self->map[x][y];
+            current->is_forbidden = 0;
+            current->cost = 0.0;
+            for (zone = self->zones; zone != NULL; zone = zone->next) {
+                if (zone_contains(zone, x, y)) {
+                    current->is_forbidden |= zone->type == ZoneForbidden;
+                    if (current->cost < zone->cost) {
+                        current->cost = zone->cost;
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+static PyObject* pathfinder_add_zone(PathFinder* self, PyObject* args, ZoneType zone_type, ZoneShape zone_shape)
 {
     Zone* zone = (Zone*) malloc(sizeof(Zone));
 
-    if (!PyArg_ParseTuple(args, "iiiif", &zone->x1, &zone->y1, &zone->x2, &zone->y2, &zone->cost)) {
-        return NULL;
+    if (zone_shape == ZoneRect) {
+        if (!PyArg_ParseTuple(args, "iiiif", &zone->x1, &zone->y1, &zone->x2, &zone->y2, &zone->cost)) {
+            return NULL;
+        }
+        pathfinder_normalize_rectangle(&zone->x1, &zone->y1, &zone->x2, &zone->y2);
+    } else {
+        if (!PyArg_ParseTuple(args, "iiif", &zone->x, &zone->y, &zone->radius, &zone->cost)) {
+            return NULL;
+        }
     }
 
-    pathfinder_normalize_rectangle(&zone->x1, &zone->y1, &zone->x2, &zone->y2);
-
-    zone->zone_type = zone_type;
-    zone->runtime_zone_type = zone_type;
-
+    zone->type = zone_type;
+    zone->shape = zone_shape;
     zone->next = self->zones;
     zone->id = self->next_zone_id;
+    zone->distance_map = self->distance_map;
     ++self->next_zone_id;
     self->zones = zone;
+
+    pathfinder_rebuild_map(self);
 
     return Py_BuildValue("i", zone->id);
 }
 
 
-static PyObject* pathfinder_add_wall(PathFinder* self, PyObject* args)
+static PyObject* pathfinder_add_forbidden_rect_zone(PathFinder* self, PyObject* args)
 {
-    return pathfinder_add_zone(self, args, ZoneWall);
+    return pathfinder_add_zone(self, args, ZoneForbidden, ZoneRect);
 }
 
 
-static PyObject* pathfinder_add_penalized_zone(PathFinder* self, PyObject* args)
+static PyObject* pathfinder_add_forbidden_circle_zone(PathFinder* self, PyObject* args)
 {
-    return pathfinder_add_zone(self, args, ZonePenalized);
+    return pathfinder_add_zone(self, args, ZoneForbidden, ZoneCircle);
+}
+
+
+static PyObject* pathfinder_add_penalized_rect_zone(PathFinder* self, PyObject* args)
+{
+    return pathfinder_add_zone(self, args, ZonePenalized, ZoneRect);
+}
+
+
+static PyObject* pathfinder_add_penalized_circle_zone(PathFinder* self, PyObject* args)
+{
+    return pathfinder_add_zone(self, args, ZonePenalized, ZoneCircle);
 }
 
 
@@ -476,6 +525,8 @@ static PyObject* pathfinder_remove_zone(PathFinder* self, PyObject* args)
         }
         prev_zone = zone;
     }
+
+    pathfinder_rebuild_map(self);
 
     Py_RETURN_NONE;
 }
@@ -527,10 +578,11 @@ static PyObject* pathfinder_clear_secondary_opponent_position(PathFinder* self)
 /* Object methods */
 static PyMethodDef PathFinder_methods[] = {
     { "find"                             , (PyCFunction) pathfinder_find                             , METH_VARARGS, "Find the route from (x1, y1) to (x2, y2)" },
-    { "add_wall"                         , (PyCFunction) pathfinder_add_wall                         , METH_VARARGS, "Add a wall (x1, y1) to (x2, y2)" },
-    { "remove_wall"                      , (PyCFunction) pathfinder_remove_zone                      , METH_VARARGS, "Remove a wall" },
-    { "add_penalized_zone"               , (PyCFunction) pathfinder_add_penalized_zone               , METH_VARARGS, "Add a penalized zone (x1, y1) to (x2, y2) with the given cost" },
-    { "remove_penalized_zone"            , (PyCFunction) pathfinder_remove_zone                      , METH_VARARGS, "Remove a penalized zone" },
+    { "add_forbidden_rect"               , (PyCFunction) pathfinder_add_forbidden_rect_zone          , METH_VARARGS, "Add a forbidden rect (x1, y1) to (x2, y2)" },
+    { "add_forbidden_circle"             , (PyCFunction) pathfinder_add_forbidden_circle_zone        , METH_VARARGS, "Add a forbidden circle centered at (x, y), radius r" },
+    { "add_penalized_rect"               , (PyCFunction) pathfinder_add_penalized_rect_zone          , METH_VARARGS, "Add a penalized rect (x1, y1) to (x2, y2) with the given cost" },
+    { "add_penalized_circle"             , (PyCFunction) pathfinder_add_penalized_circle_zone        , METH_VARARGS, "Add a penalized circle centered at (x, y), radius r" },
+    { "remove_zone"                      , (PyCFunction) pathfinder_remove_zone                      , METH_VARARGS, "Remove a penalized zone" },
     { "set_main_opponent_position"       , (PyCFunction) pathfinder_set_main_opponent_position       , METH_VARARGS, "Sets the main opponent position" },
     { "clear_main_opponent_position"     , (PyCFunction) pathfinder_clear_main_opponent_position     , METH_NOARGS , "Clears the main opponent position" },
     { "set_secondary_opponent_position"  , (PyCFunction) pathfinder_set_secondary_opponent_position  , METH_VARARGS, "Sets the secondary opponent position" },
