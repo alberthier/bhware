@@ -25,27 +25,18 @@ class Main(statemachine.State):
         gm = goalmanager.GoalManager(self.event_loop)
         self.robot().goal_manager = gm
         gm.harvesting_goals.append(goalmanager.Goal("MAP", 1.0, 0.31, 1.37, DIRECTION_BACKWARD, GrabMap))
-        #gm.harvesting_goals.append(goalmanager.Goal("SELF_NORTH", 1.0, 0.60, 0.86, DIRECTION_BACKWARD, TakeGoldBar))
-        #gm.harvesting_goals.append(goalmanager.Goal("SELF_NORTH", 1.0, 0.60, 1.30, DIRECTION_BACKWARD, TakeGoldBar))
-        #gm.harvesting_goals.append(goalmanager.Goal("SELF_SOUTH", 1.0, 1.35, 0.86, DIRECTION_BACKWARD, TakeGoldBar))
-        #gm.harvesting_goals.append(goalmanager.Goal("SELF_SOUTH", 1.0, 1.35, 1.30, DIRECTION_BACKWARD, TakeGoldBar))
-        #gm.harvesting_goals.append(goalmanager.Goal("OTHER_NORTH", 1.0, 0.60, 0.86, DIRECTION_BACKWARD, TakeGoldBar))
-        #gm.harvesting_goals.append(goalmanager.Goal("OTHER_NORTH", 1.0, 0.60, 1.30, DIRECTION_BACKWARD, TakeGoldBar))
-        #gm.harvesting_goals.append(goalmanager.Goal("OTHER_SOUTH", 1.0, 1.35, 0.86, DIRECTION_BACKWARD, TakeGoldBar))
-        #gm.harvesting_goals.append(goalmanager.Goal("OTHER_SOUTH", 1.0, 1.35, 1.30, DIRECTION_BACKWARD, TakeGoldBar))
 
         x1, y1 = 0.60, 0.86
         x2, y2 = x1, (1.1 - y1) + 1.1
-
         offset_x = (1.0 - x1) * 2.0
         offset_y = 0.80
 
-        gm.harvesting_goals.append(goalmanager.Goal("SELF_NORTH", 1.0, x1, y1,              DIRECTION_BACKWARD, TakeGoldBar))
-        gm.harvesting_goals.append(goalmanager.Goal("SELF_NORTH", 1.0, x2, y2,              DIRECTION_BACKWARD, TakeGoldBar))
-        gm.harvesting_goals.append(goalmanager.Goal("SELF_SOUTH", 1.0, x1 + offset_x, y1,   DIRECTION_BACKWARD, TakeGoldBar))
-        gm.harvesting_goals.append(goalmanager.Goal("SELF_SOUTH", 1.0, x2 + offset_x, y2,   DIRECTION_BACKWARD, TakeGoldBar))
-        gm.harvesting_goals.append(goalmanager.Goal("OTHER_NORTH", 1.0, x1, y1 + offset_y, DIRECTION_BACKWARD, TakeGoldBar))
-        gm.harvesting_goals.append(goalmanager.Goal("OTHER_NORTH", 1.0, x2, y2 + offset_y, DIRECTION_BACKWARD, TakeGoldBar))
+        gm.harvesting_goals.append(goalmanager.Goal("SELF_NORTH" , 1.0, x1           , y1           , DIRECTION_BACKWARD, TakeGoldBar))
+        gm.harvesting_goals.append(goalmanager.Goal("SELF_NORTH" , 1.0, x2           , y2           , DIRECTION_BACKWARD, TakeGoldBar))
+        gm.harvesting_goals.append(goalmanager.Goal("SELF_SOUTH" , 1.0, x1 + offset_x, y1           , DIRECTION_BACKWARD, TakeGoldBar))
+        gm.harvesting_goals.append(goalmanager.Goal("SELF_SOUTH" , 1.0, x2 + offset_x, y2           , DIRECTION_BACKWARD, TakeGoldBar))
+        gm.harvesting_goals.append(goalmanager.Goal("OTHER_NORTH", 1.0, x1           , y1 + offset_y, DIRECTION_BACKWARD, TakeGoldBar))
+        gm.harvesting_goals.append(goalmanager.Goal("OTHER_NORTH", 1.0, x2           , y2 + offset_y, DIRECTION_BACKWARD, TakeGoldBar))
         gm.harvesting_goals.append(goalmanager.Goal("OTHER_SOUTH", 1.0, x1 + offset_x, y1 + offset_y, DIRECTION_BACKWARD, TakeGoldBar))
         gm.harvesting_goals.append(goalmanager.Goal("OTHER_SOUTH", 1.0, x2 + offset_x, y2 + offset_y, DIRECTION_BACKWARD, TakeGoldBar))
 
@@ -53,10 +44,6 @@ class Main(statemachine.State):
         gm.emptying_goals.append(goalmanager.Goal("DEPOSIT_2", 1.0, 0.90, 0.5, DIRECTION_FORWARD, EmptyTank))
         gm.emptying_goals.append(goalmanager.Goal("DEPOSIT_3", 1.0, 0.72, 0.5, DIRECTION_FORWARD, EmptyTank))
         gm.emptying_goals.append(goalmanager.Goal("DEPOSIT_4", 1.0, 1.06, 0.5, DIRECTION_FORWARD, EmptyTank))
-
-#        for gold_bar_start_pos in [(0.60, 0.86, 0.0), (1.35, 0.86, 0.0)] :
-#            gm.harvesting_goals.append(goalmanager.Goal(0.0, 1.0, gold_bar_start_pos[0], gold_bar_start_pos[1], TakeGoldBar,
-#                gold_bar_start_pos))
 
 
     def on_device_ready(self, packet):
