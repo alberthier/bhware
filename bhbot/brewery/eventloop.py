@@ -343,8 +343,6 @@ class EventLoop(object):
         else:
             self.root_state.switch_to_substate(state)
             self.send_packet(packets.ControllerReady())
-        if IS_HOST_DEVICE_PC:
-            self.map.send_zones_to_simulator()
 
 
     def start(self):
