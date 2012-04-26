@@ -575,7 +575,13 @@ class Navigate(statemachine.State):
 class GotoHome(statemachine.State):
 
     def on_enter(self):
-        self.switch_to_substate(Navigate(PURPLE_START_X, PURPLE_START_Y))
+        seq = Sequence()
+        seq.add(Navigate(PURPLE_START_X, 0.60))
+        walk = TrajectoryWalk()
+        walk.look_at(PURPLE_START_X, PURPLE_START_Y + 0.03)
+        walk.move_to(PURPLE_START_X, PURPLE_START_Y + 0.03)
+        seq.add(walk)
+        self.switch_to_substate(seq)
 
 
     def on_exit_substate(self, substate):
