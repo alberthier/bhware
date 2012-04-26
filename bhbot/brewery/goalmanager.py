@@ -3,6 +3,7 @@
 
 import sys
 import trajectory
+import logger
 
 
 
@@ -90,5 +91,6 @@ class GoalManager(object):
 
 
     def goal_done(self, goal):
+        logger.log("Goal done : "+goal.identifier)
         self.harvesting_goals = [ g for g in self.harvesting_goals if g.identifier != goal.identifier ]
         self.emptying_goals = [ g for g in self.emptying_goals if g.identifier != goal.identifier ]

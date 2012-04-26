@@ -7,6 +7,8 @@ import imp
 import inspect
 import datetime
 
+#TODO : improve import mechanism by using this tutorial : http://www.doughellmann.com/PyMOTW/imp/
+# then when could remove sys.path manipulations
 
 def instantiate_state_machine(state_machine_name, eventloop):
     state_machines_dir = os.path.join(os.path.dirname(__file__), "statemachines")
@@ -31,6 +33,12 @@ class State(object):
         self.event_loop = None
         self.sub_state = None
         self.parent_state = None
+        self.short_description = None
+
+    def get_short_description(self):
+        if not self.short_description :
+            return self.__doc__
+        return self.short_description
 
 
     def switch_to_state(self, new_state):
