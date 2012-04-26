@@ -285,7 +285,7 @@ class Map(object):
         pathfinding_result = self.evaluator.find(start_cell_x, start_cell_y, goal_cell_x, goal_cell_y)
         if pathfinding_result is None:
             max_cost = (FIELD_X_SIZE / EVALUATOR_MAP_RESOLUTION) * (FIELD_Y_SIZE / EVALUATOR_MAP_RESOLUTION)
-            max_cost = max_cost ** 2
+            max_cost**=2
             return max_cost
         else:
             return pathfinding_result[0]
