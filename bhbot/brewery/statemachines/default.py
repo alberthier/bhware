@@ -25,10 +25,29 @@ class Main(statemachine.State):
         gm = goalmanager.GoalManager(self.event_loop)
         self.robot().goal_manager = gm
         gm.harvesting_goals.append(goalmanager.Goal("MAP", 1.0, 0.31, 1.37, DIRECTION_BACKWARD, GrabMap))
-        gm.harvesting_goals.append(goalmanager.Goal("SELF_NORTH", 1.0, 0.60, 0.86, DIRECTION_BACKWARD, TakeGoldBar))
-        gm.harvesting_goals.append(goalmanager.Goal("SELF_NORTH", 1.0, 0.60, 1.30, DIRECTION_BACKWARD, TakeGoldBar))
-        gm.harvesting_goals.append(goalmanager.Goal("SELF_SOUTH", 1.0, 1.35, 0.86, DIRECTION_BACKWARD, TakeGoldBar))
-        gm.harvesting_goals.append(goalmanager.Goal("SELF_SOUTH", 1.0, 1.35, 1.30, DIRECTION_BACKWARD, TakeGoldBar))
+        #gm.harvesting_goals.append(goalmanager.Goal("SELF_NORTH", 1.0, 0.60, 0.86, DIRECTION_BACKWARD, TakeGoldBar))
+        #gm.harvesting_goals.append(goalmanager.Goal("SELF_NORTH", 1.0, 0.60, 1.30, DIRECTION_BACKWARD, TakeGoldBar))
+        #gm.harvesting_goals.append(goalmanager.Goal("SELF_SOUTH", 1.0, 1.35, 0.86, DIRECTION_BACKWARD, TakeGoldBar))
+        #gm.harvesting_goals.append(goalmanager.Goal("SELF_SOUTH", 1.0, 1.35, 1.30, DIRECTION_BACKWARD, TakeGoldBar))
+        #gm.harvesting_goals.append(goalmanager.Goal("OTHER_NORTH", 1.0, 0.60, 0.86, DIRECTION_BACKWARD, TakeGoldBar))
+        #gm.harvesting_goals.append(goalmanager.Goal("OTHER_NORTH", 1.0, 0.60, 1.30, DIRECTION_BACKWARD, TakeGoldBar))
+        #gm.harvesting_goals.append(goalmanager.Goal("OTHER_SOUTH", 1.0, 1.35, 0.86, DIRECTION_BACKWARD, TakeGoldBar))
+        #gm.harvesting_goals.append(goalmanager.Goal("OTHER_SOUTH", 1.0, 1.35, 1.30, DIRECTION_BACKWARD, TakeGoldBar))
+
+        x1, y1 = 0.60, 0.86
+        x2, y2 = x1, (1.1 - y1) + 1.1
+
+        offset_x = (1.0 - x1) * 2.0
+        offset_y = 0.80
+
+        gm.harvesting_goals.append(goalmanager.Goal("SELF_NORTH", 1.0, x1, y1,              DIRECTION_BACKWARD, TakeGoldBar))
+        gm.harvesting_goals.append(goalmanager.Goal("SELF_NORTH", 1.0, x2, y2,              DIRECTION_BACKWARD, TakeGoldBar))
+        gm.harvesting_goals.append(goalmanager.Goal("SELF_SOUTH", 1.0, x1 + offset_x, y1,   DIRECTION_BACKWARD, TakeGoldBar))
+        gm.harvesting_goals.append(goalmanager.Goal("SELF_SOUTH", 1.0, x2 + offset_x, y2,   DIRECTION_BACKWARD, TakeGoldBar))
+        gm.harvesting_goals.append(goalmanager.Goal("OTHER_NORTH", 1.0, x1, y1 + offset_y, DIRECTION_BACKWARD, TakeGoldBar))
+        gm.harvesting_goals.append(goalmanager.Goal("OTHER_NORTH", 1.0, x2, y2 + offset_y, DIRECTION_BACKWARD, TakeGoldBar))
+        gm.harvesting_goals.append(goalmanager.Goal("OTHER_SOUTH", 1.0, x1 + offset_x, y1 + offset_y, DIRECTION_BACKWARD, TakeGoldBar))
+        gm.harvesting_goals.append(goalmanager.Goal("OTHER_SOUTH", 1.0, x2 + offset_x, y2 + offset_y, DIRECTION_BACKWARD, TakeGoldBar))
 
         gm.emptying_goals.append(goalmanager.Goal("DEPOSIT_1", 2.0, 0.25, 0.6, DIRECTION_FORWARD, EmptyTank))
         gm.emptying_goals.append(goalmanager.Goal("DEPOSIT_2", 1.0, 0.90, 0.5, DIRECTION_FORWARD, EmptyTank))
@@ -243,20 +262,16 @@ class GrabMap(statemachine.State):
 
     def on_enter(self):
         walk = commonstates.TrajectoryWalk()
+        walk.rotate_to(0.0)
+        walk.wait_for(commonstates.StoreFabric(FABRIC_STORE_LOW))
+        walk.wait_for(commonstates.MapArm(MAP_ARM_OPEN))
+        walk.wait_for(commonstates.MapGripper(MAP_GRIPPER_OPEN))
+        walk.backward(0.10)
+        walk.wait_for(commonstates.MapGripper(MAP_GRIPPER_CLOSE))
+        walk.wait_for(commonstates.MapArm(MAP_ARM_CLOSE))
+        walk.wait_for(commonstates.StoreFabric(FABRIC_STORE_HIGH))
         walk.forward(0.10)
-        walk_at_end = commonstates.TrajectoryWalk()
-        walk_at_end.backward(0.20)
-        #TODO : parallelize
-        seq = commonstates.Sequence(commonstates.StoreFabric(FABRIC_STORE_LOW),
-                                    commonstates.MapArm(MAP_ARM_OPEN),
-                                    commonstates.MapGripper(MAP_GRIPPER_OPEN),
-                                    walk,
-                                    commonstates.MapGripper(MAP_GRIPPER_CLOSE),
-                                    commonstates.MapArm(MAP_ARM_CLOSE),
-                                    commonstates.StoreFabric(FABRIC_STORE_HIGH),
-                                    walk_at_end
-                                    )
-        self.switch_to_substate(seq)
+        self.switch_to_substate(walk)
 
     def on_exit_substate(self, state):
         self.robot().goal_manager.goal_done(self.goal)
