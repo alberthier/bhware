@@ -24,16 +24,16 @@ class Main(statemachine.State):
     def on_enter(self):
         gm = goalmanager.GoalManager(self.event_loop)
         self.robot().goal_manager = gm
-        gm.harvesting_goals.append(goalmanager.Goal("MAP", 1.0, 0.31, 1.37, GrabMap))
-        gm.harvesting_goals.append(goalmanager.Goal("SELF_NORTH", 1.0, 0.60, 0.86, TakeGoldBar))
-        gm.harvesting_goals.append(goalmanager.Goal("SELF_NORTH", 1.0, 0.60, 1.30, TakeGoldBar))
-        gm.harvesting_goals.append(goalmanager.Goal("SELF_SOUTH", 1.0, 1.35, 0.86, TakeGoldBar))
-        gm.harvesting_goals.append(goalmanager.Goal("SELF_SOUTH", 1.0, 1.35, 1.30, TakeGoldBar))
+        gm.harvesting_goals.append(goalmanager.Goal("MAP", 1.0, 0.31, 1.37, DIRECTION_BACKWARD, GrabMap))
+        gm.harvesting_goals.append(goalmanager.Goal("SELF_NORTH", 1.0, 0.60, 0.86, DIRECTION_BACKWARD, TakeGoldBar))
+        gm.harvesting_goals.append(goalmanager.Goal("SELF_NORTH", 1.0, 0.60, 1.30, DIRECTION_BACKWARD, TakeGoldBar))
+        gm.harvesting_goals.append(goalmanager.Goal("SELF_SOUTH", 1.0, 1.35, 0.86, DIRECTION_BACKWARD, TakeGoldBar))
+        gm.harvesting_goals.append(goalmanager.Goal("SELF_SOUTH", 1.0, 1.35, 1.30, DIRECTION_BACKWARD, TakeGoldBar))
 
-        gm.emptying_goals.append(goalmanager.Goal("DEPOSIT_1", 2.0, 0.25, 0.6, EmptyTank))
-        gm.emptying_goals.append(goalmanager.Goal("DEPOSIT_2", 1.0, 0.9, 0.5, EmptyTank))
-        gm.emptying_goals.append(goalmanager.Goal("DEPOSIT_3", 1.0, 0.72, 0.5, EmptyTank))
-        gm.emptying_goals.append(goalmanager.Goal("DEPOSIT_4", 1.0, 1.06, 0.5, EmptyTank))
+        gm.emptying_goals.append(goalmanager.Goal("DEPOSIT_1", 2.0, 0.25, 0.6, DIRECTION_FORWARD, EmptyTank))
+        gm.emptying_goals.append(goalmanager.Goal("DEPOSIT_2", 1.0, 0.90, 0.5, DIRECTION_FORWARD, EmptyTank))
+        gm.emptying_goals.append(goalmanager.Goal("DEPOSIT_3", 1.0, 0.72, 0.5, DIRECTION_FORWARD, EmptyTank))
+        gm.emptying_goals.append(goalmanager.Goal("DEPOSIT_4", 1.0, 1.06, 0.5, DIRECTION_FORWARD, EmptyTank))
 
 #        for gold_bar_start_pos in [(0.60, 0.86, 0.0), (1.35, 0.86, 0.0)] :
 #            gm.harvesting_goals.append(goalmanager.Goal(0.0, 1.0, gold_bar_start_pos[0], gold_bar_start_pos[1], TakeGoldBar,
@@ -214,7 +214,7 @@ class FindNextGoal(statemachine.State):
             self.current_goal = next_goal
             logger.log("Next goal is " + next_goal.identifier)
             logger.log("Time taken for decision taking {} ms".format((end_time - start_time) * 1000))
-            nav = commonstates.Navigate(next_goal.x, next_goal.y)
+            nav = commonstates.Navigate(next_goal.x, next_goal.y, next_goal.direction)
             self.switch_to_substate(nav)
         else :
             self.switch_to_state(EndOfMatch())

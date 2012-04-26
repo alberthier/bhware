@@ -10,12 +10,13 @@ import logger
 
 class Goal(object):
 
-    def __init__(self, identifier, weight, x, y, handler_state, ctor_parameters = None):
+    def __init__(self, identifier, weight, x, y, direction, handler_state, ctor_parameters = None):
         self.identifier = identifier
 #        self.count = count
         self.weight = weight
         self.x = x
         self.y = y
+        self.direction = direction
         self.handler_state = handler_state
 #        self.intrinsic_cost = 0.0
         self.navigation_cost = 0.0
