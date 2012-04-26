@@ -75,6 +75,9 @@ class GoalManager(object):
 
     def get_best_goal(self, goals):
 
+        if not goals :
+            return None
+
         for goal in goals:
             pose = trajectory.Pose(goal.x, goal.y, virtual=True)
             goal.navigation_cost = self.event_loop.map.evaluate(self.event_loop.robot.pose, pose)
@@ -85,7 +88,11 @@ class GoalManager(object):
         for order, goal in enumerate(sorted(goals, key=lambda x:x.weight, reverse=True)):
             goal.score += order
 
-        best_goal = max(goals, key=lambda g : g.score)
+        logger.log("Goals by score : {}".format( ["{}:{}".format(g.identifier, g.score) for g in goals ] ))
+
+        best_goal = min(goals, key=lambda g : g.score)
+
+        logger.log("Best goal is {} with score {}".format(best_goal.identifier, best_goal.score))
 
         return best_goal
 

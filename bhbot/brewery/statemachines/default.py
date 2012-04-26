@@ -24,16 +24,16 @@ class Main(statemachine.State):
     def on_enter(self):
         gm = goalmanager.GoalManager(self.event_loop)
         self.robot().goal_manager = gm
-        gm.harvesting_goals.append(goalmanager.Goal("MAP", 1.0, 0.1043, 1.3699, GrabMap))
+        gm.harvesting_goals.append(goalmanager.Goal("MAP", 1.0, 0.31, 1.37, GrabMap))
         gm.harvesting_goals.append(goalmanager.Goal("SELF_NORTH", 1.0, 0.60, 0.86, TakeGoldBar))
         gm.harvesting_goals.append(goalmanager.Goal("SELF_NORTH", 1.0, 0.60, 1.30, TakeGoldBar))
         gm.harvesting_goals.append(goalmanager.Goal("SELF_SOUTH", 1.0, 1.35, 0.86, TakeGoldBar))
         gm.harvesting_goals.append(goalmanager.Goal("SELF_SOUTH", 1.0, 1.35, 1.30, TakeGoldBar))
 
-        gm.emptying_goals.append(goalmanager.Goal("DEPOSIT_1", 1.0, 0.7, 0.5, EmptyTank))
-        gm.emptying_goals.append(goalmanager.Goal("DEPOSIT_2", 1.0, 0.85, 0.48, EmptyTank))
-        gm.emptying_goals.append(goalmanager.Goal("DEPOSIT_3", 1.0, 1.02, 0.48, EmptyTank))
-        gm.emptying_goals.append(goalmanager.Goal("DEPOSIT_4", 1.0, 1.21, 0.46, EmptyTank))
+        gm.emptying_goals.append(goalmanager.Goal("DEPOSIT_1", 2.0, 0.25, 0.6, EmptyTank))
+        gm.emptying_goals.append(goalmanager.Goal("DEPOSIT_2", 1.0, 0.9, 0.5, EmptyTank))
+        gm.emptying_goals.append(goalmanager.Goal("DEPOSIT_3", 1.0, 0.72, 0.5, EmptyTank))
+        gm.emptying_goals.append(goalmanager.Goal("DEPOSIT_4", 1.0, 1.06, 0.5, EmptyTank))
 
 #        for gold_bar_start_pos in [(0.60, 0.86, 0.0), (1.35, 0.86, 0.0)] :
 #            gm.harvesting_goals.append(goalmanager.Goal(0.0, 1.0, gold_bar_start_pos[0], gold_bar_start_pos[1], TakeGoldBar,
@@ -55,19 +55,6 @@ class WaitStart(statemachine.State):
 
     def on_enter(self):
         self.sent = False
-
-
-    def on_keep_alive(self, packet):
-#        pass
-        if not self.sent:
-            self.sent = True
-            import cProfile
-            import sys
-            cProfile.runctx("import trajectory;self.event_loop.map.route(self.robot().pose, trajectory.Pose(1.6, 2.0, virtual=True))", None, { "self": self })
-            sys.stdout.flush()
-            self.event_loop.map.route(self.robot().pose, trajectory.Pose(0.5, 1.0, virtual=True))
-            #self.event_loop.map.route(self.robot().pose.x, self.robot().pose.y, 1.8, 2.8)
-
 
     def on_start(self, packet):
         self.switch_to_substate(commonstates.DefinePosition())
@@ -229,12 +216,18 @@ class FindNextGoal(statemachine.State):
             logger.log("Time taken for decision taking {} ms".format((end_time - start_time) * 1000))
             nav = commonstates.Navigate(next_goal.x, next_goal.y)
             self.switch_to_substate(nav)
+        else :
+            self.switch_to_state(EndOfMatch())
 
 
     def on_exit_substate(self, state):
         if isinstance(state, commonstates.Navigate ) :
-            if state.exit_reason == REASON_DESTINATION_REACHED :
+            if state.exit_reason == TRAJECTORY_DESTINATION_REACHED :
                 self.switch_to_goal_state()
+            elif state.exit_reason == TRAJECTORY_DESTINATION_UNREACHABLE :
+                logger.log("Goal {} unreachable, skipping it".format(self.current_goal.identifier))
+                self.robot().goal_manager.goal_done(self.current_goal)
+                self.switch_to_state(FindNextGoal())
             else :
                 self.switch_to_state(FindNextGoal())
         else :
@@ -250,17 +243,17 @@ class GrabMap(statemachine.State):
 
     def on_enter(self):
         walk = commonstates.TrajectoryWalk()
-        walk.forward(10.0)
+        walk.forward(0.10)
         walk_at_end = commonstates.TrajectoryWalk()
-        walk_at_end.backward(20.0)
+        walk_at_end.backward(0.20)
         #TODO : parallelize
-        seq = commonstates.Sequence(commonstates.FabricStore(FABRIC_STORE_LOW),
+        seq = commonstates.Sequence(commonstates.StoreFabric(FABRIC_STORE_LOW),
                                     commonstates.MapArm(MAP_ARM_OPEN),
                                     commonstates.MapGripper(MAP_GRIPPER_OPEN),
                                     walk,
                                     commonstates.MapGripper(MAP_GRIPPER_CLOSE),
                                     commonstates.MapArm(MAP_ARM_CLOSE),
-                                    commonstates.FabricStore(FABRIC_STORE_HIGH),
+                                    commonstates.StoreFabric(FABRIC_STORE_HIGH),
                                     walk_at_end
                                     )
         self.switch_to_substate(seq)
@@ -324,3 +317,8 @@ class EmptyTank(statemachine.State):
         self.robot().goal_manager.goal_done(self.goal)
         self.exit_substate()
 
+class EndOfMatch(statemachine.State):
+    """End of match"""
+
+    def on_enter(self):
+        pass
