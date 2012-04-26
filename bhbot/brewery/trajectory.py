@@ -146,9 +146,14 @@ class Map(object):
         forbidden_zones_def.append(['rect', 0.5 - MAP_WALLS_DISTANCE + captain_room_reduction, 0.0, 0.52 + MAP_WALLS_DISTANCE - captain_room_reduction, 0.4])
         forbidden_zones_def.append(['circle', 0.51, 0.4, MAP_WALLS_DISTANCE])
         # Bridge
-        forbidden_zones_def.append(['rect', 1.25 - MAP_WALLS_DISTANCE, 0.0, 2.0, 0.380 + MAP_WALLS_DISTANCE])
+        forbidden_zones_def.append(['rect', 1.25 - MAP_WALLS_DISTANCE, 0.0, 1.25, 0.380])
+        forbidden_zones_def.append(['rect', 1.25, 0.0, 2.0, 0.380 + MAP_WALLS_DISTANCE])
+        forbidden_zones_def.append(['circle', 1.25, 0.380, MAP_WALLS_DISTANCE])
         # Island
-        forbidden_zones_def.append(['rect', 0.875 - MAP_WALLS_DISTANCE, 0.975 - MAP_WALLS_DISTANCE, 1.125 + MAP_WALLS_DISTANCE, 2.025 + MAP_WALLS_DISTANCE])
+        forbidden_zones_def.append(['rect', 0.875 - MAP_WALLS_DISTANCE, 0.975, 1.125 + MAP_WALLS_DISTANCE, 2.025])
+        forbidden_zones_def.append(['rect', 0.875, 0.975 - MAP_WALLS_DISTANCE, 1.125, 0.975])
+        forbidden_zones_def.append(['circle', 0.875, 0.975, MAP_WALLS_DISTANCE])
+        forbidden_zones_def.append(['circle', 1.125, 2.025, MAP_WALLS_DISTANCE])
         # Edges
         forbidden_zones_def.append(['rect', 0.0, 0.0, MAP_WALLS_DISTANCE, FIELD_Y_SIZE / 2.0]) # Top edge
         forbidden_zones_def.append(['rect', FIELD_X_SIZE - MAP_WALLS_DISTANCE, 0.0, FIELD_X_SIZE, FIELD_Y_SIZE / 2.0]) # Bottom edge
