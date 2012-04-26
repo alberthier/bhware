@@ -412,8 +412,12 @@ class Map(object):
         pyversion = "python{}.{}".format(sys.version_info.major, sys.version_info.minor)
         include_dir = sys.exec_prefix + "/include/" + pyversion
         lib_dir = sys.exec_prefix + "/lib"
-        working_dir = os.path.dirname(__file__)
-        cmd = ["gcc", "-O2", "-shared", "-fPIC", "-o", "pathfinding.so", "-I" + include_dir, "-L" + lib_dir, "pathfinding.c", "-l" + pyversion]
+        source_file = os.path.join(os.path.dirname(__file__), "pathfinding.c")
+        working_dir = "/tmp/bhware"
+        if not os.path.exists(working_dir):
+            os.makedirs(working_dir)
+        sys.path.append(working_dir)
+        cmd = ["gcc", "-O2", "-shared", "-fPIC", "-o", "pathfinding.so", "-I" + include_dir, "-L" + lib_dir, source_file, "-l" + pyversion]
         gcc = subprocess.Popen(cmd, stdout = subprocess.PIPE, stderr = subprocess.PIPE, cwd=working_dir)
         (out, err) = gcc.communicate()
         if gcc.returncode == 0:
