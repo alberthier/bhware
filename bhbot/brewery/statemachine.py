@@ -101,5 +101,5 @@ class State(object):
 
 
     #noinspection PyUnusedLocal
-    def on_opponent_disapeared(self, opponent):
+    def on_opponent_disapeared(self, opponent, is_in_front):
         pass

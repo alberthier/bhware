@@ -104,7 +104,7 @@ BLOCKED_ZONE_DISAPEARING_MS            = 1000
 OPPONENT_DETECTION_DISAPEARING_TICKS   = int(0.5 / EVENT_LOOP_TICK_RESOLUTION_S)
 
 # Blocking opponent handling
-DEFAULT_OPPONENT_WAIT_MS               = 3000
+DEFAULT_OPPONENT_WAIT_MS               = 2000
 DEFAULT_OPPONENT_MAX_RETRIES           = 5
 
 # Turret detection ranges
