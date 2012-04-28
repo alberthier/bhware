@@ -84,7 +84,7 @@ class GoalManager(object):
             goal.navigation_cost = self.event_loop.map.evaluate(self.event_loop.robot.pose, pose)
 
         for order, goal in enumerate(sorted(goals, key=lambda x:x.navigation_cost)):
-            goal.score = order
+            goal.score = order * 2
 
         for order, goal in enumerate(sorted(goals, key=lambda x:x.weight, reverse=True)):
             goal.score += order
