@@ -43,6 +43,7 @@ class WaitForOpponentLeave(Timer):
 
     def __init__(self, opponent, miliseconds, current_move_direction):
         Timer.__init__(self, miliseconds)
+        self.current_move_direction = current_move_direction
         self.opponent = opponent
         self.exit_reason = self.TIMEOUT
 
