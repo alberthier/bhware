@@ -39,6 +39,7 @@ class Main(statemachine.State):
         gm.harvesting_goals.append(goalmanager.Goal("OTHER_NORTH", 1.0, x2           , y2 + offset_y, DIRECTION_BACKWARD, TakeGoldBar))
         gm.harvesting_goals.append(goalmanager.Goal("OTHER_SOUTH", 1.0, x1 + offset_x, y1 + offset_y, DIRECTION_BACKWARD, TakeGoldBar))
         gm.harvesting_goals.append(goalmanager.Goal("OTHER_SOUTH", 1.0, x2 + offset_x, y2 + offset_y, DIRECTION_BACKWARD, TakeGoldBar))
+        gm.harvesting_goals.append(goalmanager.Goal("SWIFFER"    , 0.5, 1.37         , 2.0          , DIRECTION_BACKWARD, Swiffer))
 
         gm.emptying_goals.append(goalmanager.Goal("DEPOSIT_1", 2.0, 0.25, 0.6, DIRECTION_FORWARD, EmptyTank))
         gm.emptying_goals.append(goalmanager.Goal("DEPOSIT_2", 1.0, 0.90, 0.5, DIRECTION_FORWARD, EmptyTank))
@@ -253,11 +254,11 @@ class GrabMap(statemachine.State):
         walk.wait_for(commonstates.StoreFabric(FABRIC_STORE_LOW))
         walk.wait_for(commonstates.MapArm(MAP_ARM_OPEN))
         walk.wait_for(commonstates.MapGripper(MAP_GRIPPER_OPEN))
-        walk.backward(0.10)
+        walk.backward(0.25)
         walk.wait_for(commonstates.MapGripper(MAP_GRIPPER_CLOSE))
         walk.wait_for(commonstates.MapArm(MAP_ARM_CLOSE))
         walk.wait_for(commonstates.StoreFabric(FABRIC_STORE_HIGH))
-        walk.forward(0.10)
+        walk.forward(0.25)
         self.switch_to_substate(walk)
 
     def on_exit_substate(self, state):
@@ -268,37 +269,34 @@ class GrabMap(statemachine.State):
 class TakeGoldBar(statemachine.State):
     """ Take a gold bar
     """
+    init_positions = { #   x      y    angle
+        "SELF_NORTH" :  ( 0.54, 1.10, 0.0 ),
+        "SELF_SOUTH" :  ( 1.46, 1.10, math.pi ),
+        "OTHER_NORTH" : ( 0.54, 1.90, 0.0 ),
+        "OTHER_SOUTH" : ( 1.46, 1.90, -math.pi )
+    }
     def __init__(self, goal):
+        """
+        @param goal: Goal which led to this state
+        @type goal: trajectory.Goal
+        """
         super(TakeGoldBar,self).__init__()
         self.goal = goal
+        self.start_pos = self.init_positions[goal.identifier]
 
 
     def on_enter(self):
         walk = commonstates.TrajectoryWalk()
+        walk.move_to(*self.start_pos[0:2], direction=DIRECTION_BACKWARD)
+        walk.rotate_to(self.start_pos[2])
+#        walk.wait_for(commonstates.Timer(5000))
+#        walk.forward(0.11)
+#        walk.wait_for(commonstates.Timer(5000))
+        walk.wait_for(DetectAndTakeGoldbar(self.goal))
         self.switch_to_substate(walk)
 
     def on_exit_substate(self, state):
-        self.robot().tank_full = True
-        self.robot().goal_manager.goal_done(self.goal)
         self.exit_substate()
-
-class GrabGoldbarAndStuff(statemachine.State):
-    """ Grab the gold bar and all the coins
-    """
-    def __init__(self):
-        super(GrabGoldbarAndStuff, self).__init__()
-
-    def on_enter(self):
-        pass
-
-#class GotoWithPathFinding(statemachine.State):
-#    """ Goto in the captain's lair
-#    """
-#    def __init__(self):
-#        super(GotoWithPathFinding, self).__init__()
-#
-#    def on_enter(self):
-#        pass
 
 
 class EmptyTank(statemachine.State):
@@ -324,3 +322,62 @@ class EndOfMatch(statemachine.State):
 
     def on_enter(self):
         pass
+
+class DetectAndTakeGoldbar(statemachine.State):
+    def __init__(self, goal):
+        self.goal = goal
+
+    def on_enter(self):
+        self.switch_to_substate(commonstates.GetGoldBarStatus())
+
+    def on_exit_substate(self, state):
+        logger.log("Returned from substate")
+        if isinstance(state, commonstates.GetGoldBarStatus):
+            if state.status == GOLD_BAR_PRESENT :
+                logger.log("Goldbar was present")
+                walk = commonstates.TrajectoryWalk()
+                walk.wait_for(commonstates.Gripper(GRIPPER_SIDE_BOTH, GRIPPER_OPEN))
+                walk.forward(0.11)
+#                walk.wait_for(commonstates.Timer(5000))
+                walk.wait_for(commonstates.Gripper(GRIPPER_SIDE_BOTH, GRIPPER_CLOSE))
+#                walk.wait_for(commonstates.Timer(5000))
+                walk.backward(0.11)
+                self.switch_to_substate(walk)
+                return
+            else:
+                logger.log("Goldbar was not detected")
+        elif isinstance(state, commonstates.TrajectoryWalk) :
+            self.robot().tank_full = True
+        self.robot().goal_manager.goal_done(self.goal)
+        self.exit_substate()
+
+class Swiffer(statemachine.State):
+    """Try to find some pieces to grab"""
+    def __init__(self, goal):
+        """
+        @param goal: goal which led to this state
+        @type goal: trajectory.Goal
+        """
+        self.goal = goal
+
+    def on_enter(self):
+        walk = commonstates.TrajectoryWalk()
+        walk.rotate_to(math.pi)
+        walk.wait_for(commonstates.Sweeper(SWEEPER_OPEN))
+        walk.move_to(1.65, 2.05, direction=DIRECTION_BACKWARD)
+        walk.rotate_to(math.pi / 2)
+        walk.move_to(1.65, 0.67, direction=DIRECTION_BACKWARD)
+        walk.rotate_to(0.0)
+        walk.backward(0.7)
+        walk.rotate_to(math.pi/2)
+        walk.forward(0.15)
+        walk.wait_for(commonstates.Sweeper(SWEEPER_CLOSE))
+        walk.backward(0.35)
+        self.switch_to_substate(walk)
+
+    def on_exit_substate(self):
+        self.robot().goal_manager.goal_done(self.goal)
+        self.exit_substate()
+
+
+
