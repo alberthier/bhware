@@ -227,32 +227,64 @@ class Map(object):
 
         simplified_paths = []
 
-        if len(path) > 1:
-            cleaned_path = [ Pose(path[0][0], path[0][1]) ]
-            for i in xrange(1, len(path)):
-                (prev_x, prev_y) = path[i - 1]
+        if len(path) == 0:
+            return []
+        elif len(path) < 3:
+            simplified_paths.append([goal_cell_y, goal_cell_x])
+        else:
+            # 1. Filter X or Y lines
+            lines_filtered_path = [ Pose(path[-1][0], path[-1][1]) ]
+            for i in reversed(xrange(len(path) - 1)):
+                (next_x, next_y) = path[i + 1]
                 (x, y) = path[i]
-                if x != prev_x and y != prev_y:
-                    cleaned_path.append(Pose(x, y))
-            if cleaned_path[-1].x != path[-1][0] or cleaned_path[-1].y != path[-1][1]:
-                cleaned_path.append(Pose(path[-1][0], path[-1][1]))
-            p1 = cleaned_path[0]
+                if x != next_x and y != next_y:
+                    lines_filtered_path.insert(0, Pose(x, y))
+
+            # 2. Filter aligned points
+            p1 = lines_filtered_path[0]
             p2 = None
-            if len(cleaned_path) >= 2:
-                p3 = cleaned_path[1]
+            if len(lines_filtered_path) > 1:
+                p3 = lines_filtered_path[1]
             else:
                 p3 = None
-            simplified_paths.append([])
-            for i in xrange(2, len(cleaned_path)):
+            alignment_filtered_path = []
+            if p1.x != start_cell_x or p1.y != start_cell_y:
+                alignment_filtered_path.append(p1)
+            for i in xrange(2, len(lines_filtered_path)):
                 p2 = p3
-                p3 = cleaned_path[i]
+                p3 = lines_filtered_path[i]
                 a1 = math.atan2(p2.y - p1.y, p2.x - p1.x)
                 a2 = math.atan2(p3.y - p2.y, p3.x - p2.x)
                 if abs(a1 - a2) > 0.1:
-                    simplified_paths[-1].append(p2)
-                    if abs(a1 - a2) > ROUTE_SPLIT_ANGLE:
-                        simplified_paths.append([])
+                    alignment_filtered_path.append(p2)
                     p1 = p2
+            if p3 is not None:
+                alignment_filtered_path.append(p3)
+
+            # 3. Filter neighbor points
+            neighbor_filtered_path = [ alignment_filtered_path[0] ]
+            for i in xrange(1, len(alignment_filtered_path)):
+                prev = neighbor_filtered_path[-1]
+                curr = alignment_filtered_path[i]
+                if abs(prev.x - curr.x) > 1 or abs(prev.y - curr.y) > 1:
+                    neighbor_filtered_path.append(curr)
+
+            # 4. Split the path if the angle is too sharp
+            p1 = neighbor_filtered_path[0]
+            p2 = None
+            if len(neighbor_filtered_path) > 1:
+                p3 = neighbor_filtered_path[1]
+            else:
+                p3 = None
+            simplified_paths.append([ p1 ])
+            for i in xrange(2, len(neighbor_filtered_path)):
+                p2 = p3
+                p3 = neighbor_filtered_path[i]
+                a1 = math.atan2(p2.y - p1.y, p2.x - p1.x)
+                a2 = math.atan2(p3.y - p2.y, p3.x - p2.x)
+                simplified_paths[-1].append(p2)
+                if abs(a1 - a2) > ROUTE_SPLIT_ANGLE:
+                    simplified_paths.append([])
             if p3 is not None:
                 simplified_paths[-1].append(p3)
 
