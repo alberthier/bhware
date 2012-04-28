@@ -459,6 +459,17 @@ class OptionalAngle(FloatRadianItem):
         return angle
 
 
+    def to_dict_value(self, value, pretty = False):
+        if value != None:
+            return super(OptionalAngle, self).to_dict_value(value, pretty)
+        return "None"
+
+
+    def from_dict_value(self, value, pretty = False):
+        if value == "None":
+            return None
+        return super(OptionalAngle, self).from_dict_value(value, pretty)
+
 
 
 class SimulatorPointItem(PacketItem):
