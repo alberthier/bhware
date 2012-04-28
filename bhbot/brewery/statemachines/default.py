@@ -375,7 +375,7 @@ class Swiffer(statemachine.State):
         walk.backward(0.35)
         self.switch_to_substate(walk)
 
-    def on_exit_substate(self):
+    def on_exit_substate(self, substate):
         self.robot().goal_manager.goal_done(self.goal)
         self.exit_substate()
 
