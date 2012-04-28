@@ -20,6 +20,10 @@ class Timer(statemachine.State):
     TIMEOUT = 0
 
     def __init__(self, miliseconds):
+        """
+        @param miliseconds: Time to wait in miliseconds
+        @type miliseconds: float
+        """
         logger.log("Enter timer {}".format(datetime.datetime.now()))
         statemachine.State.__init__(self)
         self.end_time = datetime.datetime.now() + datetime.timedelta(0, 0, 0, miliseconds)
