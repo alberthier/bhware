@@ -70,7 +70,6 @@ class BasicDynamics(QObject):
             time = abs(self.angle - packet.angle) / angular_speed
             traj.append((segmentNb, time, trajectory.Pose(self.x, self.y, packet.angle)))
             self.angle = packet.angle
-            segmentNb += 1
 
         self.simulation_finished.emit(traj)
 
