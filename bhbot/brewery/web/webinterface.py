@@ -4,7 +4,6 @@
 
 import sys
 import os
-import socket
 
 sys.path.append(os.path.dirname(__file__))
 
@@ -16,7 +15,7 @@ import statemachine
 import commonstates
 from definitions import *
 
-
+import math
 
 
 class WebState(statemachine.State):
