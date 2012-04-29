@@ -16,6 +16,7 @@ import fieldview
 import helpers
 import dynamics
 
+import math
 
 
 
@@ -137,7 +138,7 @@ class GraphicsRobotGripperObject(QObject):
             self.item.setPos(150.0, -125.0)
             self.start_angle = 40
             self.end_angle = -180
-        self.item.setRotation(self.start_angle)
+        self.reset()
 
         pen = QPen(QColor("#838383"), 15.0)
         pen.setCapStyle(Qt.RoundCap)
@@ -157,6 +158,8 @@ class GraphicsRobotGripperObject(QObject):
     def set_position(self, p):
         self.item.setRotation(p)
 
+    def reset(self):
+        self.item.setRotation(self.start_angle)
 
     #declare 'position' to Qt's property system
     position = pyqtProperty('qreal', get_position, set_position)
@@ -307,6 +310,8 @@ class GraphicsRobotObject(QObject):
         self.item.setPos(0.0, 0.0)
         self.set_rotation(0.0)
         self.arm.reset()
+        self.left_gripper.reset()
+        self.right_gripper.reset()
 
 
     def get_position(self):
@@ -849,6 +854,11 @@ class RoutingLayer(fieldview.Layer):
                 self.secondary_opponent_zone.hide()
 
 
+    def reset(self):
+        self.main_opponent_zone.hide()
+        self.secondary_opponent_zone.hide()
+
+
 
 
 class Coin(QGraphicsItemGroup):
@@ -1145,3 +1155,13 @@ class SimulatorFieldViewController(fieldview.FieldViewController):
         self.field_view.userEventListeners.append(self.red_robot_layer)
 
         self.update_layers_list()
+
+        self.main_bar = ui.main_bar
+        self.main_bar.stop.clicked.connect(self.user_stop)
+
+    def reset(self):
+        self.red_robot_layer.reset()
+        self.purple_robot_layer.reset()
+
+    def user_stop(self):
+        self.reset()
