@@ -87,8 +87,8 @@ typedef struct
 typedef struct
 {
     float                   distance;
-    float                   qx;                  /* Defini pour l'ordre 5 */
-    float                   qy;
+    float                   qx[2];
+    float                   qy[2];
     float                   ax;
     float                   ay;
     float                   bx;
@@ -97,7 +97,6 @@ typedef struct
     float                   aiy;
     float                   bix;
     float                   biy;
-    unsigned int            i;
 } segmentTrajectoireBS;
 
 typedef struct

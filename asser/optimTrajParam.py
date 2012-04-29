@@ -226,9 +226,16 @@ def trajFunction(d_cfgTraj):
     # 1) 0:'DEPLACEMENT'/1:'ROTATION' 
     # 2) 1:'MARCHE_AVANT'/-1:'MARCHE_ARRIERE'"
     # 3) angle d'arrivee
-    deplacement = commandMsg("MSG_MAIN_GOTO 1 1 0.0")   # 'DEPLACEMENT' en 'MARCHE_AVANT'
-    deplacement.addPose(str(d_cfgTraj['Distance']) + " 0.0") # deplacement rectiligne sur la distance d_cfgTraj['Distance']
-
+    
+    #~ deplacement = commandMsg("MSG_MAIN_GOTO 1 1 0.0")   # 'DEPLACEMENT' en 'MARCHE_AVANT'
+    #~ deplacement.addPose(str(d_cfgTraj['Distance']) + " 0.0") # deplacement rectiligne sur la distance d_cfgTraj['Distance']
+    
+    deplacement = commandMsg("MSG_MAIN_GOTO 1 1 0.0")   # 'DEPLACEMENT' en 'MARCHE_AVANT' #0.78539816339744828
+    deplacement.addPose("0.3 0.05")
+    deplacement.addPose("0.5 0.0")
+    deplacement.addPose("0.7 0.0")
+    deplacement.addPose("1.0 0.1")
+    
     #transmission de commandes de deplacement par l'entree standard
     simulator_process.stdin.write(deplacement.cmdMsgGeneration())
 
@@ -761,17 +768,28 @@ traj = trajFunction(d_cfgTraj)
 #~ traj = trajTest(d_cfgTraj)
 affichageGabaritVitesse_2012(traj)
 
-#~ print(len(traj["def_xTraj"]))
+#~ print(traj["main_goto"])
+#~ sys.exit(2)
+
+print(len(traj["def_xTraj"]))
 #~ print([traj["def_xTraj"][0], traj["def_yTraj"][0]])
 #~ print([traj["def_xTraj"][1], traj["def_yTraj"][1]])
 #~ print([traj["def_xTraj"][2], traj["def_yTraj"][2]])
 #~ print([traj["def_xTraj"][-1], traj["def_yTraj"][-1]])
 
-#~ print(traj["pti"])
-#~ print(traj["disti"])
+print("q:")
+print(traj["q"])
+#~ print("q2:")
+#~ print(traj["q2"])
+print("pti:")
+print(traj["pti"])
+print("disti")
+print(traj["disti"])
+print("distance_seg")
 print(traj["distance_seg"])
 #~ print(traj["vpointe"])
 
+#~ print(traj["def_i"])
 #~ figure()
 #~ N = len(traj["def_xTraj"])
 #~ plot(traj["def_xTraj"][:N], traj["def_yTraj"][:N], '-o')

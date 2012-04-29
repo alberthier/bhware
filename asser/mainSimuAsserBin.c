@@ -147,7 +147,14 @@ int main(void)
         else if (strcmp(command, "MSG_MAIN_GOTO") == 0)
         {
             commandMsgTreatment(buffer, &mouvement, &marche, &angle_rad, &nbrPtsChemin, chemin);
-
+            /*
+            ASSER_TRAJ_LogAsser("main_goto", NBR_ASSER_LOG_VALUE, nbrPtsChemin);
+            ASSER_TRAJ_LogAsser("main_goto", NBR_ASSER_LOG_VALUE, chemin[0].x);
+            ASSER_TRAJ_LogAsser("main_goto", NBR_ASSER_LOG_VALUE, chemin[0].y);
+            ASSER_TRAJ_LogAsser("main_goto", NBR_ASSER_LOG_VALUE, chemin[1].x);
+            ASSER_TRAJ_LogAsser("main_goto", NBR_ASSER_LOG_VALUE, chemin[1].y);
+            ASSER_TRAJ_LogAsser("main_goto", NBR_ASSER_LOG_VALUE, angle_rad);
+            */
             SIMU_InitialisationLogRobot();
             /* initialisation des données pour l'ordre de déplacement */
             /* lancement du deplacement */
