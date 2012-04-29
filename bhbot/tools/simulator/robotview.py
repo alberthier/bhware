@@ -36,9 +36,9 @@ class RobotView(QWidget, RobotView_Ui):
 
     def add_log(self, text):
         if text.startswith("["):
-            self.log_view.append(text)
+            self.log_view.append('<font size="6">{}</font>'.format(text))
         else:
-            self.log_view.append('<font color="{}">{}</font>'.format(self.color, text))
+            self.log_view.append('<font size="6" color="{}">{}</font>'.format(self.color, text))
 
 
     def clear(self):
