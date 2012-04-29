@@ -252,7 +252,7 @@ class GraphicsRobotObject(QObject):
         QObject.__init__(self)
 
         self.move_animation = QParallelAnimationGroup()
-        self.move_animation.finished.connect(self.animation_finished)
+        self.move_animation.stateChanged.connect(self.animation_state_changed)
         self.layer = layer
 
         self.item = QGraphicsItemGroup(layer)
@@ -386,10 +386,9 @@ class GraphicsRobotObject(QObject):
 
         self.move_animation.start()
 
-
-    def animation_finished(self):
-        t = self.move_animation.currentLoopTime() / 1000.0
-        self.movement_finished.emit(0)
+    def animation_state_changed(self, new_state, old_state):
+        if new_state == QAbstractAnimation.Stopped :
+            self.movement_finished.emit(0)
 
 
     def create_rotation_animation(self, angle):
