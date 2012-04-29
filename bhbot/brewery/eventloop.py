@@ -240,6 +240,7 @@ class EventLoop(object):
         self.stopping = False
         self.map = trajectory.Map(self)
         self.timers = []
+        self.state_history = []
 
 
     def handle_read(self, channel):
