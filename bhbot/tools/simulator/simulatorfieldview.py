@@ -1092,10 +1092,12 @@ class GameElementsLayer(fieldview.Layer):
                     elt.setPos(elt.pos().x() + dx, elt.pos().y() + dy)
 
         if self.main_bar.opponent_detection.isChecked():
-            if self.purple_robot_layer.robot.short_detection_circle.collidesWithItem(self.red_robot_layer.robot.team_indicator):
+            short_circle = self.purple_robot_layer.robot.short_detection_circle
+            long_circle = self.purple_robot_layer.robot.long_detection_circle
+            if short_circle.collidesWithItem(self.red_robot_layer.robot.team_indicator):
                 self.send_turret_detect(self.purple_robot_layer, self.red_robot_layer, 0)
                 self.send_turret_detect(self.red_robot_layer, self.purple_robot_layer, 0)
-            if self.purple_robot_layer.robot.long_detection_circle.collidesWithItem(self.red_robot_layer.robot.team_indicator):
+            elif long_circle.collidesWithItem(self.red_robot_layer.robot.team_indicator):
                 self.send_turret_detect(self.purple_robot_layer, self.red_robot_layer, 1)
                 self.send_turret_detect(self.red_robot_layer, self.purple_robot_layer, 1)
 
