@@ -38,6 +38,9 @@ class WebState(statemachine.State):
 class BHWeb(object):
 
     def __init__(self, eventloop):
+        """
+        @type eventloop: EventLoop
+        """
         self.eventloop = eventloop
 
 
@@ -90,6 +93,20 @@ class BHWeb(object):
         while state != self.eventloop.root_state:
             html += "<li>{}</li>\n".format(type(state).__name__)
             state = state.parent_state
+        html += """</ul>
+  </div>
+  <div>
+    <h2>State history:</h2>
+    <ul>
+"""
+        previous = None
+        for state in self.eventloop.state_history:
+            if state.parent_state == previous :
+                html+="<ul>"
+            elif previous and previous.parent_state == state :
+                html+="</ul>"
+            html += "<li>{}</li>\n".format(type(state).__name__)
+            previous = state
         html += """</ul>
   </div>
 </body>

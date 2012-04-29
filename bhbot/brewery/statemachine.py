@@ -48,6 +48,7 @@ class State(object):
         new_state.parent_state = self.parent_state
         self.parent_state.sub_state = new_state
         logger.log("Switching to state {}".format(type(new_state).__name__))
+        self.event_loop.state_history.append(new_state)
         new_state.on_enter()
 
 
@@ -57,6 +58,7 @@ class State(object):
         new_state.parent_state = self
         self.sub_state = new_state
         logger.log("Pushing sub-state {}".format(type(new_state).__name__))
+        self.event_loop.state_history.append(new_state)
         new_state.on_enter()
 
 
