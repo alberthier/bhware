@@ -275,10 +275,20 @@ class GraphicsRobotObject(QObject):
         tower.setBrush(QColor("#838383"))
         self.item.addToGroup(tower)
 
-        team_indicator = QGraphicsEllipseItem(15.0, -25.0, 50.0, 50.0)
-        team_indicator.setBrush(QColor(layer.color))
-        team_indicator.setPen(QPen(0))
-        self.item.addToGroup(team_indicator)
+        self.team_indicator = QGraphicsEllipseItem(15.0, -25.0, 50.0, 50.0)
+        self.team_indicator.setBrush(QColor(layer.color))
+        self.team_indicator.setPen(QPen(0))
+        self.item.addToGroup(self.team_indicator)
+
+        detection_radius = TURRET_SHORT_DISTANCE_DETECTION_RANGE * 1000.0
+        self.short_detection_circle = QGraphicsEllipseItem(-detection_radius, -detection_radius, 2.0 * detection_radius, 2.0 * detection_radius)
+        self.short_detection_circle.setPen(QPen(QColor(layer.color), 2, Qt.DashLine))
+        self.item.addToGroup(self.short_detection_circle)
+
+        detection_radius = TURRET_LONG_DISTANCE_DETECTION_RANGE * 1000.0
+        self.long_detection_circle = QGraphicsEllipseItem(-detection_radius, -detection_radius, 2.0 * detection_radius, 2.0 * detection_radius)
+        self.long_detection_circle.setPen(QPen(QColor(layer.color), 2, Qt.DashLine))
+        self.item.addToGroup(self.long_detection_circle)
 
         self.fabric = QGraphicsRectItem(-60.0, -100.0, 40.0, 200.0)
         self.fabric.setPen(QPen(0))
@@ -934,13 +944,14 @@ class Fabric(QGraphicsRectItem):
 
 class GameElementsLayer(fieldview.Layer):
 
-    def __init__(self, purple_robot, red_robot, scene = None):
+    def __init__(self, purple_robot_layer, red_robot_layer, scene, main_bar):
         fieldview.Layer.__init__(self, scene)
         self.name = "Game elements"
         self.color = GOLD_BAR_COLOR
         self.elements = []
-        self.purple_robot = purple_robot
-        self.red_robot = red_robot
+        self.purple_robot_layer = purple_robot_layer
+        self.red_robot_layer = red_robot_layer
+        self.main_bar = main_bar
 
         self.purple_map_tower_treasure = [Coin(self, 0.915, 1.015, True),
                                           Coin(self, 0.915, 1.185, True),
@@ -1040,12 +1051,12 @@ class GameElementsLayer(fieldview.Layer):
 
     def scene_changed(self):
         for elt in self.elements:
-            if not elt in self.purple_robot.carried_treasure and not elt in self.red_robot.carried_treasure:
+            if not elt in self.purple_robot_layer.robot.carried_treasure and not elt in self.red_robot_layer.robot.carried_treasure:
                 robot = None
-                if elt.collidesWithItem(self.purple_robot.robot_item):
-                    robot = self.purple_robot
-                elif elt.collidesWithItem(self.red_robot.robot_item):
-                    robot = self.red_robot
+                if elt.collidesWithItem(self.purple_robot_layer.robot.robot_item):
+                    robot = self.purple_robot_layer.robot
+                elif elt.collidesWithItem(self.red_robot_layer.robot.robot_item):
+                    robot = self.red_robot_layer.robot
                 if robot != None:
                     angle = (robot.item.rotation() / 180.0 * math.pi) % (math.pi * 2.0)
 
@@ -1070,6 +1081,29 @@ class GameElementsLayer(fieldview.Layer):
                     dx = sign * math.cos(angle) * dist
                     dy = sign * math.sin(angle) * dist
                     elt.setPos(elt.pos().x() + dx, elt.pos().y() + dy)
+
+        if self.main_bar.opponent_detection.isChecked():
+            if self.purple_robot_layer.robot.short_detection_circle.collidesWithItem(self.red_robot_layer.robot.team_indicator):
+                self.send_turret_detect(self.purple_robot_layer, self.red_robot_layer, 0)
+                self.send_turret_detect(self.red_robot_layer, self.purple_robot_layer, 0)
+            if self.purple_robot_layer.robot.long_detection_circle.collidesWithItem(self.red_robot_layer.robot.team_indicator):
+                self.send_turret_detect(self.purple_robot_layer, self.red_robot_layer, 1)
+                self.send_turret_detect(self.red_robot_layer, self.purple_robot_layer, 1)
+
+
+    def send_turret_detect(self, detecting_robot_layer, detected_robot_layer, distance):
+        dx = detected_robot_layer.robot.item.x() - detecting_robot_layer.robot.item.x()
+        dy = detected_robot_layer.robot.item.y() - detecting_robot_layer.robot.item.y()
+        angle = (detecting_robot_layer.robot.item.rotation() / 180.0 * math.pi) - math.atan2(dy, dx)
+        angle %= 2.0 * math.pi
+        angle = int(angle / (2.0 * math.pi) * 18.0)
+
+        packet = packets.TurretDetect()
+        packet.distance = distance
+        packet.robot = OPPONENT_ROBOT_MAIN
+        packet.angle = angle
+
+        detecting_robot_layer.robot_controller.send_packet(packet)
 
 
     def remove_fabric(self, team):
@@ -1101,9 +1135,10 @@ class SimulatorFieldViewController(fieldview.FieldViewController):
         self.red_robot_routing_layer = RoutingLayer(self.field_scene, TEAM_RED)
         self.field_scene.add_layer(self.red_robot_routing_layer)
 
-        self.game_elements_layer = GameElementsLayer(self.purple_robot_layer.robot,
-                                                     self.red_robot_layer.robot,
-                                                     self.field_scene)
+        self.game_elements_layer = GameElementsLayer(self.purple_robot_layer,
+                                                     self.red_robot_layer,
+                                                     self.field_scene,
+                                                     ui.main_bar)
         self.field_scene.add_layer(self.game_elements_layer)
 
         self.field_view.userEventListeners.append(self.purple_robot_layer)
