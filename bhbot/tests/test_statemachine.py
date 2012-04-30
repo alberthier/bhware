@@ -57,7 +57,9 @@ class StateMachineTestCase(unittest.TestCase):
 
     def setUp(self):
         shared_data = {}
+        self.state_history = []
         self.state = statemachine.State()
+        self.state.event_loop = self
         self.state.switch_to_substate(TestStartState(shared_data))
 
     def test_init(self):
@@ -123,7 +125,9 @@ class SubStateStateTestCase(unittest.TestCase):
 
     def setUp(self):
         shared_data = {}
+        self.state_history = []
         self.root_state = statemachine.State()
+        self.root_state.event_loop = self
         self.root_state.switch_to_substate(TestSubState1())
 
 
