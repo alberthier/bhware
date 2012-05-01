@@ -61,7 +61,7 @@ float                   GAIN_STATIQUE_MOTEUR_D;                                 
 float                   GAIN_STATIQUE_MOTEUR_G;                                     /* Gain statique du moteur CC gauche en (m/s) / unitePWM */
 float                   GAIN_STATIQUE_MOTEUR;
 
-float                   ECART_ROUE_LIBRE        = 0.240;                            /* Ecart entre les roues libres des codeurs incrementaux */
+float                   ECART_ROUE_LIBRE        = 0.235;                            /* Ecart entre les roues libres des codeurs incrementaux */
 float                   ECART_ROUE_MOTRICE      = 0.174;                            /* Entraxe des roues motrices */
 float                   COEFFICIENT_DE_GLISSEMENT_LATERAL = 0.0;
 

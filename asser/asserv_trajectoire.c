@@ -73,9 +73,8 @@ float                           DECC_MIN                                =   -0.3
 float                           Ratio_Acc                               =   1.0;
 float                           Ratio_Decc                              =   1.0;
 
-float                           k0_init                                 =   0.2;
-float                           q0_init                                 =   0.0;
-float                           C_distManathan                          =   0.1;
+float                           k0_init                                 =   0.3;
+float                           C_init                                  =   0.2;
 
 /***********************************************************************************************/
 /**************************** Fin de la definition des parametres de l'asservissement de trajectoire *********/
@@ -183,6 +182,10 @@ static void                     ASSER_TRAJ_SmoothGabaritAcceleration(Trajectoire
 static void                     ASSER_TRAJ_CreateGabaritVitesseFromGabaritAcceleration(Trajectoire * traj);
 static void                     ASSER_TRAJ_InitTabVPointe(Trajectoire *traj, float coeff_vit_ini);
 static unsigned char            ASSER_TRAJ_isDeplacement(Trajectoire *traj);
+static void                     ASSER_TRAJ_SolveSegment(unsigned int iSegment, float x0, float y0, float theta0, float x1, float y1, float theta1, float k0, float* k1, float C, float* out_q0x, float* out_q0y, float* out_q1x, float* out_q1y);
+static float                    ASSER_TRAJ_CalculTheta1(unsigned char iSegment, unsigned int nbrePts, PtTraj* point, float angle_rad, float prec_x, float prec_y);
+static float                    ASSER_TRAJ_LongueurSegment(float x0, float y0, float x1, float y1);
+static Vecteur                  ASSER_TRAJ_PortionEnd(float bx, float by, float ax, float ay, float qx, float qy);
 
 /*----------------------------------------------------------------------------------------------*/
 
@@ -542,6 +545,7 @@ extern void ASSER_TRAJ_AsservissementMouvementRobot(Pose poseRobot, VitessesRobo
     ASSER_TRAJ_LogAsser("segmentCourant", NBR_ASSER_LOG_VALUE, segmentCourant);
 }
 
+
 /**********************************************************************/
 /*! \brief ASSER_TRAJ_InitialisationTrajectoire
  *
@@ -560,20 +564,21 @@ extern void ASSER_TRAJ_InitialisationTrajectoire(Pose poseRobot, PtTraj * point,
     Vecteur         diff1BS, diff2BS;
     unsigned char    iSegment, j, iCurrentGPoint_n0, iCurrentGPoint_n1;
     Vecteur         deltaI, deltaF, qI, qF;
-    Pose            pose_ti, pose_tj;
+    Vecteur         pos_ti, pos_tj;
     float           cordeInitiale, cordeFinale;
     float           angleInitial, angleFinal;
-    float           k0, k1, theta0, theta1;
+    float           k0, k1, theta0, theta1, C;
     float           prec_x, prec_y;
     float           A0, A1x, A1y, F1, B0, B1x, B1y, F2;
     float           cos_theta1, sin_theta1;
     unsigned int    iseg_portion;
     segmentTrajectoireBS * segmentTraj;
     float   tl_2, tl_3, tl;
+    float           lenSeg;
 
 #ifndef PIC32_BUILD
     Pose            poseTest;
-    int             intT;
+    unsigned int    intT;
     float           sommeMask;
 #endif /* PIC32_BUILD */
     /* var des resultats de calcul de puissance */
@@ -602,135 +607,194 @@ extern void ASSER_TRAJ_InitialisationTrajectoire(Pose poseRobot, PtTraj * point,
         chemin.profilVitesse.vmax = POS_GetConsVitesseMax();                /* UMAX * GAIN_STATIQUE_MOTEUR */
 
         /*  */
-        q0_init = 0.0;
-        k0_init = C_distManathan/ti; //1.0;
+
+        lenSeg = ASSER_TRAJ_LongueurSegment(poseRobot.x, poseRobot.y, CONVERT_DISTANCE(point[0].x), CONVERT_DISTANCE(point[0].y));
+        C = C_init * lenSeg;
+        k0 = k0_init * lenSeg;
+
+        //C = 0.0001;
+        //k0 = 0.001;
 
         chemin.segmentTrajBS[0].bx = poseRobot.x;
         chemin.segmentTrajBS[0].by = poseRobot.y;
         chemin.segmentTrajBS[1].bx = CONVERT_DISTANCE(point[0].x);
         chemin.segmentTrajBS[1].by = CONVERT_DISTANCE(point[0].y);
 
-        k0 = k0_init;
         theta0 = poseRobot.angle;
         chemin.segmentTrajBS[0].ax = k0 * cos(theta0);
         chemin.segmentTrajBS[0].ay = k0 * sin(theta0);
         k1 = k0;
-        chemin.segmentTrajBS[1].ax = -k1 * cos(angle_rad);
-        chemin.segmentTrajBS[1].ay = -k1 * sin(angle_rad);
+        theta1 = ASSER_TRAJ_CalculTheta1(1, nbrePts, point, angle_rad, poseRobot.x, poseRobot.y);
+        ASSER_TRAJ_LogAsser("theta1", NBR_ASSER_LOG_VALUE, theta1);
+        ASSER_TRAJ_LogAsser("angle_rad", NBR_ASSER_LOG_VALUE, angle_rad);
+        chemin.segmentTrajBS[1].ax = k1 * cos(theta1);
+        chemin.segmentTrajBS[1].ay = k1 * sin(theta1);
 
-        chemin.segmentTrajBS[0].qx = q0_init;
-        chemin.segmentTrajBS[0].qy = q0_init;
-        chemin.segmentTrajBS[1].qx = q0_init;
-        chemin.segmentTrajBS[1].qy = q0_init;
+
+        ASSER_TRAJ_LogAsser("pti", NBR_ASSER_LOG_VALUE, C );
+
+        ASSER_TRAJ_SolveSegment(1,
+                                poseRobot.x,
+                                poseRobot.y,
+                                theta0,
+                                CONVERT_DISTANCE(point[0].x),
+                                CONVERT_DISTANCE(point[0].y),
+                                theta1,
+                                k0,
+                                &k1,
+                                C,
+                                &chemin.segmentTrajBS[1].qx[0],
+                                &chemin.segmentTrajBS[1].qy[0],
+                                &chemin.segmentTrajBS[1].qx[1],
+                                &chemin.segmentTrajBS[1].qy[1]);
+
+        ASSER_TRAJ_LogAsser("q", NBR_ASSER_LOG_VALUE, chemin.segmentTrajBS[1].qx[0]);
+        ASSER_TRAJ_LogAsser("q", NBR_ASSER_LOG_VALUE, chemin.segmentTrajBS[1].qy[0]);
+        ASSER_TRAJ_LogAsser("q", NBR_ASSER_LOG_VALUE, chemin.segmentTrajBS[1].qx[1]);
+        ASSER_TRAJ_LogAsser("q", NBR_ASSER_LOG_VALUE, chemin.segmentTrajBS[1].qy[1]);
+        ASSER_TRAJ_LogAsser("q", NBR_ASSER_LOG_VALUE, 3000.0);
 
         iSegment = 1;
-        //pose_ti = ASSER_TRAJ_TrajectoireBSpline(chemin.segmentTrajBS, iSegment, ti);
         iseg_portion = iSegment - 1;
         segmentTraj = chemin.segmentTrajBS;
+        /*
         tl = ti;
         tl_3 = CUBE(tl);
         tl_2 = SQUARE(tl);
-        pose_ti.x = ((-segmentTraj[iseg_portion].qx) / (6.0 * ti)) * tl_3 + (segmentTraj[iseg_portion].qx / 2.0) * tl_2 + segmentTraj[iseg_portion].ax * tl +segmentTraj[iseg_portion].bx;
-        pose_ti.y = ((-segmentTraj[iseg_portion].qy) / (6.0 * ti)) * tl_3 + (segmentTraj[iseg_portion].qy / 2.0) * tl_2 + segmentTraj[iseg_portion].ay * tl +segmentTraj[iseg_portion].by;
+        pos_ti.x = ((-segmentTraj[iseg_portion].qx) / (6.0 * ti)) * tl_3 + (segmentTraj[iseg_portion].qx / 2.0) * tl_2 + segmentTraj[iseg_portion].ax * tl +segmentTraj[iseg_portion].bx;
+        pos_ti.y = ((-segmentTraj[iseg_portion].qy) / (6.0 * ti)) * tl_3 + (segmentTraj[iseg_portion].qy / 2.0) * tl_2 + segmentTraj[iseg_portion].ay * tl +segmentTraj[iseg_portion].by;
+        */
+        pos_ti = ASSER_TRAJ_PortionEnd(segmentTraj[iseg_portion].bx, segmentTraj[iseg_portion].by, segmentTraj[iseg_portion].ax, segmentTraj[iseg_portion].ay, segmentTraj[iSegment].qx[0], segmentTraj[iSegment].qy[0]);
 
-        //pose_tj = ASSER_TRAJ_TrajectoireBSpline(chemin.segmentTrajBS, iSegment, 1.0 - ti);
         iseg_portion = iSegment;
         segmentTraj = chemin.segmentTrajBS;
+        /*
         tl = ti;
         tl_3 = CUBE(tl);
         tl_2 = SQUARE(tl);
-        pose_tj.x = ((-segmentTraj[iseg_portion].qx) / (6.0 * ti)) * tl_3 + (segmentTraj[iseg_portion].qx / 2.0) * tl_2 + segmentTraj[iseg_portion].ax * tl +segmentTraj[iseg_portion].bx;
-        pose_tj.y = ((-segmentTraj[iseg_portion].qy) / (6.0 * ti)) * tl_3 + (segmentTraj[iseg_portion].qy / 2.0) * tl_2 + segmentTraj[iseg_portion].ay * tl +segmentTraj[iseg_portion].by;
-
-        chemin.segmentTrajBS[iSegment].aix = (pose_tj.x - pose_ti.x) / (1.0 - 2.0*ti);
-        chemin.segmentTrajBS[iSegment].aiy = (pose_tj.y - pose_ti.y) / (1.0 - 2.0*ti);
-        chemin.segmentTrajBS[iSegment].bix = pose_ti.x;
-        chemin.segmentTrajBS[iSegment].biy = pose_ti.y;
-
-        /*
-        ASSER_TRAJ_LogAsser("pti", NBR_ASSER_LOG_VALUE, pose_ti.x);
-        ASSER_TRAJ_LogAsser("pti", NBR_ASSER_LOG_VALUE, pose_ti.y);
-        ASSER_TRAJ_LogAsser("pti", NBR_ASSER_LOG_VALUE, pose_tj.x);
-        ASSER_TRAJ_LogAsser("pti", NBR_ASSER_LOG_VALUE, pose_tj.y);
+        pos_tj.x = ((-segmentTraj[iseg_portion].qx) / (6.0 * ti)) * tl_3 + (segmentTraj[iseg_portion].qx / 2.0) * tl_2 + segmentTraj[iseg_portion].ax * tl +segmentTraj[iseg_portion].bx;
+        pos_tj.y = ((-segmentTraj[iseg_portion].qy) / (6.0 * ti)) * tl_3 + (segmentTraj[iseg_portion].qy / 2.0) * tl_2 + segmentTraj[iseg_portion].ay * tl +segmentTraj[iseg_portion].by;
         */
+        pos_tj = ASSER_TRAJ_PortionEnd(segmentTraj[iseg_portion].bx, segmentTraj[iseg_portion].by, -segmentTraj[iseg_portion].ax, -segmentTraj[iseg_portion].ay, segmentTraj[iSegment].qx[1], segmentTraj[iSegment].qy[1]);
 
-#if 0
-        k0 = k0_init;
-        theta0 = poseRobot.angle;
-        chemin.segmentTrajBS[0].bx = poseRobot.x;
-        chemin.segmentTrajBS[0].by = poseRobot.y;
-        chemin.segmentTrajBS[0].ax = k0 * cos(theta0);
-        chemin.segmentTrajBS[0].ay = k0 * sin(theta0);
-        chemin.segmentTrajBS[0].qx = q0_init;
-        //chemin.segmentTrajBS[0].qy = (3.0/ti) * ( (C_distManathan/ti) - ((ti*chemin.segmentTrajBS[0].qx)/3.0) - (chemin.segmentTrajBS[0].ax + chemin.segmentTrajBS[0].ay) );
-        chemin.segmentTrajBS[0].qy = 0.0;
-        prec_x = poseRobot.x;
-        prec_y = poseRobot.y;
+        chemin.segmentTrajBS[iSegment].aix = (pos_tj.x - pos_ti.x) / (1.0 - 2.0*ti);
+        chemin.segmentTrajBS[iSegment].aiy = (pos_tj.y - pos_ti.y) / (1.0 - 2.0*ti);
+        chemin.segmentTrajBS[iSegment].bix = pos_ti.x;
+        chemin.segmentTrajBS[iSegment].biy = pos_ti.y;
 
-        for(iSegment=1; iSegment<=nbrePts; iSegment++)
+
+        ASSER_TRAJ_LogAsser("pti", NBR_ASSER_LOG_VALUE, CONVERT_DISTANCE(point[0].x));
+        ASSER_TRAJ_LogAsser("pti", NBR_ASSER_LOG_VALUE, CONVERT_DISTANCE(point[0].y));
+        ASSER_TRAJ_LogAsser("pti", NBR_ASSER_LOG_VALUE, theta1 );
+        ASSER_TRAJ_LogAsser("pti", NBR_ASSER_LOG_VALUE, k0 );
+        ASSER_TRAJ_LogAsser("pti", NBR_ASSER_LOG_VALUE, k1 );
+        ASSER_TRAJ_LogAsser("pti", NBR_ASSER_LOG_VALUE, (ti) );
+        ASSER_TRAJ_LogAsser("pti", NBR_ASSER_LOG_VALUE, (segmentTraj[0].ax * ti +segmentTraj[0].bx) );
+        ASSER_TRAJ_LogAsser("pti", NBR_ASSER_LOG_VALUE, pos_ti.x);
+        ASSER_TRAJ_LogAsser("pti", NBR_ASSER_LOG_VALUE, pos_ti.y);
+        ASSER_TRAJ_LogAsser("pti", NBR_ASSER_LOG_VALUE, pos_tj.x);
+        ASSER_TRAJ_LogAsser("pti", NBR_ASSER_LOG_VALUE, pos_tj.y);
+
+//#if 0
+        prec_x = CONVERT_DISTANCE(point[0].x);
+        prec_y = CONVERT_DISTANCE(point[0].y);
+
+        for(iSegment=2; iSegment<=nbrePts; iSegment++)
         {
             chemin.segmentTrajBS[iSegment].bx = CONVERT_DISTANCE(point[iSegment-1].x);
             chemin.segmentTrajBS[iSegment].by = CONVERT_DISTANCE(point[iSegment-1].y);
 
+            lenSeg = ASSER_TRAJ_LongueurSegment(prec_x, prec_y, CONVERT_DISTANCE(point[iSegment-1].x), CONVERT_DISTANCE(point[iSegment-1].y));
+            C = C_init * lenSeg;
+            k0 = k0_init * lenSeg;
+            k1 = k0;
+
             /* calcul de l'angle au point intermediaire */
-            if (iSegment < nbrePts)
-            {
-                theta1 = atan2(CONVERT_DISTANCE(point[iSegment].y) - prec_y, CONVERT_DISTANCE(point[iSegment].x) - prec_x);
-            }
-            else
-            {
-                if (angle_rad < (-1e6))
-                {
-                    theta1 = atan2(CONVERT_DISTANCE(point[nbrePts-1].y) - prec_y, CONVERT_DISTANCE(point[nbrePts-1].x) - prec_x);
-                }
-                else
-                {
-                    theta1 = angle_rad;
-                }
-            }
+            theta0 = theta1;
+
+            theta1 = ASSER_TRAJ_CalculTheta1(iSegment, nbrePts, point, angle_rad, prec_x, prec_y);
             cos_theta1 = cos(theta1);
             sin_theta1 = sin(theta1);
+            chemin.segmentTrajBS[iSegment].ax = k1 * cos_theta1;
+            chemin.segmentTrajBS[iSegment].ay = k1 * sin_theta1;
 
-            /* calcul du triplet (qx, qy, k1) */
-            A0 = cos_theta1 / (cos_theta1 + sin_theta1);
-            A1x = ti/2.0 - (ti * A0)/3.0;
-            A1y = -(ti * A0)/3.0;
-            F1 = -(ti * chemin.segmentTrajBS[iSegment-1].qx)/2.0 - chemin.segmentTrajBS[iSegment-1].ax - (C_distManathan * A0)/ti;
-            B0 = sin_theta1 / (cos_theta1 + sin_theta1);
-            B1x = -(ti * B0)/3.0;
-            B1y = ti/2.0 - (ti * B0)/3.0;
-            F2 = -(ti * chemin.segmentTrajBS[iSegment-1].qy)/2.0 - chemin.segmentTrajBS[iSegment-1].ay - (C_distManathan * B0)/ti;
-            chemin.segmentTrajBS[iSegment].qx = (F1 * B1y - F2 * A1y) / (A1x * B1y - A1y * B1x);
-            chemin.segmentTrajBS[iSegment].qy = (F2 - chemin.segmentTrajBS[iSegment].qx * B1x) / B1y;
-            k1 = (-C_distManathan/ti + (ti * chemin.segmentTrajBS[iSegment].qx)/3.0 + (ti * chemin.segmentTrajBS[iSegment].qy)/3.0) / (cos_theta1 + sin_theta1);
 
-            pose_ti = ASSER_TRAJ_TrajectoireBSpline(chemin.segmentTrajBS, iSegment, ti);
-            pose_tj = ASSER_TRAJ_TrajectoireBSpline(chemin.segmentTrajBS, iSegment, 1.0 - ti);
-            chemin.segmentTrajBS[iSegment].aix = (pose_tj.x - pose_ti.x);
-            chemin.segmentTrajBS[iSegment].aiy = (pose_tj.y - pose_ti.y);
-            chemin.segmentTrajBS[iSegment].bix = pose_tj.x;
-            chemin.segmentTrajBS[iSegment].biy = pose_tj.y;
+
+            ASSER_TRAJ_SolveSegment(1,
+                                    prec_x,
+                                    prec_y,
+                                    theta0,
+                                    CONVERT_DISTANCE(point[iSegment-1].x),
+                                    CONVERT_DISTANCE(point[iSegment-1].y),
+                                    theta1,
+                                    k0,
+                                    &k1,
+                                    C,
+                                    &chemin.segmentTrajBS[iSegment].qx[0],
+                                    &chemin.segmentTrajBS[iSegment].qy[0],
+                                    &chemin.segmentTrajBS[iSegment].qx[1],
+                                    &chemin.segmentTrajBS[iSegment].qy[1]);
+/*
+            ASSER_TRAJ_SolveSegment(iSegment,
+                                    prec_x,
+                                    prec_y,
+                                    theta0,
+                                    CONVERT_DISTANCE(point[iSegment-1].x),
+                                    CONVERT_DISTANCE(point[iSegment-1].y),
+                                    theta1,
+                                    k0,
+                                    &k1,
+                                    C,
+                                    &chemin.segmentTrajBS[iSegment-1].qx,
+                                    &chemin.segmentTrajBS[iSegment-1].qy,
+                                    &chemin.segmentTrajBS[iSegment].qx,
+                                    &chemin.segmentTrajBS[iSegment].qy);
+*/
+
+            ASSER_TRAJ_LogAsser("q2", NBR_ASSER_LOG_VALUE, k0);
+            ASSER_TRAJ_LogAsser("q2", NBR_ASSER_LOG_VALUE, k1);
+            ASSER_TRAJ_LogAsser("q2", NBR_ASSER_LOG_VALUE, chemin.segmentTrajBS[iSegment].qx[0]);
+            ASSER_TRAJ_LogAsser("q2", NBR_ASSER_LOG_VALUE, chemin.segmentTrajBS[iSegment].qy[0]);
+            ASSER_TRAJ_LogAsser("q2", NBR_ASSER_LOG_VALUE, chemin.segmentTrajBS[iSegment].qx[1]);
+            ASSER_TRAJ_LogAsser("q2", NBR_ASSER_LOG_VALUE, chemin.segmentTrajBS[iSegment].qy[1]);
+
+
+            iseg_portion = iSegment - 1;
+            segmentTraj = chemin.segmentTrajBS;
+            pos_ti = ASSER_TRAJ_PortionEnd(segmentTraj[iseg_portion].bx, segmentTraj[iseg_portion].by, segmentTraj[iseg_portion].ax, segmentTraj[iseg_portion].ay, segmentTraj[iSegment].qx[0], segmentTraj[iSegment].qy[0]);
+
+            iseg_portion = iSegment;
+            segmentTraj = chemin.segmentTrajBS;
+            pos_tj = ASSER_TRAJ_PortionEnd(segmentTraj[iseg_portion].bx, segmentTraj[iseg_portion].by, -segmentTraj[iseg_portion].ax, -segmentTraj[iseg_portion].ay, segmentTraj[iSegment].qx[1], segmentTraj[iSegment].qy[1]);
+
+            chemin.segmentTrajBS[iSegment].aix = (pos_tj.x - pos_ti.x) / (1.0 - 2.0*ti);
+            chemin.segmentTrajBS[iSegment].aiy = (pos_tj.y - pos_ti.y) / (1.0 - 2.0*ti);
+            chemin.segmentTrajBS[iSegment].bix = pos_ti.x;
+            chemin.segmentTrajBS[iSegment].biy = pos_ti.y;
 
             prec_x = CONVERT_DISTANCE(point[iSegment-1].x);
             prec_y = CONVERT_DISTANCE(point[iSegment-1].y);
-            k0 = k1;
         }
-#endif
+//#endif
 
 #ifndef PIC32_BUILD
 
         /* Enregistrement pour affichage de x(t) et de y(t) */
 
-        for (intT = 0; intT < 101; intT++)
+        for (intT = 0; intT < (100*nbrePts); intT++)
         //for (intT = 0; intT < (ti*100.0)+1; intT++)
         {
             /*
             poseTest = ASSER_TRAJ_Trajectoire( ((float)intT) / 100.0 );
             */
-            poseTest = ASSER_TRAJ_Trajectoire(chemin.segmentTrajBS, 1,  ((float)intT) / 100.0 );
-            ASSER_TRAJ_LogAsser("def_xTraj", NBR_ASSER_LOG_VALUE, poseTest.x);
-            ASSER_TRAJ_LogAsser("def_yTraj", NBR_ASSER_LOG_VALUE, poseTest.y);
-            ASSER_TRAJ_LogAsser("def_angleTraj", NBR_ASSER_LOG_VALUE, poseTest.angle);
+            //if ( (((float)intT) / 100.0) > (1.0-ti))
+            //{
+                poseTest = ASSER_TRAJ_Trajectoire(chemin.segmentTrajBS, floor( (((float)intT)*((float)1)) / 100.0) + 1,  ((float)intT) / 100.0 );
+                ASSER_TRAJ_LogAsser("def_i", NBR_ASSER_LOG_VALUE, floor( (((float)intT)*((float)1)) / 100.0) + 1);
+                ASSER_TRAJ_LogAsser("def_xTraj", NBR_ASSER_LOG_VALUE, poseTest.x);
+                ASSER_TRAJ_LogAsser("def_yTraj", NBR_ASSER_LOG_VALUE, poseTest.y);
+                ASSER_TRAJ_LogAsser("def_angleTraj", NBR_ASSER_LOG_VALUE, poseTest.angle);
+            //}
         }
 
 #endif /*PIC32_BUILD*/
@@ -783,6 +847,7 @@ extern void ASSER_TRAJ_InitialisationTrajectoire(Pose poseRobot, PtTraj * point,
         chemin.distance = (fabs(chemin.rotation.angle) * NORME_BARRE_SUIVI_TRAJ) + 0.000001;
     }
 
+
     /* Calcul du gabarit du profil de vitesse */
     //g_poseRobotTrajectoire.x = poseRobot.x;
     //g_poseRobotTrajectoire.y = poseRobot.y;
@@ -819,6 +884,158 @@ extern void ASSER_TRAJ_InitialisationTrajectoire(Pose poseRobot, PtTraj * point,
     /* Initialisation de l'erreur de distance avant l'arrivee */
     errDist = POS_ErreurDistance(poseRobot, chemin.posArrivee);
     errAngle = POS_ErreurOrientation(poseRobot, chemin.posArrivee);
+
+}
+
+static Vecteur ASSER_TRAJ_PortionEnd(float bx, float by, float ax, float ay, float qx, float qy)
+{
+    Vecteur pos_ti;
+    float ti_3, ti_2;
+
+    ti_3 = CUBE(ti);
+    ti_2 = SQUARE(ti);
+    pos_ti.x = ((-qx) / (6.0 * ti)) * ti_3 + (qx / 2.0) * ti_2 + ax * ti + bx;
+    pos_ti.y = ((-qy) / (6.0 * ti)) * ti_3 + (qy / 2.0) * ti_2 + ay * ti + by;
+
+    return pos_ti;
+}
+
+static void ASSER_TRAJ_SolveSegment(unsigned int iSegment, float x0, float y0, float theta0, float x1, float y1, float theta1, float k0, float* k1, float C, float* out_q0x, float* out_q0y, float* out_q1x, float* out_q1y)
+{
+    float theta_seg, theta_delta;
+    float F2, F3, F4, F5;
+    float A;
+    float G;
+
+    theta_seg = atan2(y1 - y0, x1 - x0);
+    theta_delta = PI / 2.0 - theta_seg;
+
+    F2 = -k0 * cos(theta0) + (*k1) * cos(theta1);
+    F3 = -k0 * sin(theta0) + (*k1) * sin(theta1);
+    F4 = (-(*k1) * cos(theta1) - k0 * cos(theta0)) * ti + x1 - x0;
+    F5 = (-(*k1) * sin(theta1) - k0 * sin(theta0)) * ti + y1 - y0;
+
+    A = (2.0 * F3) / ti;
+    G = (2.0 * F2) / ti;
+
+    if ((theta_seg >= (-PI / 4.0) && theta_seg <= (PI / 4.0)) || (theta_seg >= (3.0 * PI / 4.0) || theta_seg <= (-3.0 * PI / 4.0)))
+    {
+        float E11, E12;
+        float B, D;
+        float H1, H2, H3, H4, H5, H6, H7, H8;
+        float I1, I2, I3;
+
+        E11 = -sin(theta_seg) / cos(theta_seg);
+        E12 = (3.0 / SQUARE(ti)) * (((C - k0 * sin(theta0) * ti * sin(theta_seg)) / cos(theta_seg)) - (k0 * cos(theta0) * ti));
+
+        B = (2.0 * F2) / ti - (2.0 * F3 * E11) / ti - E12;
+        D = (2.0 * F3 * E11) / ti + E12;
+
+        H1 = (2.0 * SQUARE(ti) * E11) / 3.0;
+        H2 = ((B - D) * SQUARE(ti)) / 3.0 + F4;
+        H3 = -ti / 2.0;
+        H4 = (A * ti) / 2.0 + k0 * sin(theta0);
+        H5 = (2.0 * SQUARE(ti)) / 3.0;
+        H6 = -(A * SQUARE(ti)) / 3.0 + F5;
+        H7 = -(E11 * ti) / 2.0;
+        H8 = (D * ti) / 2.0 + k0 * cos(theta0);
+
+        I1 = H1 * H3 - H5 * H7;
+        I2 = H1 * H4 + H2 * H3 - H5 * H8 - H6 * H7;
+        I3 = H2 * H4 - H6 * H8;
+
+        if (fabs(I1) > 1e-8) {
+            float delta = SQUARE(I2) - 4.0 * I1 * I3;
+            if (delta < 0.0) {
+                ASSER_TRAJ_LogAsser("delta negatif", NBR_ASSER_LOG_VALUE, 0.0);
+                *out_q0x = -10000.0;
+                *out_q0y = -10000.0;
+                *out_q1x = -10000.0;
+                *out_q1y = -10000.0;
+                return;
+            }
+            *out_q1y = (-I2 + sqrt(delta)) / (2.0 * I1);
+        } else {
+            *out_q1y = -(I3/I2);
+        }
+
+        *out_q0x = -E11 * (*out_q1y) + D;
+        *out_q0y = A - (*out_q1y);
+        *out_q1x = E11 * (*out_q1y) + B;
+    }
+    else
+    {
+        float E21, E22;
+        float B2, D2;
+        float K1, K2, K3, K4, K5, K6, K7, K8;
+        float J1, J2, J3;
+
+        E21 = -cos(theta_seg) / sin(theta_seg);
+        E22 = (3.0 / SQUARE(ti)) * (((C - (k0 * cos(theta0) * ti * cos(theta_seg))) / sin(theta_seg)) - (k0 * sin(theta0) * ti));
+
+        B2 = A - (2.0 * F2 * E21) / ti - E22;
+        D2 = (2.0 * F2 * E21) / ti + E22;
+
+        K1 = (2.0 * SQUARE(ti)) / 3.0;
+        K2 = -G * SQUARE(ti) / 3.0 + F4;
+        K3 = -(ti * E21) / 2.0;
+        K4 = (D2 * ti) / 2.0 + k0 * sin(theta0);
+        K5 = (2.0 * SQUARE(ti) * E21) / 3.0;
+        K6 = ((B2 - D2) * SQUARE(ti)) / 3.0 + F5;
+        K7 = -ti / 2.0;
+        K8 = G * ti / 2.0 + k0 * cos(theta0);
+
+        J1 = K1 * K3 - K5 * K7;
+        J2 = K1 * K4 + K2 * K3 - K5 * K8 - K6 * K7;
+        J3 = K2 * K4 - K6 * K8;
+
+        if (fabs(J1) > 1e-8) {
+            float delta = SQUARE(J2) - 4.0 * J1 * J3;
+            if (delta < 0.0) {
+                ASSER_TRAJ_LogAsser("delta negatif", NBR_ASSER_LOG_VALUE, 0.0);
+                *out_q0x = -10000.0;
+                *out_q0y = -10000.0;
+                *out_q1x = -10000.0;
+                *out_q1y = -10000.0;
+                return;
+            }
+            *out_q1x = (-J2 + sqrt(delta)) / (2.0 * J1);
+        } else {
+            *out_q1x = -(J3 / J2);
+        }
+
+        *out_q0x = G - (*out_q1x);
+        *out_q0y = -E21 * (*out_q1x) + D2;
+        *out_q1y = E21 * (*out_q1x) + B2;
+    }
+}
+
+static float ASSER_TRAJ_CalculTheta1(unsigned char iSegment, unsigned int nbrePts, PtTraj* point, float angle_rad, float prec_x, float prec_y)
+{
+    float theta1;
+
+    if (iSegment < nbrePts)
+    {
+        theta1 = atan2(CONVERT_DISTANCE(point[iSegment].y) - prec_y, CONVERT_DISTANCE(point[iSegment].x) - prec_x);
+    }
+    else
+    {
+        if (angle_rad < (-1e6))
+        {
+            theta1 = atan2(CONVERT_DISTANCE(point[nbrePts-1].y) - prec_y, CONVERT_DISTANCE(point[nbrePts-1].x) - prec_x);
+        }
+        else
+        {
+            theta1 = angle_rad;
+        }
+    }
+
+    return theta1;
+}
+
+static float ASSER_TRAJ_LongueurSegment(float x0, float y0, float x1, float y1)
+{
+    return sqrt(SQUARE(x1 - x0) + SQUARE(y1 - y0));
 }
 
 /**********************************************************************/
@@ -896,6 +1113,7 @@ static Pose ASSER_TRAJ_TrajectoireBSpline(segmentTrajectoireBS * segmentTraj, un
     Pose    poseTraj;
     unsigned int iseg_portion;
     char    num_portion;
+    float   sign_a_portion = 1.0;
     /* var temporaire de resultats de calcul de puissance */
     float   tl_2, tl_3;
 
@@ -904,6 +1122,7 @@ static Pose ASSER_TRAJ_TrajectoireBSpline(segmentTrajectoireBS * segmentTraj, un
         num_portion = 1;
         tl = t;
         iseg_portion = iSegment - 1;
+        sign_a_portion = 1.0;
     }
     else
     {
@@ -912,6 +1131,7 @@ static Pose ASSER_TRAJ_TrajectoireBSpline(segmentTrajectoireBS * segmentTraj, un
             num_portion = 3;
             tl = 1.0 - t;
             iseg_portion = iSegment;
+            sign_a_portion = -1.0;
         }
         else
         {
@@ -924,8 +1144,9 @@ static Pose ASSER_TRAJ_TrajectoireBSpline(segmentTrajectoireBS * segmentTraj, un
     {
         tl_3 = CUBE(tl);
         tl_2 = SQUARE(tl);
-        poseTraj.x = ((-segmentTraj[iseg_portion].qx) / (6.0 * ti)) * tl_3 + (segmentTraj[iseg_portion].qx / 2.0) * tl_2 + segmentTraj[iseg_portion].ax * tl +segmentTraj[iseg_portion].bx;
-        poseTraj.y = ((-segmentTraj[iseg_portion].qy) / (6.0 * ti)) * tl_3 + (segmentTraj[iseg_portion].qy / 2.0) * tl_2 + segmentTraj[iseg_portion].ay * tl +segmentTraj[iseg_portion].by;
+
+        poseTraj.x = ((-segmentTraj[iSegment].qx[iseg_portion - iSegment + 1]) / (6.0 * ti)) * tl_3 + (segmentTraj[iSegment].qx[iseg_portion - iSegment + 1] / 2.0) * tl_2 + sign_a_portion * segmentTraj[iseg_portion].ax * tl + segmentTraj[iseg_portion].bx;
+        poseTraj.y = ((-segmentTraj[iSegment].qy[iseg_portion - iSegment + 1]) / (6.0 * ti)) * tl_3 + (segmentTraj[iSegment].qy[iseg_portion - iSegment + 1] / 2.0) * tl_2 + sign_a_portion * segmentTraj[iseg_portion].ay * tl + segmentTraj[iseg_portion].by;
     }
     else
     {
@@ -959,6 +1180,7 @@ static Vecteur ASSER_TRAJ_DiffCourbeBSpline(segmentTrajectoireBS * segmentTraj, 
     float   tl;
     unsigned int iseg_portion;
     char    num_portion;
+    float   sign_a_portion = 1.0;
     /* var temporaire de resultats de calcul de puissance */
     float   tl_2;
 
@@ -967,6 +1189,7 @@ static Vecteur ASSER_TRAJ_DiffCourbeBSpline(segmentTrajectoireBS * segmentTraj, 
         num_portion = 1;
         tl = t;
         iseg_portion = iSegment - 1;
+        sign_a_portion = 1.0;
     }
     else
     {
@@ -975,6 +1198,7 @@ static Vecteur ASSER_TRAJ_DiffCourbeBSpline(segmentTrajectoireBS * segmentTraj, 
             num_portion = 3;
             tl = 1.0 - t;
             iseg_portion = iSegment;
+            sign_a_portion = -1.0;
         }
         else
         {
@@ -986,8 +1210,8 @@ static Vecteur ASSER_TRAJ_DiffCourbeBSpline(segmentTrajectoireBS * segmentTraj, 
     if (num_portion != 2)
     {
         tl_2 = SQUARE(tl);
-        derivP.x = ((-segmentTraj[iseg_portion].qx) / (2.0 * ti)) * tl_2 + segmentTraj[iseg_portion].qx * tl + segmentTraj[iseg_portion].ax;
-        derivP.y = ((-segmentTraj[iseg_portion].qy) / (2.0 * ti)) * tl_2 + segmentTraj[iseg_portion].qy * tl + segmentTraj[iseg_portion].ay;
+        derivP.x = ((-segmentTraj[iSegment].qx[iseg_portion - iSegment + 1]) / (2.0 * ti)) * tl_2 + segmentTraj[iSegment].qx[iseg_portion - iSegment + 1] * tl + sign_a_portion * segmentTraj[iseg_portion].ax;
+        derivP.y = ((-segmentTraj[iSegment].qy[iseg_portion - iSegment + 1]) / (2.0 * ti)) * tl_2 + segmentTraj[iSegment].qy[iseg_portion - iSegment + 1] * tl + sign_a_portion * segmentTraj[iseg_portion].ay;
 
         if (num_portion == 3)
         {
@@ -1054,8 +1278,8 @@ static Vecteur ASSER_TRAJ_Diff2CourbeBSpline(segmentTrajectoireBS * segmentTraj,
     if (num_portion != 2)
     {
         tl_2 = SQUARE(tl);
-        deriv2P.x = ((-segmentTraj[iseg_portion].qx) / ti) * tl + segmentTraj[iseg_portion].qx;
-        deriv2P.y = ((-segmentTraj[iseg_portion].qy) / ti) * tl + segmentTraj[iseg_portion].qy;
+        deriv2P.x = ((-segmentTraj[iSegment].qx[iseg_portion - iSegment + 1]) / ti) * tl + segmentTraj[iSegment].qx[iseg_portion - iSegment + 1];
+        deriv2P.y = ((-segmentTraj[iSegment].qy[iseg_portion - iSegment + 1]) / ti) * tl + segmentTraj[iSegment].qy[iseg_portion - iSegment + 1];
     }
     else
     {
@@ -1275,7 +1499,7 @@ static void ASSER_TRAJ_GabaritVitesse(Trajectoire * traj)
     float           vpointe                 = 0.0;
     int    i                                = 0u;
     unsigned int    N_plateau               = 0.0;
-    float           coeff_vit_ini           = 0.4;
+    float           coeff_vit_ini           = 0.04;
 
     ASSER_TRAJ_InitTabVPointe(traj, coeff_vit_ini);
     distanceRestante = traj->distance;
@@ -2004,9 +2228,9 @@ static void ASSER_TRAJ_DistanceTrajectoire(segmentTrajectoireBS * segmentTraj, u
         delta_D = sqrt(SQUARE(diffD_T.x) + SQUARE(diffD_T.y)) * (ti * ((float)(1.0 / 5.0)));
         distance += delta_D;
     }
-    //ASSER_TRAJ_LogAsser("disti", NBR_ASSER_LOG_VALUE, distance);
+    ASSER_TRAJ_LogAsser("disti", NBR_ASSER_LOG_VALUE, distance);
     delta_D = sqrt(SQUARE(segmentTraj[iSegment].aix) + SQUARE(segmentTraj[iSegment].aiy)) * (1.0 - 2.0*ti);
-    //ASSER_TRAJ_LogAsser("disti", NBR_ASSER_LOG_VALUE, delta_D);
+    ASSER_TRAJ_LogAsser("disti", NBR_ASSER_LOG_VALUE, delta_D);
     distance += delta_D;
 
     for (param = 0; param < (unsigned char) 5; param++)

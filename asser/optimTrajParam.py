@@ -218,17 +218,29 @@ def trajFunction(d_cfgTraj):
     send_config_simulator(simulator_process, d_cfgTraj)
 
     # envoie au simulateur de l'init de pose
-    send_init_pose(simulator_process, x=0.0, y=0.0, angle=0.0)
-    #~ send_init_pose(simulator_process, x=0.310000002384, y=0.177000001073, angle=-1.57079637051)
+    #~ send_init_pose(simulator_process, x=0.31, y=0.177, angle=-1.5708)
+    angle0 = math.atan2(-(1.1-0.86), -(0.54-0.6)) + (math.pi/4.0) * 1.2*0
+    print("angle0: " +str(angle0))
+    print("Aval: " +str(0.799249231815))
+    send_init_pose(simulator_process, x=0.6, y=0.86, angle=angle0) #INIT_POSE_ROBOT 1 -1 0.799249231815 1 0.6 0.86
+    
 
     #generation d'un message de commande de deplacement
     # "MSG_MAIN_GOTO 
     # 1) 0:'DEPLACEMENT'/1:'ROTATION' 
     # 2) 1:'MARCHE_AVANT'/-1:'MARCHE_ARRIERE'"
     # 3) angle d'arrivee
-    deplacement = commandMsg("MSG_MAIN_GOTO 1 1 0.0")   # 'DEPLACEMENT' en 'MARCHE_AVANT'
-    deplacement.addPose(str(d_cfgTraj['Distance']) + " 0.0") # deplacement rectiligne sur la distance d_cfgTraj['Distance']
-
+    
+    #~ deplacement = commandMsg("MSG_MAIN_GOTO 1 1 0.0")   # 'DEPLACEMENT' en 'MARCHE_AVANT'
+    #~ deplacement.addPose(str(d_cfgTraj['Distance']) + " 0.0") # deplacement rectiligne sur la distance d_cfgTraj['Distance']
+    
+    deplacement = commandMsg("MSG_MAIN_GOTO 1 -1 1.82374799252")   # 'DEPLACEMENT' en 'MARCHE_AVANT' #0.78539816339744828
+    #~ deplacement.addPose("0.31 1.177") #-1100000.0
+    
+    deplacement.addPose("0.54 1.1") #MSG_MAIN_GOTO 1 -1 1.82374799252 1 0.54 1.1
+    #~ deplacement.addPose("0.7 0.0")
+    #~ deplacement.addPose("1.0 0.1")
+    
     #transmission de commandes de deplacement par l'entree standard
     simulator_process.stdin.write(deplacement.cmdMsgGeneration())
 
@@ -761,23 +773,36 @@ traj = trajFunction(d_cfgTraj)
 #~ traj = trajTest(d_cfgTraj)
 affichageGabaritVitesse_2012(traj)
 
-#~ print(len(traj["def_xTraj"]))
+#~ print(traj["main_goto"])
+#~ sys.exit(2)
+
+print(len(traj["def_xTraj"]))
 #~ print([traj["def_xTraj"][0], traj["def_yTraj"][0]])
 #~ print([traj["def_xTraj"][1], traj["def_yTraj"][1]])
 #~ print([traj["def_xTraj"][2], traj["def_yTraj"][2]])
 #~ print([traj["def_xTraj"][-1], traj["def_yTraj"][-1]])
 
-#~ print(traj["pti"])
-#~ print(traj["disti"])
+print("q:")
+print(traj["q"])
+#~ print("q2:")
+#~ print(traj["q2"])
+print("pti:")
+print(traj["pti"])
+print("disti")
+print(traj["disti"])
+print("distance_seg")
 print(traj["distance_seg"])
+print("theta1: " + str(traj["theta1"]))
+print("angle_rad: " + str(traj["angle_rad"]))
 #~ print(traj["vpointe"])
 
-#~ figure()
-#~ N = len(traj["def_xTraj"])
-#~ plot(traj["def_xTraj"][:N], traj["def_yTraj"][:N], '-o')
-#~ plot(traj["def_xTraj"][0], traj["def_yTraj"][0], '-oy')
-#~ plot(traj["def_xTraj"][-1], traj["def_yTraj"][-1], '-or')
-#~ # plot(traj["def_xTraj"][1], traj["def_yTraj"][1], '-og')
+#~ print(traj["def_i"])
+figure()
+N = len(traj["def_xTraj"])
+plot(traj["def_xTraj"][:N], traj["def_yTraj"][:N], '-o')
+plot(traj["def_xTraj"][0], traj["def_yTraj"][0], '-oy')
+plot(traj["def_xTraj"][-1], traj["def_yTraj"][-1], '-or')
+# plot(traj["def_xTraj"][1], traj["def_yTraj"][1], '-og')
 #~ show()
 
 affichageTraj2011(traj)
