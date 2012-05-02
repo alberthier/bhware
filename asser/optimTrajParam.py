@@ -224,6 +224,7 @@ def trajFunction(d_cfgTraj):
     print("Aval: " +str(0.799249231815))
     send_init_pose(simulator_process, x=0.6, y=0.86, angle=angle0) #INIT_POSE_ROBOT 1 -1 0.799249231815 1 0.6 0.86
     
+    send_init_pose(simulator_process, x=1.0, y=1.0, angle=-math.pi/2.0)
 
     #generation d'un message de commande de deplacement
     # "MSG_MAIN_GOTO 
@@ -234,12 +235,16 @@ def trajFunction(d_cfgTraj):
     #~ deplacement = commandMsg("MSG_MAIN_GOTO 1 1 0.0")   # 'DEPLACEMENT' en 'MARCHE_AVANT'
     #~ deplacement.addPose(str(d_cfgTraj['Distance']) + " 0.0") # deplacement rectiligne sur la distance d_cfgTraj['Distance']
     
-    deplacement = commandMsg("MSG_MAIN_GOTO 1 -1 1.82374799252")   # 'DEPLACEMENT' en 'MARCHE_AVANT' #0.78539816339744828
+    #~ deplacement = commandMsg("MSG_MAIN_GOTO 1 -1 1.82374799252")   # 'DEPLACEMENT' en 'MARCHE_AVANT' #0.78539816339744828
     #~ deplacement.addPose("0.31 1.177") #-1100000.0
     
-    deplacement.addPose("0.54 1.1") #MSG_MAIN_GOTO 1 -1 1.82374799252 1 0.54 1.1
-    #~ deplacement.addPose("0.7 0.0")
-    #~ deplacement.addPose("1.0 0.1")
+    #~ deplacement.addPose("0.54 1.1") #MSG_MAIN_GOTO 1 -1 1.82374799252 1 0.54 1.1
+    
+    deplacement = commandMsg("MSG_MAIN_GOTO 1 -1 1.57")
+    deplacement.addPose("1.0 1.3")
+    deplacement.addPose("1.3 1.6")
+    deplacement.addPose("1.6 1.3")
+    deplacement.addPose("1.6 1.0")
     
     #transmission de commandes de deplacement par l'entree standard
     simulator_process.stdin.write(deplacement.cmdMsgGeneration())
