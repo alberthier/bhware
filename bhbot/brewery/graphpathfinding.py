@@ -20,95 +20,130 @@ class Node(object):
         self.edges = []
 
 
+    def is_in_field(self):
+        return self.x > 0.0 and self.x < FIELD_X_SIZE and self.y > 0.0 and self.y < FIELD_Y_SIZE
+
+
 
 
 class Edge(object):
 
-    def __init__(self, src, dst):
-        self.src = src
-        self.src.edges.append(self)
-        self.dst = dst
-        self.dst.edges.append(self)
-        self.static_penality = 0.0
-        self.opponent_penality = { OPPONENT_ROBOT_MAIN: 0.0, OPPONENT_ROBOT_SECONDARY: 0.0 }
-        self.main_opponent_penality = 0.0
-        self.secondary_opponent_penality = 0.0
-        self.x1 = min(self.src.x, self.dst.x)
-        self.x2 = max(self.src.x, self.dst.x)
-        self.y1 = min(self.src.y, self.dst.y)
-        self.y2 = max(self.src.y, self.dst.y)
-        self.distance = tools.distance(self.src.x, self.src.y, self.dst.x, self.dst.y)
-        if tools.quasi_equal(self.src.x, self.dst.x):
-            self.a = None
-            self.b = None
-        else:
-            self.a = (dst.y - src.y) / (dst.x - src.x)
-            self.b = self.src.y - self.a * self.src.x
+    def __init__(self, node1, node2):
+        self.node1 = node1
+        self.node1.edges.append(self)
+        self.node2 = node2
+        self.node2.edges.append(self)
+        self.penality = 0.0
 
 
-    def contains(self, x, y):
-        if self.a == None:
-            ok = tools.quasi_equal(x, self.x1) and (y > self.y1 and y < self.y2)
-        else:
-            ok = tools.quasi_equal(self.a * x + self.b, y)
-            if tools.quasi_equal(self.y1, self.y2):
-                ok = ok and tools.quasi_equal(self.y1, y)
-            else:
-                ok = ok and (y > self.y1 and y < self.y2)
-            ok = ok and (x > self.x1 and x < self.x2)
-        return ok
-
-
-    def intersects(self, edge):
-        if self.a is None:
-            e2 = self
-            e1 = edge
-        else:
-            e1 = self
-            e2 = edge
-
-        if e1.a == None and e2.a == None:
-            return False
-        if e2.a == None:
-            cross_x = e2.src.x
-        elif tools.quasi_equal(e1.a, e2.a):
-            return False
-        else:
-            cross_x = (e2.b - e1.b) / (e1.a - e2.a)
-        cross_y = e1.a * cross_x + e1.b
-
-        return e1.contains(cross_x, cross_y) and e2.contains(cross_x, cross_y)
+    def links(self, node1, node2):
+        return (self.node1 is node1 and self.node2 is node2) or (self.node1 is node2 and self.node2 is node1)
 
 
     def unlink(self):
-        self.src.edges.remove(self)
-        self.dst.edges.remove(self)
+        self.node1.edges.remove(self)
+        self.node2.edges.remove(self)
 
 
 
 
-class Zone(object):
+class AbstractZone(object):
 
-    def __init__(self, close_path, *nodes):
-        self.nodes = list(nodes)
-        self.edges = []
-        for i in xrange(1, len(self.nodes)):
-            edge = Edge(self.nodes[i - 1], self.nodes[i])
-            self.nodes[i - 1].edges.append(edge)
-            self.nodes[i].edges.append(edge)
-            self.edges.append(edge)
-        if close_path:
-            edge = Edge(self.nodes[0], self.nodes[-1])
-            self.nodes[0].edges.append(edge)
-            self.nodes[-1].edges.append(edge)
-            self.edges.append(edge)
+    def __init__(self, forbidden, penality):
+        self.forbidden = forbidden
+        self.penality = penality
+        self.nodes = []
 
 
-    def intersects(self, edge):
-        for e in self.edges:
-            if e.intersects(edge):
-                return True
+    def create_symetric_zone(self):
+        return NotImplementedError()
+
+
+    def create_nodes(self, map):
+        return NotImplementedError()
+
+
+    def contains(self, node):
+        return NotImplementedError()
+
+
+    def intersects(self, node1, node2):
+        return NotImplementedError()
+
+
+
+
+class RectZone(AbstractZone):
+
+    def __init__(self, x1, y1, x2, y2, forbidden, penality):
+        AbstractZone.__init__(self, forbidden, penality)
+        self.x1 = min(x1, x2)
+        self.y1 = min(y1, y2)
+        self.x2 = max(x1, x2)
+        self.y2 = max(y1, y2)
+
+
+    def create_symetric_zone(self):
+        return RectZone(self.x1, FIELD_Y_SIZE - self.y1, self.x2, FIELD_Y_SIZE - self.y2, self.forbidden, self.penality)
+
+
+    def create_nodes(self, map):
+        self.nodes = [ map.get_node(self.x1, self.y1), map.get_node(self.x1, self.y2), map.get_node(self.x2, self.y1), map.get_node(self.x2, self.y2) ]
+        return self.nodes
+
+
+    def contains(self, node):
+        return self.x1 < node.x and self.x2 > node.x and self.y1 < node.y and self.y2 > node.y
+
+
+    def intersects(self, node1, node2):
+        if self.contains(node1) or self.contains(node2):
+            return True
+        if self.x1 == min(node1.x, node2.x) and self.y1 == min(node1.y, node2.y) and self.x2 == max(node1.x, node2.x) and self.y2 == max(node1.y, node2.y):
+            return True
+        if tools.segment_intersects_segment(self.x1, self.y1, self.x1, self.y2, node1.x, node1.y, node2.x, node2.y):
+            return True
+        if tools.segment_intersects_segment(self.x1, self.y2, self.x2, self.y2, node1.x, node1.y, node2.x, node2.y):
+            return True
+        if tools.segment_intersects_segment(self.x2, self.y2, self.x2, self.y1, node1.x, node1.y, node2.x, node2.y):
+            return True
+        if tools.segment_intersects_segment(self.x2, self.y1, self.x1, self.y1, node1.x, node1.y, node2.x, node2.y):
+            return True
         return False
+
+
+
+
+class CircleZone(AbstractZone):
+
+    RESOLUTION = 6
+
+    def __init__(self, x, y, radius, forbidden, penality):
+        AbstractZone.__init__(self, forbidden, penality)
+        self.x = x
+        self.y = y
+        self.radius = radius
+
+    def create_symetric_zone(self):
+        return CircleZone(self.x, FIELD_Y_SIZE - self.y, self.radius, self.forbidden, self.penality)
+
+
+    def create_nodes(self, map):
+        self.nodes = []
+        fresolution = float(self.RESOLUTION)
+        for i in xrange(self.RESOLUTION):
+            fi = float(i)
+            node = map.get_node(self.x + self.radius * math.cos(fi * 2.0 * math.pi / fresolution), self.y + self.radius * math.sin(fi * 2.0 * math.pi / fresolution))
+            nodes.append(node)
+        return self.nodes
+
+
+    def contains(self, node):
+        return tools.distance(self.x, self.y, node.x, node.y) < self.radius
+
+
+    def intersects(self, node1, node2):
+        return NotImplementedError()
 
 
 
@@ -118,128 +153,136 @@ class Map(object):
     def __init__(self, eventloop):
         self.eventloop = eventloop
         self.zones = []
-        self.zone_links_edges = []
+        self.nodes = []
+        self.edges = []
+        self.penality = FIELD_X_SIZE * FIELD_Y_SIZE
         self.opponent_zones = { OPPONENT_ROBOT_MAIN: None, OPPONENT_ROBOT_SECONDARY: None }
-        self.opponent_avoidance_ranges = { OPPONENT_ROBOT_MAIN: MAIN_OPPONENT_AVOIDANCE_RANGE, OPPONENT_ROBOT_SECONDARY: SECONDARY_OPPONENT_AVOIDANCE_RANGE }
-
-        # Captain room
-        self.add_zone(True, False, Node(0.5 - MAP_WALLS_DISTANCE, 0.4 + MAP_WALLS_DISTANCE),
-                                   Node(0.52 + MAP_WALLS_DISTANCE, 0.4 + MAP_WALLS_DISTANCE),
-                                   Node(0.52 + MAP_WALLS_DISTANCE, MAP_WALLS_DISTANCE))
-        # Bridge
-        self.add_zone(True, False, Node(1.25 - MAP_WALLS_DISTANCE, MAP_WALLS_DISTANCE),
-                                   Node(1.25 - MAP_WALLS_DISTANCE, 0.380 + MAP_WALLS_DISTANCE),
-                                   Node(2.0 - MAP_WALLS_DISTANCE, 0.380 + MAP_WALLS_DISTANCE))
-        # Island
-        self.add_zone(False, True, Node(0.875 - MAP_WALLS_DISTANCE, 0.975 - MAP_WALLS_DISTANCE),
-                                   Node(0.875 - MAP_WALLS_DISTANCE, 2.025 + MAP_WALLS_DISTANCE),
-                                   Node(1.125 + MAP_WALLS_DISTANCE, 2.025 + MAP_WALLS_DISTANCE),
-                                   Node(1.125 + MAP_WALLS_DISTANCE, 0.975 - MAP_WALLS_DISTANCE))
-
-        self.initial_setup()
-        #self.add_opponent(2.0, 1.6, OPPONENT_ROBOT_MAIN)
+        self.opponent_positions = { OPPONENT_ROBOT_MAIN: None, OPPONENT_ROBOT_SECONDARY: None }
+        self.opponent_edges = { OPPONENT_ROBOT_MAIN: [], OPPONENT_ROBOT_SECONDARY: [] }
+        self.changed_opponents = []
+        self.start_node = None
+        self.start_node_edges = []
+        self.start_node_changed = False
+        self.destination_node = None
+        self.destination_node_edges = []
+        self.destination_node_changed = False
 
 
-    def add_zone(self, symetric, close_path, *nodes):
-        self.zones.append(Zone(close_path, *nodes))
-        if symetric:
-            symetric_nodes = []
-            for node in nodes:
-                symetric_nodes.append(Node(node.x, FIELD_Y_SIZE - node.y))
-            self.zones.append(Zone(close_path, *symetric_nodes))
+    def get_node(self, x, y):
+        for node in self.nodes:
+            if tools.quasi_equal(x, node.x) and tools.quasi_equal(y, node.y):
+                return node
+        node = Node(x, y)
+        self.nodes.append(node)
+        return node
 
 
-    def initial_setup(self):
-        handled_node_pairs = set()
-        for zone in self.zones:
-            for node1 in zone.nodes:
-                for other_zone in self.zones:
-                    if not zone is other_zone:
-                        for node2 in other_zone.nodes:
-                            if not node2 in zone.nodes:
-                                if ((node1, node2) not in handled_node_pairs) or ((node2, node1) not in handled_node_pairs):
-                                    edge = self.create_edge(node1, node2)
-                                    if edge is not None:
-                                        self.zone_links_edges.append(edge)
-                                        node1.edges.append(edge)
-                                        node2.edges.append(edge)
-                                    handled_node_pairs.add((node1, node2))
-                                    handled_node_pairs.add((node2, node1))
-
-
-    def create_edge(self, node1, node2):
-        edge = Edge(node1, node2)
-        for zone in self.zones:
-            if zone.intersects(edge):
-                return None
-        return edge
-
-
-    def add_opponent(self, x, y, opponent):
-        distance = self.opponent_avoidance_ranges[opponent]
-        nodes = []
-        nb_edges = 6
-        for i in xrange(nb_edges):
-            nodes.append(Node(x + distance * math.cos(float(i) * math.pi / float(nb_edges)), y + distance * math.sin(float(i) * math.pi / float(nb_edges))))
-        zone = Zone(True, *nodes)
+    def add_zone(self, symetric, create_nodes, zone):
         self.zones.append(zone)
-        self.link_zone(zone, opponent)
-        self.opponent_zones[opponent] = zone
+        if create_nodes:
+            zone.create_nodes(self)
+        if symetric:
+            symetric_zone = zone.create_symetric_zone()
+            self.zones.append(symetric_zone)
+            if create_nodes:
+                symetric_zone.create_nodes(self)
 
 
-    def link_zone(self, zone, opponent):
-        for node1 in zone.nodes:
-            for other_zone in self.zones:
-                if not other_zone is zone:
-                    for node2 in zone.nodes:
-                        edge = self.create_edge(node1, node2)
-                        if edge is not None:
-                            self.zone_links_edges.append(edge)
-                            node1.edges.append(edge)
-                            node2.edges.append(edge)
-
-        edges_to_remove = []
-        for edge1 in zone.edges:
-            for other_zone in self.zones:
-                if not other_zone is zone:
-                    for edge2 in zone.edges:
-                        if edge1.intersects(edge2):
-                            edge2.opponent_penality[opponent] = FIELD_X_SIZE * FIELD_Y_SIZE
-                            edges_to_remove.append(edge1)
-
-        for edge in edges_to_remove:
-            edge1.unlink()
-            zone.edges.remove(edge)
-
-        nodes_to_remove = []
-        for node in zone.nodes:
-            if len(node.edges) == 0:
-                nodes_to_remove.append(node)
-
-        for node in nodes_to_remove:
-            zone.nodes.remove(node)
+    def link_nodes(self):
+        for node in self.nodes:
+            self.edges += self.link_node(node)
 
 
-    def remove_opponent(self, opponent):
-        for edge in self.zone_links_edges:
-            edge.opponent_penality[opponent] = 0.0
-        for edge in self.opponent_zones[opponent].edges:
-            edge.unlink()
-        self.opponent_zones[opponent] = None
+    def link_node(self, node):
+        new_edges = []
+        if node.is_in_field():
+            for other_node in self.nodes:
+                if other_node is not node and other_node.is_in_field():
+                    already_exists = False
+                    for existing_edge in node.edges:
+                        if existing_edge.links(node, other_node):
+                            already_exists = True
+                            break
+                    if not already_exists:
+                        ok = True
+                        penality = 0.0
+                        for zone in self.zones:
+                            intersects = zone.intersects(node, other_node)
+                            if intersects:
+                                if zone.forbidden:
+                                    ok = False
+                                    break
+                                else:
+                                    if zone.penality > penality:
+                                        penality = zone.penality
+                        if ok:
+                            edge = Edge(node, other_node)
+                            new_edges.append(edge)
+        return new_edges
+
+
+    def set_opponent(self, x, y, opponent):
+        self.opponent_positions[opponent] = (x, y)
+        self.changed_opponents.append(opponent)
+
+
+    def clear_opponent(self, opponent):
+        self.opponent_positions[opponent] = None
+        self.changed_opponents.append(opponent)
+
+
+    def synchronize(self):
+        for opponent in self.changed_opponents:
+            # Clear previous positions
+            nodes = set()
+            for edge in self.opponent_edges[opponent]:
+                edge.unlink()
+                nodes.add(edge.node1)
+                nodes.add(edge.node2)
+            self.opponent_edges[opponent] = []
+            for node in nodes:
+                if len(node.edges) == 0:
+                    self.nodes.remove(node)
+            self.opponent_zones[opponent] = None
+
+            # Set new positions
+            coords = self.opponent_positions[opponent]
+            if coords is not None:
+                (x, y) = coords
+                opponent_zone = RectZone(x - MAP_WALLS_DISTANCE, y - MAP_WALLS_DISTANCE, x + MAP_WALLS_DISTANCE, y + MAP_WALLS_DISTANCE, False, self.penality)
+                self.opponent_zones[opponent] = opponent_zone
+                self.add_zone(False, True, opponent_zone)
+                opponent_edges = []
+                for node in opponent_zone.nodes:
+                    opponent_edges += self.link_node(node)
+                self.opponent_edges[opponent] = opponent_edges
+        self.changed_opponents = []
+
+        if self.start_node_changed:
+            for edge in self.start_node_edges:
+                edge.unlink()
+            self.start_node_edges = self.link_node(self.start_node)
+            self.start_node_changed = False
+        if self.destination_node_changed:
+            for edge in self.destination_node_edges:
+                edge.unlink()
+            self.destination_node_edges = self.link_node(self.destination_node)
+            self.destination_node_changed = False
 
 
     def send_to_simulator(self):
         if IS_HOST_DEVICE_PC:
-            edges = list(self.zone_links_edges)
-            for zone in self.zones:
-                edges += zone.edges
-
             packet = packets.SimulatorGraphMapEdges()
+            edges = list(self.edges)
+            for edgelist in self.opponent_edges.values():
+                edges += edgelist
+            edges += self.start_node_edges
+            edges += self.destination_node_edges
             for edge in edges:
-                packet.points.append(edge.src.x)
-                packet.points.append(edge.src.y)
-                packet.points.append(edge.dst.x)
-                packet.points.append(edge.dst.y)
+                packet.points.append(edge.node1.x)
+                packet.points.append(edge.node1.y)
+                packet.points.append(edge.node2.x)
+                packet.points.append(edge.node2.y)
                 if len(packet.points) == 60:
                     self.eventloop.send_packet(packet)
                     packet.points = []
@@ -248,4 +291,45 @@ class Map(object):
 
 
     def on_device_ready(self, packet):
+        # Captain room
+        self.add_zone(True, True, RectZone(0.5 - MAP_WALLS_DISTANCE,
+                                           0.0,
+                                           0.52 + MAP_WALLS_DISTANCE,
+                                           0.4 + MAP_WALLS_DISTANCE,
+                                           True, self.penality))
+        # Bridge
+        self.add_zone(True, True, RectZone(1.25 - MAP_WALLS_DISTANCE,
+                                           0.0,
+                                           2.0,
+                                           0.380 + MAP_WALLS_DISTANCE,
+                                           True, self.penality))
+        # Island
+        self.add_zone(False, True, RectZone(0.875 - MAP_WALLS_DISTANCE,
+                                             0.975 - MAP_WALLS_DISTANCE,
+                                             1.125 + MAP_WALLS_DISTANCE,
+                                             2.025 + MAP_WALLS_DISTANCE,
+                                             True, self.penality))
+        # BH Secondary robot zone
+        x1 = 0.70
+        y1 = 2.20
+        x2 = 2.0
+        y2 = 3.0
+        if packet.team == TEAM_RED:
+            y1 = FIELD_Y_SIZE - y1
+            y2 = FIELD_Y_SIZE - y2
+        self.add_zone(False, False, RectZone(x1, y1, x2, y2, False, self.penality))
+
+        self.link_nodes()
+
+        self.set_opponent(1.5, 2.0, OPPONENT_ROBOT_MAIN)
+        self.set_opponent(2.0, 2.0, OPPONENT_ROBOT_SECONDARY)
+        #self.start_node = self.get_node(0.15, 1.0)
+        #self.start_node_changed = True
+        #self.destination_node = self.get_node(1.5, 1.0)
+        #self.destination_node_changed = True
+        self.synchronize()
+        self.clear_opponent(OPPONENT_ROBOT_MAIN)
+        #self.clear_opponent(OPPONENT_ROBOT_SECONDARY)
+        self.synchronize()
+
         self.send_to_simulator()
