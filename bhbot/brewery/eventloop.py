@@ -296,6 +296,7 @@ class EventLoop(object):
 
                         channel.packet = None
                 except Exception, e:
+                    channel.packet = None
                     logger.log_exception(e)
 
 
