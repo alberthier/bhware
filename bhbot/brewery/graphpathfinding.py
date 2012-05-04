@@ -17,6 +17,7 @@ class Node(object):
     def __init__(self, x, y):
         self.x = x
         self.y = y
+        self.refcount = 1
         self.edges = []
 
 
@@ -42,7 +43,9 @@ class Edge(object):
 
     def unlink(self):
         self.node1.edges.remove(self)
+        self.node1 = None
         self.node2.edges.remove(self)
+        self.node2 = None
 
 
 
@@ -134,7 +137,7 @@ class CircleZone(AbstractZone):
         for i in xrange(self.RESOLUTION):
             fi = float(i)
             node = map.get_node(self.x + self.radius * math.cos(fi * 2.0 * math.pi / fresolution), self.y + self.radius * math.sin(fi * 2.0 * math.pi / fresolution))
-            nodes.append(node)
+            self.nodes.append(node)
         return self.nodes
 
 
@@ -148,29 +151,46 @@ class CircleZone(AbstractZone):
 
 
 
+class DynamicPoint(object):
+
+    def __init__(self):
+        self.node = None
+        self.next_coords = None
+        self.dynamic_edges = []
+
+
+
+
 class Map(object):
 
     def __init__(self, eventloop):
         self.eventloop = eventloop
         self.zones = []
         self.nodes = []
-        self.edges = []
+        self.base_edges = []
         self.penality = FIELD_X_SIZE * FIELD_Y_SIZE
         self.opponent_zones = { OPPONENT_ROBOT_MAIN: None, OPPONENT_ROBOT_SECONDARY: None }
         self.opponent_positions = { OPPONENT_ROBOT_MAIN: None, OPPONENT_ROBOT_SECONDARY: None }
-        self.opponent_edges = { OPPONENT_ROBOT_MAIN: [], OPPONENT_ROBOT_SECONDARY: [] }
         self.changed_opponents = []
-        self.start_node = None
-        self.start_node_edges = []
-        self.start_node_changed = False
-        self.destination_node = None
-        self.destination_node_edges = []
-        self.destination_node_changed = False
+        self.points = [ DynamicPoint(),  # Start Point
+                        DynamicPoint() ] # Destination Point
+
+
+    def all_edges(self):
+        edges = list(self.base_edges)
+        for zone in self.opponent_zones.values():
+            if zone != None:
+                for node in zone.nodes:
+                    edges += node.edges
+        for point in self.points:
+            edges += point.dynamic_edges
+        return edges
 
 
     def get_node(self, x, y):
         for node in self.nodes:
             if tools.quasi_equal(x, node.x) and tools.quasi_equal(y, node.y):
+                node.refcount += 1
                 return node
         node = Node(x, y)
         self.nodes.append(node)
@@ -190,7 +210,7 @@ class Map(object):
 
     def link_nodes(self):
         for node in self.nodes:
-            self.edges += self.link_node(node)
+            self.base_edges += self.link_node(node)
 
 
     def link_node(self, node):
@@ -205,16 +225,12 @@ class Map(object):
                             break
                     if not already_exists:
                         ok = True
-                        penality = 0.0
                         for zone in self.zones:
                             intersects = zone.intersects(node, other_node)
                             if intersects:
                                 if zone.forbidden:
                                     ok = False
                                     break
-                                else:
-                                    if zone.penality > penality:
-                                        penality = zone.penality
                         if ok:
                             edge = Edge(node, other_node)
                             new_edges.append(edge)
@@ -231,19 +247,23 @@ class Map(object):
         self.changed_opponents.append(opponent)
 
 
+    def set_points(self, x1, y1, x2, y2):
+        self.points[0].next_coords = (x1, y1)
+        self.points[1].next_coords = (x2, y2)
+
+
     def synchronize(self):
         for opponent in self.changed_opponents:
             # Clear previous positions
-            nodes = set()
-            for edge in self.opponent_edges[opponent]:
-                edge.unlink()
-                nodes.add(edge.node1)
-                nodes.add(edge.node2)
-            self.opponent_edges[opponent] = []
-            for node in nodes:
-                if len(node.edges) == 0:
-                    self.nodes.remove(node)
-            self.opponent_zones[opponent] = None
+            if self.opponent_zones[opponent] != None:
+                for node in self.opponent_zones[opponent].nodes:
+                    node.refcount -= 1
+                    if node.refcount == 0:
+                        for edge in list(node.edges):
+                            edge.unlink()
+                        self.nodes.remove(node)
+                self.zones.remove(self.opponent_zones[opponent])
+                self.opponent_zones[opponent] = None
 
             # Set new positions
             coords = self.opponent_positions[opponent]
@@ -252,33 +272,34 @@ class Map(object):
                 opponent_zone = RectZone(x - MAP_WALLS_DISTANCE, y - MAP_WALLS_DISTANCE, x + MAP_WALLS_DISTANCE, y + MAP_WALLS_DISTANCE, False, self.penality)
                 self.opponent_zones[opponent] = opponent_zone
                 self.add_zone(False, True, opponent_zone)
-                opponent_edges = []
                 for node in opponent_zone.nodes:
-                    opponent_edges += self.link_node(node)
-                self.opponent_edges[opponent] = opponent_edges
+                    self.link_node(node)
         self.changed_opponents = []
 
-        if self.start_node_changed:
-            for edge in self.start_node_edges:
-                edge.unlink()
-            self.start_node_edges = self.link_node(self.start_node)
-            self.start_node_changed = False
-        if self.destination_node_changed:
-            for edge in self.destination_node_edges:
-                edge.unlink()
-            self.destination_node_edges = self.link_node(self.destination_node)
-            self.destination_node_changed = False
+        # Update start and destination points
+        for point in self.points:
+            if point.next_coords is not None:
+                for edge in point.dynamic_edges:
+                    edge.unlink()
+                if point.node is not None and len(point.node.edges) == 0:
+                    self.nodes.remove(self.point.node)
+                point.node = self.get_node(*point.next_coords)
+                point.dynamic_edges = self.link_node(point.node)
+                point.next_coords = None
+
+        # Update edge penalities:
+        for edge in self.all_edges():
+            edge.penality = 0.0
+            for zone in self.zones:
+                if zone.intersects(edge.node1, edge.node2):
+                    if zone.penality > edge.penality:
+                        edge.penality = zone.penality
 
 
     def send_to_simulator(self):
         if IS_HOST_DEVICE_PC:
             packet = packets.SimulatorGraphMapEdges()
-            edges = list(self.edges)
-            for edgelist in self.opponent_edges.values():
-                edges += edgelist
-            edges += self.start_node_edges
-            edges += self.destination_node_edges
-            for edge in edges:
+            for edge in self.all_edges():
                 packet.points.append(edge.node1.x)
                 packet.points.append(edge.node1.y)
                 packet.points.append(edge.node2.x)
@@ -321,15 +342,12 @@ class Map(object):
 
         self.link_nodes()
 
-        self.set_opponent(1.5, 2.0, OPPONENT_ROBOT_MAIN)
+        self.set_opponent(1.5, 1.8, OPPONENT_ROBOT_MAIN)
         self.set_opponent(2.0, 2.0, OPPONENT_ROBOT_SECONDARY)
-        #self.start_node = self.get_node(0.15, 1.0)
-        #self.start_node_changed = True
-        #self.destination_node = self.get_node(1.5, 1.0)
-        #self.destination_node_changed = True
+        self.set_points(0.15, 1.0, 1.5, 1.0)
         self.synchronize()
-        self.clear_opponent(OPPONENT_ROBOT_MAIN)
+        #self.clear_opponent(OPPONENT_ROBOT_MAIN)
         #self.clear_opponent(OPPONENT_ROBOT_SECONDARY)
-        self.synchronize()
+        #self.synchronize()
 
         self.send_to_simulator()
