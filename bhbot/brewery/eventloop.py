@@ -20,6 +20,7 @@ import leds
 import robot
 import opponentdetector
 import trajectory
+import graphpathfinding
 from definitions import *
 
 if IS_HOST_DEVICE_ARM :
@@ -239,6 +240,7 @@ class EventLoop(object):
         self.opponent_detector = opponentdetector.OpponentDetector(self)
         self.stopping = False
         self.map = trajectory.Map(self)
+        #self.map = graphpathfinding.Map(self)
         self.timers = []
         self.state_history = []
 

@@ -6,6 +6,7 @@ import tools
 
 import packets
 import logger
+import trajectory
 
 from definitions import *
 
@@ -19,10 +20,24 @@ class Node(object):
         self.y = y
         self.refcount = 1
         self.edges = []
+        self.g_score = 0.0
+        self.h_score = 0.0
+        self.f_score = 0.0
+        self.came_from = None
 
 
     def is_in_field(self):
         return self.x > 0.0 and self.x < FIELD_X_SIZE and self.y > 0.0 and self.y < FIELD_Y_SIZE
+
+
+    def neighbor_nodes(self):
+        nodes = []
+        for edge in self.edges:
+            if self is edge.node1:
+                nodes.append(edge.node2)
+            else:
+                nodes.append(edge.node1)
+        return nodes
 
 
 
@@ -253,7 +268,7 @@ class Map(object):
 
 
     def synchronize(self):
-        for opponent in self.changed_opponents:
+        for idx, opponent in enumerate(self.changed_opponents):
             # Clear previous positions
             if self.opponent_zones[opponent] != None:
                 for node in self.opponent_zones[opponent].nodes:
@@ -277,12 +292,14 @@ class Map(object):
         self.changed_opponents = []
 
         # Update start and destination points
-        for point in self.points:
+        for idx, point in enumerate(self.points):
             if point.next_coords is not None:
                 for edge in point.dynamic_edges:
                     edge.unlink()
-                if point.node is not None and len(point.node.edges) == 0:
-                    self.nodes.remove(self.point.node)
+                if point.node is not None:
+                    point.node.refcount -= 1
+                    if len(point.node.edges) == 0 and point.node.refcount == 0:
+                        self.nodes.remove(point.node)
                 point.node = self.get_node(*point.next_coords)
                 point.dynamic_edges = self.link_node(point.node)
                 point.next_coords = None
@@ -342,12 +359,98 @@ class Map(object):
 
         self.link_nodes()
 
-        self.set_opponent(1.5, 1.8, OPPONENT_ROBOT_MAIN)
-        self.set_opponent(2.0, 2.0, OPPONENT_ROBOT_SECONDARY)
-        self.set_points(0.15, 1.0, 1.5, 1.0)
-        self.synchronize()
-        #self.clear_opponent(OPPONENT_ROBOT_MAIN)
-        #self.clear_opponent(OPPONENT_ROBOT_SECONDARY)
-        #self.synchronize()
-
         self.send_to_simulator()
+
+
+    def route(self, start, goal):
+        return [ self.find_path(start, goal)[1] ]
+
+
+    def evaluate(self, start, goal):
+        cost = self.find_path(start, goal)[0]
+        if cost is None:
+            cost = (FIELD_X_SIZE * FIELD_Y_SIZE) ** 2
+        return cost
+
+
+    def find_path(self, start, goal):
+        logger.log("Compute route from ({}, {}) to ({}, {})".format(start.x, start.y, goal.x, goal.y))
+
+        self.set_points(start.x, start.y, goal.x, goal.y)
+        self.synchronize()
+
+        goal_node = self.points[1].node
+        start_node = self.points[0].node
+        start_node.g_score = 0.0
+        start_node.h_score = self.heuristic_cost_estimate(start_node, goal_node)
+        start_node.f_score = start_node.g_score + start_node.h_score
+        start_node.came_from = None
+
+        closedset = set()
+        openset = [ start_node ]
+
+        while len(openset) != 0:
+            current = openset[0]
+            if tools.quasi_equal(current.x, goal_node.x) and tools.quasi_equal(current.y, goal_node.y):
+                path = []
+                path_length = 0.0
+                n = current
+                while n.came_from != None:
+                    path.insert(0, trajectory.Pose(n.x, n.y))
+                    if n.came_from != None:
+                        path_length += tools.distance(n.x, n.y, n.came_from.x, n.came_from.y)
+                    n = n.came_from
+                logger.log("Route computed. Length: {}.".format(path_length))
+                return (path_length, path)
+
+            del openset[0]
+            closedset.add(current)
+
+            for neighbor in current.neighbor_nodes():
+                if not neighbor in closedset:
+                    tentative_g_score = current.g_score + self.effective_cost(current, neighbor)
+                    if not neighbor in openset:
+                        neighbor.h_score = self.heuristic_cost_estimate(neighbor, goal_node)
+                        neighbor.g_score = tentative_g_score
+                        neighbor.f_score = neighbor.g_score + neighbor.h_score
+                        neighbor.came_from = current
+                        self.insert_sorted(openset, neighbor)
+                    elif tentative_g_score < neighbor.g_score:
+                        neighbor.g_score = tentative_g_score
+                        neighbor.f_score = neighbor.g_score + neighbor.h_score
+                        neighbor.came_from = current
+
+        logger.log("No route found")
+        return (None, [])
+
+
+    def effective_cost(self, node1, node2):
+        return tools.distance(node1.x, node1.y, node2.x, node2.y)
+
+
+    def heuristic_cost_estimate(self, node1, node2):
+        return tools.distance(node1.x, node1.y, node2.x, node2.y)
+
+
+    def insert_sorted(self, openset, neighbor):
+        for i in xrange(len(openset)):
+            if openset[i].f_score >= neighbor.f_score:
+                openset.insert(i, neighbor)
+                return
+        openset.append(neighbor)
+
+
+    def on_goto_finished(self, packet):
+        pass
+
+
+    def pop_blocked_zone(self):
+        pass
+
+
+    def opponent_detected(self, opponent, x, y):
+        pass
+
+
+    def opponent_disapeared(self, opponent):
+        pass

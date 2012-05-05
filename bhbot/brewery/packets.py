@@ -1028,6 +1028,30 @@ class SimulatorOpponentsPositions(BasePacket):
 
 
 
+class SimulatorGraphMapZones(BasePacket):
+
+    TYPE = 109
+    LOGVIEW_DEFAULT_ENABLED = False
+    LOGVIEW_COLOR = "#ba55d3"
+    DEFINITION = (
+        ListItem('points', [], FloatItem("", 0.0), 62, "Forbidden zone points"),
+    )
+
+
+
+
+class SimulatorGraphMapEdges(BasePacket):
+
+    TYPE = 110
+    LOGVIEW_DEFAULT_ENABLED = False
+    LOGVIEW_COLOR = "#ba55d3"
+    DEFINITION = (
+        ListItem('points', [], FloatItem("", 0.0), 60, "Edges"),
+    )
+
+
+
+
 class TurretDetect(BasePacket):
 
     MAX_SIZE = 4

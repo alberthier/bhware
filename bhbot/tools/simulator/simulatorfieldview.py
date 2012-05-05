@@ -860,6 +860,34 @@ class RoutingLayer(fieldview.Layer):
 
 
 
+class RoutingGraphLayer(fieldview.Layer):
+
+    def __init__(self, scene, team):
+        fieldview.Layer.__init__(self, scene)
+        self.team = team
+        if self.team == TEAM_PURPLE:
+            self.name = "Purple robot routing graph"
+            self.color = TEAM_COLOR_PURPLE
+        else:
+            self.name = "Red robot routing graph"
+            self.color = TEAM_COLOR_RED
+        self.zones = []
+        #self.setVisible(False)
+
+
+    def on_simulator_graph_map_edges(self, packet):
+        for i in xrange(len(packet.points) / 4):
+            y1 = packet.points[i * 4] * 1000.0
+            x1 = packet.points[i * 4 + 1] * 1000.0
+            y2 = packet.points[i * 4 + 2] * 1000.0
+            x2 = packet.points[i * 4 + 3] * 1000.0
+            item = QGraphicsLineItem(x1, y1, x2, y2)
+            item.setPen(QPen(QColor(self.color).lighter(120)))
+            self.addToGroup(item)
+
+
+
+
 class Coin(QGraphicsItemGroup):
 
     def __init__(self, parent, x, y, is_white):
@@ -1138,6 +1166,8 @@ class SimulatorFieldViewController(fieldview.FieldViewController):
         self.field_scene.add_layer(self.purple_robot_trajectrory_layer)
         self.purple_robot_routing_layer = RoutingLayer(self.field_scene, TEAM_PURPLE)
         self.field_scene.add_layer(self.purple_robot_routing_layer)
+        self.purple_robot_routing_graph_layer = RoutingGraphLayer(self.field_scene, TEAM_PURPLE)
+        self.field_scene.add_layer(self.purple_robot_routing_graph_layer)
 
         self.red_robot_layer = RobotLayer(self.field_scene, self, TEAM_RED)
         self.field_scene.add_layer(self.red_robot_layer)
@@ -1145,6 +1175,8 @@ class SimulatorFieldViewController(fieldview.FieldViewController):
         self.field_scene.add_layer(self.red_robot_trajectrory_layer)
         self.red_robot_routing_layer = RoutingLayer(self.field_scene, TEAM_RED)
         self.field_scene.add_layer(self.red_robot_routing_layer)
+        self.red_robot_routing_graph_layer = RoutingGraphLayer(self.field_scene, TEAM_RED)
+        self.field_scene.add_layer(self.red_robot_routing_graph_layer)
 
         self.game_elements_layer = GameElementsLayer(self.purple_robot_layer,
                                                      self.red_robot_layer,

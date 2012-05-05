@@ -15,13 +15,14 @@ from definitions import *
 
 class RobotController(object):
 
-    def __init__(self, team, game_controller, view, robot_layer, robot_trajectory_layer, robot_routing_layer):
+    def __init__(self, team, game_controller, view, robot_layer, robot_trajectory_layer, robot_routing_layer, robot_routing_graph_layer):
         self.team = team
         self.game_controller = game_controller
         self.view = view
         self.robot_layer = robot_layer
         self.robot_trajectory_layer = robot_trajectory_layer
         self.robot_routing_layer = robot_routing_layer
+        self.robot_routing_graph_layer = robot_routing_graph_layer
         robot_layer.robot_controller = self
         self.process = None
         self.socket = None
@@ -108,6 +109,7 @@ class RobotController(object):
                     packet.dispatch(self.robot_layer)
                     packet.dispatch(self.robot_trajectory_layer)
                     packet.dispatch(self.robot_routing_layer)
+                    packet.dispatch(self.robot_routing_graph_layer)
 
 
     def on_goto(self, packet):
