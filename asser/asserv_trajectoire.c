@@ -63,7 +63,7 @@ float                           gainDeplacement3                        =   20.0
 float                           A_MAX                                   =   3.0;
 float                           D_MAX                                   =   -1.5;
 
-float                           facteurVitesseAngulaireMax              =   4.0;
+float                           facteurVitesseAngulaireMax              =   1.0;
 
 float                           COEFF_VI1                               =   0.95;
 float                           VITESSE_SEUIL_DECC                      =   0.2;
@@ -599,6 +599,7 @@ extern void ASSER_TRAJ_InitialisationTrajectoire(Pose poseRobot, PtTraj * point,
     segmentTrajectoireBS * segmentTraj;
     float   tl_2, tl_3, tl;
     float           lenSeg;
+    float           angle_fin_rotation;
 
 #ifndef PIC32_BUILD
     Pose            poseTest;
@@ -813,15 +814,17 @@ extern void ASSER_TRAJ_InitialisationTrajectoire(Pose poseRobot, PtTraj * point,
     else
     {
         /* Position a atteindre (condition d'arret du test de fin d'asservissment) */
-        chemin.posArrivee.x = poseRobot.x + NORME_BARRE_SUIVI_TRAJ * cos(POS_ModuloAngle(angle_rad));
-        chemin.posArrivee.y = poseRobot.y + NORME_BARRE_SUIVI_TRAJ * sin(POS_ModuloAngle(angle_rad));
+        angle_fin_rotation = POS_ModuloAngle(fabs(angle_rad));
+        chemin.posArrivee.x = poseRobot.x + NORME_BARRE_SUIVI_TRAJ * cos(angle_fin_rotation);
+        chemin.posArrivee.y = poseRobot.y + NORME_BARRE_SUIVI_TRAJ * sin(angle_fin_rotation);
+        ASSER_TRAJ_LogAsser("angleFinRotation", NBR_ASSER_LOG_VALUE, angle_fin_rotation);
 
         /* Configuration du profil de vitesse */
         chemin.profilVitesse.vmax = POS_GetConsVitesseAngulaireMax() * NORME_BARRE_SUIVI_TRAJ;
 
         chemin.rotation.poseDepartRobot = poseRobot;
         chemin.nbreSegments = 1;
-        chemin.rotation.angle = POS_ModuloAngle(angle_rad - poseRobot.angle);
+        chemin.rotation.angle = POS_ModuloAngle(angle_fin_rotation - poseRobot.angle);
         if ((chemin.rotation.angle * angle_rad) < 0.0)
         {
             if (angle_rad > 0.0)
@@ -833,6 +836,7 @@ extern void ASSER_TRAJ_InitialisationTrajectoire(Pose poseRobot, PtTraj * point,
                 chemin.rotation.angle -= 2.0 * PI;
             }
         }
+        ASSER_TRAJ_LogAsser("plageAngleRotation", NBR_ASSER_LOG_VALUE, chemin.rotation.angle);
 
         /* Calcul de la premiere pose de la trajectoire de consigne */
         poseReference = ASSER_TRAJ_TrajectoireRotation(&(chemin.rotation), 0.0);
@@ -1712,7 +1716,7 @@ static void ASSER_TRAJ_SmoothGabaritAcceleration(Trajectoire * traj)
 
                         cpt++;
                     }
-                    while ( ( (fabs(delta) > delta_acc_seuilMax) || (g_tab_gabarit_acceleration[m] > acc_max) ) && (cpt < 30u) );
+                    while ( ( (fabs(delta) > delta_acc_seuilMax) || (g_tab_gabarit_acceleration[m] > acc_max) ) && (cpt < 30u) && (cpt < 10u) );
 
                     ASSER_TRAJ_LogAsser("gabarit_acceleration_max", NBR_ASSER_LOG_VALUE, i * chemin.profilVitesse.pas_echantillon_distance);
                     memo_delta_acc = 0.0;
@@ -1732,6 +1736,103 @@ static void ASSER_TRAJ_SmoothGabaritAcceleration(Trajectoire * traj)
 
 }
 
+#if 0
+static void ASSER_TRAJ_SmoothGabaritAcceleration(Trajectoire * traj)
+{
+    int             i                   = 0.0, k, m, n;
+    float           delta_acc           = 0.0, memo_delta_acc           = 0.0;
+    float           delta_acc_seuilMax  = 0.2;
+    float           acc_max = 1.0;
+    float           delta;
+    float           sum_acc;
+    unsigned int    N;
+    unsigned int    cpt = 0;
+
+    delta_acc = fabs(g_tab_gabarit_acceleration[1] - g_tab_gabarit_acceleration[0]);
+    i = 1;
+    while( i < (g_index_tab_gabarit_acceleration - 1u) )
+    {
+        memo_delta_acc = delta_acc;
+        delta_acc = fabs(g_tab_gabarit_acceleration[i+1] - g_tab_gabarit_acceleration[i]);
+        // recherche d'un maximum local
+        if (delta_acc < memo_delta_acc)
+        {
+            if (memo_delta_acc > delta_acc_seuilMax)
+            {
+                m = (i - 1) - 1;
+                if (m < 0)
+                {
+                    m = 0;
+                }
+                n = i;
+                if (n < 1)
+                {
+                    n = 1;
+                }
+
+                if ((g_tab_gabarit_acceleration[m] * g_tab_gabarit_acceleration[n]) < 0.0)
+                {
+
+                    cpt = 0;
+                    do
+                    {
+                        acc_max = traj->profilVitesse.Amax - ((traj->profilVitesse.Amax / pow(traj->profilVitesse.vpointe, 2.0)) * pow(g_tab_gabarit_vitesse[m], 2.0));
+                        sum_acc = 0.0;
+                        for (k=m; k<(n+1); k++)
+                        {
+                            sum_acc = sum_acc + g_tab_gabarit_acceleration[k];
+                        }
+
+                        N = n - m + 1;
+
+                        if ( ((float)(n+m)/2.0) < ((float)g_index_tab_gabarit_acceleration/2.0))
+                        {
+                            delta = (N * g_tab_gabarit_acceleration[n] - sum_acc) / ((N * (N - 1)) / 2.0);
+                            for (k=1; k<N; k++)
+                            {
+                                g_tab_gabarit_acceleration[n-k] = g_tab_gabarit_acceleration[n] - k * delta;
+                            }
+                        }
+                        else
+                        {
+                            delta = (sum_acc - N * g_tab_gabarit_acceleration[m]) / ((N * (N - 1)) / 2.0);
+                            for (k=1; k<N; k++)
+                            {
+                                g_tab_gabarit_acceleration[m+k] = g_tab_gabarit_acceleration[m] + k * delta;
+                            }
+                        }
+
+                        if (m > 0)
+                        {
+                            m = m - 1;
+                        }
+                        if (n < (g_index_tab_gabarit_acceleration - 1u))
+                        {
+                            n = n + 1;
+                        }
+
+                        cpt++;
+                    }
+                    while ( ( (fabs(delta) > delta_acc_seuilMax) || (g_tab_gabarit_acceleration[m] > acc_max) ) && (cpt < 30u) && (cpt < 10u) );
+
+                    ASSER_TRAJ_LogAsser("gabarit_acceleration_max", NBR_ASSER_LOG_VALUE, i * chemin.profilVitesse.pas_echantillon_distance);
+                    memo_delta_acc = 0.0;
+                    delta_acc = 0.0;
+                    i = m;
+                }
+            }
+        }
+
+        i++;
+    }
+
+    for(i=0; i<g_index_tab_gabarit_acceleration; i++)
+    {
+        ASSER_TRAJ_LogAsser("gabarit_acceleration_new", NBR_ASSER_LOG_VALUE, g_tab_gabarit_acceleration[i]);
+    }
+
+}
+#endif
 /**********************************************************************/
 /*! \brief ASSER_TRAJ_CreateGabaritVitesseFromGabaritAcceleration
  *

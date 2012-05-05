@@ -220,11 +220,15 @@ def trajFunction(d_cfgTraj):
     # envoie au simulateur de l'init de pose
     #~ send_init_pose(simulator_process, x=0.31, y=0.177, angle=-1.5708)
     angle0 = math.atan2(-(1.1-0.86), -(0.54-0.6)) + (math.pi/4.0) * 1.2*0
-    print("angle0: " +str(angle0))
-    print("Aval: " +str(0.799249231815))
-    send_init_pose(simulator_process, x=0.6, y=0.86, angle=angle0) #INIT_POSE_ROBOT 1 -1 0.799249231815 1 0.6 0.86
+    #~ print("angle0: " +str(angle0))
+    #~ print("Aval: " +str(0.799249231815))
+    #~ send_init_pose(simulator_process, x=0.6, y=0.86, angle=angle0) #INIT_POSE_ROBOT 1 -1 0.799249231815 1 0.6 0.86
     
-    send_init_pose(simulator_process, x=1.0, y=1.0, angle=-math.pi/2.0)
+    # Init du dep qui merde
+    #~ send_init_pose(simulator_process, x=0.31, y=0.177, angle=-math.pi/2.0)
+    
+    # Init du dep qui fuse
+    send_init_pose(simulator_process, x=0.1, y=0.1, angle=math.pi*0.0)
 
     #generation d'un message de commande de deplacement
     # "MSG_MAIN_GOTO 
@@ -234,17 +238,26 @@ def trajFunction(d_cfgTraj):
     
     #~ deplacement = commandMsg("MSG_MAIN_GOTO 1 1 0.0")   # 'DEPLACEMENT' en 'MARCHE_AVANT'
     #~ deplacement.addPose(str(d_cfgTraj['Distance']) + " 0.0") # deplacement rectiligne sur la distance d_cfgTraj['Distance']
-    
-    #~ deplacement = commandMsg("MSG_MAIN_GOTO 1 -1 1.82374799252")   # 'DEPLACEMENT' en 'MARCHE_AVANT' #0.78539816339744828
+
+    # Dep qui merde    
+    #~ deplacement = commandMsg("MSG_MAIN_GOTO 1 -1 -1100000.0")   # 'DEPLACEMENT' en 'MARCHE_AVANT' #0.78539816339744828
     #~ deplacement.addPose("0.31 1.177") #-1100000.0
+    
+    # Dep qui fuse
+    #~ deplacement = commandMsg("MSG_MAIN_GOTO 1 -1 -1100000.0")   # 'DEPLACEMENT' en 'MARCHE_AVANT' #0.78539816339744828
+    #~ deplacement.addPose("1.1 0.1") #-1100000.0
     
     #~ deplacement.addPose("0.54 1.1") #MSG_MAIN_GOTO 1 -1 1.82374799252 1 0.54 1.1
     
-    deplacement = commandMsg("MSG_MAIN_GOTO 1 -1 1.57")
-    deplacement.addPose("1.0 1.3")
-    deplacement.addPose("1.3 1.6")
-    deplacement.addPose("1.6 1.3")
-    deplacement.addPose("1.6 1.0")
+    angle = 12.0*(math.pi/8.0)
+    print("angle : "+str(angle*180.0/math.pi))
+    deplacement = commandMsg("MSG_MAIN_GOTO 0 1 "+str(angle))
+    #~ deplacement.addPose("0.31 3.82") #"0.31 3.82"
+    
+    #~ deplacement.addPose("1.0 1.3")
+    #~ deplacement.addPose("1.3 1.6")
+    #~ deplacement.addPose("1.6 1.3")
+    #~ deplacement.addPose("1.6 1.0")
     
     #transmission de commandes de deplacement par l'entree standard
     simulator_process.stdin.write(deplacement.cmdMsgGeneration())
@@ -515,6 +528,7 @@ def affichageTraj2011(d_traj):
     plot(temps, d_traj["vitesseMoteurGauche"], '-', label='mesure gauche')
     #~ hold(True)
     plot(temps, d_traj["vitesseMoteurDroit"], label='mesure droit')
+    plot(temps, d_traj["ConsigneMoteurDroit_MS"], label='consigne droit')
     #~ plot([index*periode for index in range(len(d_traj["ConsigneMoteurDroit"]))], [(cons-1024.0)*0.000985 for cons in d_traj["ConsigneMoteurDroit"]], label='consigne droit')
     #~ plot([index*periode for index in range(len(d_traj["vitesseProfilConsigne"]))], d_traj["vitesseProfilConsigne"], 'o', label='vitesse profil')
     #~ plot([index*periode for index in range(len(d_traj["vitLongitudinale"]))], d_traj["vitLongitudinale"], label='consigne long calculee')
@@ -688,13 +702,14 @@ def affichageGabaritVitesse_2012(d_traj):
     plot([index * pas for index in range(len(d_traj["gabarit_acceleration"]))], d_traj["gabarit_acceleration"], '-o', label='acc')
     plot([index * pas for index in range(len(d_traj["gabarit_acceleration_new"]))], d_traj["gabarit_acceleration_new"], '-o', label='acc2')
     plot([index * pas for index in range(len(d_traj["gabarit_vitesse_new"]))], d_traj["gabarit_vitesse_new"], '-o', label='vit2')
+    
     #~ plot([index * pas for index in range(len(d_traj["gabarit_delta_acceleration"]))], d_traj["gabarit_delta_acceleration"], '-om', label='delta')
     #~ plot(d_traj["gabarit_acceleration_max"], [0 for index in range(len(d_traj["gabarit_acceleration_max"]))], '-or')
     print("taille tab gabarit vitesse : " + str(len(d_traj["gabarit_vitesse"])))
     #~ print("nb acc max : " + str(len(d_traj["gabarit_acceleration_max"])))
-    print("init_gabarit:")
-    for val in d_traj["init_gabarit"] :
-        print(val)
+    #~ print("init_gabarit:")
+    #~ for val in d_traj["init_gabarit"] :
+        #~ print(val)
     grid()
     title("Gabarit vitesse")
     legend()
@@ -781,34 +796,37 @@ affichageGabaritVitesse_2012(traj)
 #~ print(traj["main_goto"])
 #~ sys.exit(2)
 
-print(len(traj["def_xTraj"]))
+#~ print(len(traj["def_xTraj"]))
+
 #~ print([traj["def_xTraj"][0], traj["def_yTraj"][0]])
 #~ print([traj["def_xTraj"][1], traj["def_yTraj"][1]])
 #~ print([traj["def_xTraj"][2], traj["def_yTraj"][2]])
 #~ print([traj["def_xTraj"][-1], traj["def_yTraj"][-1]])
 
-print("q:")
-print(traj["q"])
-#~ print("q2:")
-#~ print(traj["q2"])
-print("pti:")
-print(traj["pti"])
-print("disti")
-print(traj["disti"])
-print("distance_seg")
-print(traj["distance_seg"])
-print("theta1: " + str(traj["theta1"]))
-print("angle_rad: " + str(traj["angle_rad"]))
-#~ print(traj["vpointe"])
 
-#~ print(traj["def_i"])
+#~ print("pti:")
+#~ print(traj["pti"])
+#~ print("disti")
+#~ print(traj["disti"])
+#~ print("distance_seg")
+#~ print(traj["distance_seg"])
+#~ print("theta1: " + str(traj["theta1"]))
+#~ print("angle_rad: " + str(traj["angle_rad"]))
+
+#~ 
+#~ figure()
+#~ N = len(traj["def_xTraj"])
+#~ plot(traj["def_xTraj"][:N], traj["def_yTraj"][:N], '-o')
+#~ plot(traj["def_xTraj"][0], traj["def_yTraj"][0], '-oy')
+#~ plot(traj["def_xTraj"][-1], traj["def_yTraj"][-1], '-or')
+
+#~ print("angle_init: " +str(traj["angleFinRotation"][0]*180.0/math.pi))
+print("angleFinRotation: " +str(traj["angleFinRotation"][0]*180.0/math.pi))
+#~ print("test_modulo_angle: " +str(traj["angleFinRotation"][2]))
+print("plageAngleRotation: " +str(traj["plageAngleRotation"][0]*180.0/math.pi))
+
 figure()
-N = len(traj["def_xTraj"])
-plot(traj["def_xTraj"][:N], traj["def_yTraj"][:N], '-o')
-plot(traj["def_xTraj"][0], traj["def_yTraj"][0], '-oy')
-plot(traj["def_xTraj"][-1], traj["def_yTraj"][-1], '-or')
-# plot(traj["def_xTraj"][1], traj["def_yTraj"][1], '-og')
-#~ show()
+plot([theta*180.0/math.pi for theta in traj["angle"]])
 
 affichageTraj2011(traj)
 #~ affichageTestAccDcecc(traj)

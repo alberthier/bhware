@@ -365,6 +365,8 @@ void SIMU_InitialisationLogRobot(void)
 //    /* debug boucle de vitesse 1ms */
 //    ASSER_TRAJ_LogAsser("vitesseG1ms", NBR_ASSER_LOG_VALUE + 1, vitesseMoteurG);
 //    ASSER_TRAJ_LogAsser("vitesseD1ms", NBR_ASSER_LOG_VALUE + 1, vitesseMoteurD);
+
+    ASSER_TRAJ_LogAsser("ConsigneMoteurDroit_MS", NBR_ASSER_LOG_VALUE + 1, 0.0);
 }
 
 void SIMU_LogRobot(void)
@@ -386,6 +388,7 @@ void SIMU_LogRobot(void)
     ASSER_TRAJ_LogAsser("vitLongitudinale", NBR_ASSER_LOG_VALUE, vitessesConsignes.longitudinale);
 //    ASSER_TRAJ_LogAsser("vitRotation", NBR_ASSER_LOG_VALUE + 1, vitessesConsignes.rotation);
 
+    ASSER_TRAJ_LogAsser("ConsigneMoteurDroit_MS", NBR_ASSER_LOG_VALUE + 1, (((float)g_ConsigneMoteurD)-((float)OffsetPWM))*SIMU_gain());
 }
 
 /**********************************************************************/
