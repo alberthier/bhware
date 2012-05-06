@@ -1337,7 +1337,7 @@ static float ASSER_TRAJ_DiffThetaBSpline(Vecteur diff1BS, Vecteur diff2BS)
 {
     float diffTheta;
 
-    diffTheta = ((diff2BS.y * diff1BS.x) - (diff1BS.y * diff2BS.x)) / (SQUARE(diff1BS.x) * (1.0 + SQUARE(diff1BS.y / diff1BS.x)));
+    diffTheta = ((diff2BS.y * diff1BS.x) - (diff1BS.y * diff2BS.x)) / (SQUARE(diff1BS.x)  + SQUARE(diff1BS.y));
 
     return diffTheta;
 }

@@ -247,8 +247,8 @@ def trajFunction(d_cfgTraj):
     #~ deplacement = commandMsg("MSG_MAIN_GOTO 1 -1 -1100000.0")   # 'DEPLACEMENT' en 'MARCHE_AVANT' #0.78539816339744828
     #~ deplacement.addPose("1.1 0.1") #-1100000.0
     
-    deplacement = commandMsg("MSG_MAIN_GOTO 2 1 -1100000.0")   # 'DEPLACEMENT' en 'MARCHE_AVANT' #0.78539816339744828
-    deplacement.addPose("0.1 1.1") #-1100000.0
+    #~ deplacement = commandMsg("MSG_MAIN_GOTO 2 1 -1100000.0")   # 'DEPLACEMENT' en 'MARCHE_AVANT' #0.78539816339744828
+    #~ deplacement.addPose("0.1 1.1") #-1100000.0
     
     #~ deplacement.addPose("0.54 1.1") #MSG_MAIN_GOTO 1 -1 1.82374799252 1 0.54 1.1
     
