@@ -25,20 +25,30 @@ class RobotView(QWidget, RobotView_Ui):
         RobotView_Ui.__init__(self)
         self.setupUi(self)
 
+        font = QFont("", 8)
+        font.setStyleHint(QFont.TypeWriter)
+        self.log_view.setCurrentFont(font)
+
+        self.default_color = self.log_view.textColor()
         if team == TEAM_RED:
-            self.color = TEAM_COLOR_RED
+            self.color = QColor(TEAM_COLOR_RED)
         elif team == TEAM_PURPLE:
-            self.color = TEAM_COLOR_PURPLE
+            self.color = QColor(TEAM_COLOR_PURPLE)
         palette = self.palette()
         palette.setColor(QPalette.Window, QColor(self.color))
         self.setPalette(palette)
 
+        self.led_off_color = QApplication.instance().palette().color(QPalette.Window)
+        self.led_orange_color = QColor("#f57900")
+        self.led_green_color = QColor("#73d216")
+
 
     def add_log(self, text):
-        if text.startswith("["):
-            self.log_view.append('<font size="6">{}</font>'.format(text))
+        if not text.startswith("["):
+            self.log_view.setTextColor(self.default_color)
         else:
-            self.log_view.append('<font size="6" color="{}">{}</font>'.format(self.color, text))
+            self.log_view.setTextColor(self.color)
+        self.log_view.append('{}'.format(text))
 
 
     def clear(self):
@@ -46,11 +56,13 @@ class RobotView(QWidget, RobotView_Ui):
 
 
     def handle_led(self, led_data):
-        color = QApplication.instance().palette().color(QPalette.Window)
         if (led_data & leds.SimulatorLed.COLOR_ORANGE_FLAG) and (led_data & leds.SimulatorLed.COLOR_ORANGE):
-            color = QColor("#f57900")
+            color = self.led_orange_color
         elif (led_data & leds.SimulatorLed.COLOR_GREEN_FLAG) and (led_data & leds.SimulatorLed.COLOR_GREEN):
-            color = QColor("#73d216")
+            color = self.led_green_color
+        else:
+            color = self.led_off_color
+
         palette = self.led.palette()
         palette.setColor(QPalette.Window, color)
         self.led.setPalette(palette)
