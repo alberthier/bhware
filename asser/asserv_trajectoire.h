@@ -131,6 +131,10 @@ extern float                DECC_MIN;
 /** Table pour le log asser */
 extern float                tabLogAsser[NBR_ASSER_LOG_VALUE];
 
+extern int                  g_tabLog_telnet[NBR_ASSER_LOG_VALUE];
+extern char                 g_tabIndex_logTelnet[NBR_ASSER_LOG_VALUE];
+extern unsigned short       g_index_logTelnet;
+
 /** Echnatillon de mesure pour le log asser */
 extern unsigned char        Sample;
 
