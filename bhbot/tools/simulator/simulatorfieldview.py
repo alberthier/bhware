@@ -862,7 +862,7 @@ class RoutingLayer(fieldview.Layer):
 
 class RoutingGraphLayer(fieldview.Layer):
 
-    def __init__(self, scene, team):
+    def __init__(self, scene, team, robot):
         fieldview.Layer.__init__(self, scene)
         self.team = team
         if self.team == TEAM_PURPLE:
@@ -871,19 +871,49 @@ class RoutingGraphLayer(fieldview.Layer):
         else:
             self.name = "Red robot routing graph"
             self.color = TEAM_COLOR_RED
-        self.zones = []
+        self.edges = []
+        self.robot = robot
         #self.setVisible(False)
 
 
+    def on_simulator_clear_graph_map_edges(self, packet):
+        for item in self.edges:
+            self.scene().removeItem(item)
+        self.edges = []
+
+
     def on_simulator_graph_map_edges(self, packet):
-        for i in xrange(len(packet.points) / 4):
-            y1 = packet.points[i * 4] * 1000.0
-            x1 = packet.points[i * 4 + 1] * 1000.0
-            y2 = packet.points[i * 4 + 2] * 1000.0
-            x2 = packet.points[i * 4 + 3] * 1000.0
+        segment_items = 5
+        for i in xrange(len(packet.points) / segment_items):
+            y1 = packet.points[i * segment_items] * 1000.0
+            x1 = packet.points[i * segment_items + 1] * 1000.0
+            y2 = packet.points[i * segment_items + 2] * 1000.0
+            x2 = packet.points[i * segment_items + 3] * 1000.0
+            penality = packet.points[i * segment_items + 4]
             item = QGraphicsLineItem(x1, y1, x2, y2)
-            item.setPen(QPen(QColor(self.color).lighter(120)))
+            if tools.quasi_equal(penality, 0.0):
+                style = Qt.SolidLine
+            else:
+                style = Qt.DotLine
+            item.setPen(QPen(QColor(self.color).lighter(120), 2, style))
+            self.edges.append(item)
             self.addToGroup(item)
+
+
+    def on_simulator_graph_map_route(self, packet):
+        prev_x = self.robot.item.x()
+        prev_y = self.robot.item.y()
+        point_items = 2
+        for i in xrange(len(packet.points) / point_items):
+            y = packet.points[i * point_items] * 1000.0
+            x = packet.points[i * point_items + 1] * 1000.0
+            item = QGraphicsLineItem(prev_x, prev_y, x, y)
+            item.setPen(QPen(QColor(self.color), 20.0, Qt.SolidLine, Qt.RoundCap))
+            self.edges.append(item)
+            self.addToGroup(item)
+            prev_x = x
+            prev_y = y
+
 
 
 
@@ -1166,7 +1196,7 @@ class SimulatorFieldViewController(fieldview.FieldViewController):
         self.field_scene.add_layer(self.purple_robot_trajectrory_layer)
         self.purple_robot_routing_layer = RoutingLayer(self.field_scene, TEAM_PURPLE)
         self.field_scene.add_layer(self.purple_robot_routing_layer)
-        self.purple_robot_routing_graph_layer = RoutingGraphLayer(self.field_scene, TEAM_PURPLE)
+        self.purple_robot_routing_graph_layer = RoutingGraphLayer(self.field_scene, TEAM_PURPLE, self.purple_robot_layer.robot)
         self.field_scene.add_layer(self.purple_robot_routing_graph_layer)
 
         self.red_robot_layer = RobotLayer(self.field_scene, self, TEAM_RED)
@@ -1175,7 +1205,7 @@ class SimulatorFieldViewController(fieldview.FieldViewController):
         self.field_scene.add_layer(self.red_robot_trajectrory_layer)
         self.red_robot_routing_layer = RoutingLayer(self.field_scene, TEAM_RED)
         self.field_scene.add_layer(self.red_robot_routing_layer)
-        self.red_robot_routing_graph_layer = RoutingGraphLayer(self.field_scene, TEAM_RED)
+        self.red_robot_routing_graph_layer = RoutingGraphLayer(self.field_scene, TEAM_RED, self.red_robot_layer.robot)
         self.field_scene.add_layer(self.red_robot_routing_graph_layer)
 
         self.game_elements_layer = GameElementsLayer(self.purple_robot_layer,

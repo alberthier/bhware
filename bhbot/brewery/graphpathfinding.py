@@ -31,13 +31,13 @@ class Node(object):
 
 
     def neighbor_nodes(self):
-        nodes = []
+        neighbors = []
         for edge in self.edges:
             if self is edge.node1:
-                nodes.append(edge.node2)
+                neighbors.append((edge, edge.node2))
             else:
-                nodes.append(edge.node1)
-        return nodes
+                neighbors.append((edge, edge.node1))
+        return neighbors
 
 
 
@@ -50,6 +50,7 @@ class Edge(object):
         self.node2 = node2
         self.node2.edges.append(self)
         self.penality = 0.0
+        self.distance = tools.distance(self.node1.x, self.node1.y, self.node2.x, self.node2.y)
 
 
     def links(self, node1, node2):
@@ -241,14 +242,13 @@ class Map(object):
                     if not already_exists:
                         ok = True
                         for zone in self.zones:
-                            intersects = zone.intersects(node, other_node)
-                            if intersects:
-                                if zone.forbidden:
-                                    ok = False
-                                    break
+                            if zone.intersects(node, other_node) and zone.forbidden:
+                                ok = False
+                                break
                         if ok:
                             edge = Edge(node, other_node)
                             new_edges.append(edge)
+
         return new_edges
 
 
@@ -312,15 +312,19 @@ class Map(object):
                     if zone.penality > edge.penality:
                         edge.penality = zone.penality
 
+        self.send_to_simulator()
+
 
     def send_to_simulator(self):
         if IS_HOST_DEVICE_PC:
+            self.eventloop.send_packet(packets.SimulatorClearGraphMapEdges())
             packet = packets.SimulatorGraphMapEdges()
             for edge in self.all_edges():
                 packet.points.append(edge.node1.x)
                 packet.points.append(edge.node1.y)
                 packet.points.append(edge.node2.x)
                 packet.points.append(edge.node2.y)
+                packet.points.append(edge.penality)
                 if len(packet.points) == 60:
                     self.eventloop.send_packet(packet)
                     packet.points = []
@@ -347,6 +351,7 @@ class Map(object):
                                              1.125 + MAP_WALLS_DISTANCE,
                                              2.025 + MAP_WALLS_DISTANCE,
                                              True, self.penality))
+
         # BH Secondary robot zone
         x1 = 0.70
         y1 = 2.20
@@ -401,14 +406,20 @@ class Map(object):
                         path_length += tools.distance(n.x, n.y, n.came_from.x, n.came_from.y)
                     n = n.came_from
                 logger.log("Route computed. Length: {}.".format(path_length))
+                if IS_HOST_DEVICE_PC:
+                    packet = packets.SimulatorGraphMapRoute()
+                    for path_element in path:
+                        packet.points.append(path_element.x)
+                        packet.points.append(path_element.y)
+                    self.eventloop.send_packet(packet)
                 return (path_length, path)
 
             del openset[0]
             closedset.add(current)
 
-            for neighbor in current.neighbor_nodes():
+            for edge, neighbor in current.neighbor_nodes():
                 if not neighbor in closedset:
-                    tentative_g_score = current.g_score + self.effective_cost(current, neighbor)
+                    tentative_g_score = current.g_score + self.effective_cost(edge)
                     if not neighbor in openset:
                         neighbor.h_score = self.heuristic_cost_estimate(neighbor, goal_node)
                         neighbor.g_score = tentative_g_score
@@ -424,8 +435,8 @@ class Map(object):
         return (None, [])
 
 
-    def effective_cost(self, node1, node2):
-        return tools.distance(node1.x, node1.y, node2.x, node2.y)
+    def effective_cost(self, edge):
+        return edge.distance + edge.penality
 
 
     def heuristic_cost_estimate(self, node1, node2):

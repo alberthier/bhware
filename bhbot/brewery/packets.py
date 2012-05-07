@@ -1028,14 +1028,11 @@ class SimulatorOpponentsPositions(BasePacket):
 
 
 
-class SimulatorGraphMapZones(BasePacket):
+class SimulatorClearGraphMapEdges(BasePacket):
 
     TYPE = 109
     LOGVIEW_DEFAULT_ENABLED = False
     LOGVIEW_COLOR = "#ba55d3"
-    DEFINITION = (
-        ListItem('points', [], FloatItem("", 0.0), 62, "Forbidden zone points"),
-    )
 
 
 
@@ -1046,7 +1043,19 @@ class SimulatorGraphMapEdges(BasePacket):
     LOGVIEW_DEFAULT_ENABLED = False
     LOGVIEW_COLOR = "#ba55d3"
     DEFINITION = (
-        ListItem('points', [], FloatItem("", 0.0), 60, "Edges"),
+        ListItem('points', [], FloatItem("", 0.0), 63, "Edges"),
+    )
+
+
+
+
+class SimulatorGraphMapRoute(BasePacket):
+
+    TYPE = 111
+    LOGVIEW_DEFAULT_ENABLED = False
+    LOGVIEW_COLOR = "#ba55d3"
+    DEFINITION = (
+        ListItem('points', [], FloatItem("", 0.0), 63, "Edges"),
     )
 
 
