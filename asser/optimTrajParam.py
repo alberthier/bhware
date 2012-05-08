@@ -228,7 +228,7 @@ def trajFunction(d_cfgTraj):
     #~ send_init_pose(simulator_process, x=0.31, y=0.177, angle=-math.pi/2.0)
     
     # Init du dep qui fuse
-    send_init_pose(simulator_process, x=1.0, y=1.0, angle=math.pi)
+    send_init_pose(simulator_process, x=1.0, y=1.0, angle=(-math.pi/2.0)*0)
 
     #generation d'un message de commande de deplacement
     # "MSG_MAIN_GOTO 
@@ -243,18 +243,20 @@ def trajFunction(d_cfgTraj):
     #~ deplacement = commandMsg("MSG_MAIN_GOTO 1 -1 -1100000.0")   # 'DEPLACEMENT' en 'MARCHE_AVANT' #0.78539816339744828
     #~ deplacement.addPose("0.31 1.177") #-1100000.0
     
-    # Dep qui fuse
-    #~ deplacement = commandMsg("MSG_MAIN_GOTO 1 -1 -1100000.0")   # 'DEPLACEMENT' en 'MARCHE_AVANT' #0.78539816339744828
-    #~ deplacement.addPose("1.1 0.1") #-1100000.0
+    #~ # Dep qui fuse
+    deplacement = commandMsg("MSG_MAIN_GOTO 1 1 -1100000.0")   # 'DEPLACEMENT' en 'MARCHE_AVANT' #0.78539816339744828
+    deplacement.addPose("1.15 1.0")
+    deplacement.addPose("1.3 1.0") #-1100000.0
+    deplacement.addPose("1.5 1.2")
     
-    #~ deplacement = commandMsg("MSG_MAIN_GOTO 2 1 -1100000.0")   # 'DEPLACEMENT' en 'MARCHE_AVANT' #0.78539816339744828
-    #~ deplacement.addPose("0.1 0.28") #-1100000.0
+    #~ deplacement = commandMsg("MSG_MAIN_GOTO 2 -1 -1100000.0")   # 'DEPLACEMENT' en 'MARCHE_AVANT' #0.78539816339744828
+    #~ deplacement.addPose("1.0 2.0") #-1100000.0
     
     #~ deplacement.addPose("0.54 1.1") #MSG_MAIN_GOTO 1 -1 1.82374799252 1 0.54 1.1
     
-    angle = 12.0*(math.pi/8.0)
-    print("angle : "+str(angle*180.0/math.pi))
-    deplacement = commandMsg("MSG_MAIN_GOTO 0 1 "+str(angle))
+    #~ angle = 12.0*(math.pi/8.0)
+    #~ print("angle : "+str(angle*180.0/math.pi))
+    #~ deplacement = commandMsg("MSG_MAIN_GOTO 0 1 "+str(angle))
     #~ deplacement.addPose("0.31 3.82") #"0.31 3.82"
     
     #~ deplacement.addPose("1.0 1.3")
@@ -703,8 +705,8 @@ def affichageGabaritVitesse_2012(d_traj):
     print("pas ech: " + str(pas))
     plot([index * pas for index in range(len(d_traj["gabarit_vitesse"]))], d_traj["gabarit_vitesse"], '-o', label='vit')
     plot([index * pas for index in range(len(d_traj["gabarit_acceleration"]))], d_traj["gabarit_acceleration"], '-o', label='acc')
-    #~ plot([index * pas for index in range(len(d_traj["gabarit_acceleration_new"]))], d_traj["gabarit_acceleration_new"], '-o', label='acc2')
-    #~ plot([index * pas for index in range(len(d_traj["gabarit_vitesse_new"]))], d_traj["gabarit_vitesse_new"], '-o', label='vit2')
+    plot([index * pas for index in range(len(d_traj["gabarit_acceleration_new"]))], d_traj["gabarit_acceleration_new"], '-o', label='acc2')
+    plot([index * pas for index in range(len(d_traj["gabarit_vitesse_new"]))], d_traj["gabarit_vitesse_new"], '-o', label='vit2')
     
     #~ plot([index * pas for index in range(len(d_traj["gabarit_delta_acceleration"]))], d_traj["gabarit_delta_acceleration"], '-om', label='delta')
     #~ plot(d_traj["gabarit_acceleration_max"], [0 for index in range(len(d_traj["gabarit_acceleration_max"]))], '-or')
@@ -817,11 +819,22 @@ affichageGabaritVitesse_2012(traj)
 #~ print("angle_rad: " + str(traj["angle_rad"]))
 
 #~ 
-#~ figure()
-#~ N = len(traj["def_xTraj"])
-#~ plot(traj["def_xTraj"][:N], traj["def_yTraj"][:N], '-o')
-#~ plot(traj["def_xTraj"][0], traj["def_yTraj"][0], '-oy')
-#~ plot(traj["def_xTraj"][-1], traj["def_yTraj"][-1], '-or')
+figure()
+N = len(traj["def_xTraj"])
+plot(traj["def_xTraj"][:N], traj["def_yTraj"][:N], '-o')
+plot(traj["def_xTraj"][0], traj["def_yTraj"][0], '-oy')
+plot(traj["def_xTraj"][-1], traj["def_yTraj"][-1], '-or')
+
+figure()
+plot(traj["def_angleTraj"], '-o', label="thetaTraj")
+legend()
+
+figure()
+plot(traj["def_diff_xTraj"], '-o', label="diff_x")
+plot(traj["def_diff_yTraj"], '-o', label="diff_y")
+legend()
+grid()
+
 
 #~ print("angle_init: " +str(traj["angleFinRotation"][0]*180.0/math.pi))
 #~ print("angleFinRotation: " +str(traj["angleFinRotation"][0]*180.0/math.pi))
@@ -841,11 +854,17 @@ affichageGabaritVitesse_2012(traj)
 #~ plot(traj["diffY"], label='Y')
 #~ legend()
 #~ 
-#~ figure()
-#~ plot(traj["delta_t"])
+figure()
+plot(traj["consRotation"], '-o', label="consRot")
+legend()
+grid()
+
+print("debug_smooth:")
+print(traj["debug_smooth"])
 
 affichageTraj2011(traj)
 #~ affichageTestAccDcecc(traj)
 
+#~ show()
 
 #~ sys.exit(2)

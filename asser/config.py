@@ -18,7 +18,7 @@ d_cfgTraj = {'Masse': 1.2
                 , 'R1': -6.0
                 , 'R2': -6.0
                 , 'Amax': 3.0   #3.0
-                , 'Dmax': -1.5  #-1.5
+                , 'Dmax': -1.0  #-1.5
                 , 'coeff_vi1': 0.95
                 , 'vitesse_seuil_decc': 0.15
                 , 'coeff_decc_finale': 0.08

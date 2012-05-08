@@ -11,9 +11,6 @@
 #define _ASSERV_TRAJECTOIRE_H_
 
 #include "position.h"
-#ifdef PIC32_BUILD
-#include "net.h"
-#endif
 
 /*! \addtogroup Task_Asser
  *  @{
@@ -39,12 +36,13 @@
 #ifndef PIC32_BUILD
 #define NBR_ASSER_LOG_VALUE         60
 #else
-#define NBR_ASSER_LOG_VALUE         ((NET_BUF_CFG_DATA_SIZE_SMALL - (3 * sizeof(float)) - (2 * sizeof(unsigned char)) - sizeof(int)) / sizeof(float))
+#define NBR_ASSER_LOG_VALUE         ((256 - (3 * sizeof(float)) - (2 * sizeof(unsigned char)) - sizeof(int)) / sizeof(float))
 #endif
 
 /** Parametres du profil de vitesse des trajectoires */
 #define TAILLE_TAB_GABARIT_VITESSE  201
 
+#define MaxSizeLogBuffer 1
 
 /** Structure de parametres du profil de vitesse des trajectoires */
 typedef struct
@@ -103,7 +101,7 @@ typedef struct
 {
     unsigned int            mouvement;
     ParametresProfilVitesse profilVitesse;
-    segmentTrajectoireBS    segmentTrajBS[NBRE_MAX_PTS_TRAJ+1];
+    segmentTrajectoireBS    segmentTrajBS[(NBRE_MAX_PTS_TRAJ + 1)];
     unsigned int            nbreSegments;
     ParametresRotation      rotation;
     float                   distance;
@@ -118,11 +116,11 @@ extern float                gainDeplacement1;
 extern float                gainDeplacement2;
 extern float                gainDeplacement3;
 
+extern float                A_MAX;
+extern float                D_MAX;
 extern float                Ratio_Acc;            
 extern float                Ratio_Decc;
 extern float                facteurVitesseAngulaireMax;
-extern float                A_MAX;
-extern float                D_MAX;
 extern float                COEFF_VI1;
 extern float                VITESSE_SEUIL_DECC;
 extern float                COEFF_DECC_FINALE;
@@ -130,10 +128,6 @@ extern float                DECC_MIN;
 
 /** Table pour le log asser */
 extern float                tabLogAsser[NBR_ASSER_LOG_VALUE];
-
-extern int                  g_tabLog_telnet[NBR_ASSER_LOG_VALUE];
-extern char                 g_tabIndex_logTelnet[NBR_ASSER_LOG_VALUE];
-extern unsigned short       g_index_logTelnet;
 
 /** Echnatillon de mesure pour le log asser */
 extern unsigned char        Sample;
