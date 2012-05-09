@@ -140,8 +140,11 @@ class CircleZone(AbstractZone):
     def __init__(self, x, y, radius, forbidden, penality):
         AbstractZone.__init__(self, forbidden, penality)
         self.x = x
+        self.x_squared = x ** 2
         self.y = y
+        self.y_squared = y ** 2
         self.radius = radius
+        self.radius_squared = radius ** 2
 
     def create_symetric_zone(self):
         return CircleZone(self.x, FIELD_Y_SIZE - self.y, self.radius, self.forbidden, self.penality)
@@ -162,7 +165,19 @@ class CircleZone(AbstractZone):
 
 
     def intersects(self, node1, node2):
-        return NotImplementedError()
+        dx = node2.x - node1.x
+        dy = node2.y - node1.y
+        a = dx ** 2 + dy ** 2
+        b = 2.0 * (dx * (node1.x - self.x) + dy * (node1.y - self.y))
+        c = node1.x ** 2 + node1.y ** 2 + self.x_squared + self.y_squared - 2.0 * (node1.x * self.x + node1.y * self.y) - self.radius_squared
+        d = b ** 2 - 4 * a * c
+
+        if d < 0.0:
+            return False
+
+        u = ((self.x - node1.x) * dx + (self.y - node1.y) * dy) / a
+
+        return 0.0 <= u and u <= 1.0
 
 
 
@@ -252,7 +267,7 @@ class Map(object):
         return new_edges
 
 
-    def set_opponent(self, x, y, opponent):
+    def set_opponent(self, opponent, x, y):
         self.opponent_positions[opponent] = (x, y)
         self.changed_opponents.append(opponent)
 
@@ -268,7 +283,7 @@ class Map(object):
 
 
     def synchronize(self):
-        for idx, opponent in enumerate(self.changed_opponents):
+        for opponent in self.changed_opponents:
             # Clear previous positions
             if self.opponent_zones[opponent] != None:
                 for node in self.opponent_zones[opponent].nodes:
@@ -276,6 +291,9 @@ class Map(object):
                     if node.refcount == 0:
                         for edge in list(node.edges):
                             edge.unlink()
+                            for point in self.points:
+                                if edge in point.dynamic_edges:
+                                    point.dynamic_edges.remove(edge)
                         self.nodes.remove(node)
                 self.zones.remove(self.opponent_zones[opponent])
                 self.opponent_zones[opponent] = None
@@ -284,15 +302,20 @@ class Map(object):
             coords = self.opponent_positions[opponent]
             if coords is not None:
                 (x, y) = coords
-                opponent_zone = RectZone(x - MAP_WALLS_DISTANCE, y - MAP_WALLS_DISTANCE, x + MAP_WALLS_DISTANCE, y + MAP_WALLS_DISTANCE, False, self.penality)
+                if opponent == OPPONENT_ROBOT_MAIN:
+                    radius = MAIN_OPPONENT_AVOIDANCE_RANGE
+                else:
+                    radius = SECONDARY_OPPONENT_AVOIDANCE_RANGE
+                opponent_zone = CircleZone(x, y, radius, False, self.penality)
                 self.opponent_zones[opponent] = opponent_zone
+                logger.log("Add opponent zone at {} {}".format(x, y))
                 self.add_zone(False, True, opponent_zone)
                 for node in opponent_zone.nodes:
                     self.link_node(node)
         self.changed_opponents = []
 
         # Update start and destination points
-        for idx, point in enumerate(self.points):
+        for point in self.points:
             if point.next_coords is not None:
                 for edge in point.dynamic_edges:
                     edge.unlink()
@@ -460,8 +483,8 @@ class Map(object):
 
 
     def opponent_detected(self, opponent, x, y):
-        pass
+        self.set_opponent(opponent, x, y)
 
 
     def opponent_disapeared(self, opponent):
-        pass
+        self.clear_opponent(opponent)
