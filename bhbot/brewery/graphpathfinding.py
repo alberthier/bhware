@@ -202,7 +202,7 @@ class Map(object):
         self.penality = FIELD_X_SIZE * FIELD_Y_SIZE
         self.opponent_zones = { OPPONENT_ROBOT_MAIN: None, OPPONENT_ROBOT_SECONDARY: None }
         self.opponent_positions = { OPPONENT_ROBOT_MAIN: None, OPPONENT_ROBOT_SECONDARY: None }
-        self.changed_opponents = []
+        self.changed_opponents = set()
         self.points = [ DynamicPoint(),  # Start Point
                         DynamicPoint() ] # Destination Point
 
@@ -269,12 +269,12 @@ class Map(object):
 
     def set_opponent(self, opponent, x, y):
         self.opponent_positions[opponent] = (x, y)
-        self.changed_opponents.append(opponent)
+        self.changed_opponents.add(opponent)
 
 
     def clear_opponent(self, opponent):
         self.opponent_positions[opponent] = None
-        self.changed_opponents.append(opponent)
+        self.changed_opponents.add(opponent)
 
 
     def set_points(self, x1, y1, x2, y2):
@@ -283,6 +283,7 @@ class Map(object):
 
 
     def synchronize(self):
+        logger.log("Synchronize")
         for opponent in self.changed_opponents:
             # Clear previous positions
             if self.opponent_zones[opponent] != None:
@@ -312,7 +313,7 @@ class Map(object):
                 self.add_zone(False, True, opponent_zone)
                 for node in opponent_zone.nodes:
                     self.link_node(node)
-        self.changed_opponents = []
+        self.changed_opponents = set()
 
         # Update start and destination points
         for point in self.points:
