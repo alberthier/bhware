@@ -10,6 +10,7 @@ import statemachine
 import packets
 import trajectory
 import logger
+import eventloop
 from definitions import *
 
 
@@ -37,24 +38,33 @@ class Timer(statemachine.State):
 
 
 
-class WaitForOpponentLeave(Timer):
+class WaitForOpponentLeave(statemachine.State):
 
+    TIMEOUT       = 0
     OPPONENT_LEFT = 1
 
     def __init__(self, opponent, miliseconds, current_move_direction):
-        Timer.__init__(self, miliseconds)
+        statemachine.State.__init__(self)
         self.current_move_direction = current_move_direction
         self.opponent = opponent
-        self.exit_reason = self.TIMEOUT
+        self.goto_finished = False
+        self.opponent_disappeared = False
+        self.timer_expired = False
+        self.exit_reason = None
+        self.timer = eventloop.Timer(self.event_loop, miliseconds, self.on_timeout)
 
 
     def on_enter(self):
+        self.goto_finished = False
+        self.opponent_disappeared = False
+        self.timer_expired = False
+        self.exit_reason = None
         if self.current_move_direction == DIRECTION_FORWARD:
             direction = DIRECTION_BACKWARD
-            distance = 0.100
+            distance = -0.100
         else:
             direction = DIRECTION_FORWARD
-            distance = -0.100
+            distance = 0.100
 
         current_pose = self.robot().pose
         x = current_pose.virt.x + math.cos(current_pose.virt.angle) * distance
@@ -66,10 +76,28 @@ class WaitForOpponentLeave(Timer):
         self.send_packet(packet)
 
 
+    def on_timeout(self):
+        self.timer_expired = True
+        if self.exit_reason is None:
+            self.exit_reason = self.TIMEOUT
+        self.try_leave()
+
+
+    def on_goto_finished(self, packet):
+        self.goto_finished = True
+        self.try_leave()
+
+
     def on_opponent_disapeared(self, opponent, is_in_front):
         if opponent == self.opponent:
             self.exit_reason = self.OPPONENT_LEFT
-            logger.log("WaitForOpponentLeave : exit on opponent leave")
+            self.opponent_disappeared = True
+            self.try_leave()
+
+
+    def try_leave(self):
+        if self.goto_finished and (self.timer_expired or self.opponent_disappeared):
+            logger.log("WaitForOpponentLeave : exit on opponent leave reason={}".format(self.exit_reason))
             self.exit_substate(self.exit_reason)
 
 
@@ -333,6 +361,7 @@ class TrajectoryWalk(statemachine.State):
         self.current_goto_packet = None
         self.opponent_wait_time = DEFAULT_OPPONENT_WAIT_MS
         self.exit_reason = TRAJECTORY_DESTINATION_REACHED
+        self.current_opponent = None
 
 
     def move(self, dx, dy, direction = DIRECTION_FORWARD):
@@ -494,8 +523,15 @@ class TrajectoryWalk(statemachine.State):
         elif packet.reason == REASON_BLOCKED_FRONT or packet.reason == REASON_BLOCKED_BACK:
             self.exit_reason = TRAJECTORY_BLOCKED
             self.exit_substate()
-        else:
-            self.exit_substate()
+        elif self.current_opponent is not None:
+            if self.opponent_wait_time:
+                self.switch_to_substate(WaitForOpponentLeave(self.current_opponent, self.opponent_wait_time, self.current_goto_packet.direction))
+            else:
+                logger.log("TrajectoryWalk failed")
+                self.exit_reason = TRAJECTORY_OPPONENT_DETECTED
+                self.exit_substate()
+            self.current_opponent = None
+
 
 
     def process_next_job(self):
@@ -539,11 +575,7 @@ class TrajectoryWalk(statemachine.State):
             if self.current_goto_packet.movement != MOVEMENT_ROTATE and self.current_goto_packet.direction == opponent_direction:
                 logger.log("Opponent detected. direction = {}. Robot stopped".format(opponent_direction))
                 self.send_packet(packets.Stop())
-                if self.opponent_wait_time:
-                    self.switch_to_substate(WaitForOpponentLeave(packet.robot, self.opponent_wait_time, self.current_goto_packet.direction))
-                else:
-                    logger.log("TrajectoryWalk failed")
-                    self.exit_reason = TRAJECTORY_OPPONENT_DETECTED
+                self.current_opponent = packet.robot
 
 
 
