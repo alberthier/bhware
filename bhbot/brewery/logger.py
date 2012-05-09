@@ -94,7 +94,7 @@ def log_packet(packet, sender = "ARM"):
         log_file.write("l([" + time + "," + text + ")\n")
     except:
         print("Failed to write to file")
-    if not isinstance(packet, packets.KeepAlive) and not isinstance(packet, packets.SimulatorData):
+    if not isinstance(packet, packets.KeepAlive) and not type(packet).__name__.startswith("Simulator"):
         sys.stdout.write("[" + text + "\n")
         sys.stdout.flush()
 
