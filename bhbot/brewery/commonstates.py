@@ -494,6 +494,8 @@ class TrajectoryWalk(statemachine.State):
         elif packet.reason == REASON_BLOCKED_FRONT or packet.reason == REASON_BLOCKED_BACK:
             self.exit_reason = TRAJECTORY_BLOCKED
             self.exit_substate()
+        else:
+            self.exit_substate()
 
 
     def process_next_job(self):
@@ -542,7 +544,6 @@ class TrajectoryWalk(statemachine.State):
                 else:
                     logger.log("TrajectoryWalk failed")
                     self.exit_reason = TRAJECTORY_OPPONENT_DETECTED
-                    self.exit_substate()
 
 
 
