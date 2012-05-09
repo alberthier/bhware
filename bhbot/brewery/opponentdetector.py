@@ -7,6 +7,7 @@ from definitions import *
 import logging
 import logger
 import packets
+import eventloop
 
 
 
@@ -23,7 +24,7 @@ class Opponent(object):
         self.notified_in_back = False
         self.x = None
         self.y = None
-        self.timeout_ticks = 0
+        self.timer = eventloop.Timer(self.detector.event_loop, OPPONENT_DETECTION_DISAPEARING_MS, self.opponent_disapear_timout)
 
 
     def on_turret_detect(self, packet):
@@ -51,24 +52,21 @@ class Opponent(object):
             sim_packet.distance = distance
             self.detector.event_loop.send_packet(sim_packet)
 
-        self.timeout_ticks = OPPONENT_DETECTION_DISAPEARING_TICKS
-
         is_in_front = packet.angle in self.IN_FRONT_ANGLES
         is_in_back  = packet.angle in self.IN_BACK_ANGLES
         self.notify_state_machine(packet, is_in_front, is_in_back)
 
+        self.timer.restart()
 
-    def on_timer_tick(self):
-        if self.timeout_ticks != 0:
-            self.timeout_ticks -= 1
-            if self.timeout_ticks == 0:
-                self.detector.event_loop.map.opponent_disapeared(self.opponent_type)
-                if IS_HOST_DEVICE_PC:
-                    sim_packet = packets.SimulatorOpponentsPositions()
-                    sim_packet.robot = self.opponent_type
-                    sim_packet.present = False
-                    self.detector.event_loop.send_packet(sim_packet)
-                self.notify_state_machine(None, False, False)
+
+    def opponent_disapear_timout(self):
+        self.detector.event_loop.map.opponent_disapeared(self.opponent_type)
+        if IS_HOST_DEVICE_PC:
+            sim_packet = packets.SimulatorOpponentsPositions()
+            sim_packet.robot = self.opponent_type
+            sim_packet.present = False
+            self.detector.event_loop.send_packet(sim_packet)
+        self.notify_state_machine(None, False, False)
 
 
     def notify_state_machine(self, packet, is_in_front, is_in_back):
@@ -102,8 +100,3 @@ class OpponentDetector(object):
             self.main_opponent.on_turret_detect(packet)
         else:
             self.secondary_opponent.on_turret_detect(packet)
-
-
-    def on_timer_tick(self):
-        self.main_opponent.on_timer_tick()
-        self.secondary_opponent.on_timer_tick()

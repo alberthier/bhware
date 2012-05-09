@@ -164,6 +164,11 @@ class Timer(object):
         return False
 
 
+    def restart(self):
+        self.stop()
+        self.start()
+
+
     def start(self):
         self.timeout_date = datetime.datetime.now() + datetime.timedelta(milliseconds = self.timeout_ms)
         bisect.insort_left(self.eventloop.timers, self)
@@ -239,8 +244,8 @@ class EventLoop(object):
         self.webserver_port = webserver_port
         self.opponent_detector = opponentdetector.OpponentDetector(self)
         self.stopping = False
-        self.map = trajectory.Map(self)
-        #self.map = graphpathfinding.Map(self)
+        #self.map = trajectory.Map(self)
+        self.map = graphpathfinding.Map(self)
         self.timers = []
         self.state_history = []
 
@@ -363,7 +368,6 @@ class EventLoop(object):
         while not self.stopping:
             asyncore.loop(EVENT_LOOP_TICK_RESOLUTION_S, True, None, 1)
             self.get_current_state().on_timer_tick()
-            self.opponent_detector.on_timer_tick()
             while len(self.timers) != 0:
                 if not self.timers[0].check_timeout():
                     break
