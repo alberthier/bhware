@@ -87,6 +87,9 @@ WEB_SERVER_PORT                        = 80
 # Default state machine name
 STATE_MACHINE                          = "default"
 
+# Use multipoint Goto for navigation
+NAVIGATION_USES_MULTIPOINT             = True
+
 # Router map resolution
 ROUTING_MAP_RESOLUTION                 = 0.02
 EVALUATOR_MAP_RESOLUTION               = 0.04

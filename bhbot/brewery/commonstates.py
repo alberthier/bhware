@@ -563,17 +563,37 @@ class Navigate(statemachine.State):
         if len(path) == 0:
             self.exit_reason = TRAJECTORY_DESTINATION_UNREACHABLE
             self.exit_substate()
+        elif NAVIGATION_USES_MULTIPOINT:
+            self.multipoint_walk(path)
         else:
-            for sub_path in path:
-                first_point = sub_path[0]
+            self.monopoint_walk(path)
+
+
+
+    def multipoint_walk(self, path):
+        for sub_path in path:
+            first_point = sub_path[0]
+            if self.direction == DIRECTION_FORWARD:
+                if not self.robot().is_looking_at(first_point):
+                    self.walk.look_at(first_point.virt.x, first_point.virt.y)
+            else:
+                if not self.robot().is_looking_at_opposite(first_point):
+                    self.walk.look_at_opposite(first_point.virt.x, first_point.virt.y)
+            self.walk.follow(sub_path, None, self.direction)
+        self.switch_to_substate(self.walk)
+
+
+    def monopoint_walk(self, path):
+        for sub_path in path:
+            for point in sub_path:
                 if self.direction == DIRECTION_FORWARD:
-                    if not self.robot().is_looking_at(first_point):
-                        self.walk.look_at(first_point.virt.x, first_point.virt.y)
+                    if not self.robot().is_looking_at(point):
+                        self.walk.look_at(point.virt.x, point.virt.y)
                 else:
-                    if not self.robot().is_looking_at_opposite(first_point):
-                        self.walk.look_at_opposite(first_point.virt.x, first_point.virt.y)
-                self.walk.follow(sub_path, None, self.direction)
-            self.switch_to_substate(self.walk)
+                    if not self.robot().is_looking_at_opposite(point):
+                        self.walk.look_at_opposite(point.virt.x, point.virt.y)
+                self.walk.move_to(point.virt.x, point.virt.y)
+        self.switch_to_substate(self.walk)
 
 
     def on_exit_substate(self, substate):
