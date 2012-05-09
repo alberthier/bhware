@@ -1167,10 +1167,10 @@ class GameElementsLayer(fieldview.Layer):
 
 
     def send_turret_detect(self, detecting_robot_layer, detected_robot_layer, distance):
-        if self.last_sent_turret_detect and self.last_sent_turret_detect + 0.001 > time.time() :
-#            print("Rate limiting")
-            return
-        self.last_sent_turret_detect = time.time()
+#        if self.last_sent_turret_detect and self.last_sent_turret_detect + 0.001 > time.time() :
+##            print("Rate limiting")
+#            return
+#        self.last_sent_turret_detect = time.time()
         dx = detected_robot_layer.robot.item.x() - detecting_robot_layer.robot.item.x()
         dy = detected_robot_layer.robot.item.y() - detecting_robot_layer.robot.item.y()
         angle = (detecting_robot_layer.robot.item.rotation() / 180.0 * math.pi) - math.atan2(dy, dx)
