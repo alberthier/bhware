@@ -187,7 +187,7 @@ static float                    ASSER_TRAJ_CalculTheta1(unsigned int iSegment, u
 static float                    ASSER_TRAJ_LongueurSegment(float x0, float y0, float x1, float y1);
 static Vecteur                  ASSER_TRAJ_PortionEnd(float bx, float by, float ax, float ay, float qx, float qy);
 static void                     ASSER_TRAJ_LogTelnet(char key, int val);
-static void                     ASSER_TRAJ_SolveSegment(float x0, float y0, float theta0, float x1, float y1, float theta1, float k0, float* k1, float C, float* out_q0x, float* out_q0y, float* out_q1x, float* out_q1y);
+static void                     ASSER_TRAJ_SolveSegment_v2(unsigned char mode, float x0, float y0, float theta0, float x1, float y1, float theta1, float k0, float* k1, float C, float* out_q0x, float* out_q0y, float* out_q1x, float* out_q1y);
 
 /*----------------------------------------------------------------------------------------------*/
 
@@ -590,7 +590,8 @@ extern void ASSER_TRAJ_InitialisationTrajectoire(Pose poseRobot, PtTraj * point,
     float                   lenSeg, angle_fin_rotation;
 #ifndef PIC32_BUILD
     Pose                    poseTest;
-    Vecteur                 diffTest;
+    Vecteur                 diffTest, diff2Test;
+    float                   diffTheta;
     unsigned int            intT;
     float                   sommeMask;
 #endif /* PIC32_BUILD */
@@ -667,7 +668,7 @@ extern void ASSER_TRAJ_InitialisationTrajectoire(Pose poseRobot, PtTraj * point,
 
             ASSER_TRAJ_LogAsser("pti", NBR_ASSER_LOG_VALUE, C);
 
-            ASSER_TRAJ_SolveSegment(poseRobot.x,
+            ASSER_TRAJ_SolveSegment_v2(1, poseRobot.x,
                                     poseRobot.y,
                                     theta0,
                                     CONVERT_DISTANCE(point[0].x),
@@ -724,8 +725,10 @@ extern void ASSER_TRAJ_InitialisationTrajectoire(Pose poseRobot, PtTraj * point,
 
                 lenSeg = ASSER_TRAJ_LongueurSegment(prec_x, prec_y, CONVERT_DISTANCE(point[(iSegment - 1)].x), CONVERT_DISTANCE(point[(iSegment - 1)].y));
                 C = C_init * lenSeg;
-                k0 = k0_init * lenSeg;
-                k1 = k0;
+                //k0 = k0_init * lenSeg;
+                //k1 = k0;
+                k0 = k1;
+                k1 = k0_init * lenSeg;
 
                 /* Calcul de l'angle au point intermediaire */
                 theta0 = theta1;
@@ -737,7 +740,7 @@ extern void ASSER_TRAJ_InitialisationTrajectoire(Pose poseRobot, PtTraj * point,
                 chemin.segmentTrajBS[iSegment].ax = k1 * cos_theta1;
                 chemin.segmentTrajBS[iSegment].ay = k1 * sin_theta1;
 
-                ASSER_TRAJ_SolveSegment(prec_x,
+                ASSER_TRAJ_SolveSegment_v2(2, prec_x,
                                         prec_y,
                                         theta0,
                                         CONVERT_DISTANCE(point[(iSegment - 1)].x),
@@ -791,6 +794,13 @@ extern void ASSER_TRAJ_InitialisationTrajectoire(Pose poseRobot, PtTraj * point,
             diffTest = ASSER_TRAJ_DiffTrajectoire(chemin.segmentTrajBS, floor( (((float)intT)*((float)1)) / 100.0) + 1, ((float)intT) / 100.0);
             ASSER_TRAJ_LogAsser("def_diff_xTraj", NBR_ASSER_LOG_VALUE, diffTest.x);
             ASSER_TRAJ_LogAsser("def_diff_yTraj", NBR_ASSER_LOG_VALUE, diffTest.y);
+
+            diff2Test = ASSER_TRAJ_Diff2Trajectoire(chemin.segmentTrajBS, floor( (((float)intT)*((float)1)) / 100.0) + 1, ((float)intT) / 100.0);
+            ASSER_TRAJ_LogAsser("def_diff2_xTraj", NBR_ASSER_LOG_VALUE, diff2Test.x);
+            ASSER_TRAJ_LogAsser("def_diff2_yTraj", NBR_ASSER_LOG_VALUE, diff2Test.y);
+
+            diffTheta = ASSER_TRAJ_DiffThetaBSpline(diffTest, diff2Test);
+            ASSER_TRAJ_LogAsser("def_diff_ThetaTraj", NBR_ASSER_LOG_VALUE, diffTheta);
         }
 
 #endif /*PIC32_BUILD*/
@@ -922,130 +932,21 @@ static Vecteur ASSER_TRAJ_PortionEnd(float bx, float by, float ax, float ay, flo
     return pos_ti;
 }
 
-static void ASSER_TRAJ_SolveSegment(float x0, float y0, float theta0, float x1, float y1, float theta1, float k0, float* k1, float C, float* out_q0x, float* out_q0y, float* out_q1x, float* out_q1y)
+
+static void ASSER_TRAJ_SolveSegment_v2(unsigned char mode, float x0, float y0, float theta0, float x1, float y1, float theta1, float k0, float* k1, float C, float* out_q0x, float* out_q0y, float* out_q1x, float* out_q1y)
 {
-    float theta_seg, theta_delta;
     float F2, F3, F4, F5;
-    float A;
-    float G;
 
-    theta_seg = atan2f((y1 - y0), (x1 - x0));
-    theta_delta = (PI / 2.0) - theta_seg;
+    F2 = (- k0 * cosf(theta0)) + ((*k1) * cosf(theta1));
+    F3 = (- k0 * sinf(theta0)) + ((*k1) * sinf(theta1));
+    F4 = (((- (*k1) * cosf(theta1)) - (k0 * cosf(theta0))) * ti) + x1 - x0;
+    F5 = (((- (*k1) * sinf(theta1)) - (k0 * sinf(theta0))) * ti) + y1 - y0;
 
-    F2 = (- k0 * cosf(theta0)) + (*k1 * cosf(theta1));
-    F3 = (- k0 * sinf(theta0)) + (*k1 * sinf(theta1));
-    F4 = (((- *k1 * cosf(theta1)) - (k0 * cosf(theta0))) * ti) + x1 - x0;
-    F5 = (((- *k1 * sinf(theta1)) - (k0 * sinf(theta0))) * ti) + y1 - y0;
+    *out_q0x = ((2.0*ti*F2)/(3.0*(1.0-2.0*ti)) + F4/(1.0 - 2.0*ti) - k0*cosf(theta0)) / (ti/2.0  + (2.0*pow(ti,2.0))/(3.0*(1.0-2.0*ti)));
+    *out_q0y = ((2.0*ti*F3)/(3.0*(1.0-2.0*ti)) + F5/(1.0 - 2.0*ti) - k0*sinf(theta0)) / (ti/2.0  + (2.0*pow(ti,2.0))/(3.0*(1.0-2.0*ti)));
 
-    A = (2.0 * F3) / ti;
-    G = (2.0 * F2) / ti;
-
-    if ((theta_seg >= (- PI / 4.0) && theta_seg <= (PI / 4.0)) || (theta_seg >= (3.0 * (PI / 4.0)) || theta_seg <= (- 3.0 * (PI / 4.0))))
-    {
-        float E11, E12;
-        float B, D;
-        float H1, H2, H3, H4, H5, H6, H7, H8;
-        float I1, I2, I3;
-
-        E11 = - sinf(theta_seg) / cosf(theta_seg);
-        E12 = (3.0 / SQUARE(ti)) * (((C - (k0 * sinf(theta0) * ti * sinf(theta_seg))) / cosf(theta_seg)) - (k0 * cosf(theta0) * ti));
-
-        B = ((2.0 * F2) / ti) - ((2.0 * F3 * E11) / ti) - E12;
-        D = ((2.0 * F3 * E11) / ti) + E12;
-
-        H1 = (2.0 * SQUARE(ti) * E11) / 3.0;
-        H2 = ((B - D) * SQUARE(ti)) / 3.0 + F4;
-        H3 = -ti / 2.0;
-        H4 = (A * ti) / 2.0 + k0 * sinf(theta0);
-        H5 = (2.0 * SQUARE(ti)) / 3.0;
-        H6 = -((A * SQUARE(ti)) / 3.0) + F5;
-        H7 = -(E11 * ti) / 2.0;
-        H8 = ((D * ti) / 2.0) + (k0 * cosf(theta0));
-
-        I1 = (H1 * H3) - (H5 * H7);
-        I2 = (H1 * H4) + (H2 * H3) - (H5 * H8) - (H6 * H7);
-        I3 = (H2 * H4) - (H6 * H8);
-
-        if (fabsf(I1) > 1e-8) 
-        {
-            float delta = SQUARE(I2) - (4.0 * I1 * I3);
-            
-            if (delta < 0.0) 
-            {
-                ASSER_TRAJ_LogAsser("delta negatif", NBR_ASSER_LOG_VALUE, 0.0);
-                
-                *out_q0x = -10000.0;
-                *out_q0y = -10000.0;
-                *out_q1x = -10000.0;
-                *out_q1y = -10000.0;
-                
-                return;
-            }
-            
-            *out_q1y = (-I2 + sqrtf(delta)) / (2.0 * I1);
-        }
-        else 
-        {
-            *out_q1y = -(I3 / I2);
-        }
-
-        *out_q0x = -E11 * (*out_q1y) + D;
-        *out_q0y = A - (*out_q1y);
-        *out_q1x = E11 * (*out_q1y) + B;
-    }
-    else
-    {
-        float E21, E22;
-        float B2, D2;
-        float K1, K2, K3, K4, K5, K6, K7, K8;
-        float J1, J2, J3;
-
-        E21 = - cosf(theta_seg) / sinf(theta_seg);
-        E22 = (3.0 / SQUARE(ti)) * (((C - (k0 * cosf(theta0) * ti * cosf(theta_seg))) / sinf(theta_seg)) - (k0 * sinf(theta0) * ti));
-
-        B2 = A - (2.0 * F2 * E21) / ti - E22;
-        D2 = (2.0 * F2 * E21) / ti + E22;
-
-        K1 = (2.0 * SQUARE(ti)) / 3.0;
-        K2 = ((-G * SQUARE(ti)) / 3.0) + F4;
-        K3 = -(ti * E21) / 2.0;
-        K4 = ((D2 * ti) / 2.0) + k0 * sinf(theta0);
-        K5 = (2.0 * SQUARE(ti) * E21) / 3.0;
-        K6 = (((B2 - D2) * SQUARE(ti)) / 3.0) + F5;
-        K7 = -ti / 2.0;
-        K8 = ((G * ti) / 2.0) + (k0 * cosf(theta0));
-
-        J1 = (K1 * K3) - (K5 * K7);
-        J2 = (K1 * K4) + (K2 * K3) - (K5 * K8) - (K6 * K7);
-        J3 = (K2 * K4) - (K6 * K8);
-
-        if (fabsf(J1) > 1e-8) 
-        {
-            float delta = SQUARE(J2) - (4.0 * J1 * J3);
-
-            if (delta < 0.0) 
-            {
-                ASSER_TRAJ_LogAsser("delta negatif", NBR_ASSER_LOG_VALUE, 0.0);
-                
-                *out_q0x = -10000.0;
-                *out_q0y = -10000.0;
-                *out_q1x = -10000.0;
-                *out_q1y = -10000.0;
-                
-                return;
-            }
-            
-            *out_q1x = (-J2 + sqrtf(delta)) / (2.0 * J1);
-        } 
-        else 
-        {
-            *out_q1x = -(J3 / J2);
-        }
-
-        *out_q0x = G - (*out_q1x);
-        *out_q0y = -E21 * (*out_q1x) + D2;
-        *out_q1y = E21 * (*out_q1x) + B2;
-    }
+    *out_q1x = (2.0*F2)/ti - (*out_q0x);
+    *out_q1y = (2.0*F3)/ti - (*out_q0y);
 }
 
 /**********************************************************************/
@@ -1606,7 +1507,7 @@ static void ASSER_TRAJ_GabaritVitesse(Trajectoire * traj)
     float           vpointe                         = 0.0;
     unsigned int    i                               = 0u;
     unsigned int    N_plateau                       = 0;
-    float           coeff_vit_ini                   = 0.3;
+    float           coeff_vit_ini                   = 0.2;
 
     ASSER_TRAJ_InitTabVPointe(traj, coeff_vit_ini);
     distanceRestante = traj->distance;

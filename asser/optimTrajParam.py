@@ -245,9 +245,10 @@ def trajFunction(d_cfgTraj):
     
     #~ # Dep qui fuse
     deplacement = commandMsg("MSG_MAIN_GOTO 1 1 -1100000.0")   # 'DEPLACEMENT' en 'MARCHE_AVANT' #0.78539816339744828
-    deplacement.addPose("1.15 1.0")
-    deplacement.addPose("1.3 1.0") #-1100000.0
-    deplacement.addPose("1.5 1.2")
+    #~ deplacement.addPose("1.01 1.0")
+    deplacement.addPose("1.3 1.0")
+    deplacement.addPose("1.4 1.1") #-1100000.0
+    deplacement.addPose("1.5 1.1")
     
     #~ deplacement = commandMsg("MSG_MAIN_GOTO 2 -1 -1100000.0")   # 'DEPLACEMENT' en 'MARCHE_AVANT' #0.78539816339744828
     #~ deplacement.addPose("1.0 2.0") #-1100000.0
@@ -819,21 +820,34 @@ affichageGabaritVitesse_2012(traj)
 #~ print("angle_rad: " + str(traj["angle_rad"]))
 
 #~ 
-figure()
-N = len(traj["def_xTraj"])
-plot(traj["def_xTraj"][:N], traj["def_yTraj"][:N], '-o')
-plot(traj["def_xTraj"][0], traj["def_yTraj"][0], '-oy')
-plot(traj["def_xTraj"][-1], traj["def_yTraj"][-1], '-or')
-
-figure()
-plot(traj["def_angleTraj"], '-o', label="thetaTraj")
-legend()
-
-figure()
-plot(traj["def_diff_xTraj"], '-o', label="diff_x")
-plot(traj["def_diff_yTraj"], '-o', label="diff_y")
-legend()
-grid()
+#~ figure()
+#~ N = len(traj["def_xTraj"])
+#~ plot(traj["def_xTraj"][:N], traj["def_yTraj"][:N], '-o')
+#~ plot(traj["def_xTraj"][0], traj["def_yTraj"][0], '-oy')
+#~ plot(traj["def_xTraj"][-1], traj["def_yTraj"][-1], '-or')
+#~ plot(traj["def_xTraj"][30], traj["def_yTraj"][30], 'or')
+#~ plot(traj["def_xTraj"][70], traj["def_yTraj"][70], 'or')
+#~ 
+#~ figure()
+#~ plot(traj["def_angleTraj"], '-o', label="thetaTraj")
+#~ legend()
+#~ 
+#~ figure()
+#~ plot(traj["def_diff_xTraj"], '-o', label="diff_x")
+#~ plot(traj["def_diff_yTraj"], '-o', label="diff_y")
+#~ legend()
+#~ grid()
+#~ 
+#~ figure()
+#~ plot(traj["def_diff2_xTraj"], '-o', label="diff2_x")
+#~ plot(traj["def_diff2_yTraj"], '-o', label="diff2_y")
+#~ legend()
+#~ grid()
+#~ 
+#~ figure()
+#~ plot(traj["def_diff_ThetaTraj"], '-o', label="diff_Theta")
+#~ legend()
+#~ grid()
 
 
 #~ print("angle_init: " +str(traj["angleFinRotation"][0]*180.0/math.pi))
