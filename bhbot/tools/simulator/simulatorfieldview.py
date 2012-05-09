@@ -17,6 +17,7 @@ import helpers
 import dynamics
 
 import math
+import time
 
 
 
@@ -1023,6 +1024,7 @@ class GameElementsLayer(fieldview.Layer):
         self.purple_robot_layer = purple_robot_layer
         self.red_robot_layer = red_robot_layer
         self.main_bar = main_bar
+        self.last_sent_turret_detect = None
 
         self.purple_map_tower_treasure = [Coin(self, 0.915, 1.015, True),
                                           Coin(self, 0.915, 1.185, True),
@@ -1165,6 +1167,10 @@ class GameElementsLayer(fieldview.Layer):
 
 
     def send_turret_detect(self, detecting_robot_layer, detected_robot_layer, distance):
+        if self.last_sent_turret_detect and self.last_sent_turret_detect + 0.001 > time.time() :
+#            print("Rate limiting")
+            return
+        self.last_sent_turret_detect = time.time()
         dx = detected_robot_layer.robot.item.x() - detecting_robot_layer.robot.item.x()
         dy = detected_robot_layer.robot.item.y() - detecting_robot_layer.robot.item.y()
         angle = (detecting_robot_layer.robot.item.rotation() / 180.0 * math.pi) - math.atan2(dy, dx)
