@@ -352,6 +352,10 @@ class GraphicsRobotObject(QObject):
         self.move_animation.clear()
 
         end_time = points[-1][1]
+        if end_time == 0.0:
+            self.movement_finished.emit(0)
+            print("end_time == 0.0 !?")
+            return
 
         rotate_animation = QPropertyAnimation()
         self.move_animation.addAnimation(rotate_animation)
