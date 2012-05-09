@@ -44,7 +44,7 @@ class RobotView(QWidget, RobotView_Ui):
 
 
     def add_log(self, text):
-        if not text.startswith("["):
+        if text.startswith("["):
             self.log_view.setTextColor(self.default_color)
         else:
             self.log_view.setTextColor(self.color)
