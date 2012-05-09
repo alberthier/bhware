@@ -165,19 +165,17 @@ class CircleZone(AbstractZone):
 
 
     def intersects(self, node1, node2):
-        dx = node2.x - node1.x
-        dy = node2.y - node1.y
-        a = dx ** 2 + dy ** 2
-        b = 2.0 * (dx * (node1.x - self.x) + dy * (node1.y - self.y))
-        c = node1.x ** 2 + node1.y ** 2 + self.x_squared + self.y_squared - 2.0 * (node1.x * self.x + node1.y * self.y) - self.radius_squared
-        d = b ** 2 - 4 * a * c
-
-        if d < 0.0:
-            return False
-
-        u = ((self.x - node1.x) * dx + (self.y - node1.y) * dy) / a
-
-        return 0.0 <= u and u <= 1.0
+        if node1 in self.nodes and node2 in self.nodes:
+            i1 = self.nodes.index(node1)
+            i2 = self.nodes.index(node2)
+            offset = abs(i1 - i2)
+            return offset != 1 and offset != len(self.nodes) - 1
+        for i in xrange(self.RESOLUTION - 1):
+            n1 = self.nodes[i]
+            n2 = self.nodes[i + 1]
+            if tools.segment_intersects_segment(n1.x, n1.y, n2.x, n2.y, node1.x, node1.y, node2.x, node2.y):
+                return True
+        return False
 
 
 
