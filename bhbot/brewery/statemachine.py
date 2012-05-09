@@ -67,6 +67,8 @@ class State(object):
         if exit_status is not None :
             logger.log("Substate exit status = {}".format(exit_status))
         self.parent_state.sub_state = None
+        if not self.event_loop.state_history[:-1] is self :
+            self.event_loop.state_history.append(self)
         self.parent_state.on_exit_substate(self)
 
 
