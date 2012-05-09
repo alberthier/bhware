@@ -81,7 +81,11 @@ class WaitFirstKeepAlive(statemachine.State):
 #        self.switch_to_state(TestCommands())
         self.switch_to_state(FindNextGoal())
 
-
+class MyGoto(statemachine.State):
+    def on_enter(self):
+        walk = commonstates.TrajectoryWalk()
+        walk.backward(2.5)
+        self.switch_to_substate(walk)
 
 
 class TestTraj(statemachine.State):
