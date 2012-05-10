@@ -6,3 +6,4 @@ set softtabstop=4
 set tabstop=4
 set cindent
 set backspace=2
+set ignorecase
