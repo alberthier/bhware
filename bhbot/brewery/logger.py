@@ -69,6 +69,8 @@ def log(text, sender = "ARM"):
     time = "'{:=0.02f}'".format(float(delta.seconds) + (float(delta.microseconds)/1000000.0))
     #noinspection PyBroadException
     try:
+        #if type(text) != str:
+            #text = str(text)
         log_file.write("l([" + time + ",'" + sender + "','# " + text.replace("'", "\\'") + "'])\n")
     except:
         print("Failed to write to file")
