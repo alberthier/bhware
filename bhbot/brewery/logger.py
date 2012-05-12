@@ -20,6 +20,8 @@ LOG_LINE_COUNT  = 3
 filepath = None
 log_file = None
 start_time = None
+color_start = ""
+color_stop = ""
 
 
 def initialize():
@@ -50,6 +52,17 @@ def initialize():
         log("Logging to '{}'".format(os.path.split(filepath)[1]))
 
 
+def set_team(team):
+    global color_start
+    global color_stop
+    if os.isatty(sys.stdout.fileno()):
+        if team == TEAM_PURPLE:
+            color_start = "\033[34m"
+        else:
+            color_start = "\033[31m"
+        color_stop = "\033[00m"
+
+
 def close():
     global log_file
     global filepath
@@ -64,17 +77,19 @@ def close():
 def log(text, sender = "ARM"):
     global log_file
     global start_time
+    global color_start
+    global color_stop
     initialize()
     delta = datetime.datetime.now() - start_time
     time = "'{:=0.02f}'".format(float(delta.seconds) + (float(delta.microseconds)/1000000.0))
+    if type(text) != str:
+        text = str(text)
     #noinspection PyBroadException
     try:
-        #if type(text) != str:
-            #text = str(text)
         log_file.write("l([" + time + ",'" + sender + "','# " + text.replace("'", "\\'") + "'])\n")
     except:
         print("Failed to write to file")
-    sys.stdout.write(text + "\n")
+    sys.stdout.write(color_start + text + color_stop + "\n")
     sys.stdout.flush()
 
 

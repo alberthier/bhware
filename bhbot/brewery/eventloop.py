@@ -307,6 +307,10 @@ class EventLoop(object):
                     logger.log_exception(e)
 
 
+    def on_device_ready(self, packet):
+        logger.set_team(packet.team)
+
+
     def on_keep_alive(self, packet):
         self.send_packet(packet)
         leds.green.heartbeat_tick()
