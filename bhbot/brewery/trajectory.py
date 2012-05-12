@@ -387,10 +387,11 @@ class Map(object):
             self.evaluator.remove_penalized_zone(ez)
 
 
-    def opponent_detected(self, opponent, x, y):
-        if opponent == OPPONENT_ROBOT_MAIN:
+    def opponent_detected(self, packet, x, y):
+        if packet.robot == OPPONENT_ROBOT_MAIN:
             self.pathfinder.set_main_opponent_position(int(round(x / ROUTING_MAP_RESOLUTION)), int(round(y / ROUTING_MAP_RESOLUTION)))
-            self.evaluator.set_main_opponent_position(int(round(x / EVALUATOR_MAP_RESOLUTION)), int(round(y / EVALUATOR_MAP_RESOLUTION)))
+            if packet.distance == 0:
+                self.evaluator.set_main_opponent_position(int(round(x / EVALUATOR_MAP_RESOLUTION)), int(round(y / EVALUATOR_MAP_RESOLUTION)))
         else:
             self.pathfinder.set_secondary_opponent_position(int(round(x / ROUTING_MAP_RESOLUTION)), int(round(y / ROUTING_MAP_RESOLUTION)))
             self.evaluator.set_secondary_opponent_position(int(round(x / EVALUATOR_MAP_RESOLUTION)), int(round(y / EVALUATOR_MAP_RESOLUTION)))
@@ -458,17 +459,23 @@ class Map(object):
         pyversion = "python{}.{}".format(sys.version_info.major, sys.version_info.minor)
         include_dir = sys.exec_prefix + "/include/" + pyversion
         lib_dir = sys.exec_prefix + "/lib"
-        source_file = os.path.join(os.path.dirname(__file__), "pathfinding.c")
         working_dir = "/tmp/bhware"
+        source_file = os.path.join(os.path.dirname(__file__), "pathfinding.c")
+        output_file = os.path.join(working_dir, "pathfinding.so")
         if not os.path.exists(working_dir):
             os.makedirs(working_dir)
-        sys.path.append(working_dir)
-        cmd = ["gcc", "-O2", "-shared", "-fPIC", "-o", "pathfinding.so", "-I" + include_dir, "-L" + lib_dir, source_file, "-l" + pyversion]
-        gcc = subprocess.Popen(cmd, stdout = subprocess.PIPE, stderr = subprocess.PIPE, cwd=working_dir)
-        (out, err) = gcc.communicate()
-        if gcc.returncode == 0:
-            logger.log("Pathfinding C module compiled successfully")
-        for l in out.splitlines():
-            logger.log(l)
-        for l in err.splitlines():
-            logger.log(l)
+            os.utime(source_file, None)
+        if not working_dir in sys.path:
+            sys.path.append(working_dir)
+        if not os.path.exists(output_file) or os.stat(source_file).st_mtime > os.stat(output_file).st_mtime:
+            cmd = ["gcc", "-O2", "-shared", "-fPIC", "-o", output_file, "-I" + include_dir, "-L" + lib_dir, source_file, "-l" + pyversion]
+            gcc = subprocess.Popen(cmd, stdout = subprocess.PIPE, stderr = subprocess.PIPE, cwd=working_dir)
+            (out, err) = gcc.communicate()
+            if gcc.returncode == 0:
+                logger.log("Pathfinding C module compiled successfully")
+            for l in out.splitlines():
+                logger.log(l)
+            for l in err.splitlines():
+                logger.log(l)
+        else:
+            logger.log("Pathfinding C module already up to date")
