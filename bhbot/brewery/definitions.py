@@ -95,7 +95,7 @@ ROUTING_MAP_RESOLUTION                 = 0.02
 EVALUATOR_MAP_RESOLUTION               = 0.04
 MAP_WALLS_DISTANCE                     = 0.18
 ASTAR_EFFECTIVE_VS_HEURISTIC_TRADEOFF  = 1.5
-ROUTE_SPLIT_ANGLE                      = math.pi / 3.0
+ROUTE_SPLIT_ANGLE                      = 2.0 * math.pi
 MAIN_OPPONENT_AVOIDANCE_RANGE          = 0.5
 SECONDARY_OPPONENT_AVOIDANCE_RANGE     = 0.4
 
