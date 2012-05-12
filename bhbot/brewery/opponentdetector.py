@@ -28,9 +28,9 @@ class Opponent(object):
 
 
     def on_turret_detect(self, packet):
-        if packet.distance == 1:
-            # Ignore long distances for the moment
+        if packet.robot != self.opponent_type:
             return
+        if packet.distance == 1:
             distance = TURRET_LONG_DISTANCE_DETECTION_RANGE
         else:
             distance = TURRET_SHORT_DISTANCE_DETECTION_RANGE
@@ -41,7 +41,7 @@ class Opponent(object):
         self.x = robot_pose.x + distance * math.cos(real_angle)
         self.y = robot_pose.y + distance * math.sin(real_angle)
 
-        self.detector.event_loop.map.opponent_detected(packet.robot, self.x, self.y)
+        self.detector.event_loop.map.opponent_detected(packet, self.x, self.y)
 
         if IS_HOST_DEVICE_PC:
             sim_packet = packets.SimulatorOpponentsPositions()
@@ -70,17 +70,24 @@ class Opponent(object):
 
 
     def notify_state_machine(self, packet, is_in_front, is_in_back):
+        if packet is not None and packet.distance != 0:
+            is_in_back = False
+            is_in_front = False
         if self.notified_in_front != is_in_front:
             if is_in_front:
+                logger.log("Opponent in front")
                 self.detector.event_loop.get_current_state().on_opponent_in_front(packet)
             else:
+                logger.log("Opponent away from front")
                 self.detector.event_loop.get_current_state().on_opponent_disapeared(self.opponent_type, True)
             self.notified_in_front = is_in_front
 
         if self.notified_in_back != is_in_back:
             if is_in_back:
+                logger.log("Opponent in back")
                 self.detector.event_loop.get_current_state().on_opponent_in_back(packet)
             else:
+                logger.log("Opponent away from back")
                 self.detector.event_loop.get_current_state().on_opponent_disapeared(self.opponent_type, False)
             self.notified_in_back = is_in_back
 
