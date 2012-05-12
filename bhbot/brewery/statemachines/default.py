@@ -269,16 +269,38 @@ class GrabMap(statemachine.State):
         self.robot().goal_manager.goal_done(self.goal)
         self.exit_substate()
 
+TAKE_GOLDBAR_APPROACH = 0.15
+
+totem_take_positions = { # name           x      y     angle
+                         "SELF_NORTH"  : ( 0.875, 1.10, 0.0       ),
+                         "SELF_SOUTH"  : ( 1.125, 1.10, math.pi   ),
+                         "OTHER_NORTH" : ( 0.875, 1.90, 0.0       ),
+                         "OTHER_SOUTH" : ( 1.125, 1.90, -math.pi  )
+}
+
+delta = ROBOT_X_SIZE - ROBOT_CENTER_X
+
+totem_approach_start_positions = {}
+totem_approach_end_positions = {}
+
+for k, v in totem_take_positions.items() :
+    vals = None
+    if k.endswith("_NORTH") :
+        vals = v[0] - (TAKE_GOLDBAR_APPROACH + delta), v[1], v[2]
+        totem_approach_start_positions[k] = vals
+        vals = v[0] - delta, v[1], v[2]
+        totem_approach_end_positions[k] = vals
+    else :
+        vals = v[0] + (TAKE_GOLDBAR_APPROACH + delta), v[1], v[2]
+        totem_approach_start_positions[k] = vals
+        vals = v[0] + delta, v[1], v[2]
+        totem_approach_end_positions[k] = vals
+
 
 class TakeGoldBar(statemachine.State):
     """ Take a gold bar
     """
-    init_positions = { #   x      y    angle
-        "SELF_NORTH" :  ( 0.54, 1.10, 0.0 ),
-        "SELF_SOUTH" :  ( 1.46, 1.10, math.pi ),
-        "OTHER_NORTH" : ( 0.54, 1.90, 0.0 ),
-        "OTHER_SOUTH" : ( 1.46, 1.90, -math.pi )
-    }
+
     def __init__(self, goal):
         """
         @param goal: Goal which led to this state
@@ -286,16 +308,12 @@ class TakeGoldBar(statemachine.State):
         """
         super(TakeGoldBar,self).__init__()
         self.goal = goal
-        self.start_pos = self.init_positions[goal.identifier]
-
+        self.start_pos = totem_approach_start_positions[goal.identifier]
 
     def on_enter(self):
         walk = commonstates.TrajectoryWalk()
         walk.move_to(*self.start_pos[0:2], direction=DIRECTION_BACKWARD)
         walk.rotate_to(self.start_pos[2])
-#        walk.wait_for(commonstates.Timer(5000))
-#        walk.forward(0.11)
-#        walk.wait_for(commonstates.Timer(5000))
         walk.wait_for(DetectAndTakeGoldbar(self.goal))
         self.switch_to_substate(walk)
 
@@ -340,12 +358,16 @@ class DetectAndTakeGoldbar(statemachine.State):
             if state.status == GOLD_BAR_PRESENT :
                 logger.log("Goldbar was present")
                 walk = commonstates.TrajectoryWalk()
+                #open gripper
                 walk.wait_for(commonstates.Gripper(GRIPPER_SIDE_BOTH, GRIPPER_OPEN))
-                walk.forward(0.11)
-#                walk.wait_for(commonstates.Timer(5000))
+                #look at totem
+                walk.look_at(*totem_take_positions[self.goal.identifier][0:2])
+                #bump again totem
+                walk.move_to(*totem_approach_end_positions[self.goal.identifier][0:2],direction=DIRECTION_FORWARD)
+                #close gripper
                 walk.wait_for(commonstates.Gripper(GRIPPER_SIDE_BOTH, GRIPPER_CLOSE))
-#                walk.wait_for(commonstates.Timer(5000))
-                walk.backward(0.11)
+                #go backwards
+                walk.move_to(*totem_approach_start_positions[self.goal.identifier][0:2],direction=DIRECTION_BACKWARD)
                 self.switch_to_substate(walk)
                 return
             else:
