@@ -104,7 +104,7 @@ BLOCKED_ZONE_SIZE                      = 0.08
 BLOCKED_ZONE_DISAPEARING_MS            = 1000
 
 # Opponent detection
-OPPONENT_DETECTION_DISAPEARING_MS      = 500
+OPPONENT_DETECTION_DISAPEARING_MS      = 1500
 
 # Blocking opponent handling
 DEFAULT_OPPONENT_WAIT_MS               = 2000

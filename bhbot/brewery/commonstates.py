@@ -47,6 +47,7 @@ class WaitForOpponentLeave(statemachine.State):
         statemachine.State.__init__(self)
         self.current_move_direction = current_move_direction
         self.opponent = opponent
+        self.miliseconds = miliseconds
         self.goto_finished = False
         self.opponent_disappeared = False
         self.timer_expired = False
@@ -96,7 +97,7 @@ class WaitForOpponentLeave(statemachine.State):
 
 
     def try_leave(self):
-        if self.goto_finished and (self.timer_expired or self.opponent_disappeared):
+        if self.goto_finished and ((self.timer_expired or self.miliseconds == 0) or self.opponent_disappeared):
             logger.log("WaitForOpponentLeave : exit on opponent leave reason={}".format(self.exit_reason))
             self.exit_substate(self.exit_reason)
 
@@ -524,12 +525,7 @@ class TrajectoryWalk(statemachine.State):
             self.exit_reason = TRAJECTORY_BLOCKED
             self.exit_substate()
         elif self.current_opponent is not None:
-            if self.opponent_wait_time:
-                self.switch_to_substate(WaitForOpponentLeave(self.current_opponent, self.opponent_wait_time, self.current_goto_packet.direction))
-            else:
-                logger.log("TrajectoryWalk failed")
-                self.exit_reason = TRAJECTORY_OPPONENT_DETECTED
-                self.exit_substate()
+            self.switch_to_substate(WaitForOpponentLeave(self.current_opponent, self.opponent_wait_time, self.current_goto_packet.direction))
             self.current_opponent = None
 
 
@@ -551,8 +547,8 @@ class TrajectoryWalk(statemachine.State):
 
 
     def on_exit_substate(self, substate):
-        if self.current_goto_packet is not None and isinstance(substate, WaitForOpponentLeave):
-            if substate.exit_reason == WaitForOpponentLeave.OPPONENT_LEFT:
+        if isinstance(substate, WaitForOpponentLeave):
+            if self.current_goto_packet is not None and self.opponent_wait_time != 0 and substate.exit_reason == WaitForOpponentLeave.OPPONENT_LEFT:
                 self.send_packet(self.current_goto_packet)
             else:
                 logger.log("TrajectoryWalk failed")
