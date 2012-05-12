@@ -244,8 +244,8 @@ class EventLoop(object):
         self.webserver_port = webserver_port
         self.opponent_detector = opponentdetector.OpponentDetector(self)
         self.stopping = False
-        #self.map = trajectory.Map(self)
-        self.map = graphpathfinding.Map(self)
+        self.map = trajectory.Map(self)
+        #self.map = graphpathfinding.Map(self)
         self.timers = []
         self.state_history = []
 
