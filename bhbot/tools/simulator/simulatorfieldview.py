@@ -21,6 +21,7 @@ import time
 
 
 
+
 class GraphicsRobotArmObject(QObject):
 
     arm_movement_finished = pyqtSignal()
@@ -1156,12 +1157,13 @@ class GameElementsLayer(fieldview.Layer):
                     elt.setPos(elt.pos().x() + dx, elt.pos().y() + dy)
 
         if self.main_bar.opponent_detection.isChecked():
-            short_circle = self.purple_robot_layer.robot.short_detection_circle
-            long_circle = self.purple_robot_layer.robot.long_detection_circle
-            if short_circle.collidesWithItem(self.red_robot_layer.robot.team_indicator):
+            purple_robot_item = self.purple_robot_layer.robot.item
+            red_robot_item = self.red_robot_layer.robot.item
+            distance = tools.distance(purple_robot_item.x(), purple_robot_item.y(), red_robot_item.x(), red_robot_item.y())
+            if distance < TURRET_SHORT_DISTANCE_DETECTION_RANGE * 1000.0:
                 self.send_turret_detect(self.purple_robot_layer, self.red_robot_layer, 0)
                 self.send_turret_detect(self.red_robot_layer, self.purple_robot_layer, 0)
-            elif long_circle.collidesWithItem(self.red_robot_layer.robot.team_indicator):
+            elif distance < TURRET_LONG_DISTANCE_DETECTION_RANGE * 1000.0:
                 self.send_turret_detect(self.purple_robot_layer, self.red_robot_layer, 1)
                 self.send_turret_detect(self.red_robot_layer, self.purple_robot_layer, 1)
 
