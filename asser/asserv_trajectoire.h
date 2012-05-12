@@ -42,7 +42,9 @@
 /** Parametres du profil de vitesse des trajectoires */
 #define TAILLE_TAB_GABARIT_VITESSE  201
 
+#ifndef PIC32_BUILD
 #define MaxSizeLogBuffer 1
+#endif
 
 /** Structure de parametres du profil de vitesse des trajectoires */
 typedef struct

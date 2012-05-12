@@ -63,9 +63,9 @@ float                           gainDeplacement3                        =   20.0
 float                           A_MAX                                   =   3.0;
 float                           D_MAX                                   =   -1.5;
 
-float                           facteurVitesseAngulaireMax              =   1.0;
+float                           facteurVitesseAngulaireMax              =   1.0;    /* ce facteur doit etre positif */
 
-float                           COEFF_VI1                               =   0.95;
+float                           COEFF_VI1                               =   0.95;   /* COEFF_VI1 doit etre strictement positif et strictement inferieur a 1 (0.0 < COEFF_VI1 < 1.0) */
 float                           VITESSE_SEUIL_DECC                      =   0.2;
 float                           COEFF_DECC_FINALE                       =   0.08;
 float                           DECC_MIN                                =   -0.3;       /* Decceleration en m/s^2 du profil de vitesse au point d'arrivee */
@@ -107,6 +107,8 @@ static float                    errDist, memo_errDist, errAngle, memo_errAngle, 
 /** Vecteurs associees au depart et a l'arrivee, et parametrage du profil de vitesse de la trajectoire */
 static Trajectoire              chemin;
 static unsigned int             segmentCourant                          =   1;
+
+//*** Contraintes d'affectation : ti doit etre compris entre 0 et 0.5, avec les valeurs 0.0 et 0.5 exclus ***/
 static float                    ti                                      =   0.3;
 
 /** Pose de la trajectoire de consigne a l'instant t*/
@@ -133,8 +135,8 @@ static unsigned int             g_index_tab_gabarit_vitesse             = 0;
 static unsigned int             g_index_tab_gabarit_acceleration        = 0;
 
 // tableau de 1: distance des phases d'acc et de decc reunies, 2: vitesse max(de pointe), 3; distance de decc
-static float                    g_tab_vpointe[5][3]; // = {{0.04, 0.2, 0.025}, {0.085, 0.3, 0.04}, {0.165, 0.4, 0.075}, {0.27, 0.5, 0.115}, {0.4, 0.6, 0.165}};
-static unsigned int             iMaxVpointe                             = 4;
+static float                    g_tab_vpointe[10][3]; // = {{0.04, 0.2, 0.025}, {0.085, 0.3, 0.04}, {0.165, 0.4, 0.075}, {0.27, 0.5, 0.115}, {0.4, 0.6, 0.165}};
+static unsigned int             iMaxVpointe                             = 9;
 
 //static Pose                     g_poseRobotTrajectoire;
 
@@ -303,17 +305,12 @@ extern void ASSER_TRAJ_AsservissementMouvementRobot(Pose poseRobot, VitessesRobo
 {
     float           diagonaleMatriceGain[2];
     float           gain[5];
-    float           facteurCorrectionT                      = 1.0;
-/*    float           vitesseNormaliseeSegmentCourantCorrigee = 0.0;
-    float           vitesseSegmentCourant       = 0.0;
-    float           vitLimiteCourbure           = 0.0; */
     Pose            differentielleTemporellePoseReference;
     Pose            differentielleTemporellePoseReferenceRobot;
     Pose            P_robot;                                        /* Point fixe du robot a asservir a la trajectoire de consigne */
     Pose            erreurPoseCentreRobot;
     Pose            erreur_P;
     Vecteur         diff1BS, diff2BS;
-    float           vitesseAngulaire                        = 0.0;
     float           delta_distance                          = 0.0;
     float           parametrePositionSegmentTrajectoireAv   = 0.0;
     unsigned int    segmentCourantAv;
@@ -544,8 +541,6 @@ extern void ASSER_TRAJ_AsservissementMouvementRobot(Pose poseRobot, VitessesRobo
         memo_vitesse_profil_consigne = 0.0;
         chemin.profilVitesse.p = 0;
     }
-
-    vitesseAngulaire = (chemin.profilVitesse.diffThetaCourant * (memo_vitesse_profil_consigne / facteurCorrectionT)) / TE;
 
     /* Log de valeurs */
     ASSER_TRAJ_LogAsser("xCCourant", NBR_ASSER_LOG_VALUE, ASSER_TRAJ_Trajectoire(chemin.segmentTrajBS, segmentCourant, parametrePositionSegmentTrajectoire).x);
@@ -829,7 +824,7 @@ extern void ASSER_TRAJ_InitialisationTrajectoire(Pose poseRobot, PtTraj * point,
     else
     {
         /* Position a atteindre (condition d'arret du test de fin d'asservissment) */
-        angle_fin_rotation = POS_ModuloAngle(fabsf(angle_rad));
+        angle_fin_rotation = POS_ModuloAngle(angle_rad);
         
         chemin.posArrivee.x = poseRobot.x + NORME_BARRE_SUIVI_TRAJ * cosf(angle_fin_rotation);
         chemin.posArrivee.y = poseRobot.y + NORME_BARRE_SUIVI_TRAJ * sinf(angle_fin_rotation);
@@ -842,27 +837,21 @@ extern void ASSER_TRAJ_InitialisationTrajectoire(Pose poseRobot, PtTraj * point,
         chemin.rotation.poseDepartRobot = poseRobot;
         chemin.nbreSegments = 1;
         chemin.rotation.angle = POS_ModuloAngle(angle_fin_rotation - poseRobot.angle);
-        
-        if ((chemin.rotation.angle * angle_rad) < 0.0)
-        {
-            if (angle_rad > 0.0)
-            {
-                chemin.rotation.angle += (2.0 * PI);
-            }
-            else
-            {
-                chemin.rotation.angle -= (2.0 * PI);
-            }
-        }
-        
+
         ASSER_TRAJ_LogAsser("plageAngleRotation", NBR_ASSER_LOG_VALUE, chemin.rotation.angle);
 
         /* Calcul de la premiere pose de la trajectoire de consigne */
         poseReference = ASSER_TRAJ_TrajectoireRotation(&(chemin.rotation), 0.0);
 
-        chemin.distance = (fabsf(chemin.rotation.angle) * NORME_BARRE_SUIVI_TRAJ) + 0.000001;
+        chemin.distance = (fabsf(chemin.rotation.angle) * NORME_BARRE_SUIVI_TRAJ);
+        ASSER_TRAJ_LogAsser("distance_seg", NBR_ASSER_LOG_VALUE, chemin.distance);
     }
 
+    // Garantie que la distance totale de la trajectoire est positive et non nulle
+    if (chemin.distance < 1e-3)
+    {
+        chemin.distance = 1e-3;
+    }
 
     /* Calcul du gabarit du profil de vitesse */
     //g_poseRobotTrajectoire.x = poseRobot.x;
@@ -1318,7 +1307,15 @@ static float ASSER_TRAJ_DiffThetaBSpline(Vecteur diff1BS, Vecteur diff2BS)
 {
     float diffTheta;
 
-    diffTheta = ((diff2BS.y * diff1BS.x) - (diff1BS.y * diff2BS.x)) / (SQUARE(diff1BS.x) + SQUARE(diff1BS.y));
+    diffTheta = SQUARE(diff1BS.x) + SQUARE(diff1BS.y);
+
+    // Restriction de la somme precedente à une valeur minimale pour eviter la division par zero et maximiser le resultat final de diffTheta
+    if (diffTheta < 1e-9)
+    {
+        diffTheta = 1e-9;
+    }
+
+    diffTheta = ((diff2BS.y * diff1BS.x) - (diff1BS.y * diff2BS.x)) / diffTheta;
 
     return diffTheta;
 }
@@ -1394,6 +1391,10 @@ static void ASSER_TRAJ_ParcoursTrajectoire(Trajectoire *traj, float delta_distan
             /* Determination du ratio entre un deplacement en metre et un deplacement du parametre du chemin */
             diffD_T = ASSER_TRAJ_DiffTrajectoire(traj->segmentTrajBS, *segmentCourant, *paramPoseSegTraj);
             facteurCorrectionT = sqrtf(SQUARE(diffD_T.x) + SQUARE(diffD_T.y));
+            if (facteurCorrectionT < 1e-9)
+            {
+                facteurCorrectionT = 1e-9;
+            }
 
             /* Deplacement du parametre de pose du chemin */
             delta_param_chemin = delta_distance / facteurCorrectionT;
@@ -1507,7 +1508,7 @@ static void ASSER_TRAJ_GabaritVitesse(Trajectoire * traj)
     float           vpointe                         = 0.0;
     unsigned int    i                               = 0u;
     unsigned int    N_plateau                       = 0;
-    float           coeff_vit_ini                   = 0.2;
+    float           coeff_vit_ini                   = 0.4;
 
     ASSER_TRAJ_InitTabVPointe(traj, coeff_vit_ini);
     distanceRestante = traj->distance;
@@ -1618,6 +1619,17 @@ static void ASSER_TRAJ_GabaritVitesse(Trajectoire * traj)
         ASSER_TRAJ_CreateGabaritVitesseFromGabaritAcceleration(traj);
     }
 
+#ifndef PIC32_BUILD
+    if (ASSER_TRAJ_isDeplacement(traj) == False)
+    {
+        for(i =0; i < g_index_tab_gabarit_acceleration; i++)
+        {
+            ASSER_TRAJ_LogAsser("gabarit_acceleration_new", NBR_ASSER_LOG_VALUE, g_tab_gabarit_acceleration[i]);
+            ASSER_TRAJ_LogAsser("gabarit_vitesse_new", NBR_ASSER_LOG_VALUE, g_tab_gabarit_vitesse[i]);
+        }
+    }
+#endif
+
 }
 
 /**********************************************************************/
@@ -1638,9 +1650,17 @@ static void ASSER_TRAJ_InitTabVPointe(Trajectoire * traj, float coeff_vit_ini)
     unsigned int    i;
     float           vpointe, distanceAcc, distanceDecc;
 
-    for(i = 0; i < 9; i++)
+    vpointe = 0.05;
+    ASSER_TRAJ_LogAsser("vpointe", NBR_ASSER_LOG_VALUE, vpointe);
+    distanceAcc = ASSER_TRAJ_DistanceAcceleration(traj, vpointe, (vpointe * coeff_vit_ini));
+    distanceDecc = ASSER_TRAJ_DistanceDecceleration(traj, vpointe);
+    g_tab_vpointe[0][0] = distanceAcc + distanceDecc;
+    g_tab_vpointe[0][1] = vpointe;
+    g_tab_vpointe[0][2] = distanceDecc;
+
+    for(i = 1; i < 10; i++)
     {
-        vpointe = 0.2 + (((float)i) * 0.1);
+        vpointe = 0.1 + (((float)(i-1)) * 0.1);
         
         if (vpointe > traj->profilVitesse.vmax)
         {
@@ -1657,7 +1677,7 @@ static void ASSER_TRAJ_InitTabVPointe(Trajectoire * traj, float coeff_vit_ini)
         g_tab_vpointe[i][1] = vpointe;
         g_tab_vpointe[i][2] = distanceDecc;
 
-        if ((0.2 + (((float)i) * 0.1)) > traj->profilVitesse.vmax)
+        if ((0.1 + (((float)(i-1)) * 0.1)) > traj->profilVitesse.vmax)
         {
             break;
         }
@@ -1892,7 +1912,7 @@ static float ASSER_TRAJ_Decceleration_vs_Vitesse(Trajectoire * traj, float vpoin
         decc = traj->profilVitesse.Dmax * (1.0 - SQUARE((vitesse - vi1) / (vpointe - vi1)));
     }
 
-    if (vitesse < traj->profilVitesse.vitesse_seuil_decc_finale)
+    if (sqrtf(SQUARE(vitesse) + (2.0 * traj->profilVitesse.pas_echantillon_distance * decc)) < traj->profilVitesse.vitesse_seuil_decc_finale)
     {
         decc_limit = traj->profilVitesse.decc_min_finale - (traj->profilVitesse.coeff_decc_finale * vitesse);
 
@@ -1926,10 +1946,6 @@ static unsigned char ASSER_TRAJ_ProfilAcceleration_2012(Trajectoire * traj, floa
     acc = ASSER_TRAJ_Acceleration_vs_Vitesse(traj, vpointe, *vitesse_n);
     
     vitesse_np1 = sqrtf(SQUARE(*vitesse_n) + (2.0 * traj->profilVitesse.pas_echantillon_distance * acc));
-    
-    dt = (2.0 * traj->profilVitesse.pas_echantillon_distance) / (*vitesse_n + vitesse_np1);
-    
-    acc = (vitesse_np1 - *vitesse_n) / dt;
 
     if (vitesse_np1 > (vpointe - 0.005))
     {
@@ -2210,6 +2226,7 @@ static VitessesRobotUnicycle ASSER_TRAJ_RetourDetatOrientation(Pose erreurPose, 
     float                   z[3];
     float                   w[2];
     float                   k1, k2, k3, uref1, uref2;
+    float                   erreurAngle;
 
     k1 = gain[0];
     k2 = gain[1];
@@ -2217,7 +2234,21 @@ static VitessesRobotUnicycle ASSER_TRAJ_RetourDetatOrientation(Pose erreurPose, 
 
     z[0] = erreurPose.x;
     z[1] = erreurPose.y;
-    z[2] = tanf(erreurPose.angle);
+
+    erreurAngle = POS_ModuloAngle(erreurPose.angle);
+    if (fabsf(erreurAngle) > (PI/2.0 - 0.1))
+    {
+        if (erreurAngle > 0.0)
+        {
+            erreurAngle = PI/2.0 - 0.1;
+        }
+        else
+        {
+            erreurAngle = -(PI/2.0 - 0.1);
+        }
+    }
+
+    z[2] = tanf(erreurAngle);
 
     uref1 = sqrtf(SQUARE(diffPoseRef.x) + SQUARE(diffPoseRef.y));
     uref2 = diffPoseRef.angle;
@@ -2225,8 +2256,8 @@ static VitessesRobotUnicycle ASSER_TRAJ_RetourDetatOrientation(Pose erreurPose, 
     w[0] = -k1 * uref1 * fabsf(uref1) * (z[0] + (z[1] * z[2]));
     w[1] = -(k2 * uref1 * z[1]) - (k3 * fabsf(uref1) * z[2]);
 
-    vitessesCons.longitudinale = (w[0] + uref1) / cosf(erreurPose.angle);
-    vitessesCons.rotation = (w[1] * SQUARE(cosf(erreurPose.angle))) + uref2;
+    vitessesCons.longitudinale = (w[0] + uref1) / cosf(erreurAngle);
+    vitessesCons.rotation = (w[1] * SQUARE(cosf(erreurAngle))) + uref2;
 
     return vitessesCons;
 }

@@ -219,7 +219,7 @@ def trajFunction(d_cfgTraj):
 
     # envoie au simulateur de l'init de pose
     #~ send_init_pose(simulator_process, x=0.31, y=0.177, angle=-1.5708)
-    angle0 = math.atan2(-(1.1-0.86), -(0.54-0.6)) + (math.pi/4.0) * 1.2*0
+    #~ angle0 = math.atan2(-(1.1-0.86), -(0.54-0.6)) + (math.pi/4.0) * 1.2*0
     #~ print("angle0: " +str(angle0))
     #~ print("Aval: " +str(0.799249231815))
     #~ send_init_pose(simulator_process, x=0.6, y=0.86, angle=angle0) #INIT_POSE_ROBOT 1 -1 0.799249231815 1 0.6 0.86
@@ -228,7 +228,95 @@ def trajFunction(d_cfgTraj):
     #~ send_init_pose(simulator_process, x=0.31, y=0.177, angle=-math.pi/2.0)
     
     # Init du dep qui fuse
-    send_init_pose(simulator_process, x=1.0, y=1.0, angle=(-math.pi/2.0)*0)
+    #~ send_init_pose(simulator_process, x=1.0, y=1.0, angle=(-math.pi/2.0)*0)
+    
+    #~ send_init_pose(simulator_process, x=0.0, y=0.0, angle=0.0)
+    #~ deplacement = commandMsg("MSG_MAIN_GOTO 1 1 -1100000.0")
+    #~ deplacement.addPose("1.0 0.0")
+    #~ simulator_process.stdin.write(deplacement.cmdMsgGeneration())
+    
+    
+    send_init_pose(simulator_process, x=0.31, y=0.177, angle=4.71)
+    #1
+    deplacement = commandMsg("MSG_MAIN_GOTO 1 -1 -1100000.0")
+    deplacement.addPose("0.33 0.41") #-1100000.0
+    deplacement.addPose("0.35 0.49")
+    deplacement.addPose("0.55 0.69")
+    deplacement.addPose("0.59 0.83")
+    deplacement.addPose("0.6 0.86")
+    #transmission de commandes de deplacement par l'entree standard
+    simulator_process.stdin.write(deplacement.cmdMsgGeneration())
+    
+    #2
+    deplacement = commandMsg("MSG_MAIN_GOTO 0 1 4.94647762266") #4.94647762266
+    #transmission de commandes de deplacement par l'entree standard
+    simulator_process.stdin.write(deplacement.cmdMsgGeneration())
+    
+    #3
+    deplacement = commandMsg("MSG_MAIN_GOTO 1 -1 -1100000.0")
+    deplacement.addPose("0.54 1.1") #-1100000.0
+    #transmission de commandes de deplacement par l'entree standard
+    simulator_process.stdin.write(deplacement.cmdMsgGeneration())
+    
+    #4
+    deplacement = commandMsg("MSG_MAIN_GOTO 0 1 0.0")
+    #transmission de commandes de deplacement par l'entree standard
+    simulator_process.stdin.write(deplacement.cmdMsgGeneration())
+    
+    #5
+    deplacement = commandMsg("MSG_MAIN_GOTO 1 1 -1100000.0")
+    deplacement.addPose("0.702017867449 1.09724518987") #-1100000.0
+    #transmission de commandes de deplacement par l'entree standard
+    simulator_process.stdin.write(deplacement.cmdMsgGeneration())
+    
+    #6
+    deplacement = commandMsg("MSG_MAIN_GOTO 1 -1 -1100000.0")
+    deplacement.addPose("0.540340565576 1.09785575467") #-1100000.0
+    #transmission de commandes de deplacement par l'entree standard
+    simulator_process.stdin.write(deplacement.cmdMsgGeneration())
+    
+    #7
+    deplacement = commandMsg("MSG_MAIN_GOTO 0 1 3.90764130631")
+    #transmission de commandes de deplacement par l'entree standard
+    simulator_process.stdin.write(deplacement.cmdMsgGeneration())
+    
+    #8
+    deplacement = commandMsg("MSG_MAIN_GOTO 1 1 -1100000.0")
+    deplacement.addPose("0.43 0.99")
+    deplacement.addPose("0.33 0.65")
+    deplacement.addPose("0.3 0.6")
+    #transmission de commandes de deplacement par l'entree standard
+    simulator_process.stdin.write(deplacement.cmdMsgGeneration())
+    
+    #9
+    deplacement = commandMsg("MSG_MAIN_GOTO 0 1 4.71238898038")
+    #transmission de commandes de deplacement par l'entree standard
+    simulator_process.stdin.write(deplacement.cmdMsgGeneration())
+    
+    #10
+    deplacement = commandMsg("MSG_MAIN_GOTO 1 1 -1100000.0")
+    deplacement.addPose("0.29983521028 0.483999268052")
+    #transmission de commandes de deplacement par l'entree standard
+    simulator_process.stdin.write(deplacement.cmdMsgGeneration())
+    
+    #11
+    deplacement = commandMsg("MSG_MAIN_GOTO 1 -1 -1100000.0")
+    deplacement.addPose("0.296075643967 0.585826966544") #-1100000.0
+    #transmission de commandes de deplacement par l'entree standard
+    simulator_process.stdin.write(deplacement.cmdMsgGeneration())
+    
+    #12
+    deplacement = commandMsg("MSG_MAIN_GOTO 0 1 3.17099620926")
+    #transmission de commandes de deplacement par l'entree standard
+    simulator_process.stdin.write(deplacement.cmdMsgGeneration())
+    
+    #13
+    deplacement = commandMsg("MSG_MAIN_GOTO 1 -1 -1100000.0")
+    deplacement.addPose("0.47 0.59")
+    deplacement.addPose("1.37 0.85")
+    deplacement.addPose("1.4 0.86")
+    #transmission de commandes de deplacement par l'entree standard
+    simulator_process.stdin.write(deplacement.cmdMsgGeneration())
 
     #generation d'un message de commande de deplacement
     # "MSG_MAIN_GOTO 
@@ -244,11 +332,10 @@ def trajFunction(d_cfgTraj):
     #~ deplacement.addPose("0.31 1.177") #-1100000.0
     
     #~ # Dep qui fuse
-    deplacement = commandMsg("MSG_MAIN_GOTO 1 1 -1100000.0")   # 'DEPLACEMENT' en 'MARCHE_AVANT' #0.78539816339744828
-    #~ deplacement.addPose("1.01 1.0")
-    deplacement.addPose("1.3 1.0")
-    deplacement.addPose("1.4 1.1") #-1100000.0
-    deplacement.addPose("1.5 1.1")
+    #~ deplacement = commandMsg("MSG_MAIN_GOTO 1 1 -1100000.0")   # 'DEPLACEMENT' en 'MARCHE_AVANT' #0.78539816339744828
+    #~ deplacement.addPose("1.3 1.0")
+    #~ deplacement.addPose("1.4 1.1") #-1100000.0
+    #~ deplacement.addPose("1.5 1.1")
     
     #~ deplacement = commandMsg("MSG_MAIN_GOTO 2 -1 -1100000.0")   # 'DEPLACEMENT' en 'MARCHE_AVANT' #0.78539816339744828
     #~ deplacement.addPose("1.0 2.0") #-1100000.0
@@ -266,7 +353,7 @@ def trajFunction(d_cfgTraj):
     #~ deplacement.addPose("1.6 1.0")
     
     #transmission de commandes de deplacement par l'entree standard
-    simulator_process.stdin.write(deplacement.cmdMsgGeneration())
+    #~ simulator_process.stdin.write(deplacement.cmdMsgGeneration())
 
     #transmission de la commande de d'arret du simulateur
     (stdoutdata, stderrdata) = simulator_process.communicate("QUIT\n")
@@ -497,7 +584,7 @@ def coutOptim_TempsAcc(param, d_cfgTraj_local) :
     return coutTotal
 
 def affichageTraj2011(d_traj):
-    print("duree: " + str(d_traj["time"][0]) + "s")
+    print("duree: " + str(sum(d_traj["time"])) + "s")
     periode = d_traj['periode'][0]
 
     #nombre de variable loguer
@@ -509,7 +596,7 @@ def affichageTraj2011(d_traj):
         print(d_traj['finAsser'])
     else : print("Test fin asser negatif")
 
-    print(len(d_traj["xRoueDroite"]))
+    print("len_xRoueDroite: " + str(len(d_traj["xRoueDroite"])))
     print(len(d_traj["xRoueGauche"]))
 
     figure(1)
@@ -525,7 +612,9 @@ def affichageTraj2011(d_traj):
 
     #~ plot((d_traj["xRoueGauche"][posIndex]+d_traj["xRoueDroite"][posIndex])/2.0, (d_traj["yRoueGauche"][posIndex]+d_traj["yRoueDroite"][posIndex])/2.0, 'ro')
     grid(True)
-    legend(loc='upper right')
+    xlabel("x (m)")
+    ylabel("y (m)")
+    legend(loc='lower right')
     title("trajectoire")
 
     temps = [index*periode for index in range(len(d_traj["vitesseMoteurGauche"]))]
@@ -706,8 +795,10 @@ def affichageGabaritVitesse_2012(d_traj):
     print("pas ech: " + str(pas))
     plot([index * pas for index in range(len(d_traj["gabarit_vitesse"]))], d_traj["gabarit_vitesse"], '-o', label='vit')
     plot([index * pas for index in range(len(d_traj["gabarit_acceleration"]))], d_traj["gabarit_acceleration"], '-o', label='acc')
-    plot([index * pas for index in range(len(d_traj["gabarit_acceleration_new"]))], d_traj["gabarit_acceleration_new"], '-o', label='acc2')
-    plot([index * pas for index in range(len(d_traj["gabarit_vitesse_new"]))], d_traj["gabarit_vitesse_new"], '-o', label='vit2')
+    if (d_traj.keys().count("gabarit_acceleration_new")) :
+        plot([index * pas for index in range(len(d_traj["gabarit_acceleration_new"]))], d_traj["gabarit_acceleration_new"], '-o', label='acc2')
+    if (d_traj.keys().count("gabarit_vitesse_new")) :
+        plot([index * pas for index in range(len(d_traj["gabarit_vitesse_new"]))], d_traj["gabarit_vitesse_new"], '-o', label='vit2')
     
     #~ plot([index * pas for index in range(len(d_traj["gabarit_delta_acceleration"]))], d_traj["gabarit_delta_acceleration"], '-om', label='delta')
     #~ plot(d_traj["gabarit_acceleration_max"], [0 for index in range(len(d_traj["gabarit_acceleration_max"]))], '-or')
@@ -814,40 +905,42 @@ affichageGabaritVitesse_2012(traj)
 #~ print(traj["pti"])
 #~ print("disti")
 #~ print(traj["disti"])
-#~ print("distance_seg")
-#~ print(traj["distance_seg"])
+print("distance_seg")
+print(traj["distance_seg"])
 #~ print("theta1: " + str(traj["theta1"]))
 #~ print("angle_rad: " + str(traj["angle_rad"]))
 
 #~ 
-#~ figure()
-#~ N = len(traj["def_xTraj"])
-#~ plot(traj["def_xTraj"][:N], traj["def_yTraj"][:N], '-o')
-#~ plot(traj["def_xTraj"][0], traj["def_yTraj"][0], '-oy')
-#~ plot(traj["def_xTraj"][-1], traj["def_yTraj"][-1], '-or')
-#~ plot(traj["def_xTraj"][30], traj["def_yTraj"][30], 'or')
-#~ plot(traj["def_xTraj"][70], traj["def_yTraj"][70], 'or')
-#~ 
-#~ figure()
-#~ plot(traj["def_angleTraj"], '-o', label="thetaTraj")
-#~ legend()
-#~ 
-#~ figure()
-#~ plot(traj["def_diff_xTraj"], '-o', label="diff_x")
-#~ plot(traj["def_diff_yTraj"], '-o', label="diff_y")
-#~ legend()
-#~ grid()
-#~ 
-#~ figure()
-#~ plot(traj["def_diff2_xTraj"], '-o', label="diff2_x")
-#~ plot(traj["def_diff2_yTraj"], '-o', label="diff2_y")
-#~ legend()
-#~ grid()
-#~ 
-#~ figure()
-#~ plot(traj["def_diff_ThetaTraj"], '-o', label="diff_Theta")
-#~ legend()
-#~ grid()
+
+if (traj.keys().count("def_xTraj")) :
+    figure()
+    N = len(traj["def_xTraj"])
+    plot(traj["def_xTraj"][:N], traj["def_yTraj"][:N], '-o')
+    plot(traj["def_xTraj"][0], traj["def_yTraj"][0], '-oy')
+    plot(traj["def_xTraj"][-1], traj["def_yTraj"][-1], '-or')
+    plot(traj["def_xTraj"][30], traj["def_yTraj"][30], 'or')
+    plot(traj["def_xTraj"][70], traj["def_yTraj"][70], 'or')
+    #~ 
+    #~ figure()
+    #~ plot(traj["def_angleTraj"], '-o', label="thetaTraj")
+    #~ legend()
+    #~ 
+    #~ figure()
+    #~ plot(traj["def_diff_xTraj"], '-o', label="diff_x")
+    #~ plot(traj["def_diff_yTraj"], '-o', label="diff_y")
+    #~ legend()
+    #~ grid()
+    #~ 
+    #~ figure()
+    #~ plot(traj["def_diff2_xTraj"], '-o', label="diff2_x")
+    #~ plot(traj["def_diff2_yTraj"], '-o', label="diff2_y")
+    #~ legend()
+    #~ grid()
+    #~ 
+    #~ figure()
+    #~ plot(traj["def_diff_ThetaTraj"], '-o', label="diff_Theta")
+    #~ legend()
+    #~ grid()
 
 
 #~ print("angle_init: " +str(traj["angleFinRotation"][0]*180.0/math.pi))
@@ -867,15 +960,16 @@ affichageGabaritVitesse_2012(traj)
 #~ plot(traj["diffX"], label='X')
 #~ plot(traj["diffY"], label='Y')
 #~ legend()
-#~ 
-figure()
-plot(traj["consRotation"], '-o', label="consRot")
-legend()
-grid()
 
-print("debug_smooth:")
-print(traj["debug_smooth"])
+#~ figure()
+#~ plot(traj["consRotation"], '-o', label="consRot")
+#~ legend()
+#~ grid()
 
+#~ print("debug_smooth:")
+#~ print(traj["debug_smooth"])
+
+matplotlib.rcParams.update({'font.size': 16})
 affichageTraj2011(traj)
 #~ affichageTestAccDcecc(traj)
 
