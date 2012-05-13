@@ -157,7 +157,7 @@ class GrabMap(statemachine.State):
         self.robot().goal_manager.goal_done(self.goal)
         self.exit_substate()
 
-TAKE_GOLDBAR_APPROACH = 0.15
+TAKE_GOLDBAR_APPROACH = 0.10
 
 totem_take_positions = { # name           x      y     angle
                          "SELF_NORTH"  : ( 0.875, 1.10, 0.0       ),
@@ -238,10 +238,41 @@ class TakeGoldBar(statemachine.State):
 
         walk.look_at_opposite(self.start_pos[0], self.start_pos[1])
         walk.move_to(self.start_pos[0], self.start_pos[1], DIRECTION_BACKWARD)
+
+        # movement using GOTO doesn't work with current code on PIC (Taz's Syndrom)
+#        a = 0.0
+
+#        if self.goal.identifier.endswith("_NORTH") :
+#            a = self.start_pos[2] + math.pi / 2
+#        else :
+#            a = self.start_pos[2] - math.pi / 2
+#
+#        walk.goto(*self.start_pos[0:2], angle = a, direction=DIRECTION_BACKWARD)
+
         walk.rotate_to(self.start_pos[2])
         walk.wait_for(commonstates.Sweeper(SWEEPER_CLOSE, wait=False))
         walk.wait_for(DetectAndTakeGoldbar(self.goal))
         self.switch_to_substate(walk)
+
+#### parallel moves seem to be a bad idea
+#        walk = commonstates.TrajectoryWalk()
+#        walk.look_at_opposite(self.start_pos[0], self.start_pos[1])
+#        walk.move_to(self.start_pos[0], self.start_pos[1], DIRECTION_BACKWARD)
+#        walk.rotate_to(self.start_pos[2])
+#
+#        parallel_sw_open_move = commonstates.Parallel(  commonstates.Sweeper(SWEEPER_OPEN),
+#            walk
+#        )
+#
+#        parallel_sw_close_take = commonstates.Parallel(  commonstates.Sweeper(SWEEPER_CLOSE),
+#            DetectAndTakeGoldbar(self.goal)
+#        )
+#
+#        seq = commonstates.Sequence( parallel_sw_open_move,
+#            parallel_sw_close_take
+#        )
+#
+#        self.switch_to_substate(seq)
 
     def on_exit_substate(self, state):
         self.exit_substate()
@@ -264,10 +295,13 @@ class DetectAndTakeGoldbar(statemachine.State):
                 walk = commonstates.TrajectoryWalk()
                 #open gripper
                 walk.wait_for(commonstates.Gripper(GRIPPER_SIDE_BOTH, GRIPPER_OPEN))
+                #TODO : speed up by opening gripper while moving
                 #look at totem
-                walk.look_at(*totem_take_positions[self.goal.identifier][0:2])
+                totem_take_pose = totem_approach_end_positions[self.goal.identifier][0],self.robot().pose.y
+    #            totem_take_pose = totem_approach_end_positions[self.goal.identifier][0:2]
+                walk.look_at(*totem_take_pose)
                 #bump again totem
-                walk.move_to(*totem_approach_end_positions[self.goal.identifier][0:2],direction=DIRECTION_FORWARD)
+                walk.move_to(*totem_take_pose,direction=DIRECTION_FORWARD)
                 #close gripper
                 walk.wait_for(commonstates.Gripper(GRIPPER_SIDE_BOTH, GRIPPER_CLOSE))
                 #go backwards
