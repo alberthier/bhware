@@ -427,7 +427,7 @@ class TrajectoryWalk(statemachine.State):
 
     def create_move_to_packet(self, x, y, direction = DIRECTION_FORWARD):
         packet = packets.Goto()
-        packet.movement = MOVEMENT_MOVE
+        packet.movement = MOVEMENT_LINE
         packet.direction = direction
         packet.points = [ trajectory.Pose(x, y, None, True) ]
         return packet
@@ -624,7 +624,7 @@ class Navigate(statemachine.State):
                 else:
                     if not self.robot().is_looking_at_opposite(point):
                         self.walk.look_at_opposite(point.virt.x, point.virt.y)
-                self.walk.move_to(point.virt.x, point.virt.y)
+                self.walk.move_to(point.virt.x, point.virt.y, self.direction)
         self.switch_to_substate(self.walk)
 
 

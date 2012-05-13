@@ -88,12 +88,12 @@ WEB_SERVER_PORT                        = 80
 STATE_MACHINE                          = "default"
 
 # Use multipoint Goto for navigation
-NAVIGATION_USES_MULTIPOINT             = True
+NAVIGATION_USES_MULTIPOINT             = False
 
 # Router map resolution
 ROUTING_MAP_RESOLUTION                 = 0.02
 EVALUATOR_MAP_RESOLUTION               = 0.04
-MAP_WALLS_DISTANCE                     = 0.18
+MAP_WALLS_DISTANCE                     = 0.20
 ASTAR_EFFECTIVE_VS_HEURISTIC_TRADEOFF  = 1.5
 ROUTE_SPLIT_ANGLE                      = 2.0 * math.pi
 MAIN_OPPONENT_AVOIDANCE_RANGE          = 0.5
@@ -156,6 +156,7 @@ Enum("MOVEMENT",
      "Movement",
      MOVEMENT_ROTATE = 0,
      MOVEMENT_MOVE   = 1,
+     MOVEMENT_LINE   = 2,
 )
 
 Enum("DIRECTION",

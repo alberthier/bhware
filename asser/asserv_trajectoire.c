@@ -84,6 +84,8 @@ float                           C_init                                  =   0.2;
 
 /** Variables globales */
 
+#ifdef DEBUG_ASSER
+
 /** Table pour le log asser */
 float                           tabLogAsser[NBR_ASSER_LOG_VALUE];
 
@@ -92,6 +94,8 @@ unsigned char                   Sample                                  =   0;
 
 /** Pour prendre les mesures 1/2 */
 unsigned char                   TakeMesure                              =   False;
+
+#endif /* DEBUG_ASSER */
 
 /*----------------------------------------------------------------------------------------------*/
 
@@ -143,11 +147,15 @@ static unsigned int             iMaxVpointe                             = 9;
 /** Test */
 //static float                    g_distance_suivante = 0.0;
 
+#ifdef DEBUG_ASSER
+
 /* Debug Telent */
 static int                      g_tabLog_telnet[(MaxSizeLogBuffer / 20)];
 static char                     g_tabIndex_logTelnet[(MaxSizeLogBuffer / 20)];
 static unsigned short           g_index_logTelnet = 0;
 static char                     g_Buffer_logTelnet[MaxSizeLogBuffer];
+
+#endif /* DEBUG_ASSER */
 
 /*----------------------------------------------------------------------------------------------*/
 
@@ -188,8 +196,17 @@ static unsigned char            ASSER_TRAJ_isAngle(float angle);
 static float                    ASSER_TRAJ_CalculTheta1(unsigned int iSegment, unsigned int nbrePts, PtTraj* point, float angle_rad, float prec_x, float prec_y);
 static float                    ASSER_TRAJ_LongueurSegment(float x0, float y0, float x1, float y1);
 static Vecteur                  ASSER_TRAJ_PortionEnd(float bx, float by, float ax, float ay, float qx, float qy);
-static void                     ASSER_TRAJ_LogTelnet(char key, int val);
 static void                     ASSER_TRAJ_SolveSegment_v2(unsigned char mode, float x0, float y0, float theta0, float x1, float y1, float theta1, float k0, float* k1, float C, float* out_q0x, float* out_q0y, float* out_q1x, float* out_q1y);
+
+#ifdef PIC32_BUILD
+
+#ifdef DEBUG_ASSER
+
+static void                     ASSER_TRAJ_LogTelnet(char key, int val);
+
+#endif /* DEBUG_ASSER */
+
+#endif /* PIC32_BUILD */
 
 /*----------------------------------------------------------------------------------------------*/
 
@@ -217,7 +234,7 @@ extern void ASSER_TRAJ_InitialisationGenerale(void)
 /**********************************************************************/
 /*! \brief ASSER_TRAJ_isDeplacement
  *
- *  \note  Test le déplacement
+ *  \note  Test le deplacement
  *
  *  \param [in] traj              type de trajectoire
  *
@@ -571,7 +588,7 @@ extern void ASSER_TRAJ_AsservissementMouvementRobot(Pose poseRobot, VitessesRobo
  *  \param [in]     poseRobot       pose courante du robot integrant le choix de la marche (AVANT ou ARRIERE)
  *  \param [in]     point               pointeur du tableau des points imposes du chemin dont le point a atteindre en dernier
  *  \param [in]     nbrePts           nombre de points intermediaires du chemin par lesquelles passer +1 pour le point d'arrvee
- *  \param [in]     mouvement     type de mouvement a executer: un deplacement (DEPLACEMENT), une pure rotation (ROTATION) ou un dÃ©placement qui finit en ligne droite (DEPLACEMENT_LIGNE_DROITE)
+ *  \param [in]     mouvement     type de mouvement a executer: un deplacement (DEPLACEMENT), une pure rotation (ROTATION) ou un déplacement qui finit en ligne droite (DEPLACEMENT_LIGNE_DROITE)
  *
  *  \return           None
  */
@@ -720,8 +737,6 @@ extern void ASSER_TRAJ_InitialisationTrajectoire(Pose poseRobot, PtTraj * point,
 
                 lenSeg = ASSER_TRAJ_LongueurSegment(prec_x, prec_y, CONVERT_DISTANCE(point[(iSegment - 1)].x), CONVERT_DISTANCE(point[(iSegment - 1)].y));
                 C = C_init * lenSeg;
-                //k0 = k0_init * lenSeg;
-                //k1 = k0;
                 k0 = k1;
                 k1 = k0_init * lenSeg;
 
@@ -1639,7 +1654,7 @@ static void ASSER_TRAJ_GabaritVitesse(Trajectoire * traj)
  *  et des fonctions d'acceleration et de decceleration.
  *
  *  \param [in]     traj            pointeur de structure definissant la trajectoire
- *  \param [in]     coeff_vit_ini   coefficient applique �  la vitesse de pointe pour déterminer la vitesse de consigne au depart
+ *  \param [in]     coeff_vit_ini   coefficient applique a la vitesse de pointe pour determiner la vitesse de consigne au depart
  *
  *  \return None
  */
@@ -2378,20 +2393,27 @@ static void ASSER_TRAJ_DistanceTrajectoire(segmentTrajectoireBS * segmentTraj, u
 extern void ASSER_TRAJ_LogAsser(char * keyWord, unsigned char index, float val)
 {
 #ifdef PIC32_BUILD
+
+#ifdef DEBUG_ASSER
+
     keyWord = keyWord;
 
-    if (Test_mode == (unsigned long)2)
+    if ((int)index < NBR_ASSER_LOG_VALUE)
     {
-        if ((int)index < NBR_ASSER_LOG_VALUE)
-        {
-            tabLogAsser[(int)index] = val;
-        }
+        tabLogAsser[(int)index] = val;
     }
+    
+#endif /* DEBUG_ASSER */
+    
 #else /* PIC32_BUILD */
     printf("log_%s: %1.5f\n", keyWord, val);
     fflush(stdout);
 #endif /* PIC32_BUILD */
 }
+
+#ifdef PIC32_BUILD
+
+#ifdef DEBUG_ASSER
 
 /**********************************************************************/
 /*! \brief ASSER_TRAJ_LogTelnet
@@ -2407,57 +2429,55 @@ extern void ASSER_TRAJ_LogAsser(char * keyWord, unsigned char index, float val)
 
 static void ASSER_TRAJ_LogTelnet(char key, int val)
 {
-#ifdef PIC32_BUILD
-    if (Test_mode == (unsigned long)1)
+	if (EVIT_NetConnected == True)
     {
-        if (EVIT_NetConnected == True)
-        {
-            if ((int)g_index_logTelnet < (MaxSizeLogBuffer / 20))
-            {           
-                g_tabIndex_logTelnet[(int)g_index_logTelnet] = key;
-                g_tabLog_telnet[(int)g_index_logTelnet] = val;
-                g_index_logTelnet++;
+        if ((int)g_index_logTelnet < (MaxSizeLogBuffer / 20))
+        {           
+            g_tabIndex_logTelnet[(int)g_index_logTelnet] = key;
+            g_tabLog_telnet[(int)g_index_logTelnet] = val;
+            g_index_logTelnet++;
+            
+            if (g_index_logTelnet == NBR_ASSER_LOG_VALUE)
+            {
+                unsigned int    i, sizetemp;
+                char            TempBuffer[20];
+                unsigned int    size            = 0;
                 
-                if (g_index_logTelnet == NBR_ASSER_LOG_VALUE)
+                memset(g_Buffer_logTelnet, 0 , sizeof(g_Buffer_logTelnet));
+                
+                for (i = 0; i < NBR_ASSER_LOG_VALUE; i++)
                 {
-                    unsigned int    i, sizetemp;
-                    char            TempBuffer[20];
-                    unsigned int    size            = 0;
+                    memset(TempBuffer, 0 , sizeof(TempBuffer));
                     
-                    memset(g_Buffer_logTelnet, 0 , sizeof(g_Buffer_logTelnet));
-                    
-                    for (i = 0; i < NBR_ASSER_LOG_VALUE; i++)
-                    {
-                        memset(TempBuffer, 0 , sizeof(TempBuffer));
-                        
-                        sizetemp = snprintf(TempBuffer, sizeof(TempBuffer), "%u:%i,", g_tabIndex_logTelnet[i], g_tabLog_telnet[i]);
+                    sizetemp = snprintf(TempBuffer, sizeof(TempBuffer), "%u:%i,", g_tabIndex_logTelnet[i], g_tabLog_telnet[i]);
 
-                        if ((size + sizetemp) < sizeof(g_Buffer_logTelnet))
-                        {
-                            strncat(g_Buffer_logTelnet, TempBuffer, sizetemp);
-                            
-                            size += sizetemp;
-                        }
-                        else
-                        {                   
-                            TOOLS_Printf2(g_Buffer_logTelnet);
-                            
-                            memset(g_Buffer_logTelnet, 0 , sizeof(g_Buffer_logTelnet));
-                            
-                            size = 0;
-                            
-                            strncat(g_Buffer_logTelnet, TempBuffer, sizetemp);
-                        }
+                    if ((size + sizetemp) < sizeof(g_Buffer_logTelnet))
+                    {
+                        strncat(g_Buffer_logTelnet, TempBuffer, sizetemp);
+                        
+                        size += sizetemp;
                     }
-                    
-                    g_index_logTelnet = 0;
+                    else
+                    {                   
+                        TOOLS_Printf2(g_Buffer_logTelnet);
+                        
+                        memset(g_Buffer_logTelnet, 0 , sizeof(g_Buffer_logTelnet));
+                        
+                        size = 0;
+                        
+                        strncat(g_Buffer_logTelnet, TempBuffer, sizetemp);
+                    }
                 }
+                
+                g_index_logTelnet = 0;
             }
         }
     }
-#endif /* PIC32_BUILD */
-
 }
+
+#endif /* DEBUG_ASSER */
+
+#endif /* PIC32_BUILD */
 
 /**********************************************************************/
 /*! \brief ASSER_TRAJ_ResetLogAsserTable
@@ -2469,6 +2489,9 @@ static void ASSER_TRAJ_LogTelnet(char key, int val)
 /**********************************************************************/
 extern void ASSER_TRAJ_ResetLogAsserTable(void)
 {
+
+#ifdef DEBUG_ASSER
+
     unsigned char i;
 
     /* Reset de la table de log */
@@ -2479,6 +2502,9 @@ extern void ASSER_TRAJ_ResetLogAsserTable(void)
 
     Sample = 0;
     TakeMesure = False;
+    
+#endif /* DEBUG_ASSER */
+
 }
 
 /*! @} */

@@ -22,6 +22,8 @@
  *  @{
  */
 
+extern unsigned short                   DonneeNbrPasCdrDroite;
+
 /* Define asser de position */
 
 /** Flag de mouvement */
@@ -36,7 +38,7 @@
 #define     ANGLE_INACTIF               ((unsigned char)     0u)
 
 /** Parametres materiels */
-#define     NBRE_PAS                    ((unsigned int)      20000u)
+#define     NBRE_PAS                    ((unsigned int)(DonneeNbrPasCdrDroite * 4))
 
 /** Parametres pour le calcul des consignes des regulateurs PI */
 #define     BORNE_PWM_AV                2047u
