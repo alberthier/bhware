@@ -247,14 +247,17 @@ class Gripper(statemachine.State):
 
 class Sweeper(statemachine.State):
 
-    def __init__(self, move):
+    def __init__(self, move, wait=True):
         statemachine.State.__init__(self)
         self.packet = packets.SweeperControl()
         self.packet.move = move
+        self.wait = wait
 
 
     def on_enter(self):
         self.send_packet(self.packet)
+        if not self.wait :
+            self.exit_substate()
 
 
     def on_sweeper_control(self, packet):

@@ -234,9 +234,12 @@ class TakeGoldBar(statemachine.State):
 
     def on_enter(self):
         walk = commonstates.TrajectoryWalk()
+        walk.wait_for(commonstates.Sweeper(SWEEPER_OPEN, wait=False))
+
         walk.look_at_opposite(self.start_pos[0], self.start_pos[1])
         walk.move_to(self.start_pos[0], self.start_pos[1], DIRECTION_BACKWARD)
         walk.rotate_to(self.start_pos[2])
+        walk.wait_for(commonstates.Sweeper(SWEEPER_CLOSE, wait=False))
         walk.wait_for(DetectAndTakeGoldbar(self.goal))
         self.switch_to_substate(walk)
 
