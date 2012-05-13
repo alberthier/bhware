@@ -282,6 +282,9 @@ class TakeGoldBar(statemachine.State):
 
 class DetectAndTakeGoldbar(statemachine.State):
     def __init__(self, goal):
+        """
+        @type goal: Goal
+        """
         self.goal = goal
 
     def on_enter(self):
