@@ -31,8 +31,8 @@ class Main(statemachine.State):
         offset_x = (1.0 - x1) * 2.0
         offset_y = 0.80
 
-        #gm.harvesting_goals.append(goalmanager.Goal("SELF_NORTH" , 1.0, x1           , y1           , DIRECTION_BACKWARD, TakeGoldBar))
-        #gm.harvesting_goals.append(goalmanager.Goal("SELF_NORTH" , 1.0, x2           , y2           , DIRECTION_BACKWARD, TakeGoldBar))
+        gm.harvesting_goals.append(goalmanager.Goal("SELF_NORTH" , 1.0, x1           , y1           , DIRECTION_BACKWARD, TakeGoldBar))
+        gm.harvesting_goals.append(goalmanager.Goal("SELF_NORTH" , 1.0, x2           , y2           , DIRECTION_BACKWARD, TakeGoldBar))
         gm.harvesting_goals.append(goalmanager.Goal("SELF_SOUTH" , 1.0, x1 + offset_x, y1           , DIRECTION_BACKWARD, TakeGoldBar))
         gm.harvesting_goals.append(goalmanager.Goal("SELF_SOUTH" , 1.0, x2 + offset_x, y2           , DIRECTION_BACKWARD, TakeGoldBar))
         gm.harvesting_goals.append(goalmanager.Goal("OTHER_NORTH", 1.0, x1           , y1 + offset_y, DIRECTION_BACKWARD, TakeGoldBar))
