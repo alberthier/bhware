@@ -10,10 +10,6 @@
 #ifndef _DEFINE_H
 #define _DEFINE_H
 
-#ifdef PIC32_BUILD
-#include "tools.h"
-#endif /* PIC32_BUILD */
-
 /*! \addtogroup OS
  *  @{
  */
@@ -36,6 +32,7 @@
 #define MAIN_SEND_KEEP_ALIVE        (OS_FLAGS) 0x08
 #define MAIN_START                  (OS_FLAGS) 0x10
 #define MAIN_ASSER_STOP             (OS_FLAGS) 0x20
+#define MAIN_GOLD_BAR_DETECTION     (OS_FLAGS) 0x40
 
 /** Evitement */
 #define EVIT_EVENT                  (OS_FLAGS) 0x01
@@ -48,8 +45,7 @@
 #define ASSER_CONFIG                (OS_FLAGS) 0x08
 
 /** I/O */
-#define IO_EVENT                    (OS_FLAGS) 0x01
-#define IO_STOP_ROBOT               (OS_FLAGS) 0x02
+#define IO_STOP_ROBOT               (OS_FLAGS) 0x01
 
 /** UART RS232 */
 #define UART_EVENT                  (OS_FLAGS) 0x01
@@ -116,9 +112,6 @@
 /** Define pour la compilation pour PIC32 */
 //#define PIC32_BUILD
 
-/** Define pour la stack TCP IP BSD socket 4.0 */
-#define API_00833_SUPPORT
-
 /** Utilisation des DMA pour l'emission UART */
 #define UART_DMA_TX
 
@@ -135,6 +128,11 @@
 
 /** Active l'auto maintien pour les pinces pelle */
 //#define Auto_Maintien_Pelle
+
+/**********************************************************************/
+
+/** Active le Debug Asser */
+//#define DEBUG_ASSER
 
 /**********************************************************************/
 

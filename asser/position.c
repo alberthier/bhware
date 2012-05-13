@@ -62,7 +62,7 @@ float                   GAIN_STATIQUE_MOTEUR_G;                                 
 float                   GAIN_STATIQUE_MOTEUR;
 
 float                   ECART_ROUE_LIBRE        = 0.235;                            /* Ecart entre les roues libres des codeurs incrementaux */
-float                   ECART_ROUE_MOTRICE      = 0.174;                            /* Entraxe des roues motrices */
+float                   ECART_ROUE_MOTRICE      = 0.1735;                           /* Entraxe des roues motrices */
 float                   COEFFICIENT_DE_GLISSEMENT_LATERAL = 0.0;
 
 /** Tolerances de la condition d'arret des asservissements */
@@ -239,8 +239,8 @@ void POS_Positionnement(signed int delta_impDroite, signed int delta_impGauche)
     Delta_moy  = ((((float)delta_impDroite * PERIMETRE_DROIT) + ((float)delta_impGauche * PERIMETRE_GAUCHE)) / (2.0 * (float)NBRE_PAS));
     Delta_diff = ((((float)delta_impDroite * PERIMETRE_DROIT) - ((float)delta_impGauche * PERIMETRE_GAUCHE)) / (float)NBRE_PAS);
 
-    Dx = (Delta_moy * cos(m_poseRobot.angle));
-    Dy = (Delta_moy * sin(m_poseRobot.angle));
+    Dx = (Delta_moy * cosf(m_poseRobot.angle));
+    Dy = (Delta_moy * sinf(m_poseRobot.angle));
 
     Dtheta = (Delta_diff / ECART_ROUE_LIBRE);
 
@@ -251,30 +251,32 @@ void POS_Positionnement(signed int delta_impDroite, signed int delta_impGauche)
     m_poseRobot.y = m_poseRobot.y + Dy + Deviation_y;
     m_poseRobot.angle = POS_ModuloAngle(m_poseRobot.angle + Dtheta);
 
-    if (Test_mode == (unsigned long)2)
+#ifdef DEBUG_ASSER
+
+    if (TakeMesure == True)
     {
-        if (TakeMesure == True)
+        if (Sample < (unsigned char)5)
         {
-            if (Sample < (unsigned char)5)
-            {
-                ASSER_TRAJ_LogAsser("Tension PWM MG", (unsigned char)(Sample * 7), (float) TensionPWM_MG);
-                ASSER_TRAJ_LogAsser("Tension PWM MD", (unsigned char)((Sample * 7) + 1), (float) TensionPWM_MD);
-                ASSER_TRAJ_LogAsser("Vitesse MG", (unsigned char)((Sample * 7) + 2),Vitesse_MG_PIC_PI);            
-                ASSER_TRAJ_LogAsser("Vitesse MS", (unsigned char)((Sample * 7) + 3), Vitesse_MG_PIC_PI);
-                ASSER_TRAJ_LogAsser("Position X", (unsigned char)((Sample * 7) + 4), m_poseRobot.x);    
-                ASSER_TRAJ_LogAsser("Position Y", (unsigned char)((Sample * 7) + 5), m_poseRobot.y);
-                ASSER_TRAJ_LogAsser("Position Angle", (unsigned char)((Sample * 7) + 6), m_poseRobot.angle);
+            ASSER_TRAJ_LogAsser("Tension PWM MG", (unsigned char)(Sample * 7), (float) TensionPWM_MG);
+            ASSER_TRAJ_LogAsser("Tension PWM MD", (unsigned char)((Sample * 7) + 1), (float) TensionPWM_MD);
+            ASSER_TRAJ_LogAsser("Vitesse MG", (unsigned char)((Sample * 7) + 2),Vitesse_MG_PIC_PI);            
+            ASSER_TRAJ_LogAsser("Vitesse MS", (unsigned char)((Sample * 7) + 3), Vitesse_MG_PIC_PI);
+            ASSER_TRAJ_LogAsser("Position X", (unsigned char)((Sample * 7) + 4), m_poseRobot.x);    
+            ASSER_TRAJ_LogAsser("Position Y", (unsigned char)((Sample * 7) + 5), m_poseRobot.y);
+            ASSER_TRAJ_LogAsser("Position Angle", (unsigned char)((Sample * 7) + 6), m_poseRobot.angle);
 
-                Sample++;
-            }
+            Sample++;
+        }
 
-            TakeMesure = False;
-        }
-        else
-        {
-            TakeMesure = True;
-        }
+        TakeMesure = False;
     }
+    else
+    {
+        TakeMesure = True;
+    }
+
+#endif /* DEBUG_ASSER */
+
 }
 
 
@@ -322,7 +324,7 @@ float POS_ErreurDistance(Pose poseRobot, Vecteur posArrivee)
     temp1 = ((poseRobot.x - posArrivee.x) * (poseRobot.x - posArrivee.x));
     temp2 = ((poseRobot.y - posArrivee.y ) * (poseRobot.y - posArrivee.y ));
 
-    return (sqrt(temp1 + temp2));
+    return (sqrtf(temp1 + temp2));
 }
 
 /**********************************************************************/
@@ -341,7 +343,7 @@ float POS_ErreurOrientation(Pose poseRobot, Vecteur posArrivee)
 {
     float thetaRobotArrivee;    /* Orientation de la trajectoire directe robot -pt d'arrivee */
     
-    thetaRobotArrivee = atan2((posArrivee.y - poseRobot.y), (posArrivee.x - poseRobot.x));
+    thetaRobotArrivee = atan2f((posArrivee.y - poseRobot.y), (posArrivee.x - poseRobot.x));
  
     return (POS_ModuloAngle(thetaRobotArrivee - poseRobot.angle));
 }
@@ -370,7 +372,7 @@ void POS_ConversionVitessesLongRotToConsignesPWMRouesRobotUnicycle(float vitesse
 
     /*
     vMax = POS_GetConsVitesseMax();
-    vitRoue_maxAbs = MAX(fabs(vitRoueGauche), fabs(vitRoueDroite));
+    vitRoue_maxAbs = MAX(fabsf(vitRoueGauche), fabsf(vitRoueDroite));
     vitRoue_sup = vitRoue_maxAbs - vMax;
     if (vitRoue_sup > 0.0)
     {
