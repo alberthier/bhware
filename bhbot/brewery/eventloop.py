@@ -134,7 +134,7 @@ class RobotLogDeviceChannel(asyncore.dispatcher):
             while True:
                 i = self.buffer.find("\n")
                 if i != -1:
-                    logger.log(self.buffer[:i].rstrip(), "PIC")
+                    logger.log(self.buffer[:i].rstrip().encode("string_escape"), "PIC")
                     self.buffer = self.buffer[i + 1:]
                 else:
                     break
