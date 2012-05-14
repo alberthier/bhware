@@ -6,6 +6,8 @@ import trajectory
 import logger
 import tools
 
+from definitions import *
+
 
 
 
