@@ -7,6 +7,7 @@ import tools
 import packets
 import logger
 import trajectory
+import geometry
 
 from definitions import *
 
@@ -23,7 +24,7 @@ class Node(object):
         self.g_score = 0.0
         self.h_score = 0.0
         self.f_score = 0.0
-        self.came_from = None
+        self.path_edge = None
 
 
     def is_in_field(self):
@@ -40,15 +41,23 @@ class Node(object):
         return neighbors
 
 
+    def __repr__(self):
+        return "Node({}, {})".format(self.x, self.y)
+
+
 
 
 class Edge(object):
 
-    def __init__(self, node1, node2):
+    def __init__(self, node1, node2, segment = None):
         self.node1 = node1
         self.node1.edges.append(self)
         self.node2 = node2
         self.node2.edges.append(self)
+        if segment is not None:
+            self.segment = segment
+        else:
+            self.segment = geometry.Segment(node1.x, node1.y, node2.x, node2.y)
         self.penality = 0.0
         self.distance = tools.distance(self.node1.x, self.node1.y, self.node2.x, self.node2.y)
 
@@ -62,6 +71,16 @@ class Edge(object):
         self.node1 = None
         self.node2.edges.remove(self)
         self.node2 = None
+
+
+    def other_node(self, node):
+        if node is self.node1:
+            return self.node2
+        return self.node1
+
+
+    def __repr__(self):
+        return "Edge(({}, {}), ({}, {}), {})".format(self.node1.x, self.node1.y, self.node2.x, self.node2.y, self.penality)
 
 
 
@@ -94,88 +113,34 @@ class AbstractZone(object):
 
 class RectZone(AbstractZone):
 
-    def __init__(self, x1, y1, x2, y2, forbidden, penality):
-        AbstractZone.__init__(self, forbidden, penality)
-        self.x1 = min(x1, x2)
-        self.y1 = min(y1, y2)
-        self.x2 = max(x1, x2)
-        self.y2 = max(y1, y2)
-
-
-    def create_symetric_zone(self):
-        return RectZone(self.x1, FIELD_Y_SIZE - self.y1, self.x2, FIELD_Y_SIZE - self.y2, self.forbidden, self.penality)
-
-
-    def create_nodes(self, map):
-        self.nodes = [ map.get_node(self.x1, self.y1), map.get_node(self.x1, self.y2), map.get_node(self.x2, self.y1), map.get_node(self.x2, self.y2) ]
-        return self.nodes
-
-
-    def contains(self, node):
-        return self.x1 < node.x and self.x2 > node.x and self.y1 < node.y and self.y2 > node.y
-
-
-    def intersects(self, node1, node2):
-        if self.contains(node1) or self.contains(node2):
-            return True
-        if self.x1 == min(node1.x, node2.x) and self.y1 == min(node1.y, node2.y) and self.x2 == max(node1.x, node2.x) and self.y2 == max(node1.y, node2.y):
-            return True
-        if tools.segment_intersects_segment(self.x1, self.y1, self.x1, self.y2, node1.x, node1.y, node2.x, node2.y):
-            return True
-        if tools.segment_intersects_segment(self.x1, self.y2, self.x2, self.y2, node1.x, node1.y, node2.x, node2.y):
-            return True
-        if tools.segment_intersects_segment(self.x2, self.y2, self.x2, self.y1, node1.x, node1.y, node2.x, node2.y):
-            return True
-        if tools.segment_intersects_segment(self.x2, self.y1, self.x1, self.y1, node1.x, node1.y, node2.x, node2.y):
-            return True
-        return False
-
-
-
-
-class CircleZone(AbstractZone):
-
-    RESOLUTION = 6
-
-    def __init__(self, x, y, radius, forbidden, penality):
+    def __init__(self, x, y, x_size, y_size, forbidden, penality):
         AbstractZone.__init__(self, forbidden, penality)
         self.x = x
-        self.x_squared = x ** 2
         self.y = y
-        self.y_squared = y ** 2
-        self.radius = radius
-        self.radius_squared = radius ** 2
+        self.x_size = x_size
+        self.y_size = y_size
+        ZONE_DELTA = 0.005
+        self.shape = geometry.Rectangle(x + ZONE_DELTA, y + ZONE_DELTA, x_size - 2.0 * ZONE_DELTA, y_size - 2.0 * ZONE_DELTA)
+
 
     def create_symetric_zone(self):
-        return CircleZone(self.x, FIELD_Y_SIZE - self.y, self.radius, self.forbidden, self.penality)
+        return RectZone(self.x, FIELD_Y_SIZE - self.y - self.y_size, self.x_size, self.y_size, self.forbidden, self.penality)
 
 
     def create_nodes(self, map):
-        self.nodes = []
-        fresolution = float(self.RESOLUTION)
-        for i in xrange(self.RESOLUTION):
-            fi = float(i)
-            node = map.get_node(self.x + self.radius * math.cos(fi * 2.0 * math.pi / fresolution), self.y + self.radius * math.sin(fi * 2.0 * math.pi / fresolution))
-            self.nodes.append(node)
+        self.nodes = [ map.get_node(self.x              , self.y              ),
+                       map.get_node(self.x              , self.y + self.y_size),
+                       map.get_node(self.x + self.x_size, self.y              ),
+                       map.get_node(self.x + self.x_size, self.y + self.y_size) ]
         return self.nodes
 
 
     def contains(self, node):
-        return tools.distance(self.x, self.y, node.x, node.y) < self.radius
+        return self.shape.contains(node.x, node.y)
 
 
-    def intersects(self, node1, node2):
-        if node1 in self.nodes and node2 in self.nodes:
-            i1 = self.nodes.index(node1)
-            i2 = self.nodes.index(node2)
-            offset = abs(i1 - i2)
-            return offset != 1 and offset != len(self.nodes) - 1
-        for i in xrange(self.RESOLUTION - 1):
-            n1 = self.nodes[i]
-            n2 = self.nodes[i + 1]
-            if tools.segment_intersects_segment(n1.x, n1.y, n2.x, n2.y, node1.x, node1.y, node2.x, node2.y):
-                return True
-        return False
+    def intersects(self, segment):
+        return self.shape.intersects(segment)
 
 
 
@@ -254,12 +219,13 @@ class Map(object):
                             break
                     if not already_exists:
                         ok = True
+                        segment = geometry.Segment(node.x, node.y, other_node.x, other_node.y)
                         for zone in self.zones:
-                            if zone.intersects(node, other_node) and zone.forbidden:
+                            if zone.intersects(segment) and zone.forbidden:
                                 ok = False
                                 break
                         if ok:
-                            edge = Edge(node, other_node)
+                            edge = Edge(node, other_node, segment)
                             new_edges.append(edge)
 
         return new_edges
@@ -281,7 +247,6 @@ class Map(object):
 
 
     def synchronize(self):
-        logger.log("Synchronize")
         for opponent in self.changed_opponents:
             # Clear previous positions
             if self.opponent_zones[opponent] != None:
@@ -305,7 +270,7 @@ class Map(object):
                     radius = MAIN_OPPONENT_AVOIDANCE_RANGE
                 else:
                     radius = SECONDARY_OPPONENT_AVOIDANCE_RANGE
-                opponent_zone = CircleZone(x, y, radius, False, self.penality)
+                opponent_zone = RectZone(x - radius, y - radius, x + radius * 2.0, y + radius * 2.0, False, self.penality * 2.0)
                 self.opponent_zones[opponent] = opponent_zone
                 logger.log("Add opponent zone at {} {}".format(x, y))
                 self.add_zone(False, True, opponent_zone)
@@ -330,7 +295,7 @@ class Map(object):
         for edge in self.all_edges():
             edge.penality = 0.0
             for zone in self.zones:
-                if zone.intersects(edge.node1, edge.node2):
+                if zone.intersects(edge.segment):
                     if zone.penality > edge.penality:
                         edge.penality = zone.penality
 
@@ -356,35 +321,36 @@ class Map(object):
 
     def on_device_ready(self, packet):
         # Captain room
-        self.add_zone(True, True, RectZone(0.5 - MAP_WALLS_DISTANCE,
-                                           0.0,
-                                           0.52 + MAP_WALLS_DISTANCE,
-                                           0.4 + MAP_WALLS_DISTANCE,
+        self.add_zone(True, True, RectZone(max(0.5 - MAP_WALLS_DISTANCE, PURPLE_START_X + 0.005),
+                                           0.000,
+                                           0.020 + MAP_WALLS_DISTANCE * 2.0,
+                                           0.400 + MAP_WALLS_DISTANCE,
                                            True, self.penality))
         # Bridge
-        self.add_zone(True, True, RectZone(1.25 - MAP_WALLS_DISTANCE,
-                                           0.0,
-                                           2.0,
+        self.add_zone(True, True, RectZone(1.250 - MAP_WALLS_DISTANCE,
+                                           0.000,
+                                           0.750 + MAP_WALLS_DISTANCE * 2.0,
                                            0.380 + MAP_WALLS_DISTANCE,
                                            True, self.penality))
         # Island
         self.add_zone(False, True, RectZone(0.875 - MAP_WALLS_DISTANCE,
-                                             0.975 - MAP_WALLS_DISTANCE,
-                                             1.125 + MAP_WALLS_DISTANCE,
-                                             2.025 + MAP_WALLS_DISTANCE,
-                                             True, self.penality))
+                                            0.975 - MAP_WALLS_DISTANCE,
+                                            0.250 + MAP_WALLS_DISTANCE * 2.0,
+                                            1.050 + MAP_WALLS_DISTANCE * 2.0,
+                                            True, self.penality))
 
         # BH Secondary robot zone
-        x1 = 0.70
-        y1 = 2.20
-        x2 = 2.0
-        y2 = 3.0
+        x = 0.700
+        y = 2.200
+        x_size = 1.300
+        y_size = 0.800
         if packet.team == TEAM_RED:
-            y1 = FIELD_Y_SIZE - y1
-            y2 = FIELD_Y_SIZE - y2
-        self.add_zone(False, False, RectZone(x1, y1, x2, y2, False, self.penality))
+            y = FIELD_Y_SIZE - y - y_size
+        self.add_zone(False, False, RectZone(x, y, x_size, y_size, False, self.penality))
 
         self.link_nodes()
+
+        self.synchronize()
 
         self.send_to_simulator()
 
@@ -411,7 +377,7 @@ class Map(object):
         start_node.g_score = 0.0
         start_node.h_score = self.heuristic_cost_estimate(start_node, goal_node)
         start_node.f_score = start_node.g_score + start_node.h_score
-        start_node.came_from = None
+        start_node.path_edge = None
 
         closedset = set()
         openset = [ start_node ]
@@ -421,20 +387,21 @@ class Map(object):
             if tools.quasi_equal(current.x, goal_node.x) and tools.quasi_equal(current.y, goal_node.y):
                 path = []
                 path_length = 0.0
+                path_cost = 0.0
                 n = current
-                while n.came_from != None:
+                while n.path_edge != None:
                     path.insert(0, trajectory.Pose(n.x, n.y))
-                    if n.came_from != None:
-                        path_length += tools.distance(n.x, n.y, n.came_from.x, n.came_from.y)
-                    n = n.came_from
-                logger.log("Route computed. Length: {}.".format(path_length))
+                    path_length += n.path_edge.distance
+                    path_cost += n.path_edge.distance + n.path_edge.penality
+                    n = n.path_edge.other_node(n)
+                logger.log("Route computed. Length: {}, Cost: {}".format(path_length, path_cost))
                 if IS_HOST_DEVICE_PC:
                     packet = packets.SimulatorGraphMapRoute()
                     for path_element in path:
                         packet.points.append(path_element.x)
                         packet.points.append(path_element.y)
                     self.eventloop.send_packet(packet)
-                return (path_length, path)
+                return (path_cost, path)
 
             del openset[0]
             closedset.add(current)
@@ -446,12 +413,12 @@ class Map(object):
                         neighbor.h_score = self.heuristic_cost_estimate(neighbor, goal_node)
                         neighbor.g_score = tentative_g_score
                         neighbor.f_score = neighbor.g_score + neighbor.h_score
-                        neighbor.came_from = current
+                        neighbor.path_edge = edge
                         self.insert_sorted(openset, neighbor)
                     elif tentative_g_score < neighbor.g_score:
                         neighbor.g_score = tentative_g_score
                         neighbor.f_score = neighbor.g_score + neighbor.h_score
-                        neighbor.came_from = current
+                        neighbor.path_edge = edge
 
         logger.log("No route found")
         return (None, [])
@@ -481,8 +448,8 @@ class Map(object):
         pass
 
 
-    def opponent_detected(self, opponent, x, y):
-        self.set_opponent(opponent, x, y)
+    def opponent_detected(self, packet, x, y):
+        self.set_opponent(packet.robot, x, y)
 
 
     def opponent_disapeared(self, opponent):
