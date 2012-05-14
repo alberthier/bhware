@@ -11,6 +11,7 @@ import packets
 import trajectory
 import logger
 import eventloop
+import tools
 from definitions import *
 
 
@@ -474,10 +475,11 @@ class TrajectoryWalk(statemachine.State):
 
 
     def create_rotate_to_packet(self, angle):
-        dest = trajectory.Pose(0.0, 0.0, angle, True)
+        angle = trajectory.Pose(0.0, 0.0, angle, True).angle
         packet = packets.Goto()
         packet.movement = MOVEMENT_ROTATE
-        packet.angle = dest.angle
+        angle = tools.normalize_angle(angle)
+        packet.angle = angle
         return packet
 
 
