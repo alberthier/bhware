@@ -81,7 +81,7 @@ def log(text, sender = "ARM"):
     global color_stop
     initialize()
     delta = datetime.datetime.now() - start_time
-    time = "'{:=0.02f}'".format(float(delta.seconds) + (float(delta.microseconds)/1000000.0))
+    time = "'{:=0.02f}'".format(delta.total_seconds())
     if type(text) != str:
         text = str(text)
     #noinspection PyBroadException
@@ -104,7 +104,7 @@ def log_exception(exc, msg = None):
 def log_packet(packet, sender = "ARM"):
     initialize()
     delta = datetime.datetime.now() - start_time
-    time = "'{:=0.02f}'".format(float(delta.seconds) + (float(delta.microseconds)/1000000.0))
+    time = "'{:=0.02f}'".format(delta.total_seconds())
     text = "'" + sender + "'," + packet.to_code() + "]"
     #noinspection PyBroadException
     try:
