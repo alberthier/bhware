@@ -109,6 +109,23 @@ class RobotControlDeviceChannel(asyncore.dispatcher_with_send):
         self.eventloop.handle_read(self)
 
 
+    def handle_close(self):
+        connected = False
+        while not connected:
+            try:
+                logger.log("*** WARNING *** Reconnecting to {}:{}".format(REMOTE_IP, REMOTE_PORT))
+                control_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                control_socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
+                control_socket.connect((REMOTE_IP, REMOTE_PORT))
+                self.eventloop.robot_control_channel = RobotControlDeviceChannel(self.eventloop, control_socket)
+                leds.orange.off()
+                connected = True
+            except Exception as e:
+                logger.log("Unable to connect to {}:{} ({}), retrying".format(REMOTE_IP, REMOTE_PORT, e))
+                leds.orange.toggle()
+                time.sleep(0.5)
+
+
 
 
 class RobotLogDeviceChannel(asyncore.dispatcher):
