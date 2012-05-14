@@ -265,6 +265,7 @@ class EventLoop(object):
         self.map = graphpathfinding.Map(self)
         self.timers = []
         self.state_history = []
+        self.last_ka_date = datetime.datetime.now()
 
 
     def handle_read(self, channel):
@@ -329,8 +330,11 @@ class EventLoop(object):
 
 
     def on_keep_alive(self, packet):
-        self.send_packet(packet)
-        leds.green.heartbeat_tick()
+        now = datetime.datetime.now()
+        if (now - self.last_ka_date).total_seconds() > KEEP_ALIVE_MINIMUM_AGE_S:
+            self.last_ka_date = now
+            self.send_packet(packet)
+            leds.green.heartbeat_tick()
 
 
     def on_turret_boot(self, packet):

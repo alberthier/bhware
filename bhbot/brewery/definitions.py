@@ -45,7 +45,8 @@ TEAM_COLOR_RED                         = "#ff3b3d"
 TEAM_COLOR_PURPLE                      = "#9632f6"
 
 # Timing
-KEEP_ALIVE_DELAY_MS                    = 200
+KEEP_ALIVE_DELAY_MS                    = 250
+KEEP_ALIVE_MINIMUM_AGE_S               = (KEEP_ALIVE_DELAY_MS * 4.0 / 5.0) / 1000.0
 EVENT_LOOP_TICK_RESOLUTION_S           = 0.05
 
 # Brewery execution host
