@@ -122,7 +122,7 @@ class FindNextGoal(statemachine.State):
                 self.robot().goal_manager.goal_done(self.current_goal)
                 self.switch_to_state(FindNextGoal())
             else :
-                self.current_goal.penality = 100.0
+                self.robot().goal_manager.penalize_goal(self.current_goal)
                 self.switch_to_state(FindNextGoal())
         else :
             self.switch_to_state(FindNextGoal())

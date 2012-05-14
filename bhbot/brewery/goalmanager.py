@@ -72,6 +72,12 @@ class GoalManager(object):
         return best_goal
 
 
+    def penalize_goal(self, goal):
+        for g in self.harvesting_goals + self.emptying_goals:
+            if g.identifier == goal.identifier:
+                g.penality = 100.0
+
+
     def goal_done(self, goal):
         logger.log("Goal done : "+goal.identifier)
         self.harvesting_goals = [ g for g in self.harvesting_goals if g.identifier != goal.identifier ]
