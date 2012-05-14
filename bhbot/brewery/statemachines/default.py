@@ -14,10 +14,6 @@ from definitions import *
 
 
 
-################################################################################
-# Setup states
-#from bhbot.brewery.definitions import DIRECTION_BACKWARD
-
 
 class Main(statemachine.State):
 
@@ -126,6 +122,7 @@ class FindNextGoal(statemachine.State):
                 self.robot().goal_manager.goal_done(self.current_goal)
                 self.switch_to_state(FindNextGoal())
             else :
+                self.current_goal.penality = 100.0
                 self.switch_to_state(FindNextGoal())
         else :
             self.switch_to_state(FindNextGoal())

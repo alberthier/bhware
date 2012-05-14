@@ -20,6 +20,7 @@ class Goal(object):
         self.navigation_cost = 0.0
         self.ctor_parameters = ctor_parameters
         self.score = 0.0
+        self.penality = 0.0
 
 
 
@@ -47,9 +48,11 @@ class GoalManager(object):
             pose = trajectory.Pose(goal.x, goal.y, virtual=True)
             logger.log("Evaluate goal {}".format(goal.identifier))
             goal.navigation_cost = self.event_loop.map.evaluate(self.event_loop.robot.pose, pose)
+            goal.score = goal.penality
+            goal.penality = 0.0
 
         for order, goal in enumerate(sorted(goals, key=lambda x:x.navigation_cost)):
-            goal.score = order * 2
+            goal.score += order * 2
 
         for order, goal in enumerate(sorted(goals, key=lambda x:x.weight, reverse=True)):
             goal.score += order
