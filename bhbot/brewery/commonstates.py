@@ -432,6 +432,10 @@ class TrajectoryWalk(statemachine.State):
         packet = packets.Goto()
         packet.movement = MOVEMENT_LINE
         packet.direction = direction
+        #if tools.quasi_equal(x, 0.0) or tools.quasi_equal(x, self.robot().pose.x):
+            #x += 0.001
+        #if tools.quasi_equal(y, 0.0) or tools.quasi_equal(y, self.robot().pose.y):
+            #y += 0.001
         packet.points = [ trajectory.Pose(x, y, None, True) ]
         return packet
 
@@ -479,6 +483,13 @@ class TrajectoryWalk(statemachine.State):
         packet = packets.Goto()
         packet.movement = MOVEMENT_ROTATE
         angle = tools.normalize_angle(angle)
+        #if tools.quasi_equal(angle, self.robot().pose.angle) or \
+            #tools.quasi_equal(angle, 0.0) or \
+            #tools.quasi_equal(angle, math.pi / 2.0) or \
+            #tools.quasi_equal(angle, math.pi) or \
+            #tools.quasi_equal(angle, -math.pi) or \
+            #tools.quasi_equal(angle, -math.pi / 2.0):
+            #angle += 0.001
         packet.angle = angle
         return packet
 
