@@ -66,6 +66,13 @@ class BasicDynamics(QObject):
                     angle = packet.angle + math.pi
                 traj[-1][2].angle = angle
                 self.angle = angle
+        elif packet.movement == MOVEMENT_LINE:
+            pose = packet.points[0]
+            d = tools.distance(self.x, self.y, pose.x, pose.y)
+            time = d / linear_speed
+            traj.append((segmentNb, time, pose))
+            self.x = pose.x
+            self.y = pose.y
         else:
             time = abs(self.angle - packet.angle) / angular_speed
             traj.append((segmentNb, time, trajectory.Pose(self.x, self.y, packet.angle)))
