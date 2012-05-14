@@ -297,7 +297,7 @@ class DetectAndTakeGoldbar(statemachine.State):
                 walk.wait_for(commonstates.Gripper(GRIPPER_SIDE_BOTH, GRIPPER_OPEN))
                 #TODO : speed up by opening gripper while moving
                 #look at totem
-                totem_take_pose = totem_approach_end_positions[self.goal.identifier][0],self.robot().pose.y
+                totem_take_pose = totem_approach_end_positions[self.goal.identifier][0], self.robot().pose.virt.y
     #            totem_take_pose = totem_approach_end_positions[self.goal.identifier][0:2]
                 walk.look_at(*totem_take_pose)
                 #bump again totem
