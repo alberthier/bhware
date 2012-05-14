@@ -25,6 +25,8 @@ class Node(object):
         self.h_score = 0.0
         self.f_score = 0.0
         self.path_edge = None
+        self.is_in_openset = False
+        self.is_in_closedset = False
 
 
     def is_in_field(self):
@@ -379,8 +381,12 @@ class Map(object):
         start_node.f_score = start_node.g_score + start_node.h_score
         start_node.path_edge = None
 
-        closedset = set()
+        for node in self.nodes:
+            node.is_in_openset = False
+            node.is_in_closedset = False
+
         openset = [ start_node ]
+        start_node.is_in_openset = True
 
         while len(openset) != 0:
             current = openset[0]
@@ -404,17 +410,19 @@ class Map(object):
                 return (path_cost, path)
 
             del openset[0]
-            closedset.add(current)
+            current.is_in_openset = False
+            current.is_in_closedset = True
 
             for edge, neighbor in current.neighbor_nodes():
-                if not neighbor in closedset:
+                if not neighbor.is_in_closedset:
                     tentative_g_score = current.g_score + self.effective_cost(edge)
-                    if not neighbor in openset:
+                    if not neighbor.is_in_openset:
                         neighbor.h_score = self.heuristic_cost_estimate(neighbor, goal_node)
                         neighbor.g_score = tentative_g_score
                         neighbor.f_score = neighbor.g_score + neighbor.h_score
                         neighbor.path_edge = edge
                         self.insert_sorted(openset, neighbor)
+                        neighbor.is_in_openset = True
                     elif tentative_g_score < neighbor.g_score:
                         neighbor.g_score = tentative_g_score
                         neighbor.f_score = neighbor.g_score + neighbor.h_score
