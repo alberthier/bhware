@@ -91,6 +91,9 @@ STATE_MACHINE                          = "default"
 # Use multipoint Goto for navigation
 NAVIGATION_USES_MULTIPOINT             = False
 
+# Use pathfinding algorithm to evaluate the best goal
+GOAL_EVALUATION_USES_PATHFINDING       = True
+
 # Router map resolution
 ROUTING_MAP_RESOLUTION                 = 0.02
 EVALUATOR_MAP_RESOLUTION               = 0.04

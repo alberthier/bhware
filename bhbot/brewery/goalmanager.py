@@ -4,6 +4,7 @@
 import sys
 import trajectory
 import logger
+import tools
 
 
 
@@ -47,7 +48,10 @@ class GoalManager(object):
         for goal in goals:
             pose = trajectory.Pose(goal.x, goal.y, virtual=True)
             logger.log("Evaluate goal {}".format(goal.identifier))
-            goal.navigation_cost = self.event_loop.map.evaluate(self.event_loop.robot.pose, pose)
+            if GOAL_EVALUATION_USES_PATHFINDING:
+                goal.navigation_cost = self.event_loop.map.evaluate(self.event_loop.robot.pose, pose)
+            else:
+                goal.navigation_cost = tools.distance(self.event_loop.robot.pose.x, self.event_loop.robot.pose.y, pose.x, pose.y)
             goal.score = goal.penality
             goal.penality = 0.0
 
