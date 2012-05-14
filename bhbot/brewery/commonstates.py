@@ -93,6 +93,8 @@ class WaitForOpponentLeave(statemachine.State):
         if opponent == self.opponent:
             self.exit_reason = self.OPPONENT_LEFT
             self.opponent_disappeared = True
+            if not self.goto_finished:
+                self.send_packet(packets.Stop())
             self.try_leave()
 
 
