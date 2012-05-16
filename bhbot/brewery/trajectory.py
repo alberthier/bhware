@@ -124,7 +124,7 @@ class Map(object):
         lateral_distance = ROBOT_X_SIZE - ROBOT_CENTER_X - max(ROUTING_MAP_RESOLUTION, EVALUATOR_MAP_RESOLUTION)
         captain_room_reduction = 0.01
 
-        only_rects = False
+        only_rects = True
 
         if only_rects:
             # Captain room
