@@ -32,6 +32,7 @@ class Opponent(object):
             return
         if packet.distance == 1:
             distance = TURRET_LONG_DISTANCE_DETECTION_RANGE
+            return
         else:
             distance = TURRET_SHORT_DISTANCE_DETECTION_RANGE
 
@@ -70,9 +71,6 @@ class Opponent(object):
 
 
     def notify_state_machine(self, packet, is_in_front, is_in_back):
-        if packet is not None and packet.distance != 0:
-            is_in_back = False
-            is_in_front = False
         if self.notified_in_front != is_in_front:
             if is_in_front:
                 logger.log("Opponent in front")
