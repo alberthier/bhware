@@ -117,6 +117,9 @@ DEFAULT_OPPONENT_WAIT_MS               = 2000
 TURRET_SHORT_DISTANCE_DETECTION_RANGE  = 0.55
 TURRET_LONG_DISTANCE_DETECTION_RANGE   = 1.0
 
+# Time to wait for the secondary robot to start
+SECONDARY_DEPARTURE_TIME_MS            = 2000
+
 
 ########################################################################
 # Enums

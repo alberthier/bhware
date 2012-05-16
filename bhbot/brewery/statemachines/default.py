@@ -64,15 +64,10 @@ class WaitStart(statemachine.State):
 
 
     def on_exit_substate(self, substate):
-        self.switch_to_state(WaitFirstKeepAlive())
-
-
-
-
-class WaitFirstKeepAlive(statemachine.State):
-
-    def on_keep_alive(self, packet):
-        self.switch_to_state(FindNextGoal())
+        seq = commonstates.Sequence()
+        seq.add(commonstates.Timer(SECONDARY_DEPARTURE_TIME_MS))
+        seq.add(FindNextGoal())
+        self.switch_to_state(seq)
 
 
 
