@@ -247,7 +247,25 @@ class TestSquare(statemachine.State):
     def on_exit_substate(self, substate):
         self.exit_substate()
 
+class TestSquare2(statemachine.State):
 
+    def __init__(self):
+        pass
+
+    def on_enter(self):
+        walk = commonstates.TrajectoryWalk()
+#  walk.look_at(2.0, 1.0)
+        walk.move_to(2.0, 1.0)
+        walk.look_at(2.0, 2.0)
+        walk.move_to(2.0, 2.0)
+        walk.look_at(1.0, 2.0)
+        walk.move_to(1.0, 2.0)
+        walk.look_at(1.0, 1.0)
+        walk.move_to(1.0, 1.0)
+        self.switch_to_substate(walk)
+
+    def on_exit_substate(self, substate):
+        self.exit_substate()
 
 
 class TestMultipointMShape(statemachine.State):
@@ -502,7 +520,7 @@ class MakeRobotsCollide(statemachine.State):
         self.switch_to_substate(walk)
 
 
-class TestSimpleSquare(statemachine.State):
+class TestTrajectory(statemachine.State):
 
     def on_enter(self):
         walk = commonstates.TrajectoryWalk(None, TEAM_UNKNOWN)
