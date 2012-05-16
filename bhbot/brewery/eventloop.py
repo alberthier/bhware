@@ -341,8 +341,8 @@ class EventLoop(object):
         if self.turret_channel is not None:
             packet = packets.TurretInit()
             packet.mode = TURRET_INIT_MODE_WRITE
-            packet.short_distance = TURRET_SHORT_DISTANCE_DETECTION_RANGE
-            packet.long_distance = TURRET_LONG_DISTANCE_DETECTION_RANGE
+            packet.short_distance = TURRET_SHORT_DISTANCE_DETECTION_ID
+            packet.long_distance = TURRET_LONG_DISTANCE_DETECTION_ID
             buffer = packet.serialize()
             logger.log_packet(packet, "ARM")
             self.turret_channel.send(buffer)
