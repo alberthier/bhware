@@ -20,7 +20,7 @@ class Main(statemachine.State):
     def on_enter(self):
         gm = goalmanager.GoalManager(self.event_loop)
         self.robot().goal_manager = gm
-        gm.harvesting_goals.append(goalmanager.Goal("MAP", 1.0, 0.31, 1.37, DIRECTION_BACKWARD, GrabMap))
+        #gm.harvesting_goals.append(goalmanager.Goal("MAP", 1.0, 0.31, 1.37, DIRECTION_BACKWARD, GrabMap))
 
         x1, y1 = 0.60, 0.86
         x2, y2 = x1, (1.1 - y1) + 1.1
@@ -35,7 +35,7 @@ class Main(statemachine.State):
         gm.harvesting_goals.append(goalmanager.Goal("OTHER_NORTH", 1.0, x2           , y2 + offset_y, DIRECTION_BACKWARD, TakeGoldBar))
         gm.harvesting_goals.append(goalmanager.Goal("OTHER_SOUTH", 1.0, x1 + offset_x, y1 + offset_y, DIRECTION_BACKWARD, TakeGoldBar))
         gm.harvesting_goals.append(goalmanager.Goal("OTHER_SOUTH", 1.0, x2 + offset_x, y2 + offset_y, DIRECTION_BACKWARD, TakeGoldBar))
-        gm.harvesting_goals.append(goalmanager.Goal("SWIFFER"    , 0.5, 1.37         , 2.0          , DIRECTION_BACKWARD, Swiffer))
+        #gm.harvesting_goals.append(goalmanager.Goal("SWIFFER"    , 0.5, 1.37         , 2.0          , DIRECTION_BACKWARD, Swiffer))
 
         gm.emptying_goals.append(goalmanager.Goal("DEPOSIT_CAPTAIN", 2.0, 0.30, 0.6, DIRECTION_FORWARD, DepositTreasure))
         gm.emptying_goals.append(goalmanager.Goal("DEPOSIT_2",       1.0, 0.90, 0.5, DIRECTION_FORWARD, DepositTreasure))
@@ -290,7 +290,7 @@ class DetectAndTakeGoldbar(statemachine.State):
     def on_exit_substate(self, state):
         logger.log("Returned from substate")
         if isinstance(state, commonstates.GetGoldBarStatus):
-            if state.status == GOLD_BAR_PRESENT :
+            if True : #state.status == GOLD_BAR_PRESENT :
                 logger.log("Goldbar was present")
                 walk = commonstates.TrajectoryWalk()
                 #open gripper
