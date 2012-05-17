@@ -6,3 +6,7 @@ hgshelve=/root/.hgext/hgshelve.py
 
 [ui]
 editor=vim
+
+[web]
+push_ssl=False
+allow_push=*
