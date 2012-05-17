@@ -30,7 +30,7 @@ class Node(object):
 
 
     def is_in_field(self):
-        return self.x > 0.0 and self.x < FIELD_X_SIZE and self.y > 0.0 and self.y < FIELD_Y_SIZE
+        return self.x > MAP_WALLS_DISTANCE and self.x < FIELD_X_SIZE - MAP_WALLS_DISTANCE and self.y > MAP_WALLS_DISTANCE and self.y < FIELD_Y_SIZE - MAP_WALLS_DISTANCE
 
 
     def neighbor_nodes(self):
@@ -209,7 +209,7 @@ class Map(object):
             self.base_edges += self.link_node(node)
 
 
-    def link_node(self, node):
+    def link_node(self, node, allow_escape = False):
         new_edges = []
         if node.is_in_field():
             for other_node in self.nodes:
@@ -224,8 +224,9 @@ class Map(object):
                         segment = geometry.Segment(node.x, node.y, other_node.x, other_node.y)
                         for zone in self.zones:
                             if zone.intersects(segment) and zone.forbidden:
-                                ok = False
-                                break
+                                if not (allow_escape and zone.contains(node)):
+                                    ok = False
+                                    break
                         if ok:
                             edge = Edge(node, other_node, segment)
                             new_edges.append(edge)
@@ -281,7 +282,7 @@ class Map(object):
         self.changed_opponents = set()
 
         # Update start and destination points
-        for point in self.points:
+        for idx, point in enumerate(self.points):
             if point.next_coords is not None:
                 for edge in point.dynamic_edges:
                     edge.unlink()
@@ -290,7 +291,7 @@ class Map(object):
                     if len(point.node.edges) == 0 and point.node.refcount == 0:
                         self.nodes.remove(point.node)
                 point.node = self.get_node(*point.next_coords)
-                point.dynamic_edges = self.link_node(point.node)
+                point.dynamic_edges = self.link_node(point.node, idx == 0)
                 point.next_coords = None
 
         # Update edge penalities:
