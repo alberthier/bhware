@@ -20,8 +20,6 @@ class Opponent(object):
     def __init__(self, detector, opponent_type):
         self.detector = detector
         self.opponent_type = opponent_type
-        self.notified_in_front = False
-        self.notified_in_back = False
         self.x = None
         self.y = None
         self.timer = eventloop.Timer(self.detector.event_loop, OPPONENT_DETECTION_DISAPEARING_MS, self.opponent_disapear_timout)
@@ -71,23 +69,15 @@ class Opponent(object):
 
 
     def notify_state_machine(self, packet, is_in_front, is_in_back):
-        if self.notified_in_front != is_in_front:
-            if is_in_front:
-                logger.log("Opponent in front")
-                self.detector.event_loop.get_current_state().on_opponent_in_front(packet)
-            else:
-                logger.log("Opponent away from front")
-                self.detector.event_loop.get_current_state().on_opponent_disapeared(self.opponent_type, True)
-            self.notified_in_front = is_in_front
+        if is_in_front:
+            self.detector.event_loop.get_current_state().on_opponent_in_front(packet)
+        else:
+            self.detector.event_loop.get_current_state().on_opponent_disapeared(self.opponent_type, True)
 
-        if self.notified_in_back != is_in_back:
-            if is_in_back:
-                logger.log("Opponent in back")
-                self.detector.event_loop.get_current_state().on_opponent_in_back(packet)
-            else:
-                logger.log("Opponent away from back")
-                self.detector.event_loop.get_current_state().on_opponent_disapeared(self.opponent_type, False)
-            self.notified_in_back = is_in_back
+        if is_in_back:
+            self.detector.event_loop.get_current_state().on_opponent_in_back(packet)
+        else:
+            self.detector.event_loop.get_current_state().on_opponent_disapeared(self.opponent_type, False)
 
 
 
