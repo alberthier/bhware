@@ -164,7 +164,7 @@ class Map(object):
         self.zones = []
         self.nodes = []
         self.base_edges = []
-        self.penality = FIELD_X_SIZE * FIELD_Y_SIZE
+        self.penality = FIELD_X_SIZE * FIELD_Y_SIZE * 4.0
         self.opponent_zones = { OPPONENT_ROBOT_MAIN: None, OPPONENT_ROBOT_SECONDARY: None }
         self.opponent_positions = { OPPONENT_ROBOT_MAIN: None, OPPONENT_ROBOT_SECONDARY: None }
         self.changed_opponents = set()
