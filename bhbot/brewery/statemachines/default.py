@@ -15,7 +15,7 @@ from definitions import *
 
 
 
-TAKE_GOLDBAR_APPROACH = 0.100
+TAKE_GOLDBAR_APPROACH = 0.105
 
 totem_take_positions = { # name           x      y     angle
                          "SELF_NORTH"  : ( 0.878, 1.10, 0.0     ),
