@@ -33,14 +33,14 @@ class Main(statemachine.State):
         gm.harvesting_goals.append(goalmanager.Goal("SELF_SOUTH" , 1.0, x2 + offset_x, y2           , DIRECTION_BACKWARD, TakeGoldBar))
         gm.harvesting_goals.append(goalmanager.Goal("OTHER_NORTH", 1.0, x1           , y1 + offset_y, DIRECTION_BACKWARD, TakeGoldBar))
         gm.harvesting_goals.append(goalmanager.Goal("OTHER_NORTH", 1.0, x2           , y2 + offset_y, DIRECTION_BACKWARD, TakeGoldBar))
-        gm.harvesting_goals.append(goalmanager.Goal("OTHER_SOUTH", 1.0, x1 + offset_x, y1 + offset_y, DIRECTION_BACKWARD, TakeGoldBar))
-        gm.harvesting_goals.append(goalmanager.Goal("OTHER_SOUTH", 1.0, x2 + offset_x, y2 + offset_y, DIRECTION_BACKWARD, TakeGoldBar))
+        #gm.harvesting_goals.append(goalmanager.Goal("OTHER_SOUTH", 1.0, x1 + offset_x, y1 + offset_y, DIRECTION_BACKWARD, TakeGoldBar))
+        #gm.harvesting_goals.append(goalmanager.Goal("OTHER_SOUTH", 1.0, x2 + offset_x, y2 + offset_y, DIRECTION_BACKWARD, TakeGoldBar))
         #gm.harvesting_goals.append(goalmanager.Goal("SWIFFER"    , 0.5, 1.37         , 2.0          , DIRECTION_BACKWARD, Swiffer))
 
         gm.emptying_goals.append(goalmanager.Goal("DEPOSIT_CAPTAIN", 2.0, 0.30, 0.6, DIRECTION_FORWARD, DepositTreasure))
         gm.emptying_goals.append(goalmanager.Goal("DEPOSIT_2",       1.0, 0.90, 0.5, DIRECTION_FORWARD, DepositTreasure))
-        gm.emptying_goals.append(goalmanager.Goal("DEPOSIT_3",       1.0, 0.75, 0.5, DIRECTION_FORWARD, DepositTreasure))
-        gm.emptying_goals.append(goalmanager.Goal("DEPOSIT_4",       1.0, 1.03, 0.5, DIRECTION_FORWARD, DepositTreasure))
+        gm.emptying_goals.append(goalmanager.Goal("DEPOSIT_3",       1.0, 0.80, 0.5, DIRECTION_FORWARD, DepositTreasure))
+        gm.emptying_goals.append(goalmanager.Goal("DEPOSIT_4",       1.0, 1.00, 0.5, DIRECTION_FORWARD, DepositTreasure))
 
 
     def on_device_ready(self, packet):
@@ -152,10 +152,10 @@ class GrabMap(statemachine.State):
 TAKE_GOLDBAR_APPROACH = 0.16
 
 totem_take_positions = { # name           x      y     angle
-                         "SELF_NORTH"  : ( 0.875, 1.10, 0.0       ),
-                         "SELF_SOUTH"  : ( 1.125, 1.10, math.pi   ),
-                         "OTHER_NORTH" : ( 0.875, 1.90, 0.0       ),
-                         "OTHER_SOUTH" : ( 1.125, 1.90, math.pi  )
+                         "SELF_NORTH"  : ( 0.875, 1.10, 0.0     ),
+                         "SELF_SOUTH"  : ( 1.125, 1.10, math.pi ),
+                         "OTHER_NORTH" : ( 0.875, 1.90, 0.0     ),
+                         "OTHER_SOUTH" : ( 1.125, 1.90, math.pi )
 }
 
 totem_approach_delta = ROBOT_X_SIZE - ROBOT_CENTER_X
@@ -189,13 +189,11 @@ class DepositTreasure(statemachine.State):
     def on_enter(self):
         walk = commonstates.TrajectoryWalk()
         walk.rotate_to(-math.pi / 2.0)
-        walk.forward(0.100)
         walk.wait_for(commonstates.Gripper(GRIPPER_SIDE_BOTH, GRIPPER_OPEN))
         walk.wait_for(commonstates.EmptyTank(TANK_DEPLOY))
         walk.wait_for(commonstates.EmptyTank(TANK_RETRACT))
         walk.wait_for(commonstates.EmptyTank(TANK_DEPLOY))
         walk.wait_for(commonstates.EmptyTank(TANK_RETRACT))
-        walk.backward(0.100)
         walk.wait_for(commonstates.Gripper(GRIPPER_SIDE_BOTH, GRIPPER_CLOSE))
         self.switch_to_substate(walk)
 
