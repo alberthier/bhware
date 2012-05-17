@@ -158,7 +158,7 @@ totem_take_positions = { # name           x      y     angle
                          "OTHER_SOUTH" : ( 1.125, 1.90, math.pi  )
 }
 
-delta = ROBOT_X_SIZE - ROBOT_CENTER_X
+totem_approach_delta = ROBOT_X_SIZE - ROBOT_CENTER_X
 
 totem_approach_start_positions = {}
 totem_approach_end_positions = {}
@@ -166,14 +166,14 @@ totem_approach_end_positions = {}
 for k, v in totem_take_positions.items() :
     vals = None
     if k.endswith("_NORTH") :
-        vals = v[0] - (TAKE_GOLDBAR_APPROACH + delta), v[1], v[2]
+        vals = v[0] - (TAKE_GOLDBAR_APPROACH + totem_approach_delta), v[1], v[2]
         totem_approach_start_positions[k] = vals
-        vals = v[0] - delta, v[1], v[2]
+        vals = v[0] - totem_approach_delta, v[1], v[2]
         totem_approach_end_positions[k] = vals
     else :
-        vals = v[0] + (TAKE_GOLDBAR_APPROACH + delta), v[1], v[2]
+        vals = v[0] + (TAKE_GOLDBAR_APPROACH + totem_approach_delta), v[1], v[2]
         totem_approach_start_positions[k] = vals
-        vals = v[0] + delta, v[1], v[2]
+        vals = v[0] + totem_approach_delta, v[1], v[2]
         totem_approach_end_positions[k] = vals
 
 
@@ -292,8 +292,7 @@ class DetectAndTakeGoldbar(statemachine.State):
                 walk.wait_for(commonstates.Gripper(GRIPPER_SIDE_BOTH, GRIPPER_OPEN))
                 #TODO : speed up by opening gripper while moving
                 #look at totem
-                totem_take_pose = totem_approach_end_positions[self.goal.identifier][0], self.robot().pose.virt.y
-    #            totem_take_pose = totem_approach_end_positions[self.goal.identifier][0:2]
+                totem_take_pose = totem_approach_end_positions[self.goal.identifier][0:2]
                 walk.look_at(*totem_take_pose)
                 #bump again totem
                 walk.move_to(*totem_take_pose,direction=DIRECTION_FORWARD)
