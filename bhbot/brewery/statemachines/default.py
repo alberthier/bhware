@@ -149,13 +149,13 @@ class GrabMap(statemachine.State):
         self.robot().goal_manager.goal_done(self.goal)
         self.exit_substate()
 
-TAKE_GOLDBAR_APPROACH = 0.16
+TAKE_GOLDBAR_APPROACH = 0.19
 
 totem_take_positions = { # name           x      y     angle
-                         "SELF_NORTH"  : ( 0.875, 1.10, 0.0     ),
-                         "SELF_SOUTH"  : ( 1.125, 1.10, math.pi ),
-                         "OTHER_NORTH" : ( 0.875, 1.90, 0.0     ),
-                         "OTHER_SOUTH" : ( 1.125, 1.90, math.pi )
+                         "SELF_NORTH"  : ( 0.878, 1.10, 0.0     ),
+                         "SELF_SOUTH"  : ( 1.122, 1.10, math.pi ),
+                         "OTHER_NORTH" : ( 0.878, 1.90, 0.0     ),
+                         "OTHER_SOUTH" : ( 1.122, 1.90, math.pi )
 }
 
 totem_approach_delta = ROBOT_X_SIZE - ROBOT_CENTER_X
