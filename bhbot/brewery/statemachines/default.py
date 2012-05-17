@@ -15,6 +15,36 @@ from definitions import *
 
 
 
+TAKE_GOLDBAR_APPROACH = 0.100
+
+totem_take_positions = { # name           x      y     angle
+                         "SELF_NORTH"  : ( 0.878, 1.10, 0.0     ),
+                         "SELF_SOUTH"  : ( 1.122, 1.10, math.pi ),
+                         "OTHER_NORTH" : ( 0.878, 1.90, 0.0     ),
+                         "OTHER_SOUTH" : ( 1.122, 1.90, math.pi )
+}
+
+totem_approach_delta = ROBOT_X_SIZE - ROBOT_CENTER_X
+
+totem_approach_start_positions = {}
+totem_approach_end_positions = {}
+
+for k, v in totem_take_positions.items() :
+    vals = None
+    if k.endswith("_NORTH") :
+        vals = v[0] - (TAKE_GOLDBAR_APPROACH + totem_approach_delta), v[1], v[2]
+        totem_approach_start_positions[k] = vals
+        vals = v[0] - totem_approach_delta, v[1], v[2]
+        totem_approach_end_positions[k] = (vals[0] + 0.02, vals[1], vals[2])
+    else :
+        vals = v[0] + (TAKE_GOLDBAR_APPROACH + totem_approach_delta), v[1], v[2]
+        totem_approach_start_positions[k] = vals
+        vals = v[0] + totem_approach_delta, v[1], v[2]
+        totem_approach_end_positions[k] = (vals[0] - 0.02, vals[1], vals[2])
+
+APPROACH_ABSOLUTE_X = totem_approach_start_positions["SELF_NORTH"][0]
+
+
 class Main(statemachine.State):
 
     def on_enter(self):
@@ -22,7 +52,7 @@ class Main(statemachine.State):
         self.robot().goal_manager = gm
         #gm.harvesting_goals.append(goalmanager.Goal("MAP", 1.0, 0.31, 1.37, DIRECTION_BACKWARD, GrabMap))
 
-        x1, y1 = 0.60, 0.86
+        x1, y1 = APPROACH_ABSOLUTE_X, 0.86
         x2, y2 = x1, (1.1 - y1) + 1.1
         offset_x = (1.0 - x1) * 2.0
         offset_y = 0.80
@@ -146,33 +176,6 @@ class GrabMap(statemachine.State):
     def on_exit_substate(self, state):
         self.robot().goal_manager.goal_done(self.goal)
         self.exit_substate()
-
-TAKE_GOLDBAR_APPROACH = 0.19
-
-totem_take_positions = { # name           x      y     angle
-                         "SELF_NORTH"  : ( 0.878, 1.10, 0.0     ),
-                         "SELF_SOUTH"  : ( 1.122, 1.10, math.pi ),
-                         "OTHER_NORTH" : ( 0.878, 1.90, 0.0     ),
-                         "OTHER_SOUTH" : ( 1.122, 1.90, math.pi )
-}
-
-totem_approach_delta = ROBOT_X_SIZE - ROBOT_CENTER_X
-
-totem_approach_start_positions = {}
-totem_approach_end_positions = {}
-
-for k, v in totem_take_positions.items() :
-    vals = None
-    if k.endswith("_NORTH") :
-        vals = v[0] - (TAKE_GOLDBAR_APPROACH + totem_approach_delta), v[1], v[2]
-        totem_approach_start_positions[k] = vals
-        vals = v[0] - totem_approach_delta, v[1], v[2]
-        totem_approach_end_positions[k] = vals
-    else :
-        vals = v[0] + (TAKE_GOLDBAR_APPROACH + totem_approach_delta), v[1], v[2]
-        totem_approach_start_positions[k] = vals
-        vals = v[0] + totem_approach_delta, v[1], v[2]
-        totem_approach_end_positions[k] = vals
 
 
 
