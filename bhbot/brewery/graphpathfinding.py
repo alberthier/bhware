@@ -340,6 +340,7 @@ class Map(object):
                                             0.945 - MAP_WALLS_DISTANCE,
                                             0.310 + MAP_WALLS_DISTANCE * 2.0,
                                             1.110 + MAP_WALLS_DISTANCE * 2.0,
+                                            True, self.penality))
 
         # BH Secondary robot zone
         x = 0.700
