@@ -119,7 +119,7 @@ def log_packet(packet, sender = "ARM"):
 def get_next_log_filepath():
     index = 0
     if not os.path.exists(LOG_DIR):
-        os.mkdir(LOG_DIR)
+        os.makedirs(LOG_DIR)
     while True:
         filepath = os.path.join(LOG_DIR, "brewerylog_{:=#04}.py".format(index))
         if os.path.exists(filepath):
