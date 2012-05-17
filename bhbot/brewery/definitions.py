@@ -78,7 +78,7 @@ else:
 
 # Log directory
 if IS_HOST_DEVICE_ARM:
-    LOG_DIR                            = "/root/logs"
+    LOG_DIR                            = "/tmp/bhlogs"
 else:
     LOG_DIR                            = os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file__))), "logs")
 
