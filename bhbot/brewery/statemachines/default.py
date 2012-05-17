@@ -33,8 +33,8 @@ class Main(statemachine.State):
         gm.harvesting_goals.append(goalmanager.Goal("SELF_SOUTH" , 1.0, x2 + offset_x, y2           , DIRECTION_BACKWARD, TakeGoldBar))
         gm.harvesting_goals.append(goalmanager.Goal("OTHER_NORTH", 1.0, x1           , y1 + offset_y, DIRECTION_BACKWARD, TakeGoldBar))
         gm.harvesting_goals.append(goalmanager.Goal("OTHER_NORTH", 1.0, x2           , y2 + offset_y, DIRECTION_BACKWARD, TakeGoldBar))
-        #gm.harvesting_goals.append(goalmanager.Goal("OTHER_SOUTH", 1.0, x1 + offset_x, y1 + offset_y, DIRECTION_BACKWARD, TakeGoldBar))
-        #gm.harvesting_goals.append(goalmanager.Goal("OTHER_SOUTH", 1.0, x2 + offset_x, y2 + offset_y, DIRECTION_BACKWARD, TakeGoldBar))
+        gm.harvesting_goals.append(goalmanager.Goal("OTHER_SOUTH", 1.0, x1 + offset_x, y1 + offset_y, DIRECTION_BACKWARD, TakeGoldBar))
+        gm.harvesting_goals.append(goalmanager.Goal("OTHER_SOUTH", 1.0, x2 + offset_x, y2 + offset_y, DIRECTION_BACKWARD, TakeGoldBar))
         #gm.harvesting_goals.append(goalmanager.Goal("SWIFFER"    , 0.5, 1.37         , 2.0          , DIRECTION_BACKWARD, Swiffer))
 
         gm.emptying_goals.append(goalmanager.Goal("DEPOSIT_CAPTAIN", 2.0, 0.30, 0.6, DIRECTION_FORWARD, DepositTreasure))
@@ -191,6 +191,7 @@ class DepositTreasure(statemachine.State):
         walk.wait_for(commonstates.EmptyTank(TANK_DEPLOY))
         walk.wait_for(commonstates.EmptyTank(TANK_RETRACT))
         walk.wait_for(commonstates.EmptyTank(TANK_DEPLOY))
+        walk.backward(0.100)
         walk.wait_for(commonstates.EmptyTank(TANK_RETRACT))
         walk.wait_for(commonstates.Gripper(GRIPPER_SIDE_BOTH, GRIPPER_CLOSE))
         self.switch_to_substate(walk)
@@ -222,7 +223,7 @@ class TakeGoldBar(statemachine.State):
 
     def on_enter(self):
         walk = commonstates.TrajectoryWalk()
-        walk.wait_for(commonstates.Sweeper(SWEEPER_OPEN))
+        walk.wait_for(commonstates.Sweeper(SWEEPER_OPEN, wait=False))
 
         walk.look_at_opposite(self.start_pos[0], self.start_pos[1])
         walk.move_to(self.start_pos[0], self.start_pos[1], DIRECTION_BACKWARD)
@@ -238,7 +239,7 @@ class TakeGoldBar(statemachine.State):
 #        walk.goto(*self.start_pos[0:2], angle = a, direction=DIRECTION_BACKWARD)
 
         walk.rotate_to(self.start_pos[2])
-        walk.wait_for(commonstates.Sweeper(SWEEPER_CLOSE))
+        walk.wait_for(commonstates.Sweeper(SWEEPER_CLOSE, wait=False))
         walk.wait_for(DetectAndTakeGoldbar(self.goal))
         self.switch_to_substate(walk)
 
