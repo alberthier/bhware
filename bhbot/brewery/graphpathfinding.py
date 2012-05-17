@@ -336,11 +336,10 @@ class Map(object):
                                            0.380 + MAP_WALLS_DISTANCE,
                                            True, self.penality))
         # Island
-        self.add_zone(False, True, RectZone(0.875 - MAP_WALLS_DISTANCE,
-                                            0.975 - MAP_WALLS_DISTANCE,
-                                            0.250 + MAP_WALLS_DISTANCE * 2.0,
-                                            1.050 + MAP_WALLS_DISTANCE * 2.0,
-                                            True, self.penality))
+        self.add_zone(False, True, RectZone(0.845 - MAP_WALLS_DISTANCE,
+                                            0.945 - MAP_WALLS_DISTANCE,
+                                            0.310 + MAP_WALLS_DISTANCE * 2.0,
+                                            1.110 + MAP_WALLS_DISTANCE * 2.0,
 
         # BH Secondary robot zone
         x = 0.700
