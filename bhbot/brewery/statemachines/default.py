@@ -254,7 +254,7 @@ class DetectAndTakeGoldbar(statemachine.State):
     def on_exit_substate(self, state):
         logger.log("Returned from substate")
         if isinstance(state, commonstates.GetGoldBarStatus):
-            if True : #state.status == GOLD_BAR_PRESENT :
+            if state.status == GOLD_BAR_PRESENT :
                 logger.log("Goldbar was present")
                 walk = commonstates.TrajectoryWalk()
                 #open gripper
