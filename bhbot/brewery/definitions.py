@@ -32,12 +32,12 @@ ROBOT_EXPANDED_SWEEPER_GYRATION_RADIUS = 0.289355
 ROBOT_EXPANDED_GYRATION_RADIUS         = max(ROBOT_EXPANDED_GRIPPER_GYRATION_RADIUS, ROBOT_EXPANDED_SWEEPER_GYRATION_RADIUS)
 
 # Start positons (the robot starts 90 degrees rotated that's why *_START_Y use ROBOT_X_SIZE and ROBOT_CENTER_X)
-RED_START_X                            = 0.310
-RED_START_Y                            = FIELD_Y_SIZE - (ROBOT_X_SIZE - ROBOT_CENTER_X)
-RED_START_ANGLE                        = math.pi / 2.0
 PURPLE_START_X                         = 0.310
-PURPLE_START_Y                         = ROBOT_X_SIZE - ROBOT_CENTER_X
+PURPLE_START_Y                         = 0.364
 PURPLE_START_ANGLE                     = -math.pi / 2.0
+RED_START_X                            = 0.310
+RED_START_Y                            = FIELD_Y_SIZE - PURPLE_START_Y
+RED_START_ANGLE                        = math.pi / 2.0
 
 # Rule specific
 MATCH_DURATION_MS                      = 90000
@@ -118,9 +118,6 @@ TURRET_SHORT_DISTANCE_DETECTION_RANGE  = 0.55
 TURRET_LONG_DISTANCE_DETECTION_RANGE   = 1.0
 TURRET_SHORT_DISTANCE_DETECTION_ID     = 210
 TURRET_LONG_DISTANCE_DETECTION_ID      = 240
-
-# Time to wait for the secondary robot to start
-SECONDARY_DEPARTURE_TIME_MS            = 2000
 
 
 ########################################################################

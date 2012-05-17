@@ -59,15 +59,13 @@ class WaitStart(statemachine.State):
     def on_enter(self):
         self.sent = False
 
+
     def on_start(self, packet):
         self.switch_to_substate(commonstates.DefinePosition())
 
 
     def on_exit_substate(self, substate):
-        seq = commonstates.Sequence()
-        seq.add(commonstates.Timer(SECONDARY_DEPARTURE_TIME_MS))
-        seq.add(FindNextGoal())
-        self.switch_to_state(seq)
+        self.switch_to_state(FindNextGoal())
 
 
 
