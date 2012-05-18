@@ -65,7 +65,7 @@ class Main(statemachine.State):
         gm.harvesting_goals.append(goalmanager.Goal("OTHER_NORTH", 1.0, x2           , y2 + offset_y, DIRECTION_BACKWARD, TakeGoldBar))
         gm.harvesting_goals.append(goalmanager.Goal("OTHER_SOUTH", 1.0, x1 + offset_x, y1 + offset_y, DIRECTION_BACKWARD, TakeGoldBar))
         gm.harvesting_goals.append(goalmanager.Goal("OTHER_SOUTH", 1.0, x2 + offset_x, y2 + offset_y, DIRECTION_BACKWARD, TakeGoldBar))
-        gm.harvesting_goals.append(goalmanager.Goal("SWIFFER"    , 0.5, 1.37         , 2.0          , DIRECTION_BACKWARD, Swiffer))
+#        gm.harvesting_goals.append(goalmanager.Goal("SWIFFER"    , 0.5, 1.37         , 2.0          , DIRECTION_BACKWARD, Swiffer))
 
         gm.emptying_goals.append(goalmanager.Goal("DEPOSIT_CAPTAIN", 2.0, 0.30, 0.6, DIRECTION_FORWARD, DepositTreasure))
         gm.emptying_goals.append(goalmanager.Goal("DEPOSIT_2",       1.0, 0.90, 0.5, DIRECTION_FORWARD, DepositTreasure))
