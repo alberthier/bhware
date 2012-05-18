@@ -15,7 +15,7 @@ from definitions import *
 
 
 
-TAKE_GOLDBAR_APPROACH = 0.105
+TAKE_GOLDBAR_APPROACH = 0.115
 
 totem_take_positions = { # name           x      y     angle
                          "SELF_NORTH"  : ( 0.878, 1.10, 0.0     ),
@@ -35,12 +35,12 @@ for k, v in totem_take_positions.items() :
         vals = v[0] - (TAKE_GOLDBAR_APPROACH + totem_approach_delta), v[1], v[2]
         totem_approach_start_positions[k] = vals
         vals = v[0] - totem_approach_delta, v[1], v[2]
-        totem_approach_end_positions[k] = (vals[0] + 0.02, vals[1], vals[2])
+        totem_approach_end_positions[k] = (vals[0] + 0.05, vals[1], vals[2])
     else :
         vals = v[0] + (TAKE_GOLDBAR_APPROACH + totem_approach_delta), v[1], v[2]
         totem_approach_start_positions[k] = vals
         vals = v[0] + totem_approach_delta, v[1], v[2]
-        totem_approach_end_positions[k] = (vals[0] - 0.02, vals[1], vals[2])
+        totem_approach_end_positions[k] = (vals[0] - 0.05, vals[1], vals[2])
 
 APPROACH_ABSOLUTE_X = totem_approach_start_positions["SELF_NORTH"][0]
 
