@@ -140,11 +140,9 @@ class FindNextGoal(statemachine.State):
         if isinstance(state, commonstates.Navigate ) :
             if state.exit_reason == TRAJECTORY_DESTINATION_REACHED :
                 self.switch_to_goal_state()
-            elif state.exit_reason == TRAJECTORY_DESTINATION_UNREACHABLE :
-                logger.log("Goal {} unreachable, skipping it".format(self.current_goal.identifier))
-                self.robot().goal_manager.goal_done(self.current_goal)
-                self.switch_to_state(FindNextGoal())
             else :
+                logger.log("Goal {} unreachable or blocked, adding a penalty (reason={})".format(self.current_goal
+                .identifier, state.exit_reason))
                 self.robot().goal_manager.penalize_goal(self.current_goal)
                 self.switch_to_state(FindNextGoal())
         else :
