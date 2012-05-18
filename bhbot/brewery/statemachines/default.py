@@ -236,8 +236,8 @@ class TakeGoldBar(statemachine.State):
 
     def on_exit_substate(self, state):
         if isinstance(state, commonstates.TrajectoryWalk):
-            if walk.exit_reason != REASON_DESTINATION_REACHED:
-                self.robot().goal_manager.penalize_goal(self.current_goal)
+            if state.exit_reason != REASON_DESTINATION_REACHED:
+                self.robot().goal_manager.penalize_goal(self.goal)
                 self.switch_to_state(EscapeTotem())
             else:
                 self.switch_to_substate(DetectAndTakeGoldbar(self.goal))
