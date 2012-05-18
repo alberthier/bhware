@@ -359,7 +359,12 @@ class Map(object):
 
 
     def route(self, start, goal):
-        return [ self.find_path(start, goal)[1] ]
+        ret = self.find_path(start, goal)[1]
+
+        if len(ret) == 0 :
+            return []
+        else :
+            return [ret]
 
 
     def evaluate(self, start, goal):
