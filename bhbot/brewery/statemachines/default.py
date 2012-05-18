@@ -228,9 +228,30 @@ class TakeGoldBar(statemachine.State):
         walk.look_at_opposite(self.start_pos[0], self.start_pos[1])
         walk.move_to(self.start_pos[0], self.start_pos[1], DIRECTION_BACKWARD)
 
+        walk.wait_for(commonstates.Antiblocking(True))
         walk.rotate_to(self.start_pos[2])
+        walk.wait_for(commonstates.Antiblocking(False))
 
-        walk.wait_for(DetectAndTakeGoldbar(self.goal))
+        self.switch_to_substate(walk)
+
+    def on_exit_substate(self, state):
+        if isinstance(state, commonstates.TrajectoryWalk):
+            if walk.exit_reason != REASON_DESTINATION_REACHED:
+                self.robot().goal_manager.penalize_goal(self.current_goal)
+                self.switch_to_state(EscapeTotem())
+            else:
+                self.switch_to_substate(DetectAndTakeGoldbar(self.goal))
+        else:
+            self.exit_substate()
+
+
+
+
+class EscapeTotem(statemachine.State):
+
+    def on_enter(self):
+        walk = commonstates.TrajectoryWalk()
+        walk.backward(0.15)
         self.switch_to_substate(walk)
 
     def on_exit_substate(self, state):
