@@ -298,8 +298,6 @@ class Swiffer(statemachine.State):
         walk.rotate_to(0.0)
         walk.backward(0.7)
         walk.rotate_to(math.pi/2)
-        walk.forward(0.15)
-        walk.wait_for(commonstates.Sweeper(SWEEPER_CLOSE))
         walk.backward(0.35)
         self.switch_to_substate(walk)
 
