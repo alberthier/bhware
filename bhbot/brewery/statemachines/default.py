@@ -50,7 +50,9 @@ class Main(statemachine.State):
     def on_enter(self):
         gm = goalmanager.GoalManager(self.event_loop)
         self.robot().goal_manager = gm
-        gm.harvesting_goals.append(goalmanager.Goal("MAP", 1.0, 0.31, 1.37, DIRECTION_BACKWARD, GrabMap))
+        map_goal = goalmanager.Goal("MAP", 1.0, 0.31, 1.37, DIRECTION_BACKWARD, GrabMap)
+        gm.harvesting_goals.append(map_goal)
+        gm.emptying_goals.append(map_goal)
 
         x1, y1 = APPROACH_ABSOLUTE_X, 0.86
         x2, y2 = x1, (1.1 - y1) + 1.1
