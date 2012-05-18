@@ -122,7 +122,7 @@ class Map(object):
 
         self.zone_cost = max(routing_zone_cost, evaluator_zone_cost)
         lateral_distance = ROBOT_X_SIZE - ROBOT_CENTER_X - max(ROUTING_MAP_RESOLUTION, EVALUATOR_MAP_RESOLUTION)
-        captain_room_reduction = 0.01
+        captain_room_reduction = 0.05
 
         only_rects = True
 
