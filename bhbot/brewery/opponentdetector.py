@@ -41,6 +41,7 @@ class Opponent(object):
         self.y = robot_pose.y + distance * math.sin(real_angle)
 
         self.detector.event_loop.map.opponent_detected(packet, self.x, self.y)
+        self.detector.event_loop.eval_map.opponent_detected(packet, self.x, self.y)
 
         if IS_HOST_DEVICE_PC:
             sim_packet = packets.SimulatorOpponentsPositions()
@@ -60,6 +61,7 @@ class Opponent(object):
 
     def opponent_disapear_timout(self):
         self.detector.event_loop.map.opponent_disapeared(self.opponent_type)
+        self.detector.event_loop.eval_map.opponent_disapeared(self.opponent_type)
         if IS_HOST_DEVICE_PC:
             sim_packet = packets.SimulatorOpponentsPositions()
             sim_packet.robot = self.opponent_type
