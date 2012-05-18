@@ -250,12 +250,25 @@ class TakeGoldBar(statemachine.State):
 class EscapeTotem(statemachine.State):
 
     def on_enter(self):
+        self.count = 0
+        self.try_escape()
+
+
+    def try_escape(self):
+        self.count += 1
         walk = commonstates.TrajectoryWalk()
+        walk.wait_for(commonstates.Antiblocking(True))
         walk.backward(0.15)
+        walk.wait_for(commonstates.Antiblocking(False))
         self.switch_to_substate(walk)
 
+
     def on_exit_substate(self, state):
-        self.exit_substate()
+        if state.exit_reason != REASON_DESTINATION_REACHED and self.count <= 5:
+            self.try_escape()
+        else:
+            self.send_packet(packets.DisableAntiBlocking())
+            self.exit_substate()
 
 
 
