@@ -357,6 +357,24 @@ class StoreFabric(statemachine.State):
         self.exit_substate()
 
 
+class Antiblocking(statemachine.State):
+
+    def __init__(self, desired_status):
+        self.status = desired_status
+        if desired_status :
+            self.packet = packets.EnableAntiBlocking()
+        else :
+            self.packet = packets.DisableAntiBlocking()
+
+    def on_enter(self):
+        self.send_packet(self.packet)
+
+    def on_enable_anti_blocking(self, packet):
+        self.exit_substate()
+
+    def on_disable_anti_blocking(self, packet):
+        self.exit_substate()
+
 
 
 class TrajectoryWalk(statemachine.State):
@@ -595,6 +613,7 @@ class TrajectoryWalk(statemachine.State):
 
 
 
+
 class Navigate(statemachine.State):
 
     def __init__(self, x, y, direction = DIRECTION_FORWARD):
@@ -604,6 +623,14 @@ class Navigate(statemachine.State):
         self.walk = TrajectoryWalk()
         self.walk.opponent_wait_time = 0
         self.exit_reason = TRAJECTORY_DESTINATION_REACHED
+
+
+    def do_walk(self):
+        seq = Sequence( Antiblocking(True),
+                        self.walk,
+                        Antiblocking(False)
+                      )
+        self.switch_to_substate(seq)
 
 
     def on_enter(self):
@@ -628,7 +655,7 @@ class Navigate(statemachine.State):
                 if not self.robot().is_looking_at_opposite(first_point):
                     self.walk.look_at_opposite(first_point.virt.x, first_point.virt.y)
             self.walk.follow(sub_path, None, self.direction)
-        self.switch_to_substate(self.walk)
+        self.do_walk()
 
 
     def monopoint_walk(self, path):
@@ -641,7 +668,7 @@ class Navigate(statemachine.State):
                     if not self.robot().is_looking_at_opposite(point):
                         self.walk.look_at_opposite(point.virt.x, point.virt.y)
                 self.walk.move_to(point.virt.x, point.virt.y, self.direction)
-        self.switch_to_substate(self.walk)
+        self.do_walk()
 
 
     def on_exit_substate(self, substate):
