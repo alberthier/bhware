@@ -23,9 +23,12 @@ class Opponent(object):
         self.x = None
         self.y = None
         self.timer = eventloop.Timer(self.detector.event_loop, OPPONENT_DETECTION_DISAPEARING_MS, self.opponent_disapear_timout)
+        self.enabled = False
 
 
     def on_turret_detect(self, packet):
+        if not self.enabled:
+            return
         if packet.robot != self.opponent_type:
             return
         if packet.distance == 1:
@@ -97,3 +100,9 @@ class OpponentDetector(object):
             self.main_opponent.on_turret_detect(packet)
         else:
             self.secondary_opponent.on_turret_detect(packet)
+
+
+    def enable(self):
+        logger.log("OpponentDetector: enabling")
+        self.main_opponent.enabled = True
+        self.secondary_opponent.enabled = True

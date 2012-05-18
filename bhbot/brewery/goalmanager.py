@@ -34,6 +34,7 @@ class GoalManager(object):
         self.event_loop = event_loop
         self.harvesting_goals = []
         self.emptying_goals = []
+        self.count = 0
 
     def next_goal(self):
         if self.event_loop.robot.tank_full:
@@ -43,6 +44,9 @@ class GoalManager(object):
 
 
     def get_best_goal(self, goals):
+        self.count += 1
+        if self.count == 2:
+            self.event_loop.opponent_detector.enable()
 
         if not goals :
             return None
