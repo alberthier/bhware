@@ -21,6 +21,10 @@ import robot
 import opponentdetector
 import trajectory
 import graphpathfinding
+import commonstates
+import geometry
+import goalmanager
+import tools
 from definitions import *
 
 if IS_HOST_DEVICE_ARM :
