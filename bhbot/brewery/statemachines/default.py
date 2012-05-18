@@ -161,14 +161,14 @@ class GrabMap(statemachine.State):
     def on_enter(self):
         walk = commonstates.TrajectoryWalk()
         walk.rotate_to(0.0)
-#        walk.wait_for(commonstates.StoreFabric(FABRIC_STORE_LOW))
+        walk.wait_for(commonstates.StoreFabric(FABRIC_STORE_LOW))
         walk.wait_for(commonstates.MapArm(MAP_ARM_OPEN))
         walk.wait_for(commonstates.MapGripper(MAP_GRIPPER_OPEN))
         walk.backward(0.25)
         walk.wait_for(commonstates.MapGripper(MAP_GRIPPER_CLOSE))
         walk.forward(0.25)
         walk.wait_for(commonstates.MapArm(MAP_ARM_CLOSE))
-        #        walk.wait_for(commonstates.StoreFabric(FABRIC_STORE_HIGH))
+        walk.wait_for(commonstates.StoreFabric(FABRIC_STORE_HIGH))
         self.switch_to_substate(walk)
 
     def on_exit_substate(self, state):
