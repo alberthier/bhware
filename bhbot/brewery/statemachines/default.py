@@ -67,10 +67,10 @@ class Main(statemachine.State):
         gm.harvesting_goals.append(goalmanager.Goal("OTHER_SOUTH", 1.0, x2 + offset_x, y2 + offset_y, DIRECTION_BACKWARD, TakeGoldBar))
 #        gm.harvesting_goals.append(goalmanager.Goal("SWIFFER"    , 0.5, 1.37         , 2.0          , DIRECTION_BACKWARD, Swiffer))
 
-        gm.emptying_goals.append(goalmanager.Goal("DEPOSIT_CAPTAIN", 2.0, 0.30, 0.6, DIRECTION_FORWARD, DepositTreasure))
-        gm.emptying_goals.append(goalmanager.Goal("DEPOSIT_2",       1.0, 0.90, 0.5, DIRECTION_FORWARD, DepositTreasure))
-        gm.emptying_goals.append(goalmanager.Goal("DEPOSIT_3",       1.0, 0.80, 0.5, DIRECTION_FORWARD, DepositTreasure))
-        gm.emptying_goals.append(goalmanager.Goal("DEPOSIT_4",       1.0, 1.00, 0.5, DIRECTION_FORWARD, DepositTreasure))
+        gm.emptying_goals.append(goalmanager.Goal("DEPOSIT_CAPTAIN", 2.0, 0.30, 0.60, DIRECTION_FORWARD, DepositTreasure))
+        gm.emptying_goals.append(goalmanager.Goal("DEPOSIT_2",       1.0, 0.90, 0.45, DIRECTION_FORWARD, DepositTreasure))
+        gm.emptying_goals.append(goalmanager.Goal("DEPOSIT_3",       1.0, 0.80, 0.45, DIRECTION_FORWARD, DepositTreasure))
+        gm.emptying_goals.append(goalmanager.Goal("DEPOSIT_4",       1.0, 1.00, 0.45, DIRECTION_FORWARD, DepositTreasure))
 
 
     def on_device_ready(self, packet):
@@ -192,7 +192,7 @@ class DepositTreasure(statemachine.State):
         walk.wait_for(commonstates.EmptyTank(TANK_DEPLOY))
         walk.wait_for(commonstates.EmptyTank(TANK_RETRACT))
         walk.wait_for(commonstates.EmptyTank(TANK_DEPLOY))
-        walk.backward(0.100)
+        walk.backward(0.150)
         walk.wait_for(commonstates.EmptyTank(TANK_RETRACT))
         walk.wait_for(commonstates.Gripper(GRIPPER_SIDE_BOTH, GRIPPER_CLOSE))
         self.switch_to_substate(walk)
