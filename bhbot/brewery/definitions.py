@@ -92,7 +92,7 @@ STATE_MACHINE                          = "default"
 NAVIGATION_USES_MULTIPOINT             = False
 
 # Use pathfinding algorithm to evaluate the best goal
-GOAL_EVALUATION_USES_PATHFINDING       = False
+GOAL_EVALUATION_USES_PATHFINDING       = True
 
 # Router map resolution
 ROUTING_MAP_RESOLUTION                 = 0.02

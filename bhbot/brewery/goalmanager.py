@@ -51,13 +51,14 @@ class GoalManager(object):
             pose = trajectory.Pose(goal.x, goal.y, virtual=True)
             logger.log("Evaluate goal {}".format(goal.identifier))
             if GOAL_EVALUATION_USES_PATHFINDING:
-                goal.navigation_cost = self.event_loop.map.evaluate(self.event_loop.robot.pose, pose)
+                goal.navigation_cost = self.event_loop.eval_map.evaluate(self.event_loop.robot.pose, pose)
             else:
                 goal.navigation_cost = tools.distance(self.event_loop.robot.pose.x, self.event_loop.robot.pose.y, pose.x, pose.y)
             goal.score = goal.penality
             goal.penality = 0.0
 
         for order, goal in enumerate(sorted(goals, key=lambda x:x.navigation_cost)):
+            logger.log("Goal {} nav cost = {}".format(goal.identifier, goal.navigation_cost))
             goal.score += order * 2
 
         for order, goal in enumerate(sorted(goals, key=lambda x:x.weight, reverse=True)):
