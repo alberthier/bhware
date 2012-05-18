@@ -50,7 +50,7 @@ class Main(statemachine.State):
     def on_enter(self):
         gm = goalmanager.GoalManager(self.event_loop)
         self.robot().goal_manager = gm
-        #gm.harvesting_goals.append(goalmanager.Goal("MAP", 1.0, 0.31, 1.37, DIRECTION_BACKWARD, GrabMap))
+        gm.harvesting_goals.append(goalmanager.Goal("MAP", 1.0, 0.31, 1.37, DIRECTION_BACKWARD, GrabMap))
 
         x1, y1 = APPROACH_ABSOLUTE_X, 0.86
         x2, y2 = x1, (1.1 - y1) + 1.1
@@ -65,7 +65,7 @@ class Main(statemachine.State):
         gm.harvesting_goals.append(goalmanager.Goal("OTHER_NORTH", 1.0, x2           , y2 + offset_y, DIRECTION_BACKWARD, TakeGoldBar))
         gm.harvesting_goals.append(goalmanager.Goal("OTHER_SOUTH", 1.0, x1 + offset_x, y1 + offset_y, DIRECTION_BACKWARD, TakeGoldBar))
         gm.harvesting_goals.append(goalmanager.Goal("OTHER_SOUTH", 1.0, x2 + offset_x, y2 + offset_y, DIRECTION_BACKWARD, TakeGoldBar))
-        #gm.harvesting_goals.append(goalmanager.Goal("SWIFFER"    , 0.5, 1.37         , 2.0          , DIRECTION_BACKWARD, Swiffer))
+        gm.harvesting_goals.append(goalmanager.Goal("SWIFFER"    , 0.5, 1.37         , 2.0          , DIRECTION_BACKWARD, Swiffer))
 
         gm.emptying_goals.append(goalmanager.Goal("DEPOSIT_CAPTAIN", 2.0, 0.30, 0.6, DIRECTION_FORWARD, DepositTreasure))
         gm.emptying_goals.append(goalmanager.Goal("DEPOSIT_2",       1.0, 0.90, 0.5, DIRECTION_FORWARD, DepositTreasure))
@@ -163,14 +163,14 @@ class GrabMap(statemachine.State):
     def on_enter(self):
         walk = commonstates.TrajectoryWalk()
         walk.rotate_to(0.0)
-        walk.wait_for(commonstates.StoreFabric(FABRIC_STORE_LOW))
+#        walk.wait_for(commonstates.StoreFabric(FABRIC_STORE_LOW))
         walk.wait_for(commonstates.MapArm(MAP_ARM_OPEN))
         walk.wait_for(commonstates.MapGripper(MAP_GRIPPER_OPEN))
         walk.backward(0.25)
         walk.wait_for(commonstates.MapGripper(MAP_GRIPPER_CLOSE))
-        walk.wait_for(commonstates.MapArm(MAP_ARM_CLOSE))
-        walk.wait_for(commonstates.StoreFabric(FABRIC_STORE_HIGH))
         walk.forward(0.25)
+        walk.wait_for(commonstates.MapArm(MAP_ARM_CLOSE))
+        #        walk.wait_for(commonstates.StoreFabric(FABRIC_STORE_HIGH))
         self.switch_to_substate(walk)
 
     def on_exit_substate(self, state):
