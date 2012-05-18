@@ -265,7 +265,7 @@ class EventLoop(object):
         self.webserver_port = webserver_port
         self.opponent_detector = opponentdetector.OpponentDetector(self)
         self.stopping = False
-        self.eval_map = trajectory.Map(self)
+        #self.map = trajectory.Map(self)
         self.map = graphpathfinding.Map(self)
         self.timers = []
         self.state_history = []
@@ -321,7 +321,6 @@ class EventLoop(object):
                         channel.packet.dispatch(self.robot)
                         channel.packet.dispatch(self.opponent_detector)
                         channel.packet.dispatch(self.map)
-                        channel.packet.dispatch(self.eval_map)
                         channel.packet.dispatch(self.get_current_state())
 
                         channel.packet = None
