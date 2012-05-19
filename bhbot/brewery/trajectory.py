@@ -351,6 +351,7 @@ class Map(object):
 
 
     def on_goto_finished(self, packet):
+        return # Disable this feature for the cup
         angle = None
         if packet.reason == REASON_BLOCKED_FRONT:
             angle = self.eventloop.robot.pose.angle
@@ -364,12 +365,12 @@ class Map(object):
             x2 = x1 + BLOCKED_ZONE_SIZE
             y2 = y1 + BLOCKED_ZONE_SIZE
             cost = FIELD_X_SIZE * FIELD_Y_SIZE
-            rz = self.pathfinder.add_penalized_zone(int(x1 / ROUTING_MAP_RESOLUTION),
+            rz = self.pathfinder.add_penalized_rect(int(x1 / ROUTING_MAP_RESOLUTION),
                                                     int(y1 / ROUTING_MAP_RESOLUTION),
                                                     int(x2 / ROUTING_MAP_RESOLUTION),
                                                     int(y2 / ROUTING_MAP_RESOLUTION),
                                                     cost / ROUTING_MAP_RESOLUTION)
-            ez = self.evaluator.add_penalized_zone(int(x1 / EVALUATOR_MAP_RESOLUTION),
+            ez = self.evaluator.add_penalized_rect(int(x1 / EVALUATOR_MAP_RESOLUTION),
                                                    int(y1 / EVALUATOR_MAP_RESOLUTION),
                                                    int(x2 / EVALUATOR_MAP_RESOLUTION),
                                                    int(y2 / EVALUATOR_MAP_RESOLUTION),
