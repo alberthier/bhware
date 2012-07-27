@@ -26,7 +26,7 @@
 #define DEBUG_EVENT                 (OS_FLAGS) 0x01
 
 /** Main */
-#define MAIN_EVENT                  (OS_FLAGS) 0x01
+#define MAIN_ASSER_READY            (OS_FLAGS) 0x01
 #define MAIN_ASSER_FINISHED         (OS_FLAGS) 0x02
 #define MAIN_EVITEMENT              (OS_FLAGS) 0x04
 #define MAIN_SEND_KEEP_ALIVE        (OS_FLAGS) 0x08
@@ -124,15 +124,10 @@
 //#define Capteur_Couleur_connected
 
 /** Active les actionneurs */
-//#define Actionneurs
+#define Actionneurs
 
 /** Active l'auto maintien pour les pinces pelle */
 //#define Auto_Maintien_Pelle
-
-/**********************************************************************/
-
-/** Active le Debug Asser */
-//#define DEBUG_ASSER
 
 /**********************************************************************/
 

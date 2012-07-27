@@ -10,22 +10,22 @@ d_cfgTraj = {'Masse': 1.2
                 , 'Constance_couple': 0.0234
                 , 'Constante_vitesse': 0.02346
                 , 'Rapport_reduction': 20.0
-                , 'Kp': 2.8     #Te_20ms:8.0
-                , 'Ki': 8.0    #Te_20ms:25.0
+                , 'Kp': 2.0     #Te_20ms:8.0
+                , 'Ki': 5.0    #Te_20ms:25.0
                 , 'K1': 20.0
                 , 'K2': 50.0
-                , 'K3': 50#20.0
-                , 'R1': -6.0 #-6.0
-                , 'R2': -6.0 #-6.0
-                , 'Amax': 7.0   #3.0
-                , 'Dmax': -8.0  #-1.5
+                , 'K3': 20.0
+                , 'R1': -6.0
+                , 'R2': -6.0
+                , 'Amax': 1.0   #3.0
+                , 'Dmax': -1.5  #-1.5.0
                 , 'coeff_vi1': 0.95
                 , 'vitesse_seuil_decc': 0.15
-                , 'coeff_decc_finale': 1.0 #0.08
+                , 'coeff_decc_finale': 0.08
                 , 'decc_min': -0.3
                 , 'RatioAcc': 1.0
                 , 'RatioDecc': 1.0
                 , 'Umax': 900.0	# Umax
-                , 'Facteur_vitesse_angulaire': 1.2	# facteur de vitesse angulaire
+                , 'Facteur_vitesse_angulaire': 8.0	# facteur de vitesse angulaire
                 , 'Distance': 0.5
                 }

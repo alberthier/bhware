@@ -58,7 +58,7 @@ extern unsigned short   simu_consigneMoteurD;
 #ifdef PIC32_BUILD
 
 extern void             TASK_ASSER(void *pdata);
-extern void             ASSER_GoTo(PtTraj *p_chemin, unsigned int nbrePtsChemin, unsigned char Mouvement, signed char Marche);
+extern void             ASSER_GoTo(PtTraj *p_chemin, unsigned int nbrePtsChemin, unsigned char Mouvement, signed char Marche, float Angle);
 extern void             ASSER_SendConsigne(unsigned short ConsigneMoteurD, unsigned short ConsigneMoteurG);
 
 #else /* PIC32_BUILD */
