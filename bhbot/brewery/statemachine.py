@@ -7,6 +7,8 @@ import imp
 import inspect
 import datetime
 
+#TODO : improve import mechanism by using this tutorial : http://www.doughellmann.com/PyMOTW/imp/
+# then when could remove sys.path manipulations
 
 def instantiate_state_machine(state_machine_name, eventloop):
     state_machines_dir = os.path.join(os.path.dirname(__file__), "statemachines")
@@ -31,6 +33,12 @@ class State(object):
         self.event_loop = None
         self.sub_state = None
         self.parent_state = None
+        self.short_description = None
+
+    def get_short_description(self):
+        if not self.short_description :
+            return self.__doc__
+        return self.short_description
 
 
     def switch_to_state(self, new_state):
@@ -40,6 +48,7 @@ class State(object):
         new_state.parent_state = self.parent_state
         self.parent_state.sub_state = new_state
         logger.log("Switching to state {}".format(type(new_state).__name__))
+        self.event_loop.state_history.append(new_state)
         new_state.on_enter()
 
 
@@ -49,6 +58,7 @@ class State(object):
         new_state.parent_state = self
         self.sub_state = new_state
         logger.log("Pushing sub-state {}".format(type(new_state).__name__))
+        self.event_loop.state_history.append(new_state)
         new_state.on_enter()
 
 
@@ -57,6 +67,8 @@ class State(object):
         if exit_status is not None :
             logger.log("Substate exit status = {}".format(exit_status))
         self.parent_state.sub_state = None
+        if not self.event_loop.state_history[:-1] is self :
+            self.event_loop.state_history.append(self)
         self.parent_state.on_exit_substate(self)
 
 
@@ -93,5 +105,5 @@ class State(object):
 
 
     #noinspection PyUnusedLocal
-    def on_opponent_disapeared(self, opponent):
+    def on_opponent_disapeared(self, opponent, is_in_front):
         pass

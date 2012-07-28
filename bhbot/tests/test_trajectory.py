@@ -100,6 +100,11 @@ class TestMap(unittest.TestCase):
         self.assertEquals(len(route), 0)
 
 
+    def test_escape_from_forbidden_zone(self):
+        route = self.map.route(trajectory.Pose(PURPLE_START_X + MAP_WALLS_DISTANCE, PURPLE_START_Y), trajectory.Pose(1.6, 2.0))
+        self.assertNotEquals(len(route), 0)
+
+
 
 
 if __name__ == '__main__':

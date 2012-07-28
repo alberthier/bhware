@@ -4,7 +4,6 @@
 
 import sys
 import os
-import socket
 
 sys.path.append(os.path.dirname(__file__))
 
@@ -16,7 +15,7 @@ import statemachine
 import commonstates
 from definitions import *
 
-
+import math
 
 
 class WebState(statemachine.State):
@@ -38,6 +37,9 @@ class WebState(statemachine.State):
 class BHWeb(object):
 
     def __init__(self, eventloop):
+        """
+        @type eventloop: EventLoop
+        """
         self.eventloop = eventloop
 
 
@@ -90,6 +92,20 @@ class BHWeb(object):
         while state != self.eventloop.root_state:
             html += "<li>{}</li>\n".format(type(state).__name__)
             state = state.parent_state
+        html += """</ul>
+  </div>
+  <div>
+    <h2>State history:</h2>
+    <ul>
+"""
+        previous = None
+        for state in self.eventloop.state_history:
+            if state.parent_state == previous :
+                html+="<ul>"
+            elif previous and previous.parent_state == state :
+                html+="</ul>"
+            html += "<li>{}</li>\n".format(type(state).__name__)
+            previous = state
         html += """</ul>
   </div>
 </body>
@@ -180,16 +196,9 @@ class BHWeb(object):
             for value, name in item.enum.lookup_by_value.iteritems():
                 html += """<option value="{}">{} ({})</option>""".format(value, name, value)
             html += """</select></td></tr>"""
-        elif isinstance(item, packets.PoseWithOptionalAngleItem):
-            html += """<tr><td>{}.x (f)</td><td><input type="text" name="{}.x" value="{}"/></td></tr>""".format(name, name, item.default_value.x)
-            html += """<tr><td>{}.y (f)</td><td><input type="text" name="{}.y" value="{}"/></td></tr>""".format(name, name, item.default_value.y)
-            if item.default_value.angle is not None:
-                default_angle = item.default_value.angle
-            else:
-                default_angle = "0.0"
-            html += """<tr><td>{}.angle (f)</td><td><input type="text" name="{}.angle" value="{}"/></td></tr>""".format(name, name, default_angle)
-            if not isinstance(item, packets.PoseItem):
-                html += """<tr><td>{}.use_angle (B)</td><td><input type="checkbox" name="{}.use_angle" checked="checked"/></td></tr>""".format(name, name)
+        elif isinstance(item, packets.OptionalAngle):
+            html += """<tr><td>{}.angle (f)</td><td><input type="text" name="{}.angle" value="{}"/></td></tr>""".format(name, name, item.default_value)
+            html += """<tr><td>{}.use_angle (B)</td><td><input type="checkbox" name="{}.use_angle" checked="checked"/></td></tr>""".format(name, name)
         elif isinstance(item, packets.ListItem):
             html += """<tr><td>{}.count (B)</td><td><input type="text" name="{}.count" value="{}"/></td></tr>""".format(name, name, 1)
             for sub_item_index in xrange(item.max_elements):
@@ -216,15 +225,12 @@ class BHWeb(object):
             return query.has_key(name)
         elif isinstance(item, packets.FloatItem):
             return float(query[name])
-        elif isinstance(item, packets.PoseWithOptionalAngleItem):
-            pose = trajectory.Pose()
-            pose.x = float(query[name + ".x"])
-            pose.y = float(query[name + ".y"])
-            if isinstance(item, packets.PoseItem) or query.has_key(name + ".use_angle"):
-                pose.angle = float(query[name + ".angle"])
+        elif isinstance(item, packets.OptionalAngle):
+            if query.has_key(name + ".use_angle"):
+                angle = float(query[name + ".angle"])
             else:
-                pose.angle = None
-            return pose
+                angle = None
+            return angle
         elif isinstance(item, packets.ListItem):
             count = int(query[name + ".count"])
             l = []

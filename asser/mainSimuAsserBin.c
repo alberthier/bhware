@@ -49,7 +49,7 @@ int commandMsgTreatment(char *buffer, unsigned char *p_mouvement, char *p_marche
         //printf("logStr_data: %s\n", strValTemp);
         sscanf(strValTemp, "%f", &valTemp);
         data[iVal] = valTemp;
-        //ASSER_TRAJ_LogAsser("init", NBR_ASSER_LOG_VALUE, data[iVal]);
+        //ASSER_TRAJ_LogAsserValPC("init", data[iVal]);
         msgSize = msgSize + strlen(strValTemp) + 1;
     }
     /* msgSize = strlen(cmd) + strlen(strMvt) + strlen(strMarche) + strlen(strNbPts) + 4 + shiftChar; */
@@ -58,9 +58,9 @@ int commandMsgTreatment(char *buffer, unsigned char *p_mouvement, char *p_marche
     for(iVal = 0; iVal < *p_nbPts; iVal++)
     {
         p_chemin[iVal].x = CONVERT_FLOAT2SHORT_DISTANCE(data[iVal*2]);
-        //ASSER_TRAJ_LogAsser("x_traj", NBR_ASSER_LOG_VALUE, CONVERT_DISTANCE(p_chemin[iVal].x));
+        //ASSER_TRAJ_LogAsserValPC("x_traj", CONVERT_DISTANCE(p_chemin[iVal].x));
         p_chemin[iVal].y = CONVERT_FLOAT2SHORT_DISTANCE(data[iVal*2 + 1]);
-        //ASSER_TRAJ_LogAsser("y_traj", NBR_ASSER_LOG_VALUE, CONVERT_DISTANCE(p_chemin[iVal].y));
+        //ASSER_TRAJ_LogAsserValPC("y_traj", CONVERT_DISTANCE(p_chemin[iVal].y));
     }
 
     return msgSize;
@@ -105,16 +105,16 @@ int main(void)
 
     /* Config des parametres par défaut  */
     // param des PI # 1:Kp, 2:Ki
-    SIMU_SetGainsPI(2.0, 12.0);
+    SIMU_SetGainsPI(2.0, 6.0);
     // param des gains asser haut niveau
     gainDeplacement1 = 20.0;
     gainDeplacement2 = 50.0;
-    gainDeplacement3 = 20.0;
+    gainDeplacement3 = 50.0;
     // param des gains asser rotation
     gainRotation1 = -6.0;
     gainRotation2 = -6.0;
-    // param du profil de vitesse # 1:A_MAX, 2:D_MAX, 3:COEFF_VI1, 4:VITESSE_SEUIL_DECC, 5:COEFF_DECC_FINALE, 6:DECC_MIN, 7:Umax, 8:facteurVitesseAngulaireMax
-    SIMU_SetParamProfilVitesse(3.0, -1.5, 0.95, 0.15, 0.08, -0.3, 900.0, 0.5);
+    // param du profil de vitesse # 1:A_MAX, 2:D_MAX, 3:COEFF_VI1, 4:VITESSE_SEUIL_DECC, 5:COEFF_DECC_FINALE, 6:DECC_MIN, 7:Umax, 8:FacteurVitesseAngulaireMax
+    SIMU_SetParamProfilVitesse(2.5, -1.5, 0.95, 0.15, 0.08, -0.3, 900.0, 0.5);
     // param du moteur de deplacement # 1:MASSE, 2:RAYON_ROUE, 3:FROTTEMENT_FLUIDE, 4:FORCE_RESISTANTE, 5:RESISTANCE_INDUIT, 6:INDUCTANCE_INDUIT, 7:CONSTANTE_COUPLE, 8:CONSTANTE_VITESSE, 9:RAPPORT_REDUCTION
     SIMU_SetParamMoteur(1.2, 0.03, 0.0000504, 0.4, 2.18, 0.00024, 0.0234, 0.02346, 20.0);
 
@@ -147,7 +147,14 @@ int main(void)
         else if (strcmp(command, "MSG_MAIN_GOTO") == 0)
         {
             commandMsgTreatment(buffer, &mouvement, &marche, &angle_rad, &nbrPtsChemin, chemin);
-
+            /*
+            ASSER_TRAJ_LogAsserValPC("main_goto", nbrPtsChemin);
+            ASSER_TRAJ_LogAsserValPC("main_goto", chemin[0].x);
+            ASSER_TRAJ_LogAsserValPC("main_goto", chemin[0].y);
+            ASSER_TRAJ_LogAsserValPC("main_goto", chemin[1].x);
+            ASSER_TRAJ_LogAsserValPC("main_goto", chemin[1].y);
+            ASSER_TRAJ_LogAsserValPC("main_goto", angle_rad);
+            */
             SIMU_InitialisationLogRobot();
             /* initialisation des données pour l'ordre de déplacement */
             /* lancement du deplacement */
@@ -204,7 +211,7 @@ int main(void)
                 COEFF_DECC_FINALE = paramT[4].value;
                 DECC_MIN = paramT[5].value;
                 Umax = (unsigned int)paramT[6].value;
-                facteurVitesseAngulaireMax = paramT[7].value;
+                FacteurVitesseAngulaireMax = paramT[7].value;
             }
         }
         else if (strcmp(command, "CONFIG_ASSER") == 0)

@@ -107,7 +107,7 @@ extern void SIMU_SetParamProfilVitesse(float Amax, float Dmax, float coeff_vi1, 
     COEFF_DECC_FINALE = coeff_decc_finale;
     DECC_MIN = decc_min;
     Umax = (unsigned int)umax;
-    facteurVitesseAngulaireMax = fvam;
+    FacteurVitesseAngulaireMax = fvam;
 }
 
 extern void SIMU_SetConfigGeneraleProfilVitesse(float ratioAcc, float ratioDecc)
@@ -344,48 +344,51 @@ void SIMU_InitialisationLogRobot(void)
     //POS_SetGainStatiqueMoteur(SIMU_gain(), SIMU_gain());
     poseRobot = POS_GetPoseRobot();
 
-    ASSER_TRAJ_LogAsser("vitesseMoteurGauche", NBR_ASSER_LOG_VALUE + 1, vitesseMoteurG);
-    ASSER_TRAJ_LogAsser("vitesseMoteurDroit", NBR_ASSER_LOG_VALUE + 1, vitesseMoteurD);
-    ASSER_TRAJ_LogAsser("erreurVitesseMoteurGauche", NBR_ASSER_LOG_VALUE + 1, erreurVitesseMoteurG);
-    ASSER_TRAJ_LogAsser("erreurVitesseMoteurDroit", NBR_ASSER_LOG_VALUE + 1, erreurVitesseMoteurD);
-    ASSER_TRAJ_LogAsser("tensionPWM_MoteurGauche", NBR_ASSER_LOG_VALUE + 1, tensionPWM_G);
-    ASSER_TRAJ_LogAsser("tensionPWM_MoteurDroit", NBR_ASSER_LOG_VALUE + 1, tensionPWM_D);
-//    ASSER_TRAJ_LogAsser("integPIVG", NBR_ASSER_LOG_VALUE + 1, integPI_G*KI_GAUCHE);
-//    ASSER_TRAJ_LogAsser("integPIVD", NBR_ASSER_LOG_VALUE + 1, integPI_D*KI_DROIT);
+    ASSER_TRAJ_LogAsserValPC("vitesseMoteurGauche", vitesseMoteurG);
+    ASSER_TRAJ_LogAsserValPC("vitesseMoteurDroit", vitesseMoteurD);
+    ASSER_TRAJ_LogAsserValPC("erreurVitesseMoteurGauche", erreurVitesseMoteurG);
+    ASSER_TRAJ_LogAsserValPC("erreurVitesseMoteurDroit", erreurVitesseMoteurD);
+    ASSER_TRAJ_LogAsserValPC("tensionPWM_MoteurGauche", tensionPWM_G);
+    ASSER_TRAJ_LogAsserValPC("tensionPWM_MoteurDroit", tensionPWM_D);
+//    ASSER_TRAJ_LogAsserValPC("integPIVG", integPI_G*KI_GAUCHE);
+//    ASSER_TRAJ_LogAsserValPC("integPIVD", integPI_D*KI_DROIT);
 
-    ASSER_TRAJ_LogAsser("ConsigneMoteurGauche", NBR_ASSER_LOG_VALUE + 1, 0.0);
-    ASSER_TRAJ_LogAsser("ConsigneMoteurDroit", NBR_ASSER_LOG_VALUE + 1, 0.0);
-    ASSER_TRAJ_LogAsser("vitLongitudinale", NBR_ASSER_LOG_VALUE + 1, 0.0);
+    ASSER_TRAJ_LogAsserValPC("ConsigneMoteurGauche", 0.0);
+    ASSER_TRAJ_LogAsserValPC("ConsigneMoteurDroit", 0.0);
+    ASSER_TRAJ_LogAsserValPC("vitLongitudinale", 0.0);
 
     /* fichier de configuration pour l'affichage sous matlab */
-    ASSER_TRAJ_LogAsser("periode", NBR_ASSER_LOG_VALUE + 1, TE);
-    //ASSER_TRAJ_LogAsser("periode", NBR_ASSER_LOG_VALUE + 1, TE_PI);
-    ASSER_TRAJ_LogAsser("Ki", NBR_ASSER_LOG_VALUE + 1, KI_GAUCHE*SIMU_gain());
+    ASSER_TRAJ_LogAsserValPC("periode", TE);
+    //ASSER_TRAJ_LogAsserValPC("periode", TE_PI);
+    ASSER_TRAJ_LogAsserValPC("Ki", KI_GAUCHE*SIMU_gain());
 
 //    /* debug boucle de vitesse 1ms */
-//    ASSER_TRAJ_LogAsser("vitesseG1ms", NBR_ASSER_LOG_VALUE + 1, vitesseMoteurG);
-//    ASSER_TRAJ_LogAsser("vitesseD1ms", NBR_ASSER_LOG_VALUE + 1, vitesseMoteurD);
+//    ASSER_TRAJ_LogAsserValPC("vitesseG1ms", vitesseMoteurG);
+//    ASSER_TRAJ_LogAsserValPC("vitesseD1ms", vitesseMoteurD);
+
+    ASSER_TRAJ_LogAsserValPC("ConsigneMoteurDroit_MS", 0.0);
 }
 
 void SIMU_LogRobot(void)
 {
-    ASSER_TRAJ_LogAsser("vitesseMoteurGauche", NBR_ASSER_LOG_VALUE, vitesseMoteurG);
-    ASSER_TRAJ_LogAsser("vitesseMoteurDroit", NBR_ASSER_LOG_VALUE, vitesseMoteurD);
+    ASSER_TRAJ_LogAsserValPC("vitesseMoteurGauche", vitesseMoteurG);
+    ASSER_TRAJ_LogAsserValPC("vitesseMoteurDroit", vitesseMoteurD);
 
-    ASSER_TRAJ_LogAsser("erreurVitesseMoteurGauche", NBR_ASSER_LOG_VALUE + 1, erreurVitesseMoteurG);
-    ASSER_TRAJ_LogAsser("erreurVitesseMoteurDroit", NBR_ASSER_LOG_VALUE + 1, erreurVitesseMoteurD);
+    ASSER_TRAJ_LogAsserValPC("erreurVitesseMoteurGauche", erreurVitesseMoteurG);
+    ASSER_TRAJ_LogAsserValPC("erreurVitesseMoteurDroit", erreurVitesseMoteurD);
 
-    ASSER_TRAJ_LogAsser("tensionPWM_MoteurGauche", NBR_ASSER_LOG_VALUE, tensionPWM_G);
-    ASSER_TRAJ_LogAsser("tensionPWM_MoteurDroit", NBR_ASSER_LOG_VALUE, tensionPWM_D);
+    ASSER_TRAJ_LogAsserValPC("tensionPWM_MoteurGauche", tensionPWM_G);
+    ASSER_TRAJ_LogAsserValPC("tensionPWM_MoteurDroit", tensionPWM_D);
 /*
-    ASSER_TRAJ_LogAsser("integPIVG", NBR_ASSER_LOG_VALUE + 1, integPI_G*KI_GAUCHE);
-    ASSER_TRAJ_LogAsser("integPIVD", NBR_ASSER_LOG_VALUE + 1, integPI_D*KI_DROIT);
+    ASSER_TRAJ_LogAsserValPC("integPIVG", integPI_G*KI_GAUCHE);
+    ASSER_TRAJ_LogAsserValPC("integPIVD", integPI_D*KI_DROIT);
 */
-    ASSER_TRAJ_LogAsser("ConsigneMoteurGauche", NBR_ASSER_LOG_VALUE, (float)g_ConsigneMoteurG);
-    ASSER_TRAJ_LogAsser("ConsigneMoteurDroit", NBR_ASSER_LOG_VALUE, (float)g_ConsigneMoteurD);
-    ASSER_TRAJ_LogAsser("vitLongitudinale", NBR_ASSER_LOG_VALUE, vitessesConsignes.longitudinale);
-//    ASSER_TRAJ_LogAsser("vitRotation", NBR_ASSER_LOG_VALUE + 1, vitessesConsignes.rotation);
+    ASSER_TRAJ_LogAsserValPC("ConsigneMoteurGauche", (float)g_ConsigneMoteurG);
+    ASSER_TRAJ_LogAsserValPC("ConsigneMoteurDroit", (float)g_ConsigneMoteurD);
+    ASSER_TRAJ_LogAsserValPC("vitLongitudinale", vitessesConsignes.longitudinale);
+//    ASSER_TRAJ_LogAsserValPC("vitRotation", vitessesConsignes.rotation);
 
+    ASSER_TRAJ_LogAsserValPC("ConsigneMoteurDroit_MS", (((float)g_ConsigneMoteurD)-((float)OffsetPWM))*SIMU_gain());
 }
 
 /**********************************************************************/
@@ -401,7 +404,7 @@ extern void ASSER_TRAJ_AfficheInfoFinAsser(void)
     Pose poseRobot;
 
     poseRobot = POS_GetPoseRobot();
-//    ASSER_TRAJ_LogAsser("time", ASSER_TRAJ_GetCompteur() * TE);
+//    ASSER_TRAJ_LogAsserValPC("time", ASSER_TRAJ_GetCompteur() * TE);
     printf("Motion accomplished. Pose x:%1.3fm y:%1.3fm theta:%1.3f time:%1.2fs.\n", poseRobot.x, poseRobot.y, ((poseRobot.angle * 180.0) / PI), (ASSER_TRAJ_GetCompteur() * TE));
     fflush(stdout);
 }
@@ -424,22 +427,22 @@ void SIMU_BoucleVitesse(void)
 //    /* Mesure des instants de saturation du correcteur PI gauche */
 //    if ((tensionPWM_G < -(OffsetPWM-0.1)) || (tensionPWM_G > (OffsetPWM-0.1)))
 //    {
-//        ASSER_TRAJ_LogAsser("saturationPIgauche", 1.0);
+//        ASSER_TRAJ_LogAsserValPC("saturationPIgauche", 1.0);
 //    }
 //    else
 //    {
-//        ASSER_TRAJ_LogAsser("saturationPIgauche", 0.0);
+//        ASSER_TRAJ_LogAsserValPC("saturationPIgauche", 0.0);
 //    }
     tensionPWM_D = (signed int)SIMU_RegulateurPI_BHT(erreurVitesseMoteurD, &integPI_D, KI_DROIT, KP_DROIT, OffsetPWM, TE_PI);
 
     /* Mesure des instants de saturation du correcteur PI droit */
 //    if ((tensionPWM_D < -(OffsetPWM-0.1)) || (tensionPWM_D > (OffsetPWM-0.1)))
 //    {
-//        ASSER_TRAJ_LogAsser("saturationPIdroit", 1.0);
+//        ASSER_TRAJ_LogAsserValPC("saturationPIdroit", 1.0);
 //    }
 //    else
 //    {
-//        ASSER_TRAJ_LogAsser("saturationPIdroit", 0.0);
+//        ASSER_TRAJ_LogAsserValPC("saturationPIdroit", 0.0);
 //    }
 
     if (asserRunning_ant != ASSER_Running)
@@ -454,20 +457,20 @@ void SIMU_BoucleVitesse(void)
     // 1:gain statique, 2:premiere constante de temps, 3: deuxieme constante de temps
     // moteur gauche [0.90848238070313447, 0.001532263578663721, 0.14712688461925522]
     //SIMU_SimulationMoteurCC((signed int)tensionPWM_G, &vitesseMoteurG, SIMU_TM, SIMU_KM, SIMU_CR);
-    /*
+
     SIMU_SimulationMoteurCC_ordre2((signed int)tensionPWM_G
                                    , tensionPWM_G_n
                                    , &vitesseMoteurG
                                    , &vitesseMoteurG_n2
-                                   , 0.0178 //0.072
-                                   , 0.3449 //0.431
-                                   , SIMU_KM
+                                   , 0.1707 //0.072
+                                   , 0.003 //0.431
+                                   , GAIN_STATIQUE_MOTEUR_G
                                    , 0 //20
                                    , SIMU_CR
                                    , TE_PI
                                    );
-    */
 
+    /*
     SIMU_SimulationMoteurCC_ordre2_complet((signed int)tensionPWM_G
                                            , tensionPWM_G_n
                                            , &vitesseMoteurG
@@ -484,24 +487,25 @@ void SIMU_BoucleVitesse(void)
                                            , NB_PERIODE_RETARD
                                            , TE_PI
                                            );
+    */
 
     // 1:gain statique, 2:premiere constante de temps, 3: deuxieme constante de temps
     // moteur droit [0.93041457097724989, 0.0018257971355764644, 0.20174006794915703] avec un retard pur de 0.02s
     //SIMU_SimulationMoteurCC((signed int)tensionPWM_D, &vitesseMoteurD, SIMU_TM, SIMU_KM, SIMU_CR);
-    /*
+
     SIMU_SimulationMoteurCC_ordre2((signed int)tensionPWM_D
                                    , tensionPWM_D_n
                                    , &vitesseMoteurD
                                    , &vitesseMoteurD_n2
-                                   , 0.0178 //0.072
-                                   , 0.3449 //0.431
-                                   , SIMU_KM
+                                   , 0.001 //0.072
+                                   , 0.1763 //0.431
+                                   , GAIN_STATIQUE_MOTEUR_D
                                    , 0 //20
                                    , SIMU_CR
                                    , TE_PI
                                    );
-    */
 
+    /*
     SIMU_SimulationMoteurCC_ordre2_complet((signed int)tensionPWM_D
                                            , tensionPWM_D_n
                                            , &vitesseMoteurD
@@ -518,11 +522,12 @@ void SIMU_BoucleVitesse(void)
                                            , NB_PERIODE_RETARD
                                            , TE_PI
                                            );
+    */
 
 //    if (ASSER_TRAJ_GetCompteur() == 1)
 //    {
-//        ASSER_TRAJ_LogAsser("vitesseG1ms", (float)tensionPWM_G);
-//        ASSER_TRAJ_LogAsser("vitesseD1ms", (float)tensionPWM_D);
+//        ASSER_TRAJ_LogAsserValPC("vitesseG1ms", (float)tensionPWM_G);
+//        ASSER_TRAJ_LogAsserValPC("vitesseD1ms", (float)tensionPWM_D);
 //    }
 
 }
@@ -530,7 +535,7 @@ void SIMU_BoucleVitesse(void)
 void SIMU_CalculPeriodique(void)
 {
     int p;
-        ASSER_TRAJ_LogAsser("ASSER_Running", NBR_ASSER_LOG_VALUE, ASSER_Running);
+        ASSER_TRAJ_LogAsserValPC("ASSER_Running", ASSER_Running);
         asserRunning_ant = ASSER_Running;
         SIMU_REDEF_ASSER_RecoverNbrPas(vitesseMoteurG, vitesseMoteurD, &deltaPasCodeurG, &deltaPasCodeurD);
         POS_Positionnement(deltaPasCodeurD, deltaPasCodeurG);
@@ -582,11 +587,11 @@ void SIMU_CalculPeriodiqueAsserVitessePI(void)
     tensionPWM_G = (float)floor(SIMU_RegulateurPI_BHT(erreurVitesseMoteurG, &integPI_G, KI_GAUCHE, KP_GAUCHE, OffsetPWM, TE_PI));
     if ((tensionPWM_G < -(OffsetPWM-0.1)) || (tensionPWM_G > (OffsetPWM-0.1)))
     {
-        ASSER_TRAJ_LogAsser("saturationPIgauche", NBR_ASSER_LOG_VALUE + 1, 1.0);
+        ASSER_TRAJ_LogAsserValPC("saturationPIgauche", 1.0);
     }
     else
     {
-        ASSER_TRAJ_LogAsser("saturationPIgauche", NBR_ASSER_LOG_VALUE + 1, 0.0);
+        ASSER_TRAJ_LogAsserValPC("saturationPIgauche", 0.0);
     }
 
     //SIMU_SimulationMoteurCC((signed int)tensionPWM_G, &vitesseMoteurG, SIMU_TM, SIMU_KM, SIMU_CR);
@@ -667,14 +672,14 @@ int SIMU_AsserVitessePI(void)
     SIMU_REDEF_ASSER_GoTo(chemin, nbrePtsChemin, mouvement, marche, angle_arrivee);
 
     compteurPeriodePI = 0;
-    ASSER_TRAJ_LogAsser("distPI", NBR_ASSER_LOG_VALUE, distance_parcourue);
-    ASSER_TRAJ_LogAsser("vitconsPI", NBR_ASSER_LOG_VALUE, vitesse_cons_mps);
+    ASSER_TRAJ_LogAsserValPC("distPI", distance_parcourue);
+    ASSER_TRAJ_LogAsserValPC("vitconsPI", vitesse_cons_mps);
     while ((distance_parcourue < len_parcours) && (compteurPeriodePI < (unsigned int)(TEMPS_SIMULATION / TE))) /* -> simulation pendant TEMPS_SIMULATION secondes au max */
     {
         compteurPeriodePI = compteurPeriodePI + 1;
         vitesse_cons_mps = ASSER_TRAJ_GabaritVitesse_getVitesse_vs_Distance(distance_parcourue);
 
-        ASSER_TRAJ_LogAsser("vitconsPI", NBR_ASSER_LOG_VALUE, vitesse_cons_mps);
+        ASSER_TRAJ_LogAsserValPC("vitconsPI", vitesse_cons_mps);
 
         g_ConsigneMoteurG = (unsigned int)(vitesse_cons_mps / SIMU_gain()) + OffsetPWM;
 
@@ -685,7 +690,7 @@ int SIMU_AsserVitessePI(void)
             SIMU_BoucleVitesse();
             distance_parcourue += vitesseMoteurG * TE_PI;
         }
-        ASSER_TRAJ_LogAsser("distPI", NBR_ASSER_LOG_VALUE, distance_parcourue);
+        ASSER_TRAJ_LogAsserValPC("distPI", distance_parcourue);
         SIMU_LogRobot();
     }
 }
@@ -697,11 +702,11 @@ int SIMU_Mouvement(void)
         SIMU_CalculPeriodique();
         SIMU_LogRobot();
     }
-    ASSER_TRAJ_LogAsser("time", NBR_ASSER_LOG_VALUE, ASSER_TRAJ_GetCompteur() * TE);
+    ASSER_TRAJ_LogAsserValPC("time", ASSER_TRAJ_GetCompteur() * TE);
     /* FIN 1er DEPLACEMENT */
     if (ASSER_Running == True)
     {
-//        ASSER_TRAJ_LogAsser("time", -1.0);
+//        ASSER_TRAJ_LogAsserValPC("time", -1.0);
         printf("Motion failed: timeout.\n");
         fflush(stdout);
         ASSER_Running = False;

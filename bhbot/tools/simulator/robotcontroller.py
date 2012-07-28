@@ -15,21 +15,22 @@ from definitions import *
 
 class RobotController(object):
 
-    def __init__(self, team, game_controller, view, robot_layer, robot_trajectory_layer, robot_routing_layer):
+    def __init__(self, team, game_controller, view, robot_layer, robot_trajectory_layer, robot_routing_layer, robot_routing_graph_layer):
         self.team = team
         self.game_controller = game_controller
         self.view = view
         self.robot_layer = robot_layer
         self.robot_trajectory_layer = robot_trajectory_layer
         self.robot_routing_layer = robot_routing_layer
+        self.robot_routing_graph_layer = robot_routing_graph_layer
         robot_layer.robot_controller = self
         self.process = None
         self.socket = None
         self.incoming_packet_buffer = ""
         self.incoming_packet = None
         self.ready = False
-
         self.resettle_count = 0
+        self.stop_requested = False
 
 
     def is_process_started(self):
@@ -108,10 +109,18 @@ class RobotController(object):
                     packet.dispatch(self.robot_layer)
                     packet.dispatch(self.robot_trajectory_layer)
                     packet.dispatch(self.robot_routing_layer)
+                    packet.dispatch(self.robot_routing_graph_layer)
 
 
     def on_goto(self, packet):
+        self.stop_requested = False
         self.send_packet(packets.GotoStarted())
+
+    def on_enable_anti_blocking(self, packet):
+        self.send_packet(packet)
+
+    def on_disable_anti_blocking(self, packet):
+        self.send_packet(packet)
 
 
     def on_controller_ready(self, packet):
@@ -123,6 +132,7 @@ class RobotController(object):
 
 
     def on_stop(self, packet):
+        self.stop_requested = True
         self.stop()
 
 
@@ -179,7 +189,10 @@ class RobotController(object):
     def send_goto_finished(self, reason, current_point_index):
         self.goto_packet = None
         packet = packets.GotoFinished()
-        packet.reason = reason
+        if self.stop_requested:
+            packet.reason = REASON_STOP_REQUESTED
+        else:
+            packet.reason = reason
         packet.current_pose = self.robot_layer.get_pose()
         packet.current_point_index = current_point_index
         self.send_packet(packet)
@@ -193,7 +206,8 @@ class RobotController(object):
     def stop(self):
         if self.robot_layer.robot.move_animation.state() == QAbstractAnimation.Running:
             self.robot_layer.robot.move_animation.stop()
-
+        else:
+            self.send_goto_finished(REASON_STOP_REQUESTED, 0)
 
     def resume(self):
         if self.robot_layer.robot.move_animation.state() == QAbstractAnimation.Paused:

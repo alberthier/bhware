@@ -16,6 +16,9 @@ import fieldview
 import helpers
 import dynamics
 
+import math
+import time
+
 
 
 
@@ -137,7 +140,7 @@ class GraphicsRobotGripperObject(QObject):
             self.item.setPos(150.0, -125.0)
             self.start_angle = 40
             self.end_angle = -180
-        self.item.setRotation(self.start_angle)
+        self.reset()
 
         pen = QPen(QColor("#838383"), 15.0)
         pen.setCapStyle(Qt.RoundCap)
@@ -157,6 +160,8 @@ class GraphicsRobotGripperObject(QObject):
     def set_position(self, p):
         self.item.setRotation(p)
 
+    def reset(self):
+        self.item.setRotation(self.start_angle)
 
     #declare 'position' to Qt's property system
     position = pyqtProperty('qreal', get_position, set_position)
@@ -249,7 +254,7 @@ class GraphicsRobotObject(QObject):
         QObject.__init__(self)
 
         self.move_animation = QParallelAnimationGroup()
-        self.move_animation.finished.connect(self.animation_finished)
+        self.move_animation.stateChanged.connect(self.animation_state_changed)
         self.layer = layer
 
         self.item = QGraphicsItemGroup(layer)
@@ -275,10 +280,20 @@ class GraphicsRobotObject(QObject):
         tower.setBrush(QColor("#838383"))
         self.item.addToGroup(tower)
 
-        team_indicator = QGraphicsEllipseItem(15.0, -25.0, 50.0, 50.0)
-        team_indicator.setBrush(QColor(layer.color))
-        team_indicator.setPen(QPen(0))
-        self.item.addToGroup(team_indicator)
+        self.team_indicator = QGraphicsEllipseItem(15.0, -25.0, 50.0, 50.0)
+        self.team_indicator.setBrush(QColor(layer.color))
+        self.team_indicator.setPen(QPen(0))
+        self.item.addToGroup(self.team_indicator)
+
+        detection_radius = TURRET_SHORT_DISTANCE_DETECTION_RANGE * 1000.0
+        self.short_detection_circle = QGraphicsEllipseItem(-detection_radius, -detection_radius, 2.0 * detection_radius, 2.0 * detection_radius)
+        self.short_detection_circle.setPen(QPen(QColor(layer.color), 2, Qt.DashLine))
+        self.item.addToGroup(self.short_detection_circle)
+
+        detection_radius = TURRET_LONG_DISTANCE_DETECTION_RANGE * 1000.0
+        self.long_detection_circle = QGraphicsEllipseItem(-detection_radius, -detection_radius, 2.0 * detection_radius, 2.0 * detection_radius)
+        self.long_detection_circle.setPen(QPen(QColor(layer.color), 2, Qt.DashLine))
+        self.item.addToGroup(self.long_detection_circle)
 
         self.fabric = QGraphicsRectItem(-60.0, -100.0, 40.0, 200.0)
         self.fabric.setPen(QPen(0))
@@ -297,6 +312,8 @@ class GraphicsRobotObject(QObject):
         self.item.setPos(0.0, 0.0)
         self.set_rotation(0.0)
         self.arm.reset()
+        self.left_gripper.reset()
+        self.right_gripper.reset()
 
 
     def get_position(self):
@@ -337,6 +354,10 @@ class GraphicsRobotObject(QObject):
         self.move_animation.clear()
 
         end_time = points[-1][1]
+        if end_time == 0.0:
+            self.movement_finished.emit(0)
+            print("end_time == 0.0 !?")
+            return
 
         rotate_animation = QPropertyAnimation()
         self.move_animation.addAnimation(rotate_animation)
@@ -371,10 +392,9 @@ class GraphicsRobotObject(QObject):
 
         self.move_animation.start()
 
-
-    def animation_finished(self):
-        t = self.move_animation.currentLoopTime() / 1000.0
-        self.movement_finished.emit(0)
+    def animation_state_changed(self, new_state, old_state):
+        if new_state == QAbstractAnimation.Stopped :
+            self.movement_finished.emit(0)
 
 
     def create_rotation_animation(self, angle):
@@ -735,7 +755,7 @@ class RoutingLayer(fieldview.Layer):
             self.name = "Red robot routing"
             self.color = TEAM_COLOR_RED
         self.path_blocks = []
-        self.walls = []
+        self.zones = []
         #self.setVisible(False)
 
         self.main_opponent_zone = self.create_opponent_zone(MAIN_OPPONENT_AVOIDANCE_RANGE * 2.0 * 1000.0)
@@ -787,21 +807,41 @@ class RoutingLayer(fieldview.Layer):
             self.path_blocks.append(item)
 
 
-    def on_simulator_route_walls(self, packet):
+    def on_simulator_route_reset_zones(self, packet):
+        for zone in self.zones:
+            self.scene().removeItem(zone)
+        self.zones = []
+
+
+    def on_simulator_route_rects(self, packet):
+        self.add_zone(packet, True)
+
+
+    def on_simulator_route_circles(self, packet):
+        self.add_zone(packet, False)
+
+
+    def add_zone(self, packet, is_rect):
         cell_size = ROUTING_MAP_RESOLUTION * 1000.0
-        brushColor = QColor(QColor("#ab471d"))
-        brushColor.setAlpha(80)
+        if packet.is_forbidden_zone:
+            brushColor = QColor(QColor("#ab471d"))
+        else:
+            brushColor = QColor(QColor("#73ab1d"))
+        brushColor.setAlpha(50)
         brush = QBrush(brushColor)
         pen = QPen(QBrush(), 0)
-        for wall in self.walls:
-            self.scene().removeItem(wall)
-        self.walls = []
-        for (x1, y1, x2, y2) in packet.walls:
-            item = QGraphicsRectItem(y1 * cell_size, x1 * cell_size, abs(y2 - y1) * cell_size,  abs(x2 - x1) * cell_size)
+
+        for shape in packet.shapes:
+            if is_rect:
+                (x1, y1, x2, y2) = shape
+                item = QGraphicsRectItem(y1 * cell_size, x1 * cell_size, abs(y2 - y1) * cell_size,  abs(x2 - x1) * cell_size)
+            else:
+                (x, y, radius) = shape
+                item = QGraphicsEllipseItem((y - radius) * cell_size, (x - radius) * cell_size, radius * 2.0 * cell_size, radius * 2.0 * cell_size)
             item.setBrush(brush)
             item.setPen(pen)
             self.addToGroup(item)
-            self.walls.append(item)
+            self.zones.append(item)
 
 
     def on_simulator_opponents_positions(self, packet):
@@ -817,6 +857,69 @@ class RoutingLayer(fieldview.Layer):
                 self.main_opponent_zone.hide()
             else:
                 self.secondary_opponent_zone.hide()
+
+
+    def reset(self):
+        self.main_opponent_zone.hide()
+        self.secondary_opponent_zone.hide()
+
+
+
+
+class RoutingGraphLayer(fieldview.Layer):
+
+    def __init__(self, scene, team, robot):
+        fieldview.Layer.__init__(self, scene)
+        self.team = team
+        if self.team == TEAM_PURPLE:
+            self.name = "Purple robot routing graph"
+            self.color = TEAM_COLOR_PURPLE
+        else:
+            self.name = "Red robot routing graph"
+            self.color = TEAM_COLOR_RED
+        self.edges = []
+        self.robot = robot
+        #self.setVisible(False)
+
+
+    def on_simulator_clear_graph_map_edges(self, packet):
+        for item in self.edges:
+            self.scene().removeItem(item)
+        self.edges = []
+
+
+    def on_simulator_graph_map_edges(self, packet):
+        segment_items = 5
+        for i in xrange(len(packet.points) / segment_items):
+            y1 = packet.points[i * segment_items] * 1000.0
+            x1 = packet.points[i * segment_items + 1] * 1000.0
+            y2 = packet.points[i * segment_items + 2] * 1000.0
+            x2 = packet.points[i * segment_items + 3] * 1000.0
+            penality = packet.points[i * segment_items + 4]
+            item = QGraphicsLineItem(x1, y1, x2, y2)
+            if tools.quasi_equal(penality, 0.0):
+                style = Qt.SolidLine
+            else:
+                style = Qt.DotLine
+            item.setPen(QPen(QColor(self.color).lighter(120), 2, style))
+            self.edges.append(item)
+            self.addToGroup(item)
+
+
+    def on_simulator_graph_map_route(self, packet):
+        prev_x = self.robot.item.x()
+        prev_y = self.robot.item.y()
+        point_items = 2
+        for i in xrange(len(packet.points) / point_items):
+            y = packet.points[i * point_items] * 1000.0
+            x = packet.points[i * point_items + 1] * 1000.0
+            item = QGraphicsLineItem(prev_x, prev_y, x, y)
+            item.setPen(QPen(QColor(self.color), 20.0, Qt.SolidLine, Qt.RoundCap))
+            self.edges.append(item)
+            self.addToGroup(item)
+            prev_x = x
+            prev_y = y
+
 
 
 
@@ -914,13 +1017,15 @@ class Fabric(QGraphicsRectItem):
 
 class GameElementsLayer(fieldview.Layer):
 
-    def __init__(self, purple_robot, red_robot, scene = None):
+    def __init__(self, purple_robot_layer, red_robot_layer, scene, main_bar):
         fieldview.Layer.__init__(self, scene)
         self.name = "Game elements"
         self.color = GOLD_BAR_COLOR
         self.elements = []
-        self.purple_robot = purple_robot
-        self.red_robot = red_robot
+        self.purple_robot_layer = purple_robot_layer
+        self.red_robot_layer = red_robot_layer
+        self.main_bar = main_bar
+        self.last_sent_turret_detect = None
 
         self.purple_map_tower_treasure = [Coin(self, 0.915, 1.015, True),
                                           Coin(self, 0.915, 1.185, True),
@@ -1020,12 +1125,12 @@ class GameElementsLayer(fieldview.Layer):
 
     def scene_changed(self):
         for elt in self.elements:
-            if not elt in self.purple_robot.carried_treasure and not elt in self.red_robot.carried_treasure:
+            if not elt in self.purple_robot_layer.robot.carried_treasure and not elt in self.red_robot_layer.robot.carried_treasure:
                 robot = None
-                if elt.collidesWithItem(self.purple_robot.robot_item):
-                    robot = self.purple_robot
-                elif elt.collidesWithItem(self.red_robot.robot_item):
-                    robot = self.red_robot
+                if elt.collidesWithItem(self.purple_robot_layer.robot.robot_item):
+                    robot = self.purple_robot_layer.robot
+                elif elt.collidesWithItem(self.red_robot_layer.robot.robot_item):
+                    robot = self.red_robot_layer.robot
                 if robot != None:
                     angle = (robot.item.rotation() / 180.0 * math.pi) % (math.pi * 2.0)
 
@@ -1051,6 +1156,36 @@ class GameElementsLayer(fieldview.Layer):
                     dy = sign * math.sin(angle) * dist
                     elt.setPos(elt.pos().x() + dx, elt.pos().y() + dy)
 
+        if self.main_bar.opponent_detection.isChecked():
+            purple_robot_item = self.purple_robot_layer.robot.item
+            red_robot_item = self.red_robot_layer.robot.item
+            distance = tools.distance(purple_robot_item.x(), purple_robot_item.y(), red_robot_item.x(), red_robot_item.y())
+            if distance < TURRET_SHORT_DISTANCE_DETECTION_RANGE * 1000.0:
+                self.send_turret_detect(self.purple_robot_layer, self.red_robot_layer, 0)
+                self.send_turret_detect(self.red_robot_layer, self.purple_robot_layer, 0)
+            elif distance < TURRET_LONG_DISTANCE_DETECTION_RANGE * 1000.0:
+                self.send_turret_detect(self.purple_robot_layer, self.red_robot_layer, 1)
+                self.send_turret_detect(self.red_robot_layer, self.purple_robot_layer, 1)
+
+
+    def send_turret_detect(self, detecting_robot_layer, detected_robot_layer, distance):
+#        if self.last_sent_turret_detect and self.last_sent_turret_detect + 0.001 > time.time() :
+##            print("Rate limiting")
+#            return
+#        self.last_sent_turret_detect = time.time()
+        dx = detected_robot_layer.robot.item.x() - detecting_robot_layer.robot.item.x()
+        dy = detected_robot_layer.robot.item.y() - detecting_robot_layer.robot.item.y()
+        angle = (detecting_robot_layer.robot.item.rotation() / 180.0 * math.pi) - math.atan2(dy, dx)
+        angle %= 2.0 * math.pi
+        angle = int(angle / (2.0 * math.pi) * 18.0)
+
+        packet = packets.TurretDetect()
+        packet.distance = distance
+        packet.robot = OPPONENT_ROBOT_MAIN
+        packet.angle = angle
+
+        detecting_robot_layer.robot_controller.send_packet(packet)
+
 
     def remove_fabric(self, team):
         if team == TEAM_PURPLE:
@@ -1073,6 +1208,8 @@ class SimulatorFieldViewController(fieldview.FieldViewController):
         self.field_scene.add_layer(self.purple_robot_trajectrory_layer)
         self.purple_robot_routing_layer = RoutingLayer(self.field_scene, TEAM_PURPLE)
         self.field_scene.add_layer(self.purple_robot_routing_layer)
+        self.purple_robot_routing_graph_layer = RoutingGraphLayer(self.field_scene, TEAM_PURPLE, self.purple_robot_layer.robot)
+        self.field_scene.add_layer(self.purple_robot_routing_graph_layer)
 
         self.red_robot_layer = RobotLayer(self.field_scene, self, TEAM_RED)
         self.field_scene.add_layer(self.red_robot_layer)
@@ -1080,13 +1217,26 @@ class SimulatorFieldViewController(fieldview.FieldViewController):
         self.field_scene.add_layer(self.red_robot_trajectrory_layer)
         self.red_robot_routing_layer = RoutingLayer(self.field_scene, TEAM_RED)
         self.field_scene.add_layer(self.red_robot_routing_layer)
+        self.red_robot_routing_graph_layer = RoutingGraphLayer(self.field_scene, TEAM_RED, self.red_robot_layer.robot)
+        self.field_scene.add_layer(self.red_robot_routing_graph_layer)
 
-        self.game_elements_layer = GameElementsLayer(self.purple_robot_layer.robot,
-                                                     self.red_robot_layer.robot,
-                                                     self.field_scene)
+        self.game_elements_layer = GameElementsLayer(self.purple_robot_layer,
+                                                     self.red_robot_layer,
+                                                     self.field_scene,
+                                                     ui.main_bar)
         self.field_scene.add_layer(self.game_elements_layer)
 
         self.field_view.userEventListeners.append(self.purple_robot_layer)
         self.field_view.userEventListeners.append(self.red_robot_layer)
 
         self.update_layers_list()
+
+        self.main_bar = ui.main_bar
+        self.main_bar.stop.clicked.connect(self.user_stop)
+
+    def reset(self):
+        self.red_robot_layer.reset()
+        self.purple_robot_layer.reset()
+
+    def user_stop(self):
+        self.reset()

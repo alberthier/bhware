@@ -39,15 +39,15 @@ float                           Vitesse_MD_Mesures[NbrMesuresMax]           =   
 float                           Vitesse_MG_Mesures[NbrMesuresMax]           =   {0};
 
 /** Variables des configuration PIC18 */
-float                           DonneeKpDroite                              =   5.0;
-float                           DonneeKiDroite                              =   1.5;
+float                           DonneeKpDroite                              =   3.0;
+float                           DonneeKiDroite                              =   11.0;
 float                           DonneeDRoueDroite                           =   40.0;   /* en mm */
-float                           DonneeVmaxDroite                            =   1.009;  /* en m/s */
+float                           DonneeVmaxDroite                            =   0.606;  /* en m/s */
 unsigned short                  DonneeNbrPasCdrDroite                       =   5000;
-float                           DonneeKpGauche                              =   5.0;
-float                           DonneeKiGauche                              =   3.0;
+float                           DonneeKpGauche                              =   3.0;
+float                           DonneeKiGauche                              =   8.0;
 float                           DonneeDRoueGauche                           =   40.0;   /* en mm */
-float                           DonneeVmaxGauche                            =   1.009;  /* en m/s */
+float                           DonneeVmaxGauche                            =   0.630;  /* en m/s */
 unsigned short                  DonneeNbrPasCdrGauche                       =   5000;
 
 /** Tensions des moteurs (consignes reelles PWM) */

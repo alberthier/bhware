@@ -41,12 +41,6 @@
    </item>
    <item row="0" column="1">
     <widget class="QTextEdit" name="log_view">
-     <property name="font">
-      <font>
-       <family>Monospace</family>
-       <pointsize>8</pointsize>
-      </font>
-     </property>
      <property name="lineWrapMode">
       <enum>QTextEdit::NoWrap</enum>
      </property>

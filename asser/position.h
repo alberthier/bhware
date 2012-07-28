@@ -22,6 +22,8 @@
  *  @{
  */
 
+extern unsigned short                   DonneeNbrPasCdrDroite;
+
 /* Define asser de position */
 
 /** Flag de mouvement */
@@ -32,11 +34,10 @@
 #define     MARCHE_AVANT                ((signed char)       1)
 #define     MARCHE_ARRIERE              ((signed char)       -1)
 
-#define     ANGLE_ACTIF                 ((unsigned char)     1u)
-#define     ANGLE_INACTIF               ((unsigned char)     0u)
+#define     ANGLE_INVALID               ((float)             -1e6)
 
 /** Parametres materiels */
-#define     NBRE_PAS                    ((unsigned int)      20000u)
+#define     NBRE_PAS                    ((unsigned int)(DonneeNbrPasCdrDroite * 4))
 
 /** Parametres pour le calcul des consignes des regulateurs PI */
 #define     BORNE_PWM_AV                2047u
@@ -115,6 +116,7 @@ extern void             POS_ConversionVitessesLongRotToConsignesPWMRouesRobotUni
 extern float            POS_GetConsVitesseMax(void);
 extern float            POS_GetConsVitesseAngulaireMax(void);
 extern void             POS_SetGainStatiqueMoteur(float gain_G, float gain_D);
+extern float            POS_GetVitesseRelle(void);
 
 /*! @} */
 

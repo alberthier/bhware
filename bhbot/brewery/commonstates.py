@@ -10,6 +10,8 @@ import statemachine
 import packets
 import trajectory
 import logger
+import eventloop
+import tools
 from definitions import *
 
 
@@ -20,6 +22,10 @@ class Timer(statemachine.State):
     TIMEOUT = 0
 
     def __init__(self, miliseconds):
+        """
+        @param miliseconds: Time to wait in miliseconds
+        @type miliseconds: float
+        """
         logger.log("Enter timer {}".format(datetime.datetime.now()))
         statemachine.State.__init__(self)
         self.end_time = datetime.datetime.now() + datetime.timedelta(0, 0, 0, miliseconds)
@@ -33,27 +39,69 @@ class Timer(statemachine.State):
 
 
 
-class WaitForOpponentLeave(Timer):
+class WaitForOpponentLeave(statemachine.State):
 
+    TIMEOUT       = 0
     OPPONENT_LEFT = 1
 
     def __init__(self, opponent, miliseconds, current_move_direction):
-        Timer.__init__(self, miliseconds)
+        statemachine.State.__init__(self)
+        self.current_move_direction = current_move_direction
         self.opponent = opponent
-        self.exit_reason = self.TIMEOUT
+        self.miliseconds = miliseconds
+        self.goto_finished = False
+        self.opponent_disappeared = False
+        self.timer_expired = False
+        self.exit_reason = None
+        self.timer = eventloop.Timer(self.event_loop, miliseconds, self.on_timeout)
 
 
     def on_enter(self):
+        self.goto_finished = False
+        self.opponent_disappeared = False
+        self.timer_expired = False
+        self.exit_reason = None
         if self.current_move_direction == DIRECTION_FORWARD:
-            self.robot().backward(0.100)
+            direction = DIRECTION_BACKWARD
+            distance = -0.100
         else:
-            self.robot().forward(0.100)
+            direction = DIRECTION_FORWARD
+            distance = 0.100
+
+        current_pose = self.robot().pose
+        x = current_pose.virt.x + math.cos(current_pose.virt.angle) * distance
+        y = current_pose.virt.y + math.sin(current_pose.virt.angle) * distance
+        packet = packets.Goto()
+        packet.movement = MOVEMENT_MOVE
+        packet.direction = direction
+        packet.points = [ trajectory.Pose(x, y, None, True) ]
+        self.send_packet(packet)
 
 
-    def on_opponent_disapeared(self, opponent):
+    def on_timeout(self):
+        self.timer_expired = True
+        if self.exit_reason is None:
+            self.exit_reason = self.TIMEOUT
+        self.try_leave()
+
+
+    def on_goto_finished(self, packet):
+        self.goto_finished = True
+        self.try_leave()
+
+
+    def on_opponent_disapeared(self, opponent, is_in_front):
         if opponent == self.opponent:
             self.exit_reason = self.OPPONENT_LEFT
-            logger.log("WaitForOpponentLeave : exit on opponent leave")
+            self.opponent_disappeared = True
+            if not self.goto_finished:
+                self.send_packet(packets.Stop())
+            self.try_leave()
+
+
+    def try_leave(self):
+        if self.goto_finished and ((self.timer_expired or self.miliseconds == 0) or self.opponent_disappeared):
+            logger.log("WaitForOpponentLeave : exit on opponent leave reason={}".format(self.exit_reason))
             self.exit_substate(self.exit_reason)
 
 
@@ -202,14 +250,17 @@ class Gripper(statemachine.State):
 
 class Sweeper(statemachine.State):
 
-    def __init__(self, move):
+    def __init__(self, move, wait=True):
         statemachine.State.__init__(self)
         self.packet = packets.SweeperControl()
         self.packet.move = move
+        self.wait = wait
 
 
     def on_enter(self):
         self.send_packet(self.packet)
+        if not self.wait :
+            self.exit_substate()
 
 
     def on_sweeper_control(self, packet):
@@ -306,6 +357,24 @@ class StoreFabric(statemachine.State):
         self.exit_substate()
 
 
+class Antiblocking(statemachine.State):
+
+    def __init__(self, desired_status):
+        self.status = desired_status
+        if desired_status :
+            self.packet = packets.EnableAntiBlocking()
+        else :
+            self.packet = packets.DisableAntiBlocking()
+
+    def on_enter(self):
+        self.send_packet(self.packet)
+
+    def on_enable_anti_blocking(self, packet):
+        self.exit_substate()
+
+    def on_disable_anti_blocking(self, packet):
+        self.exit_substate()
+
 
 
 class TrajectoryWalk(statemachine.State):
@@ -316,9 +385,8 @@ class TrajectoryWalk(statemachine.State):
         self.jobs = deque()
         self.current_goto_packet = None
         self.opponent_wait_time = DEFAULT_OPPONENT_WAIT_MS
-        self.opponent_blocking_max_retries = DEFAULT_OPPONENT_MAX_RETRIES
-        self.opponent_blocking_current_retries = 0
         self.exit_reason = TRAJECTORY_DESTINATION_REACHED
+        self.current_opponent = None
 
 
     def move(self, dx, dy, direction = DIRECTION_FORWARD):
@@ -380,8 +448,12 @@ class TrajectoryWalk(statemachine.State):
 
     def create_move_to_packet(self, x, y, direction = DIRECTION_FORWARD):
         packet = packets.Goto()
-        packet.movement = MOVEMENT_MOVE
+        packet.movement = MOVEMENT_LINE
         packet.direction = direction
+        #if tools.quasi_equal(x, 0.0) or tools.quasi_equal(x, self.robot().pose.x):
+            #x += 0.001
+        #if tools.quasi_equal(y, 0.0) or tools.quasi_equal(y, self.robot().pose.y):
+            #y += 0.001
         packet.points = [ trajectory.Pose(x, y, None, True) ]
         return packet
 
@@ -425,10 +497,18 @@ class TrajectoryWalk(statemachine.State):
 
 
     def create_rotate_to_packet(self, angle):
-        dest = trajectory.Pose(0.0, 0.0, angle, True)
+        angle = trajectory.Pose(0.0, 0.0, angle, True).angle
         packet = packets.Goto()
         packet.movement = MOVEMENT_ROTATE
-        packet.angle = dest.angle
+        angle = tools.normalize_angle(angle)
+        #if tools.quasi_equal(angle, self.robot().pose.angle) or \
+            #tools.quasi_equal(angle, 0.0) or \
+            #tools.quasi_equal(angle, math.pi / 2.0) or \
+            #tools.quasi_equal(angle, math.pi) or \
+            #tools.quasi_equal(angle, -math.pi) or \
+            #tools.quasi_equal(angle, -math.pi / 2.0):
+            #angle += 0.001
+        packet.angle = angle
         return packet
 
 
@@ -480,6 +560,10 @@ class TrajectoryWalk(statemachine.State):
         elif packet.reason == REASON_BLOCKED_FRONT or packet.reason == REASON_BLOCKED_BACK:
             self.exit_reason = TRAJECTORY_BLOCKED
             self.exit_substate()
+        elif self.current_opponent is not None:
+            self.switch_to_substate(WaitForOpponentLeave(self.current_opponent, self.opponent_wait_time, self.current_goto_packet.direction))
+            self.current_opponent = None
+
 
 
     def process_next_job(self):
@@ -499,12 +583,14 @@ class TrajectoryWalk(statemachine.State):
 
 
     def on_exit_substate(self, substate):
-        if self.current_goto_packet is not None and isinstance(substate, WaitForOpponentLeave):
-            if substate.exit_reason == WaitForOpponentLeave.OPPONENT_LEFT:
-                self.opponent_blocking_current_retries = 0
+        if isinstance(substate, WaitForOpponentLeave):
+            if self.current_goto_packet is not None and self.opponent_wait_time != 0 and substate.exit_reason == WaitForOpponentLeave.OPPONENT_LEFT:
+                self.current_opponent = None
                 self.send_packet(self.current_goto_packet)
             else:
-                self.on_opponent_detected(0.0)
+                logger.log("TrajectoryWalk failed")
+                self.exit_reason = TRAJECTORY_OPPONENT_DETECTED
+                self.exit_substate()
         else:
             self.process_next_job()
 
@@ -519,19 +605,11 @@ class TrajectoryWalk(statemachine.State):
 
     def on_opponent_detected(self, packet, opponent_direction):
         if self.current_goto_packet is not None:
-            direction = self.current_goto_packet.direction
-            if self.current_goto_packet.movement != MOVEMENT_ROTATE and self.current_goto_packet.direction == opponent_direction:
-                logger.log("Opponent detected. direction = {}".format(opponent_direction))
+            if self.current_goto_packet.movement != MOVEMENT_ROTATE and self.current_goto_packet.direction == opponent_direction and self.current_opponent is None:
+                logger.log("Opponent detected. direction = {}. Robot stopped".format(opponent_direction))
                 self.send_packet(packets.Stop())
-                logger.log("TrajectoryWalk robot stopped")
-                if self.opponent_blocking_current_retries < self.opponent_blocking_max_retries :
-                    logger.log("TrajectoryWalk retries ({}/{})".format(self.opponent_blocking_current_retries, self.opponent_blocking_max_retries))
-                    self.opponent_blocking_current_retries += 1
-                    self.switch_to_substate(WaitForOpponentLeave(packet.robot, self.opponent_wait_time, direction))
-                else :
-                    logger.log("TrajectoryWalk failed")
-                    self.exit_reason = TRAJECTORY_OPPONENT_DETECTED
-                    self.exit_substate()
+                self.current_opponent = packet.robot
+
 
 
 
@@ -543,8 +621,16 @@ class Navigate(statemachine.State):
         self.destination = trajectory.Pose(x, y, None, True)
         self.direction = direction
         self.walk = TrajectoryWalk()
-        self.walk.opponent_blocking_max_retries = 0
+        self.walk.opponent_wait_time = 0
         self.exit_reason = TRAJECTORY_DESTINATION_REACHED
+
+
+    def do_walk(self):
+        seq = Sequence( Antiblocking(True),
+                        self.walk,
+                        Antiblocking(False)
+                      )
+        self.switch_to_substate(seq)
 
 
     def on_enter(self):
@@ -552,17 +638,37 @@ class Navigate(statemachine.State):
         if len(path) == 0:
             self.exit_reason = TRAJECTORY_DESTINATION_UNREACHABLE
             self.exit_substate()
+        elif NAVIGATION_USES_MULTIPOINT:
+            self.multipoint_walk(path)
         else:
-            for sub_path in path:
-                first_point = sub_path[0]
+            self.monopoint_walk(path)
+
+
+
+    def multipoint_walk(self, path):
+        for sub_path in path:
+            first_point = sub_path[0]
+            if self.direction == DIRECTION_FORWARD:
+                if not self.robot().is_looking_at(first_point):
+                    self.walk.look_at(first_point.virt.x, first_point.virt.y)
+            else:
+                if not self.robot().is_looking_at_opposite(first_point):
+                    self.walk.look_at_opposite(first_point.virt.x, first_point.virt.y)
+            self.walk.follow(sub_path, None, self.direction)
+        self.do_walk()
+
+
+    def monopoint_walk(self, path):
+        for sub_path in path:
+            for point in sub_path:
                 if self.direction == DIRECTION_FORWARD:
-                    if not self.robot().is_looking_at(first_point):
-                        self.walk.look_at(first_point.virt.x, first_point.virt.y)
+                    if not self.robot().is_looking_at(point):
+                        self.walk.look_at(point.virt.x, point.virt.y)
                 else:
-                    if not self.robot().is_looking_at_opposite(first_point):
-                        self.walk.look_at_opposite(first_point.virt.x, first_point.virt.y)
-                self.walk.follow(sub_path, None, self.direction)
-            self.switch_to_substate(self.walk)
+                    if not self.robot().is_looking_at_opposite(point):
+                        self.walk.look_at_opposite(point.virt.x, point.virt.y)
+                self.walk.move_to(point.virt.x, point.virt.y, self.direction)
+        self.do_walk()
 
 
     def on_exit_substate(self, substate):
@@ -575,7 +681,13 @@ class Navigate(statemachine.State):
 class GotoHome(statemachine.State):
 
     def on_enter(self):
-        self.switch_to_substate(Navigate(PURPLE_START_X, PURPLE_START_Y))
+        seq = Sequence()
+        seq.add(Navigate(PURPLE_START_X, 0.60))
+        walk = TrajectoryWalk()
+        walk.look_at(PURPLE_START_X, PURPLE_START_Y + 0.03)
+        walk.move_to(PURPLE_START_X, PURPLE_START_Y + 0.03)
+        seq.add(walk)
+        self.switch_to_substate(seq)
 
 
     def on_exit_substate(self, substate):

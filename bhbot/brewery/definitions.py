@@ -32,12 +32,12 @@ ROBOT_EXPANDED_SWEEPER_GYRATION_RADIUS = 0.289355
 ROBOT_EXPANDED_GYRATION_RADIUS         = max(ROBOT_EXPANDED_GRIPPER_GYRATION_RADIUS, ROBOT_EXPANDED_SWEEPER_GYRATION_RADIUS)
 
 # Start positons (the robot starts 90 degrees rotated that's why *_START_Y use ROBOT_X_SIZE and ROBOT_CENTER_X)
-RED_START_X                            = 0.310
-RED_START_Y                            = FIELD_Y_SIZE - (ROBOT_X_SIZE - ROBOT_CENTER_X)
-RED_START_ANGLE                        = math.pi / 2.0
 PURPLE_START_X                         = 0.310
-PURPLE_START_Y                         = ROBOT_X_SIZE - ROBOT_CENTER_X
+PURPLE_START_Y                         = 0.364
 PURPLE_START_ANGLE                     = -math.pi / 2.0
+RED_START_X                            = 0.310
+RED_START_Y                            = FIELD_Y_SIZE - PURPLE_START_Y
+RED_START_ANGLE                        = math.pi / 2.0
 
 # Rule specific
 MATCH_DURATION_MS                      = 90000
@@ -45,7 +45,8 @@ TEAM_COLOR_RED                         = "#ff3b3d"
 TEAM_COLOR_PURPLE                      = "#9632f6"
 
 # Timing
-KEEP_ALIVE_DELAY_MS                    = 200
+KEEP_ALIVE_DELAY_MS                    = 250
+KEEP_ALIVE_MINIMUM_AGE_S               = (KEEP_ALIVE_DELAY_MS * 4.0 / 5.0) / 1000.0
 EVENT_LOOP_TICK_RESOLUTION_S           = 0.05
 
 # Brewery execution host
@@ -77,7 +78,7 @@ else:
 
 # Log directory
 if IS_HOST_DEVICE_ARM:
-    LOG_DIR                            = "/root/logs"
+    LOG_DIR                            = "/tmp/bhlogs"
 else:
     LOG_DIR                            = os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file__))), "logs")
 
@@ -87,12 +88,18 @@ WEB_SERVER_PORT                        = 80
 # Default state machine name
 STATE_MACHINE                          = "default"
 
+# Use multipoint Goto for navigation
+NAVIGATION_USES_MULTIPOINT             = False
+
+# Use pathfinding algorithm to evaluate the best goal
+GOAL_EVALUATION_USES_PATHFINDING       = True
+
 # Router map resolution
 ROUTING_MAP_RESOLUTION                 = 0.02
 EVALUATOR_MAP_RESOLUTION               = 0.04
-MAP_WALLS_DISTANCE                     = 0.18
+MAP_WALLS_DISTANCE                     = 0.20
 ASTAR_EFFECTIVE_VS_HEURISTIC_TRADEOFF  = 1.5
-ROUTE_SPLIT_ANGLE                      = math.pi / 3.0
+ROUTE_SPLIT_ANGLE                      = 2.0 * math.pi
 MAIN_OPPONENT_AVOIDANCE_RANGE          = 0.5
 SECONDARY_OPPONENT_AVOIDANCE_RANGE     = 0.4
 
@@ -101,15 +108,16 @@ BLOCKED_ZONE_SIZE                      = 0.08
 BLOCKED_ZONE_DISAPEARING_MS            = 1000
 
 # Opponent detection
-OPPONENT_DETECTION_DISAPEARING_TICKS   = int(0.5 / EVENT_LOOP_TICK_RESOLUTION_S)
+OPPONENT_DETECTION_DISAPEARING_MS      = 3000
 
 # Blocking opponent handling
-DEFAULT_OPPONENT_WAIT_MS               = 3000
-DEFAULT_OPPONENT_MAX_RETRIES           = 5
+DEFAULT_OPPONENT_WAIT_MS               = 2000
 
 # Turret detection ranges
 TURRET_SHORT_DISTANCE_DETECTION_RANGE  = 0.55
 TURRET_LONG_DISTANCE_DETECTION_RANGE   = 1.0
+TURRET_SHORT_DISTANCE_DETECTION_ID     = 190
+TURRET_LONG_DISTANCE_DETECTION_ID      = 240
 
 
 ########################################################################
@@ -154,6 +162,7 @@ Enum("MOVEMENT",
      "Movement",
      MOVEMENT_ROTATE = 0,
      MOVEMENT_MOVE   = 1,
+     MOVEMENT_LINE   = 2,
 )
 
 Enum("DIRECTION",

@@ -66,11 +66,17 @@ class BasicDynamics(QObject):
                     angle = packet.angle + math.pi
                 traj[-1][2].angle = angle
                 self.angle = angle
+        elif packet.movement == MOVEMENT_LINE:
+            pose = packet.points[0]
+            d = tools.distance(self.x, self.y, pose.x, pose.y)
+            time = d / linear_speed
+            traj.append((segmentNb, time, pose))
+            self.x = pose.x
+            self.y = pose.y
         else:
             time = abs(self.angle - packet.angle) / angular_speed
             traj.append((segmentNb, time, trajectory.Pose(self.x, self.y, packet.angle)))
             self.angle = packet.angle
-            segmentNb += 1
 
         self.simulation_finished.emit(traj)
 
@@ -151,13 +157,13 @@ class PositionControlSimulatorDynamics(QObject):
         elif packet.axis == AXIS_Y:
             self.previous_pose.y = packet.position
             self.previous_pose.angle = packet.angle
-            self.invoke_move("INIT_POSE_ROBOT", 0, 0, [self.previous_pose])
+            self.invoke_move("INIT_POSE_ROBOT", 0, 0, self.previous_pose.angle, [self.previous_pose])
 
 
     def goto(self, packet):
         self.poses = []
         self.elapsed_time = PositionControlSimulatorDynamics.TIMER_RESOLUTION
-        self.invoke_move("MSG_MAIN_GOTO", packet.movement, packet.direction, packet.points)
+        self.invoke_move("MSG_MAIN_GOTO", packet.movement, packet.direction, packet.angle, packet.points)
 
 
     def terminate(self):
@@ -175,16 +181,17 @@ class PositionControlSimulatorDynamics(QObject):
         self.process.waitForBytesWritten()
 
 
-    def invoke_move(self, function_name, movement, direction, points):
+    def invoke_move(self, function_name, movement, direction, angle, points):
         cmd = function_name + " " + str(movement) + " " + str(direction)
+        if angle is None:
+            cmd += " -1100000.0"
+        else:
+            cmd += " " + str(angle)
         cmd += " " + str(len(points))
         for pose in points:
             cmd += " " + str(pose.x) + " " + str(pose.y)
-            if pose.angle != None:
-                cmd += " " + str(pose.angle) + " 1.0"
-            else:
-                cmd += " 0.0 0.0"
         cmd += "\n"
+        print cmd
         self.process.write(cmd)
         self.process.waitForBytesWritten()
 

@@ -20,6 +20,11 @@ import leds
 import robot
 import opponentdetector
 import trajectory
+import graphpathfinding
+import commonstates
+import geometry
+import goalmanager
+import tools
 from definitions import *
 
 if IS_HOST_DEVICE_ARM :
@@ -108,6 +113,23 @@ class RobotControlDeviceChannel(asyncore.dispatcher_with_send):
         self.eventloop.handle_read(self)
 
 
+    def handle_close(self):
+        connected = False
+        while not connected:
+            try:
+                logger.log("*** WARNING *** Reconnecting to {}:{}".format(REMOTE_IP, REMOTE_PORT))
+                control_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                control_socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
+                control_socket.connect((REMOTE_IP, REMOTE_PORT))
+                self.eventloop.robot_control_channel = RobotControlDeviceChannel(self.eventloop, control_socket)
+                leds.orange.off()
+                connected = True
+            except Exception as e:
+                logger.log("Unable to connect to {}:{} ({}), retrying".format(REMOTE_IP, REMOTE_PORT, e))
+                leds.orange.toggle()
+                time.sleep(0.5)
+
+
 
 
 class RobotLogDeviceChannel(asyncore.dispatcher):
@@ -133,7 +155,7 @@ class RobotLogDeviceChannel(asyncore.dispatcher):
             while True:
                 i = self.buffer.find("\n")
                 if i != -1:
-                    logger.log(self.buffer[:i], "PIC")
+                    logger.log(self.buffer[:i].rstrip().encode("string_escape"), "PIC")
                     self.buffer = self.buffer[i + 1:]
                 else:
                     break
@@ -161,6 +183,11 @@ class Timer(object):
             self.callback()
             return True
         return False
+
+
+    def restart(self):
+        self.stop()
+        self.start()
 
 
     def start(self):
@@ -238,8 +265,11 @@ class EventLoop(object):
         self.webserver_port = webserver_port
         self.opponent_detector = opponentdetector.OpponentDetector(self)
         self.stopping = False
-        self.map = trajectory.Map(self)
+        self.eval_map = trajectory.Map(self)
+        self.map = graphpathfinding.Map(self)
         self.timers = []
+        self.state_history = []
+        self.last_ka_date = datetime.datetime.now()
 
 
     def handle_read(self, channel):
@@ -291,24 +321,33 @@ class EventLoop(object):
                         channel.packet.dispatch(self.robot)
                         channel.packet.dispatch(self.opponent_detector)
                         channel.packet.dispatch(self.map)
+                        channel.packet.dispatch(self.eval_map)
                         channel.packet.dispatch(self.get_current_state())
 
                         channel.packet = None
                 except Exception, e:
+                    channel.packet = None
                     logger.log_exception(e)
 
 
+    def on_device_ready(self, packet):
+        logger.set_team(packet.team)
+
+
     def on_keep_alive(self, packet):
-        self.send_packet(packet)
-        leds.green.heartbeat_tick()
+        now = datetime.datetime.now()
+        if (now - self.last_ka_date).total_seconds() > KEEP_ALIVE_MINIMUM_AGE_S:
+            self.last_ka_date = now
+            self.send_packet(packet)
+            leds.green.heartbeat_tick()
 
 
     def on_turret_boot(self, packet):
         if self.turret_channel is not None:
             packet = packets.TurretInit()
             packet.mode = TURRET_INIT_MODE_WRITE
-            packet.short_distance = TURRET_SHORT_DISTANCE_DETECTION_RANGE
-            packet.long_distance = TURRET_LONG_DISTANCE_DETECTION_RANGE
+            packet.short_distance = TURRET_SHORT_DISTANCE_DETECTION_ID
+            packet.long_distance = TURRET_LONG_DISTANCE_DETECTION_ID
             buffer = packet.serialize()
             logger.log_packet(packet, "ARM")
             self.turret_channel.send(buffer)
@@ -343,8 +382,6 @@ class EventLoop(object):
         else:
             self.root_state.switch_to_substate(state)
             self.send_packet(packets.ControllerReady())
-        if IS_HOST_DEVICE_PC:
-            self.map.send_walls_to_simulator()
 
 
     def start(self):
@@ -361,7 +398,6 @@ class EventLoop(object):
         while not self.stopping:
             asyncore.loop(EVENT_LOOP_TICK_RESOLUTION_S, True, None, 1)
             self.get_current_state().on_timer_tick()
-            self.opponent_detector.on_timer_tick()
             while len(self.timers) != 0:
                 if not self.timers[0].check_timeout():
                     break

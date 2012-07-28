@@ -29,7 +29,7 @@ class Robot(object):
         dy = pose.y - self.pose.y
         angle = math.atan2(dy, dx) % (2.0 * math.pi)
         current_angle = self.pose.angle % (2.0 * math.pi)
-        return abs(current_angle - angle) < (math.pi / 16.0)
+        return abs(current_angle - angle) < (math.pi / 32.0)
 
 
     def is_looking_at_opposite(self, pose, reference_team = TEAM_UNKNOWN):
@@ -37,7 +37,7 @@ class Robot(object):
         dy = pose.y - self.pose.y
         angle = (math.atan2(dy, dx) + math.pi) % (2.0 * math.pi)
         current_angle = self.pose.angle % (2.0 * math.pi)
-        return abs(current_angle - angle) < (math.pi / 16.0)
+        return abs(current_angle - angle) < (math.pi / 32.0)
 
 
     def on_device_ready(self, packet):
