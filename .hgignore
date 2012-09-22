@@ -9,3 +9,7 @@ drunkstar/buildroot-2012.02/
 asser/log.txt
 asser/Makefile
 asser/simulator_trajAsser
+syntax: glob
+asser/optimTrajParam.py.old
+asser.7z
+asser/Simu.bat
