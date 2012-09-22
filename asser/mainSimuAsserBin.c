@@ -201,8 +201,8 @@ int main(void)
         }
         else if (strcmp(command, "PARAMETERS_TIME") == 0)
         {
-            parameterMsgTreatment(buffer, &nbrParameters, paramT, 8);
-            if (nbrParameters == 8)
+            parameterMsgTreatment(buffer, &nbrParameters, paramT, 7);
+            if (nbrParameters == 7)
             {
                 A_MAX = paramT[0].value;
                 D_MAX = paramT[1].value;
@@ -210,7 +210,7 @@ int main(void)
                 VITESSE_SEUIL_DECC = paramT[3].value;
                 COEFF_DECC_FINALE = paramT[4].value;
                 DECC_MIN = paramT[5].value;
-                FacteurVitesseAngulaireMax = paramT[7].value;
+                FacteurVitesseAngulaireMax = paramT[6].value;
             }
         }
         else if (strcmp(command, "CONFIG_ASSER") == 0)
