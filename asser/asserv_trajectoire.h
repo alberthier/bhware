@@ -120,12 +120,17 @@ extern float                gainDeplacement3;
 extern float                Ratio_Acc;            
 extern float                Ratio_Decc;
 extern float                FacteurVitesseAngulaireMax;
+
 extern float                A_MAX;
 extern float                D_MAX;
-extern float                COEFF_VI1;
+
+extern float                COEFF_VI1;              /* COEFF_VI1 doit etre strictement positif et strictement inferieur a 1 (0.0 < COEFF_VI1 < 1.0) */
 extern float                VITESSE_SEUIL_DECC;
 extern float                COEFF_DECC_FINALE;
-extern float                DECC_MIN;
+extern float                DECC_MIN;               /* Decceleration en m/s^2 du profil de vitesse au point d'arrivee */
+
+extern float                k0_init; 
+extern float                C_init;
 
 /* Prototypes de function globales asserv_trajectoire */
 

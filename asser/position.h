@@ -93,7 +93,7 @@ extern float            ANGLE_MIN;
 extern float            COEFFICIENT_DE_GLISSEMENT_LATERAL;
 
 /** UMAX tension PWM max + offset (0x03FF) */
-extern float            Umax;
+extern const float      Umax;
 
 /** Coordonnees de la pose actuelle du robot */
 extern Pose             m_poseRobot;

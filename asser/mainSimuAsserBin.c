@@ -204,12 +204,12 @@ int main(void)
             parameterMsgTreatment(buffer, &nbrParameters, paramT, 8);
             if (nbrParameters == 8)
             {
-                A_MAX = paramT[0].value;
+        /*        A_MAX = paramT[0].value;
                 D_MAX = paramT[1].value;
                 COEFF_VI1 = paramT[2].value;
                 VITESSE_SEUIL_DECC = paramT[3].value;
                 COEFF_DECC_FINALE = paramT[4].value;
-                DECC_MIN = paramT[5].value;
+                DECC_MIN = paramT[5].value;    */
                 Umax = (unsigned int)paramT[6].value;
                 FacteurVitesseAngulaireMax = paramT[7].value;
             }

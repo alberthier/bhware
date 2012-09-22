@@ -212,7 +212,7 @@ def trajFunction(d_cfgTraj):
 
     #lancement du simulateur de deplacement
     print("Lancement du simulateur")
-    simulator_process = subprocess.Popen('./simulator_trajAsser', shell=True, stdin = subprocess.PIPE, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+    simulator_process = subprocess.Popen('simulator_trajAsser.exe', shell=True, stdin = subprocess.PIPE, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
 
     # envoie de la configuration du simulateur
     send_config_simulator(simulator_process, d_cfgTraj)
@@ -651,6 +651,10 @@ def affichageTraj2011(d_traj):
     #~ hold(True)
     plot(temps, d_traj["vitesseMoteurDroit"], label='mesure droit')
     plot(temps, d_traj["ConsigneMoteurDroit_MS"], label='consigne droit')
+    plot(temps, d_traj["VitesseProfil"], label='Vitesse Profil')
+    plot(temps, d_traj["VgASR"], label='V g ASR')
+    plot(temps, d_traj["Phase"], label='Phase')
+    plot(temps, d_traj["fFin"], label='flag Fin')
     #~ plot([index*periode for index in range(len(d_traj["ConsigneMoteurDroit"]))], [(cons-1024.0)*0.000985 for cons in d_traj["ConsigneMoteurDroit"]], label='consigne droit')
     #~ plot([index*periode for index in range(len(d_traj["vitesseProfilConsigne"]))], d_traj["vitesseProfilConsigne"], 'o', label='vitesse profil')
     #~ plot([index*periode for index in range(len(d_traj["vitLongitudinale"]))], d_traj["vitLongitudinale"], label='consigne long calculee')
@@ -999,6 +1003,8 @@ print("distance_seg")
 
 #~ print("debug_smooth:")
 #~ print(traj["debug_smooth"])
+
+print("Ditance parcourue : " + str(traj["dist_parcourue"][-1]))
 
 matplotlib.rcParams.update({'font.size': 16})
 affichageTraj2011(traj)

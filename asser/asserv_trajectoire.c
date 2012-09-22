@@ -18,7 +18,6 @@
 #ifdef PIC32_BUILD
 #include "includes.h"
 #include "tools.h"
-#include "pic18.h"
 #ifndef S_SPLINT_S
 #include "math.h"
 #endif /* S_SPLINT_S */
@@ -31,6 +30,7 @@
 #endif /* PIC32_BUILD */
 #include "task_asser.h"
 #include "asserv_trajectoire.h"
+#include "pic18.h"
 
 /*! \addtogroup Task_Asser
  *  @{
@@ -54,17 +54,6 @@
 
 /** Constantes */
 
-float                           A_MAX                                   =   3.0;
-float                           D_MAX                                   =   -1.5;
-
-float                           COEFF_VI1                               =   0.95;   /* COEFF_VI1 doit etre strictement positif et strictement inferieur a 1 (0.0 < COEFF_VI1 < 1.0) */
-float                           VITESSE_SEUIL_DECC                      =   0.2;
-float                           COEFF_DECC_FINALE                       =   0.08;
-float                           DECC_MIN                                =   -0.3;   /* Decceleration en m/s^2 du profil de vitesse au point d'arrivee */
-
-const float                     k0_init                                 =   0.3; 
-const float                     C_init                                  =   0.2;
-
 /*----------------------------------------------------------------------------------------------*/
 
 /** Variables globales */
@@ -82,6 +71,16 @@ float                           Ratio_Decc                              =   1.0;
 
 float                           FacteurVitesseAngulaireMax              =   1.0;    /* Ce facteur doit etre positif */
 
+float                           A_MAX                                   =   0.6;
+float                           D_MAX                                   =   0.6;
+
+float                           COEFF_VI1                               =   0.95;   /* COEFF_VI1 doit etre strictement positif et strictement inferieur a 1 (0.0 < COEFF_VI1 < 1.0) */
+float                           VITESSE_SEUIL_DECC                      =   0.2;
+float                           COEFF_DECC_FINALE                       =   0.08;
+float                           DECC_MIN                                =   -0.3;   /* Decceleration en m/s^2 du profil de vitesse au point d'arrivee */
+
+float                           k0_init                                 =   0.3; 
+float                           C_init                                  =   0.2;
 
 /***********************************************************************************************/
 /**************************** Fin de la definition des parametres de l'asservissement de trajectoire *********/
@@ -173,7 +172,7 @@ static float                    ASSER_TRAJ_CalculTheta1(unsigned int iSegment, u
 static float                    ASSER_TRAJ_LongueurSegment(float x0, float y0, float x1, float y1);
 static Vecteur                  ASSER_TRAJ_PortionEnd(float bx, float by, float ax, float ay, float qx, float qy);
 static void                     ASSER_TRAJ_SolveSegment_v2(float x0, float y0, float theta0, float x1, float y1, float theta1, float k0, float* k1, float* out_q0x, float* out_q0y, float* out_q1x, float* out_q1y);
-static unsigned char            ASSER_TRAJ_Profil_S_Curve(float * Vconsigne, float Distance, float VStart, float VEnd, float Amax, float Dmax, float gASR, float Pr, float Vr);
+static unsigned char            ASSER_TRAJ_Profil_S_Curve(float * Vconsigne, float Distance, float VStart, float VEnd, float Amax, float Dmax, float gASR, float Pr, float Vr, unsigned char fSatPI);
 #ifdef PIC32_BUILD
 void                            ASSER_TRAJ_LogAsserPIC(char * keyWord, float Val1, float * pVal2, float * pVal3, float * pVal4, float * pVal5);
 #define                         ASSER_TRAJ_LogAsserValPC(a, b)
@@ -375,6 +374,30 @@ extern void ASSER_TRAJ_AsservissementMouvementRobot(Pose poseRobot, VitessesRobo
         }
     }
 
+    /* distance de deplacement sur la periode */
+    if (ASSER_TRAJ_isDeplacement(&chemin) == True)
+    {
+        delta_distance = cosf(poseReferenceRobot.angle) * (poseRobot.x - poseReferenceRobot.x) + sinf(poseReferenceRobot.angle) * (poseRobot.y - poseReferenceRobot.y);
+    }
+    else
+    {
+        delta_distance = NORME_BARRE_SUIVI_TRAJ * fabsf(POS_ModuloAngle(poseRobot.angle - memo_angleRobot));
+
+        memo_angleRobot = poseRobot.angle;
+
+        ASSER_TRAJ_LogAsserValPC("angleRobot", poseRobot.angle);
+        ASSER_TRAJ_LogAsserValPC("angleRef", poseReference.angle);
+    }
+
+    if (delta_distance < 0.0)
+    {
+        delta_distance = 0.0;
+    }
+
+    chemin.profilVitesse.distance_parcourue += delta_distance;
+
+    ASSER_TRAJ_LogAsserValPC("dist_parcourue",  chemin.profilVitesse.distance_parcourue);
+
     if (ASSER_Running == True)
     {
         /* Comptage du nombre de periodes depuis le lancement de la commande d'asservissement */
@@ -393,29 +416,6 @@ extern void ASSER_TRAJ_AsservissementMouvementRobot(Pose poseRobot, VitessesRobo
 
             if (chemin.profilVitesse.p > 0)
             {
-                /* distance de deplacement sur la periode */
-                if (ASSER_TRAJ_isDeplacement(&chemin) == True)
-                {
-                    delta_distance = cosf(poseReferenceRobot.angle) * (poseRobot.x - poseReferenceRobot.x) + sinf(poseReferenceRobot.angle) * (poseRobot.y - poseReferenceRobot.y);
-                }
-                else
-                {                    
-                    delta_distance = NORME_BARRE_SUIVI_TRAJ * fabsf(POS_ModuloAngle(poseRobot.angle - memo_angleRobot));
-
-                    memo_angleRobot = poseRobot.angle;
-
-                    ASSER_TRAJ_LogAsserValPC("angleRobot", poseRobot.angle);
-                    ASSER_TRAJ_LogAsserValPC("angleRef", poseReference.angle);
-                }
-
-                if (delta_distance < 0.0)
-                {
-                    delta_distance = 0.0;
-                }
-
-                chemin.profilVitesse.distance_parcourue += delta_distance;
-
-                ASSER_TRAJ_LogAsserValPC("dist_parcourue",  chemin.profilVitesse.distance_parcourue);
                 ASSER_TRAJ_LogAsserValPC("nbdepas",  chemin.profilVitesse.pas_echantillon_distance);
                 ASSER_TRAJ_LogAsserValPC("index_tab_vit",  g_index_tab_gabarit_vitesse);
 
@@ -445,7 +445,7 @@ extern void ASSER_TRAJ_AsservissementMouvementRobot(Pose poseRobot, VitessesRobo
                 parametrePositionSegmentTrajectoireAv = parametrePositionSegmentTrajectoire;
                 segmentCourantAv = segmentCourant;
                 
-                ASSER_Running = ASSER_TRAJ_Profil_S_Curve(&VitesseProfil, chemin.distance, 0.0, 0.0, 1.0, 1.0, 0.001, chemin.profilVitesse.distance_parcourue, POS_GetVitesseRelle());
+                ASSER_Running = ASSER_TRAJ_Profil_S_Curve(&VitesseProfil, chemin.distance, 0.0, 0.0, chemin.profilVitesse.Amax, chemin.profilVitesse.Dmax, 0.001, chemin.profilVitesse.distance_parcourue, POS_GetVitesseRelle(), (SaturationPIDflag | SaturationPIGflag));
                 delta_distance_Av = VitesseProfil * TE;
                 //delta_distance_Av = ASSER_TRAJ_GabaritVitesse_getVitesse_vs_Distance(chemin.profilVitesse.distance_parcourue) * TE;
                 
@@ -468,7 +468,7 @@ extern void ASSER_TRAJ_AsservissementMouvementRobot(Pose poseRobot, VitessesRobo
                 parametrePositionSegmentTrajectoireAv = parametrePositionSegmentTrajectoire;
                 segmentCourantAv = segmentCourant;
 
-                ASSER_Running = ASSER_TRAJ_Profil_S_Curve(&VitesseProfil, chemin.distance, 0.0, 0.0, 1.0, 1.0, 0.001, chemin.profilVitesse.distance_parcourue, POS_GetVitesseRelle());
+                ASSER_Running = ASSER_TRAJ_Profil_S_Curve(&VitesseProfil, chemin.distance, 0.0, 0.0, chemin.profilVitesse.Amax, chemin.profilVitesse.Dmax, 0.001, chemin.profilVitesse.distance_parcourue, POS_GetVitesseRelle(), (SaturationPIDflag | SaturationPIGflag));
                 delta_distance_Av = VitesseProfil * TE;
                 //delta_distance_Av = ASSER_TRAJ_GabaritVitesse_getVitesse_vs_Distance(chemin.profilVitesse.distance_parcourue) * TE;
                 
@@ -547,6 +547,10 @@ extern void ASSER_TRAJ_AsservissementMouvementRobot(Pose poseRobot, VitessesRobo
     ASSER_TRAJ_LogAsserValPC("consRotation",  vitessesConsignes->rotation);
     ASSER_TRAJ_LogAsserValPC("parametrePositionSegmentTrajectoire",  parametrePositionSegmentTrajectoire);
     ASSER_TRAJ_LogAsserValPC("segmentCourant",  segmentCourant);
+    ASSER_TRAJ_LogAsserValPC("VitesseProfil", VitesseProfil);
+    ASSER_TRAJ_LogAsserValPC("VgASR", VgASR);
+    ASSER_TRAJ_LogAsserValPC("Phase", (Phase/10.0));
+    ASSER_TRAJ_LogAsserValPC("fFin", (ASSER_Running/10.0));
 }
 
 
@@ -2480,7 +2484,7 @@ void ASSER_TRAJ_LogAsserValPC(char * keyWord, float Val)
 /**********************************************************************/
 /*! \brief ASSER_TRAJ_LogAsserMsgPC
  *
- *  \note  Log d'un message associé à une valeur
+ *  \note  Log d'un message associe a une valeur
  *
  *  \param [in] Message    Message a logguer
  *  \param [in] Val            Valeur a logguer
@@ -2556,25 +2560,34 @@ void ASSER_TRAJ_LogAsserPIC(char * keyWord, float Val1, float * pVal2, float * p
  *  \param [in] Distance     Distance a parcourir (m)
  *  \param [in] VStart        Vitesse de debut de profil de vitesse (m/s)
  *  \param [in] VEnd          Vitesse de fin de profil de vitesse (m/s)
- *  \param [in] Amax         Acceleration de debut de profil de vitesse (m/s²)
- *  \param [in] Dmax         Deceleration de fin de profil de vitesse (m/s²)
+ *  \param [in] Amax         Acceleration de debut de profil de vitesse (m/s2)
+ *  \param [in] Dmax         Deceleration de fin de profil de vitesse (m/s2)
  *  \param [in] gASR         Gain d'ASR (m/s)
  *  \param [in] Pr              Postion reelle longitudinale (m)          
  *  \param [in] Vr              Vitesse relle (m/s)
+ *  \param [in] fSatPI         Flag de saturation du PI
  *
  *  \return  Flag d'arrivee au point (False arrivee / True continuer le profil)
  */
 /**********************************************************************/
-static unsigned char ASSER_TRAJ_Profil_S_Curve(float * Vconsigne, float Distance, float VStart, float VEnd, float Amax, float Dmax, float gASR, float Pr, float Vr)
+static unsigned char ASSER_TRAJ_Profil_S_Curve(float * Vconsigne, float Distance, float VStart, float VEnd, float Amax, float Dmax, float gASR, float Pr, float Vr, unsigned char fSatPI)
 {
     unsigned char   AsserRunningFlag = True;
 
+    Vr = fabsf(Vr);
+    
     if (Phase == 0)
     {
         /* Phase 0 (Initialisation) */
+            
+        /* Forcage de la vitesse minim de deplacement minimum */
+        if (VStart < (VminMouv / 2))
+        {
+            VStart = VminMouv / 2;
+        }
 
         /* Initilisation de la vitesse maximum */
-        Vmax = POS_GetConsVitesseMax();
+        Vmax = MIN(DonneeVmaxGauche, DonneeVmaxDroite);
         
         /* Ajustement de Vmax suivant la distance si necessaire */      
         DistanceMin = (((Vmax * Vmax) - (VStart * VStart)) / Amax) + (((Vmax * Vmax) - (VEnd * VEnd)) / Dmax) + (2 * (Vmax * TE)) + (VStart * TE) + (VEnd * TE);
@@ -2597,6 +2610,7 @@ static unsigned char ASSER_TRAJ_Profil_S_Curve(float * Vconsigne, float Distance
 #endif /* PIC32_BUILD */
         }
         
+        /* Ajustement de VStart et VEnd pour eviter les division par zero */
         if ((Vmax - VStart) <= 0.0)
         {
             VStart = Vmax - 0.000001;
@@ -2611,7 +2625,7 @@ static unsigned char ASSER_TRAJ_Profil_S_Curve(float * Vconsigne, float Distance
         JAmax = (Amax * Amax) / (Vmax - VStart);
         JDmax = (Dmax * Dmax) / (Vmax - VEnd);
                 
-        /* Initialisation */
+        /* Initialisation des variables */
         A0 = 0.0;
         V0 = VStart;
         P0 = 0.0;
@@ -2644,6 +2658,7 @@ static unsigned char ASSER_TRAJ_Profil_S_Curve(float * Vconsigne, float Distance
             /* Vitesse */            
             V = V0 + (A0 * TE) + (0.5 * J0 * SQUARE(TE));
 
+            /* Verification de la vitesse */
             if (V > Vmax)
             {
                 V = Vmax;
@@ -2686,7 +2701,7 @@ static unsigned char ASSER_TRAJ_Profil_S_Curve(float * Vconsigne, float Distance
                 if (ASRrunning == False)
                 {
                     /* Vitesse Reelle atteinte => delcanchement de l'ASR pour plus de performance */
-                    if (Vr >= (V0 - EcartVitesse))
+                    if ((Vr >= (V0 - EcartVitesse)) && (fSatPI == False))
                     {
                        ASRrunning = True;
                     }
@@ -2695,11 +2710,14 @@ static unsigned char ASSER_TRAJ_Profil_S_Curve(float * Vconsigne, float Distance
                 if (ASRrunning == True)
                 {
                     /* Vitesse Reelle atteinte => delcanchement de l'ASR pour plus de performance */
-                    if (Vr >= (V0 - EcartVitesse))
+                    if ((Vr >= (V0 - EcartVitesse)) && (fSatPI == False))
                     {
+                        /* Incrementation de la vitesse gain ASR */
                         VgASR = VgASR + gASR;
+                        /* Modification de la vitesse suivant la vitesse precedente */
                         *Vconsigne = Vconsigne0 + VgASR;
                         
+                        /* Verifiaction et ajustement de la vitesse de consigne */
                         if (*Vconsigne > Vmax)
                         {
                             *Vconsigne = Vmax;
@@ -2714,9 +2732,12 @@ static unsigned char ASSER_TRAJ_Profil_S_Curve(float * Vconsigne, float Distance
                         /* Vitesse Reelle non atteinte => correction de l'ASR */
                         if (VgASR > 0.0)
                         {
+                            /* Decrementation de la vitesse gain ASR */
                             VgASR = VgASR - gASR;
+                            /* Modification de la vitesse suivant la vitesse precedente */
                             *Vconsigne = Vconsigne0 + VgASR;
                             
+                            /* Verifiaction et ajustement de la vitesse de consigne */
                             if (*Vconsigne > Vmax)
                             {
                                 *Vconsigne = Vmax;
@@ -2728,21 +2749,49 @@ static unsigned char ASSER_TRAJ_Profil_S_Curve(float * Vconsigne, float Distance
                         }  
                         else
                         {
-                            /* Consigne de vitesse */
-                            *Vconsigne = V;
+                            /* Correction de la vitesse pour eviter les sauts de vitesse en cours de profil */
+                            if (V >= Vconsigne0)
+                            {
+                                /* Consigne de vitesse */
+                                *Vconsigne = V;
+                            }
+                            else
+                            {
+                                *Vconsigne = Vconsigne0;
+                            }                                
+                            
+                            /* Verifiaction et ajustement de la vitesse de consigne */
+                            if (*Vconsigne > Vmax)
+                            {
+                                *Vconsigne = Vmax;
+                            }
+                            else if (*Vconsigne < VminMouv)
+                            {
+                                *Vconsigne = VminMouv;
+                            }                                                        
 
 #ifdef PIC32_BUILD
-                            TOOLS_LogFault(AsserPosErr, True, FLOAT, (float *)&Amax, True, "Asserv_traj : Amax / Dmax > aux capacitées du robot !");
+                            TOOLS_LogFault(AsserPosErr, True, FLOAT, (float *)&Amax, True, "Asserv_traj : Amax / Dmax > aux capacitees du robot !");
 #else /* PIC32_BUILD */
-                            ASSER_TRAJ_LogAsserMsgPC("Asserv_traj : Amax / Dmax > aux capacitées du robot !", Amax);
+                            ASSER_TRAJ_LogAsserMsgPC("Asserv_traj : Amax / Dmax > aux capacitees du robot !", Amax);
 #endif /* PIC32_BUILD */     
                         }
                     }
                 }
                 else
-                {                 
+                {            
                     /* Consigne de vitesse */
-                    *Vconsigne = V;
+                    *Vconsigne = V;  
+                   
+                    /* Verifiaction et ajustement de la vitesse de consigne */
+                    if (*Vconsigne > Vmax)
+                    {
+                        *Vconsigne = Vmax;
+                    }
+                    else if (*Vconsigne < VminMouv)
+                    {
+                        *Vconsigne = VminMouv;
+                    }                                                                                                                                         
                 }
             }       
             /* Phase de decceleration */
@@ -2751,7 +2800,7 @@ static unsigned char ASSER_TRAJ_Profil_S_Curve(float * Vconsigne, float Distance
                 if (ASRrunning == False)
                 {
                     /* Vitesse Reelle superieure => delcanchement de l'ASR pour mieux deccelerer */
-                    if (Vr > (V0 + EcartVitesse))
+                    if ((Vr > (V0 + EcartVitesse)) && (fSatPI == False))
                     {                       
                        ASRrunning = True;
                     }
@@ -2760,11 +2809,14 @@ static unsigned char ASSER_TRAJ_Profil_S_Curve(float * Vconsigne, float Distance
                 if (ASRrunning == True)
                 {
                     /* Vitesse Reelle superieure => delcanchement de l'ASR pour mieux deccelerer */
-                    if (Vr > (V0 + EcartVitesse))
+                    if ((Vr > (V0 + EcartVitesse)) && (fSatPI == False))
                     {
+                        /* Decrementation de la vitesse gain ASR */
                         VgASR = VgASR - gASR;
-                        *Vconsigne = Vconsigne0 + VgASR;
+                        /* Modification de la vitesse suivant la vitesse du profil deceleration */
+                        *Vconsigne = V + VgASR;
 
+                        /* Verifiaction et ajustement de la vitesse de consigne */
                         if (*Vconsigne > Vmax)
                         {
                             *Vconsigne = Vmax;
@@ -2779,9 +2831,12 @@ static unsigned char ASSER_TRAJ_Profil_S_Curve(float * Vconsigne, float Distance
                         /* Vitesse Reelle atteinte => correction de l'ASR */
                         if (VgASR < 0.0)
                         {
+                            /* Incrementation de la vitesse gain ASR */
                             VgASR = VgASR + gASR;
-                            *Vconsigne = Vconsigne0 + VgASR;
+                            /* Modification de la vitesse suivant la vitesse du profil deceleration */
+                            *Vconsigne = V + VgASR;
                             
+                            /* Verifiaction et ajustement de la vitesse de consigne */
                             if (*Vconsigne > Vmax)
                             {
                                 *Vconsigne = Vmax;
@@ -2793,8 +2848,26 @@ static unsigned char ASSER_TRAJ_Profil_S_Curve(float * Vconsigne, float Distance
                         }
                         else
                         {
-                            /* Consigne de vitesse */
-                            *Vconsigne = V;
+                            /* Correction de la vitesse pour eviter les sauts de vitesse en cours de profil et pourvoir freiner */
+                            if (Vconsigne0 < V)
+                            {
+                                *Vconsigne = Vconsigne0;
+                            }
+                            else
+                            {
+                                /* Consigne de vitesse*/
+                                *Vconsigne = V;  
+                                
+                                /* Verifiaction et ajustement de la vitesse de consigne */
+                                if (*Vconsigne > Vmax)
+                                {
+                                    *Vconsigne = Vmax;
+                                }
+                                else if (*Vconsigne < VminMouv)
+                                {
+                                    *Vconsigne = VminMouv;
+                                }                                                                                        
+                            } 
                         }
                     }
                 }
@@ -2802,6 +2875,16 @@ static unsigned char ASSER_TRAJ_Profil_S_Curve(float * Vconsigne, float Distance
                 {
                     /* Consigne de vitesse */
                     *Vconsigne = V;
+                    
+                    /* Verifiaction et ajustement de la vitesse de consigne */
+                    if (*Vconsigne > Vmax)
+                    {
+                        *Vconsigne = Vmax;
+                    }
+                    else if (*Vconsigne < VminMouv)
+                    {
+                        *Vconsigne = VminMouv;
+                    }                                          
                 }
             }
                    
@@ -2814,10 +2897,6 @@ static unsigned char ASSER_TRAJ_Profil_S_Curve(float * Vconsigne, float Distance
             /* Test fin de Phase */
             if ((Phase == 1) && ((A >= Amax) || (Pr >= (((Vmax * Vmax) - (VStart * VStart))/Amax) + (VStart * TE))))
             {
-                /* Reset gain en vitesse ASR */
-                VgASR = 0.0;
-                ASRrunning = False;
-
                 if (A >= Amax)
                 {
                     Phase = 3;
@@ -2835,11 +2914,7 @@ static unsigned char ASSER_TRAJ_Profil_S_Curve(float * Vconsigne, float Distance
                 }
             }
             else if ((Phase == 5) && (A <= -Dmax))
-            {
-                /* Reset gain en vitesse ASR */
-                VgASR = 0.0;
-                ASRrunning = False;
-            
+            {           
                 Phase = 7;
             }
 
@@ -2899,7 +2974,7 @@ static unsigned char ASSER_TRAJ_Profil_S_Curve(float * Vconsigne, float Distance
                 if (ASRrunning == False)
                 {
                     /* Vitesse Reelle superieure => delcanchement de l'ASR pour mieux deccelerer */
-                    if (Vr > (V0 + EcartVitesse))
+                    if ((Vr > (V0 + EcartVitesse)) && (fSatPI == False))
                     {
                         ASRrunning = True;
                     }
@@ -2908,41 +2983,75 @@ static unsigned char ASSER_TRAJ_Profil_S_Curve(float * Vconsigne, float Distance
                 if (ASRrunning == True)
                 {
                     /* Vitesse Reelle superieure => delcanchement de l'ASR pour mieux deccelerer */
-                    if (Vr > (V0 + EcartVitesse))
+                    if ((Vr > (V0 + EcartVitesse)) && (Vr > VminMouv) && (fSatPI == False))
                     {
+                        /* Decrementation de la vitesse gain ASR */
                         VgASR = VgASR - gASR;
-                        *Vconsigne = Vconsigne0 + VgASR;
+                        /* Modification de la vitesse suivant la vitesse du profil deceleration */
+                        *Vconsigne = V + VgASR;
     
+                        /* Verifiaction et ajustement de la vitesse de consigne */
                         if (*Vconsigne > Vmax)
                         {
                             *Vconsigne = Vmax;
-                        }
-                        else if (*Vconsigne < VminMouv)
+                        } 
+                        else if (*Vconsigne < -Vmax)
                         {
-                            *Vconsigne = VminMouv;
+                            *Vconsigne = -Vmax;
                         }
                     }
                     else
                     {
                         /* Vitesse Reelle atteinte => correction de l'ASR */
                         if (VgASR < 0.0)
-                        {
+                        {   
+                            /* Incrementation de la vitesse gain ASR */
                             VgASR = VgASR + gASR;
-                            *Vconsigne = Vconsigne0 + VgASR;
+                            /* Modification de la vitesse suivant la vitesse du profil deceleration */
+                            *Vconsigne = V + VgASR;
                                 
+                            /* Verifiaction et ajustement de la vitesse de consigne */
                             if (*Vconsigne > Vmax)
                             {
                                 *Vconsigne = Vmax;
                             }
-                            else if (*Vconsigne < VminMouv)
+                            else if (Vr < VminMouv)
                             {
-                                *Vconsigne = VminMouv;
+                                *Vconsigne = Vconsigne0 + gASR;
                             }
                         }
                         else
                         {
-                            /* Consigne de vitesse*/
-                            *Vconsigne = V;
+                            /* Correction de la vitesse pour eviter les sauts de vitesse en cours de profil et pourvoir freiner */
+                            if (Vconsigne0 < V)
+                            {
+                                *Vconsigne = Vconsigne0;
+                                  
+                                /* Verifiaction et ajustement de la vitesse de consigne */                              
+                                if (*Vconsigne > Vmax)
+                                {
+                                    *Vconsigne = Vmax;
+                                }
+                                else if (Vr < VminMouv)
+                                {
+                                    *Vconsigne = Vconsigne0 + gASR;
+                                }                                                                
+                            }
+                            else
+                            {
+                                /* Consigne de vitesse*/
+                                *Vconsigne = V;  
+                                
+                                /* Verifiaction et ajustement de la vitesse de consigne */
+                                if (*Vconsigne > Vmax)
+                                {
+                                    *Vconsigne = Vmax;
+                                }
+                                else if (Vr < VminMouv)
+                                {
+                                    *Vconsigne = Vconsigne0 + gASR;
+                                }                                                                                      
+                            }                                                                                       
                         }
                     }
                 }
@@ -2950,32 +3059,16 @@ static unsigned char ASSER_TRAJ_Profil_S_Curve(float * Vconsigne, float Distance
                 {
                     /* Consigne de vitesse */
                     *Vconsigne = V;
-                        
-                    if ((Pr < Distance) && ((V < VminMouv) || (Vr < VminMouv)))                 
+                    
+                    /* Verifiaction et ajustement de la vitesse de consigne */
+                    if (*Vconsigne > Vmax)
                     {
-                        if (ASRrunning == False)
-                        {
-                            ASRrunning = True;
-                        }
-                            
-                        if (ASRrunning == True)
-                        {
-                            if ((Pr < Distance) && ((V < VminMouv) || (Vr < VminMouv)))
-                            {
-                                *Vconsigne = VminMouv;
-                            }
-                        }
-                        else
-                        {
-                            /* Consigne de vitesse */
-                            *Vconsigne = V;
-                        }
+                        *Vconsigne = Vmax;
                     }
-                    else
+                    else if (Vr < VminMouv)
                     {
-                        /* Consigne de vitesse */
-                        *Vconsigne = V;
-                    }
+                        *Vconsigne = Vconsigne0 + gASR;
+                    }                                        
                 }
             }
             /* Phase de d'acceleration */
@@ -2984,7 +3077,7 @@ static unsigned char ASSER_TRAJ_Profil_S_Curve(float * Vconsigne, float Distance
                 if (ASRrunning == False)
                 {
                     /* Vitesse Reelle atteinte => delcanchement de l'ASR pour plus de performance */
-                    if (Vr >= (V0 - EcartVitesse))
+                    if ((Vr >= (V0 - EcartVitesse)) && (fSatPI == False))
                     {
                         ASRrunning = True;
                     }
@@ -2993,11 +3086,14 @@ static unsigned char ASSER_TRAJ_Profil_S_Curve(float * Vconsigne, float Distance
                 if (ASRrunning == True)
                 {
                     /* Vitesse Reelle atteinte => delcanchement de l'ASR pour plus de performance */
-                    if (Vr >= (V0 - EcartVitesse))
+                    if ((Vr >= (V0 - EcartVitesse)) && (fSatPI == False))
                     {
+                        /* Incrementation de la vitesse gain ASR */
                         VgASR = VgASR + gASR;
+                        /* Modification de la vitesse suivant la vitesse precedente */
                         *Vconsigne = Vconsigne0 + VgASR;
                             
+                        /* Verifiaction et ajustement de la vitesse de consigne */
                         if (*Vconsigne > Vmax)
                         {
                             *Vconsigne = Vmax;
@@ -3012,9 +3108,12 @@ static unsigned char ASSER_TRAJ_Profil_S_Curve(float * Vconsigne, float Distance
                         /* Vitesse Reelle non atteinte => correction de l'ASR */
                         if (VgASR > 0.0)
                         {
+                            /* Decrementation de la vitesse gain ASR */
                             VgASR = VgASR - gASR;
+                            /* Modification de la vitesse suivant la vitesse precedente */
                             *Vconsigne = Vconsigne0 + VgASR;
-                                
+                            
+                            /* Verifiaction et ajustement de la vitesse de consigne */
                             if (*Vconsigne > Vmax)
                             {
                                 *Vconsigne = Vmax;
@@ -3026,13 +3125,41 @@ static unsigned char ASSER_TRAJ_Profil_S_Curve(float * Vconsigne, float Distance
                         }
                         else
                         {
-                            /* Consigne de vitesse*/
-                            *Vconsigne = V;
+                            if (fSatPI == False)
+                            {
+                                /* Correction de la vitesse pour eviter les sauts de vitesse en cours de profil */
+                                if (V >= Vconsigne0)
+                                {
+                                    /* Consigne de vitesse */
+                                    *Vconsigne = V;
+                                }
+                                else
+                                {
+                                    *Vconsigne = Vconsigne0;
+                                } 
+                            }
+                            else
+                            {
+                                /* Decrementation de la vitesse gain ASR */
+                                VgASR = VgASR - gASR;
+                                /* Modification de la vitesse suivant la vitesse precedente */
+                                *Vconsigne = Vconsigne0 + VgASR;
+                            }
+                            
+                            /* Verifiaction et ajustement de la vitesse de consigne */
+                            if (*Vconsigne > Vmax)
+                            {
+                                *Vconsigne = Vmax;
+                            }
+                            else if (*Vconsigne < VminMouv)
+                            {
+                                *Vconsigne = VminMouv;
+                            }                                                        
 
 #ifdef PIC32_BUILD                                
-                            TOOLS_LogFault(AsserPosErr, True, FLOAT, (float *)&Dmax, True, "Asserv_traj : Amax / Dmax > aux capacitées du robot !");
+                            TOOLS_LogFault(AsserPosErr, True, FLOAT, (float *)&Dmax, True, "Asserv_traj : Amax / Dmax > aux capacitees du robot !");
 #else /* PIC32_BUILD */
-                            ASSER_TRAJ_LogAsserMsgPC("Asserv_traj : Amax / Dmax > aux capacitées du robot !", Dmax);
+                            ASSER_TRAJ_LogAsserMsgPC("Asserv_traj : Amax / Dmax > aux capacitees du robot !", Dmax);
 #endif /* PIC32_BUILD */                            
                         }
                     }
@@ -3041,6 +3168,16 @@ static unsigned char ASSER_TRAJ_Profil_S_Curve(float * Vconsigne, float Distance
                 {
                     /* Consigne de vitesse */
                     *Vconsigne = V; 
+                    
+                    /* Verifiaction et ajustement de la vitesse de consigne */
+                    if (*Vconsigne > Vmax)
+                    {
+                        *Vconsigne = Vmax;
+                    }
+                    else if (*Vconsigne < VminMouv)
+                    {
+                        *Vconsigne = VminMouv;
+                    }                                        
                 }
             }
             
@@ -3078,7 +3215,7 @@ static unsigned char ASSER_TRAJ_Profil_S_Curve(float * Vconsigne, float Distance
                 {
                     Phase = 8;
                     
-                    if ((Vr > VminMouv) && (VEnd == 0.0))
+                    if ((Vr > (VminMouv + EcartVitesse)) && (VEnd == 0.0))
                     {
 #ifdef PIC32_BUILD                        
                         TOOLS_LogFault(AsserPosErr, True, FLOAT, (float *)&Vr, True, "Asserv_traj : Vr > VminMouv a l'arrivee en position !");
@@ -3088,6 +3225,8 @@ static unsigned char ASSER_TRAJ_Profil_S_Curve(float * Vconsigne, float Distance
                     }
                 }
              }
+
+             break;
 
         case 4:
                         
@@ -3127,14 +3266,15 @@ static unsigned char ASSER_TRAJ_Profil_S_Curve(float * Vconsigne, float Distance
         default:
 
 #ifdef PIC32_BUILD
-            TOOLS_LogFault(AsserPosErr, True, INTEGER, (int *)&Phase, True, "Asserv_traj : Phase de profil non géré !");
+            TOOLS_LogFault(AsserPosErr, True, INTEGER, (int *)&Phase, True, "Asserv_traj : Phase de profil non gere !");
 #else /* PIC32_BUILD */
-            ASSER_TRAJ_LogAsserMsgPC("Asserv_traj : Phase de profil non géré !", (float)Phase);
+            ASSER_TRAJ_LogAsserMsgPC("Asserv_traj : Phase de profil non gere !", (float)Phase);
 #endif /* PIC32_BUILD */  
 
             break;
     }
 
+    /* Sauvegarde de la vitesse precedente */
     Vconsigne0 = *Vconsigne;
 
     /* Phase VIII (fin d'asser) */

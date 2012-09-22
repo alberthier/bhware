@@ -100,12 +100,12 @@ extern void SIMU_SetParamMoteur(float m, float R, float f, float Fr, float r, fl
 
 extern void SIMU_SetParamProfilVitesse(float Amax, float Dmax, float coeff_vi1, float vit_seuil_decc, float coeff_decc_finale, float decc_min, float umax, float fvam)
 {
-    A_MAX = Amax;
+  /*  A_MAX = Amax;
     D_MAX = Dmax;
     COEFF_VI1 = coeff_vi1;
     VITESSE_SEUIL_DECC = vit_seuil_decc;
     COEFF_DECC_FINALE = coeff_decc_finale;
-    DECC_MIN = decc_min;
+    DECC_MIN = decc_min;                */
     Umax = (unsigned int)umax;
     FacteurVitesseAngulaireMax = fvam;
 }
@@ -367,6 +367,10 @@ void SIMU_InitialisationLogRobot(void)
 //    ASSER_TRAJ_LogAsserValPC("vitesseD1ms", vitesseMoteurD);
 
     ASSER_TRAJ_LogAsserValPC("ConsigneMoteurDroit_MS", 0.0);
+    ASSER_TRAJ_LogAsserValPC("VitesseProfil", 0.0);
+    ASSER_TRAJ_LogAsserValPC("VgASR", 0.0);
+    ASSER_TRAJ_LogAsserValPC("Phase", 0.0);
+    ASSER_TRAJ_LogAsserValPC("fFin", 0.0);
 }
 
 void SIMU_LogRobot(void)
