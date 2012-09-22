@@ -13,3 +13,4 @@ syntax: glob
 asser/optimTrajParam.py.old
 asser.7z
 asser/Simu.bat
+asser/optimTrajParam.py.bak

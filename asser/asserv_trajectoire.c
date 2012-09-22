@@ -445,7 +445,7 @@ extern void ASSER_TRAJ_AsservissementMouvementRobot(Pose poseRobot, VitessesRobo
                 parametrePositionSegmentTrajectoireAv = parametrePositionSegmentTrajectoire;
                 segmentCourantAv = segmentCourant;
                 
-                ASSER_Running = ASSER_TRAJ_Profil_S_Curve(&VitesseProfil, chemin.distance, 0.0, 0.0, chemin.profilVitesse.Amax, chemin.profilVitesse.Dmax, 0.001, chemin.profilVitesse.distance_parcourue, POS_GetVitesseRelle(), (SaturationPIDflag | SaturationPIGflag));
+                ASSER_Running = ASSER_TRAJ_Profil_S_Curve(&VitesseProfil, chemin.distance, 0.0, 0.0, /*chemin.profilVitesse.Amax*/0.6, /*chemin.profilVitesse.Dmax*/0.6, 0.001, chemin.profilVitesse.distance_parcourue, POS_GetVitesseRelle(), (SaturationPIDflag | SaturationPIGflag));
                 delta_distance_Av = VitesseProfil * TE;
                 //delta_distance_Av = ASSER_TRAJ_GabaritVitesse_getVitesse_vs_Distance(chemin.profilVitesse.distance_parcourue) * TE;
                 
@@ -468,7 +468,7 @@ extern void ASSER_TRAJ_AsservissementMouvementRobot(Pose poseRobot, VitessesRobo
                 parametrePositionSegmentTrajectoireAv = parametrePositionSegmentTrajectoire;
                 segmentCourantAv = segmentCourant;
 
-                ASSER_Running = ASSER_TRAJ_Profil_S_Curve(&VitesseProfil, chemin.distance, 0.0, 0.0, chemin.profilVitesse.Amax, chemin.profilVitesse.Dmax, 0.001, chemin.profilVitesse.distance_parcourue, POS_GetVitesseRelle(), (SaturationPIDflag | SaturationPIGflag));
+                ASSER_Running = ASSER_TRAJ_Profil_S_Curve(&VitesseProfil, chemin.distance, 0.0, 0.0, /*chemin.profilVitesse.Amax*/0.6, /*chemin.profilVitesse.Dmax*/0.6, 0.001, chemin.profilVitesse.distance_parcourue, POS_GetVitesseRelle(), (SaturationPIDflag | SaturationPIGflag));
                 delta_distance_Av = VitesseProfil * TE;
                 //delta_distance_Av = ASSER_TRAJ_GabaritVitesse_getVitesse_vs_Distance(chemin.profilVitesse.distance_parcourue) * TE;
                 
