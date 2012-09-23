@@ -653,8 +653,8 @@ def affichageTraj2011(d_traj):
     plot(temps, d_traj["vitesseMoteurGauche"], '-', label='mesure gauche')
     #~ hold(True)
     plot(temps, d_traj["vitesseMoteurDroit"], label='mesure droit')
-    plot(temps, d_traj["ConsigneMoteurDroit_MS"], label='consigne droit')
     plot(temps, d_traj["VitesseProfil"], label='Vitesse Profil')
+    plot(temps, d_traj["ConsigneMoteurDroit_MS"], label='consigne droit')
     plot(temps, d_traj["VgASR"], label='V g ASR')
     plot(temps, d_traj["Phase"], label='Phase')
     plot(temps, d_traj["fFin"], label='flag Fin')
@@ -1010,6 +1010,9 @@ print(traj["distance"])
 
 print("dist_parcourue: " + str(traj["dist_parcourue"][-1]))
 print("etat asser: " + str(traj["Motion"][0]))
+
+print("nbre de periode de saturation G : " + str(sum(traj["SaturationPIGflag"])))
+print("nbre de periode de saturation D : " + str(sum(traj["SaturationPIDflag"])))
 
 for msg in traj['message'] :
     print(msg)

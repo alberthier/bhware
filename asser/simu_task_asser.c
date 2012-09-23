@@ -10,6 +10,7 @@
     #include "asserv_trajectoire.h"
 #include "task_asser.h"
 #include "define.h"
+#include "pic18.h"
 
 /* variables pont entre le code du robot et le code du simulateur */
 unsigned short simu_consigneMoteurG;
@@ -56,12 +57,13 @@ extern void SIMU_REDEF_ASSER_SendConsigne(unsigned short ConsigneMoteurD, unsign
     simu_consigneMoteurD = ConsigneMoteurD;
 }
 
-float SIMU_RegulateurPI_BHT(float erreurVitesse, float* integ, float Ki, float Kp, float vmax, float Te)
+float SIMU_RegulateurPI_BHT(char side, float erreurVitesse, float* integ, float Ki, float Kp, float vmax, float Te)
 {
     signed int tensionPWM;
     float tensionPWMTemp;
     float I;
     float P;
+    unsigned char flag_saturation = False;
 
     *integ = *integ + Te * erreurVitesse;
     I = Ki * (*integ);
@@ -78,14 +80,47 @@ float SIMU_RegulateurPI_BHT(float erreurVitesse, float* integ, float Ki, float K
 
     P = Kp * erreurVitesse;
     tensionPWMTemp = P + I;
+
     if (tensionPWMTemp < -vmax)
     {
         tensionPWMTemp = -vmax;
+        flag_saturation = True;
     }
     if (tensionPWMTemp > vmax)
     {
         tensionPWMTemp = vmax;
+        flag_saturation = True;
     }
+
+    if (flag_saturation == True)
+    {
+        /* Anti windup simplifie */
+        *integ = *integ - Te * erreurVitesse;
+        /* Flag de saturation*/
+        if (side == GAUCHE)
+        {
+            SaturationPIGflag = True;
+        }
+        if (side == DROIT)
+        {
+            SaturationPIDflag = True;
+        }
+    }
+    else
+    {
+        if (side == GAUCHE)
+        {
+            SaturationPIGflag = False;
+        }
+        if (side == DROIT)
+        {
+            SaturationPIDflag = False;
+        }
+    }
+
+    ASSER_TRAJ_LogAsserValPC("SaturationPIGflag", SaturationPIGflag);
+    ASSER_TRAJ_LogAsserValPC("SaturationPIDflag", SaturationPIDflag);
+
     //tensionPWM = (signed int)tensionPWMTemp;
     //return(tensionPWM);
     return(tensionPWMTemp);

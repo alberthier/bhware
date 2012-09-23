@@ -426,7 +426,7 @@ void SIMU_BoucleVitesse(void)
     erreurVitesseMoteurG = SIMU_ErreurVitesseConsPWMVToVitMS(simu_consigneMoteurG, vitesseMoteurG, GAIN_STATIQUE_MOTEUR_G);
     erreurVitesseMoteurD = SIMU_ErreurVitesseConsPWMVToVitMS(simu_consigneMoteurD, vitesseMoteurD, GAIN_STATIQUE_MOTEUR_D);
 
-    tensionPWM_G = (signed int)SIMU_RegulateurPI_BHT(erreurVitesseMoteurG, &integPI_G, KI_GAUCHE, KP_GAUCHE, OffsetPWM, TE_PI);
+    tensionPWM_G = (signed int)SIMU_RegulateurPI_BHT(GAUCHE, erreurVitesseMoteurG, &integPI_G, KI_GAUCHE, KP_GAUCHE, OffsetPWM, TE_PI);
 
 //    /* Mesure des instants de saturation du correcteur PI gauche */
 //    if ((tensionPWM_G < -(OffsetPWM-0.1)) || (tensionPWM_G > (OffsetPWM-0.1)))
@@ -437,7 +437,7 @@ void SIMU_BoucleVitesse(void)
 //    {
 //        ASSER_TRAJ_LogAsserValPC("saturationPIgauche", 0.0);
 //    }
-    tensionPWM_D = (signed int)SIMU_RegulateurPI_BHT(erreurVitesseMoteurD, &integPI_D, KI_DROIT, KP_DROIT, OffsetPWM, TE_PI);
+    tensionPWM_D = (signed int)SIMU_RegulateurPI_BHT(DROIT, erreurVitesseMoteurD, &integPI_D, KI_DROIT, KP_DROIT, OffsetPWM, TE_PI);
 
     /* Mesure des instants de saturation du correcteur PI droit */
 //    if ((tensionPWM_D < -(OffsetPWM-0.1)) || (tensionPWM_D > (OffsetPWM-0.1)))
@@ -587,8 +587,8 @@ void SIMU_CalculPeriodiqueAsserVitessePI(void)
 
     erreurVitesseMoteurG = SIMU_ErreurVitesseConsPWMVToVitMS(simu_consigneMoteurG, vitesseMoteurG, SIMU_gain());
 
-    //tensionPWM_G = SIMU_RegulateurPI_BHT(erreurVitesseMoteurG, &integPI_G, KI_GAUCHE, KP_GAUCHE, OffsetPWM * SIMU_KM, 0.001) / (float)SIMU_KM;
-    tensionPWM_G = (float)floor(SIMU_RegulateurPI_BHT(erreurVitesseMoteurG, &integPI_G, KI_GAUCHE, KP_GAUCHE, OffsetPWM, TE_PI));
+    //tensionPWM_G = SIMU_RegulateurPI_BHT(GAUCHE, erreurVitesseMoteurG, &integPI_G, KI_GAUCHE, KP_GAUCHE, OffsetPWM * SIMU_KM, 0.001) / (float)SIMU_KM;
+    tensionPWM_G = (float)floor(SIMU_RegulateurPI_BHT(GAUCHE, erreurVitesseMoteurG, &integPI_G, KI_GAUCHE, KP_GAUCHE, OffsetPWM, TE_PI));
     if ((tensionPWM_G < -(OffsetPWM-0.1)) || (tensionPWM_G > (OffsetPWM-0.1)))
     {
         ASSER_TRAJ_LogAsserValPC("saturationPIgauche", 1.0);

@@ -65,8 +65,11 @@ extern void             ASSER_SendConsigne(unsigned short ConsigneMoteurD, unsig
 
 extern void             SIMU_REDEF_ASSER_GoTo(PtTraj *p_chemin, unsigned int nbrePtsChemin, unsigned int Mouvement, signed int Marche, float angle_rad);
 extern void             SIMU_REDEF_ASSER_SendConsigne(unsigned short ConsigneMoteurD, unsigned short ConsigneMoteurG);
-extern float            SIMU_RegulateurPI_BHT(float erreurVitesse, float* integ, float Ki, float Kp, float vmax, float Te);
+extern float            SIMU_RegulateurPI_BHT(char side, float erreurVitesse, float* integ, float Ki, float Kp, float vmax, float Te);
 extern void             logAsser0(char* nomFichier, char* mode, float valeur, char* chaine); /* le prototype a utiliser reste logAsser(...) (logAsser0() <- astuce pour la simu) */
+
+#define GAUCHE -1
+#define DROIT 1
 
 #endif /* PIC32_BUILD */
 
