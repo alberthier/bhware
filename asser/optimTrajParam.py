@@ -241,8 +241,8 @@ def trajFunction(d_cfgTraj):
     send_init_pose(simulator_process, x=0.0, y=0.0, angle=math.pi/2.0) #4.71
     
     #
-    deplacement = commandMsg("MSG_MAIN_GOTO 1 1 -1100000.0")
-    deplacement.addPose("0.0 1.0") #-1100000.0
+    deplacement = commandMsg("MSG_MAIN_GOTO 2 1 -1100000.0")
+    deplacement.addPose("0.0 3.0") #-1100000.0
     #transmission de commandes de deplacement par l'entree standard
     simulator_process.stdin.write(deplacement.cmdMsgGeneration())
     
@@ -653,8 +653,8 @@ def affichageTraj2011(d_traj):
     plot(temps, d_traj["vitesseMoteurGauche"], '-', label='mesure gauche')
     #~ hold(True)
     plot(temps, d_traj["vitesseMoteurDroit"], label='mesure droit')
-    plot(temps, d_traj["ConsigneMoteurDroit_MS"], label='consigne droit')
     plot(temps, d_traj["VitesseProfil"], label='Vitesse Profil')
+    plot(temps, d_traj["ConsigneMoteurDroit_MS"], label='consigne droit')
     plot(temps, d_traj["VgASR"], label='V g ASR')
     plot(temps, d_traj["Phase"], label='Phase')
     plot(temps, d_traj["fFin"], label='flag Fin')
@@ -942,8 +942,9 @@ print(len(traj.keys()))
 #~ print(traj["pti"])
 #~ print("disti")
 #~ print(traj["disti"])
-print("distance_seg")
-#~ print(traj["distance_seg"])
+print("distance des segments :")
+print(traj["distance_seg"])
+print(traj["distance"])
 #~ print("theta1: " + str(traj["theta1"]))
 #~ print("angle_rad: " + str(traj["angle_rad"]))
 
@@ -964,7 +965,7 @@ print("distance_seg")
     #~ legend()
     #~ 
     #~ figure()
-    #~ plot(traj["def_diff_xTraj"], '-o', label="diff_x")
+    #~ plot(traj["def_diff_xTrASSER_TRAJ_LogAsserValPC("distance_seg", chemin.segmentTrajBS[iSegment].distance);aj"], '-o', label="diff_x")
     #~ plot(traj["def_diff_yTraj"], '-o', label="diff_y")
     #~ legend()
     #~ grid()
@@ -1008,6 +1009,7 @@ print("distance_seg")
 #~ print(traj["debug_smooth"])
 
 print("dist_parcourue: " + str(traj["dist_parcourue"][-1]))
+print("etat asser: " + str(traj["Motion"][0]))
 
 for msg in traj['message'] :
     print(msg)
