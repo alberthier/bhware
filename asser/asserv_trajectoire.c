@@ -615,6 +615,8 @@ extern void ASSER_TRAJ_InitialisationTrajectoire(Pose poseRobot, PtTraj * point,
             chemin.segmentTrajBS[1].aiy = (CONVERT_DISTANCE(point[0].y) - poseRobot.y);
             chemin.segmentTrajBS[1].bix = poseRobot.x;
             chemin.segmentTrajBS[1].biy = poseRobot.y;
+            chemin.distance = sqrt(SQUARE(chemin.segmentTrajBS[1].aix) + SQUARE(chemin.segmentTrajBS[1].aiy));
+            ASSER_TRAJ_LogAsserValPC("distance", chemin.distance);
         }
         else
         {
@@ -734,7 +736,7 @@ extern void ASSER_TRAJ_InitialisationTrajectoire(Pose poseRobot, PtTraj * point,
 
 
                 iseg_portion = iSegment - 1;
-                segmentTraj = chemin.segmentTrajBS;
+                segmentTraj = chemin.segmentTrajBS;ASSER_TRAJ_LogAsserValPC("distance", chemin.distance);
                 pos_ti = ASSER_TRAJ_PortionEnd(segmentTraj[iseg_portion].bx, segmentTraj[iseg_portion].by, segmentTraj[iseg_portion].ax, segmentTraj[iseg_portion].ay, segmentTraj[iSegment].qx[0], segmentTraj[iSegment].qy[0]);
 
                 iseg_portion = iSegment;
@@ -779,16 +781,24 @@ extern void ASSER_TRAJ_InitialisationTrajectoire(Pose poseRobot, PtTraj * point,
 #endif /*PIC32_BUILD*/
 
         /* Determination des distances des segments de trajectoire, et de la distance totale */
-        chemin.distance = 0.0;
 
-        for (iSegment = 1; iSegment <= nbrePts; iSegment++)
+        if (mouvement != DEPLACEMENT_LIGNE_DROITE)
         {
-            ASSER_TRAJ_DistanceTrajectoire(chemin.segmentTrajBS, iSegment);
-            
-            chemin.distance += chemin.segmentTrajBS[iSegment].distance;
-            
-            ASSER_TRAJ_LogAsserValPC("distance_seg", chemin.segmentTrajBS[iSegment].distance);
+            chemin.distance = 0.0;
+            for (iSegment = 1; iSegment <= nbrePts; iSegment++)
+            {
+                ASSER_TRAJ_DistanceTrajectoire(chemin.segmentTrajBS, iSegment);
+
+                chemin.distance += chemin.segmentTrajBS[iSegment].distance;
+
+                ASSER_TRAJ_LogAsserValPC("distance_seg", chemin.segmentTrajBS[iSegment].distance);
+            }
         }
+        else
+        {
+            ASSER_TRAJ_LogAsserValPC("distance_seg", chemin.distance);
+        }
+        ASSER_TRAJ_LogAsserValPC("distance", chemin.distance);
 
         /* Calcul de la premiere pose de la trajectoire de consigne */
         diff1BS = ASSER_TRAJ_DiffTrajectoire(chemin.segmentTrajBS, 1, 0.0);
