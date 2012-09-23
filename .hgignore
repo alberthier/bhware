@@ -9,3 +9,25 @@ drunkstar/buildroot-2012.02/
 asser/log.txt
 asser/Makefile
 asser/simulator_trajAsser
+syntax: glob
+asserold/asserold.7z
+asserold/asser/task_asser.h
+asserold/asser/simu_task_asser.c
+asserold/asser/simuAsser.h
+asserold/asser/simuAsser.c
+asserold/asser/position.h
+asserold/asser/position.c
+asserold/asser/pic18.h
+asserold/asser/pic18.c
+asserold/asser/optimTrajParam.py
+asserold/asser/mainSimuAsserBin.c
+asserold/asser/define.h
+asserold/asser/config.py
+asserold/asser/asserv_trajectoire.h
+asserold/asser/asserv_trajectoire.c
+asserold/asser/Simu.bat
+asser/optimTrajParam.py~RF7a4479.TMP
+asser/optimTrajParam.py.old
+asser/Simu.bat
+asser.7z
+asser/optimTrajParam.py.orig
