@@ -114,7 +114,7 @@ int main(void)
     gainRotation1 = -6.0;
     gainRotation2 = -6.0;
     // param du profil de vitesse # 1:A_MAX, 2:D_MAX, 3:COEFF_VI1, 4:VITESSE_SEUIL_DECC, 5:COEFF_DECC_FINALE, 6:DECC_MIN, 7:FacteurVitesseAngulaireMax
-    SIMU_SetParamProfilVitesse(0.6, 0.6, 0.95, 0.15, 0.08, -0.3, 0.5);
+    SIMU_SetParamProfilVitesse(0.575, 0.575, 0.95, 0.15, 0.08, -0.3, 0.5);
     // param du moteur de deplacement # 1:MASSE, 2:RAYON_ROUE, 3:FROTTEMENT_FLUIDE, 4:FORCE_RESISTANTE, 5:RESISTANCE_INDUIT, 6:INDUCTANCE_INDUIT, 7:CONSTANTE_COUPLE, 8:CONSTANTE_VITESSE, 9:RAPPORT_REDUCTION
     SIMU_SetParamMoteur(1.2, 0.03, 0.0000504, 0.4, 2.18, 0.00024, 0.0234, 0.02346, 20.0);
 
