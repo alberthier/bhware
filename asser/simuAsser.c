@@ -98,15 +98,14 @@ extern void SIMU_SetParamMoteur(float m, float R, float f, float Fr, float r, fl
     RAPPORT_REDUCTION   = Rred;
 }
 
-extern void SIMU_SetParamProfilVitesse(float Amax, float Dmax, float coeff_vi1, float vit_seuil_decc, float coeff_decc_finale, float decc_min, float umax, float fvam)
+extern void SIMU_SetParamProfilVitesse(float Amax, float Dmax, float coeff_vi1, float vit_seuil_decc, float coeff_decc_finale, float decc_min, float fvam)
 {
-  /*  A_MAX = Amax;
-    D_MAX = Dmax;
+    A_MAX = Amax;
+    D_MAX = Dmax;   
     COEFF_VI1 = coeff_vi1;
     VITESSE_SEUIL_DECC = vit_seuil_decc;
     COEFF_DECC_FINALE = coeff_decc_finale;
-    DECC_MIN = decc_min;                */
-    Umax = (unsigned int)umax;
+    DECC_MIN = decc_min;     
     FacteurVitesseAngulaireMax = fvam;
 }
 
@@ -648,7 +647,7 @@ void SIMU_CalculPeriodiqueAsserVitessePI(void)
 //                                   );
 }
 
-int SIMU_AsserVitessePI(void)
+void SIMU_AsserVitessePI(void)
 {
     int p;
     float len_parcours = 1.0;

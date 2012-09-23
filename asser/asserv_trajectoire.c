@@ -856,7 +856,7 @@ extern void ASSER_TRAJ_InitialisationTrajectoire(Pose poseRobot, PtTraj * point,
     chemin.profilVitesse.decc_min_finale = DECC_MIN;
     chemin.profilVitesse.coeff_vi1 = COEFF_VI1;
 
-    ASSER_TRAJ_GabaritVitesse(&chemin);
+    //ASSER_TRAJ_GabaritVitesse(&chemin);
     
     chemin.profilVitesse.etat = 1;
 

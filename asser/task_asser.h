@@ -46,10 +46,6 @@ extern OS_FLAGS         ASSER_event;
 extern unsigned long    NbrPasMesureRoueD;
 extern unsigned long    NbrPasMesureRoueG;
 
-/** Flag de saturation du PI*/
-extern unsigned char    SaturationPIDflag;
-extern unsigned char    SaturationPIGflag;
-
 #else /* PIC32_BUILD */
 
 extern unsigned short   simu_consigneMoteurG;

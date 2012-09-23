@@ -57,6 +57,10 @@ extern  unsigned short          TensionPWM_MG;
 extern  float                   Vitesse_MD_PIC_PI;
 extern  float                   Vitesse_MG_PIC_PI;
 
+/** Flag de saturation du PI*/
+extern unsigned char    		SaturationPIDflag;
+extern unsigned char    		SaturationPIGflag;
+
 /*! @} */
 
 /*! @} */

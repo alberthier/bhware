@@ -54,7 +54,7 @@
 const   float           TE                      = 0.010;                            /* Periode de l'asservissement en seconde */
 
 /** Vitesse maximale a demander aux moteurs */
-const   float           Umax                    = 1023.0;                           /* Vitesse maximale a demander aux moteurs, image de la tension (en unite PWM) etant donne le gain statique des moteurs */
+const   float           Umax                    = 900.0;                           /* Vitesse maximale a demander aux moteurs, image de la tension (en unite PWM) etant donne le gain statique des moteurs */
 
 /**********************************************************************/
 

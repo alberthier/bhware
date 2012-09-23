@@ -52,6 +52,10 @@ def stdoutParser(l_line):
                     d_traj[l_linedata[0]] = []
                 d_traj[l_linedata[0]].append(float(l_linedata[1]))
                 ignored=False
+                
+            if l_linedata[0].count('msg_', 0, 4) == 1 :
+                d_traj['message'].append(line[4:])
+                
             if l_linedata[0].count('logStr_', 0, 7) == 1:
                 l_linedata[0] = l_linedata[0].replace("logStr_", "")
                 l_linedata[0] = l_linedata[0].replace(":", "")
@@ -110,7 +114,7 @@ def MSG_config_AsserRotation(R1, R2) :
 def send_config_AsserRotation(process, R1, R2) :
     process.stdin.write(MSG_config_AsserRotation(R1, R2))
 
-def MSG_config_profilVitesse(Amax, Dmax, coeff_vi1, vitesse_seuil_decc, coeff_decc_finale, decc_min, Umax, F_VA_Max) :
+def MSG_config_profilVitesse(Amax, Dmax, coeff_vi1, vitesse_seuil_decc, coeff_decc_finale, decc_min, F_VA_Max) :
     #generation d'un message de configuration des parametres du profil de vitesse
     parametersT = commandMsg("PARAMETERS_TIME")
     parametersT.addPose("A_MAX" + " " + str(Amax))
@@ -119,7 +123,6 @@ def MSG_config_profilVitesse(Amax, Dmax, coeff_vi1, vitesse_seuil_decc, coeff_de
     parametersT.addPose("VITESSE_SEUIL_DECC" + " " + str(vitesse_seuil_decc))
     parametersT.addPose("COEFF_DECC_FINALE" + " " + str(coeff_decc_finale))
     parametersT.addPose("DECC_MIN" + " " + str(decc_min))
-    parametersT.addPose("UMAX" + " " + str(Umax))
     parametersT.addPose("VITANGMAX" + " " + str(F_VA_Max))
     return parametersT.cmdMsgGeneration()
 
@@ -130,8 +133,8 @@ def MSG_configGenerale(Ratio_Acc, Ratio_Decc) :
     parametersT.addPose("RATIO_DECC" + " " + str(Ratio_Decc))
     return parametersT.cmdMsgGeneration()
 
-def send_config_profilVitesse(process, Amax, Dmax, coeff_vi1, vitesse_seuil_decc, coeff_decc_finale, decc_min, Umax, F_VA_Max) :
-    process.stdin.write(MSG_config_profilVitesse(Amax, Dmax, coeff_vi1, vitesse_seuil_decc, coeff_decc_finale, decc_min, Umax, F_VA_Max))
+def send_config_profilVitesse(process, Amax, Dmax, coeff_vi1, vitesse_seuil_decc, coeff_decc_finale, decc_min, F_VA_Max) :
+    process.stdin.write(MSG_config_profilVitesse(Amax, Dmax, coeff_vi1, vitesse_seuil_decc, coeff_decc_finale, decc_min, F_VA_Max))
 
 def send_configGenerale(process, Ratio_Acc, Ratio_Decc) :
     process.stdin.write(MSG_configGenerale(Ratio_Acc, Ratio_Decc))
@@ -190,7 +193,7 @@ def send_config_simulator(simulator_process, d_cfgTraj) :
     send_config_AsserRotation(simulator_process, d_cfgTraj['R1'], d_cfgTraj['R2'])
 
     # envoie au simulateur de la configuration des parametres du profil de vitesse
-    send_config_profilVitesse(simulator_process, d_cfgTraj['Amax'], d_cfgTraj['Dmax'], d_cfgTraj['coeff_vi1'], d_cfgTraj['vitesse_seuil_decc'], d_cfgTraj['coeff_decc_finale'], d_cfgTraj['decc_min'], d_cfgTraj['Umax'], d_cfgTraj['Facteur_vitesse_angulaire'])
+    send_config_profilVitesse(simulator_process, d_cfgTraj['Amax'], d_cfgTraj['Dmax'], d_cfgTraj['coeff_vi1'], d_cfgTraj['vitesse_seuil_decc'], d_cfgTraj['coeff_decc_finale'], d_cfgTraj['decc_min'], d_cfgTraj['Facteur_vitesse_angulaire'])
 
     # envoie au simulateur de la configuration des parametres haut niveau du profil de vitesse
     send_configGenerale(simulator_process, d_cfgTraj['RatioAcc'], d_cfgTraj['RatioDecc'])
@@ -395,7 +398,7 @@ def trajTest(d_cfgTraj):
 
     #lancement du simulateur de deplacement
     print("Lancement du simulateur")
-    simulator_process = subprocess.Popen('./simulator_trajAsser', shell=True, stdin = subprocess.PIPE, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+    simulator_process = subprocess.Popen('simulator_trajAsser.exe', shell=True, stdin = subprocess.PIPE, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
 
     # envoie de la configuration du simulateur
     send_config_simulator(simulator_process, d_cfgTraj)
@@ -1004,7 +1007,10 @@ print("distance_seg")
 #~ print("debug_smooth:")
 #~ print(traj["debug_smooth"])
 
-print("Ditance parcourue : " + str(traj["dist_parcourue"][-1]))
+print("dist_parcourue: " + str(traj["dist_parcourue"][-1]))
+
+for msg in traj['message'] :
+    print(msg)
 
 matplotlib.rcParams.update({'font.size': 16})
 affichageTraj2011(traj)

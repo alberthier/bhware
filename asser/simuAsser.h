@@ -32,12 +32,12 @@ void    SIMU_LogRobot(void);
 void    SIMU_AfficheInfoFinAsser(void);
 void    SIMU_CalculPeriodique(void);
 int     SIMU_Mouvement(void);
-int     SIMU_AsserVitessePI(void);
+void    SIMU_AsserVitessePI(void);
 
 #ifndef PIC32_BUILD
 extern void             SIMU_SetGainsPI(float kp, float ki);
 extern void             SIMU_SetParamMoteur(float m, float R, float f, float Fr, float r, float L, float kc, float kv, float Rred);
-extern void             SIMU_SetParamProfilVitesse(float Amax, float Dmax, float coeff_vi1, float vit_seuil_decc, float coeff_decc_finale, float decc_min, float umax, float fvam);
+extern void             SIMU_SetParamProfilVitesse(float Amax, float Dmax, float coeff_vi1, float vit_seuil_decc, float coeff_decc_finale, float decc_min, float fvam);
 extern void             SIMU_SetConfigGeneraleProfilVitesse(float ratioAcc, float ratioDecc);
 #endif
 

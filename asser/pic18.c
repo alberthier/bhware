@@ -58,6 +58,11 @@ unsigned short                  TensionPWM_MG                               =   
 float                           Vitesse_MD_PIC_PI                           =   0.0;
 float                           Vitesse_MG_PIC_PI                           =   0.0;
 
+/** Flag de saturation du PI D */
+unsigned char                   SaturationPIDflag                           =   False;
+/** Flag de saturation du PI G */
+unsigned char                   SaturationPIGflag                           =   False;
+
 /*! @} */
 
 /*! @} */
