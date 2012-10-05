@@ -54,6 +54,8 @@
 
 /** Constantes */
 
+#define                         Vitesse_Gain_ASR                        ((float) 0.002)
+
 /*----------------------------------------------------------------------------------------------*/
 
 /** Variables globales */
@@ -71,8 +73,8 @@ float                           Ratio_Decc                              =   1.0;
 
 float                           FacteurVitesseAngulaireMax              =   1.0;    /* Ce facteur doit etre positif */
 
-float                           A_MAX                                   =   0.6;
-float                           D_MAX                                   =   0.6;
+float                           A_MAX                                   =   0.575;
+float                           D_MAX                                   =   0.575;
 
 float                           COEFF_VI1                               =   0.95;   /* COEFF_VI1 doit etre strictement positif et strictement inferieur a 1 (0.0 < COEFF_VI1 < 1.0) */
 float                           VITESSE_SEUIL_DECC                      =   0.2;
@@ -310,7 +312,8 @@ extern void ASSER_TRAJ_AsservissementMouvementRobot(Pose poseRobot, VitessesRobo
     float           diffThetaCourantAv                      = 0.0;
     Pose            poseReferenceRobotAv;
     float           VitesseProfil                           = 0.0;
-    
+    float           Vr;
+                             
     /* Log de valeurs */
     ASSER_TRAJ_LogAsserValPC("xRoueGauche", m_poseRobot.x + (ECART_ROUE_MOTRICE / 2.0) * cosf(m_poseRobot.angle + (PI / 2)));
     ASSER_TRAJ_LogAsserValPC("yRoueGauche", m_poseRobot.y + (ECART_ROUE_MOTRICE / 2.0) * sinf(m_poseRobot.angle + (PI / 2)));
@@ -350,7 +353,20 @@ extern void ASSER_TRAJ_AsservissementMouvementRobot(Pose poseRobot, VitessesRobo
             {
                 if (shuntTestFinAsser == False)
                 {
+                    Phase = 0;
+                                
                     ASSER_Running = False;
+                    
+                    Vr = POS_GetVitesseRelle();
+                
+                    if (Vr > (VminMouv + EcartVitesse))
+                    {
+#ifdef PIC32_BUILD                        
+                        TOOLS_LogFault(AsserPosErr, True, FLOAT, (float *)&Vr, True, "Asserv_traj : Vr > VminMouv a l'arrivee en position !");
+#else /* PIC32_BUILD */
+                        ASSER_TRAJ_LogAsserMsgPC("Asserv_traj : Vr > VminMouv a l'arrivee en position !", Vr);
+#endif /* PIC32_BUILD */  
+                    }
                 }
             }
         }
@@ -365,7 +381,20 @@ extern void ASSER_TRAJ_AsservissementMouvementRobot(Pose poseRobot, VitessesRobo
         {
             if (chemin.nbreSegments == (unsigned int)1)
             {
+                Phase = 0;
+            
                 ASSER_Running = False;
+                
+                Vr = POS_GetVitesseRelle();
+                
+                if (POS_GetVitesseRelle() > (VminMouv + EcartVitesse))
+                {
+#ifdef PIC32_BUILD                        
+                    TOOLS_LogFault(AsserPosErr, True, FLOAT, (float *)&Vr, True, "Asserv_traj : Vr > VminMouv a l'arrivee en position !");
+#else /* PIC32_BUILD */
+                    ASSER_TRAJ_LogAsserMsgPC("Asserv_traj : Vr > VminMouv a l'arrivee en position !", Vr);
+#endif /* PIC32_BUILD */  
+                }
             }
             else
             {
@@ -445,7 +474,7 @@ extern void ASSER_TRAJ_AsservissementMouvementRobot(Pose poseRobot, VitessesRobo
                 parametrePositionSegmentTrajectoireAv = parametrePositionSegmentTrajectoire;
                 segmentCourantAv = segmentCourant;
                 
-                ASSER_Running = ASSER_TRAJ_Profil_S_Curve(&VitesseProfil, chemin.distance, 0.0, 0.0, chemin.profilVitesse.Amax, chemin.profilVitesse.Dmax, 0.001, chemin.profilVitesse.distance_parcourue, POS_GetVitesseRelle(), (SaturationPIDflag | SaturationPIGflag));
+                ASSER_Running = ASSER_TRAJ_Profil_S_Curve(&VitesseProfil, chemin.distance, 0.0, 0.0, chemin.profilVitesse.Amax, chemin.profilVitesse.Dmax, Vitesse_Gain_ASR, chemin.profilVitesse.distance_parcourue, POS_GetVitesseRelle(), (SaturationPIDflag | SaturationPIGflag));
                 delta_distance_Av = VitesseProfil * TE;
                 //delta_distance_Av = ASSER_TRAJ_GabaritVitesse_getVitesse_vs_Distance(chemin.profilVitesse.distance_parcourue) * TE;
                 
@@ -468,7 +497,7 @@ extern void ASSER_TRAJ_AsservissementMouvementRobot(Pose poseRobot, VitessesRobo
                 parametrePositionSegmentTrajectoireAv = parametrePositionSegmentTrajectoire;
                 segmentCourantAv = segmentCourant;
 
-                ASSER_Running = ASSER_TRAJ_Profil_S_Curve(&VitesseProfil, chemin.distance, 0.0, 0.0, chemin.profilVitesse.Amax, chemin.profilVitesse.Dmax, 0.001, chemin.profilVitesse.distance_parcourue, POS_GetVitesseRelle(), (SaturationPIDflag | SaturationPIGflag));
+                ASSER_Running = ASSER_TRAJ_Profil_S_Curve(&VitesseProfil, chemin.distance, 0.0, 0.0, chemin.profilVitesse.Amax, chemin.profilVitesse.Dmax, Vitesse_Gain_ASR, chemin.profilVitesse.distance_parcourue, POS_GetVitesseRelle(), (SaturationPIDflag | SaturationPIGflag));
                 delta_distance_Av = VitesseProfil * TE;
                 //delta_distance_Av = ASSER_TRAJ_GabaritVitesse_getVitesse_vs_Distance(chemin.profilVitesse.distance_parcourue) * TE;
                 

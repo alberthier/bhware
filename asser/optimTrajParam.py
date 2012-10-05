@@ -242,7 +242,7 @@ def trajFunction(d_cfgTraj):
     
     #
     deplacement = commandMsg("MSG_MAIN_GOTO 2 1 -1100000.0")
-    deplacement.addPose("0.0 3.0") #-1100000.0
+    deplacement.addPose("0.0 1.0") #-1100000.0
     #transmission de commandes de deplacement par l'entree standard
     simulator_process.stdin.write(deplacement.cmdMsgGeneration())
     
