@@ -17,13 +17,13 @@ d_cfgTraj = {'Masse': 1.2
                 , 'K3': 20.0
                 , 'R1': -6.0
                 , 'R2': -6.0
-                , 'Amax': 0.575   #3.0
-                , 'Dmax': 0.575  #-1.5.0
+                , 'Amax': 0.99   #3.0
+                , 'Dmax': 0.99  #-1.5.0
                 , 'coeff_vi1': 0.95
                 , 'vitesse_seuil_decc': 0.15
                 , 'coeff_decc_finale': 0.08
                 , 'decc_min': -0.3
                 , 'RatioAcc': 1.0
-                , 'RatioDecc': 1.0
+                , 'RatioDecc': 0.5
                 , 'Facteur_vitesse_angulaire': 1.0	# facteur de vitesse angulaire
                 }

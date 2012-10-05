@@ -147,23 +147,24 @@ int main(void)
         else if (strcmp(command, "MSG_MAIN_GOTO") == 0)
         {
             commandMsgTreatment(buffer, &mouvement, &marche, &angle_rad, &nbrPtsChemin, chemin);
-            /*
-            ASSER_TRAJ_LogAsserValPC("main_goto", nbrPtsChemin);
-            ASSER_TRAJ_LogAsserValPC("main_goto", chemin[0].x);
-            ASSER_TRAJ_LogAsserValPC("main_goto", chemin[0].y);
-            ASSER_TRAJ_LogAsserValPC("main_goto", chemin[1].x);
-            ASSER_TRAJ_LogAsserValPC("main_goto", chemin[1].y);
-            ASSER_TRAJ_LogAsserValPC("main_goto", angle_rad);
-            */
-            SIMU_InitialisationLogRobot();
-            /* initialisation des données pour l'ordre de déplacement */
-            /* lancement du deplacement */
-            ASSER_GoTo(chemin, nbrPtsChemin, mouvement, marche, angle_rad);
+            if (mouvement >= 10u)
+            {
+                mouvement -= 10u;
 
-            // execution du deplacement
-            SIMU_Mouvement();
-
-            //printf("SimuC: Deplacement termine.\n");
+                SIMU_InitialisationLogRobot();
+                /* initialisation des données pour l'ordre de déplacement */
+                /* lancement du deplacement */
+                ASSER_GoTo(chemin, nbrPtsChemin, mouvement, marche, angle_rad);
+            }
+            else
+            {
+                SIMU_InitialisationLogRobot();
+                /* initialisation des données pour l'ordre de déplacement */
+                /* lancement du deplacement */
+                ASSER_GoTo(chemin, nbrPtsChemin, mouvement, marche, angle_rad);
+                // execution du deplacement
+                SIMU_Mouvement();
+            }
         }
         else if (strcmp(command, "MSG_TEST_PI") == 0)
         {

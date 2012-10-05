@@ -240,9 +240,17 @@ def trajFunction(d_cfgTraj):
     
     send_init_pose(simulator_process, x=0.0, y=0.0, angle=math.pi/2.0) #4.71
     
+    #~ deplacement = commandMsg("MSG_MAIN_GOTO 0 1 -1.57")
     #
-    deplacement = commandMsg("MSG_MAIN_GOTO 2 1 -1100000.0")
-    deplacement.addPose("0.0 1.0") #-1100000.0
+    deplacement = commandMsg("MSG_MAIN_GOTO 1 1 0.0")
+    deplacement.addPose("0.0 0.1")
+    deplacement.addPose("0.1 0.3")
+    deplacement.addPose("0.3 0.4")
+    deplacement.addPose("0.4 0.4")
+    #
+    #~ deplacement = commandMsg("MSG_MAIN_GOTO 12 1 -1100000.0")
+    #~ deplacement.addPose("0.0 2.0") #-1100000.0
+    
     #transmission de commandes de deplacement par l'entree standard
     simulator_process.stdin.write(deplacement.cmdMsgGeneration())
     
@@ -613,6 +621,8 @@ def coutOptim_TempsAcc(param, d_cfgTraj_local) :
     return coutTotal
 
 def affichageTraj2011(d_traj):
+    matplotlib.rcParams.update({'font.size': 10})
+    
     print("duree: " + str(sum(d_traj["time"])) + "s")
     periode = d_traj['periode'][0]
 
@@ -674,6 +684,9 @@ def affichageTraj2011(d_traj):
 
     #plot([index*periode for index in range(len(d_traj["val_tab_vit"]))], d_traj["val_tab_vit"], '-', label='vitesse profil')
 
+    for tpsNewSeg in traj["periodeNewSeg"] :
+        plot([tpsNewSeg*periode, tpsNewSeg*periode], [-0.6, 0.6], '-k')
+
     #~ print("decc_tempsAcc_float: " + str(d_traj["decc_tempsAcc_float"]))
     #~ print("decc_tempsAcc: " + str(d_traj["decc_tempsAcc"]))
     #~ print("decc_vmax: " + str(d_traj["decc_vmax"]))
@@ -695,6 +708,10 @@ def affichageTraj2011(d_traj):
     plot(temps, d_traj["tensionPWM_MoteurGauche"], label='moteur gauche')
     #~ hold(True)
     plot(temps, d_traj["tensionPWM_MoteurDroit"], label='moteur droit')
+    
+    for tpsNewSeg in traj["periodeNewSeg"] :
+        plot([tpsNewSeg*periode, tpsNewSeg*periode], [-1000.0, 1000.0], '-k')
+    
     legend(loc="lower center")
     grid(True)
     title("tensions moteurs")
@@ -853,6 +870,37 @@ def affichageGabaritVitesse_2012(d_traj):
     #~ figure(6)
     #~ plot([index * pas for index in range(len(d_traj["gabarit_delta_acceleration"]))], d_traj["gabarit_delta_acceleration"], 'o')
     #~ grid()
+    
+def affichageGabaritVitesse_2013(d_traj):
+
+    figure(4)
+    
+    pas = d_traj["pas_ech"][0]
+    print("pas ech: " + str(pas))
+    
+    plot([index * pas for index in range(len(d_traj["gabarit_vitesse"]))], d_traj["gabarit_vitesse"], '-o', label='vitesse')
+    #~ plot([index * pas for index in range(len(d_traj["gabarit_acceleration"]))], d_traj["gabarit_acceleration"], '-o', label='acc')
+    
+    #~ if (d_traj.keys().count("gabarit_acceleration_new")) :
+        #~ plot([index * pas for index in range(len(d_traj["gabarit_acceleration_new"]))], d_traj["gabarit_acceleration_new"], '-o', label='acc2')
+    #~ if (d_traj.keys().count("gabarit_vitesse_new")) :
+        #~ plot([index * pas for index in range(len(d_traj["gabarit_vitesse_new"]))], d_traj["gabarit_vitesse_new"], '-o', label='vit2')
+    
+    print("taille tab gabarit vitesse : " + str(len(d_traj["gabarit_vitesse"])))
+
+    grid()
+    title("Plafond de vitesse sur toute la trajectoire")
+    legend(loc="lower right")
+    xlabel("distance")
+    ylabel("vitesse max en multipoint")
+    
+    v = axis()
+    limits = []
+    for val in v:
+        limits.append(val)
+    limits[2] = 0.0
+    #~ limits[3] = 1.2
+    axis(limits)
 
 
 def optimRayonRoue(d_cfgTraj_local) :
@@ -925,10 +973,11 @@ traj = trajFunction(d_cfgTraj)
 print(len(traj.keys()))
 
 #~ traj = trajTest(d_cfgTraj)
-#~ affichageGabaritVitesse_2012(traj)
 
-#~ print(traj["main_goto"])
+#~ affichageGabaritVitesse_2013(traj)
+#~ show()
 #~ sys.exit(2)
+#~ *********************************************************************
 
 #~ print(len(traj["def_xTraj"]))
 
@@ -1016,8 +1065,11 @@ print("nbre de periode de saturation D : " + str(sum(traj["SaturationPIDflag"]))
 
 for msg in traj['message'] :
     print(msg)
+    
+print("periodeNewSeg : " + str(traj["periodeNewSeg"]))
 
 matplotlib.rcParams.update({'font.size': 16})
+affichageGabaritVitesse_2013(traj)
 affichageTraj2011(traj)
 #~ affichageTestAccDcecc(traj)
 
