@@ -317,6 +317,7 @@ extern void ASSER_TRAJ_AsservissementMouvementRobot(Pose poseRobot, VitessesRobo
     float           distanceTotale_Profil                   = 0.0;
     float           distanceParcourue_Profil                = 0.0;
     unsigned char   iSegment                                = 1u;
+    float           Vr;
     
     /* Log de valeurs */
     ASSER_TRAJ_LogAsserValPC("xRoueGauche", m_poseRobot.x + (ECART_ROUE_MOTRICE / 2.0) * cosf(m_poseRobot.angle + (PI / 2)));
@@ -489,12 +490,12 @@ extern void ASSER_TRAJ_AsservissementMouvementRobot(Pose poseRobot, VitessesRobo
                 {
                     distanceParcourue_Profil -= chemin.segmentTrajBS[iSegment].distance;
                 }
-                ASSER_Running = ASSER_TRAJ_Profil_S_Curve(&VitesseProfil, distanceTotale_Profil, 0.0, 0.0, chemin.profilVitesse.Amax, chemin.profilVitesse.Dmax, 0.001, distanceParcourue_Profil, POS_GetVitesseRelle(), (SaturationPIDflag | SaturationPIGflag));
+                ASSER_Running = ASSER_TRAJ_Profil_S_Curve(&VitesseProfil, distanceTotale_Profil, 0.0, 0.0, chemin.profilVitesse.Amax, chemin.profilVitesse.Dmax, Vitesse_Gain_ASR, distanceParcourue_Profil, POS_GetVitesseRelle(), (SaturationPIDflag | SaturationPIGflag));
                 if (segmentCourant < chemin.nbreSegments)
                 {
                     ASSER_Running = True;
                 }
-                //ASSER_Running = ASSER_TRAJ_Profil_S_Curve(&VitesseProfil, chemin.distance, 0.0, 0.0, chemin.profilVitesse.Amax, chemin.profilVitesse.Dmax, 0.001, chemin.profilVitesse.distance_parcourue, POS_GetVitesseRelle(), (SaturationPIDflag | SaturationPIGflag));
+                //ASSER_Running = ASSER_TRAJ_Profil_S_Curve(&VitesseProfil, chemin.distance, 0.0, 0.0, chemin.profilVitesse.Amax, chemin.profilVitesse.Dmax, Vitesse_Gain_ASR, chemin.profilVitesse.distance_parcourue, POS_GetVitesseRelle(), (SaturationPIDflag | SaturationPIGflag));
 
                 delta_distance_Av = VitesseProfil * TE;
                 //delta_distance_Av = ASSER_TRAJ_GabaritVitesse_getVitesse_vs_Distance(chemin.profilVitesse.distance_parcourue) * TE;
