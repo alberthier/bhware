@@ -215,7 +215,7 @@ def trajFunction(d_cfgTraj):
 
     #lancement du simulateur de deplacement
     print("Lancement du simulateur")
-    simulator_process = subprocess.Popen('simulator_trajAsser.exe', shell=True, stdin = subprocess.PIPE, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+    simulator_process = subprocess.Popen('./simulator_trajAsser', shell=True, stdin = subprocess.PIPE, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
 
     # envoie de la configuration du simulateur
     send_config_simulator(simulator_process, d_cfgTraj)
@@ -242,11 +242,11 @@ def trajFunction(d_cfgTraj):
     
     #~ deplacement = commandMsg("MSG_MAIN_GOTO 0 1 -1.57")
     #
-    deplacement = commandMsg("MSG_MAIN_GOTO 1 1 0.0")
+    deplacement = commandMsg("MSG_MAIN_GOTO 1 1 1.57")
     deplacement.addPose("0.0 0.1")
-    deplacement.addPose("0.1 0.3")
-    deplacement.addPose("0.3 0.4")
-    deplacement.addPose("0.4 0.4")
+    #~ deplacement.addPose("0.1 0.3")
+    #~ deplacement.addPose("0.3 0.4")
+    #~ deplacement.addPose("0.6 0.4")
     #
     #~ deplacement = commandMsg("MSG_MAIN_GOTO 12 1 -1100000.0")
     #~ deplacement.addPose("0.0 2.0") #-1100000.0
@@ -668,6 +668,7 @@ def affichageTraj2011(d_traj):
     plot(temps, d_traj["VgASR"], label='V g ASR')
     plot(temps, d_traj["Phase"], label='Phase')
     plot(temps, d_traj["fFin"], label='flag Fin')
+    plot(temps, d_traj["vitLongitudinale"], '--', label='consigne vit long')
     #~ plot([index*periode for index in range(len(d_traj["ConsigneMoteurDroit"]))], [(cons-1024.0)*0.000985 for cons in d_traj["ConsigneMoteurDroit"]], label='consigne droit')
     #~ plot([index*periode for index in range(len(d_traj["vitesseProfilConsigne"]))], d_traj["vitesseProfilConsigne"], 'o', label='vitesse profil')
     #~ plot([index*periode for index in range(len(d_traj["vitLongitudinale"]))], d_traj["vitLongitudinale"], label='consigne long calculee')
@@ -684,8 +685,9 @@ def affichageTraj2011(d_traj):
 
     #plot([index*periode for index in range(len(d_traj["val_tab_vit"]))], d_traj["val_tab_vit"], '-', label='vitesse profil')
 
-    for tpsNewSeg in traj["periodeNewSeg"] :
-        plot([tpsNewSeg*periode, tpsNewSeg*periode], [-0.6, 0.6], '-k')
+    if "periodeNewSeg" in traj.keys() :
+        for tpsNewSeg in traj["periodeNewSeg"] :
+            plot([tpsNewSeg*periode, tpsNewSeg*periode], [-0.6, 0.6], '-k')
 
     #~ print("decc_tempsAcc_float: " + str(d_traj["decc_tempsAcc_float"]))
     #~ print("decc_tempsAcc: " + str(d_traj["decc_tempsAcc"]))
@@ -709,8 +711,9 @@ def affichageTraj2011(d_traj):
     #~ hold(True)
     plot(temps, d_traj["tensionPWM_MoteurDroit"], label='moteur droit')
     
-    for tpsNewSeg in traj["periodeNewSeg"] :
-        plot([tpsNewSeg*periode, tpsNewSeg*periode], [-1000.0, 1000.0], '-k')
+    if "periodeNewSeg" in traj.keys() :
+        for tpsNewSeg in traj["periodeNewSeg"] :
+            plot([tpsNewSeg*periode, tpsNewSeg*periode], [-1000.0, 1000.0], '-k')
     
     legend(loc="lower center")
     grid(True)
@@ -1062,8 +1065,9 @@ print("etat asser: " + str(traj["Motion"][0]))
 
 for msg in traj['message'] :
     print(msg)
-    
-print("periodeNewSeg : " + str(traj["periodeNewSeg"]))
+  
+if "periodeNewSeg" in traj.keys() :  
+    print("periodeNewSeg : " + str(traj["periodeNewSeg"]))
 
 matplotlib.rcParams.update({'font.size': 16})
 affichageGabaritVitesse_2013(traj)
