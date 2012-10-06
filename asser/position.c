@@ -70,7 +70,7 @@ float                   COEFFICIENT_DE_GLISSEMENT_LATERAL = 0.0;
 
 /** Tolerances de la condition d'arret des asservissements */
 float                   DIST_MIN                = 0.001;
-float                   ANGLE_MIN               = 0.020;
+float                   ANGLE_MIN               = 0.001;
 
 /** Coordonnees de la pose actuelle du robot */
 Pose                    m_poseRobot             = {0.0, 0.0, 0.0};
