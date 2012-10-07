@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 d_cfgTraj = {'Masse': 1.2
-                , 'Rayon_roue': 0.030
+                , 'Rayon_roue': 0.020
                 , 'Frottement_fluide': 0.0000504
                 , 'Force_resistante': 0.4
                 , 'Resistance_induit': 2.18
