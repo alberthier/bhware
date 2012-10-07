@@ -343,6 +343,9 @@ void SIMU_InitialisationLogRobot(void)
     //POS_SetGainStatiqueMoteur(SIMU_gain(), SIMU_gain());
     poseRobot = POS_GetPoseRobot();
 
+    ASSER_TRAJ_LogAsserValPC("dist_parcourue",  0.0);
+    ASSER_TRAJ_LogAsserValPC("VitesseReelleMesure", 0.0);
+
     ASSER_TRAJ_LogAsserValPC("vitesseMoteurGauche", vitesseMoteurG);
     ASSER_TRAJ_LogAsserValPC("vitesseMoteurDroit", vitesseMoteurD);
     ASSER_TRAJ_LogAsserValPC("erreurVitesseMoteurGauche", erreurVitesseMoteurG);

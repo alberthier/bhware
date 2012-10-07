@@ -132,7 +132,7 @@ static unsigned char            Phase                                   = 0;
 static unsigned char            ASRrunning                              = False;
 /* Constantes  profil de vitesse Scurve */
 static const float              VminMouv                                = 0.100;
-static const float              EcartVitesse                            = 0.010;
+static const float              EcartVitesse                            = 0.001;
 
 /*----------------------------------------------------------------------------------------------*/
 
@@ -2769,11 +2769,22 @@ static unsigned char ASSER_TRAJ_Profil_S_Curve(float * Vconsigne, float Distance
                     {
                         /* Vitesse Reelle non atteinte => correction de l'ASR */
                         if (VgASR > 0.0)
-                        {
-                            /* Decrementation de la vitesse gain ASR */
-                            VgASR = VgASR - gASR;
-                            /* Modification de la vitesse suivant la vitesse precedente */
-                            *Vconsigne = Vconsigne0 + VgASR;
+                        {                                
+                            if (fSatPI == True)
+                            {                              
+                                /* Modification de la vitesse suivant la vitesse precedente */
+                                *Vconsigne = Vconsigne0 - VgASR;  
+                                
+                                VgASR = 0;                                                                                                                           
+                            }
+                            else
+                            {      
+                                /* Decrementation de la vitesse gain ASR */
+                                VgASR = VgASR - gASR;
+                                                     
+                                /* Modification de la vitesse suivant la vitesse precedente */
+                                *Vconsigne = Vconsigne0 + VgASR;
+                            }
                             
                             /* Verifiaction et ajustement de la vitesse de consigne */
                             if (*Vconsigne > Vmax)

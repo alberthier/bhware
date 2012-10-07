@@ -239,16 +239,16 @@ def trajFunction(d_cfgTraj):
     #~ simulator_process.stdin.write(deplacement.cmdMsgGeneration())
     
     send_init_pose(simulator_process, x=0.0, y=0.0, angle=math.pi/2.0) #4.71
-    deplacement = commandMsg("MSG_MAIN_GOTO 2 1 -1100000.0")
-    deplacement.addPose("0.0 1.0") #-1100000.0
+    #deplacement = commandMsg("MSG_MAIN_GOTO 2 1 -1100000")
+    #deplacement.addPose("0.0 1.0") #-1100000.0
     	
     #~ deplacement = commandMsg("MSG_MAIN_GOTO 0 1 -1.57")
     #
-    #deplacement = commandMsg("MSG_MAIN_GOTO 1 1 1.57")
-    #deplacement.addPose("0.0 0.1")
-    #deplacement.addPose("0.1 0.3")
-    #deplacement.addPose("0.3 0.4")
-    #deplacement.addPose("0.6 0.4")
+    deplacement = commandMsg("MSG_MAIN_GOTO 1 1 0.0")
+    deplacement.addPose("0.0 0.1")
+    deplacement.addPose("0.1 0.3")
+    deplacement.addPose("0.3 0.4")
+    deplacement.addPose("0.6 0.4")
     #
     #~ deplacement = commandMsg("MSG_MAIN_GOTO 12 1 -1100000.0")
     #~ deplacement.addPose("0.0 2.0") #-1100000.0
@@ -883,19 +883,25 @@ def affichageGabaritVitesse_2013(d_traj):
     pas = d_traj["pas_ech"][0]
     print("pas ech: " + str(pas))
     
-    plot([index * pas for index in range(len(d_traj["gabarit_vitesse"]))], d_traj["gabarit_vitesse"], '-o', label='vitesse')
+    plot([index * pas for index in range(len(d_traj["gabarit_vitesse"]))], d_traj["gabarit_vitesse"], '-o', label='vitesse limite')
     #~ plot([index * pas for index in range(len(d_traj["gabarit_acceleration"]))], d_traj["gabarit_acceleration"], '-o', label='acc')
     
     #~ if (d_traj.keys().count("gabarit_acceleration_new")) :
         #~ plot([index * pas for index in range(len(d_traj["gabarit_acceleration_new"]))], d_traj["gabarit_acceleration_new"], '-o', label='acc2')
     #~ if (d_traj.keys().count("gabarit_vitesse_new")) :
         #~ plot([index * pas for index in range(len(d_traj["gabarit_vitesse_new"]))], d_traj["gabarit_vitesse_new"], '-o', label='vit2')
+        
+    print(len(traj["dist_parcourue"]))
+    print(len(d_traj["vitLongitudinale"]))
+    print(len(d_traj["VitesseReelleMesure"]))
+    plot(traj["dist_parcourue"], d_traj["vitLongitudinale"], '-o', label="consigne vit longitudinale")
+    plot(traj["dist_parcourue"], d_traj["VitesseReelleMesure"], '-o', label="mesure vit longitudinale")
     
     print("taille tab gabarit vitesse : " + str(len(d_traj["gabarit_vitesse"])))
 
     grid()
     title("Plafond de vitesse sur toute la trajectoire")
-    legend(loc="lower right")
+    legend(loc="center right")
     xlabel("distance")
     ylabel("vitesse max en multipoint")
     
