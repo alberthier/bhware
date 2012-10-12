@@ -215,7 +215,7 @@ def trajFunction(d_cfgTraj):
 
     #lancement du simulateur de deplacement
     print("Lancement du simulateur")
-    simulator_process = subprocess.Popen('simulator_trajAsser.exe', shell=True, stdin = subprocess.PIPE, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+    simulator_process = subprocess.Popen('./simulator_trajAsser', shell=True, stdin = subprocess.PIPE, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
 
     # envoie de la configuration du simulateur
     send_config_simulator(simulator_process, d_cfgTraj)
@@ -239,8 +239,8 @@ def trajFunction(d_cfgTraj):
     #~ simulator_process.stdin.write(deplacement.cmdMsgGeneration())
     
     send_init_pose(simulator_process, x=0.0, y=0.0, angle=math.pi/2.0) #4.71
-    #deplacement = commandMsg("MSG_MAIN_GOTO 2 1 -1100000")
-    #deplacement.addPose("0.0 1.0") #-1100000.0
+    #~ deplacement = commandMsg("MSG_MAIN_GOTO 2 1 -1100000")
+    #~ deplacement.addPose("0.0 1.0") #-1100000.0
     	
     #~ deplacement = commandMsg("MSG_MAIN_GOTO 0 1 -1.57")
     #
@@ -648,6 +648,7 @@ def affichageTraj2011(d_traj):
     xCentre = [(d_traj["xRoueGauche"][index] + d_traj["xRoueDroite"][index])/2.0 for index in range(len(d_traj["xRoueDroite"]))]
     yCentre = [(d_traj["yRoueGauche"][index] + d_traj["yRoueDroite"][index])/2.0 for index in range(len(d_traj["yRoueDroite"]))]
     plot(xCentre, yCentre, '-m', label="Rcentre")
+    print("errDistFinale : " + str(math.sqrt(math.pow(0.6 - xCentre[-1], 2.0) + math.pow(0.4 - yCentre[-1], 2.0))) + ", " + str(0.6 - xCentre[-1]))
     posIndex = 70
     print("angle_final: " + str(d_traj["angle"][-1]))
 
@@ -912,6 +913,9 @@ def affichageGabaritVitesse_2013(d_traj):
     limits[2] = 0.0
     #~ limits[3] = 1.2
     axis(limits)
+    
+    #~ figure(5)
+    #~ plot(traj["f_T"], 'o')
 
 
 def optimRayonRoue(d_cfgTraj_local) :
@@ -1004,7 +1008,10 @@ print(len(traj.keys()))
 #~ print(traj["disti"])
 print("distance des segments :")
 print(traj["distance_seg"])
+print("distance: ")
 print(traj["distance"])
+#~ print("intervalle: ")
+#~ print(traj["intervalle"])
 #~ print("theta1: " + str(traj["theta1"]))
 #~ print("angle_rad: " + str(traj["angle_rad"]))
 
