@@ -788,7 +788,7 @@ extern void ASSER_TRAJ_InitialisationTrajectoire(Pose poseRobot, PtTraj * point,
 
 
                 iseg_portion = iSegment - 1;
-                segmentTraj = chemin.segmentTrajBS;ASSER_TRAJ_LogAsserValPC("distance", chemin.distance);
+                segmentTraj = chemin.segmentTrajBS;//ASSER_TRAJ_LogAsserValPC("distance", chemin.distance);
                 pos_ti = ASSER_TRAJ_PortionEnd(segmentTraj[iseg_portion].bx, segmentTraj[iseg_portion].by, segmentTraj[iseg_portion].ax, segmentTraj[iseg_portion].ay, segmentTraj[iSegment].qx[0], segmentTraj[iSegment].qy[0]);
 
                 iseg_portion = iSegment;
@@ -861,7 +861,7 @@ extern void ASSER_TRAJ_InitialisationTrajectoire(Pose poseRobot, PtTraj * point,
     }
     else
     {
-        /* Position a atteindre (condition d'arret du test de fin d'asservissment) */
+        /* Position a atteindre (condition d'arret du test de fin d'asservissement) */
         angle_fin_rotation = POS_ModuloAngle(angle_rad);
         
         chemin.posArrivee.x = poseRobot.x + NORME_BARRE_SUIVI_TRAJ * cosf(angle_fin_rotation);        
@@ -2476,25 +2476,47 @@ static unsigned char ASSER_TRAJ_TestFinAsservissement(Trajectoire * traj, float 
 static void ASSER_TRAJ_DistanceTrajectoire(segmentTrajectoireBS * segmentTraj, unsigned int iSegment)
 {
     float           distance = 0.000001;    /* toutes les divisions par la distance ne pourront pas etre des divisions par zero */
-    unsigned char   param;
+    unsigned int    param;
     Vecteur         diffD_T;
+    unsigned int    N = 15;
+    float           intervalle, pos_t, fT1, fT2;
 
-    for (param = 0; param < (unsigned char) 5; param++)
+    intervalle = ti * ((float)(1.0 / ((float)N)));
+
+    diffD_T = ASSER_TRAJ_DiffCourbeBSpline(segmentTraj, iSegment, 0.0);
+    fT1 = sqrtf(SQUARE(diffD_T.x) + (SQUARE(diffD_T.y)));
+    ASSER_TRAJ_LogAsserValPC("f_T", fT1);
+    for (param = 1; param <= N; param++)
     {
-        diffD_T = ASSER_TRAJ_DiffCourbeBSpline(segmentTraj, iSegment, ((float)(ti * (((float)param) / 5.0))));
-        
-        distance += sqrtf(SQUARE(diffD_T.x) + (SQUARE(diffD_T.y))) * (ti * ((float)(1.0 / 5.0)));        
+        pos_t = (float)(ti * (((float)param) / ((float)N) ));
+
+        diffD_T = ASSER_TRAJ_DiffCourbeBSpline(segmentTraj, iSegment, pos_t);
+        fT2 = sqrtf(SQUARE(diffD_T.x) + (SQUARE(diffD_T.y)));
+        distance += ((fT1 + fT2) / 2.0) * intervalle;
+        fT1 = fT2;
+
+        ASSER_TRAJ_LogAsserValPC("f_T", fT2);
+        ASSER_TRAJ_LogAsserValPC("dist_f_T", distance);
     }
     
     ASSER_TRAJ_LogAsserValPC("disti", distance);
 
     distance += sqrtf(((float)SQUARE(segmentTraj[iSegment].aix) + SQUARE(segmentTraj[iSegment].aiy))) * ((float)(1.0 - (2.0 * ti)));
 
-    for (param = 0; param < (unsigned char) 5; param++)
+    diffD_T = ASSER_TRAJ_DiffCourbeBSpline(segmentTraj, iSegment, 1.0 - ti);
+    fT1 = sqrtf(SQUARE(diffD_T.x) + (SQUARE(diffD_T.y)));
+    ASSER_TRAJ_LogAsserValPC("f_T", fT1);
+    for (param = 1; param <= N; param++)
     {
-        diffD_T = ASSER_TRAJ_DiffCourbeBSpline(segmentTraj, iSegment, ((float)(((1.0 - ti) * 1.001) + (ti * (((float)param) / 5.0)))));
+        pos_t = (float)((1.0 - ti) + (ti * (((float)param) / ((float)N) )));
 
-        distance += sqrtf(((float)(SQUARE(diffD_T.x) + SQUARE(diffD_T.y)))) * ((float)(ti * ((float)(1.0 / 5.0))));
+        diffD_T = ASSER_TRAJ_DiffCourbeBSpline(segmentTraj, iSegment, pos_t);
+        fT2 = sqrtf(SQUARE(diffD_T.x) + (SQUARE(diffD_T.y)));
+        distance += ((fT1 + fT2) / 2.0) * intervalle;
+        fT1 = fT2;
+
+        ASSER_TRAJ_LogAsserValPC("f_T", fT2);
+        ASSER_TRAJ_LogAsserValPC("dist_f_T", distance);
     }
 
     segmentTraj[iSegment].distance = distance;
