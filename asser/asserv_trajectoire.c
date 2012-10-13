@@ -467,19 +467,20 @@ extern void ASSER_TRAJ_AsservissementMouvementRobot(Pose poseRobot, VitessesRobo
 
                 distanceTotale_Profil = chemin.segmentTrajBS[segmentCourant].distance;
                 distanceParcourue_Profil = chemin.profilVitesse.distance_parcourue;
+                
                 for (iSegment = 1; iSegment < segmentCourant; iSegment++)
                 {
                     distanceParcourue_Profil -= chemin.segmentTrajBS[iSegment].distance;
                 }
+                
                 ASSER_Running = ASSER_TRAJ_Profil_S_Curve(&VitesseProfil, distanceTotale_Profil, 0.0, 0.0, chemin.profilVitesse.Amax, chemin.profilVitesse.Dmax, Vitesse_Gain_ASR, distanceParcourue_Profil, POS_GetVitesseRelle(), (SaturationPIDflag | SaturationPIGflag));
+
                 if (segmentCourant < chemin.nbreSegments)
                 {
                     ASSER_Running = True;
                 }
-                //ASSER_Running = ASSER_TRAJ_Profil_S_Curve(&VitesseProfil, chemin.distance, 0.0, 0.0, chemin.profilVitesse.Amax, chemin.profilVitesse.Dmax, Vitesse_Gain_ASR, chemin.profilVitesse.distance_parcourue, POS_GetVitesseRelle(), (SaturationPIDflag | SaturationPIGflag));
 
                 delta_distance_Av = VitesseProfil * TE;
-                //delta_distance_Av = ASSER_TRAJ_GabaritVitesse_getVitesse_vs_Distance(chemin.profilVitesse.distance_parcourue) * TE;
                 
                 ASSER_TRAJ_ParcoursTrajectoire(&chemin, delta_distance_Av, &segmentCourantAv, &parametrePositionSegmentTrajectoireAv, NULL);
                 
@@ -501,8 +502,8 @@ extern void ASSER_TRAJ_AsservissementMouvementRobot(Pose poseRobot, VitessesRobo
                 segmentCourantAv = segmentCourant;
 
                 ASSER_Running = ASSER_TRAJ_Profil_S_Curve(&VitesseProfil, chemin.distance, 0.0, 0.0, chemin.profilVitesse.Amax, chemin.profilVitesse.Dmax, Vitesse_Gain_ASR, chemin.profilVitesse.distance_parcourue, POS_GetVitesseRelle(), (SaturationPIDflag | SaturationPIGflag));
+
                 delta_distance_Av = VitesseProfil * TE;
-                //delta_distance_Av = ASSER_TRAJ_GabaritVitesse_getVitesse_vs_Distance(chemin.profilVitesse.distance_parcourue) * TE;
                 
                 ASSER_TRAJ_ParcoursTrajectoire(&chemin, delta_distance_Av, &segmentCourantAv, &parametrePositionSegmentTrajectoireAv, NULL);
 
@@ -1473,7 +1474,7 @@ static float ASSER_TRAJ_DiffThetaBSplinePerLenghtUnit(segmentTrajectoireBS * seg
     return diffTheta;
 }
 
-/*****************************facteurCorrectionT = sqrtf(SQUARE(diffD_T.x) + SQUARE(diffD_T.y));*****************************************/
+/**********************************************************************/
 /*! \brief ASSER_TRAJ_TrajectoireRotation
  *
  *  \note   Expression parametrique de la position a suivre pour realiser l'asservissement d'une pure rotation
@@ -1697,13 +1698,7 @@ static void ASSER_TRAJ_GabaritVitesse(Trajectoire * traj)
         ASSER_TRAJ_TabGabarit_AddVitesse(vitesse_consigne_gabarit);
 
     }
-/*
-    if (ASSER_TRAJ_isDeplacement(traj) == True)
-    {
-        ASSER_TRAJ_SmoothGabaritAcceleration(traj);
-        ASSER_TRAJ_CreateGabaritVitesseFromGabaritAcceleration(traj);
-    }
-*/
+
 #ifndef PIC32_BUILD
     if (ASSER_TRAJ_isDeplacement(traj) == False)
     {
