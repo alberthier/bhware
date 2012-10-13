@@ -247,7 +247,10 @@ extern void POS_Positionnement(signed int delta_impDroite, signed int delta_impG
     Delta_diff = ((((float)delta_impDroite * PERIMETRE_DROIT) - ((float)delta_impGauche * PERIMETRE_GAUCHE)) / (float)NBRE_PAS);
 
     VitesseReelleMesure = Delta_moy / TE;
+    
+#ifndef PIC32_BUILD 
     ASSER_TRAJ_LogAsserValPC("VitesseReelleMesure", VitesseReelleMesure);
+#endif /* PIC32_BUILD */ 
 
     Dx = (Delta_moy * cosf(m_poseRobot.angle));
     Dy = (Delta_moy * sinf(m_poseRobot.angle));

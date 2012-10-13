@@ -215,7 +215,7 @@ def trajFunction(d_cfgTraj):
 
     #lancement du simulateur de deplacement
     print("Lancement du simulateur")
-    simulator_process = subprocess.Popen('./simulator_trajAsser', shell=True, stdin = subprocess.PIPE, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+    simulator_process = subprocess.Popen('simulator_trajAsser.exe', shell=True, stdin = subprocess.PIPE, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
 
     # envoie de la configuration du simulateur
     send_config_simulator(simulator_process, d_cfgTraj)

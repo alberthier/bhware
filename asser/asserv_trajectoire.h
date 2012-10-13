@@ -132,6 +132,8 @@ extern float                DECC_MIN;               /* Decceleration en m/s^2 du
 extern float                k0_init; 
 extern float                C_init;
 
+extern float                VminMouv;
+
 /* Prototypes de function globales asserv_trajectoire */
 
 extern void                 ASSER_TRAJ_InitialisationGenerale(void);

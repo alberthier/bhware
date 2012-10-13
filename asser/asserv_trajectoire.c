@@ -71,10 +71,12 @@ float                           gainDeplacement3                        =   20.0
 float                           Ratio_Acc                               =   1.0;
 float                           Ratio_Decc                              =   1.0;
 
-float                           FacteurVitesseAngulaireMax              =   1.0;    /* Ce facteur doit etre positif */
+float                           VminMouv                                =   0.100;  /* Vitesse minimum de mouvement et maximale d'arret */
 
-float                           A_MAX                                   =   0.575;
-float                           D_MAX                                   =   0.575;
+float                           A_MAX                                   =   1.0;
+float                           D_MAX                                   =   1.0;
+
+float                           FacteurVitesseAngulaireMax              =   1.0;    /* Ce facteur doit etre positif */
 
 float                           COEFF_VI1                               =   0.95;   /* COEFF_VI1 doit etre strictement positif et strictement inferieur a 1 (0.0 < COEFF_VI1 < 1.0) */
 float                           VITESSE_SEUIL_DECC                      =   0.2;
@@ -122,16 +124,11 @@ static float                    g_tab_gabarit_acceleration[TAILLE_TAB_GABARIT_VI
 static unsigned int             g_index_tab_gabarit_vitesse             = 0;
 static unsigned int             g_index_tab_gabarit_acceleration        = 0;
 
-/* tableau de 1: distance des phases d'acc et de decc reunies, 2: vitesse max(de pointe), 3; distance de decc */
-static float                    g_tab_vpointe[10][3]; // = {{0.04, 0.2, 0.025}, {0.085, 0.3, 0.04}, {0.165, 0.4, 0.075}, {0.27, 0.5, 0.115}, {0.4, 0.6, 0.165}};
-static unsigned int             iMaxVpointe                             = 9;
-
 /* Variables profil de vitesse Scurve */
 static float                    Vmax, VgASR, Vconsigne0, J, A, V, P, J0, A0, V0, P0, DistanceMin, JAmax, JDmax, PositionFinPhase4;
 static unsigned char            Phase                                   = 0;
 static unsigned char            ASRrunning                              = False;
 /* Constantes  profil de vitesse Scurve */
-static const float              VminMouv                                = 0.100;
 static const float              EcartVitesse                            = 0.001;
 
 /*----------------------------------------------------------------------------------------------*/
@@ -157,18 +154,9 @@ static Vecteur                  ASSER_TRAJ_Diff2Trajectoire(segmentTrajectoireBS
 static float                    ASSER_TRAJ_DiffThetaBSpline(Vecteur diff1BS, Vecteur diff2BS);
 static float                    ASSER_TRAJ_DiffThetaBSplinePerLengthUnit(segmentTrajectoireBS * segmentTraj, unsigned int iSegment, float t);
 static Pose                     ASSER_TRAJ_TrajectoireRemorqueBS(segmentTrajectoireBS *segmentTraj, unsigned int iSegment, float t, Vecteur diff1BS, float diffThetaBSRobot, Pose *poseTrajRobot);
-static float                    ASSER_TRAJ_Acceleration_vs_Vitesse(Trajectoire * traj, float vpointe, float vitesse);
-static float                    ASSER_TRAJ_Decceleration_vs_Vitesse(Trajectoire * traj, float vpointe, float vitesse);
-static unsigned char            ASSER_TRAJ_ProfilAcceleration_2012(Trajectoire *traj, float vpointe, float *vitesse_n, float * acceleration);
-static unsigned char            ASSER_TRAJ_ProfilDecceleration_2012(Trajectoire *traj, float vpointe, float *vitesse_n, float * acceleration);
-static float                    ASSER_TRAJ_DistanceAcceleration(Trajectoire * traj, float vpointe, float vit_ini);
-static float                    ASSER_TRAJ_DistanceDecceleration(Trajectoire * traj, float vpointe);
 static void                     ASSER_TRAJ_TabGabarit_AddVitesse(float vitesse);
 static void                     ASSER_TRAJ_TabGabarit_AddAcceleration(float acceleration);
 static float                    ASSER_TRAJ_VitesseLimiteEnVirage(Trajectoire *traj, float diffThetaTrajectoire);
-static void                     ASSER_TRAJ_SmoothGabaritAcceleration(Trajectoire * traj);
-static void                     ASSER_TRAJ_CreateGabaritVitesseFromGabaritAcceleration(Trajectoire * traj);
-static void                     ASSER_TRAJ_InitTabVPointe(Trajectoire *traj, float vit_ini);
 static unsigned char            ASSER_TRAJ_isDeplacement(Trajectoire *traj);
 static unsigned char            ASSER_TRAJ_isAngle(float angle);
 static float                    ASSER_TRAJ_CalculTheta1(unsigned int iSegment, unsigned int nbrePts, PtTraj* point, float angle_rad, float prec_x, float prec_y);
@@ -630,7 +618,6 @@ extern void ASSER_TRAJ_InitialisationTrajectoire(Pose poseRobot, PtTraj * point,
     Vecteur                 diffTest, diff2Test;
     float                   diffTheta;
     unsigned int            intT;
-    float                   sommeMask;
 #endif /* PIC32_BUILD */
 
     memo_angleRobot = m_poseRobot.angle;
@@ -1371,8 +1358,6 @@ static Vecteur ASSER_TRAJ_Diff2CourbeBSpline(segmentTrajectoireBS * segmentTraj,
     float           tl;
     unsigned char   num_portion;
     unsigned int    iseg_portion;
-    /* var temporaire de resultats de calcul de puissance */
-    float           tl_2;
 
     if (t < ti)
     {
@@ -1398,7 +1383,6 @@ static Vecteur ASSER_TRAJ_Diff2CourbeBSpline(segmentTrajectoireBS * segmentTraj,
 
     if (num_portion != 2)
     {
-        tl_2 = SQUARE(tl);
         deriv2P.x = ((- segmentTraj[iSegment].qx[(iseg_portion - iSegment + 1)]) / ti) * tl + segmentTraj[iSegment].qx[(iseg_portion - iSegment + 1)];
         deriv2P.y = ((- segmentTraj[iSegment].qy[(iseg_portion - iSegment + 1)]) / ti) * tl + segmentTraj[iSegment].qy[(iseg_portion - iSegment + 1)];
     }
@@ -1673,7 +1657,6 @@ static void ASSER_TRAJ_TabGabarit_AddAcceleration(float acceleration)
 static void ASSER_TRAJ_GabaritVitesse(Trajectoire * traj)
 {
     unsigned int    numSegment                      = 1;
-    float           acc_courant                     = 0.0;
     float           paramPosition                   = 0.0;
     float           vitesse_consigne                = 0.0;
     float           vitesse_limite                  = 0.0;
@@ -1682,10 +1665,11 @@ static void ASSER_TRAJ_GabaritVitesse(Trajectoire * traj)
     float           diffThetaTrajectoire            = 0.0;
     float           vitesse_consigne_gabarit        = 0.0;
     float           acceleration_consigne_gabarit   = 0.0;
-    float           vpointe                         = 0.0;
-    unsigned int    i                               = 0u;
     float           vit_ini                         = 0.05;
-
+#ifndef PIC32_BUILD
+    unsigned int    i                               = 0u;
+#endif /* PIC32_BUILD */
+ 
     distanceRestante = traj->distance;
     
     ASSER_TRAJ_LogAsserValPC("distanceRestante_FD", distanceRestante);
@@ -1746,239 +1730,6 @@ static void ASSER_TRAJ_GabaritVitesse(Trajectoire * traj)
 }
 
 /**********************************************************************/
-/*! \brief ASSER_TRAJ_InitTabVPointe
- *
- *  \note   Determination du gabarit de la vitesse longitudinale de consigne, dependant de la courbure de trajectoire
- *  et des fonctions d'acceleration et de decceleration.
- *
- *  \param [in]     traj            pointeur de structure definissant la trajectoire
- *  \param [in]     coeff_vit_ini   coefficient applique a la vitesse de pointe pour determiner la vitesse de consigne au depart
- *
- *  \return None
- */
-/**********************************************************************/
-static void ASSER_TRAJ_InitTabVPointe(Trajectoire * traj, float vit_ini)
-{   
-    /* tableau de 1: distance des phases d'acc et de decc reunies, 2: vitesse max(de pointe), 3; distance de decc */
-    unsigned int    i;
-    float           vpointe, distanceAcc, distanceDecc;
-
-    vpointe = 0.05;
-    ASSER_TRAJ_LogAsserValPC("vpointe", vpointe);
-    
-    distanceAcc = ASSER_TRAJ_DistanceAcceleration(traj, vpointe, vit_ini);
-    distanceDecc = ASSER_TRAJ_DistanceDecceleration(traj, vpointe);
-    
-    g_tab_vpointe[0][0] = distanceAcc + distanceDecc;
-    g_tab_vpointe[0][1] = vpointe;
-    g_tab_vpointe[0][2] = distanceDecc;
-
-    for(i = 1; i < 10; i++)
-    {
-        vpointe = 0.1 + (((float)( i - 1)) * 0.1);
-        
-        if (vpointe > traj->profilVitesse.vmax)
-        {
-            iMaxVpointe = i;
-            vpointe = traj->profilVitesse.vmax;
-        }
-        
-        ASSER_TRAJ_LogAsserValPC("vpointe", vpointe);
-        
-        distanceAcc = ASSER_TRAJ_DistanceAcceleration(traj, vpointe, vit_ini);
-        distanceDecc = ASSER_TRAJ_DistanceDecceleration(traj, vpointe);
-        
-        g_tab_vpointe[i][0] = distanceAcc + distanceDecc;
-        g_tab_vpointe[i][1] = vpointe;
-        g_tab_vpointe[i][2] = distanceDecc;
-
-        if ((0.1 + (((float)(i - 1)) * 0.1)) > traj->profilVitesse.vmax)
-        {
-            break;
-        }
-    }
-}
-
-/**********************************************************************/
-/*! \brief ASSER_TRAJ_SmoothGabaritAcceleration
- *
- *  \note   lisser le profil d'acceleration
- *
- *  \param [in]     traj            pointeur de structure definissant la trajectoire
- *
- *  \return None
- */
-/**********************************************************************/
-static void ASSER_TRAJ_SmoothGabaritAcceleration(Trajectoire * traj)
-{
-    int             i, m, n;
-    float           acc_max_vsVitesse   = 0.0;
-    float           acc                 = 1.0;
-    float           acc_max_cste        = 0.0;
-    float           sum_acc             = 0.0;
-    unsigned int    cpt                 = 0;
-    float           vitesse             = 0.0;
-    int             flag_acc            = 1;
-    unsigned char   flag_fin            = False;
-    float           vcarre              = 0.0;
-    
-    vitesse = 0.0;
-    
-    acc_max_cste = powf(vitesse, 2.0) / (2.0 * traj->profilVitesse.pas_echantillon_distance);
-
-    i = 0;
-    
-    while(i < (g_index_tab_gabarit_acceleration - 1u))
-    {
-        acc = g_tab_gabarit_acceleration[i];
-        vitesse = g_tab_gabarit_vitesse[i];
-
-        if (acc > 0.0)
-        {
-            flag_acc = 1;
-
-            flag_fin = ASSER_TRAJ_ProfilAcceleration_2012(traj, traj->profilVitesse.vpointe, &vitesse, &acc_max_vsVitesse);
-
-            if (i > 0)
-            {
-                if (g_tab_gabarit_acceleration[i-1] < 0.0)
-                {
-                    acc_max_vsVitesse = 0.0;
-                    
-                    vitesse = sqrtf( SQUARE((g_tab_gabarit_vitesse[i])) + (2.0 * traj->profilVitesse.pas_echantillon_distance * acc_max_vsVitesse) );                    
-                }
-            }
-
-            if ((acc > (acc_max_vsVitesse*1.01)) )
-            {
-                m = i;
-
-                cpt = 0;
-                
-                do
-                {
-                    n = m + flag_acc;
-
-                    sum_acc = g_tab_gabarit_acceleration[m] + g_tab_gabarit_acceleration[n];
-
-                    g_tab_gabarit_acceleration[m] = acc_max_vsVitesse;
-                    g_tab_gabarit_acceleration[n] = sum_acc - acc_max_vsVitesse;
-
-                    if ( ( ((float)(n-i)) * traj->profilVitesse.pas_echantillon_distance < 0.04 ) && (ASSER_TRAJ_Acceleration_vs_Vitesse(traj, traj->profilVitesse.vpointe, vitesse) > acc_max_cste))
-                    {
-                        acc_max_vsVitesse = acc_max_cste;
-
-                        vitesse = sqrtf( SQUARE(vitesse) + (2.0 * traj->profilVitesse.pas_echantillon_distance * acc_max_cste));                        
-                    }
-                    else
-                    {
-                        flag_fin = ASSER_TRAJ_ProfilAcceleration_2012(traj, traj->profilVitesse.vpointe, &vitesse, &acc_max_vsVitesse);
-                    }
-
-                    m = m + flag_acc;
-
-                    cpt++;
-                }
-                while ((g_tab_gabarit_acceleration[n] > (acc_max_vsVitesse * 1.01)) && (m < (g_index_tab_gabarit_acceleration - 1u)));
-                
-                i = n;
-
-                ASSER_TRAJ_LogAsserValPC("debug_smooth", i);
-                ASSER_TRAJ_LogAsserValPC("debug_smooth", n);
-            }
-        }
-        i++;
-    }
-
-    i = (g_index_tab_gabarit_acceleration - 1u);
-    
-    while(i > 0)
-    {
-        acc = g_tab_gabarit_acceleration[i];
-        vitesse = g_tab_gabarit_vitesse[i];
-
-        if (acc < 0.0)
-        {
-            flag_acc = -1;
-            acc_max_vsVitesse = ASSER_TRAJ_Decceleration_vs_Vitesse(traj, traj->profilVitesse.vpointe, vitesse);
-
-            if (acc < (acc_max_vsVitesse * 1.01))
-            {
-                m = i;
-
-                cpt = 0;
-                
-                do
-                {
-                    n = m + flag_acc;
-
-                    sum_acc = g_tab_gabarit_acceleration[m] + g_tab_gabarit_acceleration[n];
-
-                    g_tab_gabarit_acceleration[m] = acc_max_vsVitesse;
-                    g_tab_gabarit_acceleration[n] = sum_acc - acc_max_vsVitesse;
-
-                    vcarre = SQUARE(vitesse) - (2.0 * traj->profilVitesse.pas_echantillon_distance * acc_max_vsVitesse);
-
-                    if (vcarre > 0.0)
-                    {                        
-                        vitesse = sqrtf(vcarre);                        
-                    }
-                    else
-                    {
-                        vitesse = 0.0;
-                    }
-                    
-                    acc_max_vsVitesse = ASSER_TRAJ_Decceleration_vs_Vitesse(traj, traj->profilVitesse.vpointe, vitesse);
-
-                    m = m + flag_acc;
-
-                    cpt++;
-                }
-                while ((g_tab_gabarit_acceleration[n] < (acc_max_vsVitesse * 1.01)) && (m > 0));
-                
-                i = m;
-
-                ASSER_TRAJ_LogAsserValPC("debug_smooth", i);
-                ASSER_TRAJ_LogAsserValPC("debug_smooth", n);
-            }
-        }
-        
-        i--;
-    }
-
-#ifndef PIC32_BUILD
-    for(i = 0; i < g_index_tab_gabarit_acceleration; i++)
-    {
-        ASSER_TRAJ_LogAsserValPC("gabarit_acceleration_new", g_tab_gabarit_acceleration[i]);
-    }
-#endif /* PIC32_BUILD */
-}
-
-/**********************************************************************/
-/*! \brief ASSER_TRAJ_CreateGabaritVitesseFromGabaritAcceleration
- *
- *  \note   lisser le profil d'acceleration
- *
- *  \param [in]     traj            pointeur de structure definissant la trajectoire
- *
- *  \return None
- */
-/**********************************************************************/
-static void ASSER_TRAJ_CreateGabaritVitesseFromGabaritAcceleration(Trajectoire * traj)
-{
-    unsigned int    i;
-    
-    ASSER_TRAJ_LogAsserValPC("gabarit_vitesse_new", g_tab_gabarit_vitesse[0]);
-
-    for (i = 0; i < g_index_tab_gabarit_acceleration; i++)
-    {
-        g_tab_gabarit_vitesse[(i + 1)] = sqrtf(powf(g_tab_gabarit_vitesse[i], 2.0) + (2.0 * traj->profilVitesse.pas_echantillon_distance * g_tab_gabarit_acceleration[i]));
-
-        ASSER_TRAJ_LogAsserValPC("gabarit_vitesse_new", g_tab_gabarit_vitesse[(i + 1)]);
-    }
-}
-
-/**********************************************************************/
 /*! \brief ASSER_TRAJ_getGabaritVitesse_getVitesse_vs_Distance
  *
  *  \note   Determination du gabarit de la vitesse longitudinale de consigne, dependant de la courbure de trajectoire
@@ -2013,206 +1764,6 @@ extern float ASSER_TRAJ_GabaritVitesse_getVitesse_vs_Distance(float distance)
     ASSER_TRAJ_LogAsserValPC("index_get_vitesseGabarit", vitesse);
 
     return vitesse;
-}
-
-/**********************************************************************/
-/*! \brief ASSER_TRAJ_Acceleration_vs_Vitesse
- *
- *  \note   
- *
- *  \param [in]     traj 
- *  \param [in]     vpointe
- *  \param [in]     vitesse
- *
- *  \return           acc
- */
-/**********************************************************************/
-static float ASSER_TRAJ_Acceleration_vs_Vitesse(Trajectoire * traj, float vpointe, float vitesse)
-{
-    float acc;
-
-    acc = traj->profilVitesse.Amax - ((traj->profilVitesse.Amax / SQUARE(vpointe)) * SQUARE(vitesse));
-
-    return acc;
-}
-
-/**********************************************************************/
-/*! \brief ASSER_TRAJ_Decceleration_vs_Vitesse
- *
- *  \note   
- *
- *  \param [in]     traj 
- *  \param [in]     vpointe
- *  \param [in]     vitesse
- *
- *  \return           decc
- */
-/**********************************************************************/
-static float ASSER_TRAJ_Decceleration_vs_Vitesse(Trajectoire * traj, float vpointe, float vitesse)
-{
-    float   decc;
-    float   vi1, decc_limit;
-
-    vi1 = vpointe * traj->profilVitesse.coeff_vi1;
-    
-    if (vitesse < vi1)
-    {
-        decc = traj->profilVitesse.Dmax;
-    }
-    else
-    {
-        decc = traj->profilVitesse.Dmax * (1.0 - SQUARE((vitesse - vi1) / (vpointe - vi1)));
-    }
-
-    if (sqrtf(SQUARE(vitesse) + (2.0 * traj->profilVitesse.pas_echantillon_distance * decc)) < traj->profilVitesse.vitesse_seuil_decc_finale)
-    {
-        decc_limit = traj->profilVitesse.decc_min_finale - (traj->profilVitesse.coeff_decc_finale * vitesse);
-
-        if (decc  < decc_limit)
-        {
-            decc = decc_limit;
-        }
-    }
-
-    return decc;
-}
-
-/**********************************************************************/
-/*! \brief ASSER_TRAJ_ProfilAcceleration_2012
- *
- *  \note   Determination de la vitesse longitudinale de consigne en phase d'acceleration
- *
- *  \param [in]     traj              pointeur de structure definissant la trajectoire
- *  \param [in]     vpointe         vitesse de pointe du profil de vitesse en acceleration
- *  \param [in]     *vitesse_n    vitesse courante 
- *  \param [in]     acceleration  acceleration  
- *
- *  \return            flag_fin        info de la fin de la phase d'acceleration
- */
-/**********************************************************************/
-static unsigned char ASSER_TRAJ_ProfilAcceleration_2012(Trajectoire * traj, float vpointe, float * vitesse_n, float * acceleration)
-{
-    float           acc, vitesse_np1;
-    unsigned char   flag_fin                = False;
-
-    acc = ASSER_TRAJ_Acceleration_vs_Vitesse(traj, vpointe, *vitesse_n);
-
-    vitesse_np1 = sqrtf(SQUARE(*vitesse_n) + (2.0 * traj->profilVitesse.pas_echantillon_distance * acc));
-
-    if (vitesse_np1 > (vpointe - 0.005))
-    {
-        flag_fin = True;
-    }
-
-    *vitesse_n = vitesse_np1;
-    *acceleration = acc;
-
-    return flag_fin;
-}
-
-/**********************************************************************/
-/*! \brief ASSER_TRAJ_ProfilDecceleration_2012
- *
- *  \note   Determination de la vitesse longitudinale de consigne en phase de decceleration
- *
- *  \param [in]     traj              pointeur de structure definissant la trajectoire
- *  \param [in]     vpointe         vitesse de depart (et maximale) du profil de vitesse en decceleration
- *  \param [in]     vitesse_n      vitesse courante
- *  \param [in]     acceleration  acceleration  
- *
- *  \return            flag_fin        info de la fin de la phase de decceleration
- */
-/**********************************************************************/
-static unsigned char ASSER_TRAJ_ProfilDecceleration_2012(Trajectoire * traj, float vpointe, float * vitesse_n, float * acceleration)
-{
-    float           decc, vitesse_np1;
-    float           vcarre                              = 0.0;
-    unsigned char   flag_fin                            = False;
-
-    if (*vitesse_n > (vpointe - 0.005))
-    {
-        *vitesse_n = vpointe - 0.005;
-    }
-
-    decc = ASSER_TRAJ_Decceleration_vs_Vitesse(traj, vpointe, *vitesse_n);
-
-    vcarre = SQUARE(*vitesse_n) + (2.0 * traj->profilVitesse.pas_echantillon_distance * decc);
-
-    if (vcarre < 0.0)
-    {
-        vitesse_np1 = 0.0;
-    }
-    else
-    {
-        vitesse_np1 = sqrtf(vcarre);        
-    }
-
-    if (vitesse_np1 < 0.001)
-    {
-        flag_fin = True;
-    }
-
-    *vitesse_n = vitesse_np1;
-    *acceleration = decc;
-
-    return flag_fin;
-}
-
-/**********************************************************************/
-/*! \brief ASSER_TRAJ_DistanceAcceleration
- *
- *  \note   Determination de la distance sur laquelle a lieu la phase d'acceleration
- *
- *  \param [in]     traj            pointeur de structure definissant la trajectoire
- *  \param [in]     vpointe       vitesse de pointe du profil de vitesse en acceleration
- *
- *  \return           distance
- */
-/**********************************************************************/
-static float ASSER_TRAJ_DistanceAcceleration(Trajectoire * traj, float vpointe, float vit_ini)
-{
-    unsigned int    nbrePas = 0u;
-    float           vitesse = vit_ini;
-    float           acc;
-    unsigned char   flag_fin;
-
-    do 
-    {
-        flag_fin = ASSER_TRAJ_ProfilAcceleration_2012(traj, vpointe, &vitesse, &acc);
-        
-        nbrePas++;
-    } while ((flag_fin == False) && (nbrePas < 65535));
-
-    return ((float)(nbrePas * traj->profilVitesse.pas_echantillon_distance));
-}
-
-/**********************************************************************/
-/*! \brief ASSER_TRAJ_DistanceDecceleration
- *
- *  \note   Determination de la distance sur laquelle a lieu la phase de deccelaration
- *
- *  \param [in]     traj            pointeur de structure definissant la trajectoire
- *  \param [in]     vpointe       vitesse de pointe du profil de vitesse en decceleration
- *
- *  \return           distance
- */
-/**********************************************************************/
-static float ASSER_TRAJ_DistanceDecceleration(Trajectoire * traj, float vpointe)
-{
-    unsigned int    nbrePas         = 0u;
-    float           vitesse, acc;
-    unsigned char   flag_fin;
-
-    vitesse = vpointe - 0.005;
-    
-    do
-    {
-        flag_fin = ASSER_TRAJ_ProfilDecceleration_2012(traj, vpointe, &vitesse, &acc);
-        
-        nbrePas++;
-    } while((flag_fin == False) && (nbrePas < 65535));
-
-    return ((float)(nbrePas * traj->profilVitesse.pas_echantillon_distance));
 }
 
 /**********************************************************************/
@@ -2426,7 +1977,7 @@ static VitessesRobotUnicycle ASSER_TRAJ_RetourDetatOrientation(Pose erreurPose, 
 /**********************************************************************/
 static unsigned char ASSER_TRAJ_TestFinAsservissement(Trajectoire * traj, float erDist, float memo_erDist, float tolDist, float erAngle, float memo_erAngle, float tolAngle)
 {
-    unsigned char   ret                 = False;
+    unsigned char   ret = False;
 
     if (ASSER_TRAJ_isDeplacement(traj) == True)
     {
@@ -2478,17 +2029,19 @@ static void ASSER_TRAJ_DistanceTrajectoire(segmentTrajectoireBS * segmentTraj, u
     float           distance = 0.000001;    /* toutes les divisions par la distance ne pourront pas etre des divisions par zero */
     unsigned int    param;
     Vecteur         diffD_T;
-    unsigned int    N = 15;
+    unsigned int    N        = 15;
     float           intervalle, pos_t, fT1, fT2;
 
     intervalle = ti * ((float)(1.0 / ((float)N)));
 
     diffD_T = ASSER_TRAJ_DiffCourbeBSpline(segmentTraj, iSegment, 0.0);
     fT1 = sqrtf(SQUARE(diffD_T.x) + (SQUARE(diffD_T.y)));
+    
     ASSER_TRAJ_LogAsserValPC("f_T", fT1);
+
     for (param = 1; param <= N; param++)
     {
-        pos_t = (float)(ti * (((float)param) / ((float)N) ));
+        pos_t = (float)(ti * (((float)param) / ((float)N)));
 
         diffD_T = ASSER_TRAJ_DiffCourbeBSpline(segmentTraj, iSegment, pos_t);
         fT2 = sqrtf(SQUARE(diffD_T.x) + (SQUARE(diffD_T.y)));
@@ -2503,9 +2056,11 @@ static void ASSER_TRAJ_DistanceTrajectoire(segmentTrajectoireBS * segmentTraj, u
 
     distance += sqrtf(((float)SQUARE(segmentTraj[iSegment].aix) + SQUARE(segmentTraj[iSegment].aiy))) * ((float)(1.0 - (2.0 * ti)));
 
-    diffD_T = ASSER_TRAJ_DiffCourbeBSpline(segmentTraj, iSegment, 1.0 - ti);
+    diffD_T = ASSER_TRAJ_DiffCourbeBSpline(segmentTraj, iSegment, (1.0 - ti));
     fT1 = sqrtf(SQUARE(diffD_T.x) + (SQUARE(diffD_T.y)));
+    
     ASSER_TRAJ_LogAsserValPC("f_T", fT1);
+
     for (param = 1; param <= N; param++)
     {
         pos_t = (float)((1.0 - ti) + (ti * (((float)param) / ((float)N) )));
