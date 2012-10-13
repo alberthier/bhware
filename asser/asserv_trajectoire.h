@@ -48,7 +48,6 @@
 /** Structure de parametres du profil de vitesse des trajectoires */
 typedef struct
 {
-    //unsigned int n;
     float           vmax;
     unsigned int    p;
     float           diffThetaCourant;
@@ -58,14 +57,9 @@ typedef struct
     float           pas_echantillon_distance;
     float           vitesse_courante;
 
-    // parametres gene profil 2012
+    /* parametres profil */
     float           Amax;
     float           Dmax;
-    float           coeff_vi1;
-    float           coeff_decc_finale;
-    float           decc_min_finale;
-    float           vitesse_seuil_decc_finale;
-    float           vpointe;
 } ParametresProfilVitesse;
 
 typedef struct
@@ -123,11 +117,6 @@ extern float                FacteurVitesseAngulaireMax;
 
 extern float                A_MAX;
 extern float                D_MAX;
-
-extern float                COEFF_VI1;              /* COEFF_VI1 doit etre strictement positif et strictement inferieur a 1 (0.0 < COEFF_VI1 < 1.0) */
-extern float                VITESSE_SEUIL_DECC;
-extern float                COEFF_DECC_FINALE;
-extern float                DECC_MIN;               /* Decceleration en m/s^2 du profil de vitesse au point d'arrivee */
 
 extern float                k0_init; 
 extern float                C_init;
