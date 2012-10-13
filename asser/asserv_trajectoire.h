@@ -113,7 +113,6 @@ extern float                gainDeplacement3;
 
 extern float                Ratio_Acc;            
 extern float                Ratio_Decc;
-extern float                FacteurVitesseAngulaireMax;
 
 extern float                A_MAX;
 extern float                D_MAX;

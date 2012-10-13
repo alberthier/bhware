@@ -76,8 +76,6 @@ float                           VminMouv                                =   0.10
 float                           A_MAX                                   =   1.0;
 float                           D_MAX                                   =   1.0;
 
-float                           FacteurVitesseAngulaireMax              =   1.0;    /* Ce facteur doit etre positif */
-
 float                           k0_init                                 =   0.3; 
 float                           C_init                                  =   0.2;
 
@@ -1513,8 +1511,6 @@ static Pose ASSER_TRAJ_TrajectoireRotation(ParametresRotation *p_rotation, float
 /**********************************************************************/
 static float ASSER_TRAJ_VitesseLimiteEnVirage(Trajectoire *traj, float diffThetaTrajectoire)
 {
-    //return ((float)(traj->profilVitesse.vmax / (1.0 + (fabsf(diffThetaTrajectoire) * FacteurVitesseAngulaireMax))));
-
     return ((float)(traj->profilVitesse.vmax / (1.0 + (fabsf(diffThetaTrajectoire) * (ECART_ROUE_MOTRICE / 2.0) ))));
 }
 

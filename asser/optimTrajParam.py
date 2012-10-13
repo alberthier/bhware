@@ -114,12 +114,11 @@ def MSG_config_AsserRotation(R1, R2) :
 def send_config_AsserRotation(process, R1, R2) :
     process.stdin.write(MSG_config_AsserRotation(R1, R2))
 
-def MSG_config_profilVitesse(Amax, Dmax, F_VA_Max) :
+def MSG_config_profilVitesse(Amax, Dmax) :
     #generation d'un message de configuration des parametres du profil de vitesse
     parametersT = commandMsg("PARAMETERS_TIME")
     parametersT.addPose("A_MAX" + " " + str(Amax))
     parametersT.addPose("D_MAX" + " " + str(Dmax))
-    parametersT.addPose("VITANGMAX" + " " + str(F_VA_Max))
     return parametersT.cmdMsgGeneration()
 
 def MSG_configGenerale(Ratio_Acc, Ratio_Decc) :
@@ -129,8 +128,8 @@ def MSG_configGenerale(Ratio_Acc, Ratio_Decc) :
     parametersT.addPose("RATIO_DECC" + " " + str(Ratio_Decc))
     return parametersT.cmdMsgGeneration()
 
-def send_config_profilVitesse(process, Amax, Dmax, F_VA_Max) :
-    process.stdin.write(MSG_config_profilVitesse(Amax, Dmax, F_VA_Max))
+def send_config_profilVitesse(process, Amax, Dmax) :
+    process.stdin.write(MSG_config_profilVitesse(Amax, Dmax))
 
 def send_configGenerale(process, Ratio_Acc, Ratio_Decc) :
     process.stdin.write(MSG_configGenerale(Ratio_Acc, Ratio_Decc))
@@ -189,7 +188,7 @@ def send_config_simulator(simulator_process, d_cfgTraj) :
     send_config_AsserRotation(simulator_process, d_cfgTraj['R1'], d_cfgTraj['R2'])
 
     # envoie au simulateur de la configuration des parametres du profil de vitesse
-    send_config_profilVitesse(simulator_process, d_cfgTraj['Amax'], d_cfgTraj['Dmax'], d_cfgTraj['Facteur_vitesse_angulaire'])
+    send_config_profilVitesse(simulator_process, d_cfgTraj['Amax'], d_cfgTraj['Dmax'])
 
     # envoie au simulateur de la configuration des parametres haut niveau du profil de vitesse
     send_configGenerale(simulator_process, d_cfgTraj['RatioAcc'], d_cfgTraj['RatioDecc'])

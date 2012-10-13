@@ -98,11 +98,10 @@ extern void SIMU_SetParamMoteur(float m, float R, float f, float Fr, float r, fl
     RAPPORT_REDUCTION   = Rred;
 }
 
-extern void SIMU_SetParamProfilVitesse(float Amax, float Dmax, float fvam)
+extern void SIMU_SetParamProfilVitesse(float Amax, float Dmax)
 {
     A_MAX = Amax;
     D_MAX = Dmax;   
-    FacteurVitesseAngulaireMax = fvam;
 }
 
 extern void SIMU_SetConfigGeneraleProfilVitesse(float ratioAcc, float ratioDecc)

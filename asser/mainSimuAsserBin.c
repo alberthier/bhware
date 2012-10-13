@@ -113,8 +113,8 @@ int main(void)
     // param des gains asser rotation
     gainRotation1 = -6.0;
     gainRotation2 = -6.0;
-    // param du profil de vitesse # 1:A_MAX, 2:D_MAX, 3:FacteurVitesseAngulaireMax
-    SIMU_SetParamProfilVitesse(0.575, 0.575, 0.5);
+    // param du profil de vitesse # 1:A_MAX, 2:D_MAX
+    SIMU_SetParamProfilVitesse(0.575, 0.575);
     // param du moteur de deplacement # 1:MASSE, 2:RAYON_ROUE, 3:FROTTEMENT_FLUIDE, 4:FORCE_RESISTANTE, 5:RESISTANCE_INDUIT, 6:INDUCTANCE_INDUIT, 7:CONSTANTE_COUPLE, 8:CONSTANTE_VITESSE, 9:RAPPORT_REDUCTION
     SIMU_SetParamMoteur(1.2, 0.03, 0.0000504, 0.4, 2.18, 0.00024, 0.0234, 0.02346, 20.0);
 
@@ -207,7 +207,6 @@ int main(void)
             {
                 A_MAX = paramT[0].value;
                 D_MAX = paramT[1].value;   
-                FacteurVitesseAngulaireMax = paramT[2].value;    
             }
         }
         else if (strcmp(command, "CONFIG_ASSER") == 0)
