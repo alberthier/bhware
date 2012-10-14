@@ -202,11 +202,10 @@ int main(void)
         }
         else if (strcmp(command, "PARAMETERS_TIME") == 0)
         {
-            parameterMsgTreatment(buffer, &nbrParameters, paramT, 7);
-            if (nbrParameters == 7)
+            parameterMsgTreatment(buffer, &nbrParameters, paramT, 2);
+            if (nbrParameters == 2)
             {
-                A_MAX = paramT[0].value;
-                D_MAX = paramT[1].value;   
+                SIMU_SetParamProfilVitesse(paramT[0].value, D_MAX = paramT[1].value);   
             }
         }
         else if (strcmp(command, "CONFIG_ASSER") == 0)
