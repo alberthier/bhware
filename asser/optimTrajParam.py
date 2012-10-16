@@ -210,7 +210,7 @@ def trajFunction(d_cfgTraj):
 
     #lancement du simulateur de deplacement
     print("Lancement du simulateur")
-    simulator_process = subprocess.Popen('simulator_trajAsser.exe', shell=True, stdin = subprocess.PIPE, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+    simulator_process = subprocess.Popen('./simulator_trajAsser', shell=True, stdin = subprocess.PIPE, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
 
     # envoie de la configuration du simulateur
     send_config_simulator(simulator_process, d_cfgTraj)
@@ -245,8 +245,8 @@ def trajFunction(d_cfgTraj):
     deplacement.addPose("0.3 0.4")
     deplacement.addPose("0.6 0.4")
     #
-    #~ deplacement = commandMsg("MSG_MAIN_GOTO 12 1 -1100000.0")
-    #~ deplacement.addPose("0.0 2.0") #-1100000.0
+    #~ deplacement = commandMsg("MSG_MAIN_GOTO 1 1 -1100000.0")
+    #~ deplacement.addPose("0.0 1.0") #-1100000.0
     
     #transmission de commandes de deplacement par l'entree standard
     simulator_process.stdin.write(deplacement.cmdMsgGeneration())
@@ -911,6 +911,11 @@ def affichageGabaritVitesse_2013(d_traj):
     
     #~ figure(5)
     #~ plot(traj["f_T"], 'o')
+    #~ lx = range(15)
+    #~ a = (0.03 - 0.1176) / 225
+    #~ b = -30*a
+    #~ c = 0.03
+    #~ plot(lx, [a*math.pow(x,2.0) + b*x +c for x in lx], '-')
 
 
 def optimRayonRoue(d_cfgTraj_local) :
