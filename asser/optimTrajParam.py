@@ -239,12 +239,15 @@ def trajFunction(d_cfgTraj):
     	
     #~ deplacement = commandMsg("MSG_MAIN_GOTO 0 1 -1.57")
     #
-    deplacement = commandMsg("MSG_MAIN_GOTO 1 1 0.0")
-    deplacement.addPose("0.0 0.1")
-    deplacement.addPose("0.1 0.3")
-    deplacement.addPose("0.3 0.4")
-    deplacement.addPose("0.6 0.4")
-    #
+    #deplacement = commandMsg("MSG_MAIN_GOTO 1 1 0.0")
+    #deplacement.addPose("0.0 0.1")
+    #deplacement.addPose("0.1 0.3")
+    #deplacement.addPose("0.3 0.4")
+    #deplacement.addPose("0.6 0.4")  
+    
+    deplacement = commandMsg("MSG_MAIN_GOTO 0 1 -1.57")
+    deplacement.addPose("0.0 0.0")
+    
     #~ deplacement = commandMsg("MSG_MAIN_GOTO 12 1 -1100000.0")
     #~ deplacement.addPose("0.0 2.0") #-1100000.0
     
