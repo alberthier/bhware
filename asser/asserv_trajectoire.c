@@ -347,8 +347,11 @@ extern void ASSER_TRAJ_AsservissementMouvementRobot(Pose poseRobot, VitessesRobo
                 
                     if (Vr > (VminMouv + EcartVitesse))
                     {
-#ifdef PIC32_BUILD                        
-                        TOOLS_LogFault(AsserPosErr, True, FLOAT, (float *)&Vr, True, "Asserv_traj : Vr > VminMouv a l'arrivee en position !");
+#ifdef PIC32_BUILD      
+                        if (Test_mode == (unsigned long)1)
+                        {
+                            TOOLS_LogFault(AsserPosErr, True, FLOAT, (float *)&Vr, True, "Asserv_traj : Vr > VminMouv a l'arrivee en position !");
+                        }
 #else /* PIC32_BUILD */
                         ASSER_TRAJ_LogAsserMsgPC("Asserv_traj : Vr > VminMouv a l'arrivee en position !", Vr);
 #endif /* PIC32_BUILD */  
@@ -375,8 +378,11 @@ extern void ASSER_TRAJ_AsservissementMouvementRobot(Pose poseRobot, VitessesRobo
                 
                 if (POS_GetVitesseRelle() > (VminMouv + EcartVitesse))
                 {
-#ifdef PIC32_BUILD                        
-                    TOOLS_LogFault(AsserPosErr, True, FLOAT, (float *)&Vr, True, "Asserv_traj : Vr > VminMouv a l'arrivee en position !");
+#ifdef PIC32_BUILD  
+                    if (Test_mode == (unsigned long)1)
+                    {
+                        TOOLS_LogFault(AsserPosErr, True, FLOAT, (float *)&Vr, True, "Asserv_traj : Vr > VminMouv a l'arrivee en position !");
+                    }
 #else /* PIC32_BUILD */
                     ASSER_TRAJ_LogAsserMsgPC("Asserv_traj : Vr > VminMouv a l'arrivee en position !", Vr);
 #endif /* PIC32_BUILD */  
@@ -900,6 +906,8 @@ extern void ASSER_TRAJ_InitialisationTrajectoire(Pose poseRobot, PtTraj * point,
     chemin.profilVitesse.etat = 1;
 
     compteurPeriode = 0;
+
+    Phase = 0;
 
     /* Initialisation de l'erreur de distance avant l'arrivee */
     errDist = POS_ErreurDistance(poseRobot, chemin.posArrivee);
@@ -2236,8 +2244,11 @@ static unsigned char ASSER_TRAJ_Profil_S_Curve(float * Vconsigne, float Distance
         {
             VEnd = Vmax;
 
-#ifdef PIC32_BUILD        
-            TOOLS_LogFault(AsserPosErr, False, INTEGER, 0, True, "Asserv_traj : Reajustement de la vitesse de fin de profil ! Vitesse de fin impossible sur cette distance");
+#ifdef PIC32_BUILD 
+            if (Test_mode == (unsigned long)1)
+            {
+                TOOLS_LogFault(AsserPosErr, False, INTEGER, 0, True, "Asserv_traj : Reajustement de la vitesse de fin de profil ! Vitesse de fin impossible sur cette distance");
+            }
 #else /* PIC32_BUILD */
             ASSER_TRAJ_LogAsserMsgPC("Asserv_traj : Reajustement de la vitesse de fin de profil ! Vitesse de fin impossible sur cette distance", VEnd);
 #endif /* PIC32_BUILD */
@@ -2415,7 +2426,10 @@ static unsigned char ASSER_TRAJ_Profil_S_Curve(float * Vconsigne, float Distance
                             }                                                        
 
 #ifdef PIC32_BUILD
-                            TOOLS_LogFault(AsserPosErr, True, FLOAT, (float *)&Amax, True, "Asserv_traj : Amax / Dmax > aux capacitees du robot !");
+                            if (Test_mode == (unsigned long)1)
+                            {
+                                TOOLS_LogFault(AsserPosErr, True, FLOAT, (float *)&Amax, True, "Asserv_traj : Amax / Dmax > aux capacitees du robot !");
+                            }
 #else /* PIC32_BUILD */
                             ASSER_TRAJ_LogAsserMsgPC("Asserv_traj : Amax / Dmax > aux capacitees du robot !", Amax);
 #endif /* PIC32_BUILD */     
@@ -2800,8 +2814,11 @@ static unsigned char ASSER_TRAJ_Profil_S_Curve(float * Vconsigne, float Distance
                                 *Vconsigne = VminMouv;
                             }                                                        
 
-#ifdef PIC32_BUILD                                
-                            TOOLS_LogFault(AsserPosErr, True, FLOAT, (float *)&Dmax, True, "Asserv_traj : Amax / Dmax > aux capacitees du robot !");
+#ifdef PIC32_BUILD          
+                            if (Test_mode == (unsigned long)1)
+                            {
+                                TOOLS_LogFault(AsserPosErr, True, FLOAT, (float *)&Dmax, True, "Asserv_traj : Amax / Dmax > aux capacitees du robot !");
+                            }
 #else /* PIC32_BUILD */
                             ASSER_TRAJ_LogAsserMsgPC("Asserv_traj : Amax / Dmax > aux capacitees du robot !", Dmax);
 #endif /* PIC32_BUILD */                            
@@ -2861,8 +2878,11 @@ static unsigned char ASSER_TRAJ_Profil_S_Curve(float * Vconsigne, float Distance
                     
                     if ((Vr > (VminMouv + EcartVitesse)) && (VEnd == 0.0))
                     {
-#ifdef PIC32_BUILD                        
-                        TOOLS_LogFault(AsserPosErr, True, FLOAT, (float *)&Vr, True, "Asserv_traj : Vr > VminMouv a l'arrivee en position !");
+#ifdef PIC32_BUILD           
+                        if (Test_mode == (unsigned long)1)
+                        {
+                            TOOLS_LogFault(AsserPosErr, True, FLOAT, (float *)&Vr, True, "Asserv_traj : Vr > VminMouv a l'arrivee en position !");
+                        }
 #else /* PIC32_BUILD */
                         ASSER_TRAJ_LogAsserMsgPC("Asserv_traj : Vr > VminMouv a l'arrivee en position !", Vr);
 #endif /* PIC32_BUILD */  

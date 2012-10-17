@@ -117,7 +117,8 @@ extern float            POS_GetConsVitesseMax(void);
 extern float            POS_GetConsVitesseAngulaireMax(void);
 extern void             POS_SetGainStatiqueMoteur(float gain_G, float gain_D);
 extern float            POS_GetVitesseRelle(void);
-
+extern float            POS_GetVitesseRotation(void);
+ 
 /*! @} */
 
 /*! @} */

@@ -210,7 +210,7 @@ def trajFunction(d_cfgTraj):
 
     #lancement du simulateur de deplacement
     print("Lancement du simulateur")
-    simulator_process = subprocess.Popen('./simulator_trajAsser', shell=True, stdin = subprocess.PIPE, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+    simulator_process = subprocess.Popen('simulator_trajAsser.exe', shell=True, stdin = subprocess.PIPE, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
 
     # envoie de la configuration du simulateur
     send_config_simulator(simulator_process, d_cfgTraj)
@@ -236,7 +236,7 @@ def trajFunction(d_cfgTraj):
     send_init_pose(simulator_process, x=0.0, y=0.0, angle=math.pi/2.0) #4.71
     #deplacement = commandMsg("MSG_MAIN_GOTO 2 1 -1100000")
     #deplacement.addPose("0.0 1.0") #-1100000.0
-    	
+    
     deplacement = commandMsg("MSG_MAIN_GOTO 0 1 -1.57")
     #
     #~ deplacement = commandMsg("MSG_MAIN_GOTO 1 1 0.0")
