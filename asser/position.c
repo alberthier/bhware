@@ -84,6 +84,7 @@ signed char             m_sensMarcheMouvement   = MARCHE_AVANT;
 
 /** Vitesse reelle mesure */
 static float            VitesseReelleMesure     =   0.0;
+static float            VitesseRotationMesure   =   0.0;
 
 /**********************************************************************
  * Definition dedicated to the local functions.
@@ -256,6 +257,7 @@ extern void POS_Positionnement(signed int delta_impDroite, signed int delta_impG
     Dy = (Delta_moy * sinf(m_poseRobot.angle));
 
     Dtheta = (Delta_diff / ECART_ROUE_LIBRE);
+    VitesseRotationMesure = Dtheta / TE;
 
     Deviation_x = - COEFFICIENT_DE_GLISSEMENT_LATERAL * Dtheta * Dy;
     Deviation_y = COEFFICIENT_DE_GLISSEMENT_LATERAL * Dtheta * Dx;
@@ -276,6 +278,19 @@ extern void POS_Positionnement(signed int delta_impDroite, signed int delta_impG
 extern float POS_GetVitesseRelle(void)
 {
     return VitesseReelleMesure;
+}
+
+/**********************************************************************/
+/*! \brief POS_GetVitesseRotation
+ *
+ *  \note  Retourne la vitesse reelle de rotation du robot
+ *
+ *  \return Vitesse de rotation mesuree (en rd/s)
+ */
+/**********************************************************************/
+extern float POS_GetVitesseRotation(void)
+{
+    return VitesseRotationMesure;
 }
 
 /**********************************************************************/
