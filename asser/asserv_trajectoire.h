@@ -40,7 +40,7 @@
 #endif
 
 /** Parametres du profil de vitesse des trajectoires */
-#define TAILLE_TAB_GABARIT_VITESSE      2001
+#define TAILLE_TAB_GABARIT_VITESSE      201
 
 #define CONVERT_DISTANCE(d)             (((float)d)/10000.0)
 #define CONVERT_FLOAT2SHORT_DISTANCE(d) ((unsigned short)((d) * 10000.0))

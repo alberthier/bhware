@@ -97,6 +97,7 @@ static float                    errDist, memo_errDist, errAngle, memo_errAngle, 
 /** Vecteurs associees au depart et a l'arrivee, et parametrage du profil de vitesse de la trajectoire */
 static Trajectoire              chemin;
 static unsigned int             segmentCourant                          =   1;
+static char                     m_sensDeplacement                       =   MARCHE_AVANT;
 
 /** Contraintes d'affectation : ti doit etre compris entre 0 et 0.5, avec les valeurs 0.0 et 0.5 exclus */
 static float                    ti                                      =   0.3;
@@ -479,7 +480,7 @@ extern void ASSER_TRAJ_AsservissementMouvementRobot(Pose poseRobot, VitessesRobo
                     distanceParcourue_Profil -= chemin.segmentTrajBS[iSegment].distance;
                 }
                 
-                ASSER_Running = ASSER_TRAJ_Profil_S_Curve(&VitesseProfil, distanceTotale_Profil, 0.0, 0.0, chemin.profilVitesse.Amax, chemin.profilVitesse.Dmax, Vitesse_Gain_ASR, distanceParcourue_Profil, POS_GetVitesseRelle(), (SaturationPIDflag | SaturationPIGflag));
+                ASSER_Running = ASSER_TRAJ_Profil_S_Curve(&VitesseProfil, distanceTotale_Profil, 0.0, 0.0, chemin.profilVitesse.Amax, chemin.profilVitesse.Dmax, Vitesse_Gain_ASR, distanceParcourue_Profil, ((float)m_sensDeplacement) * POS_GetVitesseRelle(), (SaturationPIDflag | SaturationPIGflag));
 
                 if (segmentCourant < chemin.nbreSegments)
                 {
@@ -507,7 +508,7 @@ extern void ASSER_TRAJ_AsservissementMouvementRobot(Pose poseRobot, VitessesRobo
                 parametrePositionSegmentTrajectoireAv = parametrePositionSegmentTrajectoire;
                 segmentCourantAv = segmentCourant;
 
-                ASSER_Running = ASSER_TRAJ_Profil_S_Curve(&VitesseProfil, chemin.distance, 0.0, 0.0, chemin.profilVitesse.Amax, chemin.profilVitesse.Dmax, Vitesse_Gain_ASR, chemin.profilVitesse.distance_parcourue, fabs(POS_GetVitesseRotation()) * (ECART_ROUE_LIBRE/2.0), (SaturationPIDflag | SaturationPIGflag));
+                ASSER_Running = ASSER_TRAJ_Profil_S_Curve(&VitesseProfil, chemin.distance, 0.0, 0.0, chemin.profilVitesse.Amax, chemin.profilVitesse.Dmax, Vitesse_Gain_ASR, chemin.profilVitesse.distance_parcourue, ((float)m_sensDeplacement) * POS_GetVitesseRotation() * (ECART_ROUE_LIBRE/2.0), (SaturationPIDflag | SaturationPIGflag));
 
                 delta_distance_Av = VitesseProfil * TE;
                 
@@ -632,6 +633,8 @@ extern void ASSER_TRAJ_InitialisationTrajectoire(Pose poseRobot, PtTraj * point,
     /* Liste des points terminee */
     if (ASSER_TRAJ_isDeplacement(&chemin) == True)
     {
+        m_sensDeplacement = m_sensMarcheMouvement;
+
         if (ASSER_TRAJ_isAngle(angle_rad) == True)
         {
             if (m_sensMarcheMouvement == MARCHE_ARRIERE)
@@ -870,6 +873,15 @@ extern void ASSER_TRAJ_InitialisationTrajectoire(Pose poseRobot, PtTraj * point,
 
         chemin.distance = (fabsf(chemin.rotation.angle) * NORME_BARRE_SUIVI_TRAJ);
         ASSER_TRAJ_LogAsserValPC("distance_seg", chemin.distance);
+
+        if (chemin.rotation.angle < 0.0)
+        {
+            m_sensDeplacement = MARCHE_ARRIERE;
+        }
+        else
+        {
+            m_sensDeplacement = MARCHE_AVANT;
+        }
     }
 
     /* Garantie que la distance totale de la trajectoire est positive et non nulle */
