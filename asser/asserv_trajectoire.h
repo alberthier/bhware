@@ -120,7 +120,7 @@ extern float                D_MAX;
 extern float                k0_init; 
 extern float                C_init;
 
-extern float                VminMouv;
+extern float                VminMouvRef;
 
 /* Prototypes de function globales asserv_trajectoire */
 

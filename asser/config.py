@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-d_cfgTraj = {'Masse': 1.2
+d_cfgTraj = {'Masse': 12.0
                 , 'Rayon_roue': 0.020
                 , 'Frottement_fluide': 0.0000504
                 , 'Force_resistante': 0.4
@@ -19,6 +19,6 @@ d_cfgTraj = {'Masse': 1.2
                 , 'R2': -6.0
                 , 'Amax': 1.0
                 , 'Dmax': 1.0
-                , 'RatioAcc': 0.8
-                , 'RatioDecc': 1.1
+                , 'RatioAcc': 1.1
+                , 'RatioDecc': 1.4
                 }

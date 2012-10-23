@@ -234,16 +234,19 @@ def trajFunction(d_cfgTraj):
     #~ simulator_process.stdin.write(deplacement.cmdMsgGeneration())
     
     send_init_pose(simulator_process, x=0.0, y=0.0, angle=math.pi/2.0) #4.71
-    #deplacement = commandMsg("MSG_MAIN_GOTO 2 1 -1100000")
-    #deplacement.addPose("0.0 1.0") #-1100000.0
+    deplacement = commandMsg("MSG_MAIN_GOTO 2 1 -1100000")
+    deplacement.addPose("0.0 1.0") #-1100000.0
     
-    deplacement = commandMsg("MSG_MAIN_GOTO 0 1 -1.57")
+    #deplacement = commandMsg("MSG_MAIN_GOTO 0 1 -1.57")
     #
-    #~ deplacement = commandMsg("MSG_MAIN_GOTO 1 1 0.0")
-    #~ deplacement.addPose("0.0 0.1")
-    #~ deplacement.addPose("0.1 0.3")
-    #~ deplacement.addPose("0.3 0.4")
-    #~ deplacement.addPose("0.6 0.4")
+    #deplacement = commandMsg("MSG_MAIN_GOTO 1 1 0.0")
+    #deplacement.addPose("0.0 0.05")
+    #deplacement.addPose("0.025 0.15")
+    #deplacement.addPose("0.075 0.25")
+    #deplacement.addPose("0.15 0.325")
+    #deplacement.addPose("0.25 0.375")
+    #deplacement.addPose("0.35 0.4")
+    #deplacement.addPose("0.6 0.4")
     #
     #~ deplacement = commandMsg("MSG_MAIN_GOTO 1 1 -1100000.0")
     #~ deplacement.addPose("0.0 1.0") #-1100000.0
@@ -667,6 +670,11 @@ def affichageTraj2011(d_traj):
     plot(temps, d_traj["Phase"], label='Phase')
     plot(temps, d_traj["fFin"], label='flag Fin')
     plot(temps, d_traj["vitLongitudinale"], '--', label='consigne vit long')
+    print(str(len(d_traj["VpiD"])) + " " + str(len(d_traj["VitesseProfil"]))) 
+    plot(temps, d_traj["VposG"], label='VposG')
+    plot(temps, d_traj["VposD"], label='VposD')
+    plot(temps, d_traj["VpiG"], label='VpiG')
+    plot(temps, d_traj["VpiD"], label='VpiD')
     #~ plot([index*periode for index in range(len(d_traj["ConsigneMoteurDroit"]))], [(cons-1024.0)*0.000985 for cons in d_traj["ConsigneMoteurDroit"]], label='consigne droit')
     #~ plot([index*periode for index in range(len(d_traj["vitesseProfilConsigne"]))], d_traj["vitesseProfilConsigne"], 'o', label='vitesse profil')
     #~ plot([index*periode for index in range(len(d_traj["vitLongitudinale"]))], d_traj["vitLongitudinale"], label='consigne long calculee')

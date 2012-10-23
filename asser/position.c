@@ -390,45 +390,49 @@ extern float POS_ErreurOrientation(Pose poseRobot, Vecteur posArrivee)
 /**********************************************************************/
 extern void POS_ConversionVitessesLongRotToConsignesPWMRouesRobotUnicycle(float vitesseLongitudinale, float vitesseAngulaireRotation, unsigned short * consPWMRoueGauche, unsigned short * consPWMRoueDroite)
 {
-    float vitRoueGauche, vitRoueDroite;
-
+    float 					vitRoueGauche, vitRoueDroite;
+		unsigned short  vitRoueGpwm, vitRoueDpwm;
+		
     vitRoueGauche = (m_sensMarcheMouvement * vitesseLongitudinale) - ((vitesseAngulaireRotation * ECART_ROUE_LIBRE) / 2.0);
     vitRoueDroite = (m_sensMarcheMouvement * vitesseLongitudinale) + ((vitesseAngulaireRotation * ECART_ROUE_LIBRE) / 2.0);
 
-    vitRoueGauche = (vitRoueGauche / GAIN_STATIQUE_MOTEUR_G) + (float)OffsetPWM;
-    vitRoueDroite = (vitRoueDroite / GAIN_STATIQUE_MOTEUR_D) + (float)OffsetPWM;
+	ASSER_TRAJ_LogAsserValPC("VposG", vitRoueGauche);
+    ASSER_TRAJ_LogAsserValPC("VposD", vitRoueDroite);
+         		
+    vitRoueGpwm = ((unsigned short)(vitRoueGauche / GAIN_STATIQUE_MOTEUR_G)) + OffsetPWM;
+    vitRoueDpwm = ((unsigned short)(vitRoueDroite / GAIN_STATIQUE_MOTEUR_D)) + OffsetPWM;
 
     /* Saturation des consignes PWM de vitesse */
     /* Consigne roue gauche */
-    if (vitRoueGauche < (float)BORNE_PWM_AR)
+    if (vitRoueGpwm < (unsigned short)BORNE_PWM_AR)
     {
         *consPWMRoueGauche = (unsigned short)BORNE_PWM_AR;
     }
     else
     {
-        if (vitRoueGauche > (float)BORNE_PWM_AV)
+        if (vitRoueGpwm > (unsigned short)BORNE_PWM_AV)
         {
             *consPWMRoueGauche = (unsigned short)BORNE_PWM_AV;
         }
         else
         {
-            *consPWMRoueGauche = (unsigned short)vitRoueGauche;
+            *consPWMRoueGauche = vitRoueGpwm;
         }
     }
     /* Consigne roue droite */
-    if (vitRoueDroite < (float)BORNE_PWM_AR)
+    if (vitRoueDpwm < (unsigned short)BORNE_PWM_AR)
     {
         *consPWMRoueDroite = (unsigned short)BORNE_PWM_AR;
     }
     else
     {
-        if (vitRoueDroite > (float)BORNE_PWM_AV)
+        if (vitRoueDpwm > (unsigned short)BORNE_PWM_AV)
         {
             *consPWMRoueDroite = (unsigned short)BORNE_PWM_AV;
         }
         else
         {
-            *consPWMRoueDroite = (unsigned short)vitRoueDroite;
+            *consPWMRoueDroite = vitRoueDpwm;
         }
     }
 }

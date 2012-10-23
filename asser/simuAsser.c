@@ -368,6 +368,10 @@ void SIMU_InitialisationLogRobot(void)
     ASSER_TRAJ_LogAsserValPC("VgASR", 0.0);
     ASSER_TRAJ_LogAsserValPC("Phase", 0.0);
     ASSER_TRAJ_LogAsserValPC("fFin", 0.0);
+    ASSER_TRAJ_LogAsserValPC("VpiG", 0.0);
+    ASSER_TRAJ_LogAsserValPC("VpiD", 0.0);
+    ASSER_TRAJ_LogAsserValPC("VposG", 0.0);
+    ASSER_TRAJ_LogAsserValPC("VposD", 0.0);
 }
 
 void SIMU_LogRobot(void)
@@ -551,8 +555,12 @@ void SIMU_CalculPeriodique(void)
         ASSER_TRAJ_AsservissementMouvementRobot(POS_GetPoseAsserRobot(), &vitessesConsignes);
 
         //if (ASSER_Running == True)
-        //{
+        //{        		        
             POS_ConversionVitessesLongRotToConsignesPWMRouesRobotUnicycle(vitessesConsignes.longitudinale, vitessesConsignes.rotation, &g_ConsigneMoteurG, &g_ConsigneMoteurD);
+            
+         		ASSER_TRAJ_LogAsserValPC("VpiG", ((((float)(g_ConsigneMoteurG - 1023)) * 0.630) / 1023.0));
+         		ASSER_TRAJ_LogAsserValPC("VpiD", ((((float)(g_ConsigneMoteurD - 1023)) * 0.606) / 1023.0));
+
             /***********************************/
             /* Envois des consignes des boucles de vitesse au PIC asser */
             SIMU_REDEF_ASSER_SendConsigne(g_ConsigneMoteurD, g_ConsigneMoteurG);

@@ -55,14 +55,13 @@
 /** Constantes */
 
 #define                         Vitesse_Gain_ASR                        ((float) 0.002)
-
 /*----------------------------------------------------------------------------------------------*/
 
 /** Variables globales */
 
 /** Parametres de l'asservissement par retour d'etat */
-float                           gainRotation1                           =   - 6.0;   /* Gain de l'asservissement de la vitesse longitudinale */
-float                           gainRotation2                           =   - 6.0;   /* Gain de l'asservissement de la vitesse de rotation */
+float                           gainRotation1                           =   - 6.0;   	/* Gain de l'asservissement de la vitesse longitudinale */
+float                           gainRotation2                           =   - 6.0;   	/* Gain de l'asservissement de la vitesse de rotation */
 float                           gainDeplacement1                        =   20.0;
 float                           gainDeplacement2                        =   50.0;
 float                           gainDeplacement3                        =   20.0;
@@ -71,13 +70,17 @@ float                           gainDeplacement3                        =   20.0
 float                           Ratio_Acc                               =   1.0;
 float                           Ratio_Decc                              =   1.0;
 
-float                           VminMouv                                =   0.100;  /* Vitesse minimum de mouvement et maximale d'arret */
+float														VminMouvRef														  =   0.2; 
 
 float                           A_MAX                                   =   1.0;
 float                           D_MAX                                   =   1.0;
 
 float                           k0_init                                 =   0.3; 
 float                           C_init                                  =   0.2;
+
+/** Variables locales */
+
+static float                    VminMouv                                =   0.2;			/* Vitesse minimum de mouvement et maximale d'arret */
 
 /***********************************************************************************************/
 /**************************** Fin de la definition des parametres de l'asservissement de trajectoire *********/
@@ -97,6 +100,7 @@ static float                    errDist, memo_errDist, errAngle, memo_errAngle, 
 /** Vecteurs associees au depart et a l'arrivee, et parametrage du profil de vitesse de la trajectoire */
 static Trajectoire              chemin;
 static unsigned int             segmentCourant                          =   1;
+static char                     m_sensDeplacement                       =   MARCHE_AVANT;
 
 /** Contraintes d'affectation : ti doit etre compris entre 0 et 0.5, avec les valeurs 0.0 et 0.5 exclus */
 static float                    ti                                      =   0.3;
@@ -479,7 +483,7 @@ extern void ASSER_TRAJ_AsservissementMouvementRobot(Pose poseRobot, VitessesRobo
                     distanceParcourue_Profil -= chemin.segmentTrajBS[iSegment].distance;
                 }
                 
-                ASSER_Running = ASSER_TRAJ_Profil_S_Curve(&VitesseProfil, distanceTotale_Profil, 0.0, 0.0, chemin.profilVitesse.Amax, chemin.profilVitesse.Dmax, Vitesse_Gain_ASR, distanceParcourue_Profil, POS_GetVitesseRelle(), (SaturationPIDflag | SaturationPIGflag));
+                ASSER_Running = ASSER_TRAJ_Profil_S_Curve(&VitesseProfil, distanceTotale_Profil, 0.0, 0.0, chemin.profilVitesse.Amax, chemin.profilVitesse.Dmax, Vitesse_Gain_ASR, distanceParcourue_Profil, ((float)m_sensDeplacement) * POS_GetVitesseRelle(), (SaturationPIDflag | SaturationPIGflag));
 
                 if (segmentCourant < chemin.nbreSegments)
                 {
@@ -507,7 +511,7 @@ extern void ASSER_TRAJ_AsservissementMouvementRobot(Pose poseRobot, VitessesRobo
                 parametrePositionSegmentTrajectoireAv = parametrePositionSegmentTrajectoire;
                 segmentCourantAv = segmentCourant;
 
-                ASSER_Running = ASSER_TRAJ_Profil_S_Curve(&VitesseProfil, chemin.distance, 0.0, 0.0, chemin.profilVitesse.Amax, chemin.profilVitesse.Dmax, Vitesse_Gain_ASR, chemin.profilVitesse.distance_parcourue, fabs(POS_GetVitesseRotation()) * (ECART_ROUE_LIBRE/2.0), (SaturationPIDflag | SaturationPIGflag));
+                ASSER_Running = ASSER_TRAJ_Profil_S_Curve(&VitesseProfil, chemin.distance, 0.0, 0.0, chemin.profilVitesse.Amax, chemin.profilVitesse.Dmax, Vitesse_Gain_ASR, chemin.profilVitesse.distance_parcourue, ((float)m_sensDeplacement) * POS_GetVitesseRotation() * (ECART_ROUE_LIBRE/2.0), (SaturationPIDflag | SaturationPIGflag));
 
                 delta_distance_Av = VitesseProfil * TE;
                 
@@ -632,6 +636,8 @@ extern void ASSER_TRAJ_InitialisationTrajectoire(Pose poseRobot, PtTraj * point,
     /* Liste des points terminee */
     if (ASSER_TRAJ_isDeplacement(&chemin) == True)
     {
+        m_sensDeplacement = m_sensMarcheMouvement;
+
         if (ASSER_TRAJ_isAngle(angle_rad) == True)
         {
             if (m_sensMarcheMouvement == MARCHE_ARRIERE)
@@ -870,6 +876,15 @@ extern void ASSER_TRAJ_InitialisationTrajectoire(Pose poseRobot, PtTraj * point,
 
         chemin.distance = (fabsf(chemin.rotation.angle) * NORME_BARRE_SUIVI_TRAJ);
         ASSER_TRAJ_LogAsserValPC("distance_seg", chemin.distance);
+
+        if (chemin.rotation.angle < 0.0)
+        {
+            m_sensDeplacement = MARCHE_ARRIERE;
+        }
+        else
+        {
+            m_sensDeplacement = MARCHE_AVANT;
+        }
     }
 
     /* Garantie que la distance totale de la trajectoire est positive et non nulle */
@@ -2221,7 +2236,7 @@ static unsigned char ASSER_TRAJ_Profil_S_Curve(float * Vconsigne, float Distance
     {
         /* Phase 0 (Initialisation) */
             
-        /* Forcage de la vitesse minim de deplacement minimum */
+        /* Forcage de la vitesse de deplacement minimum */
         if (VStart < (VminMouv / 2))
         {
             VStart = VminMouv / 2;
@@ -2239,6 +2254,15 @@ static unsigned char ASSER_TRAJ_Profil_S_Curve(float * Vconsigne, float Distance
             DistanceMin = (((Vmax * Vmax) - (VStart * VStart)) / Amax) + (((Vmax * Vmax) - (VEnd * VEnd)) / Dmax) + (2 * (Vmax * TE)) + (VStart * TE) + (VEnd * TE);
         }
         
+        if ((Vmax / 2) < VminMouvRef)
+			  {
+					  VminMouv = (Vmax / 2);
+			  }
+			  else
+			  {
+					  VminMouv = VminMouvRef;
+			  }
+   	     
         /* Verification des parametres */
         if (VEnd > Vmax)
         {
@@ -2264,7 +2288,7 @@ static unsigned char ASSER_TRAJ_Profil_S_Curve(float * Vconsigne, float Distance
         {
             VEnd = Vmax - 0.000001;
         }
-        
+            	
         /* Calcul du Jerk Max */
         JAmax = (Amax * Amax) / (Vmax - VStart);
         JDmax = (Dmax * Dmax) / (Vmax - VEnd);
@@ -2287,7 +2311,7 @@ static unsigned char ASSER_TRAJ_Profil_S_Curve(float * Vconsigne, float Distance
         /* Fin de la Phase 0 */
         Phase = 1;
     }
-    
+       	       	
     switch(Phase)
     {
         /* Phase I ou Phase V */
@@ -2428,10 +2452,10 @@ static unsigned char ASSER_TRAJ_Profil_S_Curve(float * Vconsigne, float Distance
 #ifdef PIC32_BUILD
                             if (Test_mode == (unsigned long)1)
                             {
-                                TOOLS_LogFault(AsserPosErr, True, FLOAT, (float *)&Amax, True, "Asserv_traj : Amax / Dmax > aux capacitees du robot !");
+                                TOOLS_LogFault(AsserPosErr, True, FLOAT, (float *)&Amax, True, "Asserv_traj : Amax > aux capacitees du robot !");
                             }
 #else /* PIC32_BUILD */
-                            ASSER_TRAJ_LogAsserMsgPC("Asserv_traj : Amax / Dmax > aux capacitees du robot !", Amax);
+                            ASSER_TRAJ_LogAsserMsgPC("Asserv_traj : Amax > aux capacitees du robot !", Amax);
 #endif /* PIC32_BUILD */     
                         }
                     }
@@ -2817,10 +2841,10 @@ static unsigned char ASSER_TRAJ_Profil_S_Curve(float * Vconsigne, float Distance
 #ifdef PIC32_BUILD          
                             if (Test_mode == (unsigned long)1)
                             {
-                                TOOLS_LogFault(AsserPosErr, True, FLOAT, (float *)&Dmax, True, "Asserv_traj : Amax / Dmax > aux capacitees du robot !");
+                                TOOLS_LogFault(AsserPosErr, True, FLOAT, (float *)&Amax, True, "Asserv_traj : Amax > aux capacitees du robot !");
                             }
 #else /* PIC32_BUILD */
-                            ASSER_TRAJ_LogAsserMsgPC("Asserv_traj : Amax / Dmax > aux capacitees du robot !", Dmax);
+                            ASSER_TRAJ_LogAsserMsgPC("Asserv_traj : Amax > aux capacitees du robot !", Amax);
 #endif /* PIC32_BUILD */                            
                         }
                     }
