@@ -371,7 +371,7 @@ void SIMU_InitialisationLogRobot(void)
     ASSER_TRAJ_LogAsserValPC("VpiG", 0.0);
     ASSER_TRAJ_LogAsserValPC("VpiD", 0.0);
     ASSER_TRAJ_LogAsserValPC("VposG", 0.0);
-    ASSER_TRAJ_LogAsserValPC("VposD", 0.0);
+    ASSER_TRAJ_LogAsserValPC("VposD", 0.0);        
 }
 
 void SIMU_LogRobot(void)

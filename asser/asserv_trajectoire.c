@@ -70,17 +70,17 @@ float                           gainDeplacement3                        =   20.0
 float                           Ratio_Acc                               =   1.0;
 float                           Ratio_Decc                              =   1.0;
 
-float														VminMouvRef														  =   0.2; 
+float							VminMouvRef								=   0.1; 
 
 float                           A_MAX                                   =   1.0;
 float                           D_MAX                                   =   1.0;
 
 float                           k0_init                                 =   0.3; 
-float                           C_init                                  =   0.2;
+float                           C_init                                  =   0.1;
 
 /** Variables locales */
 
-static float                    VminMouv                                =   0.2;			/* Vitesse minimum de mouvement et maximale d'arret */
+static float                    VminMouv                                =   0.1;			/* Vitesse minimum de mouvement et maximale d'arret */
 
 /***********************************************************************************************/
 /**************************** Fin de la definition des parametres de l'asservissement de trajectoire *********/
@@ -346,19 +346,22 @@ extern void ASSER_TRAJ_AsservissementMouvementRobot(Pose poseRobot, VitessesRobo
                     Phase = 0;
                                 
                     ASSER_Running = False;
-                    
-                    Vr = POS_GetVitesseRelle();
                 
-                    if (Vr > (VminMouv + EcartVitesse))
+                    if (Vmax == MIN(DonneeVmaxGauche, DonneeVmaxDroite))
                     {
-#ifdef PIC32_BUILD      
-                        if (Test_mode == (unsigned long)1)
+                        Vr = POS_GetVitesseRelle();
+                        
+                        if (Vr > (VminMouv + EcartVitesse))
                         {
-                            TOOLS_LogFault(AsserPosErr, True, FLOAT, (float *)&Vr, True, "Asserv_traj : Vr > VminMouv a l'arrivee en position !");
-                        }
+#ifdef PIC32_BUILD      
+                            if (Test_mode == (unsigned long)1)
+                            {
+                                TOOLS_LogFault(AsserPosErr, True, FLOAT, (float *)&Vr, True, "Asserv_traj : Vr > VminMouv a l'arrivee en position !");
+                            }
 #else /* PIC32_BUILD */
-                        ASSER_TRAJ_LogAsserMsgPC("Asserv_traj : Vr > VminMouv a l'arrivee en position !", Vr);
+                            ASSER_TRAJ_LogAsserMsgPC("Asserv_traj : Vr > VminMouv a l'arrivee en position !", Vr);
 #endif /* PIC32_BUILD */  
+                        }
                     }
                 }
             }
@@ -378,18 +381,21 @@ extern void ASSER_TRAJ_AsservissementMouvementRobot(Pose poseRobot, VitessesRobo
             
                 ASSER_Running = False;
                 
-                Vr = POS_GetVitesseRelle();
-                
-                if (POS_GetVitesseRelle() > (VminMouv + EcartVitesse))
+                if (Vmax == MIN(DonneeVmaxGauche, DonneeVmaxDroite))
                 {
-#ifdef PIC32_BUILD  
-                    if (Test_mode == (unsigned long)1)
+                    Vr = POS_GetVitesseRelle();
+                    
+                    if (POS_GetVitesseRelle() > (VminMouv + EcartVitesse))
                     {
-                        TOOLS_LogFault(AsserPosErr, True, FLOAT, (float *)&Vr, True, "Asserv_traj : Vr > VminMouv a l'arrivee en position !");
-                    }
+#ifdef PIC32_BUILD  
+                      if (Test_mode == (unsigned long)1)
+                      {
+                          TOOLS_LogFault(AsserPosErr, True, FLOAT, (float *)&Vr, True, "Asserv_traj : Vr > VminMouv a l'arrivee en position !");
+                      }
 #else /* PIC32_BUILD */
-                    ASSER_TRAJ_LogAsserMsgPC("Asserv_traj : Vr > VminMouv a l'arrivee en position !", Vr);
+                      ASSER_TRAJ_LogAsserMsgPC("Asserv_traj : Vr > VminMouv a l'arrivee en position !", Vr);
 #endif /* PIC32_BUILD */  
+                   }
                 }
             }
             else
@@ -2255,13 +2261,13 @@ static unsigned char ASSER_TRAJ_Profil_S_Curve(float * Vconsigne, float Distance
         }
         
         if ((Vmax / 2) < VminMouvRef)
-			  {
-					  VminMouv = (Vmax / 2);
-			  }
-			  else
-			  {
-					  VminMouv = VminMouvRef;
-			  }
+        {
+            VminMouv = (Vmax / 2);
+        }
+        else
+        {
+            VminMouv = VminMouvRef;
+        }
    	     
         /* Verification des parametres */
         if (VEnd > Vmax)
@@ -2367,16 +2373,16 @@ static unsigned char ASSER_TRAJ_Profil_S_Curve(float * Vconsigne, float Distance
             if (Phase == 1)
             {
                 if (ASRrunning == False)
-                {
+                {                   
                     /* Vitesse Reelle atteinte => delcanchement de l'ASR pour plus de performance */
                     if ((Vr >= (V0 - EcartVitesse)) && (fSatPI == False))
                     {
                        ASRrunning = True;
                     }
                 }
-                
+                               
                 if (ASRrunning == True)
-                {
+                {                
                     /* Vitesse Reelle atteinte => delcanchement de l'ASR pour plus de performance */
                     if ((Vr >= (V0 - EcartVitesse)) && (fSatPI == False))
                     {
@@ -2900,16 +2906,19 @@ static unsigned char ASSER_TRAJ_Profil_S_Curve(float * Vconsigne, float Distance
                 {
                     Phase = 8;
                     
-                    if ((Vr > (VminMouv + EcartVitesse)) && (VEnd == 0.0))
+                    if (Vmax == MIN(DonneeVmaxGauche, DonneeVmaxDroite))
                     {
+                      if ((Vr > (VminMouv + EcartVitesse)) && (VEnd == 0.0))
+                      {
 #ifdef PIC32_BUILD           
-                        if (Test_mode == (unsigned long)1)
-                        {
-                            TOOLS_LogFault(AsserPosErr, True, FLOAT, (float *)&Vr, True, "Asserv_traj : Vr > VminMouv a l'arrivee en position !");
-                        }
+                          if (Test_mode == (unsigned long)1)
+                          {
+                              TOOLS_LogFault(AsserPosErr, True, FLOAT, (float *)&Vr, True, "Asserv_traj : Vr > VminMouv a l'arrivee en position !");
+                          }
 #else /* PIC32_BUILD */
-                        ASSER_TRAJ_LogAsserMsgPC("Asserv_traj : Vr > VminMouv a l'arrivee en position !", Vr);
+                          ASSER_TRAJ_LogAsserMsgPC("Asserv_traj : Vr > VminMouv a l'arrivee en position !", Vr);
 #endif /* PIC32_BUILD */  
+                      }
                     }
                 }
              }
