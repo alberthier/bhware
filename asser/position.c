@@ -396,10 +396,11 @@ extern float POS_ErreurOrientation(Pose poseRobot, Vecteur posArrivee)
 extern void POS_ConversionVitessesLongRotToConsignesPWMRouesRobotUnicycle(float vitesseLongitudinale, float vitesseAngulaireRotation, unsigned short * consPWMRoueGauche, unsigned short * consPWMRoueDroite)
 {
     float			vitRoueGauche, vitRoueDroite;
-    float                       extra_vitRoueGauche = -1.0, extra_vitRoueDroite = -1.0;
-    unsigned short              vitRoueGpwm, vitRoueDpwm;
+    float           extra_vitRoueGauche             = -1.0;
+    float           extra_vitRoueDroite             = -1.0;
+    unsigned short  vitRoueGpwm, vitRoueDpwm;
 		
-    /* algorithme pour privilegier la vitesse de rotation demandee sur la vitesse longitudinale qui pourra etre diminuee */
+    /* Algorithme pour privilegier la vitesse de rotation demandee sur la vitesse longitudinale qui pourra etre diminuee */
     do
     {
         vitRoueGauche = (m_sensMarcheMouvement * vitesseLongitudinale) - ((vitesseAngulaireRotation * ECART_ROUE_LIBRE) / 2.0);
