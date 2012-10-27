@@ -396,12 +396,35 @@ extern float POS_ErreurOrientation(Pose poseRobot, Vecteur posArrivee)
 extern void POS_ConversionVitessesLongRotToConsignesPWMRouesRobotUnicycle(float vitesseLongitudinale, float vitesseAngulaireRotation, unsigned short * consPWMRoueGauche, unsigned short * consPWMRoueDroite)
 {
     float			vitRoueGauche, vitRoueDroite;
-	unsigned short  vitRoueGpwm, vitRoueDpwm;
+    float                       extra_vitRoueGauche = -1.0, extra_vitRoueDroite = -1.0;
+    unsigned short              vitRoueGpwm, vitRoueDpwm;
 		
-    vitRoueGauche = (m_sensMarcheMouvement * vitesseLongitudinale) - ((vitesseAngulaireRotation * ECART_ROUE_LIBRE) / 2.0);
-    vitRoueDroite = (m_sensMarcheMouvement * vitesseLongitudinale) + ((vitesseAngulaireRotation * ECART_ROUE_LIBRE) / 2.0);
+    /* algorithme pour privilegier la vitesse de rotation demandee sur la vitesse longitudinale qui pourra etre diminuee */
+    do
+    {
+        vitRoueGauche = (m_sensMarcheMouvement * vitesseLongitudinale) - ((vitesseAngulaireRotation * ECART_ROUE_LIBRE) / 2.0);
+        if (vitRoueGauche > DonneeVmaxGauche)
+        {
+            extra_vitRoueGauche = vitRoueGauche - DonneeVmaxGauche;
+            vitesseLongitudinale = vitesseLongitudinale - (extra_vitRoueGauche + 0.001);
+        }
+        else
+        {
+            extra_vitRoueGauche = -1.0;
+        }
+        vitRoueDroite = (m_sensMarcheMouvement * vitesseLongitudinale) + ((vitesseAngulaireRotation * ECART_ROUE_LIBRE) / 2.0);
+        if (vitRoueDroite > DonneeVmaxDroite)
+        {
+            extra_vitRoueDroite = vitRoueDroite - DonneeVmaxDroite;
+            vitesseLongitudinale = vitesseLongitudinale - (extra_vitRoueDroite + 0.001);
+        }
+        else
+        {
+            extra_vitRoueDroite = -1.0;
+        }
+    } while( (extra_vitRoueGauche > 0.0) || (extra_vitRoueDroite > 0.0) );
 
-	ASSER_TRAJ_LogAsserValPC("VposG", vitRoueGauche);
+    ASSER_TRAJ_LogAsserValPC("VposG", vitRoueGauche);
     ASSER_TRAJ_LogAsserValPC("VposD", vitRoueDroite);
          		
     vitRoueGpwm = ((unsigned short)(vitRoueGauche / GAIN_STATIQUE_MOTEUR_G)) + OffsetPWM;
