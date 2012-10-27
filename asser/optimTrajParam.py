@@ -210,7 +210,7 @@ def trajFunction(d_cfgTraj):
 
     #lancement du simulateur de deplacement
     print("Lancement du simulateur")
-    simulator_process = subprocess.Popen('simulator_trajAsser.exe', shell=True, stdin = subprocess.PIPE, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+    simulator_process = subprocess.Popen('./simulator_trajAsser', shell=True, stdin = subprocess.PIPE, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
 
     # envoie de la configuration du simulateur
     send_config_simulator(simulator_process, d_cfgTraj)
@@ -234,19 +234,19 @@ def trajFunction(d_cfgTraj):
     #~ simulator_process.stdin.write(deplacement.cmdMsgGeneration())
     
     send_init_pose(simulator_process, x=0.0, y=0.0, angle=math.pi/2.0) #4.71
-    deplacement = commandMsg("MSG_MAIN_GOTO 2 1 -1100000")
-    deplacement.addPose("0.0 1.0") #-1100000.0
+    #~ deplacement = commandMsg("MSG_MAIN_GOTO 2 1 -1100000")
+    #~ deplacement.addPose("0.0 1.0") #-1100000.0
     
     #deplacement = commandMsg("MSG_MAIN_GOTO 0 1 -1.57")
     #
-    #deplacement = commandMsg("MSG_MAIN_GOTO 1 1 0.0")
-    #deplacement.addPose("0.0 0.05")
-    #deplacement.addPose("0.025 0.15")
-    #deplacement.addPose("0.075 0.25")
-    #deplacement.addPose("0.15 0.325")
-    #deplacement.addPose("0.25 0.375")
-    #deplacement.addPose("0.35 0.4")
-    #deplacement.addPose("0.6 0.4")
+    deplacement = commandMsg("MSG_MAIN_GOTO 1 1 0.0")
+    deplacement.addPose("0.0 0.05")
+    deplacement.addPose("0.025 0.15")
+    deplacement.addPose("0.075 0.25")
+    deplacement.addPose("0.15 0.325")
+    deplacement.addPose("0.25 0.375")
+    deplacement.addPose("0.35 0.4")
+    deplacement.addPose("0.6 0.4")
     #
     #~ deplacement = commandMsg("MSG_MAIN_GOTO 1 1 -1100000.0")
     #~ deplacement.addPose("0.0 1.0") #-1100000.0
@@ -657,9 +657,13 @@ def affichageTraj2011(d_traj):
     legend(loc='lower right')
     title("trajectoire")
 
+    ### Affichage des donnees de vitesses ###
     temps = [index*periode for index in range(len(d_traj["vitesseMoteurGauche"]))]
+    
     figure(2)
-    subplot(2,1,1)
+    #setp( ax1.get_xticklabels(), fontsize=6)
+
+    ax_v = subplot(211)
     ylabel("vitesse (m/s)")
     plot(temps, d_traj["vitesseMoteurGauche"], '-', label='mesure gauche')
     #~ hold(True)
@@ -699,19 +703,13 @@ def affichageTraj2011(d_traj):
     #~ print("decc_tempsAcc: " + str(d_traj["decc_tempsAcc"]))
     #~ print("decc_vmax: " + str(d_traj["decc_vmax"]))
 
-    v = axis()
-    limits = []
-    for val in v:
-        limits.append(val)
-    limits[2] = -1.2
-    limits[3] = 1.2
-    axis(limits)
+    ylim(-1.2, 1.2)
     legend(loc="lower center")
     grid(True)
     title("vitesses")
 
     #~ figure(3)
-    subplot(2,1,2)
+    ax_t = subplot(212, sharex=ax_v)
     ylabel("tension (unite PWM)")
     plot(temps, d_traj["tensionPWM_MoteurGauche"], label='moteur gauche')
     #~ hold(True)
