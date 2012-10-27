@@ -410,8 +410,8 @@ extern void ASSER_TRAJ_AfficheInfoFinAsser(void)
     Pose poseRobot;
 
     poseRobot = POS_GetPoseRobot();
-//    ASSER_TRAJ_LogAsserValPC("time", ASSER_TRAJ_GetCompteur() * TE);
-    printf("Motion accomplished. Pose x:%1.3fm y:%1.3fm theta:%1.3f time:%1.2fs.\n", poseRobot.x, poseRobot.y, ((poseRobot.angle * 180.0) / PI), (ASSER_TRAJ_GetCompteur() * TE));
+//    ASSER_TRAJ_LogAsserValPC("time", ASSER_compteurPeriode * TE);
+    printf("Motion accomplished. Pose x:%1.3fm y:%1.3fm theta:%1.3f time:%1.2fs.\n", poseRobot.x, poseRobot.y, ((poseRobot.angle * 180.0) / PI), (ASSER_compteurPeriode * TE));
     ASSER_TRAJ_LogAsserValPC("Motion", 1.0);
     fflush(stdout);
 }
@@ -531,7 +531,7 @@ void SIMU_BoucleVitesse(void)
                                            );
     */
 
-//    if (ASSER_TRAJ_GetCompteur() == 1)
+//    if (ASSER_compteurPeriode == 1)
 //    {
 //        ASSER_TRAJ_LogAsserValPC("vitesseG1ms", (float)tensionPWM_G);
 //        ASSER_TRAJ_LogAsserValPC("vitesseD1ms", (float)tensionPWM_D);
@@ -655,6 +655,8 @@ void SIMU_CalculPeriodiqueAsserVitessePI(void)
 //                                   );
 }
 
+#if 0
+
 void SIMU_AsserVitessePI(void)
 {
     int p;
@@ -706,14 +708,16 @@ void SIMU_AsserVitessePI(void)
     }
 }
 
+#endif
+
 int SIMU_Mouvement(void)
 {
-    while( ((ASSER_Running == True) || (vitesseMoteurG > 10.1) || (vitesseMoteurD > 10.1)) && (ASSER_TRAJ_GetCompteur() < (unsigned int)(TEMPS_SIMULATION / TE)))
+    while( ((ASSER_Running == True) || (vitesseMoteurG > 10.1) || (vitesseMoteurD > 10.1)) && (ASSER_compteurPeriode < (unsigned int)(TEMPS_SIMULATION / TE)))
     {
         SIMU_CalculPeriodique();
         SIMU_LogRobot();
     }
-    ASSER_TRAJ_LogAsserValPC("time", ASSER_TRAJ_GetCompteur() * TE);
+    ASSER_TRAJ_LogAsserValPC("time", ASSER_compteurPeriode * TE);
     /* FIN 1er DEPLACEMENT */
     if (ASSER_Running == True)
     {

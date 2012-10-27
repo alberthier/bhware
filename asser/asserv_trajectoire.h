@@ -122,20 +122,25 @@ extern float                C_init;
 
 extern float                VminMouvRef;
 
+unsigned int                ASSER_compteurPeriode;
+unsigned int                ASSER_segmentCourant;
+
 /* Prototypes de function globales asserv_trajectoire */
 
 extern void                 ASSER_TRAJ_InitialisationGenerale(void);
 extern void                 ASSER_TRAJ_InitialisationTrajectoire(Pose poseRobot, PtTraj * point, unsigned int nbrePts, unsigned int mouvement, float angle_rad);
 extern void                 ASSER_TRAJ_AsservissementMouvementRobot(Pose poseRobot, VitessesRobotUnicycle * vitessesConsignes);
 extern Pose                 ASSER_TRAJ_Trajectoire(segmentTrajectoireBS * segmentTraj, unsigned int iSegment, float t);
-extern unsigned int         ASSER_TRAJ_GetSegmentCourant(void);
-extern void                 ASSER_TRAJ_ResetLogAsserTable(void);
-extern unsigned int         ASSER_TRAJ_GetCompteur(void);
-extern float                ASSER_TRAJ_GabaritVitesse_getVitesse_vs_Distance(float distance);
 
-#ifndef PIC32_BUILD
+#ifdef PIC32_BUILD
+extern void                 ASSER_TRAJ_LogAsserPIC(char * keyWord, float Val1, float * pVal2, float * pVal3, float * pVal4, float * pVal5);
+#define                     ASSER_TRAJ_LogAsserValPC(a, b)
+#define                     ASSER_TRAJ_LogAsserMsgPC(a, b)
+#else /* PIC32_BUILD */
+#define                     ASSER_TRAJ_LogAsserPIC(a, b, c, d, e, f)
 extern void                 ASSER_TRAJ_LogAsserValPC(char * keyWord, float Val);
-#endif
+void                        ASSER_TRAJ_LogAsserMsgPC(char * message, float Val);
+#endif /* PIC32_BUILD */
 
 /*! @} */
 

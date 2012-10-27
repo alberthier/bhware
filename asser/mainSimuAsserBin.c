@@ -169,7 +169,7 @@ int main(void)
         else if (strcmp(command, "MSG_TEST_PI") == 0)
         {
             SIMU_InitialisationLogRobot();
-            SIMU_AsserVitessePI();
+            //SIMU_AsserVitessePI();
         }
         else if (strcmp(command, "PARAMETERS_PI") == 0)
         {

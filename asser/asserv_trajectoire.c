@@ -60,8 +60,8 @@
 /** Variables globales */
 
 /** Parametres de l'asservissement par retour d'etat */
-float                           gainRotation1                           =   - 6.0;   	/* Gain de l'asservissement de la vitesse longitudinale */
-float                           gainRotation2                           =   - 6.0;   	/* Gain de l'asservissement de la vitesse de rotation */
+float                           gainRotation1                           =   - 6.0;      /* Gain de l'asservissement de la vitesse longitudinale */
+float                           gainRotation2                           =   - 6.0;      /* Gain de l'asservissement de la vitesse de rotation */
 float                           gainDeplacement1                        =   20.0;
 float                           gainDeplacement2                        =   50.0;
 float                           gainDeplacement3                        =   20.0;
@@ -70,7 +70,7 @@ float                           gainDeplacement3                        =   20.0
 float                           Ratio_Acc                               =   1.0;
 float                           Ratio_Decc                              =   1.0;
 
-float							VminMouvRef								=   0.1; 
+float                           VminMouvRef                             =   0.1; 
 
 float                           A_MAX                                   =   1.0;
 float                           D_MAX                                   =   1.0;
@@ -78,9 +78,8 @@ float                           D_MAX                                   =   1.0;
 float                           k0_init                                 =   0.3; 
 float                           C_init                                  =   0.2;
 
-/** Variables locales */
-
-static float                    VminMouv                                =   0.1;			/* Vitesse minimum de mouvement et maximale d'arret */
+unsigned int                    ASSER_compteurPeriode                   =   0;
+unsigned int                    ASSER_segmentCourant                    =   1;
 
 /***********************************************************************************************/
 /**************************** Fin de la definition des parametres de l'asservissement de trajectoire *********/
@@ -94,12 +93,10 @@ static float                    VminMouv                                =   0.1;
 static float                    NORME_BARRE_SUIVI_TRAJ;                             /* Initialise dans ASSER_TRAJ_InitialisationGenerale() */
 
 /** Variables globales de l'asservissement de trajectoire */
-static unsigned int             compteurPeriode                         =   0;
 static float                    errDist, memo_errDist, errAngle, memo_errAngle, memo_angleRobot;
 
 /** Vecteurs associees au depart et a l'arrivee, et parametrage du profil de vitesse de la trajectoire */
 static Trajectoire              chemin;
-static unsigned int             segmentCourant                          =   1;
 static unsigned int             g_memoSegmentCourant                    =   0;
 static char                     m_sensDeplacement                       =   MARCHE_AVANT;
 static float                    distanceTotale_Profil                   =   0.0;
@@ -129,8 +126,12 @@ static unsigned int             g_index_tab_gabarit_acceleration        = 0;
 static float                    Vmax, VgASR, Vconsigne0, J, A, V, P, J0, A0, V0, P0, DistanceMin, JAmax, JDmax, PositionFinPhase4;
 static unsigned char            Phase                                   = 0;
 static unsigned char            ASRrunning                              = False;
+
 /* Constantes  profil de vitesse Scurve */
 static const float              EcartVitesse                            = 0.001;
+
+/* Vitesse minimum de mouvement et maximale d'arret */
+static float                    VminMouv                                = 0.1;        
 
 /*----------------------------------------------------------------------------------------------*/
 
@@ -167,10 +168,7 @@ static void                     ASSER_TRAJ_SolveSegment_v2(float x0, float y0, f
 static unsigned char            ASSER_TRAJ_Profil_S_Curve(float * Vconsigne, float Distance, float VStart, float VEnd, float Amax, float Dmax, float gASR, float Pr, float Vr, unsigned char fSatPI);
 #ifdef PIC32_BUILD
 void                            ASSER_TRAJ_LogAsserPIC(char * keyWord, float Val1, float * pVal2, float * pVal3, float * pVal4, float * pVal5);
-#define                         ASSER_TRAJ_LogAsserValPC(a, b)
-#define                         ASSER_TRAJ_LogAsserMsgPC(a, b)
 #else /* PIC32_BUILD */
-#define                         ASSER_TRAJ_LogAsserPIC(a, b, c, d, e, f)
 void                            ASSER_TRAJ_LogAsserValPC(char * keyWord, float Val);
 void                            ASSER_TRAJ_LogAsserMsgPC(char * message, float Val);
 #endif /* PIC32_BUILD */
@@ -243,35 +241,6 @@ static unsigned char ASSER_TRAJ_isAngle(float angle)
     }
 }
 
-
-/**********************************************************************/
-/*! \brief ASSER_TRAJ_GetCompteur
- *
- *  \note  Fonction qui renvoie le compteur de periode
- *
- *  \return compteur de Periode
- */
-/**********************************************************************/
-
-extern unsigned int ASSER_TRAJ_GetCompteur(void)
-{
-    return compteurPeriode;
-}
-
-/**********************************************************************/
-/*! \brief ASSER_TRAJ_GetSegmentCourant
- *
- *  \note  Fonction qui renvoie le segment de traj courant
- *
- *  \return segment Courant
- */
-/**********************************************************************/
-
-extern unsigned int ASSER_TRAJ_GetSegmentCourant(void)
-{
-    return segmentCourant;
-}
-
 /**********************************************************************/
 /*! \brief AsservissementMouvementRobot
  *
@@ -339,7 +308,7 @@ extern void ASSER_TRAJ_AsservissementMouvementRobot(Pose poseRobot, VitessesRobo
     errAngle = POS_ErreurOrientation(poseRobot, chemin.posArrivee);
 
     /* Test fin d'asser */
-    if (compteurPeriode > 0)
+    if (ASSER_compteurPeriode > 0)
     {
         if (ASSER_TRAJ_TestFinAsservissement(&chemin, errDist, memo_errDist, DIST_MIN, errAngle, memo_errAngle, ANGLE_MIN) == True)
         {
@@ -436,7 +405,7 @@ extern void ASSER_TRAJ_AsservissementMouvementRobot(Pose poseRobot, VitessesRobo
     if (ASSER_Running == True)
     {
         /* Comptage du nombre de periodes depuis le lancement de la commande d'asservissement */
-        compteurPeriode++;
+        ASSER_compteurPeriode++;
 
         /* Generation de la pose de trajectoire de consigne suivante */
         if ( (chemin.profilVitesse.p > 0) | (chemin.profilVitesse.etat == 1) )
@@ -457,11 +426,11 @@ extern void ASSER_TRAJ_AsservissementMouvementRobot(Pose poseRobot, VitessesRobo
                 /* distance normalisee restant a parcourir */
                 chemin.profilVitesse.distNormaliseeRestante -= (delta_distance / chemin.distance);
                 
-                memo_segmentCourant = segmentCourant;
-                ASSER_TRAJ_ParcoursTrajectoire(&chemin, delta_distance, &segmentCourant, &parametrePositionSegmentTrajectoire, NULL);
-                if (memo_segmentCourant != segmentCourant)
+                memo_segmentCourant = ASSER_segmentCourant;
+                ASSER_TRAJ_ParcoursTrajectoire(&chemin, delta_distance, &ASSER_segmentCourant, &parametrePositionSegmentTrajectoire, NULL);
+                if (memo_segmentCourant != ASSER_segmentCourant)
                 {
-                    ASSER_TRAJ_LogAsserValPC("periodeNewSeg", ASSER_TRAJ_GetCompteur());
+                    ASSER_TRAJ_LogAsserValPC("periodeNewSeg", ASSER_compteurPeriode);
                 }
             }
             else
@@ -476,23 +445,23 @@ extern void ASSER_TRAJ_AsservissementMouvementRobot(Pose poseRobot, VitessesRobo
 
             if (ASSER_TRAJ_isDeplacement(&chemin) == True)
             {
-                diff1BS = ASSER_TRAJ_DiffTrajectoire(chemin.segmentTrajBS, segmentCourant, parametrePositionSegmentTrajectoire);
-                diff2BS = ASSER_TRAJ_Diff2Trajectoire(chemin.segmentTrajBS, segmentCourant, parametrePositionSegmentTrajectoire);
+                diff1BS = ASSER_TRAJ_DiffTrajectoire(chemin.segmentTrajBS, ASSER_segmentCourant, parametrePositionSegmentTrajectoire);
+                diff2BS = ASSER_TRAJ_Diff2Trajectoire(chemin.segmentTrajBS, ASSER_segmentCourant, parametrePositionSegmentTrajectoire);
                 
                 chemin.profilVitesse.diffThetaCourant = ASSER_TRAJ_DiffThetaBSpline(diff1BS, diff2BS);
-                poseReference = ASSER_TRAJ_TrajectoireRemorqueBS(chemin.segmentTrajBS, segmentCourant, parametrePositionSegmentTrajectoire, diff1BS, chemin.profilVitesse.diffThetaCourant, &poseReferenceRobot);
+                poseReference = ASSER_TRAJ_TrajectoireRemorqueBS(chemin.segmentTrajBS, ASSER_segmentCourant, parametrePositionSegmentTrajectoire, diff1BS, chemin.profilVitesse.diffThetaCourant, &poseReferenceRobot);
 
                 parametrePositionSegmentTrajectoireAv = parametrePositionSegmentTrajectoire;
-                segmentCourantAv = segmentCourant;
+                segmentCourantAv = ASSER_segmentCourant;
 
-                if (segmentCourant != g_memoSegmentCourant)
+                if (ASSER_segmentCourant != g_memoSegmentCourant)
                 {
-                    g_memoSegmentCourant = segmentCourant;
+                    g_memoSegmentCourant = ASSER_segmentCourant;
 
-                    distanceTotale_Profil = chemin.segmentTrajBS[segmentCourant].distance;
+                    distanceTotale_Profil = chemin.segmentTrajBS[ASSER_segmentCourant].distance;
 
                     /* determination des vitesses initiale et finale de chaque profil S-curve */
-                    if (segmentCourant == 1)
+                    if (ASSER_segmentCourant == 1)
                     {
                         vitesse_debut_profil = 0.0;
                     }
@@ -501,27 +470,27 @@ extern void ASSER_TRAJ_AsservissementMouvementRobot(Pose poseRobot, VitessesRobo
                         vitesse_debut_profil = vitesse_fin_profil;
                     }
 
-                    if (segmentCourant == chemin.nbreSegments)
+                    if (ASSER_segmentCourant == chemin.nbreSegments)
                     {
                         vitesse_fin_profil = 0.0;
                     }
                     else
                     {
-                        diffThetaTrajectoire = ASSER_TRAJ_DiffThetaBSplinePerLenghtUnit(chemin.segmentTrajBS, segmentCourant, ((float)segmentCourant));
+                        diffThetaTrajectoire = ASSER_TRAJ_DiffThetaBSplinePerLenghtUnit(chemin.segmentTrajBS, ASSER_segmentCourant, ((float)ASSER_segmentCourant));
                         vitesse_fin_profil = ASSER_TRAJ_VitesseLimiteEnVirage(&chemin, diffThetaTrajectoire);
                     }
                     ASSER_TRAJ_LogAsserValPC("vitesse_fin_profil",  vitesse_fin_profil);
                 }
 
                 distanceParcourue_Profil = chemin.profilVitesse.distance_parcourue;
-                for (iSegment = 1; iSegment < segmentCourant; iSegment++)
+                for (iSegment = 1; iSegment < ASSER_segmentCourant; iSegment++)
                 {
                     distanceParcourue_Profil -= chemin.segmentTrajBS[iSegment].distance;
                 }
                 
                 ASSER_Running = ASSER_TRAJ_Profil_S_Curve(&VitesseProfil, distanceTotale_Profil, vitesse_debut_profil, vitesse_fin_profil, chemin.profilVitesse.Amax, chemin.profilVitesse.Dmax, Vitesse_Gain_ASR, distanceParcourue_Profil, ((float)m_sensDeplacement) * POS_GetVitesseRelle(), (SaturationPIDflag | SaturationPIGflag));
 
-                if (segmentCourant < chemin.nbreSegments)
+                if (ASSER_segmentCourant < chemin.nbreSegments)
                 {
                     ASSER_Running = True;
                 }
@@ -545,7 +514,7 @@ extern void ASSER_TRAJ_AsservissementMouvementRobot(Pose poseRobot, VitessesRobo
                 ASSER_TRAJ_LogAsserValPC("thetaPoseReference",  poseReference.angle);
 
                 parametrePositionSegmentTrajectoireAv = parametrePositionSegmentTrajectoire;
-                segmentCourantAv = segmentCourant;
+                segmentCourantAv = ASSER_segmentCourant;
 
                 ASSER_Running = ASSER_TRAJ_Profil_S_Curve(&VitesseProfil, chemin.distance, 0.0, 0.0, chemin.profilVitesse.Amax, chemin.profilVitesse.Dmax, Vitesse_Gain_ASR, chemin.profilVitesse.distance_parcourue, ((float)m_sensDeplacement) * POS_GetVitesseRotation() * (ECART_ROUE_LIBRE/2.0), (SaturationPIDflag | SaturationPIGflag));
 
@@ -618,14 +587,14 @@ extern void ASSER_TRAJ_AsservissementMouvementRobot(Pose poseRobot, VitessesRobo
     }
 
     /* Log de valeurs */
-    ASSER_TRAJ_LogAsserValPC("xCCourant",  ASSER_TRAJ_Trajectoire(chemin.segmentTrajBS, segmentCourant, parametrePositionSegmentTrajectoire).x);
+    ASSER_TRAJ_LogAsserValPC("xCCourant",  ASSER_TRAJ_Trajectoire(chemin.segmentTrajBS, ASSER_segmentCourant, parametrePositionSegmentTrajectoire).x);
     ASSER_TRAJ_LogAsserValPC("xPoseReferenceRobot",  poseReferenceRobot.x);
     ASSER_TRAJ_LogAsserValPC("yPoseReferenceRobot",  poseReferenceRobot.y);
     ASSER_TRAJ_LogAsserValPC("distNormaliseeRestante",  chemin.profilVitesse.distNormaliseeRestante);
     ASSER_TRAJ_LogAsserValPC("orientationPoseReferenceRobot",  poseReferenceRobot.angle);
     ASSER_TRAJ_LogAsserValPC("consRotation",  vitessesConsignes->rotation);
     ASSER_TRAJ_LogAsserValPC("parametrePositionSegmentTrajectoire",  parametrePositionSegmentTrajectoire);
-    ASSER_TRAJ_LogAsserValPC("segmentCourant",  segmentCourant);
+    ASSER_TRAJ_LogAsserValPC("segmentCourant",  ASSER_segmentCourant);
     ASSER_TRAJ_LogAsserValPC("VitesseProfil", VitesseProfil);
     ASSER_TRAJ_LogAsserValPC("VgASR", VgASR);
     ASSER_TRAJ_LogAsserValPC("Phase", (Phase/10.0));
@@ -666,7 +635,7 @@ extern void ASSER_TRAJ_InitialisationTrajectoire(Pose poseRobot, PtTraj * point,
     chemin.nbreSegments = nbrePts;
 
     parametrePositionSegmentTrajectoire = 0.0;
-    segmentCourant = 1;
+    ASSER_segmentCourant = 1;
     g_memoSegmentCourant = 0;
     shuntTestFinAsser = False;
 
@@ -957,7 +926,7 @@ extern void ASSER_TRAJ_InitialisationTrajectoire(Pose poseRobot, PtTraj * point,
     
     chemin.profilVitesse.etat = 1;
 
-    compteurPeriode = 0;
+    ASSER_compteurPeriode = 0;
 
     Phase = 0;
 
@@ -1772,43 +1741,6 @@ static void ASSER_TRAJ_GabaritVitesse(Trajectoire * traj)
 }
 
 /**********************************************************************/
-/*! \brief ASSER_TRAJ_getGabaritVitesse_getVitesse_vs_Distance
- *
- *  \note   Determination du gabarit de la vitesse longitudinale de consigne, dependant de la courbure de trajectoire
- *             et des fonctions d'acceleration et de decceleration.
- *
- *  \param [in]     distance
- *
- *  \return           vitesse
- */
-/**********************************************************************/
-extern float ASSER_TRAJ_GabaritVitesse_getVitesse_vs_Distance(float distance)
-{
-    unsigned int    index;
-    float           vitesse, delta_distance;
-
-    index = floorf(distance / chemin.profilVitesse.pas_echantillon_distance);
-
-    if (index > (TAILLE_TAB_GABARIT_VITESSE - 1))
-    {
-        index = (TAILLE_TAB_GABARIT_VITESSE - 1);
-        
-        vitesse = g_tab_gabarit_vitesse[index];
-    }
-    else
-    {
-        /* Interpolation de la vitesse de consigne */
-        delta_distance = distance - (((float)index) * chemin.profilVitesse.pas_echantillon_distance);
-
-        vitesse = g_tab_gabarit_vitesse[index] + ((g_tab_gabarit_vitesse[(index + 1)] - g_tab_gabarit_vitesse[index]) * (delta_distance / chemin.profilVitesse.pas_echantillon_distance));
-    }
-
-    ASSER_TRAJ_LogAsserValPC("index_get_vitesseGabarit", vitesse);
-
-    return vitesse;
-}
-
-/**********************************************************************/
 /*! \brief ASSER_TRAJ_DiffTemporelleTrajectoire
  *
  *  \note              derivee temporelle discrete d'une pose
@@ -2029,7 +1961,7 @@ static unsigned char ASSER_TRAJ_TestFinAsservissement(Trajectoire * traj, float 
             ret = True;
 
             ASSER_TRAJ_LogAsserValPC("vitesseAnglePtArret", (erAngle - memo_erAngle));
-            ASSER_TRAJ_LogAsserValPC("CPTvitesseAnglePtArret", ASSER_TRAJ_GetCompteur());
+            ASSER_TRAJ_LogAsserValPC("CPTvitesseAnglePtArret", ASSER_compteurPeriode);
 
 #ifndef PIC32_BUILD
 
@@ -2168,7 +2100,7 @@ static void ASSER_TRAJ_DistanceTrajectoire(segmentTrajectoireBS * segmentTraj, u
  *  \return  None
  */
 /**********************************************************************/
-void ASSER_TRAJ_LogAsserValPC(char * keyWord, float Val)
+extern void ASSER_TRAJ_LogAsserValPC(char * keyWord, float Val)
 {
     printf("log_%s: %1.5f\n", keyWord, Val);
     fflush(stdout);
@@ -2185,7 +2117,7 @@ void ASSER_TRAJ_LogAsserValPC(char * keyWord, float Val)
  *  \return  None
  */
 /**********************************************************************/
-void ASSER_TRAJ_LogAsserMsgPC(char * message, float Val)
+extern void ASSER_TRAJ_LogAsserMsgPC(char * message, float Val)
 {
     printf("msg_%s: %1.5f\n", message, Val);
     fflush(stdout);
@@ -2209,7 +2141,7 @@ void ASSER_TRAJ_LogAsserMsgPC(char * message, float Val)
  *  \return  None
  */
 /**********************************************************************/
-void ASSER_TRAJ_LogAsserPIC(char * keyWord, float Val1, float * pVal2, float * pVal3, float * pVal4, float * pVal5)
+extern void ASSER_TRAJ_LogAsserPIC(char * keyWord, float Val1, float * pVal2, float * pVal3, float * pVal4, float * pVal5)
 {
     if (pVal2 == NULL)
     {
@@ -2299,7 +2231,7 @@ static unsigned char ASSER_TRAJ_Profil_S_Curve(float * Vconsigne, float Distance
         {
             VminMouv = VminMouvRef;
         }
-   	     
+        
         /* Verification des parametres */
         if (VEnd > Vmax)
         {
