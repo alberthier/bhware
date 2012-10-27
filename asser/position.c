@@ -425,6 +425,7 @@ extern void POS_ConversionVitessesLongRotToConsignesPWMRouesRobotUnicycle(float 
         }
     } while( (extra_vitRoueGauche > 0.0) || (extra_vitRoueDroite > 0.0) );
 
+    ASSER_TRAJ_LogAsserValPC("vitLongitudinaleEffective", vitesseLongitudinale);
     ASSER_TRAJ_LogAsserValPC("VposG", vitRoueGauche);
     ASSER_TRAJ_LogAsserValPC("VposD", vitRoueDroite);
          		
