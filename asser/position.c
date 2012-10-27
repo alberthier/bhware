@@ -48,6 +48,11 @@
 
 /* Constantes */
 
+#ifdef PIC32_BUILD
+#define                 ASSER_TRAJ_LogAsserValPC(a, b)
+#define                 ASSER_TRAJ_LogAsserMsgPC(a, b)
+#endif /* PIC32_BUILD */
+
 #define                 PERIMETRE_DROIT         (PI * (DonneeDRoueDroite / 1000))   /* Perimetre en m de la roue libre du codeur droit */
 #define                 PERIMETRE_GAUCHE        (PI * (DonneeDRoueGauche / 1000))   /* Perimetre en m de la roue libre du codeur gauche */
     

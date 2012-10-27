@@ -76,7 +76,7 @@ float                           A_MAX                                   =   1.0;
 float                           D_MAX                                   =   1.0;
 
 float                           k0_init                                 =   0.3; 
-float                           C_init                                  =   0.1;
+float                           C_init                                  =   0.2;
 
 /** Variables locales */
 
