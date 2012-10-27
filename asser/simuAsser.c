@@ -353,6 +353,7 @@ void SIMU_InitialisationLogRobot(void)
     ASSER_TRAJ_LogAsserValPC("ConsigneMoteurGauche", 0.0);
     ASSER_TRAJ_LogAsserValPC("ConsigneMoteurDroit", 0.0);
     ASSER_TRAJ_LogAsserValPC("vitLongitudinale", 0.0);
+    ASSER_TRAJ_LogAsserValPC("vitLongitudinaleEffective", 0.0);
 
     /* fichier de configuration pour l'affichage sous matlab */
     ASSER_TRAJ_LogAsserValPC("periode", TE);

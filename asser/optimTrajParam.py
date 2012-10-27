@@ -4,6 +4,7 @@
 
 import subprocess
 import sys
+import platform
 import time
 from matplotlib.pyplot import *
 import numpy
@@ -210,7 +211,12 @@ def trajFunction(d_cfgTraj):
 
     #lancement du simulateur de deplacement
     print("Lancement du simulateur")
-    simulator_process = subprocess.Popen('simulator_trajAsser.exe', shell=True, stdin = subprocess.PIPE, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+    
+    if (platform.system() == 'Linux') :
+        shellCommand = './simulator_trajAsser'
+    if (platform.system() == 'Windows') :
+        shellCommand = 'simulator_trajAsser.exe'
+    simulator_process = subprocess.Popen(shellCommand, shell=True, stdin = subprocess.PIPE, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
 
     # envoie de la configuration du simulateur
     send_config_simulator(simulator_process, d_cfgTraj)
@@ -249,8 +255,9 @@ def trajFunction(d_cfgTraj):
     deplacement.addPose("0.6 0.4")
     #
     #~ deplacement = commandMsg("MSG_MAIN_GOTO 1 1 -1100000.0")
-    #~ deplacement.addPose("0.0 1.0") #-1100000.0
-    
+    #~ deplacement.addPose("0.0 1.0")
+    #~ deplacement.addPose("0.5 1.2")
+
     #transmission de commandes de deplacement par l'entree standard
     simulator_process.stdin.write(deplacement.cmdMsgGeneration())
     
@@ -261,6 +268,7 @@ def trajFunction(d_cfgTraj):
     #~ deplacement.addPose("0.31 0.61") #-1100000.0
     #~ deplacement.addPose("0.53 0.83")
     #~ deplacement.addPose("0.6 0.86")
+    
     #~ #transmission de commandes de deplacement par l'entree standard
     #~ simulator_process.stdin.write(deplacement.cmdMsgGeneration())
     #~ #
@@ -894,16 +902,16 @@ def affichageGabaritVitesse_2013(d_traj):
         #~ plot([index * pas for index in range(len(d_traj["gabarit_vitesse_new"]))], d_traj["gabarit_vitesse_new"], '-o', label='vit2')
         
     print(len(traj["dist_parcourue"]))
-    print(len(d_traj["vitLongitudinale"]))
+    print(len(d_traj["vitLongitudinaleEffective"]))
     print(len(d_traj["VitesseReelleMesure"]))
-    plot(traj["dist_parcourue"], d_traj["vitLongitudinale"], '-o', label="consigne vit longitudinale")
+    plot(traj["dist_parcourue"], d_traj["vitLongitudinaleEffective"], '-o', label="consigne vit longitudinale effective")
     plot(traj["dist_parcourue"], d_traj["VitesseReelleMesure"], '-o', label="mesure vit longitudinale")
     
     print("taille tab gabarit vitesse : " + str(len(d_traj["gabarit_vitesse"])))
 
     grid()
     title("Plafond de vitesse sur toute la trajectoire")
-    legend(loc="center right")
+    legend(loc="lower center")
     xlabel("distance")
     ylabel("vitesse max en multipoint")
     
@@ -1080,6 +1088,9 @@ print(traj["distance"])
 
 #~ print("debug_smooth:")
 #~ print(traj["debug_smooth"])
+
+print("vitesse_fin_profil (m/s):")
+print(traj["vitesse_fin_profil"])
 
 print("dist_parcourue: " + str(traj["dist_parcourue"][-1]))
 print("etat asser: " + str(traj["Motion"][0]))
