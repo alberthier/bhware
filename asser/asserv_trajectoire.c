@@ -116,11 +116,13 @@ static float                    vitesse_profil_consigne                 =   0.0;
 static float                    parametrePositionSegmentTrajectoire     =   0.0;
 static unsigned char            shuntTestFinAsser                       =   False;
 
+#ifndef PIC32_BUILD
 /** Tableaux du profil de vitesse */
 static float                    g_tab_gabarit_vitesse[TAILLE_TAB_GABARIT_VITESSE];
 static float                    g_tab_gabarit_acceleration[TAILLE_TAB_GABARIT_VITESSE];
 static unsigned int             g_index_tab_gabarit_vitesse             = 0;
 static unsigned int             g_index_tab_gabarit_acceleration        = 0;
+#endif
 
 /* Variables profil de vitesse Scurve */
 static float                    Vmax, VgASR, Vconsigne0, J, A, V, P, J0, A0, V0, P0, DistanceMin, JAmax, JDmax, PositionFinPhase4;
@@ -131,7 +133,7 @@ static unsigned char            ASRrunning                              = False;
 static const float              EcartVitesse                            = 0.001;
 
 /* Vitesse minimum de mouvement et maximale d'arret */
-static float                    VminMouv                                = 0.1;        
+static float                    VminMouv                                = 0.1; 
 
 /*----------------------------------------------------------------------------------------------*/
 
@@ -922,7 +924,9 @@ extern void ASSER_TRAJ_InitialisationTrajectoire(Pose poseRobot, PtTraj * point,
     chemin.profilVitesse.Amax = A_MAX * Ratio_Acc;
     chemin.profilVitesse.Dmax = D_MAX * Ratio_Decc;
  
-    ASSER_TRAJ_GabaritVitesse(&chemin);
+    #ifndef PIC32_BUILD
+        ASSER_TRAJ_GabaritVitesse(&chemin);
+    #endif
     
     chemin.profilVitesse.etat = 1;
 
@@ -1616,6 +1620,7 @@ static void ASSER_TRAJ_ParcoursTrajectoire(Trajectoire *traj, float delta_distan
     }
 }
 
+#ifndef PIC32_BUILD
 /**********************************************************************/
 /*! \brief ASSER_TRAJ_TabGabarit_AddVitesse
  *
@@ -1739,6 +1744,7 @@ static void ASSER_TRAJ_GabaritVitesse(Trajectoire * traj)
     }
 #endif /* PIC32_BUILD */
 }
+#endif /* PIC32_BUILD */
 
 /**********************************************************************/
 /*! \brief ASSER_TRAJ_DiffTemporelleTrajectoire
@@ -1998,61 +2004,6 @@ static unsigned char ASSER_TRAJ_TestFinAsservissement(Trajectoire * traj, float 
  *  \return None
  */
 /**********************************************************************/
-#if 0
-static void ASSER_TRAJ_DistanceTrajectoire(segmentTrajectoireBS * segmentTraj, unsigned int iSegment)
-{
-    float           distance = 0.000001;    /* toutes les divisions par la distance ne pourront pas etre des divisions par zero */
-    unsigned int    param;
-    Vecteur         diffD_T;
-    unsigned int    N        = 15;
-    float           intervalle, pos_t, fT1, fT2;
-
-    intervalle = ti * ((float)(1.0 / ((float)N)));
-
-    diffD_T = ASSER_TRAJ_DiffCourbeBSpline(segmentTraj, iSegment, 0.0);
-    fT1 = sqrtf(SQUARE(diffD_T.x) + (SQUARE(diffD_T.y)));
-    
-    ASSER_TRAJ_LogAsserValPC("f_T", fT1);
-
-    for (param = 1; param <= N; param++)
-    {
-        pos_t = (float)(ti * (((float)param) / ((float)N)));
-
-        diffD_T = ASSER_TRAJ_DiffCourbeBSpline(segmentTraj, iSegment, pos_t);
-        fT2 = sqrtf(SQUARE(diffD_T.x) + (SQUARE(diffD_T.y)));
-        distance += ((fT1 + fT2) / 2.0) * intervalle;
-        fT1 = fT2;
-
-        ASSER_TRAJ_LogAsserValPC("f_T", fT2);
-        ASSER_TRAJ_LogAsserValPC("dist_f_T", distance);
-    }
-    
-    ASSER_TRAJ_LogAsserValPC("disti", distance);
-
-    distance += sqrtf(((float)SQUARE(segmentTraj[iSegment].aix) + SQUARE(segmentTraj[iSegment].aiy))) * ((float)(1.0 - (2.0 * ti)));
-
-    diffD_T = ASSER_TRAJ_DiffCourbeBSpline(segmentTraj, iSegment, (1.0 - ti));
-    fT1 = sqrtf(SQUARE(diffD_T.x) + (SQUARE(diffD_T.y)));
-    
-    ASSER_TRAJ_LogAsserValPC("f_T", fT1);
-
-    for (param = 1; param <= N; param++)
-    {
-        pos_t = (float)((1.0 - ti) + (ti * (((float)param) / ((float)N) )));
-
-        diffD_T = ASSER_TRAJ_DiffCourbeBSpline(segmentTraj, iSegment, pos_t);
-        fT2 = sqrtf(SQUARE(diffD_T.x) + (SQUARE(diffD_T.y)));
-        distance += ((fT1 + fT2) / 2.0) * intervalle;
-        fT1 = fT2;
-
-        ASSER_TRAJ_LogAsserValPC("f_T", fT2);
-        ASSER_TRAJ_LogAsserValPC("dist_f_T", distance);
-    }
-
-    segmentTraj[iSegment].distance = distance;
-}
-#endif
-
 static void ASSER_TRAJ_DistanceTrajectoire(segmentTrajectoireBS * segmentTraj, unsigned int iSegment)
 {
     float           distance = 0.000001;    /* toutes les divisions par la distance ne pourront pas etre des divisions par zero */

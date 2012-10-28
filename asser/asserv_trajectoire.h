@@ -34,13 +34,12 @@
 #define NBRE_MAX_PTS_TRAJ               62
 
 #ifndef PIC32_BUILD
+/** Parametres du profil de vitesse des trajectoires */
+#define TAILLE_TAB_GABARIT_VITESSE      2001
 #define NBR_ASSER_LOG_VALUE             60
 #else
 #define NBR_ASSER_LOG_VALUE             ((256 - (3 * sizeof(float)) - (2 * sizeof(unsigned char)) - sizeof(int)) / sizeof(float))
 #endif
-
-/** Parametres du profil de vitesse des trajectoires */
-#define TAILLE_TAB_GABARIT_VITESSE      2001
 
 #define CONVERT_DISTANCE(d)             (((float)d)/10000.0)
 #define CONVERT_FLOAT2SHORT_DISTANCE(d) ((unsigned short)((d) * 10000.0))
