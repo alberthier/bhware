@@ -131,7 +131,7 @@ static unsigned char            ASRrunning                              = False;
 static const float              EcartVitesse                            = 0.001;
 
 /* Vitesse minimum de mouvement et maximale d'arret */
-static float                    VminMouv                                = 0.1;        
+static float                    VminMouv                                = 0.1; 
 
 /*----------------------------------------------------------------------------------------------*/
 
@@ -922,7 +922,9 @@ extern void ASSER_TRAJ_InitialisationTrajectoire(Pose poseRobot, PtTraj * point,
     chemin.profilVitesse.Amax = A_MAX * Ratio_Acc;
     chemin.profilVitesse.Dmax = D_MAX * Ratio_Decc;
  
-    ASSER_TRAJ_GabaritVitesse(&chemin);
+    #ifndef PIC32_BUILD
+        ASSER_TRAJ_GabaritVitesse(&chemin);
+    #endif
     
     chemin.profilVitesse.etat = 1;
 

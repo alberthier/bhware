@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <math.h>
 
+#include "pic18.h"
 #include "position.h"
 #include "define.h"
 #include "simuAsser.h"
@@ -13,11 +14,9 @@
 #define TEMPS_SIMULATION 15 /* secondes */
 #endif
 
-#define     SIMU_TM     0.3
-#define     SIMU_KM     ((float)0.000985) // ((float)0.000997)
 #define     SIMU_CR     0
-#define     SIMU_PERIMETRE_GAUCHE   (PI * 0.0400)  /* longueur en mètre */
-#define     SIMU_PERIMETRE_DROIT    (PI * 0.0400)  /* longueur en mètre 0.040*/
+#define     SIMU_PERIMETRE_GAUCHE   (PI * (DonneeDRoueGauche / 1000))   /* Perimetre en m de la roue libre du codeur gauche */
+#define     SIMU_PERIMETRE_DROIT    (PI * (DonneeDRoueDroite / 1000))   /* Perimetre en m de la roue libre du codeur droit */
 #define     TE_PI       0.001 //0.02 fait de grosses oscillations
 
 /* coefficients des régulateurs de vitesse */
@@ -46,14 +45,14 @@ unsigned int NB_PERIODE_RETARD = 0u;
 signed int deltaPasCodeurG;
 signed int deltaPasCodeurD;
 
-/* paramètres des régulateurs de vitesse */
-float integPI_G = 0.0;
-float integPI_D = 0.0;
-
 /* initialisation du robot à une vitesse nulle */
 VitessesRobotUnicycle vitessesConsignes;
 float vitesseMoteurG = 0.0, vitesseMoteurG_n2 = 0.0;
 float vitesseMoteurD = 0.0, vitesseMoteurD_n2 = 0.0;
+
+/* paramètres des régulateurs de vitesse */
+float integPI_G = 0.0;
+float integPI_D = 0.0;
 
 unsigned short g_ConsigneMoteurG;
 unsigned short g_ConsigneMoteurD;
@@ -61,18 +60,12 @@ unsigned short g_ConsigneMoteurD;
 float erreurVitesseMoteurG = 0.0;
 float erreurVitesseMoteurD = 0.0;
 
-//float tensionPWM_G = 0.0, tensionPWM_G_n[12] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
-//float tensionPWM_D = 0.0, tensionPWM_D_n[12] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
 float tensionPWM_G = 0.0, tensionPWM_G_n[300];
 float tensionPWM_D = 0.0, tensionPWM_D_n[300];
 
-int compteurPeriodePI = 0;
 
 char asserRunning_ant = False;
 
-float tempsAcc  =   1.0;      /* Acceleration du deplacement sur la trajectoire,
-                                 -> temps en secondes pour passer de 0 a la vitesse max retournee par POS_GetConsVitesseMax() */
-float L = 0.339;
 Pose poseRobot;
 
 extern void SIMU_SetGainsPI(float kp, float ki)
@@ -120,6 +113,9 @@ void SIMU_REDEF_ASSER_RecoverNbrPas(float vitesseRoueGauche, float vitesseRoueDr
 
     deltaMesGauche = vitesseRoueGauche * TE;
     deltaMesDroite = vitesseRoueDroite * TE;
+
+    //*deltaPasGauche = (signed int)((deltaMesGauche * (float)NBRE_PAS) / (float)SIMU_PERIMETRE_GAUCHE);
+    //*deltaPasDroite = (signed int)((deltaMesDroite * (float)NBRE_PAS) / (float)SIMU_PERIMETRE_DROIT);
 
     *deltaPasGauche = (signed int)((deltaMesGauche * (float)NBRE_PAS) / (float)SIMU_PERIMETRE_GAUCHE);
     *deltaPasDroite = (signed int)((deltaMesDroite * (float)NBRE_PAS) / (float)SIMU_PERIMETRE_DROIT);
@@ -430,28 +426,28 @@ void SIMU_BoucleVitesse(void)
     erreurVitesseMoteurD = SIMU_ErreurVitesseConsPWMVToVitMS(simu_consigneMoteurD, vitesseMoteurD, GAIN_STATIQUE_MOTEUR_D);
 
     tensionPWM_G = (signed int)SIMU_RegulateurPI_BHT(GAUCHE, erreurVitesseMoteurG, &integPI_G, KI_GAUCHE, KP_GAUCHE, OffsetPWM, TE_PI);
+    /* Mesure des instants de saturation du correcteur PI gauche */
+    if ((tensionPWM_G < -(OffsetPWM-0.1)) || (tensionPWM_G > (OffsetPWM-0.1)))
+    {
+        ASSER_TRAJ_LogAsserValPC("saturationPIgauche", 1.0);
+    }
+    else
+    {
+        ASSER_TRAJ_LogAsserValPC("saturationPIgauche", 0.0);
+    }
 
-//    /* Mesure des instants de saturation du correcteur PI gauche */
-//    if ((tensionPWM_G < -(OffsetPWM-0.1)) || (tensionPWM_G > (OffsetPWM-0.1)))
-//    {
-//        ASSER_TRAJ_LogAsserValPC("saturationPIgauche", 1.0);
-//    }
-//    else
-//    {
-//        ASSER_TRAJ_LogAsserValPC("saturationPIgauche", 0.0);
-//    }
     tensionPWM_D = (signed int)SIMU_RegulateurPI_BHT(DROIT, erreurVitesseMoteurD, &integPI_D, KI_DROIT, KP_DROIT, OffsetPWM, TE_PI);
-
     /* Mesure des instants de saturation du correcteur PI droit */
-//    if ((tensionPWM_D < -(OffsetPWM-0.1)) || (tensionPWM_D > (OffsetPWM-0.1)))
-//    {
-//        ASSER_TRAJ_LogAsserValPC("saturationPIdroit", 1.0);
-//    }
-//    else
-//    {
-//        ASSER_TRAJ_LogAsserValPC("saturationPIdroit", 0.0);
-//    }
+    if ((tensionPWM_D < -(OffsetPWM-0.1)) || (tensionPWM_D > (OffsetPWM-0.1)))
+    {
+        ASSER_TRAJ_LogAsserValPC("saturationPIdroit", 1.0);
+    }
+    else
+    {
+        ASSER_TRAJ_LogAsserValPC("saturationPIdroit", 0.0);
+    }
 
+    /* Reinitialisation des integrales des PI au lancement d'une nouvelle commande d'asser */
     if (asserRunning_ant != ASSER_Running)
     {
         integPI_G = 0.0;
@@ -463,7 +459,6 @@ void SIMU_BoucleVitesse(void)
 
     // 1:gain statique, 2:premiere constante de temps, 3: deuxieme constante de temps
     // moteur gauche [0.90848238070313447, 0.001532263578663721, 0.14712688461925522]
-    //SIMU_SimulationMoteurCC((signed int)tensionPWM_G, &vitesseMoteurG, SIMU_TM, SIMU_KM, SIMU_CR);
 
     SIMU_SimulationMoteurCC_ordre2((signed int)tensionPWM_G
                                    , tensionPWM_G_n
@@ -498,7 +493,6 @@ void SIMU_BoucleVitesse(void)
 
     // 1:gain statique, 2:premiere constante de temps, 3: deuxieme constante de temps
     // moteur droit [0.93041457097724989, 0.0018257971355764644, 0.20174006794915703] avec un retard pur de 0.02s
-    //SIMU_SimulationMoteurCC((signed int)tensionPWM_D, &vitesseMoteurD, SIMU_TM, SIMU_KM, SIMU_CR);
 
     SIMU_SimulationMoteurCC_ordre2((signed int)tensionPWM_D
                                    , tensionPWM_D_n
@@ -530,13 +524,6 @@ void SIMU_BoucleVitesse(void)
                                            , TE_PI
                                            );
     */
-
-//    if (ASSER_compteurPeriode == 1)
-//    {
-//        ASSER_TRAJ_LogAsserValPC("vitesseG1ms", (float)tensionPWM_G);
-//        ASSER_TRAJ_LogAsserValPC("vitesseD1ms", (float)tensionPWM_D);
-//    }
-
 }
 
 void SIMU_CalculPeriodique(void)
@@ -577,138 +564,6 @@ void SIMU_CalculPeriodique(void)
 
         poseRobot = POS_GetPoseRobot(); // lecture de la position du robot dans le module POSITION
 }
-
-void SIMU_CalculPeriodiqueAsserVitessePI(void)
-{
-    //determination de la vitesse de consigne
-    compteurPeriodePI = compteurPeriodePI + 1;
-    if (compteurPeriodePI < floor(tempsAcc / TE_PI))
-    {
-        g_ConsigneMoteurG = (unsigned int)((float)Umax * ((float)compteurPeriodePI / (float)floor(tempsAcc / TE_PI))) + OffsetPWM;
-    }
-    if (compteurPeriodePI > (floor(5.0/TE_PI) - floor(tempsAcc / TE_PI)))
-    {
-        g_ConsigneMoteurG = (unsigned int)((float)Umax * ( (float)(floor(tempsAcc / TE_PI) - (compteurPeriodePI - (floor(5.0/TE_PI) - floor(tempsAcc / TE_PI)))) / (float)floor(tempsAcc / TE_PI))) + OffsetPWM;
-    }
-    SIMU_REDEF_ASSER_SendConsigne(g_ConsigneMoteurD, g_ConsigneMoteurG);
-
-    erreurVitesseMoteurG = SIMU_ErreurVitesseConsPWMVToVitMS(simu_consigneMoteurG, vitesseMoteurG, SIMU_gain());
-
-    //tensionPWM_G = SIMU_RegulateurPI_BHT(GAUCHE, erreurVitesseMoteurG, &integPI_G, KI_GAUCHE, KP_GAUCHE, OffsetPWM * SIMU_KM, 0.001) / (float)SIMU_KM;
-    tensionPWM_G = (float)floor(SIMU_RegulateurPI_BHT(GAUCHE, erreurVitesseMoteurG, &integPI_G, KI_GAUCHE, KP_GAUCHE, OffsetPWM, TE_PI));
-    if ((tensionPWM_G < -(OffsetPWM-0.1)) || (tensionPWM_G > (OffsetPWM-0.1)))
-    {
-        ASSER_TRAJ_LogAsserValPC("saturationPIgauche", 1.0);
-    }
-    else
-    {
-        ASSER_TRAJ_LogAsserValPC("saturationPIgauche", 0.0);
-    }
-
-    //SIMU_SimulationMoteurCC((signed int)tensionPWM_G, &vitesseMoteurG, SIMU_TM, SIMU_KM, SIMU_CR);
-
-    // 1:gain statique, 2:premiere constante de temps, 3: deuxieme constante de temps
-    // moteur gauche [0.90848238070313447, 0.001532263578663721, 0.14712688461925522]
-    //SIMU_SimulationMoteurCC((signed int)tensionPWM_G, &vitesseMoteurG, SIMU_TM, SIMU_KM, SIMU_CR);
-    /*
-    SIMU_SimulationMoteurCC_ordre2((signed int)tensionPWM_G
-                                   , tensionPWM_G_n
-                                   , &vitesseMoteurG
-                                   , &vitesseMoteurG_n2
-                                   , 0.001532263578663721 //0.05
-                                   , 0.14712688461925522 //0.177
-                                   , SIMU_KM
-                                   , 10 //20
-                                   , SIMU_CR
-                                   , TE_PI
-                                   );*/
-
-    SIMU_SimulationMoteurCC_ordre2_complet((signed int)tensionPWM_G
-                                           , tensionPWM_G_n
-                                           , &vitesseMoteurG
-                                           , &vitesseMoteurG_n2
-                                           , MASSE
-                                           , RAYON_ROUE
-                                           , FROTTEMENT_FLUIDE
-                                           , FORCE_RESISTANTE
-                                           , RESISTANCE_INDUIT
-                                           , INDUCTANCE_INDUIT
-                                           , CONSTANTE_COUPLE
-                                           , CONSTANTE_VITESSE
-                                           , RAPPORT_REDUCTION
-                                           , NB_PERIODE_RETARD
-                                           , TE_PI
-                                           );
-
-//    // 1:gain statique, 2:premiere constante de temps, 3: deuxieme constante de temps
-//    // moteur droit [0.92917170491405932, 0.0017267357695696336, 0.2008518604808292] avec un retard pur de 0.02s
-//    SIMU_SimulationMoteurCC_ordre2((signed int)tensionPWM_G
-//                                   , tensionPWM_G_n
-//                                   , &vitesseMoteurG
-//                                   , &vitesseMoteurG_n2
-//                                   , 0.0017267357695696336
-//                                   , 0.2008518604808292
-//                                   , SIMU_KM
-//                                   , 20
-//                                   , SIMU_CR
-//                                   , TE_PI
-//                                   );
-}
-
-#if 0
-
-void SIMU_AsserVitessePI(void)
-{
-    int p;
-    float len_parcours = 1.0;
-    float distance_parcourue = 0.0;
-
-    Pose    poseInit;
-    PtTraj chemin[1];
-    unsigned char mouvement;
-    char marche;
-    float angle_arrivee;
-    unsigned int nbrePtsChemin;
-    float vitesse_cons_mps = 0.0;
-
-    poseInit.x = 0.0;
-    poseInit.y = 0.0;
-    poseInit.angle = 0.0;
-    POS_InitialisationPoseRobot(poseInit);
-    ASSER_TRAJ_InitialisationGenerale();
-    chemin[0].x = CONVERT_FLOAT2SHORT_DISTANCE(poseInit.x + len_parcours);
-    chemin[0].y = CONVERT_FLOAT2SHORT_DISTANCE(poseInit.y);
-    angle_arrivee = 0.0;
-    nbrePtsChemin = 1u;
-    mouvement = DEPLACEMENT;
-    marche = MARCHE_AVANT;
-    SIMU_REDEF_ASSER_GoTo(chemin, nbrePtsChemin, mouvement, marche, angle_arrivee);
-
-    compteurPeriodePI = 0;
-    ASSER_TRAJ_LogAsserValPC("distPI", distance_parcourue);
-    ASSER_TRAJ_LogAsserValPC("vitconsPI", vitesse_cons_mps);
-    while ((distance_parcourue < len_parcours) && (compteurPeriodePI < (unsigned int)(TEMPS_SIMULATION / TE))) /* -> simulation pendant TEMPS_SIMULATION secondes au max */
-    {
-        compteurPeriodePI = compteurPeriodePI + 1;
-        vitesse_cons_mps = ASSER_TRAJ_GabaritVitesse_getVitesse_vs_Distance(distance_parcourue);
-
-        ASSER_TRAJ_LogAsserValPC("vitconsPI", vitesse_cons_mps);
-
-        g_ConsigneMoteurG = (unsigned int)(vitesse_cons_mps / SIMU_gain()) + OffsetPWM;
-
-        SIMU_REDEF_ASSER_SendConsigne(g_ConsigneMoteurD, g_ConsigneMoteurG);
-        /* Boucle de vitesse, avec une periode de 1ms sachant que la periode de l'asser trajectoire est de 20x 1ms */
-        for (p = 0; p < floor(TE/TE_PI); p++)
-        {
-            SIMU_BoucleVitesse();
-            distance_parcourue += vitesseMoteurG * TE_PI;
-        }
-        ASSER_TRAJ_LogAsserValPC("distPI", distance_parcourue);
-        SIMU_LogRobot();
-    }
-}
-
-#endif
 
 int SIMU_Mouvement(void)
 {
