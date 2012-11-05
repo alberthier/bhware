@@ -83,6 +83,7 @@ unsigned int                    ASSER_segmentCourant                    =   1;
 
 Trajectoire                     chemin;
 
+/* Vitesse minimum de mouvement et maximale d'arret */
 float                           VminMouv                                = 0.1;
 
 /***********************************************************************************************/
@@ -127,9 +128,6 @@ static unsigned char            ASRrunning                              = False;
 /* Constantes  profil de vitesse Scurve */
 static const float              EcartVitesse                            = 0.001;
 
-/* Vitesse minimum de mouvement et maximale d'arret */
-
-
 /*----------------------------------------------------------------------------------------------*/
 
 /* Prototypes des fonctions */
@@ -159,9 +157,6 @@ static unsigned char            ASSER_TRAJ_Profil_S_Curve(float * Vconsigne, flo
 #ifdef PIC32_BUILD
 void                            ASSER_TRAJ_LogAsserPIC(char * keyWord, float Val1, float * pVal2, float * pVal3, float * pVal4, float * pVal5);
 #else /* PIC32_BUILD */
-static void                     ASSER_TRAJ_GabaritVitesse(Trajectoire *traj);
-static void                     ASSER_TRAJ_TabGabarit_AddVitesse(float vitesse);
-static void                     ASSER_TRAJ_TabGabarit_AddAcceleration(float acceleration);
 void                            ASSER_TRAJ_LogAsserValPC(char * keyWord, float Val);
 void                            ASSER_TRAJ_LogAsserMsgPC(char * message, float Val);
 #endif /* PIC32_BUILD */
