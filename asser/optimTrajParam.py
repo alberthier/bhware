@@ -245,18 +245,19 @@ def trajFunction(d_cfgTraj):
     
     #deplacement = commandMsg("MSG_MAIN_GOTO 0 1 -1.57")
     #
-    deplacement = commandMsg("MSG_MAIN_GOTO 1 1 0.0")
-    deplacement.addPose("0.0 0.05")
-    deplacement.addPose("0.025 0.15")
-    deplacement.addPose("0.075 0.25")
-    deplacement.addPose("0.15 0.325")
-    deplacement.addPose("0.25 0.375")
-    deplacement.addPose("0.35 0.4")
-    deplacement.addPose("0.6 0.4")
+    #~ deplacement = commandMsg("MSG_MAIN_GOTO 1 1 0.0")
+    #~ deplacement.addPose("0.0 0.05")
+    #~ deplacement.addPose("0.025 0.15")
+    #~ deplacement.addPose("0.075 0.25")
+    #~ deplacement.addPose("0.15 0.325")
+    #~ deplacement.addPose("0.25 0.375")
+    #~ deplacement.addPose("0.35 0.4")
+    #~ deplacement.addPose("0.6 0.4")
     #
-    #~ deplacement = commandMsg("MSG_MAIN_GOTO 1 1 -1100000.0")
-    #~ deplacement.addPose("0.0 1.0")
-    #~ deplacement.addPose("0.5 1.2")
+    deplacement = commandMsg("MSG_MAIN_GOTO 1 1 -1100000.0")
+    deplacement.addPose("0.0 1.0")
+    deplacement.addPose("0.1 2.0")
+    deplacement.addPose("0.3 3.0")
 
     #transmission de commandes de deplacement par l'entree standard
     simulator_process.stdin.write(deplacement.cmdMsgGeneration())
@@ -904,8 +905,12 @@ def affichageGabaritVitesse_2013(d_traj):
     print(len(traj["dist_parcourue"]))
     print(len(d_traj["vitLongitudinaleEffective"]))
     print(len(d_traj["VitesseReelleMesure"]))
+    print(len(traj["VitesseProfil"]))
+    print(len(traj["distanceParcourue_Profil"]))
     plot(traj["dist_parcourue"], d_traj["vitLongitudinaleEffective"], '-o', label="consigne vit longitudinale effective")
     plot(traj["dist_parcourue"], d_traj["VitesseReelleMesure"], '-o', label="mesure vit longitudinale")
+    plot(traj["dist_parcourue"], d_traj["VitesseProfil"], '-o', label='Vitesse Profil')
+    #~ plot(traj["dist_parcourue"], d_traj["distanceParcourue_Profil"], '-o', label='"distanceParcourue_Profil"')
     
     print("taille tab gabarit vitesse : " + str(len(d_traj["gabarit_vitesse"])))
 

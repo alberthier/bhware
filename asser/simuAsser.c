@@ -68,6 +68,13 @@ char asserRunning_ant = False;
 
 Pose poseRobot;
 
+/** Tableaux du profil de vitesse */
+float                    g_tab_gabarit_vitesse[TAILLE_TAB_GABARIT_VITESSE];
+float                    g_tab_gabarit_acceleration[TAILLE_TAB_GABARIT_VITESSE];
+unsigned int             g_index_tab_gabarit_vitesse             = 0;
+unsigned int             g_index_tab_gabarit_acceleration        = 0;
+
+
 extern void SIMU_SetGainsPI(float kp, float ki)
 {
     float KM;
@@ -336,6 +343,7 @@ void SIMU_InitialisationLogRobot(void)
 
     ASSER_TRAJ_LogAsserValPC("dist_parcourue",  0.0);
     ASSER_TRAJ_LogAsserValPC("VitesseReelleMesure", 0.0);
+    ASSER_TRAJ_LogAsserValPC("distanceParcourue_Profil",  0.0);
 
     ASSER_TRAJ_LogAsserValPC("vitesseMoteurGauche", vitesseMoteurG);
     ASSER_TRAJ_LogAsserValPC("vitesseMoteurDroit", vitesseMoteurD);
@@ -391,6 +399,140 @@ void SIMU_LogRobot(void)
 //    ASSER_TRAJ_LogAsserValPC("vitRotation", vitessesConsignes.rotation);
 
     ASSER_TRAJ_LogAsserValPC("ConsigneMoteurDroit_MS", (((float)g_ConsigneMoteurD)-((float)OffsetPWM))*SIMU_gain());
+}
+
+/**********************************************************************/
+/*! \brief ASSER_TRAJ_TabGabarit_AddVitesse
+ *
+ *  \note   ajout d'une vitesse et de son acceleration correspondante dans les tableaux du profil de vitesse
+ *
+ *  \param [in]     vitesse         vitesse suivante du profil de consigne de vitesse
+ *
+ *  \return None
+ */
+/**********************************************************************/
+void SIMU_TabGabarit_AddVitesse(float vitesse)
+{
+    if (g_index_tab_gabarit_vitesse < TAILLE_TAB_GABARIT_VITESSE)
+    {
+        g_tab_gabarit_vitesse[g_index_tab_gabarit_vitesse] = vitesse;
+
+        ASSER_TRAJ_LogAsserValPC("gabarit_vitesse", g_tab_gabarit_vitesse[g_index_tab_gabarit_vitesse]);
+
+        g_index_tab_gabarit_vitesse++;
+    }
+}
+
+/**********************************************************************/
+/*! \brief ASSER_TRAJ_TabGabarit_AddAcceleration
+ *
+ *  \note   ajout d'une vitesse et de son acceleration correspondante dans les tableaux du profil de vitesse
+ *
+ *  \param [in]     acceleration    acceleration suivante du profil de consigne de vitesse
+ *
+ *  \return None
+ */
+/**********************************************************************/
+void SIMU_TabGabarit_AddAcceleration(float acceleration)
+{
+    if (g_index_tab_gabarit_acceleration < TAILLE_TAB_GABARIT_VITESSE)
+    {
+        g_tab_gabarit_acceleration[g_index_tab_gabarit_acceleration] = acceleration;
+
+        ASSER_TRAJ_LogAsserValPC("gabarit_acceleration", g_tab_gabarit_acceleration[g_index_tab_gabarit_acceleration]);
+
+        g_index_tab_gabarit_acceleration++;
+    }
+}
+
+/**********************************************************************/
+/*! \brief ASSER_TRAJ_GabaritVitesse
+ *
+ *  \note   Determination du gabarit de la vitesse longitudinale de consigne, dependant de la courbure de trajectoire
+ *             et des fonctions d'acceleration et de decceleration.
+ *
+ *  \param [in]     traj            pointeur de structure definissant la trajectoire
+ *
+ *  \return           None
+ */
+/**********************************************************************/
+void SIMU_GabaritVitesse(Trajectoire * traj)
+{
+    unsigned int    numSegment                      = 1;
+    float           paramPosition                   = 0.0;
+    float           vitesse_consigne                = 0.0;
+    float           vitesse_limite                  = 0.0;
+    float           distanceRestante;
+    unsigned char   flag_finTraj                    = False;
+    float           diffThetaTrajectoire            = 0.0;
+    float           vitesse_consigne_gabarit        = 0.0;
+    float           acceleration_consigne_gabarit   = 0.0;
+    float           vit_ini                         = 0.05;
+    unsigned int    i                               = 0u;
+
+    distanceRestante = traj->distance;
+
+    ASSER_TRAJ_LogAsserValPC("distanceRestante_FD", distanceRestante);
+
+    /* Parcourir la trajectoire en l'echantillonnant sur N pas de distance pas_echantillon_distance */
+    vitesse_consigne = vit_ini;
+
+    SIMU_TabGabarit_AddVitesse(traj->profilVitesse.vmax);
+
+    while (flag_finTraj == 0)
+    {
+        ASSER_TRAJ_ParcoursTrajectoire(traj, traj->profilVitesse.pas_echantillon_distance, &numSegment, &paramPosition, &flag_finTraj);
+        distanceRestante -= traj->profilVitesse.pas_echantillon_distance;
+
+        ASSER_TRAJ_LogAsserValPC("distanceRestante_FD", distanceRestante);
+
+        if (ASSER_TRAJ_isDeplacement(traj) == True)
+        {
+            diffThetaTrajectoire = ASSER_TRAJ_DiffThetaBSplinePerLenghtUnit(traj->segmentTrajBS, numSegment, paramPosition);
+
+            vitesse_limite = ASSER_TRAJ_VitesseLimiteEnVirage(traj, diffThetaTrajectoire);
+
+            vitesse_consigne_gabarit = vitesse_limite;
+        }
+        else
+        {
+            vitesse_consigne_gabarit = vitesse_consigne;
+        }
+
+        if (vitesse_consigne_gabarit < VminMouv)
+        {
+            vitesse_consigne_gabarit = VminMouv;
+        }
+
+        acceleration_consigne_gabarit = (powf(vitesse_consigne_gabarit, 2.0) - powf(g_tab_gabarit_vitesse[g_index_tab_gabarit_vitesse - 1], 2.0)) / (2.0 * traj->profilVitesse.pas_echantillon_distance);
+
+        SIMU_TabGabarit_AddAcceleration(acceleration_consigne_gabarit);
+        SIMU_TabGabarit_AddVitesse(vitesse_consigne_gabarit);
+
+    }
+
+    if (ASSER_TRAJ_isDeplacement(traj) == False)
+    {
+        for(i = 0; i < g_index_tab_gabarit_acceleration; i++)
+        {
+            ASSER_TRAJ_LogAsserValPC("gabarit_acceleration_new", g_tab_gabarit_acceleration[i]);
+            ASSER_TRAJ_LogAsserValPC("gabarit_vitesse_new", g_tab_gabarit_vitesse[i]);
+        }
+    }
+}
+
+extern void SIMU_InitGabaritVitesse(Trajectoire *traj)
+{
+   /* Initialisation du profil de vitessee */
+   traj->profilVitesse.pas_echantillon_distance = (traj->distance * 1000.0) / ((float)(TAILLE_TAB_GABARIT_VITESSE - 1));
+   traj->profilVitesse.pas_echantillon_distance = (floorf(traj->profilVitesse.pas_echantillon_distance) + 1.0) / 1000.0;
+
+   ASSER_TRAJ_LogAsserValPC("pas_ech", traj->profilVitesse.pas_echantillon_distance);
+
+   g_index_tab_gabarit_vitesse = 0;
+   g_index_tab_gabarit_acceleration = 0;
+
+   SIMU_GabaritVitesse(traj);
 }
 
 /**********************************************************************/

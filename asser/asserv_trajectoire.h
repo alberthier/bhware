@@ -35,7 +35,6 @@
 
 #ifndef PIC32_BUILD
 /** Parametres du profil de vitesse des trajectoires */
-#define TAILLE_TAB_GABARIT_VITESSE      2001
 #define NBR_ASSER_LOG_VALUE             60
 #else /* PIC32_BUILD */
 #define NBR_ASSER_LOG_VALUE             ((256 - (3 * sizeof(float)) - (2 * sizeof(unsigned char)) - sizeof(int)) / sizeof(float))
@@ -121,8 +120,12 @@ extern float                C_init;
 
 extern float                VminMouvRef;
 
-unsigned int                ASSER_compteurPeriode;
-unsigned int                ASSER_segmentCourant;
+extern unsigned int         ASSER_compteurPeriode;
+extern unsigned int         ASSER_segmentCourant;
+
+extern Trajectoire          chemin;
+
+extern float                VminMouv;
 
 /* Prototypes de function globales asserv_trajectoire */
 
@@ -130,6 +133,10 @@ extern void                 ASSER_TRAJ_InitialisationGenerale(void);
 extern void                 ASSER_TRAJ_InitialisationTrajectoire(Pose poseRobot, PtTraj * point, unsigned int nbrePts, unsigned int mouvement, float angle_rad);
 extern void                 ASSER_TRAJ_AsservissementMouvementRobot(Pose poseRobot, VitessesRobotUnicycle * vitessesConsignes);
 extern Pose                 ASSER_TRAJ_Trajectoire(segmentTrajectoireBS * segmentTraj, unsigned int iSegment, float t);
+extern void                 ASSER_TRAJ_ParcoursTrajectoire(Trajectoire *traj, float delta_distance, unsigned int *segmentCourant, float *paramPoseSegTraj, unsigned char * pReturn);
+extern unsigned char        ASSER_TRAJ_isDeplacement(Trajectoire *traj);
+extern float                ASSER_TRAJ_DiffThetaBSplinePerLenghtUnit(segmentTrajectoireBS * segmentTraj, unsigned int iSegment, float t);
+extern float                ASSER_TRAJ_VitesseLimiteEnVirage(Trajectoire *traj, float diffThetaTrajectoire);
 
 #ifdef PIC32_BUILD
 extern void                 ASSER_TRAJ_LogAsserPIC(char * keyWord, float Val1, float * pVal2, float * pVal3, float * pVal4, float * pVal5);

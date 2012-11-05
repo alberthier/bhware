@@ -81,6 +81,10 @@ float                           C_init                                  =   0.2;
 unsigned int                    ASSER_compteurPeriode                   =   0;
 unsigned int                    ASSER_segmentCourant                    =   1;
 
+Trajectoire                     chemin;
+
+float                           VminMouv                                = 0.1;
+
 /***********************************************************************************************/
 /**************************** Fin de la definition des parametres de l'asservissement de trajectoire *********/
 /***********************************************************************************************/
@@ -96,7 +100,6 @@ static float                    NORME_BARRE_SUIVI_TRAJ;                         
 static float                    errDist, memo_errDist, errAngle, memo_errAngle, memo_angleRobot;
 
 /** Vecteurs associees au depart et a l'arrivee, et parametrage du profil de vitesse de la trajectoire */
-static Trajectoire              chemin;
 static unsigned int             g_memoSegmentCourant                    =   0;
 static char                     m_sensDeplacement                       =   MARCHE_AVANT;
 static float                    distanceTotale_Profil                   =   0.0;
@@ -116,14 +119,6 @@ static float                    vitesse_profil_consigne                 =   0.0;
 static float                    parametrePositionSegmentTrajectoire     =   0.0;
 static unsigned char            shuntTestFinAsser                       =   False;
 
-#ifndef PIC32_BUILD
-/** Tableaux du profil de vitesse */
-static float                    g_tab_gabarit_vitesse[TAILLE_TAB_GABARIT_VITESSE];
-static float                    g_tab_gabarit_acceleration[TAILLE_TAB_GABARIT_VITESSE];
-static unsigned int             g_index_tab_gabarit_vitesse             = 0;
-static unsigned int             g_index_tab_gabarit_acceleration        = 0;
-#endif /* PIC32_BUILD */
-
 /* Variables profil de vitesse Scurve */
 static float                    Vmax, VgASR, Vconsigne0, J, A, V, P, J0, A0, V0, P0, DistanceMin, JAmax, JDmax, PositionFinPhase4;
 static unsigned char            Phase                                   = 0;
@@ -133,7 +128,7 @@ static unsigned char            ASRrunning                              = False;
 static const float              EcartVitesse                            = 0.001;
 
 /* Vitesse minimum de mouvement et maximale d'arret */
-static float                    VminMouv                                = 0.1; 
+
 
 /*----------------------------------------------------------------------------------------------*/
 
@@ -141,7 +136,6 @@ static float                    VminMouv                                = 0.1;
 
 static void                     ASSER_TRAJ_MatriceRotation(Vecteur *matrice2p2, float angle);
 static Pose                     ASSER_TRAJ_TrajectoireRotation(ParametresRotation *p_rotation, float t);
-static void                     ASSER_TRAJ_ParcoursTrajectoire(Trajectoire *traj, float delta_distance, unsigned int *segmentCourant, float *paramPoseSegTraj, unsigned char * pReturn);
 static Pose                     ASSER_TRAJ_DiffTemporelleTrajectoire(Pose posePrecedente, Pose poseActuelle, float periode);
 static Vecteur                  ASSER_TRAJ_ProduitMatriceVecteur(Vecteur *matrice, Vecteur vecteur);
 static Pose                     ASSER_TRAJ_ErreurPose(Pose poseRobot_P, Pose poseRef);
@@ -155,10 +149,7 @@ static Vecteur                  ASSER_TRAJ_DiffTrajectoire(segmentTrajectoireBS 
 static Vecteur                  ASSER_TRAJ_Diff2CourbeBSpline(segmentTrajectoireBS *segmentTraj, unsigned int iSegment, float t);
 static Vecteur                  ASSER_TRAJ_Diff2Trajectoire(segmentTrajectoireBS *segmentTraj, unsigned int iSegment, float t);
 static float                    ASSER_TRAJ_DiffThetaBSpline(Vecteur diff1BS, Vecteur diff2BS);
-static float                    ASSER_TRAJ_DiffThetaBSplinePerLenghtUnit(segmentTrajectoireBS * segmentTraj, unsigned int iSegment, float t);
 static Pose                     ASSER_TRAJ_TrajectoireRemorqueBS(segmentTrajectoireBS *segmentTraj, unsigned int iSegment, float t, Vecteur diff1BS, float diffThetaBSRobot, Pose *poseTrajRobot);
-static float                    ASSER_TRAJ_VitesseLimiteEnVirage(Trajectoire *traj, float diffThetaTrajectoire);
-static unsigned char            ASSER_TRAJ_isDeplacement(Trajectoire *traj);
 static unsigned char            ASSER_TRAJ_isAngle(float angle);
 static float                    ASSER_TRAJ_CalculTheta1(unsigned int iSegment, unsigned int nbrePts, PtTraj* point, float angle_rad, float prec_x, float prec_y);
 static float                    ASSER_TRAJ_LongueurSegment(float x0, float y0, float x1, float y1);
@@ -209,7 +200,7 @@ extern void ASSER_TRAJ_InitialisationGenerale(void)
  */
 /**********************************************************************/
 
-static unsigned char ASSER_TRAJ_isDeplacement(Trajectoire * traj)
+extern unsigned char ASSER_TRAJ_isDeplacement(Trajectoire * traj)
 {
     if (traj->mouvement > ROTATION)
     {
@@ -422,9 +413,6 @@ extern void ASSER_TRAJ_AsservissementMouvementRobot(Pose poseRobot, VitessesRobo
 
             if (chemin.profilVitesse.p > 0)
             {
-                ASSER_TRAJ_LogAsserValPC("nbdepas",  chemin.profilVitesse.pas_echantillon_distance);
-                ASSER_TRAJ_LogAsserValPC("index_tab_vit",  g_index_tab_gabarit_vitesse);
-
                 /* distance normalisee restant a parcourir */
                 chemin.profilVitesse.distNormaliseeRestante -= (delta_distance / chemin.distance);
                 
@@ -601,6 +589,7 @@ extern void ASSER_TRAJ_AsservissementMouvementRobot(Pose poseRobot, VitessesRobo
     ASSER_TRAJ_LogAsserValPC("VgASR", VgASR);
     ASSER_TRAJ_LogAsserValPC("Phase", (Phase/10.0));
     ASSER_TRAJ_LogAsserValPC("fFin", (ASSER_Running/10.0));
+    ASSER_TRAJ_LogAsserValPC("distanceParcourue_Profil",  distanceParcourue_Profil);
 }
 
 
@@ -910,19 +899,6 @@ extern void ASSER_TRAJ_InitialisationTrajectoire(Pose poseRobot, PtTraj * point,
 
     chemin.profilVitesse.p = 1;                                                                                 /* autorisation du profil de vitesse */
     chemin.profilVitesse.distNormaliseeRestante = 1.0;                                                          /* -> la distance totale normalisee */
-
- #ifndef PIC32_BUILD
-    /* Initialisation du profil de vitessee */
-    chemin.profilVitesse.pas_echantillon_distance = (chemin.distance * 1000.0) / ((float)(TAILLE_TAB_GABARIT_VITESSE - 1));    
-    chemin.profilVitesse.pas_echantillon_distance = (floorf(chemin.profilVitesse.pas_echantillon_distance) + 1.0) / 1000.0;
- 
-    ASSER_TRAJ_LogAsserValPC("pas_ech", chemin.profilVitesse.pas_echantillon_distance);
-     
-    g_index_tab_gabarit_vitesse = 0;
-    g_index_tab_gabarit_acceleration = 0;
- 
- 	ASSER_TRAJ_GabaritVitesse(&chemin);
- #endif /* PIC32_BUILD */
  
     /* Initialisation du profil de vitesse */
     chemin.profilVitesse.Amax = A_MAX * Ratio_Acc;
@@ -1480,7 +1456,7 @@ static float ASSER_TRAJ_DiffThetaBSpline(Vecteur diff1BS, Vecteur diff2BS)
  *  \return            diffTheta
  */
 /**********************************************************************/
-static float ASSER_TRAJ_DiffThetaBSplinePerLenghtUnit(segmentTrajectoireBS * segmentTraj, unsigned int iSegment, float t)
+extern float ASSER_TRAJ_DiffThetaBSplinePerLenghtUnit(segmentTrajectoireBS * segmentTraj, unsigned int iSegment, float t)
 {
     Vecteur         diff1BS, diff2BS;
     float           diffTheta;
@@ -1542,7 +1518,7 @@ static Pose ASSER_TRAJ_TrajectoireRotation(ParametresRotation *p_rotation, float
  *  \return         vitesseLimite   vitesse en m/s
  */
 /**********************************************************************/
-static float ASSER_TRAJ_VitesseLimiteEnVirage(Trajectoire *traj, float diffThetaTrajectoire)
+extern float ASSER_TRAJ_VitesseLimiteEnVirage(Trajectoire *traj, float diffThetaTrajectoire)
 {
     return ((float)(traj->profilVitesse.vmax / (1.0 + (fabsf(diffThetaTrajectoire) * (ECART_ROUE_MOTRICE / 2.0) ))));
 }
@@ -1562,7 +1538,7 @@ static float ASSER_TRAJ_VitesseLimiteEnVirage(Trajectoire *traj, float diffTheta
  *  \return            None
  */
 /**********************************************************************/
-static void ASSER_TRAJ_ParcoursTrajectoire(Trajectoire *traj, float delta_distance, unsigned int *segmentCourant, float *paramPoseSegTraj, unsigned char * pReturn)
+extern void ASSER_TRAJ_ParcoursTrajectoire(Trajectoire *traj, float delta_distance, unsigned int *segmentCourant, float *paramPoseSegTraj, unsigned char * pReturn)
 {
     unsigned int    memoSegmentCourant;
     Vecteur         diffD_T;
@@ -1618,132 +1594,6 @@ static void ASSER_TRAJ_ParcoursTrajectoire(Trajectoire *traj, float delta_distan
         *pReturn = flag_trajectoireTerminee;
     }
 }
-
-#ifndef PIC32_BUILD
-/**********************************************************************/
-/*! \brief ASSER_TRAJ_TabGabarit_AddVitesse
- *
- *  \note   ajout d'une vitesse et de son acceleration correspondante dans les tableaux du profil de vitesse
- *
- *  \param [in]     vitesse         vitesse suivante du profil de consigne de vitesse
- *
- *  \return None
- */
-/**********************************************************************/
-static void ASSER_TRAJ_TabGabarit_AddVitesse(float vitesse)
-{
-    if (g_index_tab_gabarit_vitesse < TAILLE_TAB_GABARIT_VITESSE)
-    {
-        g_tab_gabarit_vitesse[g_index_tab_gabarit_vitesse] = vitesse;
-        
-        ASSER_TRAJ_LogAsserValPC("gabarit_vitesse", g_tab_gabarit_vitesse[g_index_tab_gabarit_vitesse]);
-
-        g_index_tab_gabarit_vitesse++;
-    }
-}
-
-/**********************************************************************/
-/*! \brief ASSER_TRAJ_TabGabarit_AddAcceleration
- *
- *  \note   ajout d'une vitesse et de son acceleration correspondante dans les tableaux du profil de vitesse
- *
- *  \param [in]     acceleration    acceleration suivante du profil de consigne de vitesse
- *
- *  \return None
- */
-/**********************************************************************/
-static void ASSER_TRAJ_TabGabarit_AddAcceleration(float acceleration)
-{
-    if (g_index_tab_gabarit_acceleration < TAILLE_TAB_GABARIT_VITESSE)
-    {
-        g_tab_gabarit_acceleration[g_index_tab_gabarit_acceleration] = acceleration;
-        
-        ASSER_TRAJ_LogAsserValPC("gabarit_acceleration", g_tab_gabarit_acceleration[g_index_tab_gabarit_acceleration]);
-
-        g_index_tab_gabarit_acceleration++;
-    }
-}
-
-/**********************************************************************/
-/*! \brief ASSER_TRAJ_GabaritVitesse
- *
- *  \note   Determination du gabarit de la vitesse longitudinale de consigne, dependant de la courbure de trajectoire
- *             et des fonctions d'acceleration et de decceleration.
- *
- *  \param [in]     traj            pointeur de structure definissant la trajectoire
- *
- *  \return           None
- */
-/**********************************************************************/
-static void ASSER_TRAJ_GabaritVitesse(Trajectoire * traj)
-{
-    unsigned int    numSegment                      = 1;
-    float           paramPosition                   = 0.0;
-    float           vitesse_consigne                = 0.0;
-    float           vitesse_limite                  = 0.0;
-    float           distanceRestante;
-    unsigned char   flag_finTraj                    = False;
-    float           diffThetaTrajectoire            = 0.0;
-    float           vitesse_consigne_gabarit        = 0.0;
-    float           acceleration_consigne_gabarit   = 0.0;
-    float           vit_ini                         = 0.05;
-#ifndef PIC32_BUILD
-    unsigned int    i                               = 0u;
-#endif /* PIC32_BUILD */
- 
-    distanceRestante = traj->distance;
-    
-    ASSER_TRAJ_LogAsserValPC("distanceRestante_FD", distanceRestante);
-
-    /* Parcourir la trajectoire en l'echantillonnant sur N pas de distance pas_echantillon_distance */
-    vitesse_consigne = vit_ini;
-    
-    ASSER_TRAJ_TabGabarit_AddVitesse(traj->profilVitesse.vmax);
-    
-    while (flag_finTraj == 0)
-    {
-        ASSER_TRAJ_ParcoursTrajectoire(traj, traj->profilVitesse.pas_echantillon_distance, &numSegment, &paramPosition, &flag_finTraj);
-        distanceRestante -= traj->profilVitesse.pas_echantillon_distance;
-        
-        ASSER_TRAJ_LogAsserValPC("distanceRestante_FD", distanceRestante);
-
-        if (ASSER_TRAJ_isDeplacement(traj) == True)
-        {
-            diffThetaTrajectoire = ASSER_TRAJ_DiffThetaBSplinePerLenghtUnit(traj->segmentTrajBS, numSegment, paramPosition);
-
-            vitesse_limite = ASSER_TRAJ_VitesseLimiteEnVirage(traj, diffThetaTrajectoire);
-
-            vitesse_consigne_gabarit = vitesse_limite;
-        }
-        else
-        {
-            vitesse_consigne_gabarit = vitesse_consigne;
-        }
-
-        if (vitesse_consigne_gabarit < VminMouv)
-        {
-            vitesse_consigne_gabarit = VminMouv;
-        }
-
-        acceleration_consigne_gabarit = (powf(vitesse_consigne_gabarit, 2.0) - powf(g_tab_gabarit_vitesse[g_index_tab_gabarit_vitesse - 1], 2.0)) / (2.0 * traj->profilVitesse.pas_echantillon_distance);
-
-        ASSER_TRAJ_TabGabarit_AddAcceleration(acceleration_consigne_gabarit);
-        ASSER_TRAJ_TabGabarit_AddVitesse(vitesse_consigne_gabarit);
-
-    }
-
-#ifndef PIC32_BUILD
-    if (ASSER_TRAJ_isDeplacement(traj) == False)
-    {
-        for(i = 0; i < g_index_tab_gabarit_acceleration; i++)
-        {
-            ASSER_TRAJ_LogAsserValPC("gabarit_acceleration_new", g_tab_gabarit_acceleration[i]);
-            ASSER_TRAJ_LogAsserValPC("gabarit_vitesse_new", g_tab_gabarit_vitesse[i]);
-        }
-    }
-#endif /* PIC32_BUILD */
-}
-#endif /* PIC32_BUILD */
 
 /**********************************************************************/
 /*! \brief ASSER_TRAJ_DiffTemporelleTrajectoire

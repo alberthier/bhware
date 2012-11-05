@@ -24,6 +24,7 @@ typedef struct
 void ASSER_GoTo(PtTraj *p_chemin, unsigned int nbrePtsChemin, unsigned int Mouvement, signed int Marche, float angle_rad)
 {
     SIMU_REDEF_ASSER_GoTo(p_chemin, nbrePtsChemin, Mouvement, Marche, angle_rad);
+    SIMU_InitGabaritVitesse(&chemin);
 }
 
 int commandMsgTreatment(char *buffer, unsigned char *p_mouvement, char *p_marche, float *p_angle_rad, unsigned int *p_nbPts, PtTraj *p_chemin)
