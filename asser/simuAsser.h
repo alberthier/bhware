@@ -22,6 +22,10 @@
  *  @{
  */
 
+#include "asserv_trajectoire.h"
+
+#define TAILLE_TAB_GABARIT_VITESSE      2001
+
 int     SIMU_GetCompteur(void);
 void    SIMU_REDEF_ASSER_RecoverNbrPas(float vitesseRoueGauche, float vitesseRoueDroite, signed int* deltaPasGauche, signed int* deltaPasDroite);
 float   SIMU_ErreurVitesseConsPWMVToVitMS(unsigned int consPMW, float vitMS, float K);
@@ -29,6 +33,10 @@ extern float   SIMU_gain(void);
 void    SIMU_SimulationMoteurCC(signed int tensionPWM, float* vitesseMoteur, float constanteTemps, float gainStatique, float coupleResistant);
 void    SIMU_InitialisationLogRobot(void);
 void    SIMU_LogRobot(void);
+void    SIMU_TabGabarit_AddVitesse(float vitesse);
+void    SIMU_TabGabarit_AddAcceleration(float acceleration);
+void    SIMU_GabaritVitesse(Trajectoire * traj);
+extern void SIMU_InitGabaritVitesse(Trajectoire *traj);
 void    SIMU_AfficheInfoFinAsser(void);
 void    SIMU_CalculPeriodique(void);
 int     SIMU_Mouvement(void);

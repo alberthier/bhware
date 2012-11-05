@@ -905,8 +905,12 @@ def affichageGabaritVitesse_2013(d_traj):
     print(len(traj["dist_parcourue"]))
     print(len(d_traj["vitLongitudinaleEffective"]))
     print(len(d_traj["VitesseReelleMesure"]))
+    print(len(traj["VitesseProfil"]))
+    print(len(traj["distanceParcourue_Profil"]))
     plot(traj["dist_parcourue"], d_traj["vitLongitudinaleEffective"], '-o', label="consigne vit longitudinale effective")
     plot(traj["dist_parcourue"], d_traj["VitesseReelleMesure"], '-o', label="mesure vit longitudinale")
+    plot(traj["dist_parcourue"], d_traj["VitesseProfil"], '-o', label='Vitesse Profil')
+    #~ plot(traj["dist_parcourue"], d_traj["distanceParcourue_Profil"], '-o', label='"distanceParcourue_Profil"')
     
     print("taille tab gabarit vitesse : " + str(len(d_traj["gabarit_vitesse"])))
 
