@@ -2056,6 +2056,15 @@ static unsigned char ASSER_TRAJ_Profil_S_Curve(float * Vconsigne, float Distance
         /* Calcul du Jerk Max */
         JAmax = (Amax * Amax) / (Vmax - VStart);
         JDmax = (Dmax * Dmax) / (Vmax - VEnd);
+        
+        if (JAmax > (VminMouv / TE))
+        {
+        		JAmax = (VminMouv / TE);
+        }
+        if (JDmax > (VminMouv / TE))
+        {
+        		JDmax = (VminMouv / TE);
+        }
                 
         /* Initialisation des variables */
         A0 = 0.0;
