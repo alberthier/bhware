@@ -19,6 +19,6 @@ d_cfgTraj = {'Masse': 12.0
                 , 'R2': -6.0
                 , 'Amax': 1.0
                 , 'Dmax': 1.0
-                , 'RatioAcc': 1.2
+                , 'RatioAcc': 1.190
                 , 'RatioDecc': 1.275
                 }
