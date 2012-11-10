@@ -2001,13 +2001,24 @@ static unsigned char ASSER_TRAJ_Profil_S_Curve(float * Vconsigne, float Distance
         /* Phase 0 (Initialisation) */
             
         /* Forcage de la vitesse de deplacement minimum */
-        if (VStart < (VminMouv / 2))
+        if (VStart < (VminMouv / 2.0))
         {
-            VStart = VminMouv / 2;
+            VStart = VminMouv / 2.0;
         }
 
         /* Initilisation de la vitesse maximum */
         Vmax = MIN(DonneeVmaxGauche, DonneeVmaxDroite);
+        
+        /* Ajustement de VStart et VEnd pour eviter les division par zero */
+        if ((Vmax - VStart) <= 0.0)
+        {
+            VStart = Vmax - 0.001;
+        }
+        
+        if ((Vmax - VEnd) <= 0.0)
+        {
+            VEnd = Vmax - 0.001;
+        }
         
         /* Ajustement de Vmax suivant la distance si necessaire */      
         DistanceMin = (((Vmax * Vmax) - (VStart * VStart)) / Amax) + (((Vmax * Vmax) - (VEnd * VEnd)) / Dmax) + (2 * (Vmax * TE)) + (VStart * TE) + (VEnd * TE);
@@ -2018,9 +2029,9 @@ static unsigned char ASSER_TRAJ_Profil_S_Curve(float * Vconsigne, float Distance
             DistanceMin = (((Vmax * Vmax) - (VStart * VStart)) / Amax) + (((Vmax * Vmax) - (VEnd * VEnd)) / Dmax) + (2 * (Vmax * TE)) + (VStart * TE) + (VEnd * TE);
         }
         
-        if ((Vmax / 2) < VminMouvRef)
+        if ((Vmax / 2.0) < VminMouvRef)
         {
-            VminMouv = (Vmax / 2);
+            VminMouv = (Vmax / 2.0);
         }
         else
         {
@@ -2040,17 +2051,6 @@ static unsigned char ASSER_TRAJ_Profil_S_Curve(float * Vconsigne, float Distance
 #else /* PIC32_BUILD */
             ASSER_TRAJ_LogAsserMsgPC("Asserv_traj : Reajustement de la vitesse de fin de profil ! Vitesse de fin impossible sur cette distance", VEnd);
 #endif /* PIC32_BUILD */
-        }
-        
-        /* Ajustement de VStart et VEnd pour eviter les division par zero */
-        if ((Vmax - VStart) <= 0.0)
-        {
-            VStart = Vmax - 0.000001;
-        }
-        
-        if ((Vmax - VEnd) <= 0.0)
-        {
-            VEnd = Vmax - 0.000001;
         }
             	
         /* Calcul du Jerk Max */
