@@ -308,7 +308,7 @@ extern void ASSER_TRAJ_AsservissementMouvementRobot(Pose poseRobot, VitessesRobo
                                 
                     ASSER_Running = False;
                 
-                    if (Vmax == MIN(DonneeVmaxGauche, DonneeVmaxDroite))
+                    if (Vmax >= MIN(DonneeVmaxGauche, DonneeVmaxDroite))
                     {
                         Vr = POS_GetVitesseRelle();
                         
@@ -342,7 +342,7 @@ extern void ASSER_TRAJ_AsservissementMouvementRobot(Pose poseRobot, VitessesRobo
             
                 ASSER_Running = False;
                 
-                if (Vmax == MIN(DonneeVmaxGauche, DonneeVmaxDroite))
+                if (Vmax >= MIN(DonneeVmaxGauche, DonneeVmaxDroite))
                 {
                     Vr = POS_GetVitesseRelle();
                     
@@ -2673,7 +2673,7 @@ static unsigned char ASSER_TRAJ_Profil_S_Curve(float * Vconsigne, float Distance
                 {
                     Phase = 8;
                     
-                    if (Vmax == MIN(DonneeVmaxGauche, DonneeVmaxDroite))
+                    if (Vmax >= MIN(DonneeVmaxGauche, DonneeVmaxDroite))
                     {
                       if ((Vr > (VminMouv + EcartVitesse)) && (VEnd == 0.0))
                       {
