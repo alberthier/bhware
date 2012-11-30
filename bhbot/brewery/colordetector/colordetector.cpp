@@ -26,7 +26,7 @@ public:
     int y;
     int width;
     int height;
-    bool match
+    bool match;
 };
 
 
@@ -58,8 +58,7 @@ private:
     void initDisplay();
     void updateDisplay();
     void updateZones();
-    void bgrCheck();
-    void binarize();
+    void bgrRedCheck();
 
 private:
     int m_pollTimeout;
@@ -137,7 +136,6 @@ bool ColorDetector::processLine(std::istream& stream)
     if (command == "quit") {
         return false;
     } else if (command == "fetch") {
-//        binarize();
         bgrRedCheck();
     } else if (command == "poll_timeout") {
         sstr >> m_pollTimeout;
@@ -231,27 +229,6 @@ void ColorDetector::bgrRedCheck()
 }
 
 
-void ColorDetector::binarize()
-{
-    cv::cvtColor(m_bgrImage, m_hsvImage, CV_BGR2HSV);
-
-    cv::inRange(m_hsvImage, cv::Scalar(m_thresholdHue - m_thresholdTolerance - 1,
-                                       m_thresholdSaturation - m_thresholdTolerance,
-                                       0), 
-                            cv::Scalar(m_thresholdHue + m_thresholdTolerance - 1,
-                                       m_thresholdSaturation + m_thresholdTolerance,
-                                       255),
-                            m_binImage);
-
-    // Create kernels for the morphological operation
-    cv::Mat kernel = cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(5, 5), cv::Point(2, 2));
-
-    // Morphological opening (inverse because we have white pixels on black background)
-    cv::dilate(m_binImage, m_binImage, kernel);
-    cv::erode(m_binImage, m_binImage, kernel);
-}
-
-
 //=================================================================================================
 
 
@@ -277,133 +254,3 @@ int main(int argc, char** argv)
     return 0;
 }
 
-#if 0
-static int config_hue = 0;
-static int config_saturation = 0;
-static int config_tolerance = 10;
-static const char* config_image = NULL;
-
-
-cv::Mat bgrImage;
-cv::Mat hsvImage;
-
-
-void binarize(const cv::Mat& input, cv::Mat& output, int h, int s, int tolerance)
-{
-    cv::cvtColor(input, hsvImage, CV_BGR2HSV);
-
-    cv::inRange(hsvImage, cv::Scalar(h - tolerance - 1, s - tolerance, 0), cv::Scalar(h + tolerance - 1, s + tolerance, 255), output);
-
-    // Create kernels for the morphological operation
-    cv::Mat kernel = cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(5, 5), cv::Point(2, 2));
-
-    // Morphological opening (inverse because we have white pixels on black background)
-    cv::dilate(output, output, kernel);
-    cv::erode(output, output, kernel);
-}
-
-
-void processFrame(const cv::Mat& bgrImage)
-{
-  cv::Mat binMask;
-
-  binarize(bgrImage, binMask, config_hue, config_saturation, config_tolerance);
-
-  cv::imshow("BGR Image", bgrImage);
-  cv::imshow("Binarization", binMask);
-}
-
-
-void processImage()
-{
-  bgrImage = cv::imread(config_image);
-  std::cout << "type: " << CV_MAT_TYPE(bgrImage.flags) << std::endl;
-  for (int n = 0; n < 4; ++n) {
-    std::cout << "CV_8UC" << n << "=" << CV_8UC(n)   << std::endl;
-    std::cout << "CV_8SC" << n << "=" << CV_8SC(n)   << std::endl;
-    std::cout << "CV_16UC" << n << "=" << CV_16UC(n) << std::endl;
-    std::cout << "CV_16SC" << n << "=" << CV_16SC(n) << std::endl;
-    std::cout << "CV_32SC" << n << "=" << CV_32SC(n) << std::endl;
-    std::cout << "CV_32FC" << n << "=" << CV_32FC(n) << std::endl;
-    std::cout << "CV_64FC" << n << "=" << CV_64FC(n) << std::endl;
-  }
-
-  int key = 0;
-  while (key != KEY_Q) {
-    processFrame(bgrImage);
-
-    key = cv::waitKey(100);
-  }
-}
-
-
-void processWebcam()
-{
-  int key = 0;
-  cv::VideoCapture capture(0);
-
-  while (key != KEY_Q) {
-    capture.read(bgrImage);
-
-    processFrame(bgrImage);
-
-    key = cv::waitKey(100);
-  }
-}
-
-
-void getImageColor(int event, int x, int y, int flags, void* userdata)
-{
-  if (event == CV_EVENT_LBUTTONUP) {
-    cv::Vec3b hsvPixel = hsvImage.at<cv::Vec3b>(y, x);
-    int h = hsvPixel[0];
-    int s = hsvPixel[1];
-    int v = hsvPixel[2];
-    config_hue = h;
-    config_saturation = s;
-    std::cout << "h = " << h << "    s = " << s << "    v = " << v << std::endl;
-  }
-}
-
-
-int main(int argc, const char** argv)
-{
-  for (;;) {
-    std::string command;
-    std::cout << "> ";
-    std::cout.flush();
-    std::cin >> command;
-    std::cout << "'" << command << "'" << std::endl;
-  }
-  for (int n = 2; n < argc; n += 2) {
-    const char* name = argv[n - 1];
-    const char* value = argv[n];
-
-    if (std::strcmp(name, "--hue") == 0) {
-      config_hue = std::atoi(value);
-    } else if (std::strcmp(name, "--saturation") == 0) {
-      config_saturation = std::atoi(value);
-    } else if (std::strcmp(name, "--tolerance") == 0) {
-      config_tolerance = std::atoi(value);
-    } else if (std::strcmp(name, "--image") == 0) {
-      config_image = value;
-    }
-  }
-
-  // TODO init webcam
-
-  cv::namedWindow("BGR Image");
-  cv::setMouseCallback("BGR Image", getImageColor);
-
-  if (config_image == NULL) {
-    // Webcam
-    processWebcam();
-  } else {
-    // Argument
-    processImage();
-  }
-
-  return 0;
-}
-
-#endif
