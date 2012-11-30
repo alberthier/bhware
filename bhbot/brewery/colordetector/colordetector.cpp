@@ -26,6 +26,7 @@ public:
     int y;
     int width;
     int height;
+    bool match
 };
 
 
@@ -33,7 +34,8 @@ Rect::Rect(int x_, int y_, int width_, int height_) :
     x(x_),
     y(y_),
     width(width_),
-    height(height_)
+    height(height_),
+    match(false)
 {
 }
 
@@ -56,6 +58,7 @@ private:
     void initDisplay();
     void updateDisplay();
     void updateZones();
+    void bgrCheck();
     void binarize();
 
 private:
@@ -134,7 +137,8 @@ bool ColorDetector::processLine(std::istream& stream)
     if (command == "quit") {
         return false;
     } else if (command == "fetch") {
-        binarize();
+//        binarize();
+        bgrRedCheck();
     } else if (command == "poll_timeout") {
         sstr >> m_pollTimeout;
     } else if (command == "threshold_hue") {
@@ -206,6 +210,24 @@ void ColorDetector::updateZones()
         cv::Mat zone = m_bgrImage(cv::Range(rect.y, rect.y + rect.height), cv::Range(rect.x, rect.x + rect.width));
         m_detectionZones.push_back(zone);
     }
+}
+
+
+void ColorDetector::bgrRedCheck()
+{
+    for (size_t i = 0; i < m_zones.size(); ++i) {
+        Rect& rect = m_zones[i];
+        cv::Mat& image = m_detectionZones[i];
+        std::vector<cv::Mat> components;
+        cv::split(image, components);
+
+        float blue = cv::mean(components[0])[0];
+        float red = cv::mean(components[2])[0];
+        rect.match = blue < red;
+
+        std::cout << rect.match << ',';
+    }
+    std::cout << std::endl;
 }
 
 
