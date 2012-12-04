@@ -126,7 +126,8 @@ static unsigned char            Phase                                   = 0;
 static unsigned char            ASRrunning                              = False;
 
 /* Constantes  profil de vitesse Scurve */
-static const float              EcartVitesse                            = 0.001;
+static const float              EcartVitesseAcc                         = 0.010;
+static const float              EcartVitesseDecc                        = 0.001;
 
 /*----------------------------------------------------------------------------------------------*/
 
@@ -312,7 +313,7 @@ extern void ASSER_TRAJ_AsservissementMouvementRobot(Pose poseRobot, VitessesRobo
                     {
                         Vr = POS_GetVitesseRelle();
                         
-                        if (Vr > (VminMouv + EcartVitesse))
+                        if (Vr > (VminMouv + EcartVitesseDecc))
                         {
 #ifdef PIC32_BUILD      
                             if (Test_mode == (unsigned long)1)
@@ -346,7 +347,7 @@ extern void ASSER_TRAJ_AsservissementMouvementRobot(Pose poseRobot, VitessesRobo
                 {
                     Vr = POS_GetVitesseRelle();
                     
-                    if (POS_GetVitesseRelle() > (VminMouv + EcartVitesse))
+                    if (POS_GetVitesseRelle() > (VminMouv + EcartVitesseDecc))
                     {
 #ifdef PIC32_BUILD  
                       if (Test_mode == (unsigned long)1)
@@ -2142,7 +2143,7 @@ static unsigned char ASSER_TRAJ_Profil_S_Curve(float * Vconsigne, float Distance
                 if (ASRrunning == False)
                 {                   
                     /* Vitesse Reelle atteinte => delcanchement de l'ASR pour plus de performance */
-                    if ((Vr >= (V0 - EcartVitesse)) && (fSatPI == False))
+                    if ((Vr >= (V0 - EcartVitesseAcc)) && (fSatPI == False))
                     {
                        ASRrunning = True;
                     }
@@ -2151,7 +2152,7 @@ static unsigned char ASSER_TRAJ_Profil_S_Curve(float * Vconsigne, float Distance
                 if (ASRrunning == True)
                 {                
                     /* Vitesse Reelle atteinte => delcanchement de l'ASR pour plus de performance */
-                    if ((Vr >= (V0 - EcartVitesse)) && (fSatPI == False))
+                    if ((Vr >= (V0 - EcartVitesseAcc)) && (fSatPI == False))
                     {
                         /* Incrementation de la vitesse gain ASR */
                         VgASR = VgASR + gASR;
@@ -2255,7 +2256,7 @@ static unsigned char ASSER_TRAJ_Profil_S_Curve(float * Vconsigne, float Distance
                 if (ASRrunning == False)
                 {
                     /* Vitesse Reelle superieure => delcanchement de l'ASR pour mieux deccelerer */
-                    if ((Vr > (V0 + EcartVitesse)) && (fSatPI == False))
+                    if ((Vr > (V0 + EcartVitesseDecc)) && (fSatPI == False))
                     {                       
                        ASRrunning = True;
                     }
@@ -2264,7 +2265,7 @@ static unsigned char ASSER_TRAJ_Profil_S_Curve(float * Vconsigne, float Distance
                 if (ASRrunning == True)
                 {
                     /* Vitesse Reelle superieure => delcanchement de l'ASR pour mieux deccelerer */
-                    if ((Vr > (V0 + EcartVitesse)) && (fSatPI == False))
+                    if ((Vr > (V0 + EcartVitesseDecc)) && (fSatPI == False))
                     {
                         /* Decrementation de la vitesse gain ASR */
                         VgASR = VgASR - gASR;
@@ -2429,7 +2430,7 @@ static unsigned char ASSER_TRAJ_Profil_S_Curve(float * Vconsigne, float Distance
                 if (ASRrunning == False)
                 {
                     /* Vitesse Reelle superieure => delcanchement de l'ASR pour mieux deccelerer */
-                    if ((Vr > (V0 + EcartVitesse)) && (fSatPI == False))
+                    if ((Vr > (V0 + EcartVitesseDecc)) && (fSatPI == False))
                     {
                         ASRrunning = True;
                     }
@@ -2438,7 +2439,7 @@ static unsigned char ASSER_TRAJ_Profil_S_Curve(float * Vconsigne, float Distance
                 if (ASRrunning == True)
                 {
                     /* Vitesse Reelle superieure => delcanchement de l'ASR pour mieux deccelerer */
-                    if ((Vr > (V0 + EcartVitesse)) && (Vr > VminMouv) && (fSatPI == False))
+                    if ((Vr > (V0 + EcartVitesseDecc)) && (Vr > VminMouv) && (fSatPI == False))
                     {
                         /* Decrementation de la vitesse gain ASR */
                         VgASR = VgASR - gASR;
@@ -2532,7 +2533,7 @@ static unsigned char ASSER_TRAJ_Profil_S_Curve(float * Vconsigne, float Distance
                 if (ASRrunning == False)
                 {
                     /* Vitesse Reelle atteinte => delcanchement de l'ASR pour plus de performance */
-                    if ((Vr >= (V0 - EcartVitesse)) && (fSatPI == False))
+                    if ((Vr >= (V0 - EcartVitesseAcc)) && (fSatPI == False))
                     {
                         ASRrunning = True;
                     }
@@ -2541,7 +2542,7 @@ static unsigned char ASSER_TRAJ_Profil_S_Curve(float * Vconsigne, float Distance
                 if (ASRrunning == True)
                 {
                     /* Vitesse Reelle atteinte => delcanchement de l'ASR pour plus de performance */
-                    if ((Vr >= (V0 - EcartVitesse)) && (fSatPI == False))
+                    if ((Vr >= (V0 - EcartVitesseAcc)) && (fSatPI == False))
                     {
                         /* Incrementation de la vitesse gain ASR */
                         VgASR = VgASR + gASR;
@@ -2675,7 +2676,7 @@ static unsigned char ASSER_TRAJ_Profil_S_Curve(float * Vconsigne, float Distance
                     
                     if (Vmax >= MIN(DonneeVmaxGauche, DonneeVmaxDroite))
                     {
-                      if ((Vr > (VminMouv + EcartVitesse)) && (VEnd == 0.0))
+                      if ((Vr > (VminMouv + EcartVitesseDecc)) && (VEnd == 0.0))
                       {
 #ifdef PIC32_BUILD           
                           if (Test_mode == (unsigned long)1)
