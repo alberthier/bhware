@@ -469,7 +469,7 @@ class Map(object):
         if not working_dir in sys.path:
             sys.path.append(working_dir)
         if not os.path.exists(output_file) or os.stat(source_file).st_mtime > os.stat(output_file).st_mtime:
-            cmd = ["gcc", "-O2", "-shared", "-fPIC", "-o", output_file, "-I" + include_dir, "-L" + lib_dir, source_file, "-l" + pyversion + "mu"]
+            cmd = ["gcc", "-O2", "-shared", "-fPIC", "-o", output_file, "-I" + include_dir, "-L" + lib_dir, source_file, "-l" + pyversion + sys.abiflags]
             print(cmd)
             gcc = subprocess.Popen(cmd, stdout = subprocess.PIPE, stderr = subprocess.PIPE, cwd=working_dir)
             (out, err) = gcc.communicate()
