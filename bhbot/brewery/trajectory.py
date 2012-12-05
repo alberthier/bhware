@@ -248,7 +248,7 @@ class Map(object):
         else:
             # 1. Filter X or Y lines
             lines_filtered_path = [ Pose(path[-1][0], path[-1][1]) ]
-            for i in reversed(xrange(len(path) - 1)):
+            for i in reversed(range(len(path) - 1)):
                 (next_x, next_y) = path[i + 1]
                 (x, y) = path[i]
                 if x != next_x and y != next_y:
@@ -264,7 +264,7 @@ class Map(object):
             alignment_filtered_path = []
             if p1.x != start_cell_x or p1.y != start_cell_y:
                 alignment_filtered_path.append(p1)
-            for i in xrange(2, len(lines_filtered_path)):
+            for i in range(2, len(lines_filtered_path)):
                 p2 = p3
                 p3 = lines_filtered_path[i]
                 a1 = math.atan2(p2.y - p1.y, p2.x - p1.x)
@@ -277,7 +277,7 @@ class Map(object):
 
             # 3. Filter neighbor points
             neighbor_filtered_path = [ alignment_filtered_path[0] ]
-            for i in xrange(1, len(alignment_filtered_path)):
+            for i in range(1, len(alignment_filtered_path)):
                 prev = neighbor_filtered_path[-1]
                 curr = alignment_filtered_path[i]
                 if abs(prev.x - curr.x) > 1 or abs(prev.y - curr.y) > 1:
@@ -291,7 +291,7 @@ class Map(object):
             else:
                 p3 = None
             simplified_paths.append([ p1 ])
-            for i in xrange(2, len(neighbor_filtered_path)):
+            for i in range(2, len(neighbor_filtered_path)):
                 p2 = p3
                 p3 = neighbor_filtered_path[i]
                 a1 = math.atan2(p2.y - p1.y, p2.x - p1.x)
@@ -307,12 +307,12 @@ class Map(object):
             for simplified_path in simplified_paths:
                 self.send_route_to_simulator(simplified_path, True)
 
-        for i in xrange(len(simplified_paths)):
+        for i in range(len(simplified_paths)):
             simplified_path = simplified_paths[i]
             if len(simplified_path) == 0:
                 del simplified_paths[i]
             else:
-                for j in xrange(len(simplified_path)):
+                for j in range(len(simplified_path)):
                     simplified_path[j].x = simplified_path[j].x * ROUTING_MAP_RESOLUTION + ROUTING_MAP_RESOLUTION / 2.0
                     simplified_path[j].y = simplified_path[j].y * ROUTING_MAP_RESOLUTION + ROUTING_MAP_RESOLUTION / 2.0
         if len(simplified_paths) > 0 and len(simplified_paths[-1]) > 0:
@@ -469,7 +469,8 @@ class Map(object):
         if not working_dir in sys.path:
             sys.path.append(working_dir)
         if not os.path.exists(output_file) or os.stat(source_file).st_mtime > os.stat(output_file).st_mtime:
-            cmd = ["gcc", "-O2", "-shared", "-fPIC", "-o", output_file, "-I" + include_dir, "-L" + lib_dir, source_file, "-l" + pyversion]
+            cmd = ["gcc", "-O2", "-shared", "-fPIC", "-o", output_file, "-I" + include_dir, "-L" + lib_dir, source_file, "-l" + pyversion + "mu"]
+            print(cmd)
             gcc = subprocess.Popen(cmd, stdout = subprocess.PIPE, stderr = subprocess.PIPE, cwd=working_dir)
             (out, err) = gcc.communicate()
             if gcc.returncode == 0:

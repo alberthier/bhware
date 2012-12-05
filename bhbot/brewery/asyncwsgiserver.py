@@ -7,7 +7,7 @@ import asyncore
 import asynchat
 import socket
 import wsgiref.handlers
-import cStringIO as StringIO
+import io
 
 import logger
 
@@ -27,7 +27,7 @@ class WsgiRequestHandler(asynchat.async_chat):
         self.server = server
         self.ibuffer = ""
         self.environ = {}
-        self.post_data = StringIO.StringIO()
+        self.post_data = io.StringIO()
         self.set_terminator("\r\n\r\n")
         self.state = WsgiRequestHandler.READING_HTTP_HEADER
 
@@ -40,7 +40,7 @@ class WsgiRequestHandler(asynchat.async_chat):
         if self.state == WsgiRequestHandler.READING_HTTP_HEADER:
             self.parse_header()
             if self.environ["REQUEST_METHOD"] == "POST":
-                if self.environ.has_key("CONTENT_LENGTH"):
+                if "CONTENT_LENGTH" in self.environ:
                     content_length = int(self.environ["CONTENT_LENGTH"])
                     self.set_terminator(content_length)
                 else:
@@ -57,7 +57,7 @@ class WsgiRequestHandler(asynchat.async_chat):
             self.ibuffer = ""
             self.state = WsgiRequestHandler.READING_DONE
         if self.state == WsgiRequestHandler.READING_DONE:
-            errors = StringIO.StringIO()
+            errors = io.StringIO()
             self.server.current_environ = self.environ.copy()
             handler = wsgiref.handlers.SimpleHandler(self.post_data, self, errors, self.environ, False, False)
             handler.server_software = "BreweryHackerWebServer/2012" + " Python/" + sys.version.split()[0]
@@ -130,7 +130,7 @@ class WsgiServer(asyncore.dispatcher):
     def handle_accept(self):
         try:
             ret = self.accept()
-        except socket.error, msg:
+        except socket.error as msg:
             logger.log("Warning: server accept() threw an exception ({})".format(msg))
             return
         except TypeError:

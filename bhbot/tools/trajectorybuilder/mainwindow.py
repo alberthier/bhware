@@ -142,7 +142,7 @@ class MainWindowController(QObject):
 
     def update_code(self):
         code = "enum Step {\n"
-        for i in xrange(len(self.commands)):
+        for i in range(len(self.commands)):
             code += "    Step{},\n".format(i)
         code += "    StepCount,\n"
         code += "    StepNext,\n"
@@ -167,7 +167,7 @@ class MainWindowController(QObject):
                 state = "STATE_ANTI_BLOCK_OFF"
             else:
                 state = None
-                print("Unknown command {}".format(command))
+                print(("Unknown command {}".format(command)))
 
             if state != None:
                 code += "/* Step{:03} */ {{ {:<50}, StepNext }},\n".format(i, state)

@@ -174,7 +174,7 @@ class Map(object):
 
     def all_edges(self):
         edges = list(self.base_edges)
-        for zone in self.opponent_zones.values():
+        for zone in list(self.opponent_zones.values()):
             if zone != None:
                 for node in zone.nodes:
                     edges += node.edges
@@ -447,7 +447,7 @@ class Map(object):
 
 
     def insert_sorted(self, openset, neighbor):
-        for i in xrange(len(openset)):
+        for i in range(len(openset)):
             if openset[i].f_score >= neighbor.f_score:
                 openset.insert(i, neighbor)
                 return

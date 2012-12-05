@@ -115,7 +115,7 @@ class RegularPolygon(object):
         px = x + radius
         py = y
         part = 2.0 * math.pi / float(n_sides)
-        for i in xrange(1, n_sides + 1):
+        for i in range(1, n_sides + 1):
             a = float(i) * part
             nx = x + math.cos(a) * radius
             ny = y + math.sin(a) * radius

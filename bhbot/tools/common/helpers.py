@@ -63,7 +63,7 @@ def packet_dump_to_text(dump):
     elif isinstance(dump, collections.OrderedDict) or isinstance(dump, dict):
         text = "{"
         first = True
-        for key, value in dump.iteritems():
+        for key, value in dump.items():
             if first:
                 first = False
             else:

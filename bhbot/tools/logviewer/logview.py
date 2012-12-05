@@ -56,7 +56,7 @@ class LogModel(QStandardItemModel):
         self.setHorizontalHeaderLabels(["#", "Time", "Sender", "Type", "State", "content"])
         self.colors = {}
         icon_size = QSize(16, 16)
-        for type, packet in packets.PACKETS_BY_TYPE.iteritems():
+        for type, packet in packets.PACKETS_BY_TYPE.items():
             pixmap = QPixmap(icon_size)
             pixmap.fill(QColor(packet.LOGVIEW_COLOR))
             self.colors[type] = QIcon(pixmap)
@@ -116,7 +116,7 @@ class LogModel(QStandardItemModel):
                 self.add_content(new_parent, "[{}]".format(index), value, indent + "    ")
                 index += 1
         elif isinstance(log, collections.OrderedDict):
-            for key, value in log.iteritems():
+            for key, value in log.items():
                 self.add_content(new_parent, key, value, indent + "    ")
 
 
@@ -152,10 +152,10 @@ class LogViewController(QObject):
         categories_model = CategoriesModel(self)
         self.ui.categories.setModel(categories_model)
         selection = QItemSelection()
-        for row in xrange(categories_model.rowCount()):
+        for row in range(categories_model.rowCount()):
             idx = categories_model.index(row, 0)
             packet_type = idx.data(CategoriesModel.PACKET_TYPE_ROLE).toInt()[0]
-            if packets.PACKETS_BY_TYPE.has_key(packet_type):
+            if packet_type in packets.PACKETS_BY_TYPE:
                 if packets.PACKETS_BY_TYPE[packet_type].LOGVIEW_DEFAULT_ENABLED:
                     selection.select(idx, idx)
             else:
@@ -196,6 +196,6 @@ class LogViewController(QObject):
 
     def expand_packet(self, index, expand):
         self.ui.log_view.setExpanded(index, expand)
-        for row in xrange(self.ui.log_view.model().rowCount(index)):
+        for row in range(self.ui.log_view.model().rowCount(index)):
             child_index = index.child(row, 0)
             self.expand_packet(child_index, expand)

@@ -48,14 +48,14 @@ class PacketTestMixin(object):
 
     def assert_dict_equal(self, dict1, dict2):
         self.assertEqual(len(dict1), len(dict2))
-        for key, value1 in dict1.iteritems():
+        for key, value1 in dict1.items():
             value2 = dict2[key]
             self.assert_equal(value1, value2)
 
 
     def assert_sequence_equal(self, seq1, seq2):
         self.assertEqual(len(seq1), len(seq2))
-        for i in xrange(len(seq1)):
+        for i in range(len(seq1)):
             self.assert_equal(seq1[i], seq2[i])
 
 
@@ -105,23 +105,23 @@ class PacketTestMixin(object):
     def test_packet_id_uniqueness(self):
         count = 0
         packet_type = self.create_packet().TYPE
-        for name, packet_class in packets.PACKETS_BY_NAME.iteritems():
+        for name, packet_class in packets.PACKETS_BY_NAME.items():
             if packet_class.TYPE == packet_type:
                 count += 1
         self.assertEqual(count, 1)
 
 
     def inspect_logview_structure(self, s, parent):
-        self.assertTrue(s.has_key("name"))
+        self.assertTrue("name" in s)
         if parent != None:
-            self.assertTrue(s.has_key("parent"))
+            self.assertTrue("parent" in s)
             self.assertEqual(s["parent"], parent)
 
-        if s.has_key("children"):
+        if "children" in s:
             for c in s["children"]:
                 self.inspect_logview_structure(c, s)
         elif parent != None:
-            self.assertTrue(s.has_key("value"))
+            self.assertTrue("value" in s)
 
 
 
