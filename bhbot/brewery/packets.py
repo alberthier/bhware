@@ -551,7 +551,7 @@ class ListItem(PacketItem):
         self.max_elements = max_elements
         if self.C_TYPE is None:
             self.C_TYPE = "B"
-            for i in xrange(self.max_elements):
+            for i in range(self.max_elements):
                 self.C_TYPE += self.element_type.C_TYPE
         PacketItem.__init__(self, name, default_value, description)
 
@@ -560,7 +560,7 @@ class ListItem(PacketItem):
         buf.append(len(value))
         for elt in value:
             self.element_type.to_value_list(elt, buf)
-        for i in xrange(self.max_elements - len(value)):
+        for i in range(self.max_elements - len(value)):
             self.element_type.to_value_list(self.element_type.default_value, buf)
 
 
@@ -568,11 +568,11 @@ class ListItem(PacketItem):
         value = []
         count = buf[0]
         del buf[0]
-        for i in xrange(count):
+        for i in range(count):
             ival = self.element_type.from_value_list(buf)
             value.append(ival)
         # Pop remaining elements
-        for i in xrange(self.max_elements - count):
+        for i in range(self.max_elements - count):
             self.element_type.from_value_list(buf)
         return value
 
@@ -640,7 +640,7 @@ class BasePacket(object):
                     cls.HANDLER_METHOD += c
 
         for elt in self.DEFINITION:
-            if kwargs.has_key(elt.name):
+            if elt.name in kwargs:
                 value = kwargs[elt.name]
             else:
                 # Call the constructor of the value to duplicate it. This is necessary for lists
@@ -1126,10 +1126,10 @@ for (item_name, item_type) in inspect.getmembers(sys.modules[__name__]):
         item_type()
         PACKETS_BY_NAME[item_name] = item_type
         PACKETS_BY_TYPE[item_type.TYPE] = item_type
-    PACKETS_LIST = PACKETS_BY_TYPE.values()
+    PACKETS_LIST = list(PACKETS_BY_TYPE.values())
 
 
 def create_packet(buffer):
-    (packet_type,) = struct.unpack("<B", buffer[0])
+    (packet_type,) = struct.unpack("<B", buffer[:1])
     packet_class = PACKETS_BY_TYPE[packet_type]
     return packet_class()

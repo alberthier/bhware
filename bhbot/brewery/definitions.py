@@ -135,7 +135,7 @@ class Enum(object):
         self.lookup_by_name = {}
         self.lookup_by_value = {}
         ENUMS[name] = self
-        for enum_item_name, enum_item_value in kwargs.items():
+        for enum_item_name, enum_item_value in list(kwargs.items()):
             globals()[enum_item_name] = enum_item_value
             self.lookup_by_name[enum_item_name] = enum_item_value
             self.lookup_by_value[enum_item_value] = enum_item_name

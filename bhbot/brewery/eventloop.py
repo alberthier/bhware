@@ -15,7 +15,7 @@ import logger
 import packets
 import statemachine
 import asyncwsgiserver
-import web.webinterface
+#import web.webinterface
 import leds
 import robot
 import opponentdetector
@@ -40,10 +40,10 @@ class TurretChannel(asyncore.file_dispatcher):
         self.port.nonblocking()
         asyncore.file_dispatcher.__init__(self, self.port)
         self.eventloop = eventloop
-        self.buffer = ""
+        self.buffer = bytes()
         self.packet = None
         self.synchronized = False
-        self.out_buffer = ""
+        self.out_buffer = bytes()
         self.turret_packets = [ packets.TurretDetect.TYPE, packets.TurretInit.TYPE, packets.TurretDistances.TYPE, packets.TurretBoot.TYPE ]
 
 
@@ -99,7 +99,7 @@ class RobotControlDeviceChannel(asyncore.dispatcher_with_send):
     def __init__(self, eventloop, socket):
         asyncore.dispatcher_with_send.__init__(self, socket)
         self.eventloop = eventloop
-        self.buffer = ""
+        self.buffer = bytes()
         self.packet = None
 
 
@@ -136,7 +136,7 @@ class RobotLogDeviceChannel(asyncore.dispatcher):
 
     def __init__(self, socket):
         asyncore.dispatcher.__init__(self, socket)
-        self.buffer = ""
+        self.buffer = bytes()
 
 
     def bytes_available(self):
@@ -275,7 +275,7 @@ class EventLoop(object):
     def handle_read(self, channel):
         try :
             return self.do_read(channel)
-        except Exception, e :
+        except Exception as e :
             logger.log_exception(e)
 
 
@@ -313,7 +313,7 @@ class EventLoop(object):
                     if len(channel.buffer) == channel.packet.MAX_SIZE:
                         # A complete packet has been received, notify the state machine
                         channel.packet.deserialize(channel.buffer)
-                        channel.buffer = ""
+                        channel.buffer = bytes()
 
                         logger.log_packet(channel.packet, "PIC")
 
@@ -325,7 +325,7 @@ class EventLoop(object):
                         channel.packet.dispatch(self.get_current_state())
 
                         channel.packet = None
-                except Exception, e:
+                except Exception as e:
                     channel.packet = None
                     logger.log_exception(e)
 
@@ -386,7 +386,7 @@ class EventLoop(object):
 
     def start(self):
         logger.log("Starting internal web server on port {}".format(self.webserver_port))
-        self.web_server = asyncwsgiserver.WsgiServer("", self.webserver_port, web.webinterface.create_app(self))
+        #self.web_server = asyncwsgiserver.WsgiServer("", self.webserver_port, web.webinterface.create_app(self))
         if SERIAL_PORT_PATH is not None:
             try:
                 self.turret_channel = TurretChannel(SERIAL_PORT_PATH, SERIAL_PORT_SPEED, self)

@@ -33,10 +33,10 @@ def initialize():
         filepath = get_next_log_filepath()
         #noinspection PyBroadException
         try:
-            log_file = file(filepath, "w")
+            log_file = open(filepath, "w")
             os.chmod(filepath, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR | stat.S_IRGRP | stat.S_IXGRP | stat.S_IROTH | stat.S_IXOTH)
         except:
-            log_file = file(os.devnull, "w")
+            log_file = open(os.devnull, "w")
         log_file.write("#!/usr/bin/env python\n")
         log_file.write("# encoding: utf-8\n\n")
         log_file.write("from packets import *\n")

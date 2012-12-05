@@ -29,7 +29,7 @@ totem_approach_delta = ROBOT_X_SIZE - ROBOT_CENTER_X
 totem_approach_start_positions = {}
 totem_approach_end_positions = {}
 
-for k, v in totem_take_positions.items() :
+for k, v in list(totem_take_positions.items()) :
     vals = None
     if k.endswith("_NORTH") :
         vals = v[0] - (TAKE_GOLDBAR_APPROACH + totem_approach_delta), v[1], v[2]

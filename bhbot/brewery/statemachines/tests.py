@@ -185,7 +185,7 @@ class TestCircleRotation(statemachine.State):
 
     def on_enter(self):
         walk = commonstates.TrajectoryWalk()
-        for i in xrange(self.steps):
+        for i in range(self.steps):
             dst = get_destination_pose(DIRECTION_FORWARD, 0.0, float(i + 1) * math.pi * 2.0 / float(self.steps), self.trigo, self.start_pose)
             walk.rotate_to(dst.angle)
         self.switch_to_substate(walk)
@@ -237,7 +237,7 @@ class TestSquare(statemachine.State):
     def on_enter(self):
         walk = commonstates.TrajectoryWalk()
         dst = trajectory.Pose(self.start_pose.x, self.start_pose.y, self.start_pose.angle)
-        for i in xrange(4):
+        for i in range(4):
             dst = get_destination_pose(self.direction, self.distance, math.pi / 2.0, self.trigo, dst)
             walk.rotate_to(dst.angle)
             walk.move_to(dst.x, dst.y)
@@ -311,7 +311,7 @@ class TestMultipointSquare(statemachine.State):
         walk = commonstates.TrajectoryWalk()
 
         points = [ self.start_pose ]
-        for i in xrange(4):
+        for i in range(4):
             points.append(get_destination_pose(self.direction, self.distance, math.pi / 2.0, self.trigo, points[-1]))
 
         walk.follow(points[1:], self.direction)
@@ -335,7 +335,7 @@ class TestLookAt(statemachine.State):
         if isinstance(substate, commonstates.DefinePosition):
             walk = commonstates.TrajectoryWalk()
             n = 8
-            for i in xrange(1, n + 1):
+            for i in range(1, n + 1):
                 a = float(i) * 2.0 * math.pi / float(n)
                 x = 1.0 + math.cos(a) * 0.5
                 y = 1.0 + math.sin(a) * 0.5
@@ -368,7 +368,7 @@ class TestMultipointCircle(statemachine.State):
 
             points = []
             n = 20
-            for i in xrange(1, n + 1):
+            for i in range(1, n + 1):
                 a = float(i) * 2.0 * math.pi / float(n)
                 x = 1.0 + math.cos(a) * self.radius
                 y = 1.0 + math.sin(a) * self.radius
@@ -615,7 +615,7 @@ class LoopAroundPeanutIsland(statemachine.State):
 
         self.walk = commonstates.TrajectoryWalk()
 
-        for i in xrange(len(points) * 3):
+        for i in range(len(points) * 3):
             k = i % len(points)
             (x, y, angle) = points[k]
             self.walk.goto(x, y, angle + angle_offset)

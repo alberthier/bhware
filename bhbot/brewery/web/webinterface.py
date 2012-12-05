@@ -7,7 +7,7 @@ import os
 
 sys.path.append(os.path.dirname(__file__))
 
-import cherrypy
+from . import cherrypy
 
 import packets
 import trajectory
@@ -193,7 +193,7 @@ class BHWeb(object):
             html += """<tr><td>{} ({})</td><td><input type="checkbox" name="{}" {}/></td></tr>""".format(name, item.C_TYPE, name, checked)
         elif isinstance(item, packets.Enum8Item) or isinstance(item, packets.UEnum8Item):
             html += """<tr><td>{} ({})</td><td><select name="{}">""".format(name, item.C_TYPE, name)
-            for value, name in item.enum.lookup_by_value.iteritems():
+            for value, name in item.enum.lookup_by_value.items():
                 html += """<option value="{}">{} ({})</option>""".format(value, name, value)
             html += """</select></td></tr>"""
         elif isinstance(item, packets.OptionalAngle):
@@ -201,7 +201,7 @@ class BHWeb(object):
             html += """<tr><td>{}.use_angle (B)</td><td><input type="checkbox" name="{}.use_angle" checked="checked"/></td></tr>""".format(name, name)
         elif isinstance(item, packets.ListItem):
             html += """<tr><td>{}.count (B)</td><td><input type="text" name="{}.count" value="{}"/></td></tr>""".format(name, name, 1)
-            for sub_item_index in xrange(item.max_elements):
+            for sub_item_index in range(item.max_elements):
                 html += self.build_element_from_item(item.element_type, "{}[{}]".format(name, sub_item_index))
         else:
             html += """<tr><td>{} ({})</td><td><input type="text" name="{}" value="{}"/></td></tr>""".format(name, item.C_TYPE, name, item.default_value)
@@ -222,11 +222,11 @@ class BHWeb(object):
         if name is None:
             name = item.name
         if isinstance(item, packets.BoolItem):
-            return query.has_key(name)
+            return name in query
         elif isinstance(item, packets.FloatItem):
             return float(query[name])
         elif isinstance(item, packets.OptionalAngle):
-            if query.has_key(name + ".use_angle"):
+            if name + ".use_angle" in query:
                 angle = float(query[name + ".angle"])
             else:
                 angle = None
@@ -234,7 +234,7 @@ class BHWeb(object):
         elif isinstance(item, packets.ListItem):
             count = int(query[name + ".count"])
             l = []
-            for sub_item_index in xrange(count):
+            for sub_item_index in range(count):
                 elt = self.build_item_from_query(query, item.element_type, "{}[{}]".format(name, sub_item_index))
                 l.append(elt)
             return l
@@ -295,7 +295,7 @@ class BHWeb(object):
             distance = float(kwargs["distance"])
             pose = trajectory.Pose()
             packet = packets.Goto()
-            if kwargs.has_key("forward"):
+            if "forward" in kwargs:
                 packet.direction = DIRECTION_FORWARD
             else:
                 packet.direction = DIRECTION_BACKWARD

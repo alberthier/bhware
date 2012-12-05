@@ -66,7 +66,7 @@ class TestTimer(unittest.TestCase):
 
 
     def check_timers_order(self):
-        for i in xrange(len(self.timers) - 1):
+        for i in range(len(self.timers) - 1):
             t1 = self.timers[i]
             t2 = self.timers[i + 1]
             self.assertTrue(t1 <= t2)
