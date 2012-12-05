@@ -191,7 +191,6 @@ class PositionControlSimulatorDynamics(QObject):
         for pose in points:
             cmd += " " + str(pose.x) + " " + str(pose.y)
         cmd += "\n"
-        print(cmd)
         self.process.write(cmd)
         self.process.waitForBytesWritten()
 
