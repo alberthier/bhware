@@ -24,10 +24,10 @@ class WsgiRequestHandler(asynchat.async_chat):
         asynchat.async_chat.__init__(self, connection)
         self.address = address
         self.server = server
-        self.ibuffer = ""
+        self.ibuffer = bytes()
         self.environ = {}
         self.post_data = io.StringIO()
-        self.set_terminator("\r\n\r\n")
+        self.set_terminator(b"\r\n\r\n")
         self.state = WsgiRequestHandler.READING_HTTP_HEADER
 
 
@@ -43,31 +43,31 @@ class WsgiRequestHandler(asynchat.async_chat):
                     content_length = int(self.environ["CONTENT_LENGTH"])
                     self.set_terminator(content_length)
                 else:
-                    self.set_terminator("\0")
+                    self.set_terminator(b"\0")
                 self.state = WsgiRequestHandler.READING_HTTP_POST_DATA
             else:
                 self.set_terminator(None)
                 self.state = WsgiRequestHandler.READING_DONE
-            self.ibuffer = ""
+            self.ibuffer = bytes()
         elif self.state == WsgiRequestHandler.READING_HTTP_POST_DATA:
             self.set_terminator(None)
             self.post_data.write(self.ibuffer)
             self.post_data.seek(0)
-            self.ibuffer = ""
+            self.ibuffer = bytes()
             self.state = WsgiRequestHandler.READING_DONE
         if self.state == WsgiRequestHandler.READING_DONE:
             errors = io.StringIO()
             self.server.current_environ = self.environ.copy()
             handler = wsgiref.handlers.SimpleHandler(self.post_data, self, errors, self.environ, False, False)
-            handler.server_software = "BreweryHackerWebServer/2012" + " Python/" + sys.version.split()[0]
+            handler.server_software = "BHWebServer/2012" + " Python/" + sys.version.split()[0]
             handler.run(self.server.get_app())
             if len(errors.getvalue()) != 0:
                 logger.log(errors.getvalue())
 
 
     def parse_header(self):
-        lines = self.ibuffer.split("\r\n")
-        request_line = lines[0].lstrip()
+        lines = self.ibuffer.split(b"\r\n")
+        request_line = str(lines[0], "ascii").lstrip()
         lines = lines[1:]
         request_line.lstrip()
         request_parts = request_line.split()
@@ -84,7 +84,7 @@ class WsgiRequestHandler(asynchat.async_chat):
             self.environ["PATH_INFO"] = path
             self.environ["QUERY_STRING"] = ""
         for header in lines:
-            name, value = header.split(':', 1)
+            name, value = str(header, "ascii").split(':', 1)
             value = value.strip()
             name = name.strip().replace('-', '_').upper()
             if name in ["CONTENT_LENGTH", "CONTENT_TYPE"]:
