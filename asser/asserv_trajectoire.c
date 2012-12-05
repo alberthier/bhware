@@ -126,7 +126,7 @@ static unsigned char            Phase                                   = 0;
 static unsigned char            ASRrunning                              = False;
 
 /* Constantes  profil de vitesse Scurve */
-static const float              EcartVitesseAcc                         = 0.010;
+static const float              EcartVitesseAcc                         = 0.025;
 static const float              EcartVitesseDecc                        = 0.001;
 
 /*----------------------------------------------------------------------------------------------*/
