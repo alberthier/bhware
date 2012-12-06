@@ -126,7 +126,7 @@ static unsigned char            Phase                                   = 0;
 static unsigned char            ASRrunning                              = False;
 
 /* Constantes  profil de vitesse Scurve */
-static const float              EcartVitesseAcc                         = 0.025;
+static const float              EcartVitesseAcc                         = 0.050;
 static const float              EcartVitesseDecc                        = 0.001;
 
 /*----------------------------------------------------------------------------------------------*/
@@ -2221,16 +2221,7 @@ static unsigned char ASSER_TRAJ_Profil_S_Curve(float * Vconsigne, float Distance
                             else if (*Vconsigne < VminMouv)
                             {
                                 *Vconsigne = VminMouv;
-                            }                                                        
-
-#ifdef PIC32_BUILD
-                            if (Test_mode == (unsigned long)1)
-                            {
-                                TOOLS_LogFault(AsserPosErr, True, FLOAT, (float *)&Amax, True, "Asserv_traj : Amax > aux capacitees du robot !");
-                            }
-#else /* PIC32_BUILD */
-                            ASSER_TRAJ_LogAsserMsgPC("Asserv_traj : Amax > aux capacitees du robot !", Amax);
-#endif /* PIC32_BUILD */     
+                            }                                                           
                         }
                     }
                 }

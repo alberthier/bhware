@@ -242,7 +242,7 @@ def trajFunction(d_cfgTraj):
     send_init_pose(simulator_process, x=0.0, y=0.0, angle=math.pi/2.0) #4.71
     deplacement = commandMsg("MSG_MAIN_GOTO 1 1 -1100000")
     #deplacement.addPose("0.0 1.0") #-1100000.0
-    deplacement.addPose("0.0 1.6")
+    deplacement.addPose("0.0 2.0")
     
     #deplacement = commandMsg("MSG_MAIN_GOTO 0 1 -1.57")
     #
