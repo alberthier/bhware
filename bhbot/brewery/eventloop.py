@@ -14,7 +14,7 @@ import logger
 import packets
 import statemachine
 import asyncwsgiserver
-#import web.webinterface
+import nanow
 import leds
 import robot
 import opponentdetector
@@ -24,6 +24,7 @@ import commonstates
 import geometry
 import goalmanager
 import tools
+import webinterface
 from definitions import *
 
 if IS_HOST_DEVICE_ARM :
@@ -385,7 +386,7 @@ class EventLoop(object):
 
     def start(self):
         logger.log("Starting internal web server on port {}".format(self.webserver_port))
-        #self.web_server = asyncwsgiserver.WsgiServer("", self.webserver_port, web.webinterface.create_app(self))
+        self.web_server = asyncwsgiserver.WsgiServer("", self.webserver_port, nanow.Application(webinterface.BHWeb(self)))
         if SERIAL_PORT_PATH is not None:
             try:
                 self.turret_channel = TurretChannel(SERIAL_PORT_PATH, SERIAL_PORT_SPEED, self)
