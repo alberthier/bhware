@@ -239,10 +239,37 @@ def trajFunction(d_cfgTraj):
     #~ deplacement.addPose("1.0 0.0")
     #~ simulator_process.stdin.write(deplacement.cmdMsgGeneration())
     
-    send_init_pose(simulator_process, x=0.0, y=0.0, angle=math.pi/2.0) #4.71
+    send_init_pose(simulator_process, x=0.2, y=0.2, angle=math.pi/2.0) #4.71
     deplacement = commandMsg("MSG_MAIN_GOTO 1 1 -1100000")
-    #deplacement.addPose("0.0 1.0") #-1100000.0
-    deplacement.addPose("0.0 2.0")
+    deplacement.addPose("0.2 2.2")
+    simulator_process.stdin.write(deplacement.cmdMsgGeneration())
+    
+    deplacement = commandMsg("MSG_MAIN_GOTO 0 1 -1.3")
+    simulator_process.stdin.write(deplacement.cmdMsgGeneration())
+    
+    deplacement = commandMsg("MSG_MAIN_GOTO 1 1 -1100000")
+    deplacement.addPose("0.30 2.0")
+    deplacement.addPose("0.30 1.8")
+    deplacement.addPose("0.27 1.6")
+    deplacement.addPose("0.27 1.4")
+    deplacement.addPose("0.40 0.6")
+    deplacement.addPose("0.40 0.2")
+    simulator_process.stdin.write(deplacement.cmdMsgGeneration())
+    
+    deplacement = commandMsg("MSG_MAIN_GOTO 0 1 3.1415")
+    simulator_process.stdin.write(deplacement.cmdMsgGeneration())
+    
+    deplacement = commandMsg("MSG_MAIN_GOTO 1 1 -1100000")
+    deplacement.addPose("0.2 0.2")
+    simulator_process.stdin.write(deplacement.cmdMsgGeneration())
+    
+    deplacement = commandMsg("MSG_MAIN_GOTO 0 1 1.57")
+    
+    
+    
+    #~ send_init_pose(simulator_process, x=0.0, y=0.0, angle=math.pi/2.0) #4.71
+    #~ deplacement = commandMsg("MSG_MAIN_GOTO 1 1 -1100000")
+    #~ deplacement.addPose("0.0 2.0")
     
     #deplacement = commandMsg("MSG_MAIN_GOTO 0 1 -1.57")
     #
@@ -754,6 +781,23 @@ def affichageTraj2011(d_traj):
     #~ grid(True)
     #~ title("Distance parcourue")
 
+    figure(3)
+    ax_err_x = subplot(311)
+    ylabel("erreur x (mm)")
+    plot(temps, [x*1e3 for x in d_traj["erreurPose_x"]])
+    grid(True)
+    
+    ax_err_y = subplot(312)
+    ylabel("erreur y (mm)")
+    plot(temps, [y*1e3 for y in d_traj["erreurPose_y"]])
+    grid(True)
+    
+    ax_err_x = subplot(313)
+    ylabel("erreur angle (degre)")
+    plot(temps, [angle_rad*180.0/math.pi for angle_rad in d_traj["erreurPose_angle"]])
+    grid(True)
+
+
     #~ affichageGabaritVitesse(d_traj)
 
     show()
@@ -1094,8 +1138,9 @@ print(traj["distance"])
 #~ print("debug_smooth:")
 #~ print(traj["debug_smooth"])
 
-print("vitesse_fin_profil (m/s):")
-print(traj["vitesse_fin_profil"])
+if "vitesse_fin_profil" in traj.keys() :
+    print("vitesse_fin_profil (m/s):")
+    print(traj["vitesse_fin_profil"])
 
 print("dist_parcourue: " + str(traj["dist_parcourue"][-1]))
 print("etat asser: " + str(traj["Motion"][0]))
@@ -1107,7 +1152,7 @@ if "periodeNewSeg" in traj.keys() :
     print("periodeNewSeg : " + str(traj["periodeNewSeg"]))
 
 matplotlib.rcParams.update({'font.size': 16})
-affichageGabaritVitesse_2013(traj)
+#~ affichageGabaritVitesse_2013(traj)
 affichageTraj2011(traj)
 #~ affichageTestAccDcecc(traj)
 

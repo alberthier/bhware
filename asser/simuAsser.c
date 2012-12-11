@@ -359,6 +359,10 @@ void SIMU_InitialisationLogRobot(void)
     ASSER_TRAJ_LogAsserValPC("vitLongitudinale", 0.0);
     ASSER_TRAJ_LogAsserValPC("vitLongitudinaleEffective", 0.0);
 
+    ASSER_TRAJ_LogAsserValPC("erreurPose_x",  0.0);
+    ASSER_TRAJ_LogAsserValPC("erreurPose_y",  0.0);
+    ASSER_TRAJ_LogAsserValPC("erreurPose_angle",  0.0);
+
     /* fichier de configuration pour l'affichage sous matlab */
     ASSER_TRAJ_LogAsserValPC("periode", TE);
     //ASSER_TRAJ_LogAsserValPC("periode", TE_PI);
