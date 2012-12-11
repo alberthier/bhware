@@ -252,6 +252,7 @@ extern void ASSER_TRAJ_AsservissementMouvementRobot(Pose poseRobot, VitessesRobo
     Pose            P_robot;                                        /* Point fixe du robot a asservir a la trajectoire de consigne */
     Pose            erreurPoseCentreRobot;
     Pose            erreur_P;
+    float           memo_angle_robot;
     Vecteur         diff1BS, diff2BS;
     float           delta_distance                          = 0.0;
     float           parametrePositionSegmentTrajectoireAv   = 0.0;
@@ -532,6 +533,9 @@ extern void ASSER_TRAJ_AsservissementMouvementRobot(Pose poseRobot, VitessesRobo
         if (ASSER_TRAJ_isDeplacement(&chemin) == True)
         {
             erreurPoseCentreRobot = ASSER_TRAJ_ErreurPose(poseRobot, poseReferenceRobot);
+            erreur_P.x = erreurPoseCentreRobot.x;
+            erreur_P.y = erreurPoseCentreRobot.y;
+            erreur_P.angle = erreurPoseCentreRobot.angle;
 
             gain[0] = gainDeplacement1;
             gain[1] = gainDeplacement2;
@@ -547,9 +551,21 @@ extern void ASSER_TRAJ_AsservissementMouvementRobot(Pose poseRobot, VitessesRobo
             P_robot.x = poseRobot.x + (NORME_BARRE_SUIVI_TRAJ * cosf(poseRobot.angle));
             P_robot.y = poseRobot.y + (NORME_BARRE_SUIVI_TRAJ * sinf(poseRobot.angle));            
             P_robot.angle = poseRobot.angle;
+            memo_angle_robot = poseReference.angle;
+            if (differentielleTemporellePoseReference.angle > 0.0)
+            {
+                P_robot.angle = POS_ModuloAngle(P_robot.angle + PI/2.0);
+                poseReference.angle = POS_ModuloAngle(poseReference.angle + PI/2.0);
+            }
+            else
+            {
+                P_robot.angle = POS_ModuloAngle(P_robot.angle - PI/2.0);
+                poseReference.angle = POS_ModuloAngle(poseReference.angle - PI/2.0);
+            }
 
             /* Calcul du vecteur d'erreur */
             erreur_P = ASSER_TRAJ_ErreurPose(P_robot, poseReference);
+            poseReference.angle = memo_angle_robot;
 
             /* Loi de commande par retour d'etat SANS orientation*/
             diagonaleMatriceGain[0] = gainRotation1;
@@ -576,6 +592,9 @@ extern void ASSER_TRAJ_AsservissementMouvementRobot(Pose poseRobot, VitessesRobo
     ASSER_TRAJ_LogAsserValPC("xCCourant",  ASSER_TRAJ_Trajectoire(chemin.segmentTrajBS, ASSER_segmentCourant, parametrePositionSegmentTrajectoire).x);
     ASSER_TRAJ_LogAsserValPC("xPoseReferenceRobot",  poseReferenceRobot.x);
     ASSER_TRAJ_LogAsserValPC("yPoseReferenceRobot",  poseReferenceRobot.y);
+    ASSER_TRAJ_LogAsserValPC("erreurPose_x",  erreur_P.x);
+    ASSER_TRAJ_LogAsserValPC("erreurPose_y",  erreur_P.y);
+    ASSER_TRAJ_LogAsserValPC("erreurPose_angle",  erreur_P.angle);
     ASSER_TRAJ_LogAsserValPC("distNormaliseeRestante",  chemin.profilVitesse.distNormaliseeRestante);
     ASSER_TRAJ_LogAsserValPC("orientationPoseReferenceRobot",  poseReferenceRobot.angle);
     ASSER_TRAJ_LogAsserValPC("consRotation",  vitessesConsignes->rotation);
