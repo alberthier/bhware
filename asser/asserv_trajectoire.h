@@ -58,6 +58,8 @@ typedef struct
     /* parametres profil */
     float           Amax;
     float           Dmax;
+    float           AmaxRot;
+    float           DmaxRot;
 } ParametresProfilVitesse;
 
 typedef struct
@@ -111,6 +113,8 @@ extern float                gainDeplacement3;
 
 extern float                Ratio_Acc;            
 extern float                Ratio_Decc;
+extern float                Ratio_Acc_Rot;            
+extern float                Ratio_Decc_Rot;
 
 extern float                A_MAX;
 extern float                D_MAX;

@@ -69,6 +69,8 @@ float                           gainDeplacement3                        =   20.0
 /** Parametres de la generation de trajectoire */
 float                           Ratio_Acc                               =   1.0;
 float                           Ratio_Decc                              =   1.0;
+float                           Ratio_Acc_Rot                           =   1.0;
+float                           Ratio_Decc_Rot                          =   1.0;
 
 float                           VminMouvRef                             =   0.1; 
 
@@ -503,7 +505,7 @@ extern void ASSER_TRAJ_AsservissementMouvementRobot(Pose poseRobot, VitessesRobo
                 parametrePositionSegmentTrajectoireAv = parametrePositionSegmentTrajectoire;
                 segmentCourantAv = ASSER_segmentCourant;
 
-                ASSER_Running = ASSER_TRAJ_Profil_S_Curve(&VitesseProfil, chemin.distance, 0.0, 0.0, chemin.profilVitesse.Amax, chemin.profilVitesse.Dmax, Vitesse_Gain_ASR, chemin.profilVitesse.distance_parcourue, ((float)m_sensDeplacement) * POS_GetVitesseRotation() * (ECART_ROUE_LIBRE/2.0), (SaturationPIDflag | SaturationPIGflag));
+                ASSER_Running = ASSER_TRAJ_Profil_S_Curve(&VitesseProfil, chemin.distance, 0.0, 0.0, chemin.profilVitesse.AmaxRot, chemin.profilVitesse.DmaxRot, Vitesse_Gain_ASR, chemin.profilVitesse.distance_parcourue, ((float)m_sensDeplacement) * POS_GetVitesseRotation() * (ECART_ROUE_LIBRE/2.0), (SaturationPIDflag | SaturationPIGflag));
 
                 delta_distance_Av = VitesseProfil * TE;
                 
@@ -917,7 +919,9 @@ extern void ASSER_TRAJ_InitialisationTrajectoire(Pose poseRobot, PtTraj * point,
  
     /* Initialisation du profil de vitesse */
     chemin.profilVitesse.Amax = A_MAX * Ratio_Acc;
-    chemin.profilVitesse.Dmax = D_MAX * Ratio_Decc;   
+    chemin.profilVitesse.Dmax = D_MAX * Ratio_Decc;    
+    chemin.profilVitesse.AmaxRot = A_MAX * Ratio_Acc_Rot;
+    chemin.profilVitesse.DmaxRot = D_MAX * Ratio_Decc_Rot;   
     chemin.profilVitesse.etat = 1;
 
     ASSER_compteurPeriode = 0;
@@ -2072,18 +2076,18 @@ static unsigned char ASSER_TRAJ_Profil_S_Curve(float * Vconsigne, float Distance
             ASSER_TRAJ_LogAsserMsgPC("Asserv_traj : Reajustement de la vitesse de fin de profil ! Vitesse de fin impossible sur cette distance", VEnd);
 #endif /* PIC32_BUILD */
         }
-            	
+            
         /* Calcul du Jerk Max */
         JAmax = (Amax * Amax) / (Vmax - VStart);
         JDmax = (Dmax * Dmax) / (Vmax - VEnd);
         
         if (JAmax > (VminMouv / TE))
         {
-        		JAmax = (VminMouv / TE);
+            JAmax = (VminMouv / TE);
         }
         if (JDmax > (VminMouv / TE))
         {
-        		JDmax = (VminMouv / TE);
+            JDmax = (VminMouv / TE);
         }
                 
         /* Initialisation des variables */
@@ -2104,7 +2108,7 @@ static unsigned char ASSER_TRAJ_Profil_S_Curve(float * Vconsigne, float Distance
         /* Fin de la Phase 0 */
         Phase = 1;
     }
-       	       	
+       
     switch(Phase)
     {
         /* Phase I ou Phase V */
@@ -2621,15 +2625,18 @@ static unsigned char ASSER_TRAJ_Profil_S_Curve(float * Vconsigne, float Distance
                             {
                                 *Vconsigne = VminMouv;
                             }                                                        
-
-#ifdef PIC32_BUILD          
+       
                             if (Test_mode == (unsigned long)1)
                             {
-                                TOOLS_LogFault(AsserPosErr, True, FLOAT, (float *)&Amax, True, "Asserv_traj : Amax > aux capacitees du robot !");
-                            }
+                                if (Vmax >= MIN(DonneeVmaxGauche, DonneeVmaxDroite))
+                                {                
+#ifdef PIC32_BUILD 
+                                    TOOLS_LogFault(AsserPosErr, True, FLOAT, (float *)&Amax, True, "Asserv_traj : Amax > aux capacitees du robot !");
 #else /* PIC32_BUILD */
-                            ASSER_TRAJ_LogAsserMsgPC("Asserv_traj : Amax > aux capacitees du robot !", Amax);
+                                    ASSER_TRAJ_LogAsserMsgPC("Asserv_traj : Amax > aux capacitees du robot !", Amax);
 #endif /* PIC32_BUILD */                            
+                                }
+                            }
                         }
                     }
                 }
