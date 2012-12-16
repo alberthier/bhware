@@ -7,6 +7,7 @@ import math
 
 import trajectory
 from definitions import *
+import position
 
 
 
@@ -14,7 +15,7 @@ from definitions import *
 class TestPoseBase(unittest.TestCase):
 
     def setUp(self):
-        self.pose = trajectory.Pose(1.0,1.0,math.pi)
+        self.pose = position.Pose(1.0,1.0,math.pi)
 
 
     def test_base(self):
@@ -28,8 +29,8 @@ class TestPoseBase(unittest.TestCase):
 class TestPosePurple(unittest.TestCase):
 
     def setUp(self):
-        trajectory.Pose.match_team = TEAM_PURPLE
-        self.pose = trajectory.Pose(1.0,1.0,math.pi)
+        position.Pose.match_team = TEAM_PURPLE
+        self.pose = position.Pose(1.0,1.0,math.pi)
 
 
     def test_base(self):
@@ -49,8 +50,8 @@ class TestPosePurple(unittest.TestCase):
 class TestPosePurple(unittest.TestCase):
 
     def setUp(self):
-        trajectory.Pose.match_team = TEAM_PURPLE
-        self.pose = trajectory.Pose(1.0,1.0,math.pi)
+        position.Pose.match_team = TEAM_PURPLE
+        self.pose = position.Pose(1.0,1.0,math.pi)
 
 
     def test_virt(self):
@@ -64,8 +65,8 @@ class TestPosePurple(unittest.TestCase):
 class TestPoseRed(unittest.TestCase):
 
     def setUp(self):
-        trajectory.Pose.match_team = TEAM_RED
-        self.pose = trajectory.Pose(1.0,1.0,math.pi)
+        position.Pose.match_team = TEAM_RED
+        self.pose = position.Pose(1.0,1.0,math.pi)
 
     def test_virt(self):
         self.assertEquals(self.pose.virt.x, 1.0)
@@ -87,7 +88,7 @@ class TestMap(unittest.TestCase):
 
 
     def test_strait_route(self):
-        route = self.map.route(trajectory.Pose(PURPLE_START_X, PURPLE_START_Y), trajectory.Pose(PURPLE_START_X, 1.5))
+        route = self.map.route(position.Pose(PURPLE_START_X, PURPLE_START_Y), position.Pose(PURPLE_START_X, 1.5))
         self.assertEquals(len(route), 1)
         self.assertTrue(len(route[0]) > 0)
         p = route[0][0]
@@ -96,12 +97,12 @@ class TestMap(unittest.TestCase):
 
 
     def test_unroutable(self):
-        route = self.map.route(trajectory.Pose(PURPLE_START_X, PURPLE_START_Y), trajectory.Pose(1.6, 2.8))
+        route = self.map.route(position.Pose(PURPLE_START_X, PURPLE_START_Y), position.Pose(1.6, 2.8))
         self.assertEquals(len(route), 0)
 
 
     def test_escape_from_forbidden_zone(self):
-        route = self.map.route(trajectory.Pose(PURPLE_START_X + MAP_WALLS_DISTANCE, PURPLE_START_Y), trajectory.Pose(1.6, 2.0))
+        route = self.map.route(position.Pose(PURPLE_START_X + MAP_WALLS_DISTANCE, PURPLE_START_Y), position.Pose(1.6, 2.0))
         self.assertNotEquals(len(route), 0)
 
 

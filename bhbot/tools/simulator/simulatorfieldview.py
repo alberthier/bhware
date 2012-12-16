@@ -346,7 +346,7 @@ class GraphicsRobotObject(QObject):
         angle = self.item.rotation() / 180.0 * math.pi
         # Map from Qt reference to field reference
         angle = self.convert_angle(angle)
-        return trajectory.Pose(x, y, angle)
+        return position.Pose(x, y, angle)
 
 
     def animate(self, points):

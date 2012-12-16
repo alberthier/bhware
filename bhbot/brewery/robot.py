@@ -16,7 +16,7 @@ from definitions import *
 class Robot(object):
 
     def __init__(self, event_loop):
-        self.pose = trajectory.Pose(0.0, 0.0, 0.0)
+        self.pose = position.Pose(0.0, 0.0, 0.0)
         self._team = TEAM_UNKNOWN
         self.event_loop = event_loop
         self.moving = False
@@ -65,7 +65,7 @@ class Robot(object):
 
 
     def set_team(self, team):
-        trajectory.Pose.match_team = team
+        position.Pose.match_team = team
         self._team = team
 
     def get_team(self):

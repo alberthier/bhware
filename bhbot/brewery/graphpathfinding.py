@@ -401,7 +401,7 @@ class Map(object):
                 path_cost = 0.0
                 n = current
                 while n.path_edge != None:
-                    path.insert(0, trajectory.Pose(n.x, n.y))
+                    path.insert(0, position.Pose(n.x, n.y))
                     path_length += n.path_edge.distance
                     path_cost += n.path_edge.distance + n.path_edge.penality
                     n = n.path_edge.other_node(n)

@@ -23,10 +23,10 @@ class Main(statemachine.State):
 
         trigo = False
         start_poses = [
-                       trajectory.Pose(1.0, 1.0,  0.0),
-                       trajectory.Pose(1.0, 1.0,  3.0 * math.pi / 4.0),
-                       trajectory.Pose(1.0, 1.0,  math.pi),
-                       trajectory.Pose(1.0, 1.0, -math.pi / 2)
+                       position.Pose(1.0, 1.0,  0.0),
+                       position.Pose(1.0, 1.0,  3.0 * math.pi / 4.0),
+                       position.Pose(1.0, 1.0,  math.pi),
+                       position.Pose(1.0, 1.0, -math.pi / 2)
                       ]
 
         for start_pose in start_poses:
@@ -97,7 +97,7 @@ class Main(statemachine.State):
 
 
 def get_destination_pose(direction, distance, delta_angle, trigo, start_pose):
-    result = trajectory.Pose(start_pose.x, start_pose.y, start_pose.angle)
+    result = position.Pose(start_pose.x, start_pose.y, start_pose.angle)
     if trigo:
         result.angle += delta_angle
     else:
@@ -235,7 +235,7 @@ class TestSquare(statemachine.State):
 
     def on_enter(self):
         walk = commonstates.TrajectoryWalk()
-        dst = trajectory.Pose(self.start_pose.x, self.start_pose.y, self.start_pose.angle)
+        dst = position.Pose(self.start_pose.x, self.start_pose.y, self.start_pose.angle)
         for i in range(4):
             dst = get_destination_pose(self.direction, self.distance, math.pi / 2.0, self.trigo, dst)
             walk.rotate_to(dst.angle)
@@ -277,7 +277,7 @@ class TestMultipointMShape(statemachine.State):
 
     def on_enter(self):
         walk = commonstates.TrajectoryWalk()
-        dst = trajectory.Pose(self.start_pose.x, self.start_pose.y, self.start_pose.angle)
+        dst = position.Pose(self.start_pose.x, self.start_pose.y, self.start_pose.angle)
 
         points = []
 
@@ -371,7 +371,7 @@ class TestMultipointCircle(statemachine.State):
                 a = float(i) * 2.0 * math.pi / float(n)
                 x = 1.0 + math.cos(a) * self.radius
                 y = 1.0 + math.sin(a) * self.radius
-                points.append(trajectory.Pose(x, y))
+                points.append(position.Pose(x, y))
 
 #  walk.rotate_to(0.746324465867)
             walk.look_at(points[0].x, points[0].y)
@@ -523,7 +523,7 @@ class TestTrajectory(statemachine.State):
 
     def on_enter(self):
         walk = commonstates.TrajectoryWalk(None, TEAM_UNKNOWN)
-        points = self.event_loop.map.route(self.robot().pose, trajectory.Pose(1.6, 2.0, None, True))
+        points = self.event_loop.map.route(self.robot().pose, position.Pose(1.6, 2.0, None, True))
         x = self.robot().pose.x
         y = self.robot().pose.y
         logger.log("{}".format(self.robot().team))

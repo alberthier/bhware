@@ -9,7 +9,7 @@ from collections import OrderedDict
 
 from definitions import *
 
-import trajectory
+import position
 
 
 
@@ -370,7 +370,7 @@ class PointItem(PacketItem):
     DESCRIPTION = "Field coordinates"
 
     def __init__(self, name, description = None):
-        PacketItem.__init__(self, name, trajectory.Pose(), description)
+        PacketItem.__init__(self, name, position.Pose(), description)
 
 
     def to_value_list(self, value, buf):
@@ -379,7 +379,7 @@ class PointItem(PacketItem):
 
 
     def from_value_list(self, buf):
-        value = trajectory.Pose(float(buf[0]) / 10000.0, float(buf[1]) / 10000.0)
+        value = position.Pose(float(buf[0]) / 10000.0, float(buf[1]) / 10000.0)
         del buf[0:2]
         return value
 
@@ -392,7 +392,7 @@ class PoseItem(PacketItem):
     DESCRIPTION = "Robot pose"
 
     def __init__(self, name, description = None):
-        PacketItem.__init__(self, name, trajectory.Pose(), description)
+        PacketItem.__init__(self, name, position.Pose(), description)
         self.default_value.angle = 0.0
 
 
@@ -403,7 +403,7 @@ class PoseItem(PacketItem):
 
 
     def from_value_list(self, buf):
-        value = trajectory.Pose(buf[0], buf[1], buf[2])
+        value = position.Pose(buf[0], buf[1], buf[2])
         del buf[0:3]
         return value
 
@@ -422,7 +422,7 @@ class PoseItem(PacketItem):
 
 
     def from_dict_value(self, value, pretty = False):
-        pose = trajectory.Pose()
+        pose = position.Pose()
         pose.x = float(value["x"])
         pose.y = float(value["y"])
         angle  = value["angle"]

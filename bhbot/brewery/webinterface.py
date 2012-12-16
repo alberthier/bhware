@@ -274,7 +274,7 @@ class BHWeb(object):
             self.execute_statemachine(commonstates.GotoHome())
         elif command == "Rotate":
             angle = float(vars["angle"]) / 180.0 * math.pi
-            pose = trajectory.Pose()
+            pose = position.Pose()
             pose.x = self.eventloop.robot.pose.x
             pose.y = self.eventloop.robot.pose.y
             pose.angle = self.eventloop.robot.pose.angle + angle
@@ -285,7 +285,7 @@ class BHWeb(object):
             self.eventloop.send_packet(packet)
         elif command == "Move":
             distance = float(vars["distance"])
-            pose = trajectory.Pose()
+            pose = position.Pose()
             packet = packets.Goto()
             if "forward" in vars:
                 packet.direction = DIRECTION_FORWARD
