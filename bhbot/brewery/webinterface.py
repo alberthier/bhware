@@ -1,13 +1,9 @@
-#!/usr/bin/env python
 # encoding: utf-8
 
 
 import sys
 import os
-
-sys.path.append(os.path.dirname(__file__))
-
-from . import cherrypy
+import nanow
 
 import packets
 import trajectory
@@ -36,6 +32,10 @@ class WebState(statemachine.State):
 
 class BHWeb(object):
 
+
+    static = nanow.StaticDir(os.path.join(os.path.dirname(__file__), "static"))
+
+
     def __init__(self, eventloop):
         """
         @type eventloop: EventLoop
@@ -48,14 +48,13 @@ class BHWeb(object):
         ws.switch_to_substate(state)
 
 
-    @cherrypy.expose
-    def index(self):
-        host = self.eventloop.web_server.current_environ["HTTP_HOST"].split(":")[0]
+    def index(self, headers, vars):
+        host = headers["Host"].split(":")[0]
         html = """<!DOCTYPE html>
 <html>
 <head>
   <title>BH Team robot web interface</title>
-  <link rel="stylesheet" type="text/css" href="bhweb.css" />
+  <link rel="stylesheet" type="text/css" href="static/bhweb.css" />
 </head>
 <body>
   <div class="header">
@@ -75,13 +74,12 @@ class BHWeb(object):
         return html
 
 
-    @cherrypy.expose
-    def statemachine(self):
+    def statemachine(self, headers, vars):
         html = """<!DOCTYPE html>
 <html>
 <head>
   <title>Statemachine</title>
-  <link rel="stylesheet" type="text/css" href="bhweb.css" />
+  <link rel="stylesheet" type="text/css" href="static/bhweb.css" />
 </head>
 <body>
   <div>
@@ -114,13 +112,12 @@ class BHWeb(object):
         return html
 
 
-    @cherrypy.expose
-    def logs(self):
+    def logs(self, headers, vars):
         html = """<!DOCTYPE html>
 <html>
 <head>
   <title>Logs</title>
-  <link rel="stylesheet" type="text/css" href="bhweb.css" />
+  <link rel="stylesheet" type="text/css" href="static/bhweb.css" />
 </head>
 <body>
   <div>
@@ -141,8 +138,7 @@ class BHWeb(object):
         return html
 
 
-    @cherrypy.expose
-    def logurls(self):
+    def logurls(self, headers, vars):
         text = ""
         files = os.listdir(LOG_DIR)
         files.sort()
@@ -152,13 +148,12 @@ class BHWeb(object):
         return text
 
 
-    @cherrypy.expose
-    def packets(self):
+    def packets(self, headers, vars):
         html = """<!DOCTYPE html>
 <html>
 <head>
   <title>Packets</title>
-  <link rel="stylesheet" type="text/css" href="bhweb.css" />
+  <link rel="stylesheet" type="text/css" href="static/bhweb.css" />
 </head>
 <body>
   <div>
@@ -208,12 +203,11 @@ class BHWeb(object):
         return html
 
 
-    @cherrypy.expose
-    def send_packet(self, **kwargs):
-        packet_type = packets.PACKETS_BY_NAME[kwargs["packet"]]
+    def send_packet(self, headers, vars):
+        packet_type = packets.PACKETS_BY_NAME[vars["packet"]]
         packet = packet_type()
         for item in packet_type.DEFINITION:
-            setattr(packet, item.name, self.build_item_from_query(kwargs, item))
+            setattr(packet, item.name, self.build_item_from_query(vars, item))
         self.eventloop.send_packet(packet)
         return self.packets()
 
@@ -242,13 +236,12 @@ class BHWeb(object):
             return int(query[name])
 
 
-    @cherrypy.expose
-    def remote_control(self):
+    def remote_control(self, headers, vars):
         html = """<!DOCTYPE html>
 <html>
 <head>
   <title>Remote Control</title>
-  <link rel="stylesheet" type="text/css" href="bhweb.css" />
+  <link rel="stylesheet" type="text/css" href="static/bhweb.css" />
 </head>
 <body>
     <form method="POST" action="process_remote_control">
@@ -275,13 +268,12 @@ class BHWeb(object):
         return html
 
 
-    @cherrypy.expose
-    def process_remote_control(self, **kwargs):
-        command = kwargs["type"]
+    def process_remote_control(self, headers, vars):
+        command = vars["type"]
         if command == "GotoStart":
             self.execute_statemachine(commonstates.GotoHome())
         elif command == "Rotate":
-            angle = float(kwargs["angle"]) / 180.0 * math.pi
+            angle = float(vars["angle"]) / 180.0 * math.pi
             pose = trajectory.Pose()
             pose.x = self.eventloop.robot.pose.x
             pose.y = self.eventloop.robot.pose.y
@@ -292,10 +284,10 @@ class BHWeb(object):
             packet.points = [ pose ]
             self.eventloop.send_packet(packet)
         elif command == "Move":
-            distance = float(kwargs["distance"])
+            distance = float(vars["distance"])
             pose = trajectory.Pose()
             packet = packets.Goto()
-            if "forward" in kwargs:
+            if "forward" in vars:
                 packet.direction = DIRECTION_FORWARD
             else:
                 packet.direction = DIRECTION_BACKWARD
@@ -305,17 +297,3 @@ class BHWeb(object):
             packet.points = [ pose ]
             self.eventloop.send_packet(packet)
         return self.remote_control()
-
-
-def create_app(eventloop):
-    return cherrypy.tree.mount(BHWeb(eventloop), script_name = "/", config = {
-        "/" : {
-            "tools.staticdir.on"  : True,
-            "tools.staticdir.dir" : os.path.join(os.path.dirname(__file__), "static"),
-        },
-        "/logs" : {
-            "tools.staticdir.on"  : True,
-            "tools.staticdir.dir" : LOG_DIR,
-            "tools.staticdir.content_types" : { "py": "text/plain" },
-        }
-    })

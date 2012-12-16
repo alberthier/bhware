@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # encoding: utf-8
 
 
@@ -890,7 +889,7 @@ class RoutingGraphLayer(fieldview.Layer):
 
     def on_simulator_graph_map_edges(self, packet):
         segment_items = 5
-        for i in range(len(packet.points) / segment_items):
+        for i in range(len(packet.points) // segment_items):
             y1 = packet.points[i * segment_items] * 1000.0
             x1 = packet.points[i * segment_items + 1] * 1000.0
             y2 = packet.points[i * segment_items + 2] * 1000.0
@@ -910,7 +909,7 @@ class RoutingGraphLayer(fieldview.Layer):
         prev_x = self.robot.item.x()
         prev_y = self.robot.item.y()
         point_items = 2
-        for i in range(len(packet.points) / point_items):
+        for i in range(len(packet.points) // point_items):
             y = packet.points[i * point_items] * 1000.0
             x = packet.points[i * point_items + 1] * 1000.0
             item = QGraphicsLineItem(prev_x, prev_y, x, y)

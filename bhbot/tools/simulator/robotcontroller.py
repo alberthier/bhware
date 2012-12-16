@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # encoding: utf-8
 
 import os
@@ -91,7 +90,7 @@ class RobotController(object):
 
     def read_output(self):
         while self.process.canReadLine():
-            log = str(self.process.readLine()).rstrip()
+            log = str(self.process.readLine(), "utf-8").rstrip()
             self.view.add_log(log)
 
 

@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # encoding: utf-8
 
 import os
@@ -37,7 +36,7 @@ def initialize():
             os.chmod(filepath, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR | stat.S_IRGRP | stat.S_IXGRP | stat.S_IROTH | stat.S_IXOTH)
         except:
             log_file = open(os.devnull, "w")
-        log_file.write("#!/usr/bin/env python\n")
+        log_file.write("#!/usr/bin/env python3\n")
         log_file.write("# encoding: utf-8\n\n")
         log_file.write("from packets import *\n")
         log_file.write("from trajectory import *\n\n")
