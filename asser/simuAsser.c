@@ -610,8 +610,8 @@ void SIMU_BoucleVitesse(void)
                                    , tensionPWM_G_n
                                    , &vitesseMoteurG
                                    , &vitesseMoteurG_n2
-                                   , 0.1707 //0.072
-                                   , 0.003 //0.431
+                                   , 0.1707
+                                   , 0.003
                                    , GAIN_STATIQUE_MOTEUR_G
                                    , 0 //20
                                    , SIMU_CR
@@ -644,8 +644,8 @@ void SIMU_BoucleVitesse(void)
                                    , tensionPWM_D_n
                                    , &vitesseMoteurD
                                    , &vitesseMoteurD_n2
-                                   , 0.001 //0.072
-                                   , 0.1763 //0.431
+                                   , 0.001
+                                   , 0.1763
                                    , GAIN_STATIQUE_MOTEUR_D
                                    , 0 //20
                                    , SIMU_CR

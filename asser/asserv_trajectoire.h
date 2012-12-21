@@ -66,6 +66,7 @@ typedef struct
 {
     Pose                    poseDepartRobot;
     float                   angle;
+    float                   angle_final;
 } ParametresRotation;
 
 typedef struct
