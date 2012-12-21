@@ -33,3 +33,6 @@ asser.7z
 asser/optimTrajParam.py.orig
 asser/optimTrajParam.py~RF253b456e.TMP
 asser/asserv_trajectoire.c.bak
+asser/config.py.bak
+asser/optimTrajParam.py.tsst
+asser/optimTrajParam.py~RF19145bb1.TMP
