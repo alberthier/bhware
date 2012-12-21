@@ -112,8 +112,7 @@ int main(void)
     gainDeplacement2 = 50.0;
     gainDeplacement3 = 50.0;
     // param des gains asser rotation
-    gainRotation1 = -6.0;
-    gainRotation2 = -6.0;
+    gainCentreRot = 20.0;
     // param du profil de vitesse # 1:A_MAX, 2:D_MAX
     SIMU_SetParamProfilVitesse(1.0, 1.0);
     // param du moteur de deplacement # 1:MASSE, 2:RAYON_ROUE, 3:FROTTEMENT_FLUIDE, 4:FORCE_RESISTANTE, 5:RESISTANCE_INDUIT, 6:INDUCTANCE_INDUIT, 7:CONSTANTE_COUPLE, 8:CONSTANTE_VITESSE, 9:RAPPORT_REDUCTION
@@ -195,10 +194,9 @@ int main(void)
         else if (strcmp(command, "PARAMETERS_GAIN_ROT") == 0)
         {
             parameterMsgTreatment(buffer, &nbrParameters, paramR, 2);
-            if (nbrParameters == 2)
+            if (nbrParameters == 1)
             {
-                gainRotation1 = paramR[0].value;
-                gainRotation2 = paramR[1].value;
+                gainCentreRot = paramR[0].value;
             }
         }
         else if (strcmp(command, "PARAMETERS_TIME") == 0)

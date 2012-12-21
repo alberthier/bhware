@@ -106,8 +106,7 @@ typedef struct
 
 /* Variables globales de reglage de l'asser */
 
-extern float                gainRotation1;          /* Gain de l'asservissement de la vitesse longitudinale */
-extern float                gainRotation2;          /* Gain de l'asservissement de la vitesse de rotation */
+extern float                gainCentreRot;
 extern float                gainDeplacement1;
 extern float                gainDeplacement2;
 extern float                gainDeplacement3;

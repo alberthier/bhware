@@ -60,9 +60,6 @@
 /** Variables globales */
 
 /** Parametres de l'asservissement par retour d'etat */
-float                           gainRotation1                           =   - 6.0;      /* Gain de l'asservissement de la vitesse longitudinale */
-float                           gainRotation2                           =   - 6.0;      /* Gain de l'asservissement de la vitesse de rotation */
-
 float                           gainCentreRot                           =   20.0;
 
 float                           gainDeplacement1                        =   20.0;
@@ -159,7 +156,6 @@ static float                    ASSER_TRAJ_LongueurSegment(float x0, float y0, f
 static Vecteur                  ASSER_TRAJ_PortionEnd(float bx, float by, float ax, float ay, float qx, float qy);
 static void                     ASSER_TRAJ_SolveSegment_v2(float x0, float y0, float theta0, float x1, float y1, float theta1, float k0, float* k1, float* out_q0x, float* out_q0y, float* out_q1x, float* out_q1y);
 static unsigned char            ASSER_TRAJ_Profil_S_Curve(float * Vconsigne, float Distance, float VStart, float VEnd, float Amax, float Dmax, float gASR, float Pr, float Vr, unsigned char fSatPI);
-static Pose                     ASSER_TRAJ_Rotation(Pose poseCentreRotation, float angleRot);
 #ifdef PIC32_BUILD
 void                            ASSER_TRAJ_LogAsserPIC(char * keyWord, float Val1, float * pVal2, float * pVal3, float * pVal4, float * pVal5);
 #else /* PIC32_BUILD */
@@ -250,14 +246,11 @@ static unsigned char ASSER_TRAJ_isAngle(float angle)
 
 extern void ASSER_TRAJ_AsservissementMouvementRobot(Pose poseRobot, VitessesRobotUnicycle *vitessesConsignes)
 {
-    float           diagonaleMatriceGain[2];
-    float           gain[5];
+    float           gain[3];
     Pose            differentielleTemporellePoseReference;
     Pose            differentielleTemporellePoseReferenceRobot;
-    Pose            P_robot;                                        /* Point fixe du robot a asservir a la trajectoire de consigne */
     Pose            erreurPoseCentreRobot;
     Pose            erreur_P;
-    float           memo_angle_robot;
     Vecteur         diff1BS, diff2BS;
     float           delta_distance                          = 0.0;
     float           parametrePositionSegmentTrajectoireAv   = 0.0;
@@ -528,8 +521,6 @@ extern void ASSER_TRAJ_AsservissementMouvementRobot(Pose poseRobot, VitessesRobo
             gain[0] = gainDeplacement1;
             gain[1] = gainDeplacement2;
             gain[2] = gainDeplacement3;
-            gain[3] = gainRotation1;
-            gain[4] = gainRotation2;
 
             *vitessesConsignes = ASSER_TRAJ_RetourDetatOrientation(erreurPoseCentreRobot, differentielleTemporellePoseReferenceRobot, gain);
         }
@@ -1493,31 +1484,6 @@ static Pose ASSER_TRAJ_TrajectoireRotation(ParametresRotation *p_rotation, float
     
     poseTraj.x = p_rotation->poseDepartRobot.x + (NORME_BARRE_SUIVI_TRAJ * cosf(poseTraj.angle));    
     poseTraj.y = p_rotation->poseDepartRobot.y + (NORME_BARRE_SUIVI_TRAJ * sinf(poseTraj.angle));    
-
-    return poseTraj;
-}
-
-/**********************************************************************/
-/*! \brief ASSER_TRAJ_Rotation
- *
- *  \note   Transformation d'une pose selon une rotation
- *
- *  \param [in]     poseRobot           pose du centre du robot
- *  \param [in]     angleRot            angle de la rotation demandee
- *
- *  \return         Pose                pose apres rotation
- */
-/**********************************************************************/
-
-static Pose ASSER_TRAJ_Rotation(Pose poseCentreRotation, float angleRot)
-{
-    Pose poseTraj;
-
-    poseTraj.angle = poseCentreRotation.angle + angleRot;
-    poseTraj.angle = POS_ModuloAngle(poseTraj.angle);
-
-    poseTraj.x = poseCentreRotation.x + (NORME_BARRE_SUIVI_TRAJ * cosf(poseTraj.angle));
-    poseTraj.y = poseCentreRotation.y + (NORME_BARRE_SUIVI_TRAJ * sinf(poseTraj.angle));
 
     return poseTraj;
 }

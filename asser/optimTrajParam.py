@@ -105,15 +105,14 @@ def MSG_config_AsserTrajectoire(K1, K2, K3) :
 def send_config_AsserTrajectoire(process, K1, K2, K3) :
     process.stdin.write(MSG_config_AsserTrajectoire(K1, K2, K3))
 
-def MSG_config_AsserRotation(R1, R2) :
+def MSG_config_AsserRotation(R1) :
     #generation d'un message de configuration des gains de l'asser de rotation
     parametersR = commandMsg("PARAMETERS_GAIN_ROT")
     parametersR.addPose("GAIN_R1" + " " + str(R1))
-    parametersR.addPose("GAIN_R2" + " " + str(R2))
     return parametersR.cmdMsgGeneration()
 
-def send_config_AsserRotation(process, R1, R2) :
-    process.stdin.write(MSG_config_AsserRotation(R1, R2))
+def send_config_AsserRotation(process, R1) :
+    process.stdin.write(MSG_config_AsserRotation(R1))
 
 def MSG_config_profilVitesse(Amax, Dmax) :
     #generation d'un message de configuration des parametres du profil de vitesse
@@ -186,7 +185,7 @@ def send_config_simulator(simulator_process, d_cfgTraj) :
     send_config_AsserTrajectoire(simulator_process, d_cfgTraj['K1'], d_cfgTraj['K2'], d_cfgTraj['K3'])
 
     # envoie au simulateur de la configuration des gains de l'asser de rotation
-    send_config_AsserRotation(simulator_process, d_cfgTraj['R1'], d_cfgTraj['R2'])
+    send_config_AsserRotation(simulator_process, d_cfgTraj['R1'])
 
     # envoie au simulateur de la configuration des parametres du profil de vitesse
     send_config_profilVitesse(simulator_process, d_cfgTraj['Amax'], d_cfgTraj['Dmax'])
