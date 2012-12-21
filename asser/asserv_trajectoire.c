@@ -62,6 +62,9 @@
 /** Parametres de l'asservissement par retour d'etat */
 float                           gainRotation1                           =   - 6.0;      /* Gain de l'asservissement de la vitesse longitudinale */
 float                           gainRotation2                           =   - 6.0;      /* Gain de l'asservissement de la vitesse de rotation */
+
+float                           gainCentreRot                           =   20.0;
+
 float                           gainDeplacement1                        =   20.0;
 float                           gainDeplacement2                        =   50.0;
 float                           gainDeplacement3                        =   20.0;
@@ -69,8 +72,8 @@ float                           gainDeplacement3                        =   20.0
 /** Parametres de la generation de trajectoire */
 float                           Ratio_Acc                               =   1.0;
 float                           Ratio_Decc                              =   1.0;
-float                           Ratio_Acc_Rot                           =   1.0;
-float                           Ratio_Decc_Rot                          =   1.0;
+float                           Ratio_Acc_Rot                           =   0.5;
+float                           Ratio_Decc_Rot                          =   0.8;
 
 float                           VminMouvRef                             =   0.1; 
 
@@ -140,7 +143,6 @@ static Pose                     ASSER_TRAJ_TrajectoireRotation(ParametresRotatio
 static Pose                     ASSER_TRAJ_DiffTemporelleTrajectoire(Pose posePrecedente, Pose poseActuelle, float periode);
 static Vecteur                  ASSER_TRAJ_ProduitMatriceVecteur(Vecteur *matrice, Vecteur vecteur);
 static Pose                     ASSER_TRAJ_ErreurPose(Pose poseRobot_P, Pose poseRef);
-static VitessesRobotUnicycle    ASSER_TRAJ_RetourDetat(Pose erreurPose, Pose poseRef, Pose diffPoseRef, float longueurBarreSuivi, float *diagMatriceGain);
 static VitessesRobotUnicycle    ASSER_TRAJ_RetourDetatOrientation(Pose erreurPose, Pose diffPoseRef, float gain[]);
 static unsigned char            ASSER_TRAJ_TestFinAsservissement(Trajectoire *traj, float erDist, float memo_erDist, float tolDist, float erAngle, float memo_erAngle, float tolAngle);
 static void                     ASSER_TRAJ_DistanceTrajectoire(segmentTrajectoireBS *segmentTraj, unsigned int iSegment);
@@ -157,6 +159,7 @@ static float                    ASSER_TRAJ_LongueurSegment(float x0, float y0, f
 static Vecteur                  ASSER_TRAJ_PortionEnd(float bx, float by, float ax, float ay, float qx, float qy);
 static void                     ASSER_TRAJ_SolveSegment_v2(float x0, float y0, float theta0, float x1, float y1, float theta1, float k0, float* k1, float* out_q0x, float* out_q0y, float* out_q1x, float* out_q1y);
 static unsigned char            ASSER_TRAJ_Profil_S_Curve(float * Vconsigne, float Distance, float VStart, float VEnd, float Amax, float Dmax, float gASR, float Pr, float Vr, unsigned char fSatPI);
+static Pose                     ASSER_TRAJ_Rotation(Pose poseCentreRotation, float angleRot);
 #ifdef PIC32_BUILD
 void                            ASSER_TRAJ_LogAsserPIC(char * keyWord, float Val1, float * pVal2, float * pVal3, float * pVal4, float * pVal5);
 #else /* PIC32_BUILD */
@@ -181,7 +184,7 @@ extern void ASSER_TRAJ_InitialisationGenerale(void)
     chemin.profilVitesse.p = 0;
 
     /* Calcul de la norme suivi trajectoire */
-    NORME_BARRE_SUIVI_TRAJ = ECART_ROUE_LIBRE / 2.0;
+    NORME_BARRE_SUIVI_TRAJ = ECART_ROUE_MOTRICE / 2.0;
 
     /* Initialisation de la position du robot */
     POS_InitialisationConfigRobot();
@@ -496,23 +499,6 @@ extern void ASSER_TRAJ_AsservissementMouvementRobot(Pose poseRobot, VitessesRobo
                 diffThetaCourantAv = ASSER_TRAJ_DiffThetaBSpline(diff1BS, diff2BS);
                 poseReferenceAv = ASSER_TRAJ_TrajectoireRemorqueBS(chemin.segmentTrajBS, segmentCourantAv, parametrePositionSegmentTrajectoireAv, diff1BS, diffThetaCourantAv, &poseReferenceRobotAv);
             }
-            else /* if (chemin.mouvement == ROTATION) */
-            {
-                poseReference = ASSER_TRAJ_TrajectoireRotation(&(chemin.rotation), parametrePositionSegmentTrajectoire);
-
-                ASSER_TRAJ_LogAsserValPC("thetaPoseReference",  poseReference.angle);
-
-                parametrePositionSegmentTrajectoireAv = parametrePositionSegmentTrajectoire;
-                segmentCourantAv = ASSER_segmentCourant;
-
-                ASSER_Running = ASSER_TRAJ_Profil_S_Curve(&VitesseProfil, chemin.distance, 0.0, 0.0, chemin.profilVitesse.AmaxRot, chemin.profilVitesse.DmaxRot, Vitesse_Gain_ASR, chemin.profilVitesse.distance_parcourue, ((float)m_sensDeplacement) * POS_GetVitesseRotation() * (ECART_ROUE_LIBRE/2.0), (SaturationPIDflag | SaturationPIGflag));
-
-                delta_distance_Av = VitesseProfil * TE;
-                
-                ASSER_TRAJ_ParcoursTrajectoire(&chemin, delta_distance_Av, &segmentCourantAv, &parametrePositionSegmentTrajectoireAv, NULL);
-
-                poseReferenceAv = ASSER_TRAJ_TrajectoireRotation(&(chemin.rotation), parametrePositionSegmentTrajectoireAv);
-            }
             
             ASSER_TRAJ_LogAsserValPC("val_tab_vit",  (delta_distance_Av / TE));
 
@@ -549,33 +535,17 @@ extern void ASSER_TRAJ_AsservissementMouvementRobot(Pose poseRobot, VitessesRobo
         }
         else /* ROTATION */
         {
-            /* Calcul du point deporte du centre des roues motrices a asservir a la trajectoire */            
-            P_robot.x = poseRobot.x + (NORME_BARRE_SUIVI_TRAJ * cosf(poseRobot.angle));
-            P_robot.y = poseRobot.y + (NORME_BARRE_SUIVI_TRAJ * sinf(poseRobot.angle));            
-            P_robot.angle = poseRobot.angle;
-            memo_angle_robot = poseReference.angle;
-            if (differentielleTemporellePoseReference.angle > 0.0)
-            {
-                P_robot.angle = POS_ModuloAngle(P_robot.angle + PI/2.0);
-                poseReference.angle = POS_ModuloAngle(poseReference.angle + PI/2.0);
-            }
-            else
-            {
-                P_robot.angle = POS_ModuloAngle(P_robot.angle - PI/2.0);
-                poseReference.angle = POS_ModuloAngle(poseReference.angle - PI/2.0);
-            }
+            chemin.profilVitesse.distance_parcourue = fabs(POS_ModuloAngle(poseRobot.angle - chemin.rotation.poseDepartRobot.angle)) * NORME_BARRE_SUIVI_TRAJ;
+            ASSER_TRAJ_LogAsserValPC("dist_parcourue_rot",  chemin.profilVitesse.distance_parcourue);
+            ASSER_Running = ASSER_TRAJ_Profil_S_Curve(&VitesseProfil, chemin.distance, 0.0, 0.0, chemin.profilVitesse.AmaxRot, chemin.profilVitesse.DmaxRot, Vitesse_Gain_ASR, chemin.profilVitesse.distance_parcourue, ((float)m_sensDeplacement) * POS_GetVitesseRotation() * (ECART_ROUE_MOTRICE/2.0), (SaturationPIDflag | SaturationPIGflag));
+            //delta_distance_Av = VitesseProfil * TE;
+            vitessesConsignes->rotation = VitesseProfil / NORME_BARRE_SUIVI_TRAJ;
 
-            /* Calcul du vecteur d'erreur */
-            erreur_P = ASSER_TRAJ_ErreurPose(P_robot, poseReference);
-            poseReference.angle = memo_angle_robot;
-
-            /* Loi de commande par retour d'etat SANS orientation*/
-            diagonaleMatriceGain[0] = gainRotation1;
-            diagonaleMatriceGain[1] = gainRotation2;
-            
-            *vitessesConsignes = ASSER_TRAJ_RetourDetat(erreur_P, poseReference, differentielleTemporellePoseReference, NORME_BARRE_SUIVI_TRAJ, diagonaleMatriceGain);
-
-            vitessesConsignes->longitudinale = 0.0;
+            poseReference.x = chemin.rotation.poseDepartRobot.x;
+            poseReference.y = chemin.rotation.poseDepartRobot.y;
+            poseReference.angle = poseRobot.angle;
+            erreur_P = ASSER_TRAJ_ErreurPose(poseRobot, poseReference);
+            vitessesConsignes->longitudinale = -gainCentreRot * erreur_P.x;
         }
     }
     else
@@ -870,6 +840,7 @@ extern void ASSER_TRAJ_InitialisationTrajectoire(Pose poseRobot, PtTraj * point,
     {
         /* Position a atteindre (condition d'arret du test de fin d'asservissement) */
         angle_fin_rotation = POS_ModuloAngle(angle_rad);
+        chemin.rotation.angle_final = angle_fin_rotation;
         
         chemin.posArrivee.x = poseRobot.x + NORME_BARRE_SUIVI_TRAJ * cosf(angle_fin_rotation);        
         chemin.posArrivee.y = poseRobot.y + NORME_BARRE_SUIVI_TRAJ * sinf(angle_fin_rotation);        
@@ -1527,6 +1498,31 @@ static Pose ASSER_TRAJ_TrajectoireRotation(ParametresRotation *p_rotation, float
 }
 
 /**********************************************************************/
+/*! \brief ASSER_TRAJ_Rotation
+ *
+ *  \note   Transformation d'une pose selon une rotation
+ *
+ *  \param [in]     poseRobot           pose du centre du robot
+ *  \param [in]     angleRot            angle de la rotation demandee
+ *
+ *  \return         Pose                pose apres rotation
+ */
+/**********************************************************************/
+
+static Pose ASSER_TRAJ_Rotation(Pose poseCentreRotation, float angleRot)
+{
+    Pose poseTraj;
+
+    poseTraj.angle = poseCentreRotation.angle + angleRot;
+    poseTraj.angle = POS_ModuloAngle(poseTraj.angle);
+
+    poseTraj.x = poseCentreRotation.x + (NORME_BARRE_SUIVI_TRAJ * cosf(poseTraj.angle));
+    poseTraj.y = poseCentreRotation.y + (NORME_BARRE_SUIVI_TRAJ * sinf(poseTraj.angle));
+
+    return poseTraj;
+}
+
+/**********************************************************************/
 /*! \brief ASSER_TRAJ_VitesseLimiteEnVirage
  *
  *  \note   Determination de la vitesse longitudinale limite de consigne a appliquer en fonction de la courbure de la trajectoire
@@ -1710,55 +1706,6 @@ static Pose ASSER_TRAJ_ErreurPose(Pose poseRobot_P, Pose poseRef)
 
     return erreurP;
 }
-
- /**********************************************************************/
- /*! \brief ASSER_TRAJ_RetourDetat
-  *
-  *  \note  Loi de commande par retour d'etat du suivi de trajectoire
-  *
-  *  \param [in]     erreurPose              erreur calculee par la fonction ASSER_TRAJ_ErreurPose
-  *  \param [in]     poseRef                  pose a laquelle on souhaite asservir la position du robot
-  *  \param [in]     diffPoseRef              derivee temporelle de la pose de reference
-  *  \param [in]     longueurBarreSuivi  distance entre le centre de l'axe des roues motrices/libres et le point du robot a asservir
-  *  \param [in]     diagMatriceGain       gain matriciel du retour d'etat
-  *
-  *  \return            vitessesCons           Structure de vitesses avec les consignes de vitesse longitudinale (en m/s) et de vitesse de rotation (en rd/s)
-  */
- /**********************************************************************/
- static VitessesRobotUnicycle ASSER_TRAJ_RetourDetat(Pose erreurPose, Pose poseRef, Pose diffPoseRef, float longueurBarreSuivi, float * diagMatriceGain)
- {
-     VitessesRobotUnicycle   vitesseTemp;
-     VitessesRobotUnicycle   vitessesCons;
-     Vecteur                 vectTemp;
-     Vecteur                 diffPositionRef;
-     Vecteur                 matriceRot[2];
-
-     /* v = K * erPos;  */
-     vitesseTemp.longitudinale = diagMatriceGain[0] * erreurPose.x;
-     vitesseTemp.rotation = diagMatriceGain[1] * erreurPose.y;
-
-     /* v = v + diffPoseRef(3) * [-erPos(2); erPos(1)]; */
-     vitesseTemp.longitudinale = vitesseTemp.longitudinale + (diffPoseRef.angle * (- erreurPose.y));
-     vitesseTemp.rotation = vitesseTemp.rotation + (diffPoseRef.angle * erreurPose.x);
-
-     /* v = v + matriceRotation(-thetaRef) * [diffPoseRef(1); diffPoseRef(2)]; */
-     ASSER_TRAJ_MatriceRotation(matriceRot, - poseRef.angle);       /* Affectation d'une matrice de rotation de moins l'angle de reference */
-     diffPositionRef.x = diffPoseRef.x;
-     diffPositionRef.y = diffPoseRef.y;
-     
-     vectTemp = ASSER_TRAJ_ProduitMatriceVecteur(matriceRot, diffPositionRef);
-     
-     vitesseTemp.longitudinale = vitesseTemp.longitudinale + vectTemp.x;
-     vitesseTemp.rotation = vitesseTemp.rotation + vectTemp.y;
-        
-     vitessesCons.longitudinale = (cosf(erreurPose.angle) * vitesseTemp.longitudinale) + (sinf(erreurPose.angle) * vitesseTemp.rotation);     
-     vitessesCons.rotation = (- sinf(erreurPose.angle) * vitesseTemp.longitudinale) + (cosf(erreurPose.angle) * vitesseTemp.rotation);     
-     vitessesCons.rotation = vitessesCons.rotation / longueurBarreSuivi;
-
-     ASSER_TRAJ_LogAsserValPC("errPoseAngle", erreurPose.angle);
-
-     return vitessesCons;
- }
 
 /**********************************************************************/
 /*! \brief ASSER_TRAJ_RetourDetatOrientation

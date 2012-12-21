@@ -6,8 +6,7 @@ run_tests.patch_pythonpath()
 
 
 import packets
-import trajectory
-
+import position
 from definitions import *
 
 
@@ -37,7 +36,7 @@ class PacketTestMixin(object):
             self.assert_dict_equal(value1, value2)
         elif isinstance(value1, list) or isinstance(value1, tuple):
             self.assert_sequence_equal(value1, value2)
-        elif isinstance(value1, trajectory.Pose):
+        elif isinstance(value1, position.Pose):
             self.assert_pose_equal(value1, value2)
         elif isinstance(value1, float):
             self.assert_float_equal(value1, value2)
@@ -185,10 +184,10 @@ class GotoPacketTestCase(unittest.TestCase, PacketTestMixin):
         packet.movement = MOVEMENT_ROTATE
         packet.direction = DIRECTION_BACKWARD
         packet.angle = 2.56
-        packet.points.append(trajectory.Pose(1.5, 2.3))
-        packet.points.append(trajectory.Pose(0.6, 1.7))
-        packet.points.append(trajectory.Pose(2.0, 0.2))
-        packet.points.append(trajectory.Pose(1.2, 2.7))
+        packet.points.append(position.Pose(1.5, 2.3))
+        packet.points.append(position.Pose(0.6, 1.7))
+        packet.points.append(position.Pose(2.0, 0.2))
+        packet.points.append(position.Pose(1.2, 2.7))
 
 
 
@@ -209,7 +208,7 @@ class GotoFinishedPacketTestCase(unittest.TestCase, PacketTestMixin):
 
     def initialize_packet(self, packet):
         packet.reason = REASON_STOP_REQUESTED
-        packet.current_pose = trajectory.Pose(20.0, 30.0, 5.5)
+        packet.current_pose = position.Pose(20.0, 30.0, 5.5)
         packet.current_point_index = 12
 
 
@@ -238,7 +237,7 @@ class KeepAlivePacketTestCase(unittest.TestCase, PacketTestMixin):
 
 
     def initialize_packet(self, packet):
-        packet.current_pose = trajectory.Pose(564.8, 452.3, 96.4)
+        packet.current_pose = position.Pose(564.8, 452.3, 96.4)
         packet.match_started = True
         packet.match_time = 56
 

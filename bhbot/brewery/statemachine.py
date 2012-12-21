@@ -24,6 +24,83 @@ def instantiate_state_machine(state_machine_name, eventloop):
     return None
 
 
+class StateGenerator(object):
+    def __init__(self, fsm):
+        """
+
+        :param fsm: StateMachine
+        """
+        self.fsm = fsm
+
+    def __iter__(self):
+        previous_value = None
+
+        self.fsm.current_state.fsm = self.fsm
+        self.fsm.current_state.on_enter()
+
+        while True :
+            packet = (yield)
+
+            generator = packet.dispatch(self.fsm.current_state)
+
+            self.fsm.current_state.current_method = generator
+
+            if generator :
+                try :
+                    new_state = generator.send(previous_value)
+                    self.fsm.push_state(new_state)
+
+                except StopIteration :
+                    self.fsm.pop_state()
+            else :
+                previous_value = self.fsm.current_state
+                self.fsm.pop_state()
+
+                generator = self.fsm.current_state.current_method
+
+                try :
+                    new_state = generator.send(previous_value)
+                    self.fsm.push_state(new_state)
+                except StopIteration :
+                    self.fsm.pop_state()
+
+
+
+class StateMachine(object):
+    def __init__(self, root_state):
+        self.state_history = [root_state]
+        """:type: self.state_history : list of State"""
+        self.return_value = None
+        self.logger = None
+        self.state_generator = iter(StateGenerator(self))
+        self.state_generator.next()
+
+    def init_state(self, s):
+        s.fsm = self
+
+    def log(self, s):
+        if self.logger :
+            self.logger.log(s)
+
+    @property
+    def current_state(self):
+        return self.state_history[-1] if self.state_history else None
+
+    def dispatch(self, packet):
+        self.state_generator.send(packet)
+
+    def push_state(self, state):
+        logger.log("Switching to state {}".format(state.name))
+        state.fsm = self
+        state.on_enter()
+        self.state_history.append(state)
+
+
+    def pop_state(self):
+        logger.log("Exiting state {}".format(self.current_state.name))
+        self.state_history.pop()
+
+
 
 
 class State(object):
@@ -33,6 +110,19 @@ class State(object):
         self.sub_state = None
         self.parent_state = None
         self.short_description = None
+        self.current_method = None
+        self.fsm = None
+
+    @property
+    def name(self):
+        return self.__class__.__name__
+
+    def log(self, s):
+        """
+        Log to state machine
+        :param s: state machine
+        """
+        self.fsm.log(s)
 
     def get_short_description(self):
         if not self.short_description :

@@ -149,3 +149,234 @@ class SubStateStateTestCase(unittest.TestCase):
         self.get_current_state().on_device_ready(TEAM_RED)
         self.assertTrue(isinstance(self.get_current_state(), TestSubState1))
         self.assertEqual(self.get_current_state().finished_substate, "TestSubState2")
+
+class DummyPacket(object):
+    def __init__(self) :
+        self.METHOD_NAME = "on_keep_alive"
+
+    def dispatch(self, obj):
+        return obj.on_keep_alive()
+
+class FsmLogger(object):
+    def __init__(self):
+        self.lines = []
+        
+    def log(self, s):
+        print "Log : "+s
+        self.lines.append(s)
+        
+    def to_string(self):
+        return "\n".join(self.lines)
+
+
+def trim(s):
+    s = s.strip()
+    s = "\n".join((l.strip() for l in s.splitlines()))
+    return s
+
+
+class TestNewStateMachine(unittest.TestCase):
+    def test_simple_state_switch(self):
+        class State2(statemachine.State):
+            def __init__(self):
+                super(State2, self).__init__()
+
+            def on_keep_alive(self):
+                self.log("State2 A")
+                yield State1()
+                self.log("State2 B")
+
+        class State1(statemachine.State):
+            def __init__(self):
+                super(State1, self).__init__()
+
+            def on_keep_alive(self):
+                self.log("State1 A")
+                yield State2()
+                self.log("State1 B")
+
+        logger = FsmLogger()
+
+        start_state = State1()
+        fsm = statemachine.StateMachine(start_state)
+        fsm.logger = logger
+
+        fsm.dispatch(DummyPacket())
+
+        self.assertEquals(State2, fsm.current_state.__class__)
+
+        self.assertEqual(trim(
+                            """
+                            State1 A
+                            """
+                        ),
+                         logger.to_string()
+        )
+
+    def test_back_and_forth(self):
+        class State2(statemachine.State):
+            def __init__(self):
+                super(State2, self).__init__()
+
+            def on_keep_alive(self):
+                self.log("State2 A")
+                yield State1()
+                self.log("State2 B")
+
+        class State1(statemachine.State):
+            def __init__(self):
+                super(State1, self).__init__()
+
+            def on_keep_alive(self):
+                self.log("State1 A")
+                yield State2()
+                self.log("State1 B")
+
+
+        logger = FsmLogger()
+
+        start_state = State1()
+        fsm = statemachine.StateMachine(start_state)
+
+        fsm.logger = logger
+
+        fsm.dispatch(DummyPacket())
+        fsm.dispatch(DummyPacket())
+
+        self.assertEquals(State1, fsm.current_state.__class__)
+
+        self.assertEqual(trim(
+                            """
+                            State1 A
+                            State2 A
+                            """
+                        ),
+                        logger.to_string()
+        )
+
+    def test_substate(self):
+        class State2(statemachine.State):
+            def __init__(self):
+                super(State2, self).__init__()
+
+            def on_keep_alive(self):
+                self.log("State2")
+
+        class State1(statemachine.State):
+            def __init__(self):
+                super(State1, self).__init__()
+
+            def on_keep_alive(self):
+                self.log("State1 A")
+                yield State2()
+                self.log("State1 B")
+
+
+        logger = FsmLogger()
+
+        start_state = State1()
+        fsm = statemachine.StateMachine(start_state)
+
+        fsm.logger = logger
+
+        fsm.dispatch(DummyPacket())
+        fsm.dispatch(DummyPacket())
+
+        self.assertEquals(None, fsm.current_state)
+
+        self.assertEqual(trim(
+            """
+            State1 A
+            State2
+            State1 B
+            """
+        ),
+                         logger.to_string()
+        )
+
+    def test_substate_result(self):
+        class State2(statemachine.State):
+            def __init__(self):
+                super(State2, self).__init__()
+                self.result = 0
+
+            def on_keep_alive(self):
+                self.log("State2")
+                self.result = 1
+
+        class State1(statemachine.State):
+            def __init__(self):
+                super(State1, self).__init__()
+                self.check = 0
+
+            def on_keep_alive(self):
+                self.log("State1 A")
+                state = yield State2()
+                self.log("State1 B")
+                self.check = state.result
+
+        logger = FsmLogger()
+
+        start_state = State1()
+        fsm = statemachine.StateMachine(start_state)
+
+        fsm.logger = logger
+
+        fsm.dispatch(DummyPacket())
+        fsm.dispatch(DummyPacket())
+
+        self.assertEquals(1, start_state.check)
+
+        self.assertEqual(trim(
+                            """
+                            State1 A
+                            State2
+                            State1 B
+                            """
+                        ),
+                         logger.to_string()
+        )
+
+    def test_multiple_substate(self):
+        class State2(statemachine.State):
+            def __init__(self):
+                super(State2, self).__init__()
+                self.result = 0
+
+            def on_keep_alive(self):
+                self.log("State2")
+
+        class State1(statemachine.State):
+            def __init__(self):
+                super(State1, self).__init__()
+
+            def on_keep_alive(self):
+                self.log("State1 A")
+                state = yield State2()
+                self.log("State1 B")
+                state = yield State2()
+                self.log("State1 C")
+
+
+        logger = FsmLogger()
+
+        start_state = State1()
+        fsm = statemachine.StateMachine(start_state)
+
+        fsm.logger = logger
+
+        fsm.dispatch(DummyPacket())
+        fsm.dispatch(DummyPacket())
+        fsm.dispatch(DummyPacket())
+
+        self.assertEqual(trim(
+            """
+            State1 A
+            State2
+            State1 B
+            State2
+            State1 C
+            """
+        ),
+                         logger.to_string()
+        )

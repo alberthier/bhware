@@ -11,7 +11,7 @@ from PyQt4.QtCore import *
 import trajectory
 import tools
 from definitions import *
-
+import os
 
 
 
@@ -74,7 +74,7 @@ class BasicDynamics(QObject):
             self.y = pose.y
         else:
             time = abs(self.angle - packet.angle) / angular_speed
-            traj.append((segmentNb, time, trajectory.Pose(self.x, self.y, packet.angle)))
+            traj.append((segmentNb, time, position.Pose(self.x, self.y, packet.angle)))
             self.angle = packet.angle
 
         self.simulation_finished.emit(traj)
@@ -99,8 +99,8 @@ class PositionControlSimulatorDynamics(QObject):
         self.left_y = 0.0
         self.right_x = 0.0
         self.right_y = 0.0
-        self.previous_pose = trajectory.Pose()
-        self.current_pose = trajectory.Pose()
+        self.previous_pose = position.Pose()
+        self.current_pose = position.Pose()
         self.current_segment_nb = None
         self.elapsed_time = 0.0
         self.poses = []
@@ -219,12 +219,12 @@ class PositionControlSimulatorDynamics(QObject):
                     self.previous_pose.x = self.current_pose.x
                     self.previous_pose.y = self.current_pose.y
                     self.previous_pose.angle = self.current_pose.angle
-                    self.poses.append((self.current_segment_nb, self.elapsed_time, trajectory.Pose(self.current_pose.x, self.current_pose.y, self.current_pose.angle)))
+                    self.poses.append((self.current_segment_nb, self.elapsed_time, position.Pose(self.current_pose.x, self.current_pose.y, self.current_pose.angle)))
                     self.current_segment_nb = None
                     self.elapsed_time += PositionControlSimulatorDynamics.TIMER_RESOLUTION * 10.0
             elif output.startswith("Motion"):
                 if self.current_segment_nb != None:
-                    self.poses.append((self.current_segment_nb, self.elapsed_time, trajectory.Pose(self.current_pose.x, self.current_pose.y, self.current_pose.angle)))
+                    self.poses.append((self.current_segment_nb, self.elapsed_time, position.Pose(self.current_pose.x, self.current_pose.y, self.current_pose.angle)))
                     self.current_segment_nb = None
                 self.simulation_finished.emit(self.poses)
                 self.poses = []

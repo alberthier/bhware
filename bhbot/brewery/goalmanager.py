@@ -51,7 +51,7 @@ class GoalManager(object):
             return None
 
         for goal in goals:
-            pose = trajectory.Pose(goal.x, goal.y, virtual=True)
+            pose = position.Pose(goal.x, goal.y, virtual=True)
             logger.log("Evaluate goal {}".format(goal.identifier))
             if GOAL_EVALUATION_USES_PATHFINDING:
                 goal.navigation_cost = self.event_loop.eval_map.evaluate(self.event_loop.robot.pose, pose)
