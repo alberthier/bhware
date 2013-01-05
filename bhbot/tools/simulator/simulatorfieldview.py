@@ -832,11 +832,9 @@ class RoutingLayer(fieldview.Layer):
 
         for shape in packet.shapes:
             if is_rect:
-                (x1, y1, x2, y2) = shape
-                item = QGraphicsRectItem(y1 * cell_size, x1 * cell_size, abs(y2 - y1) * cell_size,  abs(x2 - x1) * cell_size)
+                item = QGraphicsRectItem(shape.y1 * cell_size, shape.x1 * cell_size, abs(shape.y2 - shape.y1) * cell_size,  abs(shape.x2 - shape.x1) * cell_size)
             else:
-                (x, y, radius) = shape
-                item = QGraphicsEllipseItem((y - radius) * cell_size, (x - radius) * cell_size, radius * 2.0 * cell_size, radius * 2.0 * cell_size)
+                item = QGraphicsEllipseItem((shape.y - shape.radius) * cell_size, (shape.x - shape.radius) * cell_size, shape.radius * 2.0 * cell_size, shape.radius * 2.0 * cell_size)
             item.setBrush(brush)
             item.setPen(pen)
             self.addToGroup(item)
