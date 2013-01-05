@@ -4,7 +4,7 @@ import math
 
 import statemachine
 import packets
-import trajectory
+import position
 import logger
 import commonstates
 import goalmanager
@@ -136,7 +136,7 @@ class FindNextGoal(statemachine.State):
                                                                                                  .identifier, state.exit_reason))
                 self.robot().goal_manager.penalize_goal(self.current_goal)
                 yield Override(FindNextGoal())
-            
+
         else :
             yield Override(EndOfMatch())
 
@@ -164,9 +164,9 @@ class GrabMap(statemachine.State):
         walk.wait_for(commonstates.StoreFabric(FABRIC_STORE_HIGH))
         yield walk
         self.robot().goal_manager.goal_done(self.goal)
-        
 
-        
+
+
 
 
 
@@ -194,7 +194,7 @@ class DepositTreasure(statemachine.State):
         self.send_packet(packet)
         # No need to wait for confirmation here
         self.robot().goal_manager.goal_done(self.goal)
-        
+
 
 
 
@@ -229,8 +229,8 @@ class TakeGoldBar(statemachine.State):
             yield Override(EscapeTotem())
         else:
             yield DetectAndTakeGoldbar(self.goal)
-            
-            
+
+
 
 
 
@@ -253,7 +253,7 @@ class EscapeTotem(statemachine.State):
             self.try_escape()
         else:
             self.send_packet(packets.DisableAntiBlocking())
-            
+
 
 
 
@@ -288,10 +288,10 @@ class DetectAndTakeGoldbar(statemachine.State):
             return
         else:
             logger.log("Goldbar was not detected")
-        
+
         self.robot().goal_manager.goal_done(self.goal)
-                    
-        
+
+
 
 
 
@@ -318,7 +318,7 @@ class Swiffer(statemachine.State):
         walk.backward(0.35)
         yield walk
         self.robot().goal_manager.goal_done(self.goal)
-        
+
 
 
 

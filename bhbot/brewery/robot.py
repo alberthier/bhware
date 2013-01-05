@@ -2,7 +2,7 @@
 
 import math
 
-import trajectory
+import position
 import packets
 import logger
 

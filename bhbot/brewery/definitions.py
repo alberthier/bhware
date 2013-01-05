@@ -123,18 +123,17 @@ TURRET_LONG_DISTANCE_DETECTION_ID      = 240
 # Enums
 
 
-ENUMS = {}
-
-
 class Enum(object):
 
-    def __init__(self, name, description, **kwargs):
-        self.name = name
+    def __init__(self, description, **kwargs):
         self.description = description
         self.lookup_by_name = {}
         self.lookup_by_value = {}
-        ENUMS[name] = self
+        auto_value = 0
         for enum_item_name, enum_item_value in list(kwargs.items()):
+            if enum_item_value is None:
+                enum_item_value = auto_value
+            auto_value = enum_item_value + 1
             globals()[enum_item_name] = enum_item_value
             self.lookup_by_name[enum_item_name] = enum_item_value
             self.lookup_by_value[enum_item_value] = enum_item_name
@@ -142,113 +141,95 @@ class Enum(object):
 
 
 
-Enum("REMOTE_DEVICE",
-     "Remote hardware type",
+REMOTE_DEVICE = Enum("Remote hardware type",
      REMOTE_DEVICE_PIC       = 0,
      REMOTE_DEVICE_SIMULATOR = 1,
      REMOTE_DEVICE_UNKNOWN   = 2,
 )
 
-
-Enum("TEAM",
-     "Team color",
+TEAM = Enum("Team color",
      TEAM_PURPLE  = 0,
      TEAM_RED     = 1,
      TEAM_UNKNOWN = 2,
 )
 
-Enum("MOVEMENT",
-     "Movement",
+MOVEMENT = Enum("Movement",
      MOVEMENT_ROTATE = 0,
      MOVEMENT_MOVE   = 1,
      MOVEMENT_LINE   = 2,
 )
 
-Enum("DIRECTION",
-     "Direction",
+DIRECTION = Enum("Direction",
      DIRECTION_FORWARD  =  1,
      DIRECTION_BACKWARD = -1,
 )
 
-Enum("REASON",
-     "Goto finished reason",
+REASON = Enum("Goto finished reason",
      REASON_DESTINATION_REACHED = 0,
      REASON_BLOCKED_FRONT       = 1,
      REASON_BLOCKED_BACK        = 2,
      REASON_STOP_REQUESTED      = 3,
 )
 
-Enum("AXIS",
-     "Axis",
+AXIS = Enum("Axis",
      AXIS_X = 0,
      AXIS_Y = 1,
 )
 
-Enum("GRIPPER",
-     "Gripper Position",
+GRIPPER = Enum("Gripper Position",
      GRIPPER_CLOSE = 0,
      GRIPPER_OPEN  = 1,
 )
 
-Enum("GRIPPER_SIDE",
-     "Gripper side",
+GRIPPER_SIDE = Enum("Gripper side",
      GRIPPER_SIDE_LEFT  = 1,
      GRIPPER_SIDE_RIGHT = 2,
      GRIPPER_SIDE_BOTH  = 3,
 )
 
-Enum("SWEEPER",
-     "Sweeper position",
+SWEEPER = Enum("Sweeper position",
      SWEEPER_CLOSE = 0,
      SWEEPER_OPEN  = 1,
 )
 
-Enum("MAP_ARM",
-     "Map arm position",
+MAP_ARM = Enum("Map arm position",
      MAP_ARM_CLOSE = 0,
      MAP_ARM_OPEN  = 1,
 )
 
-Enum("MAP_GRIPPER",
-     "Map gripper position",
+MAP_GRIPPER = Enum("Map gripper position",
      MAP_GRIPPER_CLOSE = 0,
      MAP_GRIPPER_OPEN  = 1,
 )
 
-Enum("TANK",
-     "Tank position",
+TANK = Enum("Tank position",
      TANK_RETRACT = 0,
      TANK_DEPLOY  = 1,
 )
 
-Enum("FABRIC_STORE",
-     "Fabric store control",
+FABRIC_STORE = Enum("Fabric store control",
      FABRIC_STORE_LOW  = 0,
      FABRIC_STORE_HIGH = 1,
 )
 
-Enum("GOLD_BAR",
-     "Gold bar sensor",
+GOLD_BAR = Enum("Gold bar sensor",
      GOLD_BAR_MISSING = 0,
      GOLD_BAR_PRESENT = 1,
 )
 
-Enum("TRAJECTORY",
-    "Trajectory walk or navigation result",
+TRAJECTORY = Enum("Trajectory walk or navigation result",
     TRAJECTORY_DESTINATION_REACHED     = 0,
     TRAJECTORY_BLOCKED                 = 1,
     TRAJECTORY_OPPONENT_DETECTED       = 2,
     TRAJECTORY_DESTINATION_UNREACHABLE = 3,
 )
 
-Enum("OPPONENT_ROBOT",
-     "Detected opponent robot",
-     OPPONENT_ROBOT_MAIN = 0,
+OPPONENT_ROBOT = Enum("Detected opponent robot",
+     OPPONENT_ROBOT_MAIN      = 0,
      OPPONENT_ROBOT_SECONDARY = 1,
 )
 
-Enum("TURRET_INIT_MODE",
-     "Turret initialization read/write mode",
+TURRET_INIT_MODE = Enum("Turret initialization read/write mode",
     TURRET_INIT_MODE_READ  = 0,
     TURRET_INIT_MODE_WRITE = 1,
 )

@@ -5,7 +5,7 @@ import tools
 
 import packets
 import logger
-import trajectory
+import position
 import geometry
 
 from definitions import *

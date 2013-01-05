@@ -3,12 +3,10 @@
 import sys
 import struct
 import inspect
-import copy
 import math
-from collections import OrderedDict
 
+from binarizer import *
 from definitions import *
-
 import position
 
 
@@ -93,511 +91,114 @@ import position
 
 
 ################################################################################
-# Packet item types
+# Specific item types
 
 
 
 
-class PacketItem(object):
+class Point(AbstractItem):
 
-    C_TYPE = None
-    DESCRIPTION = None
-
-
-    def __init__(self, name, default_value, description = None):
-        self.name = name
-        self.default_value = default_value
-        if description is None:
-            description = self.DESCRIPTION
-        else:
-            self.description = description
-
-
-    def to_value_list(self, value, buf):
-        buf.append(value)
-
-
-    def from_value_list(self, buf):
-        value = buf[0]
-        del buf[0]
-        return value
-
-
-    def to_dict_value(self, value, pretty = False):
-        return value
-
-
-    def from_dict_value(self, value, pretty = False):
-        return value
-
-
-
-
-class Int8Item(PacketItem):
-
-    C_TYPE = 'b'
-    DESCRIPTION = "1 byte signed integer (char)"
-
-    def __init__(self, name, default_value, description = None):
-        PacketItem.__init__(self, name, default_value, description)
-
-
-
-
-class UInt8Item(PacketItem):
-
-    C_TYPE = 'B'
-    DESCRIPTION = "1 byte unsigned integer (unsigned char)"
-
-    def __init__(self, name, default_value, description = None):
-        PacketItem.__init__(self, name, default_value, description)
-
-
-
-
-class Int16Item(PacketItem):
-
-    C_TYPE = 'h'
-    DESCRIPTION = "2 bytes signed integer (short)"
-
-    def __init__(self, name, default_value, description = None):
-        PacketItem.__init__(self, name, default_value, description)
-
-
-
-
-class UInt16Item(PacketItem):
-
-    C_TYPE = 'H'
-    DESCRIPTION = "2 bytes unsigned integer (unsigned short)"
-
-    def __init__(self, name, default_value, description = None):
-        PacketItem.__init__(self, name, default_value, description)
-
-
-
-
-class Int32Item(PacketItem):
-
-    C_TYPE = 'i'
-    DESCRIPTION = "4 bytes signed integer (int)"
-
-    def __init__(self, name, default_value, description = None):
-        PacketItem.__init__(self, name, default_value, description)
-
-
-
-
-class UInt32Item(PacketItem):
-
-    C_TYPE = 'I'
-    DESCRIPTION = "4 bytes unsigned integer (unsigned int)"
-
-    def __init__(self, name, default_value, description = None):
-        PacketItem.__init__(self, name, default_value, description)
-
-
-
-
-class Int64Item(PacketItem):
-
-    C_TYPE = 'q'
-    DESCRIPTION = "8 bytes signed integer (long long)"
-
-    def __init__(self, name, default_value, description = None):
-        PacketItem.__init__(self, name, default_value, description)
-
-
-
-
-class UInt64Item(PacketItem):
-
-    C_TYPE = 'Q'
-    DESCRIPTION = "8 bytes unsigned integer (unsigned long long)"
-
-    def __init__(self, name, default_value, description = None):
-        PacketItem.__init__(self, name, default_value, description)
-
-
-
-
-class FloatItem(PacketItem):
-
-    C_TYPE = 'f'
-    DESCRIPTION = "4 bytes real (float)"
-
-    def __init__(self, name, default_value, description = None):
-        PacketItem.__init__(self, name, default_value, description)
-
-
-    def to_dict_value(self, value, pretty = False):
-        if pretty:
-            return "{:0.4f}".format(value)
-        return value
-
-
-    def from_dict_value(self, value, pretty = False):
-        return float(value)
-
-
-
-
-class DoubleItem(FloatItem):
-
-    C_TYPE = 'd'
-    DESCRIPTION = "8 bytes real (double)"
-
-    def __init__(self, name, default_value, description = None):
-        FloatItem.__init__(self, name, default_value, description)
-
-
-
-
-class FloatRadianItem(FloatItem):
-
-    def __init__(self, name, default_value, description = None):
-        FloatItem.__init__(self, name, default_value, description)
-
-
-    def to_dict_value(self, value, pretty = False):
-        if pretty:
-            return "{:0.4f} ({:0.4f} deg)".format(value, value / math.pi * 180.0)
-        return value
-
-
-    def from_dict_value(self, value, pretty = False):
-        if pretty:
-            return float(value[:value.find(" (")])
-        else:
-            return float(value)
-
-
-
-
-class DoubleRadianItem(DoubleItem):
-
-    def __init__(self, name, default_value, description = None):
-        DoubleItem.__init__(self, name, default_value, description)
-
-
-    def to_dict_value(self, value, pretty = False):
-        if pretty:
-            return "{:0.4f} ({:0.4f} deg)".format(value, value / math.pi * 180.0)
-        return value
-
-
-    def from_dict_value(self, value, pretty = False):
-        if pretty:
-            return float(value[:value.find(" (")])
-        else:
-            return float(value)
-
-
-
-
-class BoolItem(UInt8Item):
-
-    DESCRIPTION = "8 bytes boolean value (unsigned char)"
-
-    def __init__(self, name, default_value, description = None):
-        UInt8Item.__init__(self, name, default_value, description)
-
-
-    def to_value_list(self, value, buf):
-        if value:
-            buf.append(1)
-        else:
-            buf.append(0)
-
-
-    def from_value_list(self, buf):
-        value = buf[0]
-        del buf[0]
-        return value != 0
-
-
-
-
-class Enum8Item(Int8Item):
-
-    DESCRIPTION = "8 bytes enum value (char)"
-
-    def __init__(self, name, default_value, enum_name):
-        self.enum = ENUMS[enum_name]
-        Int8Item.__init__(self, name, default_value, self.enum.description)
-
-
-    def to_dict_value(self, value, pretty = False):
-        if pretty:
-            return self.enum.lookup_by_value[value]
-        return value
-
-
-    def from_dict_value(self, value, pretty = False):
-        if pretty:
-            return self.enum.lookup_by_name[value]
-        return value
-
-
-
-
-class UEnum8Item(UInt8Item):
-
-    DESCRIPTION = "8 bytes enum value (unsigned char)"
-
-    def __init__(self, name, default_value, enum_name):
-        self.enum = ENUMS[enum_name]
-        UInt8Item.__init__(self, name, default_value, self.enum.description)
-
-
-    def to_dict_value(self, value, pretty = False):
-        if pretty:
-            return self.enum.lookup_by_value[value]
-        return value
-
-
-    def from_dict_value(self, value, pretty = False):
-        if pretty:
-            return self.enum.lookup_by_name[value]
-        return value
-
-
-
-
-class PointItem(PacketItem):
-
-    C_TYPE = 'HH'
+    C_TYPE = 'hh'
     DESCRIPTION = "Field coordinates"
 
-    def __init__(self, name, description = None):
-        PacketItem.__init__(self, name, position.Pose(), description)
+    def __init__(self, description = None):
+        AbstractItem.__init__(self, position.Pose(), description)
 
 
-    def to_value_list(self, value, buf):
+    def serialize(self, value, buf):
         buf.append(int(value.x * 10000.0))
         buf.append(int(value.y * 10000.0))
 
 
-    def from_value_list(self, buf):
-        value = position.Pose(float(buf[0]) / 10000.0, float(buf[1]) / 10000.0)
-        del buf[0:2]
-        return value
+    def deserialize(self, iterator):
+        return position.Pose(float(next(iterator)) / 10000.0, float(next(iterator)) / 10000.0)
 
 
 
 
-class PoseItem(PacketItem):
+class Pose(Struct):
 
-    C_TYPE = 'fff'
-    DESCRIPTION = "Robot pose"
+    DESCRIPTION = "Pose"
 
-    def __init__(self, name, description = None):
-        PacketItem.__init__(self, name, position.Pose(), description)
-        self.default_value.angle = 0.0
-
-
-    def to_value_list(self, value, buf):
-        buf.append(value.x)
-        buf.append(value.y)
-        buf.append(value.angle)
-
-
-    def from_value_list(self, buf):
-        value = position.Pose(buf[0], buf[1], buf[2])
-        del buf[0:3]
-        return value
-
-
-    def to_dict_value(self, value, pretty = False):
-        ret = OrderedDict()
-        if pretty:
-            ret["x"]     = "{:0.4f}".format(value.x)
-            ret["y"]     = "{:0.4f}".format(value.y)
-            ret["angle"] = "{:0.4f} ({:0.4f} deg)".format(value.angle, value.angle / math.pi * 180.0)
-        else:
-            ret["x"]     = value.x
-            ret["y"]     = value.y
-            ret["angle"] = value.angle
-        return ret
-
-
-    def from_dict_value(self, value, pretty = False):
-        pose = position.Pose()
-        pose.x = float(value["x"])
-        pose.y = float(value["y"])
-        angle  = value["angle"]
-        if pretty:
-            pose.angle = float(angle[:angle.find(" (")])
-        else:
-            pose.angle = float(angle)
-        return pose
+    def __init__(self, description = None):
+        Struct.__init__(self, position.Pose, description,
+            ('x',     Float(0.0, "X coordinate")),
+            ('y',     Float(0.0, "Y coordinate")),
+            ('angle', Float(0.0, "Angle")),
+        )
 
 
 
 
-class OptionalAngle(FloatRadianItem):
+class OptionalAngle(FloatRadian):
 
     DESCRIPTION = "Optional angle"
 
-    def __init__(self, name, default_value, description = None):
-        FloatRadianItem.__init__(self, name, default_value, description)
+    def __init__(self, default_value, description = None):
+        FloatRadian.__init__(self, default_value, description)
 
 
-    def to_value_list(self, value, buf):
+    def serialize(self, value, buf):
         if value is not None:
             buf.append(value)
         else:
             buf.append(-1100000.0)
 
 
-    def from_value_list(self, buf):
-        angle = buf[0]
-        del buf[0]
+    def deserialize(self, iterator):
+        angle = next(iterator)
         if angle < -1000000.0:
             angle = None
         return angle
 
 
-    def to_dict_value(self, value, pretty = False):
-        if value != None:
-            return super(OptionalAngle, self).to_dict_value(value, pretty)
-        return "None"
-
-
-    def from_dict_value(self, value, pretty = False):
-        if value == "None":
-            return None
-        return super(OptionalAngle, self).from_dict_value(value, pretty)
+    def to_dump(self, value):
+        if value is None:
+            return str(None)
+        return "{:0.4f}".format(value)
 
 
 
-class SimulatorPointItem(PacketItem):
 
-    C_TYPE = 'BH'
+class SimulatorPoint(Struct):
+
     DESCRIPTION = "Route point"
 
-    def __init__(self, name, default_value, description = None):
-        PacketItem.__init__(self, name, default_value, description)
-
-
-    def to_value_list(self, value, buf):
-        buf.append(value[0])
-        buf.append(value[1])
-
-
-    def from_value_list(self, buf):
-        (x, y) = buf[:2]
-        del buf[:2]
-        return x, y
+    def __init__(self, description = None):
+        Struct.__init__(self, StructInstance, description,
+            ('x', UInt8 (0, "X coordinate")),
+            ('y', UInt16(0, "Y coordinate")),
+        )
 
 
 
 
-class SimulatorRectItem(PacketItem):
+class SimulatorRect(Struct):
 
-    C_TYPE = 'BHBH'
     DESCRIPTION = "Route rectangle"
 
-    def __init__(self, name, default_value, description = None):
-        PacketItem.__init__(self, name, default_value, description)
-
-
-    def to_value_list(self, value, buf):
-        buf.append(value[0])
-        buf.append(value[1])
-        buf.append(value[2])
-        buf.append(value[3])
-
-
-    def from_value_list(self, buf):
-        (x1, y1, x2, y2) = buf[:4]
-        del buf[:4]
-        return x1, y1, x2, y2
+    def __init__(self, description = None):
+        Struct.__init__(self, StructInstance, description,
+            ('x1', UInt8 (0, "X1 coordinate")),
+            ('y1', UInt16(0, "Y1 coordinate")),
+            ('x2', UInt8 (0, "X2 coordinate")),
+            ('y2', UInt16(0, "Y2 coordinate")),
+        )
 
 
 
 
-class SimulatorCircleItem(PacketItem):
+class SimulatorCircle(Struct):
 
     C_TYPE = 'BHB'
     DESCRIPTION = "Route circle"
 
-    def __init__(self, name, default_value, description = None):
-        PacketItem.__init__(self, name, default_value, description)
-
-
-    def to_value_list(self, value, buf):
-        buf.append(value[0])
-        buf.append(value[1])
-        buf.append(value[2])
-
-
-    def from_value_list(self, buf):
-        (x, y, radius) = buf[:3]
-        del buf[:3]
-        return x, y, radius
-
-
-
-
-class ListItem(PacketItem):
-
-    C_TYPE = None
-    DESCRIPTION = "List"
-
-    def __init__(self, name, default_value, element_type, max_elements, description = None):
-        self.element_type = element_type
-        self.max_elements = max_elements
-        if self.C_TYPE is None:
-            self.C_TYPE = "B"
-            for i in range(self.max_elements):
-                self.C_TYPE += self.element_type.C_TYPE
-        PacketItem.__init__(self, name, default_value, description)
-
-
-    def to_value_list(self, value, buf):
-        buf.append(len(value))
-        for elt in value:
-            self.element_type.to_value_list(elt, buf)
-        for i in range(self.max_elements - len(value)):
-            self.element_type.to_value_list(self.element_type.default_value, buf)
-
-
-    def from_value_list(self, buf):
-        value = []
-        count = buf[0]
-        del buf[0]
-        for i in range(count):
-            ival = self.element_type.from_value_list(buf)
-            value.append(ival)
-        # Pop remaining elements
-        for i in range(self.max_elements - count):
-            self.element_type.from_value_list(buf)
-        return value
-
-
-    def to_dict_value(self, value, pretty = False):
-        ret = []
-        for elt in value:
-            ret.append(self.element_type.to_dict_value(elt, pretty))
-        return ret
-
-
-    def from_dict_value(self, value, pretty = False):
-        ret = []
-        for elt in value:
-            ret.append(self.element_type.from_dict_value(elt, pretty))
-        return ret
-
-
-
-
-class PointListItem(ListItem):
-
-    DESCRIPTION = "Pose list"
-
-    def __init__(self, name, default_value, max_elements, description = None):
-        ListItem.__init__(self, name, default_value, PointItem(""), max_elements, description)
+    def __init__(self, description = None):
+        Struct.__init__(self, StructInstance, description,
+            ('x',      UInt8 (0, "Circle center X coordinate")),
+            ('y',      UInt16(0, "Circle center Y coordinate")),
+            ('radius', UInt8 (0, "Circle radius")),
+        )
 
 
 
@@ -618,12 +219,12 @@ class BasePacket(object):
     STRUCT = None
     HANDLER_METHOD = None
 
-    def __init__(self, **kwargs):
+    def __init__(self, *args, **kwargs):
         cls = type(self)
         if cls.STRUCT is None:
             fmt = "<B"
-            for elt in self.DEFINITION:
-                fmt += elt.C_TYPE
+            for name, item in self.DEFINITION:
+                fmt += item.C_TYPE
             size = struct.calcsize(fmt)
             pad_size = cls.MAX_SIZE - size
             if pad_size > 0:
@@ -638,56 +239,47 @@ class BasePacket(object):
                 else:
                     cls.HANDLER_METHOD += c
 
-        for elt in self.DEFINITION:
-            if elt.name in kwargs:
-                value = kwargs[elt.name]
-            else:
-                # Call the constructor of the value to duplicate it. This is necessary for lists
-                value = copy.deepcopy(elt.default_value)
-            setattr(self, elt.name, value)
-
-
-    def deserialize(self, buf):
-        elements = {}
-        unpacked = list(self.STRUCT.unpack(buf))
-        # pop the type
-        del unpacked[0]
-        for elt in self.DEFINITION:
-            setattr(self, elt.name, elt.from_value_list(unpacked))
+        for name, item in self.DEFINITION:
+            value = None
+            for aname, avalue in args:
+                if name == aname:
+                    value = avalue
+                    break
+            if value is None:
+                if name in kwargs:
+                    value = kwargs[name]
+                else:
+                    # Call the constructor of the value to duplicate it. This is necessary for lists
+                    value = copy.deepcopy(item.default_value)
+            setattr(self, name, value)
 
 
     def serialize(self):
-        args = []
-        for elt in self.DEFINITION:
-            value = getattr(self, elt.name)
-            elt.to_value_list(value, args)
-        return self.STRUCT.pack(self.TYPE, *args)
+        args = [ self.TYPE ]
+        for name, item in self.DEFINITION:
+            item.serialize(getattr(self, name), args)
+        return self.STRUCT.pack(*args)
 
 
-    def to_dict(self, pretty = False):
-        packet_dict = OrderedDict()
-        for elt in self.DEFINITION:
-            packet_dict[elt.name] = elt.to_dict_value(getattr(self, elt.name), pretty)
-        return packet_dict
+    def deserialize(self, buf):
+        unpacked = self.STRUCT.unpack(buf)
+        it = iter(unpacked)
+        # pop the type
+        next(it)
+        for name, item in self.DEFINITION:
+            setattr(self, name, item.deserialize(it))
 
 
-    def from_dict(self, packet_dict, pretty = False):
-        for elt in self.DEFINITION:
-            value = elt.from_dict_value(packet_dict[elt.name], pretty)
-            setattr(self, elt.name, value)
-
-
-    def to_code(self):
-        code = type(self).__name__ + "("
+    def to_dump(self):
+        s = "("
         first = True
-        for elt in self.DEFINITION:
-            if not first:
-                code += ", "
-            else:
+        for name, item in self.DEFINITION:
+            if first:
                 first = False
-            code += elt.name + " = " + str(getattr(self, elt.name))
-        code += ")"
-        return code
+            else:
+                s += ", "
+            s += "'" + name + "', " + item.to_dump(getattr(self, name))
+        return s + ")"
 
 
     def dispatch(self, obj):
@@ -719,7 +311,7 @@ class DeviceBusy(BasePacket):
     TYPE = 1
     LOGVIEW_COLOR = "#5f9ea0"
     DEFINITION = (
-        UEnum8Item('remote_device', REMOTE_DEVICE_PIC, 'REMOTE_DEVICE'),
+        ('remote_device', UEnum8(REMOTE_DEVICE_PIC, REMOTE_DEVICE)),
     )
 
 
@@ -730,8 +322,8 @@ class DeviceReady(BasePacket):
     TYPE = 2
     LOGVIEW_COLOR = "#7fff00"
     DEFINITION = (
-        UEnum8Item('team',          TEAM_UNKNOWN,      'TEAM'),
-        UEnum8Item('remote_device', REMOTE_DEVICE_PIC, 'REMOTE_DEVICE'),
+        ('team',          UEnum8(TEAM_UNKNOWN     , TEAM         )),
+        ('remote_device', UEnum8(REMOTE_DEVICE_PIC, REMOTE_DEVICE)),
     )
 
 
@@ -742,7 +334,7 @@ class Start(BasePacket):
     TYPE = 3
     LOGVIEW_COLOR = "#d2691e"
     DEFINITION = (
-        UEnum8Item('team', TEAM_UNKNOWN, 'TEAM'),
+        ('team', UEnum8(TEAM_UNKNOWN, TEAM)),
     )
 
 
@@ -752,10 +344,10 @@ class Goto(BasePacket):
     TYPE = 4
     LOGVIEW_COLOR = "#ff7f50"
     DEFINITION = (
-        UEnum8Item   ('movement',   MOVEMENT_MOVE,     'MOVEMENT'),
-        Enum8Item    ('direction',  DIRECTION_FORWARD, 'DIRECTION'),
-        OptionalAngle('angle',      None,              "Destination angle"),
-        PointListItem('points', [], 62),
+        ('movement' , UEnum8       (MOVEMENT_MOVE,     MOVEMENT)),
+        ('direction', Enum8        (DIRECTION_FORWARD, DIRECTION)),
+        ('angle'    , OptionalAngle(None, "Destination angle")),
+        ('points'   , List         (62, Point(), [], "List of points to follow")),
     )
 
 
@@ -774,9 +366,9 @@ class GotoFinished(BasePacket):
     TYPE = 6
     LOGVIEW_COLOR = "#daa520"
     DEFINITION = (
-        UEnum8Item('reason',              REASON_DESTINATION_REACHED, 'REASON'),
-        PoseItem  ('current_pose'),
-        UInt8Item ('current_point_index', 0,                          "Last reached point index of the point list given in the Goto packet"),
+        ('reason'             , UEnum8(REASON_DESTINATION_REACHED, REASON)),
+        ('current_pose'       , Pose  ("Robot pose at the end of the movement")),
+        ('current_point_index', UInt8 (0, "Last reached point index of the point list given in the Goto packet")),
     )
 
 
@@ -804,9 +396,9 @@ class KeepAlive(BasePacket):
     LOGVIEW_COLOR = "#8b008b"
     LOGVIEW_DEFAULT_ENABLED = False
     DEFINITION = (
-        PoseItem  ('current_pose',         "Current robot pose"),
-        BoolItem  ('match_started', False, "Flag defining if the match has already started"),
-        UInt32Item('match_time',    0,     "Time elapsed since the start of the match"),
+        ('current_pose' , Pose  ("Current robot pose")),
+        ('match_started', Bool  (False, "Flag defining if the match has already started")),
+        ('match_time'   , UInt32(0, "Time elapsed since the start of the match")),
     )
 
 
@@ -817,8 +409,8 @@ class PositionControlConfig(BasePacket):
     TYPE = 11
     LOGVIEW_COLOR = "#556b2f"
     DEFINITION = (
-        FloatItem ('t_acc',                             0.0),
-        FloatItem ('f_va_max',                          0.0),
+        ('t_acc'   , Float(0.0)),
+        ('f_va_max', Float(0.0)),
     )
 
 
@@ -837,9 +429,9 @@ class Resettle(BasePacket):
     TYPE = 13
     LOGVIEW_COLOR = "#ff1493"
     DEFINITION = (
-        UEnum8Item     ('axis',     AXIS_X, 'AXIS'),
-        FloatItem      ('position', 0.0,    "Robot position on the given axis"),
-        FloatRadianItem('angle',    0.0,    "Robot angle"),
+        ('axis'    , UEnum8     (AXIS_X, AXIS)),
+        ('position', Float      (0.0, "Robot position on the given axis")),
+        ('angle'   , FloatRadian(0.0, "Robot angle")),
     )
 
 
@@ -850,8 +442,8 @@ class GripperControl(BasePacket):
     TYPE = 14
     LOGVIEW_COLOR = "#ffa500"
     DEFINITION = (
-        UEnum8Item('move',  GRIPPER_CLOSE,     'GRIPPER'),
-        UEnum8Item('which', GRIPPER_SIDE_BOTH, 'GRIPPER_SIDE'),
+        ('move' , UEnum8(GRIPPER_CLOSE,     GRIPPER)),
+        ('which', UEnum8(GRIPPER_SIDE_BOTH, GRIPPER_SIDE)),
     )
 
 
@@ -862,7 +454,7 @@ class SweeperControl(BasePacket):
     TYPE = 15
     LOGVIEW_COLOR = "#ff4500"
     DEFINITION = (
-        UEnum8Item('move',  SWEEPER_CLOSE,     'SWEEPER'),
+        ('move', UEnum8(SWEEPER_CLOSE, SWEEPER)),
     )
 
 
@@ -873,7 +465,7 @@ class MapArmControl(BasePacket):
     TYPE = 16
     LOGVIEW_COLOR = "#98fb98"
     DEFINITION = (
-        UEnum8Item('move',  MAP_ARM_CLOSE,     'MAP_ARM'),
+        ('move', UEnum8(MAP_ARM_CLOSE, MAP_ARM)),
     )
 
 
@@ -884,7 +476,7 @@ class MapGripperControl(BasePacket):
     TYPE = 17
     LOGVIEW_COLOR = "#6a5acd"
     DEFINITION = (
-        UEnum8Item('move',  MAP_GRIPPER_CLOSE,     'MAP_GRIPPER'),
+        ('move', UEnum8(MAP_GRIPPER_CLOSE, MAP_GRIPPER)),
     )
 
 
@@ -895,7 +487,7 @@ class EmptyTankControl(BasePacket):
     TYPE = 18
     LOGVIEW_COLOR = "#4682b4"
     DEFINITION = (
-        UEnum8Item('move',  TANK_RETRACT,     'TANK'),
+        ('move', UEnum8(TANK_RETRACT, TANK)),
     )
 
 
@@ -906,7 +498,7 @@ class GoldBarDetection(BasePacket):
     TYPE = 19
     LOGVIEW_COLOR = "#ffd700"
     DEFINITION = (
-        UEnum8Item('status',  GOLD_BAR_MISSING,     'GOLD_BAR'),
+        ('status', Enum8(GOLD_BAR_MISSING, GOLD_BAR)),
     )
 
 
@@ -917,7 +509,7 @@ class FabricStoreControl(BasePacket):
     TYPE = 20
     LOGVIEW_COLOR = "#32cd32"
     DEFINITION = (
-        UEnum8Item('move',  FABRIC_STORE_HIGH,     'FABRIC_STORE'),
+        ('move', UEnum8(FABRIC_STORE_HIGH, FABRIC_STORE)),
     )
 
 
@@ -937,7 +529,7 @@ class SimulatorData(BasePacket):
     LOGVIEW_DEFAULT_ENABLED = False
     LOGVIEW_COLOR = "#4169e1"
     DEFINITION = (
-        UInt8Item('leds', 0, "Dockstar leds status"),
+        ('leds', UInt8(0, "Dockstar leds status")),
     )
 
 
@@ -958,7 +550,7 @@ class SimulatorRoutePath(BasePacket):
     LOGVIEW_DEFAULT_ENABLED = False
     LOGVIEW_COLOR = "#8b4513"
     DEFINITION = (
-        ListItem('points', [], SimulatorPointItem("", (0, 0)), 84, "Route path points"),
+        ('points', List(84, SimulatorPoint(), [], "Route path points")),
     )
 
 
@@ -970,7 +562,7 @@ class SimulatorSimplifiedRoutePath(BasePacket):
     LOGVIEW_DEFAULT_ENABLED = False
     LOGVIEW_COLOR = "#8b4513"
     DEFINITION = (
-        ListItem('points', [], SimulatorPointItem("", (0, 0)), 84, "Route path points"),
+        ('points', List(84, SimulatorPoint(), [], "Route path points")),
     )
 
 
@@ -991,8 +583,8 @@ class SimulatorRouteRects(BasePacket):
     LOGVIEW_DEFAULT_ENABLED = False
     LOGVIEW_COLOR = "#d8bfd8"
     DEFINITION = (
-        BoolItem('is_forbidden_zone', True, "Represents forbidden zones or not"),
-        ListItem('shapes', [], SimulatorRectItem("", (0, 0, 0, 0)), 42, "Route rects"),
+        ('is_forbidden_zone', Bool(True, "Represents forbidden zones or not")),
+        ('shapes',            List(42, SimulatorRect(), [], "Route rects")),
     )
 
 
@@ -1004,8 +596,8 @@ class SimulatorRouteCircles(BasePacket):
     LOGVIEW_DEFAULT_ENABLED = False
     LOGVIEW_COLOR = "#ff6347"
     DEFINITION = (
-        BoolItem('is_forbidden_zone', True, "Represents forbidden zones or not"),
-        ListItem('shapes', [], SimulatorCircleItem("", (0, 0, 0)), 63, "Route circles"),
+        ('is_forbidden_zone', Bool(True, "Represents forbidden zones or not")),
+        ('shapes',            List(63, SimulatorCircle(), [], "Route circles")),
     )
 
 
@@ -1017,11 +609,11 @@ class SimulatorOpponentsPositions(BasePacket):
     LOGVIEW_DEFAULT_ENABLED = False
     LOGVIEW_COLOR = "#ba55d3"
     DEFINITION = (
-        UEnum8Item('robot',    OPPONENT_ROBOT_MAIN, 'OPPONENT_ROBOT'),
-        BoolItem  ('present',  True,                "Opponent present"),
-        FloatItem ('x',        -1.0,                "Opponent X coordinate"),
-        FloatItem ('y',        -1.0,                "Opponent Y coordinate"),
-        FloatItem ('distance', -1.0,                "Estimated distannce"),
+        ('robot'   , UEnum8(OPPONENT_ROBOT_MAIN, OPPONENT_ROBOT)),
+        ('present' , Bool  (True, "Opponent present")),
+        ('x'       , Float (-1.0, "Opponent X coordinate")),
+        ('y'       , Float (-1.0, "Opponent Y coordinate")),
+        ('distance', Float (-1.0, "Estimated distannce")),
     )
 
 
@@ -1042,7 +634,7 @@ class SimulatorGraphMapEdges(BasePacket):
     LOGVIEW_DEFAULT_ENABLED = False
     LOGVIEW_COLOR = "#ba55d3"
     DEFINITION = (
-        ListItem('points', [], FloatItem("", 0.0), 63, "Edges"),
+        ('points', List(63, Float(0.0), [], "Route circles")),
     )
 
 
@@ -1054,7 +646,7 @@ class SimulatorGraphMapRoute(BasePacket):
     LOGVIEW_DEFAULT_ENABLED = False
     LOGVIEW_COLOR = "#ba55d3"
     DEFINITION = (
-        ListItem('points', [], FloatItem("", 0.0), 63, "Edges"),
+        ('points', List(63, Float(0.0), [], "Edges")),
     )
 
 
@@ -1066,9 +658,9 @@ class TurretDetect(BasePacket):
     TYPE = 32
     LOGVIEW_COLOR = "#9acd32"
     DEFINITION = (
-        UInt8Item ('distance', 0, "Detection distance"),
-        UInt8Item ('angle',    0, "Detection angle index (0 <= angle <= 17; 20 deg resolution)"),
-        UEnum8Item('robot',    OPPONENT_ROBOT_MAIN, 'OPPONENT_ROBOT'),
+        ('distance', UInt8 (0, "Detection distance")),
+        ('angle'   , UInt8 (0, "Detection angle index (0 <= angle <= 17; 20 deg resolution)")),
+        ('robot'   , UEnum8(OPPONENT_ROBOT_MAIN, OPPONENT_ROBOT)),
     )
 
 
@@ -1080,9 +672,9 @@ class TurretInit(BasePacket):
     TYPE = 33
     LOGVIEW_COLOR = "#7fffd4"
     DEFINITION = (
-        UEnum8Item('mode',           TURRET_INIT_MODE_READ, 'TURRET_INIT_MODE'),
-        UInt8Item ('short_distance', 0, "Short distance detection range"),
-        UInt8Item ('long_distance',  0, "Long distance detection range"),
+        ('mode'          , UEnum8(TURRET_INIT_MODE_READ, TURRET_INIT_MODE)),
+        ('short_distance', UInt8 (0, "Short distance detection range")),
+        ('long_distance' , UInt8 (0, "Long distance detection range")),
     )
 
 
@@ -1094,8 +686,8 @@ class TurretDistances(BasePacket):
     TYPE = 34
     LOGVIEW_COLOR = "#191970"
     DEFINITION = (
-        UInt8Item ('short_distance', 0, "Short distance detection range"),
-        UInt8Item ('long_distance',  0, "Long distance detection range"),
+        ('short_distance', UInt8 (0, "Short distance detection range")),
+        ('long_distance' , UInt8 (0, "Long distance detection range")),
     )
 
 

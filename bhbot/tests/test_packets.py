@@ -82,24 +82,6 @@ class PacketTestMixin(object):
         self.assert_packet_equal(packet1, packet2)
 
 
-    def test_dict_serialization_deserialization(self):
-        packet1 = self.create_packet()
-        self.initialize_packet(packet1)
-        d = packet1.to_dict()
-        packet2 = self.create_packet()
-        packet2.from_dict(d)
-        self.assert_packet_equal(packet1, packet2)
-
-
-    def test_pretty_dict_serialization_deserialization(self):
-        packet1 = self.create_packet()
-        self.initialize_packet(packet1)
-        d = packet1.to_dict(True)
-        packet2 = self.create_packet()
-        packet2.from_dict(d, True)
-        self.assert_packet_equal(packet1, packet2)
-
-
     def test_packet_id_uniqueness(self):
         count = 0
         packet_type = self.create_packet().TYPE

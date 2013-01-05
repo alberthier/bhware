@@ -85,26 +85,25 @@ def log(text, sender = "ARM"):
         text = str(text)
     #noinspection PyBroadException
     try:
-        log_file.write("l([" + time + ",'" + sender + "','# " + text.replace("'", "\\'") + "'])\n")
+        log_file.write("l([" + time + ",'" + sender + "','LOG','# " + text.replace("'", "\\'") + "'])\n")
     except:
         print("Failed to write to file")
     sys.stdout.write(color_start + text + color_stop + "\n")
     sys.stdout.flush()
 
 
-def log_exception(exc, msg = None):
-    if msg is None:
-        msg = "Exception "
-    log(msg + str(exc))
-    for l in traceback.format_exc(exc).split("\n") :
-        log("   "+l)
+def log_exception(exc):
+    msg = ""
+    for l in traceback.format_exception(type(exc), exc, None):
+        msg += l
+    log(msg)
 
 
 def log_packet(packet, sender = "ARM"):
     initialize()
     delta = datetime.datetime.now() - start_time
     time = "'{:=0.02f}'".format(delta.total_seconds())
-    text = "'" + sender + "'," + packet.to_code() + "]"
+    text = "'" + sender + "'," + type(packet).__name__ + "," + packet.to_dump() + "]"
     #noinspection PyBroadException
     try:
         log_file.write("l([" + time + "," + text + ")\n")

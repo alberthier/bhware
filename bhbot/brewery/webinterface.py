@@ -6,7 +6,7 @@ import os
 import nanow
 
 import packets
-import trajectory
+import position
 import statemachine
 import commonstates
 from definitions import *

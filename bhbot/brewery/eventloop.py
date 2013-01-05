@@ -14,7 +14,7 @@ import logger
 import packets
 import statemachine
 import asyncwsgiserver
-#import nanow
+import nanow
 import leds
 import robot
 import opponentdetector
@@ -24,7 +24,7 @@ import commonstates
 import geometry
 import goalmanager
 import tools
-#import webinterface
+import webinterface
 from definitions import *
 
 if IS_HOST_DEVICE_ARM :
@@ -203,8 +203,12 @@ class Timer(object):
         self.timeout_date = None
 
 
-    def __cmp__(self, other):
-        return cmp(self.timeout_date, other.timeout_date)
+    def __lt__(self, other):
+        return self.timeout_date < other.timeout_date
+
+
+    def __le__(self, other):
+        return self.timeout_date <= other.timeout_date
 
 
 

@@ -8,7 +8,7 @@ import time
 
 from PyQt4.QtCore import *
 
-import trajectory
+import position
 import tools
 from definitions import *
 import os

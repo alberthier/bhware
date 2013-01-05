@@ -4,7 +4,7 @@ import math
 
 import statemachine
 import packets
-import trajectory
+import position
 import logger
 import commonstates
 import goalmanager

@@ -7,7 +7,7 @@ from collections import deque
 
 import statemachine
 import packets
-import trajectory
+import position
 import logger
 import eventloop
 import tools

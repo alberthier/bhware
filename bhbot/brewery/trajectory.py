@@ -9,10 +9,9 @@ import tools
 import packets
 import logger
 import eventloop
+import binarizer
 from definitions import *
 from position import Pose, VirtualPose
-
-
 
 
 
@@ -319,7 +318,7 @@ class Map(object):
 
 
     def send_route_to_simulator(self, path, is_simplified):
-        max_elements = packets.SimulatorRoutePath.DEFINITION[0].max_elements
+        max_elements = packets.SimulatorRoutePath.DEFINITION[0][1].max_count
         if is_simplified:
             packet = packets.SimulatorSimplifiedRoutePath()
         else:
@@ -344,16 +343,18 @@ class Map(object):
             penalized_circles_packet = packets.SimulatorRouteCircles(is_forbidden_zone = False)
 
             for rect in self.simulator_rect_shapes:
+                s = binarizer.StructInstance(x1 = rect[0], y1 = rect[1], x2 = rect[2], y2 = rect[3])
                 if rect[-1]:
-                    forbidden_rects_packet.shapes.append(rect[:4])
+                    forbidden_rects_packet.shapes.append(s)
                 else:
-                    penalized_rects_packet.shapes.append(rect[:4])
+                    penalized_rects_packet.shapes.append(s)
             self.simulator_rect_shapes = []
             for circle in self.simulator_circle_shapes:
+                s = binarizer.StructInstance(x = rect[0], y = rect[1], radius = rect[2])
                 if circle[-1]:
-                    forbidden_circles_packet.shapes.append(circle[:3])
+                    forbidden_circles_packet.shapes.append(s)
                 else:
-                    penalized_circles_packet.shapes.append(circle[:3])
+                    penalized_circles_packet.shapes.append(s)
             self.simulator_circle_shapes = []
 
             self.eventloop.send_packet(packets.SimulatorRouteResetZones())

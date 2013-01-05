@@ -73,7 +73,7 @@ class StateMachine(object):
         self.return_value = None
         self.logger = None
         self.state_generator = iter(StateGenerator(self))
-        self.state_generator.next()
+        next(self.state_generator)
 
     def init_state(self, s):
         s.fsm = self

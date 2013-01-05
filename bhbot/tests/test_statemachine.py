@@ -160,11 +160,11 @@ class DummyPacket(object):
 class FsmLogger(object):
     def __init__(self):
         self.lines = []
-        
+
     def log(self, s):
-        print "Log : "+s
+        print("Log : "+s)
         self.lines.append(s)
-        
+
     def to_string(self):
         return "\n".join(self.lines)
 
