@@ -96,22 +96,34 @@ import position
 
 
 
-class Point(AbstractItem):
+class ShortAsFloat(Float):
 
-    C_TYPE = 'hh'
-    DESCRIPTION = "Field coordinates"
+    C_TYPE = 'h'
+    DESCRIPTION = "4 bytes real (float) stored in a short"
 
-    def __init__(self, description = None):
-        AbstractItem.__init__(self, position.Pose(), description)
+    def __init__(self, default_value, description = None):
+        AbstractItem.__init__(self, default_value, description)
 
 
     def serialize(self, value, buf):
-        buf.append(int(value.x * 10000.0))
-        buf.append(int(value.y * 10000.0))
+        buf.append(int(value * 10000.0))
 
 
     def deserialize(self, iterator):
-        return position.Pose(float(next(iterator)) / 10000.0, float(next(iterator)) / 10000.0)
+        return float(next(iterator)) / 10000.0
+
+
+
+
+class Point(Struct):
+
+    DESCRIPTION = "Field coordinates"
+
+    def __init__(self, description = None):
+        Struct.__init__(self, position.Pose, description,
+            ('x', ShortAsFloat(0.0, "X coordinate")),
+            ('y', ShortAsFloat(0.0, "Y coordinate")),
+        )
 
 
 
@@ -217,14 +229,14 @@ class BasePacket(object):
     LOGVIEW_COLOR = "#000000"
     LOGVIEW_DEFAULT_ENABLED = True
     STRUCT = None
+    BIN_STRUCT = None
     HANDLER_METHOD = None
 
     def __init__(self, *args, **kwargs):
         cls = type(self)
         if cls.STRUCT is None:
-            fmt = "<B"
-            for name, item in self.DEFINITION:
-                fmt += item.C_TYPE
+            cls.BIN_STRUCT = Struct(StructInstance, "", *cls.DEFINITION)
+            fmt = "<B" + cls.BIN_STRUCT.C_TYPE
             size = struct.calcsize(fmt)
             pad_size = cls.MAX_SIZE - size
             if pad_size > 0:
@@ -256,8 +268,7 @@ class BasePacket(object):
 
     def serialize(self):
         args = [ self.TYPE ]
-        for name, item in self.DEFINITION:
-            item.serialize(getattr(self, name), args)
+        self.BIN_STRUCT.serialize(self, args)
         return self.STRUCT.pack(*args)
 
 
@@ -266,20 +277,11 @@ class BasePacket(object):
         it = iter(unpacked)
         # pop the type
         next(it)
-        for name, item in self.DEFINITION:
-            setattr(self, name, item.deserialize(it))
+        self.BIN_STRUCT.deserialize_to(self, it)
 
 
     def to_dump(self):
-        s = "("
-        first = True
-        for name, item in self.DEFINITION:
-            if first:
-                first = False
-            else:
-                s += ", "
-            s += "'" + name + "', " + item.to_dump(getattr(self, name))
-        return s + ")"
+        return self.BIN_STRUCT.to_dump(self)
 
 
     def dispatch(self, obj):

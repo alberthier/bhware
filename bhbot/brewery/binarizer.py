@@ -266,6 +266,10 @@ class Struct(AbstractItem):
 
     def deserialize(self, iterator):
         instance = self.instance_ctor()
+        return self.deserialize_to(instance, iterator)
+
+
+    def deserialize_to(self, instance, iterator):
         for name, item in self.content:
             value = item.deserialize(iterator)
             setattr(instance, name, value)
@@ -280,7 +284,7 @@ class Struct(AbstractItem):
                 first = False
             else:
                 s += ", "
-            s += "'" + name + "', " + item.to_dump(getattr(value, name))
+            s += "('" + name + "', " + item.to_dump(getattr(value, name)) + ")"
         return s + ")"
 
 
