@@ -7,6 +7,7 @@ from PyQt4.QtGui import *
 import collections
 
 import logger
+import logtools
 import packets
 from definitions import *
 
@@ -28,15 +29,16 @@ class RealTrajectoryLayer(fieldview.Layer):
     def process_log_line(self, log_line, lineno, last_lineno):
         packet_type = log_line[logger.LOG_LINE_PACKET]
         if packet_type is packets.KeepAlive:
-            d = collections.OrderedDict(log_line[logger.LOG_LINE_CONTENT])
-            pose = collections.OrderedDict(d["current_pose"])
+            pose = logtools.get_value(log_line[logger.LOG_LINE_CONTENT], "current_pose")
+            x = logtools.get_value(pose, "x")
+            y = logtools.get_value(pose, "y")
             if not self.has_first_goto:
-                self.path.moveTo(pose["y"] * 1000.0, pose["x"] * 1000.0)
+                self.path.moveTo(y * 1000.0, x * 1000.0)
             else:
-                self.path.lineTo(pose["y"] * 1000.0, pose["x"] * 1000.0)
+                self.path.lineTo(y * 1000.0, x * 1000.0)
         if packet_type is packets.Goto:
-            d = collections.OrderedDict(log_line[logger.LOG_LINE_CONTENT])
-            if d["movement"] != MOVEMENT_ROTATE:
+            movement = logtools.get_value(log_line[logger.LOG_LINE_CONTENT], "movement")
+            if movement != MOVEMENT_ROTATE:
                 self.has_first_goto = True
 
         if lineno == last_lineno:
@@ -59,17 +61,19 @@ class ExpectedTrajectoryLayer(fieldview.Layer):
     def process_log_line(self, log_line, lineno, last_lineno):
         packet_type = log_line[logger.LOG_LINE_PACKET]
         if packet_type is packets.Resettle:
-            d = collections.OrderedDict(log_line[logger.LOG_LINE_CONTENT])
-            if d["axis"] == AXIS_X:
-                self.path.moveTo(self.path.currentPosition().x(), d["position"] * 1000.0)
+            axis = logtools.get_value(log_line[logger.LOG_LINE_CONTENT], "axis")
+            position = logtools.get_value(log_line[logger.LOG_LINE_CONTENT], "position")
+            if axis == AXIS_X:
+                self.path.moveTo(self.path.currentPosition().x(), position * 1000.0)
             else:
-                self.path.moveTo(d["position"] * 1000.0, self.path.currentPosition().y())
+                self.path.moveTo(position * 1000.0, self.path.currentPosition().y())
         if packet_type is packets.Goto:
-            d = collections.OrderedDict(log_line[logger.LOG_LINE_CONTENT])
-            if d["movement"] != MOVEMENT_ROTATE:
-                for p in d["points"]:
-                    point = collections.OrderedDict(p)
-                    self.path.lineTo(point["y"] * 1000.0, point["x"] * 1000.0)
+            movement = logtools.get_value(log_line[logger.LOG_LINE_CONTENT], "movement")
+            if movement != MOVEMENT_ROTATE:
+                for p in logtools.get_value(log_line[logger.LOG_LINE_CONTENT], "points"):
+                    x = logtools.get_value(p, "x")
+                    y = logtools.get_value(p, "y")
+                    self.path.lineTo(y * 1000.0, x * 1000.0)
 
         if lineno == last_lineno:
             path_item = QGraphicsPathItem(self)
