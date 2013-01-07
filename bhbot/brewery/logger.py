@@ -11,10 +11,10 @@ import packets
 from definitions import *
 
 
-LOG_LINE_TIME   = 0
-LOG_LINE_SENDER = 1
-LOG_LINE_DATA   = 2
-LOG_LINE_COUNT  = 3
+LOG_LINE_TIME    = 0
+LOG_LINE_SENDER  = 1
+LOG_LINE_PACKET  = 2
+LOG_LINE_CONTENT = 3
 
 filepath = None
 log_file = None

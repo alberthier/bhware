@@ -27,13 +27,13 @@ class CategoriesModel(QStandardItemModel):
             pixmap = QPixmap(icon_size)
             pixmap.fill(QColor(packet.LOGVIEW_COLOR))
             item = QStandardItem(QIcon(pixmap), packet.__name__)
-            item.setData(QVariant(packet.TYPE), CategoriesModel.PACKET_TYPE_ROLE)
+            item.setData(packet.TYPE, CategoriesModel.PACKET_TYPE_ROLE)
             self.appendRow([item])
             row += 1
         pixmap = QPixmap(icon_size)
         pixmap.fill(QColor("#a9a9a9"))
         item = QStandardItem(QIcon(pixmap), "LogText")
-        item.setData(QVariant(-1), CategoriesModel.PACKET_TYPE_ROLE)
+        item.setData(-1, CategoriesModel.PACKET_TYPE_ROLE)
         self.appendRow([item])
 
 
@@ -66,57 +66,35 @@ class LogModel(QStandardItemModel):
 
 
     def process_log_line(self, log_line, lineno, last_lineno):
+        t = log_line[logger.LOG_LINE_PACKET]
+        if t is packets.KeepAlive:
+            d = collections.OrderedDict(log_line[logger.LOG_LINE_CONTENT])
+            time = d["match_time"]
+            if time <= 0 or time >= 90000:
+                return
         line = []
-        first_item = QStandardItem(0)
+        first_item = QStandardItem(str(lineno))
         line.append(first_item)
         line.append(QStandardItem(log_line[logger.LOG_LINE_TIME]))
-        data = log_line[logger.LOG_LINE_DATA]
-        if type(data) == str:
-            line.append(QStandardItem(log_line[logger.LOG_LINE_SENDER]))
-            typeItem = QStandardItem(self.comment_color, "Log Text")
-            typeItem.setData(QVariant(-1), LogModel.LOG_MODEL_PACKET_TYPE_ROLE)
-            line.append(typeItem)
-            line.append(QStandardItem(self.states_stack[-1]))
-            line.append(QStandardItem(data))
-            if data.startswith("# Pushing sub-state "):
-                self.states_stack.append(data[data.rfind(" ") + 1:])
-            elif data.startswith("# Poping sub-state "):
-                self.states_stack.pop()
-            elif data.startswith("# Switching to state "):
-                self.states_stack[-1] = data[data.rfind(" ") + 1:]
+        line.append(QStandardItem(log_line[logger.LOG_LINE_SENDER]))
+        if type(t) is str:
+            typeItem = QStandardItem(self.comment_color, t)
+            typeItem.setData(-1, LogModel.LOG_MODEL_PACKET_TYPE_ROLE)
         else:
-            line.append(QStandardItem(log_line[logger.LOG_LINE_SENDER]))
-            typeItem = QStandardItem(self.colors[data.TYPE], type(data).__name__)
-            typeItem.setData(QVariant(data.TYPE), LogModel.LOG_MODEL_PACKET_TYPE_ROLE)
-            line.append(typeItem)
-            line.append(QStandardItem(self.states_stack[-1]))
-            packet_dict = data.to_dict(True)
-            line.append(QStandardItem(helpers.packet_dump_to_text(packet_dict)))
-            self.add_content(first_item, None, packet_dict)
+            typeItem = QStandardItem(self.colors[t.TYPE], t.__name__)
+            typeItem.setData(t.TYPE, LogModel.LOG_MODEL_PACKET_TYPE_ROLE)
+        line.append(typeItem)
+        line.append(QStandardItem(self.states_stack[-1]))
+        line.append(QStandardItem(str(log_line[logger.LOG_LINE_CONTENT])))
         self.appendRow(line)
-
-
-    def add_content(self, parent_item, name, log, indent = ""):
-        new_parent = parent_item
-        if name != None:
-            line = []
-            first_item = QStandardItem()
-            line.append(first_item)
-            line.append(QStandardItem())
-            line.append(QStandardItem())
-            line.append(QStandardItem())
-            line.append(QStandardItem(indent + name))
-            line.append(QStandardItem(helpers.packet_dump_to_text(log)))
-            parent_item.appendRow(line)
-            new_parent = first_item
-        if isinstance(log, list) or isinstance(log, tuple):
-            index = 0
-            for value in log:
-                self.add_content(new_parent, "[{}]".format(index), value, indent + "    ")
-                index += 1
-        elif isinstance(log, collections.OrderedDict):
-            for key, value in log.items():
-                self.add_content(new_parent, key, value, indent + "    ")
+        if type(t) is str:
+            content = log_line[logger.LOG_LINE_CONTENT]
+            if content.startswith("# Pushing sub-state "):
+                self.states_stack.append(content[content.rfind(" ") + 1:])
+            elif content.startswith("# Poping sub-state "):
+                self.states_stack.pop()
+            elif content.startswith("# Switching to state "):
+                self.states_stack[-1] = content[content.rfind(" ") + 1:]
 
 
 
@@ -135,7 +113,7 @@ class LogFilterProxyModel(QSortFilterProxyModel):
             r = p.row()
             p = p.parent()
         index = self.sourceModel().index(r, LogModel.LOG_MODEL_COLUMN_TYPE)
-        t = index.data(LogModel.LOG_MODEL_PACKET_TYPE_ROLE).toInt()[0]
+        t = index.data(LogModel.LOG_MODEL_PACKET_TYPE_ROLE)
         return t in self.displayed_items
 
 
@@ -153,7 +131,7 @@ class LogViewController(QObject):
         selection = QItemSelection()
         for row in range(categories_model.rowCount()):
             idx = categories_model.index(row, 0)
-            packet_type = idx.data(CategoriesModel.PACKET_TYPE_ROLE).toInt()[0]
+            packet_type = idx.data(CategoriesModel.PACKET_TYPE_ROLE)
             if packet_type in packets.PACKETS_BY_TYPE:
                 if packets.PACKETS_BY_TYPE[packet_type].LOGVIEW_DEFAULT_ENABLED:
                     selection.select(idx, idx)

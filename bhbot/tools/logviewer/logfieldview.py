@@ -87,6 +87,7 @@ class LogFieldViewController(fieldview.FieldViewController):
 
 
     def process_log_line(self, log_line, lineno, last_lineno):
-        self.expected_trajectory.process_log_line(log_line, lineno, last_lineno)
-        self.real_trajectory.process_log_line(log_line, lineno, last_lineno)
+        pass
+        #self.expected_trajectory.process_log_line(log_line, lineno, last_lineno)
+        #self.real_trajectory.process_log_line(log_line, lineno, last_lineno)
 
