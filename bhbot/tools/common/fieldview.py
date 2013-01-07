@@ -254,8 +254,8 @@ class FieldViewController(QObject):
 
     def update_view(self, selected, deselected):
         for index in selected.indexes():
-            layer = index.data(FieldViewController.LAYERS_MODEL_LAYER_ROLE).toPyObject()
+            layer = index.data(FieldViewController.LAYERS_MODEL_LAYER_ROLE)
             layer.setVisible(True)
         for index in deselected.indexes():
-            layer = index.data(FieldViewController.LAYERS_MODEL_LAYER_ROLE).toPyObject()
+            layer = index.data(FieldViewController.LAYERS_MODEL_LAYER_ROLE)
             layer.setVisible(False)
