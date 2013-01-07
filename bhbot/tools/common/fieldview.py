@@ -211,7 +211,7 @@ class FieldViewController(QObject):
         self.field_view = FieldView(self.ui.field_view_container)
         layout.addWidget(self.field_view)
 
-        self.field_scene = FieldScene(self)
+        self.field_scene = FieldScene()
         self.field_view.setScene(self.field_scene)
 
 
