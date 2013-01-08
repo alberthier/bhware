@@ -9,7 +9,9 @@ import os
 import imp
 
 import logger
+import packets
 
+import logtools
 import logview
 import logfieldview
 import speedview
@@ -54,6 +56,11 @@ class MainWindowController(QObject):
         last_lineno = len(log)
         for log_line in log:
             for view in self.views:
+                packet_type = log_line[logger.LOG_LINE_PACKET]
+                if packet_type is packets.KeepAlive:
+                    match_time = logtools.get_value(log_line[logger.LOG_LINE_CONTENT], "match_time")
+                    if match_time <= 0 or match_time > 90000:
+                        continue
                 view.process_log_line(log_line, lineno, last_lineno)
             lineno += 1
 

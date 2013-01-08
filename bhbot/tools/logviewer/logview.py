@@ -66,28 +66,23 @@ class LogModel(QStandardItemModel):
 
 
     def process_log_line(self, log_line, lineno, last_lineno):
-        t = log_line[logger.LOG_LINE_PACKET]
-        if t is packets.KeepAlive:
-            d = collections.OrderedDict(log_line[logger.LOG_LINE_CONTENT])
-            time = d["match_time"]
-            if time <= 0 or time >= 90000:
-                return
+        packet_type = log_line[logger.LOG_LINE_PACKET]
         line = []
         first_item = QStandardItem(str(lineno))
         line.append(first_item)
         line.append(QStandardItem(log_line[logger.LOG_LINE_TIME]))
         line.append(QStandardItem(log_line[logger.LOG_LINE_SENDER]))
-        if type(t) is str:
-            typeItem = QStandardItem(self.comment_color, t)
+        if type(packet_type) is str:
+            typeItem = QStandardItem(self.comment_color, packet_type)
             typeItem.setData(-1, LogModel.LOG_MODEL_PACKET_TYPE_ROLE)
         else:
-            typeItem = QStandardItem(self.colors[t.TYPE], t.__name__)
-            typeItem.setData(t.TYPE, LogModel.LOG_MODEL_PACKET_TYPE_ROLE)
+            typeItem = QStandardItem(self.colors[packet_type.TYPE], packet_type.__name__)
+            typeItem.setData(packet_type.TYPE, LogModel.LOG_MODEL_PACKET_TYPE_ROLE)
         line.append(typeItem)
         line.append(QStandardItem(self.states_stack[-1]))
         line.append(QStandardItem(str(log_line[logger.LOG_LINE_CONTENT])))
         self.appendRow(line)
-        if type(t) is str:
+        if type(packet_type) is str:
             content = log_line[logger.LOG_LINE_CONTENT]
             if content.startswith("# Pushing sub-state "):
                 self.states_stack.append(content[content.rfind(" ") + 1:])
