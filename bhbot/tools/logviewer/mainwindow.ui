@@ -100,6 +100,23 @@
         </item>
        </layout>
       </widget>
+      <widget class="QWidget" name="speed_tab">
+       <attribute name="title">
+        <string>Speed</string>
+       </attribute>
+       <layout class="QHBoxLayout" name="horizontalLayout">
+        <property name="margin">
+         <number>0</number>
+        </property>
+        <item>
+         <widget class="QGraphicsView" name="speed_view">
+          <property name="renderHints">
+           <set>QPainter::Antialiasing|QPainter::SmoothPixmapTransform|QPainter::TextAntialiasing</set>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
      </widget>
     </item>
    </layout>

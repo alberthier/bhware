@@ -12,6 +12,7 @@ import logger
 
 import logview
 import logfieldview
+import speedview
 
 
 
@@ -24,8 +25,10 @@ class MainWindowController(QObject):
         self.ui = uic.loadUi(os.path.splitext(__file__)[0] + ".ui")
         self.ui.setWindowIcon(QIcon.fromTheme("text-x-generic"))
 
-        self.logview_controller = logview.LogViewController(self.ui)
-        self.fieldview_controller = logfieldview.LogFieldViewController(self.ui)
+        self.views = []
+        self.views.append(logview.LogViewController(self.ui))
+        self.views.append(logfieldview.LogFieldViewController(self.ui))
+        self.views.append(speedview.SpeedViewController(self.ui))
 
         self.log_file = log_file
         self.host = log_file
@@ -50,8 +53,8 @@ class MainWindowController(QObject):
         lineno = 1
         last_lineno = len(log)
         for log_line in log:
-            self.logview_controller.process_log_line(log_line, lineno, last_lineno)
-            self.fieldview_controller.process_log_line(log_line, lineno, last_lineno)
+            for view in self.views:
+                view.process_log_line(log_line, lineno, last_lineno)
             lineno += 1
 
 
