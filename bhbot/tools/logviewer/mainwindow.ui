@@ -104,17 +104,10 @@
        <attribute name="title">
         <string>Speed</string>
        </attribute>
-       <layout class="QHBoxLayout" name="horizontalLayout">
+       <layout class="QHBoxLayout" name="speed_tab_layout">
         <property name="margin">
          <number>0</number>
         </property>
-        <item>
-         <widget class="QGraphicsView" name="speed_view">
-          <property name="renderHints">
-           <set>QPainter::Antialiasing|QPainter::SmoothPixmapTransform|QPainter::TextAntialiasing</set>
-          </property>
-         </widget>
-        </item>
        </layout>
       </widget>
      </widget>
