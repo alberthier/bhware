@@ -150,6 +150,10 @@ class LogViewController(QObject):
             self.update_view(None, None)
 
 
+    def log_loaded(self):
+        pass
+
+
     def update_view(self, selected, deselected):
         packet_types = []
         for index in self.ui.categories.selectionModel().selection().indexes():

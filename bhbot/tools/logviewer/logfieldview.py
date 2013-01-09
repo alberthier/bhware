@@ -49,6 +49,7 @@ class RealTrajectoryLayer(fieldview.Layer):
 
 
 
+
 class ExpectedTrajectoryLayer(fieldview.Layer):
 
     def __init__(self, parent = None):
@@ -100,4 +101,8 @@ class LogFieldViewController(fieldview.FieldViewController):
     def process_log_line(self, log_line, lineno, last_lineno):
         self.expected_trajectory.process_log_line(log_line, lineno, last_lineno)
         self.real_trajectory.process_log_line(log_line, lineno, last_lineno)
+
+
+    def log_loaded(self):
+        pass
 

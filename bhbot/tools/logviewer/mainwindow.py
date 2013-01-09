@@ -63,6 +63,9 @@ class MainWindowController(QObject):
                         continue
                 view.process_log_line(log_line, lineno, last_lineno)
             lineno += 1
+        for view in self.views:
+            view.log_loaded()
+
 
 
     def download_remote_loglist(self):
