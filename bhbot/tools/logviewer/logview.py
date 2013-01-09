@@ -80,7 +80,7 @@ class LogModel(QStandardItemModel):
             typeItem.setData(packet_type.TYPE, LogModel.LOG_MODEL_PACKET_TYPE_ROLE)
         line.append(typeItem)
         line.append(QStandardItem(self.states_stack[-1]))
-        line.append(QStandardItem(str(log_line[logger.LOG_LINE_CONTENT])))
+        line.append(QStandardItem(str(log_line[logger.LOG_LINE_CONTENT + 1])))
         self.appendRow(line)
         if type(packet_type) is str:
             content = log_line[logger.LOG_LINE_CONTENT]

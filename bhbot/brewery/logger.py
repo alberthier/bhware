@@ -103,7 +103,7 @@ def log_packet(packet, sender = "ARM"):
     initialize()
     delta = datetime.datetime.now() - start_time
     time = "'{:=0.02f}'".format(delta.total_seconds())
-    text = "'" + sender + "'," + type(packet).__name__ + "," + packet.to_dump() + "]"
+    text = "'" + sender + "'," + type(packet).__name__ + ",\"" + packet.to_dump() + "\"]"
     #noinspection PyBroadException
     try:
         log_file.write("l([" + time + "," + text + ")\n")
