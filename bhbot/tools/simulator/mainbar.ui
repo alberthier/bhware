@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>200</width>
-    <height>361</height>
+    <height>389</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -369,6 +369,9 @@
        <property name="checkable">
         <bool>true</bool>
        </property>
+       <property name="checked">
+        <bool>true</bool>
+       </property>
        <property name="flat">
         <bool>true</bool>
        </property>
@@ -380,9 +383,6 @@
         <string>Advanced</string>
        </property>
        <property name="checkable">
-        <bool>true</bool>
-       </property>
-       <property name="checked">
         <bool>true</bool>
        </property>
        <property name="flat">
