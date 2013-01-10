@@ -43,7 +43,8 @@ class PlotWidget(QWidget):
             label.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
             layout.addWidget(label)
         else:
-            self.figure = Figure((5.0, 4.0), dpi=100)
+            bgcolor = self.palette().color(QPalette.Window).name()
+            self.figure = Figure((5.0, 4.0), dpi=100, facecolor=bgcolor)
             self.figure_canvas = FigureCanvas(self.figure)
             self.figure_canvas.setParent(self)
             layout.addWidget(self.figure_canvas)
