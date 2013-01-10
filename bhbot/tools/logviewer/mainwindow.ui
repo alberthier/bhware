@@ -14,7 +14,7 @@
    <string>BH Log Viewer</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <layout class="QHBoxLayout" name="horizontalLayout_3">
+   <layout class="QVBoxLayout" name="verticalLayout">
     <item>
      <widget class="QTabWidget" name="tabWidget">
       <property name="tabShape">
@@ -100,11 +100,21 @@
         </item>
        </layout>
       </widget>
-      <widget class="QWidget" name="speed_tab">
+      <widget class="QWidget" name="linear_speed_tab">
        <attribute name="title">
-        <string>Speed</string>
+        <string>Linear Speed</string>
        </attribute>
-       <layout class="QHBoxLayout" name="speed_tab_layout">
+       <layout class="QHBoxLayout" name="linear_speed_tab_layout">
+        <property name="margin">
+         <number>0</number>
+        </property>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="angular_speed_tab">
+       <attribute name="title">
+        <string>Angular Speed</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="angular_speed_tab_layout">
         <property name="margin">
          <number>0</number>
         </property>

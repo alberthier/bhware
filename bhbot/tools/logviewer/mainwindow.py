@@ -32,7 +32,8 @@ class MainWindowController(QObject):
         self.views = []
         self.views.append(logview.LogViewController(self.ui))
         self.views.append(logfieldview.LogFieldViewController(self.ui))
-        self.views.append(speedview.SpeedViewController(self.ui))
+        self.views.append(speedview.LinearSpeedViewController(self.ui))
+        self.views.append(speedview.AngularSpeedViewController(self.ui))
 
         self.log_file = log_file
         self.host = log_file
