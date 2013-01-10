@@ -369,7 +369,7 @@ class Map(object):
 
 
     def build_module(self):
-        pyversion = "python{}.{}".format(sys.version_info.major, sys.version_info.minor)
+        pyversion = "python{}.{}{}".format(sys.version_info.major, sys.version_info.minor, sys.abiflags)
         include_dir = sys.exec_prefix + "/include/" + pyversion
         lib_dir = sys.exec_prefix + "/lib"
         working_dir = "/tmp/bhware"
@@ -381,7 +381,7 @@ class Map(object):
         if not working_dir in sys.path:
             sys.path.append(working_dir)
         if not os.path.exists(output_file) or os.stat(source_file).st_mtime > os.stat(output_file).st_mtime:
-            cmd = ["gcc", "-O2", "-shared", "-fPIC", "-o", output_file, "-I" + include_dir, "-L" + lib_dir, source_file, "-l" + pyversion + sys.abiflags]
+            cmd = ["gcc", "-O2", "-shared", "-fPIC", "-o", output_file, "-I" + include_dir, "-L" + lib_dir, source_file, "-l" + pyversion]
             print(cmd)
             gcc = subprocess.Popen(cmd, stdout = subprocess.PIPE, stderr = subprocess.PIPE, cwd=working_dir)
             (out, err) = gcc.communicate()
