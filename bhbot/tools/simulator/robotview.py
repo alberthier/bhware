@@ -48,6 +48,7 @@ class RobotView(QWidget, RobotView_Ui):
         else:
             self.log_view.setTextColor(self.color)
         self.log_view.append('{}'.format(text))
+        self.log_view.setTextColor(self.default_color)
 
 
     def clear(self):
