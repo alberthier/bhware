@@ -67,7 +67,7 @@ class PathLayer(fieldview.Layer):
         self.ghost = ghost
         self.current_segment = None
         self.add_segment()
-        self.color = QColor(TEAM_COLOR_PURPLE).darker(150).name()
+        self.color = QColor(TEAM_COLOR_BLUE).darker(150).name()
 
 
     def add_segment(self):

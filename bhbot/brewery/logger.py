@@ -55,7 +55,7 @@ def set_team(team):
     global color_start
     global color_stop
     if os.isatty(sys.stdout.fileno()):
-        if team == TEAM_PURPLE:
+        if team == TEAM_BLUE:
             color_start = "\033[34m"
         else:
             color_start = "\033[31m"

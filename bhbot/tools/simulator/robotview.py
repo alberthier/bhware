@@ -31,8 +31,8 @@ class RobotView(QWidget, RobotView_Ui):
         self.default_color = self.log_view.textColor()
         if team == TEAM_RED:
             self.color = QColor(TEAM_COLOR_RED)
-        elif team == TEAM_PURPLE:
-            self.color = QColor(TEAM_COLOR_PURPLE)
+        elif team == TEAM_BLUE:
+            self.color = QColor(TEAM_COLOR_BLUE)
         palette = self.palette()
         palette.setColor(QPalette.Window, QColor(self.color))
         self.setPalette(palette)

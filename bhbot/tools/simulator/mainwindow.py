@@ -28,8 +28,8 @@ class MainWindow(QMainWindow, MainWindow_Ui):
 
         self.main_bar = MainBar(self)
         self.set_widget(self.main_bar_container, self.main_bar)
-        self.purple_robot_view = RobotView(self, TEAM_PURPLE)
-        self.set_widget(self.purple_robot_view_container, self.purple_robot_view)
+        self.blue_robot_view = RobotView(self, TEAM_BLUE)
+        self.set_widget(self.blue_robot_view_container, self.blue_robot_view)
         self.red_robot_view = RobotView(self, TEAM_RED)
         self.set_widget(self.red_robot_view_container, self.red_robot_view)
 
