@@ -21,7 +21,7 @@ class RealTrajectoryLayer(fieldview.Layer):
     def __init__(self, parent = None):
         fieldview.Layer.__init__(self, parent)
         self.name = "Real trajectory"
-        self.color = "#edd400"
+        self.color = "#ef2929"
         self.has_first_goto = False
         self.path = QPainterPath()
 
