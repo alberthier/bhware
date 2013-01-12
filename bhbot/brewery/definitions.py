@@ -40,8 +40,8 @@ RED_START_ANGLE                        = math.pi / 2.0
 
 # Rule specific
 MATCH_DURATION_MS                      = 90000
-TEAM_COLOR_RED                         = "#ff3b3d"
-TEAM_COLOR_BLUE                      = "#9632f6"
+TEAM_COLOR_RED                         = "#a1011d"
+TEAM_COLOR_BLUE                        = "#004c90"
 
 # Timing
 KEEP_ALIVE_DELAY_MS                    = 250
