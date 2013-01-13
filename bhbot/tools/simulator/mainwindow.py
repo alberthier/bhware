@@ -27,17 +27,12 @@ class MainWindow(QMainWindow, MainWindow_Ui):
         self.setWindowIcon(QIcon(os.path.join(os.path.dirname(__file__),'icons/main.png')))
 
         self.main_bar = MainBar(self)
-        self.set_widget(self.main_bar_container, self.main_bar)
+        self.main_bar_container_layout.addWidget(self.main_bar)
         self.blue_robot_view = RobotView(self, TEAM_BLUE)
-        self.set_widget(self.blue_robot_view_container, self.blue_robot_view)
+        self.blue_robot_view_container_layout.addWidget(self.blue_robot_view)
         self.red_robot_view = RobotView(self, TEAM_RED)
-        self.set_widget(self.red_robot_view_container, self.red_robot_view)
+        self.red_robot_view_container_layout.addWidget(self.red_robot_view)
 
         self.field_controller = SimulatorFieldViewController(self)
         self.game_controller = GameController(self)
 
-
-    def set_widget(self, widget, child_widget):
-        layout = QHBoxLayout(widget)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.addWidget(child_widget)

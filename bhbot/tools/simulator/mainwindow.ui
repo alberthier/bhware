@@ -15,7 +15,7 @@
   </property>
   <widget class="QWidget" name="main_widget">
    <layout class="QGridLayout" name="gridLayout">
-    <item row="0" column="0">
+    <item row="0" column="1">
      <widget class="QSplitter" name="h_splitter_1">
       <property name="orientation">
        <enum>Qt::Vertical</enum>
@@ -27,7 +27,14 @@
        <widget class="QWidget" name="layoutWidget">
         <layout class="QVBoxLayout" name="verticalLayout">
          <item>
-          <widget class="QWidget" name="main_bar_container" native="true"/>
+          <widget class="QWidget" name="main_bar_container" native="true">
+           <layout class="QVBoxLayout" name="main_bar_container_layout">
+            <property name="margin">
+             <number>0</number>
+            </property>
+           </layout>
+           <zorder>pushButton_2</zorder>
+          </widget>
          </item>
          <item>
           <widget class="QListView" name="layers_view">
@@ -72,6 +79,7 @@
           <verstretch>1</verstretch>
          </sizepolicy>
         </property>
+        <layout class="QVBoxLayout" name="blue_robot_view_container_layout"/>
        </widget>
        <widget class="QWidget" name="red_robot_view_container" native="true">
         <property name="sizePolicy">
@@ -80,6 +88,7 @@
           <verstretch>1</verstretch>
          </sizepolicy>
         </property>
+        <layout class="QVBoxLayout" name="red_robot_view_container_layout"/>
        </widget>
       </widget>
      </widget>
