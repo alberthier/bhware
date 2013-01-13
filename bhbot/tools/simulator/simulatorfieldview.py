@@ -1203,7 +1203,7 @@ class RobotLayersGroup:
         self.layers.append(self.robot_trajectory_layer)
         self.robot_routing_layer = GridRoutingLayer(field_view_controller, team)
         self.layers.append(self.robot_routing_layer)
-        self.robot_routing_graph_layer = GraphRoutingGraphLayer(field_view_controller, team, self.robot_layer.robot)
+        self.robot_routing_graph_layer = GraphRoutingLayer(field_view_controller, team, self.robot_layer.robot)
         self.layers.append(self.robot_routing_graph_layer)
 
 
@@ -1223,10 +1223,10 @@ class SimulatorFieldViewController(fieldview.FieldViewController):
         self.game_elements_layer = GameElementsLayer(self)
 
 
-    def reset(self):
+    def setup(self):
         for layer in self.layers:
-            layer.reset()
+            layer.setup()
 
 
     def user_stop(self):
-        self.reset()
+        self.setup()
