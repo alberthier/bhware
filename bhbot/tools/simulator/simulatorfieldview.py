@@ -741,7 +741,7 @@ class RobotTrajectoryLayer(fieldview.Layer):
 
 
 
-class RoutingLayer(fieldview.Layer):
+class GridRoutingLayer(fieldview.Layer):
 
     def __init__(self, field_view_controller, team):
         fieldview.Layer.__init__(self, field_view_controller)
@@ -862,7 +862,7 @@ class RoutingLayer(fieldview.Layer):
 
 
 
-class RoutingGraphLayer(fieldview.Layer):
+class GraphRoutingLayer(fieldview.Layer):
 
     def __init__(self, field_view_controller, team, robot):
         fieldview.Layer.__init__(self, field_view_controller)
@@ -1201,9 +1201,9 @@ class RobotLayersGroup:
         self.layers.append(self.robot_layer)
         self.robot_trajectory_layer = RobotTrajectoryLayer(field_view_controller, team)
         self.layers.append(self.robot_trajectory_layer)
-        self.robot_routing_layer = RoutingLayer(field_view_controller, team)
+        self.robot_routing_layer = GridRoutingLayer(field_view_controller, team)
         self.layers.append(self.robot_routing_layer)
-        self.robot_routing_graph_layer = RoutingGraphLayer(field_view_controller, team, self.robot_layer.robot)
+        self.robot_routing_graph_layer = GraphRoutingGraphLayer(field_view_controller, team, self.robot_layer.robot)
         self.layers.append(self.robot_routing_graph_layer)
 
 
