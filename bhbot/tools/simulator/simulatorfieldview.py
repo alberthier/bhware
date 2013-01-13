@@ -1207,11 +1207,6 @@ class RobotLayersGroup:
         self.layers.append(self.robot_routing_graph_layer)
 
 
-    def reset(self):
-        for layer in self.layers:
-            layer.reset()
-
-
 
 
 class SimulatorFieldViewController(fieldview.FieldViewController):
@@ -1220,7 +1215,7 @@ class SimulatorFieldViewController(fieldview.FieldViewController):
         fieldview.FieldViewController.__init__(self, ui)
         self.ui.main_bar.stop.clicked.connect(self.user_stop)
 
-        #self.add_ghost_layer()
+        fieldview.GhostRobotLayer(self)
 
         self.blue_robot_layers = RobotLayersGroup(self, TEAM_BLUE)
         self.red_robot_layers = RobotLayersGroup(self, TEAM_RED)
@@ -1229,8 +1224,8 @@ class SimulatorFieldViewController(fieldview.FieldViewController):
 
 
     def reset(self):
-        self.blue_robot_layers.reset()
-        self.red_robot_layers.reset()
+        for layer in self.layers:
+            layer.reset()
 
 
     def user_stop(self):

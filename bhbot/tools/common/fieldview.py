@@ -162,8 +162,8 @@ class Layer(QGraphicsItemGroup):
 
 class GhostRobotLayer(Layer):
 
-    def __init__(self, main_robot = True):
-        Layer.__init__(self, "Ghost robot", "#702800")
+    def __init__(self, field_view_controller, main_robot = True):
+        Layer.__init__(self, field_view_controller, "Ghost robot", "#702800")
 
         # Position indication
         font = QFont()
@@ -209,9 +209,9 @@ class GhostRobotLayer(Layer):
 
 
     def mouse_move_event(self, pos, event):
-        self.mouse_item.setPos(x, y)
-        self.x_label.setText("x = {:=0.04f}".format(y / 1000.0))
-        self.y_label.setText("y = {:=0.04f}".format(x / 1000.0))
+        self.mouse_item.setPos(pos.x(), pos.y())
+        self.x_label.setText("x = {:=0.04f}".format(pos.y() / 1000.0))
+        self.y_label.setText("y = {:=0.04f}".format(pos.x() / 1000.0))
         angle = self.convert_angle()
         self.angle_label.setText("angle = {:=0.04f} ({:=0.01f} deg)".format(angle, angle / math.pi * 180.0))
 
