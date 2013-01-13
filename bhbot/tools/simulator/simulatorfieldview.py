@@ -467,9 +467,8 @@ class GraphicsRobotObject(QObject):
 class RobotLayer(fieldview.Layer):
 
 
-    def __init__(self, scene, field_view_controller, team):
-        fieldview.Layer.__init__(self, scene)
-        self.field_view_controller =  field_view_controller
+    def __init__(self, field_view_controller, team):
+        fieldview.Layer.__init__(self, field_view_controller)
         self.team = team
         if self.team == TEAM_BLUE:
             self.name = "Blue robot"
@@ -705,8 +704,8 @@ class RobotLayer(fieldview.Layer):
 
 class RobotTrajectoryLayer(fieldview.Layer):
 
-    def __init__(self, scene, team):
-        fieldview.Layer.__init__(self, scene)
+    def __init__(self, field_view_controller, team):
+        fieldview.Layer.__init__(self, field_view_controller)
         self.team = team
         if self.team == TEAM_BLUE:
             self.name = "Blue robot trajectory"
@@ -744,8 +743,8 @@ class RobotTrajectoryLayer(fieldview.Layer):
 
 class RoutingLayer(fieldview.Layer):
 
-    def __init__(self, scene, team):
-        fieldview.Layer.__init__(self, scene)
+    def __init__(self, field_view_controller, team):
+        fieldview.Layer.__init__(self, field_view_controller)
         self.team = team
         if self.team == TEAM_BLUE:
             self.name = "Blue robot routing"
@@ -865,8 +864,8 @@ class RoutingLayer(fieldview.Layer):
 
 class RoutingGraphLayer(fieldview.Layer):
 
-    def __init__(self, scene, team, robot):
-        fieldview.Layer.__init__(self, scene)
+    def __init__(self, field_view_controller, team, robot):
+        fieldview.Layer.__init__(self, field_view_controller)
         self.team = team
         if self.team == TEAM_BLUE:
             self.name = "Blue robot routing graph"
@@ -1014,14 +1013,14 @@ class Fabric(QGraphicsRectItem):
 
 class GameElementsLayer(fieldview.Layer):
 
-    def __init__(self, blue_robot_layer, red_robot_layer, scene, main_bar):
-        fieldview.Layer.__init__(self, scene)
+    def __init__(self, field_view_controller):
+        fieldview.Layer.__init__(self, field_view_controller)
         self.name = "Game elements"
         self.color = GOLD_BAR_COLOR
         self.elements = []
-        self.blue_robot_layer = blue_robot_layer
-        self.red_robot_layer = red_robot_layer
-        self.main_bar = main_bar
+        self.blue_robot_layer = field_view_controller.blue_robot_layers.robot_layer
+        self.red_robot_layer = field_view_controller.red_robot_layers.robot_layer
+        self.main_bar = field_view_controller.ui.main_bar
         self.last_sent_turret_detect = None
 
         self.blue_map_tower_treasure = [Coin(self, 0.915, 1.015, True),
@@ -1106,7 +1105,7 @@ class GameElementsLayer(fieldview.Layer):
 
         self.setup()
 
-        scene.changed.connect(self.scene_changed)
+        self.scene().changed.connect(self.scene_changed)
 
 
     def setup(self):
@@ -1193,47 +1192,46 @@ class GameElementsLayer(fieldview.Layer):
 
 
 
+class RobotLayersGroup:
+
+    def __init__(self, field_view_controller, team):
+
+        self.layers = []
+        self.robot_layer = RobotLayer(field_view_controller, team)
+        self.layers.append(self.robot_layer)
+        self.robot_trajectory_layer = RobotTrajectoryLayer(field_view_controller, team)
+        self.layers.append(self.robot_trajectory_layer)
+        self.robot_routing_layer = RoutingLayer(field_view_controller, team)
+        self.layers.append(self.robot_routing_layer)
+        self.robot_routing_graph_layer = RoutingGraphLayer(field_view_controller, team, self.robot_layer.robot)
+        self.layers.append(self.robot_routing_graph_layer)
+
+
+    def reset(self):
+        for layer in self.layers:
+            layer.reset()
+
+
+
+
 class SimulatorFieldViewController(fieldview.FieldViewController):
 
     def __init__(self, ui):
         fieldview.FieldViewController.__init__(self, ui)
-        self.add_ghost_layer()
+        self.ui.main_bar.stop.clicked.connect(self.user_stop)
 
-        self.blue_robot_layer = RobotLayer(self.field_scene, self, TEAM_BLUE)
-        self.field_scene.add_layer(self.blue_robot_layer)
-        self.blue_robot_trajectrory_layer = RobotTrajectoryLayer(self.field_scene, TEAM_BLUE)
-        self.field_scene.add_layer(self.blue_robot_trajectrory_layer)
-        self.blue_robot_routing_layer = RoutingLayer(self.field_scene, TEAM_BLUE)
-        self.field_scene.add_layer(self.blue_robot_routing_layer)
-        self.blue_robot_routing_graph_layer = RoutingGraphLayer(self.field_scene, TEAM_BLUE, self.blue_robot_layer.robot)
-        self.field_scene.add_layer(self.blue_robot_routing_graph_layer)
+        #self.add_ghost_layer()
 
-        self.red_robot_layer = RobotLayer(self.field_scene, self, TEAM_RED)
-        self.field_scene.add_layer(self.red_robot_layer)
-        self.red_robot_trajectrory_layer = RobotTrajectoryLayer(self.field_scene, TEAM_RED)
-        self.field_scene.add_layer(self.red_robot_trajectrory_layer)
-        self.red_robot_routing_layer = RoutingLayer(self.field_scene, TEAM_RED)
-        self.field_scene.add_layer(self.red_robot_routing_layer)
-        self.red_robot_routing_graph_layer = RoutingGraphLayer(self.field_scene, TEAM_RED, self.red_robot_layer.robot)
-        self.field_scene.add_layer(self.red_robot_routing_graph_layer)
+        self.blue_robot_layers = RobotLayersGroup(self, TEAM_BLUE)
+        self.red_robot_layers = RobotLayersGroup(self, TEAM_RED)
 
-        self.game_elements_layer = GameElementsLayer(self.blue_robot_layer,
-                                                     self.red_robot_layer,
-                                                     self.field_scene,
-                                                     ui.main_bar)
-        self.field_scene.add_layer(self.game_elements_layer)
+        self.game_elements_layer = GameElementsLayer(self)
 
-        self.field_view.userEventListeners.append(self.blue_robot_layer)
-        self.field_view.userEventListeners.append(self.red_robot_layer)
-
-        self.update_layers_list()
-
-        self.main_bar = ui.main_bar
-        self.main_bar.stop.clicked.connect(self.user_stop)
 
     def reset(self):
-        self.red_robot_layer.reset()
-        self.blue_robot_layer.reset()
+        self.blue_robot_layers.reset()
+        self.red_robot_layers.reset()
+
 
     def user_stop(self):
         self.reset()

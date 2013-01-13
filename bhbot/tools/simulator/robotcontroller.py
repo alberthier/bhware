@@ -14,15 +14,15 @@ from definitions import *
 
 class RobotController(object):
 
-    def __init__(self, team, game_controller, view, robot_layer, robot_trajectory_layer, robot_routing_layer, robot_routing_graph_layer):
+    def __init__(self, team, game_controller, view, robot_layers):
         self.team = team
         self.game_controller = game_controller
         self.view = view
-        self.robot_layer = robot_layer
-        self.robot_trajectory_layer = robot_trajectory_layer
-        self.robot_routing_layer = robot_routing_layer
-        self.robot_routing_graph_layer = robot_routing_graph_layer
-        robot_layer.robot_controller = self
+        self.robot_layer = robot_layers.robot_layer
+        self.robot_trajectory_layer = robot_layers.robot_trajectory_layer
+        self.robot_routing_layer = robot_layers.robot_routing_layer
+        self.robot_routing_graph_layer = robot_layers.robot_routing_graph_layer
+        robot_layers.robot_layer.robot_controller = self
         self.process = None
         self.socket = None
         self.incoming_packet_buffer = ""

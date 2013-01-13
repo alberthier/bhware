@@ -54,6 +54,11 @@
           <verstretch>0</verstretch>
          </sizepolicy>
         </property>
+        <layout class="QVBoxLayout" name="field_view_container_layout">
+         <property name="margin">
+          <number>0</number>
+         </property>
+        </layout>
        </widget>
       </widget>
       <widget class="QSplitter" name="v_splitter_2">
