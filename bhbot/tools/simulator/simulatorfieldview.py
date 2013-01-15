@@ -467,15 +467,12 @@ class GraphicsRobotObject(QObject):
 class RobotLayer(fieldview.Layer):
 
 
-    def __init__(self, field_view_controller, team):
-        fieldview.Layer.__init__(self, field_view_controller)
-        self.team = team
-        if self.team == TEAM_BLUE:
-            self.name = "Blue robot"
-            self.color = TEAM_COLOR_BLUE
-        else:
-            self.name = "Red robot"
-            self.color = TEAM_COLOR_RED
+    def __init__(self, field_view_controller, robot_controller):
+        fieldview.Layer.__init__(self,
+                                 field_view_controller,
+                                 robot_controller.team_name + " robot",
+                                 robot_controller.team_color)
+        self.robot_controller = robot_controller
         self.robot = GraphicsRobotObject(self)
         self.robot.item.setVisible(False)
         self.robot.movement_finished.connect(self.movement_finished)
@@ -484,7 +481,6 @@ class RobotLayer(fieldview.Layer):
         self.robot.left_gripper.movement_finished.connect(self.gripper_movement_finished)
         self.robot.right_gripper.movement_finished.connect(self.gripper_movement_finished)
         self.robot.sweeper.movement_finished.connect(self.sweeper_movement_finished)
-        self.robot_controller = None
         self.dynamics = None
         self.expected_gripper_movements = 0
         self.gripper_packet = None
@@ -505,7 +501,7 @@ class RobotLayer(fieldview.Layer):
             self.dynamics = dynamics.BasicDynamics()
         self.dynamics.setup()
         self.dynamics.simulation_finished.connect(self.robot.animate)
-        self.dynamics.simulation_finished.connect(self.robot_controller.robot_trajectory_layer.set_points)
+        self.dynamics.simulation_finished.connect(self.robot_controller.trajectory_layer.set_points)
 
 
     def get_pose(self):
@@ -562,7 +558,7 @@ class RobotLayer(fieldview.Layer):
         packet = packets.MapGripperControl()
         if self.robot.arm.is_gripper_retracted:
             packet.move = MAP_GRIPPER_CLOSE
-            self.field_view_controller.game_elements_layer.remove_fabric(self.team)
+            self.field_view_controller.game_elements_layer.remove_fabric(self.robot_controller.team)
         else:
             packet.move = MAP_GRIPPER_OPEN
         self.robot_controller.send_packet(packet)
@@ -704,15 +700,11 @@ class RobotLayer(fieldview.Layer):
 
 class RobotTrajectoryLayer(fieldview.Layer):
 
-    def __init__(self, field_view_controller, team):
-        fieldview.Layer.__init__(self, field_view_controller)
-        self.team = team
-        if self.team == TEAM_BLUE:
-            self.name = "Blue robot trajectory"
-            self.color = QColor(TEAM_COLOR_BLUE).darker(150).name()
-        else:
-            self.name = "Red robot trajectory"
-            self.color = QColor(TEAM_COLOR_RED).darker(150).name()
+    def __init__(self, field_view_controller, robot_controller):
+        fieldview.Layer.__init__(self,
+                                 field_view_controller,
+                                 robot_controller.team_name + " robot trajectory",
+                                 robot_controller.team_color)
         self.item = QGraphicsPathItem()
         self.item.setPen(QPen(QColor(self.color), 8.0))
         self.addToGroup(self.item)
@@ -743,15 +735,11 @@ class RobotTrajectoryLayer(fieldview.Layer):
 
 class GridRoutingLayer(fieldview.Layer):
 
-    def __init__(self, field_view_controller, team):
-        fieldview.Layer.__init__(self, field_view_controller)
-        self.team = team
-        if self.team == TEAM_BLUE:
-            self.name = "Blue robot routing"
-            self.color = TEAM_COLOR_BLUE
-        else:
-            self.name = "Red robot routing"
-            self.color = TEAM_COLOR_RED
+    def __init__(self, field_view_controller, robot_controller):
+        fieldview.Layer.__init__(self,
+                                 field_view_controller,
+                                 robot_controller.team_name + " robot grid routing",
+                                 robot_controller.team_color)
         self.path_blocks = []
         self.zones = []
         #self.setVisible(False)
@@ -864,18 +852,13 @@ class GridRoutingLayer(fieldview.Layer):
 
 class GraphRoutingLayer(fieldview.Layer):
 
-    def __init__(self, field_view_controller, team, robot):
-        fieldview.Layer.__init__(self, field_view_controller)
-        self.team = team
-        if self.team == TEAM_BLUE:
-            self.name = "Blue robot routing graph"
-            self.color = TEAM_COLOR_BLUE
-        else:
-            self.name = "Red robot routing graph"
-            self.color = TEAM_COLOR_RED
+    def __init__(self, field_view_controller, robot_controller):
+        fieldview.Layer.__init__(self,
+                                 field_view_controller,
+                                 robot_controller.team_name + " robot graph routing",
+                                 robot_controller.team_color)
         self.edges = []
-        self.robot = robot
-        #self.setVisible(False)
+        self.robot = robot_controller.robot_layer.robot
 
 
     def on_simulator_clear_graph_map_edges(self, packet):

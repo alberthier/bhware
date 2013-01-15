@@ -18,15 +18,20 @@ class RobotController(object):
 
     def __init__(self, team, game_controller, main_window, view):
         self.team = team
+        if team == TEAM_BLUE:
+            self.team_name = "Blue"
+            self.team_color = TEAM_COLOR_BLUE
+        else:
+            self.team_name = "Red"
+            self.team_color = TEAM_COLOR_RED
         self.game_controller = game_controller
         self.view = view
 
-        self.robot_layer = simulatorfieldview.RobotLayer(main_window.field_view_controller, team)
-        self.robot_trajectory_layer = simulatorfieldview.RobotTrajectoryLayer(main_window.field_view_controller, team)
-        self.robot_routing_layer = simulatorfieldview.GridRoutingLayer(main_window.field_view_controller, team)
-        self.robot_routing_graph_layer = simulatorfieldview.GraphRoutingLayer(main_window.field_view_controller, team, self.robot_layer.robot)
+        self.robot_layer = simulatorfieldview.RobotLayer(main_window.field_view_controller, self)
+        self.trajectory_layer = simulatorfieldview.RobotTrajectoryLayer(main_window.field_view_controller, self)
+        self.grid_routing_layer = simulatorfieldview.GridRoutingLayer(main_window.field_view_controller, self)
+        self.graph_routing_layer = simulatorfieldview.GraphRoutingLayer(main_window.field_view_controller, self)
 
-        self.robot_layer.robot_controller = self
         self.process = None
         self.socket = None
         self.incoming_packet_buffer = ""
@@ -56,7 +61,7 @@ class RobotController(object):
 
             self.view.clear()
             self.robot_layer.setup()
-            self.robot_trajectory_layer.setup()
+            self.trajectory_layer.setup()
 
             brewery = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))), "brewery", "brewery.py")
             self.process = QProcess()
@@ -110,9 +115,9 @@ class RobotController(object):
                     packet.deserialize(buf)
                     packet.dispatch(self)
                     packet.dispatch(self.robot_layer)
-                    packet.dispatch(self.robot_trajectory_layer)
-                    packet.dispatch(self.robot_routing_layer)
-                    packet.dispatch(self.robot_routing_graph_layer)
+                    packet.dispatch(self.trajectory_layer)
+                    packet.dispatch(self.grid_routing_layer)
+                    packet.dispatch(self.graph_routing_layer)
 
 
     def on_goto(self, packet):
