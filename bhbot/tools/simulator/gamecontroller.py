@@ -17,15 +17,9 @@ class GameController(object):
         self.server = QTcpServer()
         self.server.newConnection.connect(self.brewery_connected)
         self.server.listen(QHostAddress.Any, REMOTE_PORT)
-        self.blue_robot = RobotController(TEAM_BLUE,
-                                            self,
-                                            main_window.blue_robot_view,
-                                            main_window.field_controller.blue_robot_layers)
-        self.red_robot = RobotController(TEAM_RED,
-                                         self,
-                                         main_window.red_robot_view,
-                                         main_window.field_controller.red_robot_layers)
-        self.game_elements_layer = main_window.field_controller.game_elements_layer
+        self.blue_robot = RobotController(TEAM_BLUE, self, main_window, main_window.blue_robot_view)
+        self.red_robot = RobotController(TEAM_RED, self, main_window, main_window.red_robot_view)
+        self.game_elements_layer = main_window.field_view_controller.game_elements_layer
         self.main_bar = main_window.main_bar
         self.main_bar.reload.clicked.connect(self.setup)
         self.main_bar.start_pause.clicked.connect(self.start_pause)

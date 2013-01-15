@@ -9,20 +9,24 @@ from PyQt4.QtNetwork import *
 import packets
 from definitions import *
 
+import simulatorfieldview
+
 
 
 
 class RobotController(object):
 
-    def __init__(self, team, game_controller, view, robot_layers):
+    def __init__(self, team, game_controller, main_window, view):
         self.team = team
         self.game_controller = game_controller
         self.view = view
-        self.robot_layer = robot_layers.robot_layer
-        self.robot_trajectory_layer = robot_layers.robot_trajectory_layer
-        self.robot_routing_layer = robot_layers.robot_routing_layer
-        self.robot_routing_graph_layer = robot_layers.robot_routing_graph_layer
-        robot_layers.robot_layer.robot_controller = self
+
+        self.robot_layer = simulatorfieldview.RobotLayer(main_window.field_view_controller, team)
+        self.robot_trajectory_layer = simulatorfieldview.RobotTrajectoryLayer(main_window.field_view_controller, team)
+        self.robot_routing_layer = simulatorfieldview.GridRoutingLayer(main_window.field_view_controller, team)
+        self.robot_routing_graph_layer = simulatorfieldview.GraphRoutingLayer(main_window.field_view_controller, team, self.robot_layer.robot)
+
+        self.robot_layer.robot_controller = self
         self.process = None
         self.socket = None
         self.incoming_packet_buffer = ""

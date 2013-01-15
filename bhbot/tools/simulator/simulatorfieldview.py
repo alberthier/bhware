@@ -1018,8 +1018,6 @@ class GameElementsLayer(fieldview.Layer):
         self.name = "Game elements"
         self.color = GOLD_BAR_COLOR
         self.elements = []
-        self.blue_robot_layer = field_view_controller.blue_robot_layers.robot_layer
-        self.red_robot_layer = field_view_controller.red_robot_layers.robot_layer
         self.main_bar = field_view_controller.ui.main_bar
         self.last_sent_turret_detect = None
 
@@ -1120,13 +1118,15 @@ class GameElementsLayer(fieldview.Layer):
 
 
     def scene_changed(self):
+        blue_robot_layer = self.field_view_controller.ui.game_controller.blue_robot.robot_layer
+        red_robot_layer = self.field_view_controller.ui.game_controller.red_robot.robot_layer
         for elt in self.elements:
-            if not elt in self.blue_robot_layer.robot.carried_treasure and not elt in self.red_robot_layer.robot.carried_treasure:
+            if not elt in blue_robot_layer.robot.carried_treasure and not elt in red_robot_layer.robot.carried_treasure:
                 robot = None
-                if elt.collidesWithItem(self.blue_robot_layer.robot.robot_item):
-                    robot = self.blue_robot_layer.robot
-                elif elt.collidesWithItem(self.red_robot_layer.robot.robot_item):
-                    robot = self.red_robot_layer.robot
+                if elt.collidesWithItem(blue_robot_layer.robot.robot_item):
+                    robot = blue_robot_layer.robot
+                elif elt.collidesWithItem(red_robot_layer.robot.robot_item):
+                    robot = red_robot_layer.robot
                 if robot != None:
                     angle = (robot.item.rotation() / 180.0 * math.pi) % (math.pi * 2.0)
 
@@ -1153,15 +1153,15 @@ class GameElementsLayer(fieldview.Layer):
                     elt.setPos(elt.pos().x() + dx, elt.pos().y() + dy)
 
         if self.main_bar.opponent_detection.isChecked():
-            blue_robot_item = self.blue_robot_layer.robot.item
-            red_robot_item = self.red_robot_layer.robot.item
+            blue_robot_item = blue_robot_layer.robot.item
+            red_robot_item = red_robot_layer.robot.item
             distance = tools.distance(blue_robot_item.x(), blue_robot_item.y(), red_robot_item.x(), red_robot_item.y())
             if distance < TURRET_SHORT_DISTANCE_DETECTION_RANGE * 1000.0:
-                self.send_turret_detect(self.blue_robot_layer, self.red_robot_layer, 0)
-                self.send_turret_detect(self.red_robot_layer, self.blue_robot_layer, 0)
+                self.send_turret_detect(blue_robot_layer, red_robot_layer, 0)
+                self.send_turret_detect(red_robot_layer, blue_robot_layer, 0)
             elif distance < TURRET_LONG_DISTANCE_DETECTION_RANGE * 1000.0:
-                self.send_turret_detect(self.blue_robot_layer, self.red_robot_layer, 1)
-                self.send_turret_detect(self.red_robot_layer, self.blue_robot_layer, 1)
+                self.send_turret_detect(blue_robot_layer, red_robot_layer, 1)
+                self.send_turret_detect(red_robot_layer, blue_robot_layer, 1)
 
 
     def send_turret_detect(self, detecting_robot_layer, detected_robot_layer, distance):
@@ -1192,23 +1192,6 @@ class GameElementsLayer(fieldview.Layer):
 
 
 
-class RobotLayersGroup:
-
-    def __init__(self, field_view_controller, team):
-
-        self.layers = []
-        self.robot_layer = RobotLayer(field_view_controller, team)
-        self.layers.append(self.robot_layer)
-        self.robot_trajectory_layer = RobotTrajectoryLayer(field_view_controller, team)
-        self.layers.append(self.robot_trajectory_layer)
-        self.robot_routing_layer = GridRoutingLayer(field_view_controller, team)
-        self.layers.append(self.robot_routing_layer)
-        self.robot_routing_graph_layer = GraphRoutingLayer(field_view_controller, team, self.robot_layer.robot)
-        self.layers.append(self.robot_routing_graph_layer)
-
-
-
-
 class SimulatorFieldViewController(fieldview.FieldViewController):
 
     def __init__(self, ui):
@@ -1216,9 +1199,6 @@ class SimulatorFieldViewController(fieldview.FieldViewController):
         self.ui.main_bar.stop.clicked.connect(self.user_stop)
 
         fieldview.GhostRobotLayer(self)
-
-        self.blue_robot_layers = RobotLayersGroup(self, TEAM_BLUE)
-        self.red_robot_layers = RobotLayersGroup(self, TEAM_RED)
 
         self.game_elements_layer = GameElementsLayer(self)
 

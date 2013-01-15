@@ -33,6 +33,6 @@ class MainWindow(QMainWindow, MainWindow_Ui):
         self.red_robot_view = RobotView(self, TEAM_RED)
         self.red_robot_view_container_layout.addWidget(self.red_robot_view)
 
-        self.field_controller = SimulatorFieldViewController(self)
+        self.field_view_controller = SimulatorFieldViewController(self)
         self.game_controller = GameController(self)
 
