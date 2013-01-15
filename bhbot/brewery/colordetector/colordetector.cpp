@@ -46,7 +46,7 @@ Rect::Rect(int x_, int y_, int width_, int height_) :
 class ColorDetector
 {
 public:
-    ColorDetector(const std::string& configFile, const std::string& imageFile);
+    ColorDetector(const std::string& configFile, int webcamId, const std::string& imageFile);
     virtual ~ColorDetector();
 
     void process();
@@ -77,7 +77,7 @@ private:
 };
 
 
-ColorDetector::ColorDetector(const std::string& configFile, const std::string& imageFile) :
+ColorDetector::ColorDetector(const std::string& configFile, int webcamId, const std::string& imageFile) :
     m_pollTimeout(100),
     m_thresholdHue(0),
     m_thresholdSaturation(0),
@@ -85,7 +85,7 @@ ColorDetector::ColorDetector(const std::string& configFile, const std::string& i
     m_webcam(NULL)
 {
     if (imageFile.empty()) {
-        m_webcam = new cv::VideoCapture(0);
+        m_webcam = new cv::VideoCapture(webcamId);
         m_webcam->read(m_bgrImage);
     } else {
         m_bgrImage = cv::imread(imageFile);
@@ -267,6 +267,7 @@ int main(int argc, char** argv)
 {
     const char* configFile = "";
     const char* imageFile = "";
+    int webcamId = 0;
 
     for (int n = 2; n < argc; n += 2) {
         const char* name = argv[n - 1];
@@ -276,10 +277,12 @@ int main(int argc, char** argv)
             configFile = value;
         } else if (std::strcmp(name, "-i") == 0) {
             imageFile = value;
+        } else if (std::strcmp(name, "-w") == 0) {
+            webcamId = std::atoi(value);
         }
     }
 
-    ColorDetector detector(configFile, imageFile);
+    ColorDetector detector(configFile, webcamId, imageFile);
     detector.process();
 
     return 0;
