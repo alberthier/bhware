@@ -33,6 +33,7 @@ def download():
         call(["patch", "-d", BUILDROOT, "-p1", "-i", "../buildroot-2012.02-fix-microperl-compilation.patch"])
         call(["patch", "-d", BUILDROOT, "-p1", "-i", "../buildroot-2012.02-fix-library-copy.patch"])
         call(["patch", "-d", BUILDROOT, "-p1", "-i", "../buildroot-2012.02-mercurial.patch"])
+	call(["patch", "-d", BUILDROOT, "-p1", "-i", "../buildroot-2012.02-fou-rtc-no-sync.patch"])
 
 
 def build():
