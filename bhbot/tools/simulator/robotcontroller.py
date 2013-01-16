@@ -16,7 +16,7 @@ import simulatorfieldview
 
 class RobotController(object):
 
-    def __init__(self, team, game_controller, main_window, view):
+    def __init__(self, team, game_controller, main_window, output_view):
         self.team = team
         if team == TEAM_BLUE:
             self.team_name = "Blue"
@@ -24,8 +24,8 @@ class RobotController(object):
         else:
             self.team_name = "Red"
             self.team_color = TEAM_COLOR_RED
+        self.output_view = output_view
         self.game_controller = game_controller
-        self.view = view
 
         self.robot_layer = simulatorfieldview.RobotLayer(main_window.field_view_controller, self)
         self.trajectory_layer = simulatorfieldview.RobotTrajectoryLayer(main_window.field_view_controller, self)
@@ -59,7 +59,7 @@ class RobotController(object):
             self.incoming_packet = None
             self.resettle_count = 0
 
-            self.view.clear()
+            self.output_view.clear()
             self.robot_layer.setup()
             self.trajectory_layer.setup()
 
@@ -100,7 +100,7 @@ class RobotController(object):
     def read_output(self):
         while self.process.canReadLine():
             log = str(self.process.readLine(), "utf-8").rstrip()
-            self.view.add_log(log)
+            self.output_view.add_log(log)
 
 
     def read_packet(self):
@@ -153,7 +153,7 @@ class RobotController(object):
 
 
     def on_simulator_data(self, packet):
-        self.view.handle_led(packet.leds)
+        self.output_view.handle_led(packet.leds)
 
 
     def send_packet(self, packet):

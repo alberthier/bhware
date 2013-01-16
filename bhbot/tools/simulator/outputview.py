@@ -12,16 +12,16 @@ from mainbar import *
 import leds
 from definitions import *
 
-(RobotView_Ui, RobotView_Widget) = uic.loadUiType(os.path.join(os.path.dirname(__file__), "robotview.ui"))
+(OutputView_Ui, OutputView_Widget) = uic.loadUiType(os.path.join(os.path.dirname(__file__), "outputview.ui"))
 
 
 
 
-class RobotView(QWidget, RobotView_Ui):
+class OutputView(QWidget, OutputView_Ui):
 
     def __init__(self, parent, team):
         QWidget.__init__(self, parent)
-        RobotView_Ui.__init__(self)
+        OutputView_Ui.__init__(self)
         self.setupUi(self)
 
         font = QFont("", 8)
