@@ -12,16 +12,16 @@ from mainbar import *
 import leds
 from definitions import *
 
-(RobotView_Ui, RobotView_Widget) = uic.loadUiType(os.path.join(os.path.dirname(__file__), "robotview.ui"))
+(OutputView_Ui, OutputView_Widget) = uic.loadUiType(os.path.join(os.path.dirname(__file__), "outputview.ui"))
 
 
 
 
-class RobotView(QWidget, RobotView_Ui):
+class OutputView(QWidget, OutputView_Ui):
 
     def __init__(self, parent, team):
         QWidget.__init__(self, parent)
-        RobotView_Ui.__init__(self)
+        OutputView_Ui.__init__(self)
         self.setupUi(self)
 
         font = QFont("", 8)
@@ -31,8 +31,8 @@ class RobotView(QWidget, RobotView_Ui):
         self.default_color = self.log_view.textColor()
         if team == TEAM_RED:
             self.color = QColor(TEAM_COLOR_RED)
-        elif team == TEAM_PURPLE:
-            self.color = QColor(TEAM_COLOR_PURPLE)
+        elif team == TEAM_BLUE:
+            self.color = QColor(TEAM_COLOR_BLUE)
         palette = self.palette()
         palette.setColor(QPalette.Window, QColor(self.color))
         self.setPalette(palette)
@@ -48,6 +48,7 @@ class RobotView(QWidget, RobotView_Ui):
         else:
             self.log_view.setTextColor(self.color)
         self.log_view.append('{}'.format(text))
+        self.log_view.setTextColor(self.default_color)
 
 
     def clear(self):

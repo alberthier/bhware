@@ -467,16 +467,12 @@ class GraphicsRobotObject(QObject):
 class RobotLayer(fieldview.Layer):
 
 
-    def __init__(self, scene, field_view_controller, team):
-        fieldview.Layer.__init__(self, scene)
-        self.field_view_controller =  field_view_controller
-        self.team = team
-        if self.team == TEAM_PURPLE:
-            self.name = "Purple robot"
-            self.color = TEAM_COLOR_PURPLE
-        else:
-            self.name = "Red robot"
-            self.color = TEAM_COLOR_RED
+    def __init__(self, field_view_controller, robot_controller):
+        fieldview.Layer.__init__(self,
+                                 field_view_controller,
+                                 robot_controller.team_name + " robot",
+                                 robot_controller.team_color)
+        self.robot_controller = robot_controller
         self.robot = GraphicsRobotObject(self)
         self.robot.item.setVisible(False)
         self.robot.movement_finished.connect(self.movement_finished)
@@ -485,7 +481,6 @@ class RobotLayer(fieldview.Layer):
         self.robot.left_gripper.movement_finished.connect(self.gripper_movement_finished)
         self.robot.right_gripper.movement_finished.connect(self.gripper_movement_finished)
         self.robot.sweeper.movement_finished.connect(self.sweeper_movement_finished)
-        self.robot_controller = None
         self.dynamics = None
         self.expected_gripper_movements = 0
         self.gripper_packet = None
@@ -506,7 +501,7 @@ class RobotLayer(fieldview.Layer):
             self.dynamics = dynamics.BasicDynamics()
         self.dynamics.setup()
         self.dynamics.simulation_finished.connect(self.robot.animate)
-        self.dynamics.simulation_finished.connect(self.robot_controller.robot_trajectory_layer.set_points)
+        self.dynamics.simulation_finished.connect(self.robot_controller.trajectory_layer.set_points)
 
 
     def get_pose(self):
@@ -563,7 +558,7 @@ class RobotLayer(fieldview.Layer):
         packet = packets.MapGripperControl()
         if self.robot.arm.is_gripper_retracted:
             packet.move = MAP_GRIPPER_CLOSE
-            self.field_view_controller.game_elements_layer.remove_fabric(self.team)
+            self.field_view_controller.game_elements_layer.remove_fabric(self.robot_controller.team)
         else:
             packet.move = MAP_GRIPPER_OPEN
         self.robot_controller.send_packet(packet)
@@ -599,15 +594,15 @@ class RobotLayer(fieldview.Layer):
                 elements_layer = self.field_view_controller.game_elements_layer
                 if pos.y() < 1000:
                     if pos.x() < 1500:
-                        elements = elements_layer.purple_map_tower_treasure
-                        elements_layer.purple_map_tower_treasure_present = False
+                        elements = elements_layer.blue_map_tower_treasure
+                        elements_layer.blue_map_tower_treasure_present = False
                     else:
                         elements = elements_layer.red_map_tower_treasure
                         elements_layer.red_map_tower_treasure_present = False
                 else:
                     if pos.x() < 1500:
-                        elements = elements_layer.purple_bottle_tower_treasure
-                        elements_layer.purple_bottle_tower_treasure_present = False
+                        elements = elements_layer.blue_bottle_tower_treasure
+                        elements_layer.blue_bottle_tower_treasure_present = False
                     else:
                         elements = elements_layer.red_bottle_tower_treasure
                         elements_layer.red_bottle_tower_treasure_present = False
@@ -650,12 +645,12 @@ class RobotLayer(fieldview.Layer):
         elements_layer = self.field_view_controller.game_elements_layer
         if pos.y() < 1000:
             if pos.x() < 1500:
-                gold_bar_present = elements_layer.purple_map_tower_treasure_present
+                gold_bar_present = elements_layer.blue_map_tower_treasure_present
             else:
                 gold_bar_present = elements_layer.red_map_tower_treasure_present
         else:
             if pos.x() < 1500:
-                gold_bar_present = elements_layer.purple_bottle_tower_treasure_present
+                gold_bar_present = elements_layer.blue_bottle_tower_treasure_present
             else:
                 gold_bar_present = elements_layer.red_bottle_tower_treasure_present
         if gold_bar_present:
@@ -675,22 +670,22 @@ class RobotLayer(fieldview.Layer):
         packet = packets.TurretDetect()
         packet.angle = angle
 
-        if self.team == TEAM_PURPLE and key == 'q' or self.team == TEAM_RED and key == 's':
+        if self.team == TEAM_BLUE and key == 'q' or self.team == TEAM_RED and key == 's':
             # Main opponent - short distance
             packet.distance = 0
             packet.robot = OPPONENT_ROBOT_MAIN
             self.robot_controller.send_packet(packet)
-        elif self.team == TEAM_PURPLE and key == 'Q' or self.team == TEAM_RED and key == 'S':
+        elif self.team == TEAM_BLUE and key == 'Q' or self.team == TEAM_RED and key == 'S':
             # Main opponent - long distance
             packet.distance = 1
             packet.robot = OPPONENT_ROBOT_MAIN
             self.robot_controller.send_packet(packet)
-        elif self.team == TEAM_PURPLE and key == 'w' or self.team == TEAM_RED and key == 'x':
+        elif self.team == TEAM_BLUE and key == 'w' or self.team == TEAM_RED and key == 'x':
             # Secondary opponent - short distance
             packet.distance = 0
             packet.robot = OPPONENT_ROBOT_SECONDARY
             self.robot_controller.send_packet(packet)
-        elif self.team == TEAM_PURPLE and key == 'W' or self.team == TEAM_RED and key == 'X':
+        elif self.team == TEAM_BLUE and key == 'W' or self.team == TEAM_RED and key == 'X':
             # Secondary opponent - long distance
             packet.distance = 1
             packet.robot = OPPONENT_ROBOT_SECONDARY
@@ -705,15 +700,11 @@ class RobotLayer(fieldview.Layer):
 
 class RobotTrajectoryLayer(fieldview.Layer):
 
-    def __init__(self, scene, team):
-        fieldview.Layer.__init__(self, scene)
-        self.team = team
-        if self.team == TEAM_PURPLE:
-            self.name = "Purple robot trajectory"
-            self.color = QColor(TEAM_COLOR_PURPLE).darker(150).name()
-        else:
-            self.name = "Red robot trajectory"
-            self.color = QColor(TEAM_COLOR_RED).darker(150).name()
+    def __init__(self, field_view_controller, robot_controller):
+        fieldview.Layer.__init__(self,
+                                 field_view_controller,
+                                 robot_controller.team_name + " robot trajectory",
+                                 robot_controller.team_color)
         self.item = QGraphicsPathItem()
         self.item.setPen(QPen(QColor(self.color), 8.0))
         self.addToGroup(self.item)
@@ -742,17 +733,13 @@ class RobotTrajectoryLayer(fieldview.Layer):
 
 
 
-class RoutingLayer(fieldview.Layer):
+class GridRoutingLayer(fieldview.Layer):
 
-    def __init__(self, scene, team):
-        fieldview.Layer.__init__(self, scene)
-        self.team = team
-        if self.team == TEAM_PURPLE:
-            self.name = "Purple robot routing"
-            self.color = TEAM_COLOR_PURPLE
-        else:
-            self.name = "Red robot routing"
-            self.color = TEAM_COLOR_RED
+    def __init__(self, field_view_controller, robot_controller):
+        fieldview.Layer.__init__(self,
+                                 field_view_controller,
+                                 robot_controller.team_name + " robot grid routing",
+                                 robot_controller.team_color)
         self.path_blocks = []
         self.zones = []
         #self.setVisible(False)
@@ -863,20 +850,15 @@ class RoutingLayer(fieldview.Layer):
 
 
 
-class RoutingGraphLayer(fieldview.Layer):
+class GraphRoutingLayer(fieldview.Layer):
 
-    def __init__(self, scene, team, robot):
-        fieldview.Layer.__init__(self, scene)
-        self.team = team
-        if self.team == TEAM_PURPLE:
-            self.name = "Purple robot routing graph"
-            self.color = TEAM_COLOR_PURPLE
-        else:
-            self.name = "Red robot routing graph"
-            self.color = TEAM_COLOR_RED
+    def __init__(self, field_view_controller, robot_controller):
+        fieldview.Layer.__init__(self,
+                                 field_view_controller,
+                                 robot_controller.team_name + " robot graph routing",
+                                 robot_controller.team_color)
         self.edges = []
-        self.robot = robot
-        #self.setVisible(False)
+        self.robot = robot_controller.robot_layer.robot
 
 
     def on_simulator_clear_graph_map_edges(self, packet):
@@ -997,8 +979,8 @@ class Fabric(QGraphicsRectItem):
 
     def __init__(self, team, parent = None):
         QGraphicsRectItem.__init__(self, parent)
-        if team == TEAM_PURPLE:
-            self.setBrush(QColor(TEAM_COLOR_PURPLE))
+        if team == TEAM_BLUE:
+            self.setBrush(QColor(TEAM_COLOR_BLUE))
             self.setRect(1250, -135, 250, 148)
         else:
             self.setBrush(QColor(TEAM_COLOR_RED))
@@ -1014,23 +996,21 @@ class Fabric(QGraphicsRectItem):
 
 class GameElementsLayer(fieldview.Layer):
 
-    def __init__(self, purple_robot_layer, red_robot_layer, scene, main_bar):
-        fieldview.Layer.__init__(self, scene)
+    def __init__(self, field_view_controller):
+        fieldview.Layer.__init__(self, field_view_controller)
         self.name = "Game elements"
         self.color = GOLD_BAR_COLOR
         self.elements = []
-        self.purple_robot_layer = purple_robot_layer
-        self.red_robot_layer = red_robot_layer
-        self.main_bar = main_bar
+        self.main_bar = field_view_controller.ui.main_bar
         self.last_sent_turret_detect = None
 
-        self.purple_map_tower_treasure = [Coin(self, 0.915, 1.015, True),
+        self.blue_map_tower_treasure = [Coin(self, 0.915, 1.015, True),
                                           Coin(self, 0.915, 1.185, True),
                                           Coin(self, 0.915, 1.015, True),
                                           Coin(self, 0.915, 1.185, True),
                                           GoldBar(self, 0.910, 1.100,  0.00)]
 
-        self.purple_bottle_tower_treasure = [Coin(self, 1.085, 1.015, True),
+        self.blue_bottle_tower_treasure = [Coin(self, 1.085, 1.015, True),
                                              Coin(self, 1.085, 1.185, True),
                                              Coin(self, 1.085, 1.015, True),
                                              Coin(self, 1.085, 1.185, True),
@@ -1048,13 +1028,13 @@ class GameElementsLayer(fieldview.Layer):
                                           Coin(self, 1.085, FIELD_Y_SIZE - 1.185, True),
                                           GoldBar(self, 1.090, FIELD_Y_SIZE - 1.100,  0.00)]
 
-        self.purple_map_tower_treasure_present = True
-        self.purple_bottle_tower_treasure_present = True
+        self.blue_map_tower_treasure_present = True
+        self.blue_bottle_tower_treasure_present = True
         self.red_map_tower_treasure_present = True
         self.red_bottle_tower_treasure_present = True
 
-        self.elements.extend(self.purple_map_tower_treasure)
-        self.elements.extend(self.purple_bottle_tower_treasure)
+        self.elements.extend(self.blue_map_tower_treasure)
+        self.elements.extend(self.blue_bottle_tower_treasure)
         self.elements.extend(self.red_map_tower_treasure)
         self.elements.extend(self.red_bottle_tower_treasure)
 
@@ -1097,37 +1077,39 @@ class GameElementsLayer(fieldview.Layer):
             self.addToGroup(bar)
             self.elements.append(bar)
 
-        self.purple_fabric = Fabric(TEAM_PURPLE)
-        self.addToGroup(self.purple_fabric)
-        self.elements.append(self.purple_fabric)
+        self.blue_fabric = Fabric(TEAM_BLUE)
+        self.addToGroup(self.blue_fabric)
+        self.elements.append(self.blue_fabric)
         self.red_fabric = Fabric(TEAM_RED)
         self.addToGroup(self.red_fabric)
         self.elements.append(self.red_fabric)
 
         self.setup()
 
-        scene.changed.connect(self.scene_changed)
+        self.scene().changed.connect(self.scene_changed)
 
 
     def setup(self):
-        self.purple_fabric.show()
+        self.blue_fabric.show()
         self.red_fabric.show()
         for elt in self.elements:
             elt.setup()
-        self.purple_map_tower_treasure_present = True
-        self.purple_bottle_tower_treasure_present = True
+        self.blue_map_tower_treasure_present = True
+        self.blue_bottle_tower_treasure_present = True
         self.red_map_tower_treasure_present = True
         self.red_bottle_tower_treasure_present = True
 
 
     def scene_changed(self):
+        blue_robot_layer = self.field_view_controller.ui.game_controller.blue_robot.robot_layer
+        red_robot_layer = self.field_view_controller.ui.game_controller.red_robot.robot_layer
         for elt in self.elements:
-            if not elt in self.purple_robot_layer.robot.carried_treasure and not elt in self.red_robot_layer.robot.carried_treasure:
+            if not elt in blue_robot_layer.robot.carried_treasure and not elt in red_robot_layer.robot.carried_treasure:
                 robot = None
-                if elt.collidesWithItem(self.purple_robot_layer.robot.robot_item):
-                    robot = self.purple_robot_layer.robot
-                elif elt.collidesWithItem(self.red_robot_layer.robot.robot_item):
-                    robot = self.red_robot_layer.robot
+                if elt.collidesWithItem(blue_robot_layer.robot.robot_item):
+                    robot = blue_robot_layer.robot
+                elif elt.collidesWithItem(red_robot_layer.robot.robot_item):
+                    robot = red_robot_layer.robot
                 if robot != None:
                     angle = (robot.item.rotation() / 180.0 * math.pi) % (math.pi * 2.0)
 
@@ -1154,15 +1136,15 @@ class GameElementsLayer(fieldview.Layer):
                     elt.setPos(elt.pos().x() + dx, elt.pos().y() + dy)
 
         if self.main_bar.opponent_detection.isChecked():
-            purple_robot_item = self.purple_robot_layer.robot.item
-            red_robot_item = self.red_robot_layer.robot.item
-            distance = tools.distance(purple_robot_item.x(), purple_robot_item.y(), red_robot_item.x(), red_robot_item.y())
+            blue_robot_item = blue_robot_layer.robot.item
+            red_robot_item = red_robot_layer.robot.item
+            distance = tools.distance(blue_robot_item.x(), blue_robot_item.y(), red_robot_item.x(), red_robot_item.y())
             if distance < TURRET_SHORT_DISTANCE_DETECTION_RANGE * 1000.0:
-                self.send_turret_detect(self.purple_robot_layer, self.red_robot_layer, 0)
-                self.send_turret_detect(self.red_robot_layer, self.purple_robot_layer, 0)
+                self.send_turret_detect(blue_robot_layer, red_robot_layer, 0)
+                self.send_turret_detect(red_robot_layer, blue_robot_layer, 0)
             elif distance < TURRET_LONG_DISTANCE_DETECTION_RANGE * 1000.0:
-                self.send_turret_detect(self.purple_robot_layer, self.red_robot_layer, 1)
-                self.send_turret_detect(self.red_robot_layer, self.purple_robot_layer, 1)
+                self.send_turret_detect(blue_robot_layer, red_robot_layer, 1)
+                self.send_turret_detect(red_robot_layer, blue_robot_layer, 1)
 
 
     def send_turret_detect(self, detecting_robot_layer, detected_robot_layer, distance):
@@ -1185,8 +1167,8 @@ class GameElementsLayer(fieldview.Layer):
 
 
     def remove_fabric(self, team):
-        if team == TEAM_PURPLE:
-            self.purple_fabric.hide()
+        if team == TEAM_BLUE:
+            self.blue_fabric.hide()
         else:
             self.red_fabric.hide()
 
@@ -1197,43 +1179,17 @@ class SimulatorFieldViewController(fieldview.FieldViewController):
 
     def __init__(self, ui):
         fieldview.FieldViewController.__init__(self, ui)
-        self.add_ghost_layer()
+        self.ui.main_bar.stop.clicked.connect(self.user_stop)
 
-        self.purple_robot_layer = RobotLayer(self.field_scene, self, TEAM_PURPLE)
-        self.field_scene.add_layer(self.purple_robot_layer)
-        self.purple_robot_trajectrory_layer = RobotTrajectoryLayer(self.field_scene, TEAM_PURPLE)
-        self.field_scene.add_layer(self.purple_robot_trajectrory_layer)
-        self.purple_robot_routing_layer = RoutingLayer(self.field_scene, TEAM_PURPLE)
-        self.field_scene.add_layer(self.purple_robot_routing_layer)
-        self.purple_robot_routing_graph_layer = RoutingGraphLayer(self.field_scene, TEAM_PURPLE, self.purple_robot_layer.robot)
-        self.field_scene.add_layer(self.purple_robot_routing_graph_layer)
+        fieldview.GhostRobotLayer(self)
 
-        self.red_robot_layer = RobotLayer(self.field_scene, self, TEAM_RED)
-        self.field_scene.add_layer(self.red_robot_layer)
-        self.red_robot_trajectrory_layer = RobotTrajectoryLayer(self.field_scene, TEAM_RED)
-        self.field_scene.add_layer(self.red_robot_trajectrory_layer)
-        self.red_robot_routing_layer = RoutingLayer(self.field_scene, TEAM_RED)
-        self.field_scene.add_layer(self.red_robot_routing_layer)
-        self.red_robot_routing_graph_layer = RoutingGraphLayer(self.field_scene, TEAM_RED, self.red_robot_layer.robot)
-        self.field_scene.add_layer(self.red_robot_routing_graph_layer)
+        self.game_elements_layer = GameElementsLayer(self)
 
-        self.game_elements_layer = GameElementsLayer(self.purple_robot_layer,
-                                                     self.red_robot_layer,
-                                                     self.field_scene,
-                                                     ui.main_bar)
-        self.field_scene.add_layer(self.game_elements_layer)
 
-        self.field_view.userEventListeners.append(self.purple_robot_layer)
-        self.field_view.userEventListeners.append(self.red_robot_layer)
+    def setup(self):
+        for layer in self.layers:
+            layer.setup()
 
-        self.update_layers_list()
-
-        self.main_bar = ui.main_bar
-        self.main_bar.stop.clicked.connect(self.user_stop)
-
-    def reset(self):
-        self.red_robot_layer.reset()
-        self.purple_robot_layer.reset()
 
     def user_stop(self):
-        self.reset()
+        self.setup()

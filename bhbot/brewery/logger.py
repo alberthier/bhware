@@ -55,7 +55,7 @@ def set_team(team):
     global color_start
     global color_stop
     if os.isatty(sys.stdout.fileno()):
-        if team == TEAM_PURPLE:
+        if team == TEAM_BLUE:
             color_start = "\033[34m"
         else:
             color_start = "\033[31m"
@@ -103,7 +103,7 @@ def log_packet(packet, sender = "ARM"):
     initialize()
     delta = datetime.datetime.now() - start_time
     time = "'{:=0.02f}'".format(delta.total_seconds())
-    text = "'" + sender + "'," + type(packet).__name__ + "," + packet.to_dump() + "]"
+    text = "'" + sender + "'," + type(packet).__name__ + ",\"" + packet.to_dump() + "\"]"
     #noinspection PyBroadException
     try:
         log_file.write("l([" + time + "," + text + ")\n")

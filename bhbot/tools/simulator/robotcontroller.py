@@ -9,20 +9,29 @@ from PyQt4.QtNetwork import *
 import packets
 from definitions import *
 
+import simulatorfieldview
+
 
 
 
 class RobotController(object):
 
-    def __init__(self, team, game_controller, view, robot_layer, robot_trajectory_layer, robot_routing_layer, robot_routing_graph_layer):
+    def __init__(self, team, game_controller, main_window, output_view):
         self.team = team
+        if team == TEAM_BLUE:
+            self.team_name = "Blue"
+            self.team_color = TEAM_COLOR_BLUE
+        else:
+            self.team_name = "Red"
+            self.team_color = TEAM_COLOR_RED
+        self.output_view = output_view
         self.game_controller = game_controller
-        self.view = view
-        self.robot_layer = robot_layer
-        self.robot_trajectory_layer = robot_trajectory_layer
-        self.robot_routing_layer = robot_routing_layer
-        self.robot_routing_graph_layer = robot_routing_graph_layer
-        robot_layer.robot_controller = self
+
+        self.robot_layer = simulatorfieldview.RobotLayer(main_window.field_view_controller, self)
+        self.trajectory_layer = simulatorfieldview.RobotTrajectoryLayer(main_window.field_view_controller, self)
+        self.grid_routing_layer = simulatorfieldview.GridRoutingLayer(main_window.field_view_controller, self)
+        self.graph_routing_layer = simulatorfieldview.GraphRoutingLayer(main_window.field_view_controller, self)
+
         self.process = None
         self.socket = None
         self.incoming_packet_buffer = ""
@@ -50,9 +59,9 @@ class RobotController(object):
             self.incoming_packet = None
             self.resettle_count = 0
 
-            self.view.clear()
+            self.output_view.clear()
             self.robot_layer.setup()
-            self.robot_trajectory_layer.setup()
+            self.trajectory_layer.setup()
 
             brewery = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))), "brewery", "brewery.py")
             self.process = QProcess()
@@ -91,7 +100,7 @@ class RobotController(object):
     def read_output(self):
         while self.process.canReadLine():
             log = str(self.process.readLine(), "utf-8").rstrip()
-            self.view.add_log(log)
+            self.output_view.add_log(log)
 
 
     def read_packet(self):
@@ -106,9 +115,9 @@ class RobotController(object):
                     packet.deserialize(buf)
                     packet.dispatch(self)
                     packet.dispatch(self.robot_layer)
-                    packet.dispatch(self.robot_trajectory_layer)
-                    packet.dispatch(self.robot_routing_layer)
-                    packet.dispatch(self.robot_routing_graph_layer)
+                    packet.dispatch(self.trajectory_layer)
+                    packet.dispatch(self.grid_routing_layer)
+                    packet.dispatch(self.graph_routing_layer)
 
 
     def on_goto(self, packet):
@@ -144,7 +153,7 @@ class RobotController(object):
 
 
     def on_simulator_data(self, packet):
-        self.view.handle_led(packet.leds)
+        self.output_view.handle_led(packet.leds)
 
 
     def send_packet(self, packet):

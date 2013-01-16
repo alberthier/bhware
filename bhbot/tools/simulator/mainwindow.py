@@ -7,7 +7,7 @@ from PyQt4 import uic
 from PyQt4.Qt import Qt
 
 from mainbar import *
-from robotview import *
+from outputview import *
 from gamecontroller import *
 from simulatorfieldview import *
 
@@ -27,17 +27,12 @@ class MainWindow(QMainWindow, MainWindow_Ui):
         self.setWindowIcon(QIcon(os.path.join(os.path.dirname(__file__),'icons/main.png')))
 
         self.main_bar = MainBar(self)
-        self.set_widget(self.main_bar_container, self.main_bar)
-        self.purple_robot_view = RobotView(self, TEAM_PURPLE)
-        self.set_widget(self.purple_robot_view_container, self.purple_robot_view)
-        self.red_robot_view = RobotView(self, TEAM_RED)
-        self.set_widget(self.red_robot_view_container, self.red_robot_view)
+        self.main_bar_container_layout.addWidget(self.main_bar)
+        self.blue_output_view = OutputView(self, TEAM_BLUE)
+        self.blue_output_view_container_layout.addWidget(self.blue_output_view)
+        self.red_output_view = OutputView(self, TEAM_RED)
+        self.red_output_view_container_layout.addWidget(self.red_output_view)
 
-        self.field_controller = SimulatorFieldViewController(self)
+        self.field_view_controller = SimulatorFieldViewController(self)
         self.game_controller = GameController(self)
 
-
-    def set_widget(self, widget, child_widget):
-        layout = QHBoxLayout(widget)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.addWidget(child_widget)

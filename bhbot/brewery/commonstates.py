@@ -199,7 +199,7 @@ class DefinePosition(statemachine.State):
 
     def on_enter(self):
         if self.pose is None:
-            self.pose = position.Pose(PURPLE_START_X, PURPLE_START_Y, PURPLE_START_ANGLE, True)
+            self.pose = position.Pose(BLUE_START_X, BLUE_START_Y, BLUE_START_ANGLE, True)
         self.process()
 
 
@@ -681,10 +681,10 @@ class GotoHome(statemachine.State):
 
     def on_enter(self):
         seq = Sequence()
-        seq.add(Navigate(PURPLE_START_X, 0.60))
+        seq.add(Navigate(BLUE_START_X, 0.60))
         walk = TrajectoryWalk()
-        walk.look_at(PURPLE_START_X, PURPLE_START_Y + 0.03)
-        walk.move_to(PURPLE_START_X, PURPLE_START_Y + 0.03)
+        walk.look_at(BLUE_START_X, BLUE_START_Y + 0.03)
+        walk.move_to(BLUE_START_X, BLUE_START_Y + 0.03)
         seq.add(walk)
         self.switch_to_substate(seq)
 

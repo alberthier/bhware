@@ -577,8 +577,8 @@ class GotoStartPoint(statemachine.State):
 
     def on_enter(self):
         self.walk = commonstates.TrajectoryWalk()
-        self.walk.move_to(PURPLE_START_X, 0.59)
-        if self.robot().team == TEAM_PURPLE:
+        self.walk.move_to(BLUE_START_X, 0.59)
+        if self.robot().team == TEAM_BLUE:
             self.walk.rotate_to(0.0)
             self.walk.move_to(0.96, 0.59)
         else:

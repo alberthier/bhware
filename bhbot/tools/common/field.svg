@@ -1,400 +1,154 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<!-- Created with Inkscape (http://www.inkscape.org/) -->
-
 <svg
-    xmlns:dc="http://purl.org/dc/elements/1.1/"
-    xmlns:cc="http://creativecommons.org/ns#"
-    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-    xmlns:svg="http://www.w3.org/2000/svg"
     xmlns="http://www.w3.org/2000/svg"
-    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
-    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
     width="3200"
     height="2235"
     id="svg2"
-    version="1.1"
-    inkscape:version="0.48.0 r9654"
-    sodipodi:docname="field.svg">
-    <defs
-        id="defs4" />
-    <sodipodi:namedview
-        id="base"
-        pagecolor="#ffffff"
-        bordercolor="#666666"
-        borderopacity="1.0"
-        inkscape:pageopacity="0.0"
-        inkscape:pageshadow="2"
-        inkscape:zoom="0.175"
-        inkscape:cx="807.65064"
-        inkscape:cy="1362.7561"
-        inkscape:document-units="px"
-        inkscape:current-layer="layer1"
-        showgrid="false"
-        inkscape:window-width="1440"
-        inkscape:window-height="823"
-        inkscape:window-x="0"
-        inkscape:window-y="24"
-        inkscape:window-maximized="1" />
-    <metadata
-        id="metadata7">
-        <rdf:RDF>
-            <cc:Work
-                rdf:about="">
-                <dc:format>image/svg+xml</dc:format>
-                <dc:type
-                    rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-                <dc:title></dc:title>
-            </cc:Work>
-        </rdf:RDF>
-    </metadata>
+    version="1.1">
     <g
-        inkscape:label="Calque 1"
-        inkscape:groupmode="layer"
-        id="layer1"
+        id="field"
         transform="translate(100, 135)">
 
-        <!-- Sea -->
+        <!-- Main Field -->
         <rect
-            style="fill:#31929e;stroke:none;fill-opacity:1"
-            id="mainborders"
-            width="3040"
-            height="2040"
+            style="fill:#002d57;stroke:none;fill-opacity:1"
+            id="main_blue_borders"
+            width="1520"
+            height="2020"
             x="-20"
             y="-20" />
         <rect
-            style="fill:#00e4ff;stroke:none;fill-opacity:1"
-            id="sea"
+            style="fill:#680012;stroke:none;fill-opacity:1"
+            id="main_red_borders"
+            width="1520"
+            height="2020"
+            x="1500"
+            y="-20" />
+        <rect
+            style="fill:#ab8700;stroke:none;fill-opacity:1"
+            id="main_yellow_border"
+            width="3040"
+            height="20"
+            x="-20"
+            y="2000" />
+        <rect
+            style="fill:#f1be01;stroke:none;fill-opacity:1"
+            id="mainfield"
             width="3000"
             height="2000"
             x="0"
             y="0" />
 
-        <!-- Map island -->
-        <path
-            style="fill:#ffff01;stroke:none;fill-opacity:1"
-            id="map_island_beach"
-            d="M 1100,0 a 400,400 0 0 0 800,0 z"/>
-        <path
-            style="fill:#9Aff01;stroke:none;fill-opacity:1"
-            id="map_island_forest"
-            d="M 1200,0 a 300,300 0 0 0 600,0 z"/>
-
-        <!-- Map -->
+        <!-- Blue start zone -->
         <rect
-            style="fill:#00e4ff;stroke:none;fill-opacity:1"
-            id="map_sea"
-            width="500"
-            height="148"
-            x="1250"
-            y="-135" />
-        <ellipse
-            style="fill:#ffff01;stroke:none;fill-opacity:1"
-            id="map_beach_1"
-            cx="1430"
-            cy="-60"
-            rx="100"
-            ry="50" />
-        <ellipse
-            style="fill:#ffff01;stroke:none;fill-opacity:1"
-            id="map_beach_2"
-            cx="1570"
-            cy="-60"
-            rx="100"
-            ry="50" />
-        <ellipse
-            style="fill:#9Aff01;stroke:none;fill-opacity:1"
-            id="map_forest_1"
-            cx="1410"
-            cy="-60"
-            rx="70"
-            ry="30" />
-        <ellipse
-            style="fill:#9Aff01;stroke:none;fill-opacity:1"
-            id="map_forest_2"
-            cx="1590"
-            cy="-60"
-            rx="70"
-            ry="30" />
-
-        <!-- Peanut island -->
-        <path
-            style="fill:#ffff01;stroke:none;fill-opacity:1"
-            id="peanut_island_beach"
-            d="M 1241.17,735.29
-               A 300,300 0 1 0 1241.17,1264.70
-               A 550,550 0 0 1 1758.82,1264.70
-               A 300,300 0 1 0 1758.82,735.29
-               A 550,550 0 0 1 1241.17,735.29
-               z"/>
-        <circle
-            style="fill:#9Aff01;stroke:none;fill-opacity:1"
-            id="peanut_island_forest_1"
-            cx="1100"
-            cy="1000"
-            r="200" />
-        <circle
-            style="fill:#9Aff01;stroke:none;fill-opacity:1"
-            id="peanut_island_forest_2"
-            cx="1900"
-            cy="1000"
-            r="200" />
-        <circle
-            style="fill:#9Aff01;stroke:none;fill-opacity:1"
-            id="peanut_island_palmtree"
-            cx="1500"
-            cy="1000"
-            r="75" />
-
-        <!-- totems -->
-        <rect
-            style="fill:#b75c03;stroke:none;fill-opacity:1"
-            id="totem_1"
-            width="250"
-            height="250"
-            x="975"
-            y="875" />
-        <rect
-            style="fill:#b75c03;stroke:none;fill-opacity:1"
-            id="totem_2"
-            width="250"
-            height="250"
-            x="1775"
-            y="875" />
-
-        <!-- Purple boat -->
-        <rect
-            style="fill:#9632f6;stroke:none;fill-opacity:1"
-            id="purple_start"
-            width="500"
-            height="500"
+            style="fill:#f2f6f7;stroke:none;fill-opacity:1"
+            id="blue_main_white"
+            width="400"
+            height="2000"
             x="0"
             y="0" />
-        <path
-            style="fill:#b75c03;stroke:none;fill-opacity:1"
-            id="purple_boat_1"
-            d="M 0,500 L 0,2000 L 325,2000 L 400,500 z"/>
         <rect
-            style="fill:#8c4702;stroke:none;fill-opacity:1"
-            id="purple_boat_2"
+            style="fill:#c5c9cA;stroke:none;fill-opacity:1"
+            id="blue_main_white_podium_1"
             width="400"
-            height="18"
+            height="100"
             x="0"
-            y="500" />
-        <path
-            style="fill:#8c4702;stroke:none;fill-opacity:1"
-            id="purple_boat_3"
-            d="M 362,1251 L 325,2000 L 340,2000 L 377,1253 z"/>
-        <rect
-            style="fill:#c3a78b;stroke:none;fill-opacity:1"
-            id="purple_boat_4"
-            width="358"
-            height="610"
-            x="-18"
-            y="1408" />
-        <rect
-            style="fill:#d6d4c7;stroke:none;fill-opacity:1"
-            id="purple_boat_5"
-            width="322"
-            height="574"
-            x="0"
-            y="1426" />
-
-        <!-- Purple side black line -->
-        <rect
-            style="fill:#000000;stroke:none;fill-opacity:1"
-            id="purple_boat_black_line_1"
-            width="150"
-            height="20"
-            x="500"
-            y="450" />
-        <rect
-            style="fill:#000000;stroke:none;fill-opacity:1"
-            id="purple_boat_black_line_2"
-            width="20"
-            height="1550"
-            x="630"
-            y="450" />
-
-        <!-- Red boat -->
-        <rect
-            style="fill:#ff3b3d;stroke:none;fill-opacity:1"
-            id="red_start"
-            width="500"
-            height="500"
-            x="2500"
             y="0" />
-        <path
-            style="fill:#b75c03;stroke:none;fill-opacity:1"
-            id="red_boat_1"
-            d="M 3000,500 L 3000,2000 L 2675,2000 L 2600,500 z"/>
         <rect
-            style="fill:#8c4702;stroke:none;fill-opacity:1"
-            id="red_boat_2"
+            style="fill:#c5c9cA;stroke:none;fill-opacity:1"
+            id="blue_main_white_podium_2"
             width="400"
-            height="18"
+            height="100"
+            x="0"
+            y="1900" />
+        <rect
+            style="fill:#004c90;stroke:none;fill-opacity:1"
+            id="blue_zone_1"
+            width="400"
+            height="300"
+            x="0"
+            y="100" />
+        <rect
+            style="fill:#004c90;stroke:none;fill-opacity:1"
+            id="blue_zone_2"
+            width="400"
+            height="400"
+            x="0"
+            y="800" />
+        <rect
+            style="fill:#004c90;stroke:none;fill-opacity:1"
+            id="blue_zone_3"
+            width="400"
+            height="300"
+            x="0"
+            y="1600" />
+
+        <!-- Red start zone -->
+        <rect
+            style="fill:#f2f6f7;stroke:none;fill-opacity:1"
+            id="red_main_white"
+            width="400"
+            height="2000"
             x="2600"
-            y="500" />
+            y="0" />
+        <rect
+            style="fill:#c5c9cA;stroke:none;fill-opacity:1"
+            id="red_main_white_podium_1"
+            width="400"
+            height="100"
+            x="2600"
+            y="0" />
+        <rect
+            style="fill:#c5c9cA;stroke:none;fill-opacity:1"
+            id="red_main_white_podium_2"
+            width="400"
+            height="100"
+            x="2600"
+            y="1900" />
+        <rect
+            style="fill:#a1011d;stroke:none;fill-opacity:1"
+            id="red_zone_1"
+            width="400"
+            height="300"
+            x="2600"
+            y="100" />
+        <rect
+            style="fill:#a1011d;stroke:none;fill-opacity:1"
+            id="red_zone_2"
+            width="400"
+            height="400"
+            x="2600"
+            y="800" />
+        <rect
+            style="fill:#a1011d;stroke:none;fill-opacity:1"
+            id="red_zone_3"
+            width="400"
+            height="300"
+            x="2600"
+            y="1600" />
+
+        <!-- Cake -->
         <path
-            style="fill:#8c4702;stroke:none;fill-opacity:1"
-            id="red_boat_3"
-            d="M 2638,1251 L 2675,2000 L 2660,2000 L 2623,1253 z"/>
-        <rect
-            style="fill:#c3a78b;stroke:none;fill-opacity:1"
-            id="red_boat_4"
-            width="358"
-            height="610"
-            x="2660"
-            y="1408" />
-        <rect
-            style="fill:#d6d4c7;stroke:none;fill-opacity:1"
-            id="red_boat_5"
-            width="322"
-            height="574"
-            x="2678"
-            y="1426" />
-
-        <!-- Red side black line -->
-        <rect
-            style="fill:#000000;stroke:none;fill-opacity:1"
-            id="red_boat_black_line_1"
-            width="150"
-            height="20"
-            x="2350"
-            y="450" />
-        <rect
-            style="fill:#000000;stroke:none;fill-opacity:1"
-            id="red_boat_black_line_2"
-            width="20"
-            height="1550"
-            x="2350"
-            y="450" />
-
-        <!-- Purple bottles -->
-        <rect
-            style="fill:#9632f6;stroke:none;fill-opacity:1"
-            id="purple_bottle_1_1"
-            width="200"
-            height="66"
-            x="540"
-            y="2000" />
-        <rect
-            style="fill:#9632f6;stroke:none;fill-opacity:1"
-            id="purple_bottle_1_2"
-            width="22"
-            height="44"
-            x="629"
-            y="1956" />
+            style="fill:#eb8a9b;stroke:none;fill-opacity:1"
+            d="M 1000 0 a 500 500 0 0 0 1000 0" />
         <path
-            style="fill:#5C1F96;stroke:none;fill-opacity:1"
-            id="purple_bottle_1"
-            d="M 540,2000 l 20,0 l 30,-22 l 150,0
-               l 0,66 l -150,0 l -30,-22 l -20, 0 z"/>
-
-        <rect
-            style="fill:#9632f6;stroke:none;fill-opacity:1"
-            id="purple_bottle_2_1"
-            width="200"
-            height="66"
-            x="1783"
-            y="2000" />
-        <rect
-            style="fill:#9632f6;stroke:none;fill-opacity:1"
-            id="purple_bottle_2_2"
-            width="22"
-            height="44"
-            x="1872"
-            y="1956" />
+            style="fill:#E2768C;stroke:none;fill-opacity:1"
+            d="M 1100 0 a 400 400 0 0 0 800 0" />
         <path
-            style="fill:#5C1F96;stroke:none;fill-opacity:1"
-            id="purple_bottle_2"
-            d="M 1783,2000 l 20,0 l 30,-22 l 150,0
-               l 0,66 l -150,0 l -30,-22 l -20, 0 z"/>
-
-        <!-- Red bottles -->
-        <rect
-            style="fill:#ff3b3d;stroke:none;fill-opacity:1"
-            id="red_bottle_1_1"
-            width="200"
-            height="66"
-            x="1017"
-            y="2000" />
-        <rect
-            style="fill:#ff3b3d;stroke:none;fill-opacity:1"
-            id="red_bottle_1_2"
-            width="22"
-            height="44"
-            x="1106"
-            y="1956" />
+            style="fill:#ce7179;stroke:none;fill-opacity:1"
+            d="M 1200 0 a 300 300 0 0 0 600 0" />
         <path
-            style="fill:#b3292b;stroke:none;fill-opacity:1"
-            id="red_bottle_1"
-            d="M 1017,1978 l 150,0 l 30,22 l 20, 0 l 0, 22
-               l -20,0 l -30,22 l -150,0 z"/>
+            style="fill:none;stroke:#15161b;stroke-width:5"
+            d="M 1300 0 a 200 200 0 0 0 400 0 M 1500 0 v 200" />
 
-        <rect
-            style="fill:#ff3b3d;stroke:none;fill-opacity:1"
-            id="red_bottle_2_1"
-            width="200"
-            height="66"
-            x="2260"
-            y="2000" />
-        <rect
-            style="fill:#ff3b3d;stroke:none;fill-opacity:1"
-            id="red_bottle_2_2"
-            width="22"
-            height="44"
-            x="2349"
-            y="1956" />
+        <!-- Black lines -->
         <path
-            style="fill:#b3292b;stroke:none;fill-opacity:1"
-            id="red_bottle_2"
-            d="M 2260,1978 l 150,0 l 30,22 l 20, 0 l 0, 22
-               l -20,0 l -30,22 l -150,0 z"/>
-
-        <!-- Purple beacons -->
-        <rect
-            style="fill:#9632f6;stroke:none;fill-opacity:1"
-            id="purple_beacon_1"
-            width="80"
-            height="80"
-            x="-100"
-            y="-100" />
-        <rect
-            style="fill:#9632f6;stroke:none;fill-opacity:1"
-            id="purple_beacon_2"
-            width="80"
-            height="80"
-            x="-100"
-            y="2020" />
-        <rect
-            style="fill:#9632f6;stroke:none;fill-opacity:1"
-            id="purple_beacon_3"
-            width="80"
-            height="80"
-            x="3020"
-            y="960" />
-
-        <!-- Red beacons -->
-        <rect
-            style="fill:#ff3b3d;stroke:none;fill-opacity:1"
-            id="red_beacon_1"
-            width="80"
-            height="80"
-            x="3020"
-            y="-100" />
-        <rect
-            style="fill:#ff3b3d;stroke:none;fill-opacity:1"
-            id="red_beacon_2"
-            width="80"
-            height="80"
-            x="3020"
-            y="2020" />
-        <rect
-            style="fill:#ff3b3d;stroke:none;fill-opacity:1"
-            id="red_beacon_3"
-            width="80"
-            height="80"
-            x="-100"
-            y="960" />
+            style="fill:none;stroke:#15161b;stroke-width:20"
+            d="M 0 600 h 400 a 150 150 0 0 1 150 150 V 2000
+               M 3000 600 h -400 a 150 150 0 0 0 -150 150 V 2000
+               M 550 850 a 150 150 0 0 1 150 -150 H 2300 a 150 150 0 0 1 150 150
+               M 550 1550 a 150 150 0 0 0 150 150 H 2300 a 150 150 0 0 0 150 -150
+               M 1200 1700 v 300
+               M 1800 1700 v 300" />
     </g>
 </svg>

@@ -323,7 +323,7 @@ class Map(object):
 
     def on_device_ready(self, packet):
         # Captain room
-        self.add_zone(True, True, RectZone(max(0.5 - MAP_WALLS_DISTANCE, PURPLE_START_X + 0.005),
+        self.add_zone(True, True, RectZone(max(0.5 - MAP_WALLS_DISTANCE, BLUE_START_X + 0.005),
                                            0.000,
                                            0.020 + MAP_WALLS_DISTANCE * 2.0,
                                            0.400 + MAP_WALLS_DISTANCE,

@@ -31,17 +31,17 @@ ROBOT_EXPANDED_SWEEPER_GYRATION_RADIUS = 0.289355
 ROBOT_EXPANDED_GYRATION_RADIUS         = max(ROBOT_EXPANDED_GRIPPER_GYRATION_RADIUS, ROBOT_EXPANDED_SWEEPER_GYRATION_RADIUS)
 
 # Start positons (the robot starts 90 degrees rotated that's why *_START_Y use ROBOT_X_SIZE and ROBOT_CENTER_X)
-PURPLE_START_X                         = 0.310
-PURPLE_START_Y                         = 0.364
-PURPLE_START_ANGLE                     = -math.pi / 2.0
+BLUE_START_X                         = 0.310
+BLUE_START_Y                         = 0.364
+BLUE_START_ANGLE                     = -math.pi / 2.0
 RED_START_X                            = 0.310
-RED_START_Y                            = FIELD_Y_SIZE - PURPLE_START_Y
+RED_START_Y                            = FIELD_Y_SIZE - BLUE_START_Y
 RED_START_ANGLE                        = math.pi / 2.0
 
 # Rule specific
 MATCH_DURATION_MS                      = 90000
-TEAM_COLOR_RED                         = "#ff3b3d"
-TEAM_COLOR_PURPLE                      = "#9632f6"
+TEAM_COLOR_RED                         = "#a1011d"
+TEAM_COLOR_BLUE                        = "#004c90"
 
 # Timing
 KEEP_ALIVE_DELAY_MS                    = 250
@@ -148,7 +148,7 @@ REMOTE_DEVICE = Enum("Remote hardware type",
 )
 
 TEAM = Enum("Team color",
-     TEAM_PURPLE  = 0,
+     TEAM_BLUE  = 0,
      TEAM_RED     = 1,
      TEAM_UNKNOWN = 2,
 )
