@@ -1,0 +1,13 @@
+1) Copy buildroot-2012.02/output/images/rootfs.tar.bz2 to usb key
+2) Unzip rootfs.tar.bz2 on usb key (sudo tar -xjvf rootfs.tar.bz2)
+3) Remove rootfs.tar.bz2 from usb key
+4) Copy buildroot-2012.02/output/images/rootfs.ubi to /root/ directory of usb key
+5) Change eth0 IP Address in etc/network/interfaces file of usb key 
+6) Execute "sync"
+7) Umount usb key
+8) Boot dockstar on usb key
+9) If it is the first time you want to flash nand, execute /root/usb_boot.sh else you can avoid this step
+10) To flash nand and reconfigure u-boot, execute /root/nand_boot.sh "IP Address for dockstar"
+
+You can now swap from usb to nand and from nand to usb using "nand_boot.sh ip_addr" and "usb_boot.sh ip_addr" scripts
+
