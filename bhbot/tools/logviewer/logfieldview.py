@@ -88,14 +88,11 @@ class LogFieldViewController(fieldview.FieldViewController):
 
     def __init__(self, ui):
         fieldview.FieldViewController.__init__(self, ui)
-        self.add_ghost_layer()
 
-        self.expected_trajectory = ExpectedTrajectoryLayer(self.field_scene)
-        self.field_scene.add_layer(self.expected_trajectory)
-        self.real_trajectory = RealTrajectoryLayer(self.field_scene)
-        self.field_scene.add_layer(self.real_trajectory)
+        fieldview.GhostRobotLayer(self)
 
-        self.update_layers_list()
+        self.expected_trajectory = ExpectedTrajectoryLayer(self)
+        self.real_trajectory = RealTrajectoryLayer(self)
 
 
     def process_log_line(self, log_line, lineno, last_lineno):
