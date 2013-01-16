@@ -56,6 +56,8 @@ class LinearSpeedViewController(QObject):
         if self.plot_widget.has_matplotlib:
             x = [i for i in map(lambda x: x * KEEP_ALIVE_DELAY_MS / 1000.0, range(len(self.speeds)))]
             speed_plot = self.plot_widget.add_plot()
+            speed_plot.set_xlabel("Time (s)")
+            speed_plot.set_ylabel("Speed (m/s)")
             speed_plot.fill(x, self.speeds, color='#93ABFF', edgecolor='#1E41B9')
             speed_plot.axhline(self.average_speed, color='g')
             speed_plot.axhline(self.max_speed, color='r')
@@ -87,7 +89,7 @@ class AngularSpeedViewController(QObject):
             pose = logtools.get_value(log_line[logger.LOG_LINE_CONTENT], "current_pose")
             angle = logtools.get_value(pose, "angle")
             if len(self.angles) > 0:
-                speed = self.angles[-1] - angle
+                speed = abs(self.angles[-1] - angle)
                 self.speeds.append(speed)
                 if speed > self.max_speed:
                     self.max_speed = speed
@@ -103,6 +105,8 @@ class AngularSpeedViewController(QObject):
         if self.plot_widget.has_matplotlib:
             x = [i for i in map(lambda x: x * KEEP_ALIVE_DELAY_MS / 1000.0, range(len(self.speeds)))]
             speed_plot = self.plot_widget.add_plot()
+            speed_plot.set_xlabel("Time (s)")
+            speed_plot.set_ylabel("Speed (rd/s)")
             speed_plot.fill(x, self.speeds, color='#93ABFF', edgecolor='#1E41B9')
             speed_plot.axhline(self.average_speed, color='g')
             speed_plot.axhline(self.max_speed, color='r')
