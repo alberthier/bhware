@@ -3,6 +3,10 @@
 
 from definitions import *
 
+import math
+import time
+import random
+
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 from PyQt4.QtSvg import *
@@ -14,9 +18,6 @@ import tools
 import fieldview
 import helpers
 import dynamics
-
-import math
-import time
 
 
 
@@ -905,94 +906,49 @@ class GraphRoutingLayer(fieldview.Layer):
 
 
 
+class Glass(QGraphicsEllipseItem):
 
-class Coin(QGraphicsItemGroup):
-
-    def __init__(self, parent, x, y, is_white):
-        QGraphicsItemGroup.__init__(self, parent)
-        self.is_white = is_white
-
-        r = COIN_RADIUS * 1000.0
-        x = x * 1000.0
-        y = y * 1000.0
-        path = QPainterPath()
-        path.addEllipse(-r, -r, 2.0 * r, 2.0 * r)
-        path.addEllipse(-7.5, -7.5, 15.0, 15.0)
-        disc = QGraphicsPathItem(path, self)
-        if is_white:
-            disc.setBrush(QColor(COIN_COLOR_WHITE))
-            disc.setPen(QColor(COIN_COLOR_WHITE).darker())
-        else:
-            disc.setBrush(QColor(COIN_COLOR_BLACK))
-            disc.setPen(QColor(COIN_COLOR_BLACK).lighter())
-        self.addToGroup(disc)
-        self.x = x
-        self.y = y
+    def __init__(self, x, y, parent):
+        QGraphicsEllipseItem.__init__(self, 0, 0, 75, 75, parent)
+        self.x = x - 38.5
+        self.y = y - 38.5
+        self.setPen(QPen(QColor("#888a85"), 10))
+        self.setBrush(QColor("#eeeeec"))
 
 
     def setup(self):
-        self.setPos(self.y, self.x)
+        self.setPos(self.x, self.y)
 
 
 
 
-class GoldBar(QGraphicsItemGroup):
+class Gift(QGraphicsRectItem):
 
-    def __init__(self, parent, x, y, angle):
-        QGraphicsItemGroup.__init__(self, parent)
-
-        dark_gold = QColor(GOLD_BAR_COLOR).darker()
-        w = GOLD_BAR_WIDTH * 1000.0
-        l = GOLD_BAR_LENGTH * 1000.0
-        x = x * 1000.0
-        y = y * 1000.0
-        rect = QGraphicsRectItem(-l / 2.0, -w / 2.0, l, w, self)
-        rect.setBrush(QColor(GOLD_BAR_COLOR))
-        rect.setPen(dark_gold)
-        self.addToGroup(rect)
-        rect = QGraphicsRectItem(-119.0 / 2.0, -44.0 / 2.0, 119.0, 44.0, self)
-        rect.setBrush(QColor(GOLD_BAR_COLOR))
-        rect.setPen(dark_gold)
-        self.addToGroup(rect)
-        line = QGraphicsLineItem(-l / 2.0, -w / 2.0, -119.0 / 2.0, -44.0 / 2.0)
-        line.setPen(dark_gold)
-        self.addToGroup(line)
-        line = QGraphicsLineItem(l / 2.0, -w / 2.0, 119.0 / 2.0, -44.0 / 2.0)
-        line.setPen(dark_gold)
-        self.addToGroup(line)
-        line = QGraphicsLineItem(-l / 2.0, w / 2.0, -119.0 / 2.0, 44.0 / 2.0)
-        line.setPen(dark_gold)
-        self.addToGroup(line)
-        line = QGraphicsLineItem(l / 2.0, w / 2.0, 119.0 / 2.0, 44.0 / 2.0)
-        line.setPen(dark_gold)
-        self.addToGroup(line)
-        self.x = x
-        self.y = y
-        self.angle = angle
-
-
-    def setup(self):
-        self.setPos(self.y, self.x)
-        self.setRotation(self.angle)
-
-
-
-
-class Fabric(QGraphicsRectItem):
-
-    def __init__(self, team, parent = None):
-        QGraphicsRectItem.__init__(self, parent)
-        if team == TEAM_BLUE:
-            self.setBrush(QColor(TEAM_COLOR_BLUE))
-            self.setRect(1250, -135, 250, 148)
-        else:
-            self.setBrush(QColor(TEAM_COLOR_RED))
-            self.setRect(1500, -135, 250, 148)
+    def __init__(self, x, y, color, parent):
+        QGraphicsRectItem.__init__(self, x - 75, y - 60, 150, 120, parent)
         self.setPen(QPen(0))
+        self.setBrush(QColor(color))
 
 
     def setup(self):
-        self.setVisible(True)
+        self.show()
+
+
+
+
+class Candle(QGraphicsEllipseItem):
+
+    def __init__(self, x, y, color, parent):
+        QGraphicsEllipseItem.__init__(self, x - 38.5, y - 38.5, 75, 75, parent)
+        self.setPen(QPen(QColor(color), 10))
+
+
+    def blow(self):
+        self.setBrush(QColor("#d3d7cf"))
+
+
+    def setup(self):
+        self.setBrush(QColor("#fce94f"))
 
 
 
@@ -1000,143 +956,89 @@ class Fabric(QGraphicsRectItem):
 class GameElementsLayer(fieldview.Layer):
 
     def __init__(self, field_view_controller):
-        fieldview.Layer.__init__(self, field_view_controller)
-        self.name = "Game elements"
-        self.color = GOLD_BAR_COLOR
-        self.elements = []
+        fieldview.Layer.__init__(self, field_view_controller, "Game elements", "#f1be01")
         self.main_bar = field_view_controller.ui.main_bar
-        self.last_sent_turret_detect = None
+        self.scene().changed.connect(self.scene_changed)
 
-        self.blue_map_tower_treasure = [Coin(self, 0.915, 1.015, True),
-                                          Coin(self, 0.915, 1.185, True),
-                                          Coin(self, 0.915, 1.015, True),
-                                          Coin(self, 0.915, 1.185, True),
-                                          GoldBar(self, 0.910, 1.100,  0.00)]
+        self.glasses = []
+        for offset in [0, 300]:
+            y = 950
+            for x in [900, 1050, 900]:
+                self.glasses.append(Glass(x + offset, y, self))
+                self.glasses.append(Glass(3000 - (x + offset), y, self))
+                y += 250
 
-        self.blue_bottle_tower_treasure = [Coin(self, 1.085, 1.015, True),
-                                             Coin(self, 1.085, 1.185, True),
-                                             Coin(self, 1.085, 1.015, True),
-                                             Coin(self, 1.085, 1.185, True),
-                                             GoldBar(self, 1.090, 1.100,  0.00)]
+        self.gifts = []
+        for x in [600, 1200, 1800, 2400]:
+            self.gifts.append(Gift(x - 93.5, 2020, TEAM_COLOR_BLUE, self))
+            self.gifts.append(Gift(x + 93.5, 2020, TEAM_COLOR_RED, self))
 
-        self.red_map_tower_treasure = [Coin(self, 0.915, FIELD_Y_SIZE - 1.015, True),
-                                       Coin(self, 0.915, FIELD_Y_SIZE - 1.185, True),
-                                       Coin(self, 0.915, FIELD_Y_SIZE - 1.015, True),
-                                       Coin(self, 0.915, FIELD_Y_SIZE - 1.185, True),
-                                       GoldBar(self, 0.910, FIELD_Y_SIZE - 1.100,  0.00)]
+        candle_colors = [TEAM_COLOR_BLUE for x in range(10)]
+        candle_colors += [TEAM_COLOR_RED for x in range(10)]
+        random.shuffle(candle_colors)
+        color_iter = iter(candle_colors)
+        self.candles = []
+        for i in range(6):
+            angle = math.radians(7.5 + i * 15.0)
+            dx = math.cos(angle) * 450.0
+            dy = math.sin(angle) * 450.0
+            self.candles.append(Candle(1500 - dx, dy, next(color_iter), self))
+            self.candles.append(Candle(1500 + dx, dy, next(color_iter), self))
+        for i in range(4):
+            angle = math.radians(11.25 + i * 22.5)
+            dx = math.cos(angle) * 350.0
+            dy = math.sin(angle) * 350.0
+            self.candles.append(Candle(1500 - dx, dy, next(color_iter), self))
+            self.candles.append(Candle(1500 + dx, dy, next(color_iter), self))
 
-        self.red_bottle_tower_treasure = [Coin(self, 1.085, FIELD_Y_SIZE - 1.015, True),
-                                          Coin(self, 1.085, FIELD_Y_SIZE - 1.185, True),
-                                          Coin(self, 1.085, FIELD_Y_SIZE - 1.015, True),
-                                          Coin(self, 1.085, FIELD_Y_SIZE - 1.185, True),
-                                          GoldBar(self, 1.090, FIELD_Y_SIZE - 1.100,  0.00)]
-
-        self.blue_map_tower_treasure_present = True
-        self.blue_bottle_tower_treasure_present = True
-        self.red_map_tower_treasure_present = True
-        self.red_bottle_tower_treasure_present = True
-
-        self.elements.extend(self.blue_map_tower_treasure)
-        self.elements.extend(self.blue_bottle_tower_treasure)
-        self.elements.extend(self.red_map_tower_treasure)
-        self.elements.extend(self.red_bottle_tower_treasure)
+        self.elements = self.glasses + self.gifts + self.candles
 
         for piece in self.elements:
             self.addToGroup(piece)
 
-        pieces_coords = [# Near start
-                         (0.500, 1.000),
-                         # Circle
-                         (0.830, 1.270),
-                         (0.760, 1.100),
-                         (0.830, 0.930),
-                         (1.000, 0.860),
-                         (1.170, 0.930),
-                         (1.240, 1.100),
-                         (1.170, 1.270),
-                         # Near hold
-                         (1.700, 0.450),
-                         # Bottom center
-                         (1.700, 1.415)]
-
-        for (x, y) in pieces_coords:
-            coin = Coin(self, x, y, True)
-            self.addToGroup(coin)
-            self.elements.append(coin)
-            coin = Coin(self, x, FIELD_Y_SIZE - y, True)
-            self.addToGroup(coin)
-            self.elements.append(coin)
-
-        for (x, y) in [(1.615, 1.500), (1.785, 1.500)]:
-            coin = Coin(self, x, y, True)
-            self.addToGroup(coin)
-            self.elements.append(coin)
-
-        gold_bars_coords = [(1.353, 1.500,  0.00),
-                            (0.860, 0.412, 92.86),
-                            (0.860, 2.588, 87.13)]
-        for (x, y, angle) in gold_bars_coords:
-            bar = GoldBar(self, x, y, angle)
-            self.addToGroup(bar)
-            self.elements.append(bar)
-
-        self.blue_fabric = Fabric(TEAM_BLUE)
-        self.addToGroup(self.blue_fabric)
-        self.elements.append(self.blue_fabric)
-        self.red_fabric = Fabric(TEAM_RED)
-        self.addToGroup(self.red_fabric)
-        self.elements.append(self.red_fabric)
-
         self.setup()
 
-        self.scene().changed.connect(self.scene_changed)
 
 
     def setup(self):
-        self.blue_fabric.show()
-        self.red_fabric.show()
         for elt in self.elements:
             elt.setup()
-        self.blue_map_tower_treasure_present = True
-        self.blue_bottle_tower_treasure_present = True
-        self.red_map_tower_treasure_present = True
-        self.red_bottle_tower_treasure_present = True
 
 
     def scene_changed(self):
         blue_robot_layer = self.field_view_controller.ui.game_controller.blue_robot.robot_layer
         red_robot_layer = self.field_view_controller.ui.game_controller.red_robot.robot_layer
-        for elt in self.elements:
-            if not elt in blue_robot_layer.robot.carried_treasure and not elt in red_robot_layer.robot.carried_treasure:
-                robot = None
-                if elt.collidesWithItem(blue_robot_layer.robot.robot_item):
-                    robot = blue_robot_layer.robot
-                elif elt.collidesWithItem(red_robot_layer.robot.robot_item):
-                    robot = red_robot_layer.robot
-                if robot != None:
-                    angle = (robot.item.rotation() / 180.0 * math.pi) % (math.pi * 2.0)
-
-                    ex = elt.pos().x() - robot.item.x()
-                    ey = elt.pos().y() - robot.item.y()
-                    elt_angle = math.atan2(ey, ex) % (math.pi * 2.0)
-
-                    ref = abs(angle - elt_angle)
-
-                    if ref < math.pi / 4.0 or ref >= 7.0 * math.pi / 4.0:
-                        sign = 1.0
-                    elif ref >= math.pi / 4.0 and ref < 3.0 * math.pi / 4.0:
-                        sign = -1.0
-                        angle += math.pi / 2.0
-                    elif ref >= 3.0 * math.pi / 4.0 and ref < 5.0 * math.pi / 4.0:
-                        sign = -1.0
-                    else:
-                        sign = 1.0
-                        angle -= math.pi / 2.0
-
-                    dist = 20
-                    dx = sign * math.cos(angle) * dist
-                    dy = sign * math.sin(angle) * dist
-                    elt.setPos(elt.pos().x() + dx, elt.pos().y() + dy)
+#        for elt in self.elements:
+#            if not elt in blue_robot_layer.robot.carried_treasure and not elt in red_robot_layer.robot.carried_treasure:
+#                robot = None
+#                if elt.collidesWithItem(blue_robot_layer.robot.robot_item):
+#                    robot = blue_robot_layer.robot
+#                elif elt.collidesWithItem(red_robot_layer.robot.robot_item):
+#                    robot = red_robot_layer.robot
+#                if robot != None:
+#                    angle = (robot.item.rotation() / 180.0 * math.pi) % (math.pi * 2.0)
+#
+#                    ex = elt.pos().x() - robot.item.x()
+#                    ey = elt.pos().y() - robot.item.y()
+#                    elt_angle = math.atan2(ey, ex) % (math.pi * 2.0)
+#
+#                    ref = abs(angle - elt_angle)
+#
+#                    if ref < math.pi / 4.0 or ref >= 7.0 * math.pi / 4.0:
+#                        sign = 1.0
+#                    elif ref >= math.pi / 4.0 and ref < 3.0 * math.pi / 4.0:
+#                        sign = -1.0
+#                        angle += math.pi / 2.0
+#                    elif ref >= 3.0 * math.pi / 4.0 and ref < 5.0 * math.pi / 4.0:
+#                        sign = -1.0
+#                    else:
+#                        sign = 1.0
+#                        angle -= math.pi / 2.0
+#
+#                    dist = 20
+#                    dx = sign * math.cos(angle) * dist
+#                    dy = sign * math.sin(angle) * dist
+#                    elt.setPos(elt.pos().x() + dx, elt.pos().y() + dy)
 
         if self.main_bar.opponent_detection.isChecked():
             blue_robot_item = blue_robot_layer.robot.item
@@ -1151,10 +1053,6 @@ class GameElementsLayer(fieldview.Layer):
 
 
     def send_turret_detect(self, detecting_robot_layer, detected_robot_layer, distance):
-#        if self.last_sent_turret_detect and self.last_sent_turret_detect + 0.001 > time.time() :
-##            print("Rate limiting")
-#            return
-#        self.last_sent_turret_detect = time.time()
         dx = detected_robot_layer.robot.item.x() - detecting_robot_layer.robot.item.x()
         dy = detected_robot_layer.robot.item.y() - detecting_robot_layer.robot.item.y()
         angle = (detecting_robot_layer.robot.item.rotation() / 180.0 * math.pi) - math.atan2(dy, dx)
@@ -1167,13 +1065,6 @@ class GameElementsLayer(fieldview.Layer):
         packet.angle = angle
 
         detecting_robot_layer.robot_controller.send_packet(packet)
-
-
-    def remove_fabric(self, team):
-        if team == TEAM_BLUE:
-            self.blue_fabric.hide()
-        else:
-            self.red_fabric.hide()
 
 
 
