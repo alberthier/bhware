@@ -39,6 +39,36 @@
             x="0"
             y="0" />
 
+        <!-- Gift Bracket -->
+        <rect
+            style="fill:#ab8700;stroke:none;fill-opacity:1"
+            id="main_yellow_border"
+            width="374"
+            height="60"
+            x="413"
+            y="2020" />
+        <rect
+            style="fill:#ab8700;stroke:none;fill-opacity:1"
+            id="main_yellow_border"
+            width="374"
+            height="60"
+            x="1013"
+            y="2020" />
+        <rect
+            style="fill:#ab8700;stroke:none;fill-opacity:1"
+            id="main_yellow_border"
+            width="374"
+            height="60"
+            x="1613"
+            y="2020" />
+        <rect
+            style="fill:#ab8700;stroke:none;fill-opacity:1"
+            id="main_yellow_border"
+            width="374"
+            height="60"
+            x="2213"
+            y="2020" />
+
         <!-- Blue start zone -->
         <rect
             style="fill:#f2f6f7;stroke:none;fill-opacity:1"
@@ -144,10 +174,10 @@
         <!-- Black lines -->
         <path
             style="fill:none;stroke:#15161b;stroke-width:20"
-            d="M 0 600 h 400 a 150 150 0 0 1 150 150 V 2000
-               M 3000 600 h -400 a 150 150 0 0 0 -150 150 V 2000
-               M 550 850 a 150 150 0 0 1 150 -150 H 2300 a 150 150 0 0 1 150 150
-               M 550 1550 a 150 150 0 0 0 150 150 H 2300 a 150 150 0 0 0 150 -150
+            d="M 0 600 h 450 a 150 150 0 0 1 150 150 V 2000
+               M 3000 600 h -450 a 150 150 0 0 0 -150 150 V 2000
+               M 600 850 a 150 150 0 0 1 150 -150 H 2250 a 150 150 0 0 1 150 150
+               M 600 1550 a 150 150 0 0 0 150 150 H 2250 a 150 150 0 0 0 150 -150
                M 1200 1700 v 300
                M 1800 1700 v 300" />
 
