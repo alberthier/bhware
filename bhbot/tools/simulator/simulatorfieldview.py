@@ -660,9 +660,9 @@ class RobotLayer(fieldview.Layer):
         self.robot_controller.send_packet(packet)
 
 
-    def userEvent(self, key, x, y):
-        dx = x - self.robot.item.x()
-        dy = y - self.robot.item.y()
+    def key_press_event(self, pos, event):
+        dx = pos.x() - self.robot.item.x()
+        dy = pos.y() - self.robot.item.y()
         angle = (self.robot.item.rotation() / 180.0 * math.pi) - math.atan2(dy, dx)
         angle %= 2.0 * math.pi
         angle = int(angle / (2.0 * math.pi) * 18.0)
@@ -670,22 +670,25 @@ class RobotLayer(fieldview.Layer):
         packet = packets.TurretDetect()
         packet.angle = angle
 
-        if self.team == TEAM_BLUE and key == 'q' or self.team == TEAM_RED and key == 's':
+        key = event.text()
+        team = self.robot_controller.team
+
+        if team == TEAM_BLUE and key == 'q' or team == TEAM_RED and key == 's':
             # Main opponent - short distance
             packet.distance = 0
             packet.robot = OPPONENT_ROBOT_MAIN
             self.robot_controller.send_packet(packet)
-        elif self.team == TEAM_BLUE and key == 'Q' or self.team == TEAM_RED and key == 'S':
+        elif team == TEAM_BLUE and key == 'Q' or team == TEAM_RED and key == 'S':
             # Main opponent - long distance
             packet.distance = 1
             packet.robot = OPPONENT_ROBOT_MAIN
             self.robot_controller.send_packet(packet)
-        elif self.team == TEAM_BLUE and key == 'w' or self.team == TEAM_RED and key == 'x':
+        elif team == TEAM_BLUE and key == 'w' or team == TEAM_RED and key == 'x':
             # Secondary opponent - short distance
             packet.distance = 0
             packet.robot = OPPONENT_ROBOT_SECONDARY
             self.robot_controller.send_packet(packet)
-        elif self.team == TEAM_BLUE and key == 'W' or self.team == TEAM_RED and key == 'X':
+        elif team == TEAM_BLUE and key == 'W' or team == TEAM_RED and key == 'X':
             # Secondary opponent - long distance
             packet.distance = 1
             packet.robot = OPPONENT_ROBOT_SECONDARY

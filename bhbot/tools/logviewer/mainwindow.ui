@@ -126,7 +126,14 @@
        <attribute name="title">
         <string>Opponent Detection</string>
        </attribute>
-       <layout class="QHBoxLayout" name="opponent_detection_layout"/>
+       <layout class="QHBoxLayout" name="opponent_detection_layout">
+        <property name="spacing">
+         <number>0</number>
+        </property>
+        <property name="margin">
+         <number>0</number>
+        </property>
+       </layout>
       </widget>
      </widget>
     </item>

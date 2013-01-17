@@ -15,6 +15,7 @@ import logtools
 import logview
 import logfieldview
 import speedview
+import opponentdetectionview
 
 from definitions import *
 
@@ -34,6 +35,7 @@ class MainWindowController(QObject):
         self.views.append(logfieldview.LogFieldViewController(self.ui))
         self.views.append(speedview.LinearSpeedViewController(self.ui))
         self.views.append(speedview.AngularSpeedViewController(self.ui))
+        self.views.append(opponentdetectionview.OpponentDectectionViewController(self.ui))
 
         self.log_file = log_file
         self.host = log_file
