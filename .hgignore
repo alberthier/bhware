@@ -5,7 +5,7 @@
 /remote_logs/
 drunkstar/host/
 drunkstar/dl/
-drunkstar/buildroot-2012.02/
+drunkstar/buildroot.*/
 asser/log.txt
 asser/Makefile
 asser/simulator_trajAsser
