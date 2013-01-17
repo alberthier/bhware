@@ -150,5 +150,49 @@
                M 550 1550 a 150 150 0 0 0 150 150 H 2300 a 150 150 0 0 0 150 -150
                M 1200 1700 v 300
                M 1800 1700 v 300" />
+
+        <!-- Beacon places -->
+        <rect
+            style="fill:#15161b;stroke:none;fill-opacity:1"
+            id="red_beacon_1"
+            width="80"
+            height="80"
+            x="-100"
+            y="-100" />
+        <rect
+            style="fill:#15161b;stroke:none;fill-opacity:1"
+            id="red_beacon_1"
+            width="80"
+            height="80"
+            x="-100"
+            y="960" />
+        <rect
+            style="fill:#15161b;stroke:none;fill-opacity:1"
+            id="red_beacon_1"
+            width="80"
+            height="80"
+            x="-100"
+            y="2020" />
+        <rect
+            style="fill:#15161b;stroke:none;fill-opacity:1"
+            id="red_beacon_1"
+            width="80"
+            height="80"
+            x="3020"
+            y="-100" />
+        <rect
+            style="fill:#15161b;stroke:none;fill-opacity:1"
+            id="red_beacon_1"
+            width="80"
+            height="80"
+            x="3020"
+            y="960" />
+        <rect
+            style="fill:#15161b;stroke:none;fill-opacity:1"
+            id="red_beacon_1"
+            width="80"
+            height="80"
+            x="3020"
+            y="2020" />
     </g>
 </svg>
