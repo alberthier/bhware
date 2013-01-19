@@ -6,6 +6,7 @@
 drunkstar/host/
 drunkstar/dl/
 drunkstar/buildroot.*/
+drunkstar/br-ccache/
 asser/log.txt
 asser/Makefile
 asser/simulator_trajAsser
