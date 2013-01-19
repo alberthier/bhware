@@ -142,79 +142,76 @@ class Enum(object):
 
 
 REMOTE_DEVICE = Enum("Remote hardware type",
-     REMOTE_DEVICE_PIC       = 0,
-     REMOTE_DEVICE_SIMULATOR = 1,
-     REMOTE_DEVICE_UNKNOWN   = 2,
+    REMOTE_DEVICE_PIC       = 0,
+    REMOTE_DEVICE_SIMULATOR = 1,
+    REMOTE_DEVICE_UNKNOWN   = 2,
 )
 
 TEAM = Enum("Team color",
-     TEAM_BLUE  = 0,
-     TEAM_RED     = 1,
-     TEAM_UNKNOWN = 2,
+    TEAM_BLUE    = 0,
+    TEAM_RED     = 1,
+    TEAM_UNKNOWN = 2,
 )
 
 MOVEMENT = Enum("Movement",
-     MOVEMENT_ROTATE = 0,
-     MOVEMENT_MOVE   = 1,
-     MOVEMENT_LINE   = 2,
+    MOVEMENT_ROTATE = 0,
+    MOVEMENT_MOVE   = 1,
+    MOVEMENT_LINE   = 2,
 )
 
 DIRECTION = Enum("Direction",
-     DIRECTION_FORWARD  =  1,
-     DIRECTION_BACKWARD = -1,
+    DIRECTION_FORWARD  =  1,
+    DIRECTION_BACKWARD = -1,
 )
 
 REASON = Enum("Goto finished reason",
-     REASON_DESTINATION_REACHED = 0,
-     REASON_BLOCKED_FRONT       = 1,
-     REASON_BLOCKED_BACK        = 2,
-     REASON_STOP_REQUESTED      = 3,
+    REASON_DESTINATION_REACHED = 0,
+    REASON_BLOCKED_FRONT       = 1,
+    REASON_BLOCKED_BACK        = 2,
+    REASON_STOP_REQUESTED      = 3,
 )
 
 AXIS = Enum("Axis",
-     AXIS_X = 0,
-     AXIS_Y = 1,
+    AXIS_X = 0,
+    AXIS_Y = 1,
 )
 
-GRIPPER = Enum("Gripper Position",
-     GRIPPER_CLOSE = 0,
-     GRIPPER_OPEN  = 1,
+SIDE = Enum("Side",
+    SIDE_LEFT  = 0,
+    SIDE_RIGHT = 1,
 )
 
-GRIPPER_SIDE = Enum("Gripper side",
-     GRIPPER_SIDE_LEFT  = 1,
-     GRIPPER_SIDE_RIGHT = 2,
-     GRIPPER_SIDE_BOTH  = 3,
+MOVE = Enum("Move",
+    MOVE_CLOSE = 0,
+    MOVE_OPEN  = 1,
 )
 
-SWEEPER = Enum("Sweeper position",
-     SWEEPER_CLOSE = 0,
-     SWEEPER_OPEN  = 1,
+LIFTER_MOVE = Enum("Lifter move",
+    LIFTER_MOVE_DOWN   = 0,
+    LIFTER_MOVE_MIDDLE = 1,
+    LIFTER_MOVE_UP     = 2,
 )
 
-MAP_ARM = Enum("Map arm position",
-     MAP_ARM_CLOSE = 0,
-     MAP_ARM_OPEN  = 1,
+CANDLE_KICKER = Enum("Candle kicker",
+    CANDLE_KICKER_LOWER = 0,
+    CANDLE_KICKER_UPPER = 1,
 )
 
-MAP_GRIPPER = Enum("Map gripper position",
-     MAP_GRIPPER_CLOSE = 0,
-     MAP_GRIPPER_OPEN  = 1,
+CANDLE_KICKER_POSITION = Enum("Candle kicker position",
+    CANDLE_KICKER_POSITION_IDLE = 0,
+    CANDLE_KICKER_POSITION_UP   = 1,
+    CANDLE_KICKER_POSITION_KICK = 2,
 )
 
-TANK = Enum("Tank position",
-     TANK_RETRACT = 0,
-     TANK_DEPLOY  = 1,
+GIFT_OPENER_POSITION = Enum("Gift Opener",
+    GIFT_OPENER_POSITION_IDLE  = 0,
+    GIFT_OPENER_POSITION_LEFT  = 1,
+    GIFT_OPENER_POSITION_RIGHT = 2,
 )
 
-FABRIC_STORE = Enum("Fabric store control",
-     FABRIC_STORE_LOW  = 0,
-     FABRIC_STORE_HIGH = 1,
-)
-
-GOLD_BAR = Enum("Gold bar sensor",
-     GOLD_BAR_MISSING = 0,
-     GOLD_BAR_PRESENT = 1,
+PUMP = Enum("Pump",
+    PUMP_OFF = 0,
+    PUMP_ON  = 1,
 )
 
 TRAJECTORY = Enum("Trajectory walk or navigation result",
@@ -225,8 +222,8 @@ TRAJECTORY = Enum("Trajectory walk or navigation result",
 )
 
 OPPONENT_ROBOT = Enum("Detected opponent robot",
-     OPPONENT_ROBOT_MAIN      = 0,
-     OPPONENT_ROBOT_SECONDARY = 1,
+    OPPONENT_ROBOT_MAIN      = 0,
+    OPPONENT_ROBOT_SECONDARY = 1,
 )
 
 TURRET_INIT_MODE = Enum("Turret initialization read/write mode",

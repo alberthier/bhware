@@ -204,7 +204,7 @@ class Enum8(Int8):
 
     DESCRIPTION = "8 bytes enum value (char)"
 
-    def __init__(self, default_value, enum):
+    def __init__(self, enum, default_value):
         self.enum = enum
         Int8.__init__(self, default_value, self.enum.description)
 
@@ -228,7 +228,7 @@ class UEnum8(Enum8):
     C_TYPE = 'B'
     DESCRIPTION = "8 bytes enum value (unsigned char)"
 
-    def __init__(self, default_value, enum):
+    def __init__(self, enum, default_value):
         self.enum = enum
         UInt8.__init__(self, default_value, self.enum.description)
 

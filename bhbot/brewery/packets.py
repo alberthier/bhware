@@ -313,7 +313,7 @@ class DeviceBusy(BasePacket):
     TYPE = 1
     LOGVIEW_COLOR = "#5f9ea0"
     DEFINITION = (
-        ('remote_device', UEnum8(REMOTE_DEVICE_PIC, REMOTE_DEVICE)),
+        ('remote_device', UEnum8(REMOTE_DEVICE, REMOTE_DEVICE_PIC)),
     )
 
 
@@ -324,8 +324,8 @@ class DeviceReady(BasePacket):
     TYPE = 2
     LOGVIEW_COLOR = "#7fff00"
     DEFINITION = (
-        ('team',          UEnum8(TEAM_UNKNOWN     , TEAM         )),
-        ('remote_device', UEnum8(REMOTE_DEVICE_PIC, REMOTE_DEVICE)),
+        ('team',          UEnum8(TEAM         , TEAM_UNKNOWN     )),
+        ('remote_device', UEnum8(REMOTE_DEVICE, REMOTE_DEVICE_PIC)),
     )
 
 
@@ -336,7 +336,7 @@ class Start(BasePacket):
     TYPE = 3
     LOGVIEW_COLOR = "#d2691e"
     DEFINITION = (
-        ('team', UEnum8(TEAM_UNKNOWN, TEAM)),
+        ('team', UEnum8(TEAM, TEAM_UNKNOWN)),
     )
 
 
@@ -346,8 +346,8 @@ class Goto(BasePacket):
     TYPE = 4
     LOGVIEW_COLOR = "#ff7f50"
     DEFINITION = (
-        ('movement' , UEnum8       (MOVEMENT_MOVE,     MOVEMENT)),
-        ('direction', Enum8        (DIRECTION_FORWARD, DIRECTION)),
+        ('movement' , UEnum8       (MOVEMENT,  MOVEMENT_MOVE)),
+        ('direction', Enum8        (DIRECTION, DIRECTION_FORWARD)),
         ('angle'    , OptionalAngle(None, "Destination angle")),
         ('points'   , List         (62, Point(), [], "List of points to follow")),
     )
@@ -368,7 +368,7 @@ class GotoFinished(BasePacket):
     TYPE = 6
     LOGVIEW_COLOR = "#daa520"
     DEFINITION = (
-        ('reason'             , UEnum8(REASON_DESTINATION_REACHED, REASON)),
+        ('reason'             , UEnum8(REASON, REASON_DESTINATION_REACHED)),
         ('current_pose'       , Pose  ("Robot pose at the end of the movement")),
         ('current_point_index', UInt8 (0, "Last reached point index of the point list given in the Goto packet")),
     )
@@ -431,7 +431,7 @@ class Resettle(BasePacket):
     TYPE = 13
     LOGVIEW_COLOR = "#ff1493"
     DEFINITION = (
-        ('axis'    , UEnum8     (AXIS_X, AXIS)),
+        ('axis'    , UEnum8     (AXIS, AXIS_X)),
         ('position', Float      (0.0, "Robot position on the given axis")),
         ('angle'   , FloatRadian(0.0, "Robot angle")),
     )
@@ -439,79 +439,87 @@ class Resettle(BasePacket):
 
 
 
-class GripperControl(BasePacket):
+class GlassPresent(BasePacket):
 
     TYPE = 14
-    LOGVIEW_COLOR = "#ffa500"
     DEFINITION = (
-        ('move' , UEnum8(GRIPPER_CLOSE,     GRIPPER)),
-        ('which', UEnum8(GRIPPER_SIDE_BOTH, GRIPPER_SIDE)),
+        ('side', UEnum8(SIDE, SIDE_LEFT)),
     )
 
 
 
 
-class SweeperControl(BasePacket):
+class Nipper(BasePacket):
 
     TYPE = 15
-    LOGVIEW_COLOR = "#ff4500"
     DEFINITION = (
-        ('move', UEnum8(SWEEPER_CLOSE, SWEEPER)),
+        ('side', UEnum8(SIDE, SIDE_LEFT)),
+        ('move', UEnum8(MOVE, MOVE_CLOSE)),
     )
 
 
 
 
-class MapArmControl(BasePacket):
+class Lifter(BasePacket):
 
-    TYPE = 16
-    LOGVIEW_COLOR = "#98fb98"
+    TYPE = 15
     DEFINITION = (
-        ('move', UEnum8(MAP_ARM_CLOSE, MAP_ARM)),
+        ('side', UEnum8(SIDE       , SIDE_LEFT)),
+        ('move', UEnum8(LIFTER_MOVE, LIFTER_MOVE_DOWN)),
     )
 
 
 
 
-class MapGripperControl(BasePacket):
+class Gripper(BasePacket):
 
-    TYPE = 17
-    LOGVIEW_COLOR = "#6a5acd"
+    TYPE = 15
     DEFINITION = (
-        ('move', UEnum8(MAP_GRIPPER_CLOSE, MAP_GRIPPER)),
+        ('side', UEnum8(SIDE, SIDE_LEFT)),
+        ('move', UEnum8(MOVE, MOVE_CLOSE)),
     )
 
 
 
 
-class EmptyTankControl(BasePacket):
+class Holder(BasePacket):
 
-    TYPE = 18
-    LOGVIEW_COLOR = "#4682b4"
+    TYPE = 15
     DEFINITION = (
-        ('move', UEnum8(TANK_RETRACT, TANK)),
+        ('side', UEnum8(SIDE, SIDE_LEFT)),
+        ('move', UEnum8(MOVE, MOVE_CLOSE)),
     )
 
 
 
 
-class GoldBarDetection(BasePacket):
+class CandleKicker(BasePacket):
 
-    TYPE = 19
-    LOGVIEW_COLOR = "#ffd700"
+    TYPE = 15
     DEFINITION = (
-        ('status', Enum8(GOLD_BAR_MISSING, GOLD_BAR)),
+        ('team'    , UEnum8(SIDE                  , SIDE_LEFT)),
+        ('which'   , UEnum8(CANDLE_KICKER         , CANDLE_KICKER_LOWER)),
+        ('position', UEnum8(CANDLE_KICKER_POSITION, CANDLE_KICKER_POSITION_IDLE)),
     )
 
 
 
 
-class FabricStoreControl(BasePacket):
+class GiftOpener(BasePacket):
 
-    TYPE = 20
-    LOGVIEW_COLOR = "#32cd32"
+    TYPE = 15
     DEFINITION = (
-        ('move', UEnum8(FABRIC_STORE_HIGH, FABRIC_STORE)),
+        ('position', UEnum8(GIFT_OPENER_POSITION, GIFT_OPENER_POSITION_IDLE)),
+    )
+
+
+
+
+class Pump(BasePacket):
+
+    TYPE = 15
+    DEFINITION = (
+        ('action', UEnum8(PUMP, PUMP_OFF)),
     )
 
 
@@ -611,7 +619,7 @@ class SimulatorOpponentsPositions(BasePacket):
     LOGVIEW_DEFAULT_ENABLED = False
     LOGVIEW_COLOR = "#ba55d3"
     DEFINITION = (
-        ('robot'   , UEnum8(OPPONENT_ROBOT_MAIN, OPPONENT_ROBOT)),
+        ('robot'   , UEnum8(OPPONENT_ROBOT, OPPONENT_ROBOT_MAIN)),
         ('present' , Bool  (True, "Opponent present")),
         ('x'       , Float (-1.0, "Opponent X coordinate")),
         ('y'       , Float (-1.0, "Opponent Y coordinate")),
@@ -662,7 +670,7 @@ class TurretDetect(BasePacket):
     DEFINITION = (
         ('distance', UInt8 (0, "Detection distance")),
         ('angle'   , UInt8 (0, "Detection angle index (0 <= angle <= 17; 20 deg resolution)")),
-        ('robot'   , UEnum8(OPPONENT_ROBOT_MAIN, OPPONENT_ROBOT)),
+        ('robot'   , UEnum8(OPPONENT_ROBOT, OPPONENT_ROBOT_MAIN)),
     )
 
 
@@ -674,7 +682,7 @@ class TurretInit(BasePacket):
     TYPE = 33
     LOGVIEW_COLOR = "#7fffd4"
     DEFINITION = (
-        ('mode'          , UEnum8(TURRET_INIT_MODE_READ, TURRET_INIT_MODE)),
+        ('mode'          , UEnum8(TURRET_INIT_MODE, TURRET_INIT_MODE_READ)),
         ('short_distance', UInt8 (0, "Short distance detection range")),
         ('long_distance' , UInt8 (0, "Long distance detection range")),
     )

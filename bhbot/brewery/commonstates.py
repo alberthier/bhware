@@ -228,134 +228,6 @@ class DefinePosition(statemachine.State):
 
 
 
-class Gripper(statemachine.State):
-
-    def __init__(self, which, move):
-        statemachine.State.__init__(self)
-        self.packet = packets.GripperControl()
-        self.packet.which = which
-        self.packet.move = move
-
-
-    def on_enter(self):
-        self.send_packet(self.packet)
-
-
-    def on_gripper_control(self, packet):
-        self.exit_substate()
-
-
-
-
-class Sweeper(statemachine.State):
-
-    def __init__(self, move, wait=True):
-        statemachine.State.__init__(self)
-        self.packet = packets.SweeperControl()
-        self.packet.move = move
-        self.wait = wait
-
-
-    def on_enter(self):
-        self.send_packet(self.packet)
-        if not self.wait :
-            self.exit_substate()
-
-
-    def on_sweeper_control(self, packet):
-        self.exit_substate()
-
-
-
-
-class MapArm(statemachine.State):
-
-    def __init__(self, move):
-        statemachine.State.__init__(self)
-        self.packet = packets.MapArmControl()
-        self.packet.move = move
-
-
-    def on_enter(self):
-        self.send_packet(self.packet)
-
-
-    def on_map_arm_control(self, packet):
-        self.exit_substate()
-
-
-
-
-class MapGripper(statemachine.State):
-
-    def __init__(self, move):
-        statemachine.State.__init__(self)
-        self.packet = packets.MapGripperControl()
-        self.packet.move = move
-
-
-    def on_enter(self):
-        self.send_packet(self.packet)
-
-
-    def on_map_gripper_control(self, packet):
-        self.exit_substate()
-
-
-
-
-class EmptyTank(statemachine.State):
-
-    def __init__(self, move):
-        statemachine.State.__init__(self)
-        self.packet = packets.EmptyTankControl()
-        self.packet.move = move
-
-
-    def on_enter(self):
-        self.send_packet(self.packet)
-
-
-    def on_empty_tank_control(self, packet):
-        self.exit_substate()
-
-
-
-
-class GetGoldBarStatus(statemachine.State):
-
-    def __init__(self):
-        statemachine.State.__init__(self)
-        self.status = GOLD_BAR_PRESENT
-
-
-    def on_enter(self):
-        self.send_packet(packets.GoldBarDetection())
-
-
-    def on_gold_bar_detection(self, packet):
-        self.status = packet.status
-        self.exit_substate()
-
-
-
-
-class StoreFabric(statemachine.State):
-
-    def __init__(self, move):
-        statemachine.State.__init__(self)
-        self.packet = packets.FabricStoreControl()
-        self.packet.move = move
-
-
-    def on_enter(self):
-        self.send_packet(self.packet)
-
-
-    def on_fabric_store_control(self, packet):
-        self.exit_substate()
-
-
 class Antiblocking(statemachine.State):
 
     def __init__(self, desired_status):
@@ -373,6 +245,7 @@ class Antiblocking(statemachine.State):
 
     def on_disable_anti_blocking(self, packet):
         self.exit_substate()
+
 
 
 

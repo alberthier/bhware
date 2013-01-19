@@ -48,34 +48,6 @@ def get_last_logfile():
 
 
 
-def packet_dump_to_text(dump):
-    if isinstance(dump, list) or isinstance(dump, tuple):
-        text = "["
-        first = True
-        for value in dump:
-            if first:
-                first = False
-            else:
-                text += ", "
-            text += packet_dump_to_text(value)
-        text += "]"
-    elif isinstance(dump, collections.OrderedDict) or isinstance(dump, dict):
-        text = "{"
-        first = True
-        for key, value in dump.items():
-            if first:
-                first = False
-            else:
-                text += ", "
-            text += packet_dump_to_text(key) + ": " + packet_dump_to_text(value)
-        text += "}"
-    else:
-        text = str(dump)
-    return text
-
-
-
-
 def create_main_robot_base_item(pen, brush, gyration_pen):
 
     base = QPainterPath()
