@@ -14,6 +14,7 @@ from PyQt4.QtSvg import *
 import position
 import packets
 import tools
+import logger
 
 import fieldview
 import helpers
@@ -32,7 +33,7 @@ class GraphicsRobotArmObject(QObject):
         self.size1 = size1
         self.size2 = size2
         self.item = QGraphicsLineItem(robot_object.item)
-        self.item.setPen(QColor("#838383"))
+        self.item.setPen(QPen(QColor("#111111"), 15))
 
         self.arm_animation = QPropertyAnimation()
         self.arm_animation.setDuration(500.0)
@@ -47,11 +48,12 @@ class GraphicsRobotArmObject(QObject):
 
 
     def get_position(self):
-        return self.item.line().x2()
+        return self.item.line().y2()
 
 
     def set_position(self, p):
-        self.item.setLine(0.0, 0.0, p, 0.0)
+        logger.log("position={}".format(p))
+        self.item.setLine(0.0, 0.0, 0.0, p)
 
 
     #declare 'arm_position' to Qt's property system
@@ -82,26 +84,23 @@ class GraphicsRobotObject(QObject):
         self.move_animation = QParallelAnimationGroup()
         self.move_animation.stateChanged.connect(self.animation_state_changed)
         self.layer = layer
-        self.is_main = True
 
         self.item = QGraphicsItemGroup(layer)
 
-        self.arms = []
-        if self.is_main:
-            self.left_upper_arm = GraphicsRobotArmObject(0, 100, 150, self)
-            self.arms.append(self.left_upper_arm)
-            self.left_lower_arm = GraphicsRobotArmObject(0, 75, 100, self)
-            self.arms.append(self.left_lower_arm)
-            self.right_upper_arm = GraphicsRobotArmObject(0, -100, -150, self)
-            self.arms.append(self.right_upper_arm)
-            self.right_lower_arm = GraphicsRobotArmObject(0, -75, -100, self)
-            self.arms.append(self.right_lower_arm)
-        else:
-            self.gift_arm = GraphicsRobotArmObject(0, -150, 150, self)
-            self.arms.append(self.red_lower_arm)
-
         (self.structure, self.robot_item, self.gyration_item) = helpers.create_main_robot_base_item(QColor("#838383"), QColor("#e9eaff"), QColor(layer.color).darker(150))
         self.item.addToGroup(self.structure)
+
+        self.arms = []
+        self.left_upper_arm = GraphicsRobotArmObject(0, -400, -450, self)
+        self.arms.append(self.left_upper_arm)
+        self.left_lower_arm = GraphicsRobotArmObject(0, -300, -400, self)
+        self.arms.append(self.left_lower_arm)
+        self.right_upper_arm = GraphicsRobotArmObject(0, 400, 450, self)
+        self.arms.append(self.right_upper_arm)
+        self.right_lower_arm = GraphicsRobotArmObject(0, 300, 400, self)
+        self.arms.append(self.right_lower_arm)
+        self.gift_arm = GraphicsRobotArmObject(0, 250, -250, self)
+        self.arms.append(self.gift_arm)
 
         tower = QGraphicsRectItem(0.0, -40.0, 80.0, 80.0)
         tower.setPen(QPen(0))
