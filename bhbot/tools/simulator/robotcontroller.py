@@ -124,8 +124,10 @@ class RobotController(object):
         self.stop_requested = False
         self.send_packet(packets.GotoStarted())
 
+
     def on_enable_anti_blocking(self, packet):
         self.send_packet(packet)
+
 
     def on_disable_anti_blocking(self, packet):
         self.send_packet(packet)

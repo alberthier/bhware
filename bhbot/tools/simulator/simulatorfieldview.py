@@ -24,224 +24,50 @@ import dynamics
 
 class GraphicsRobotArmObject(QObject):
 
-    arm_movement_finished = pyqtSignal()
-    gripper_movement_finished = pyqtSignal()
-
-    def __init__(self):
+    def __init__(self, size0, size1, size2, robot_object):
         QObject.__init__(self)
+        self.robot_object = robot_object
 
-        self.item = QGraphicsItemGroup()
-
-        self.arm_item = QGraphicsRectItem(0.0, -50.0, 124.0, 100.0);
-        self.arm_item.setPen(QColor("#838383"))
-        self.arm_item.setBrush(QColor("#e9eaff"))
-        self.item.addToGroup(self.arm_item)
-        self.is_arm_retracted = True
-
-        self.gripper_item = QGraphicsRectItem(-40.0, -40.0, 40.0, 80.0);
-        self.gripper_item.setPen(QPen(0))
-        self.gripper_item.setBrush(QColor("#838383"))
-        self.gripper_item.setRotation(180.0)
-        self.item.addToGroup(self.gripper_item)
-        self.is_gripper_retracted = True
+        self.size0 = size0
+        self.size1 = size1
+        self.size2 = size2
+        self.item = QGraphicsLineItem(robot_object.item)
+        self.item.setPen(QColor("#838383"))
 
         self.arm_animation = QPropertyAnimation()
         self.arm_animation.setDuration(500.0)
         self.arm_animation.setTargetObject(self)
-        self.arm_animation.setPropertyName("arm_position")
-        self.arm_animation.finished.connect(self.arm_movement_finished)
-
-        self.gripper_animation = QPropertyAnimation()
-        self.gripper_animation.setDuration(500.0)
-        self.gripper_animation.setTargetObject(self)
-        self.gripper_animation.setPropertyName("gripper_position")
-        self.gripper_animation.finished.connect(self.gripper_movement_finished)
+        self.arm_animation.setPropertyName("position")
+        self.arm_animation.finished.connect(self.movement_finished)
+        self.current_packet = None
 
 
     def reset(self):
-        self.set_arm_position(-99.0)
-        self.set_gripper_position(40.0)
-        self.is_arm_retracted = True
+        self.set_position(self.size0)
 
 
-    def get_arm_position(self):
-        return self.item.x()
+    def get_position(self):
+        return self.item.line().x2()
 
 
-    def set_arm_position(self, p):
-        self.item.setX(p)
+    def set_position(self, p):
+        self.item.setLine(0.0, 0.0, p, 0.0)
 
 
     #declare 'arm_position' to Qt's property system
-    arm_position = pyqtProperty('qreal', get_arm_position, set_arm_position)
-
-
-    def get_gripper_position(self):
-        return self.gripper_item.rect().width()
-
-
-    def set_gripper_position(self, w):
-        rect = self.gripper_item.rect()
-        rect.setWidth(w)
-        self.gripper_item.setRect(rect)
-
-
-    #declare 'gripper_position' to Qt's property system
-    gripper_position = pyqtProperty('qreal', get_gripper_position, set_gripper_position)
-
-
-    def deploy_arm(self):
-        self.arm_animation.setStartValue(-99.0)
-        self.arm_animation.setEndValue(-224.0)
-        self.arm_animation.start()
-        self.is_arm_retracted = False
-
-
-    def retract_arm(self):
-        self.arm_animation.setStartValue(-224.0)
-        self.arm_animation.setEndValue(-99.0)
-        self.arm_animation.start()
-        self.is_arm_retracted = True
-
-
-    def deploy_gripper(self):
-        self.gripper_animation.setStartValue(40.0)
-        self.gripper_animation.setEndValue(70.0)
-        self.gripper_animation.start()
-        self.is_gripper_retracted = False
-
-
-    def retract_gripper(self):
-        self.gripper_animation.setStartValue(70.0)
-        self.gripper_animation.setEndValue(40.0)
-        self.gripper_animation.start()
-        self.is_gripper_retracted = True
-
-
-
-
-class GraphicsRobotGripperObject(QObject):
-
-    movement_finished = pyqtSignal()
-
-    def __init__(self, is_right):
-        QObject.__init__(self)
-        path = QPainterPath()
-
-        if is_right:
-            path.arcTo(-61.0, -125.0, 122.0, 125.0, -90.0, 160.0)
-            self.item = QGraphicsPathItem(path)
-            self.item.setPos(150.0, 125.0)
-            self.start_angle = -40
-            self.end_angle = 180
-        else:
-            path.arcTo(-61.0, 125.0, 122.0, -125.0, -90.0, 160.0)
-            self.item = QGraphicsPathItem(path)
-            self.item.setPos(150.0, -125.0)
-            self.start_angle = 40
-            self.end_angle = -180
-        self.reset()
-
-        pen = QPen(QColor("#838383"), 15.0)
-        pen.setCapStyle(Qt.RoundCap)
-        self.item.setPen(pen)
-
-        self.animation = QPropertyAnimation()
-        self.animation.setDuration(1000.0)
-        self.animation.setTargetObject(self)
-        self.animation.setPropertyName("position")
-        self.animation.finished.connect(self.movement_finished)
-
-
-    def get_position(self):
-        return self.item.rotation()
-
-
-    def set_position(self, p):
-        self.item.setRotation(p)
-
-    def reset(self):
-        self.item.setRotation(self.start_angle)
-
-    #declare 'position' to Qt's property system
     position = pyqtProperty('qreal', get_position, set_position)
 
 
-    def deploy(self):
-        self.animation.setStartValue(self.start_angle)
-        self.animation.setEndValue(self.end_angle)
-        self.animation.start()
+    def process(self, packet):
+        self.current_packet = packet
+        size = [self.size0, self.size1, self.size2][packet.position]
+        self.arm_animation.setStartValue(self.get_position())
+        self.arm_animation.setEndValue(size)
+        self.arm_animation.start()
 
 
-    def retract(self):
-        self.animation.setStartValue(self.end_angle)
-        self.animation.setEndValue(self.start_angle)
-        self.animation.start()
-
-
-
-
-class GraphicsRobotSweeperObject(QObject):
-
-    movement_finished = pyqtSignal()
-
-    def __init__(self):
-        QObject.__init__(self)
-
-        path = QPainterPath()
-        path.arcTo(-67.5, 0.0, 135.0, 180.0, 90.0, 110.0)
-        self.left_item = QGraphicsPathItem(path)
-        self.left_item.setPos(-70.0, -125.0)
-
-        path = QPainterPath()
-        path.arcTo(-67.5, 0.0, 135.0, -180.0, 90.0, 110.0)
-        self.right_item = QGraphicsPathItem(path)
-        self.right_item.setPos(-70.0, 125.0)
-
-        self.start_angle = 40
-        self.end_angle = -140
-        self.right_item.setRotation(self.start_angle)
-        self.left_item.setRotation(-self.start_angle)
-
-        pen = QPen(QColor("#838383"), 15.0)
-        pen.setCapStyle(Qt.RoundCap)
-        self.right_item.setPen(pen)
-        self.left_item.setPen(pen)
-
-        self.is_retracted = True
-
-        self.animation = QPropertyAnimation()
-        self.animation.setDuration(1000.0)
-        self.animation.setTargetObject(self)
-        self.animation.setPropertyName("position")
-        self.animation.finished.connect(self.movement_finished)
-
-
-    def get_position(self):
-        return self.right_item.rotation()
-
-
-    def set_position(self, p):
-        self.right_item.setRotation(p)
-        self.left_item.setRotation(-p)
-
-
-    #declare 'position' to Qt's property system
-    position = pyqtProperty('qreal', get_position, set_position)
-
-
-    def deploy(self):
-        self.animation.setStartValue(self.start_angle)
-        self.animation.setEndValue(self.end_angle)
-        self.animation.start()
-        self.is_retracted = False
-
-
-    def retract(self):
-        self.animation.setStartValue(self.end_angle)
-        self.animation.setEndValue(self.start_angle)
-        self.animation.start()
-        self.is_retracted = True
+    def movement_finished(self):
+        self.robot_object.layer.robot_controller.send_packet(self.current_packet)
 
 
 
@@ -256,24 +82,26 @@ class GraphicsRobotObject(QObject):
         self.move_animation = QParallelAnimationGroup()
         self.move_animation.stateChanged.connect(self.animation_state_changed)
         self.layer = layer
+        self.is_main = True
 
         self.item = QGraphicsItemGroup(layer)
 
-        self.arm = GraphicsRobotArmObject()
-        self.item.addToGroup(self.arm.item)
-
-        self.right_gripper = GraphicsRobotGripperObject(True)
-        self.item.addToGroup(self.right_gripper.item)
-        self.left_gripper = GraphicsRobotGripperObject(False)
-        self.item.addToGroup(self.left_gripper.item)
-
-        self.sweeper = GraphicsRobotSweeperObject()
-        self.item.addToGroup(self.sweeper.right_item)
-        self.item.addToGroup(self.sweeper.left_item)
+        self.arms = []
+        if self.is_main:
+            self.left_upper_arm = GraphicsRobotArmObject(0, 100, 150, self)
+            self.arms.append(self.left_upper_arm)
+            self.left_lower_arm = GraphicsRobotArmObject(0, 75, 100, self)
+            self.arms.append(self.left_lower_arm)
+            self.right_upper_arm = GraphicsRobotArmObject(0, -100, -150, self)
+            self.arms.append(self.right_upper_arm)
+            self.right_lower_arm = GraphicsRobotArmObject(0, -75, -100, self)
+            self.arms.append(self.right_lower_arm)
+        else:
+            self.gift_arm = GraphicsRobotArmObject(0, -150, 150, self)
+            self.arms.append(self.red_lower_arm)
 
         (self.structure, self.robot_item, self.gyration_item) = helpers.create_main_robot_base_item(QColor("#838383"), QColor("#e9eaff"), QColor(layer.color).darker(150))
         self.item.addToGroup(self.structure)
-        self.item.setParentItem(layer)
 
         tower = QGraphicsRectItem(0.0, -40.0, 80.0, 80.0)
         tower.setPen(QPen(0))
@@ -295,25 +123,18 @@ class GraphicsRobotObject(QObject):
         self.long_detection_circle.setPen(QPen(QColor(layer.color), 2, Qt.DashLine))
         self.item.addToGroup(self.long_detection_circle)
 
-        self.fabric = QGraphicsRectItem(-60.0, -100.0, 40.0, 200.0)
-        self.fabric.setPen(QPen(0))
-        self.fabric.setBrush(QColor(layer.color))
-        self.item.addToGroup(self.fabric)
-
-        self.carried_treasure = []
+        self.carried_elements = []
 
 
     def reset(self):
-        for elt in self.carried_treasure:
+        for elt in self.carried_elements:
             self.item.removeFromGroup(elt)
         self.carried_treasure = []
-        self.fabric.setVisible(False)
         self.item.setVisible(False)
         self.item.setPos(0.0, 0.0)
         self.set_rotation(0.0)
-        self.arm.reset()
-        self.left_gripper.reset()
-        self.right_gripper.reset()
+        for arm in self.arms:
+            arm.reset()
 
 
     def get_position(self):
@@ -392,6 +213,7 @@ class GraphicsRobotObject(QObject):
 
         self.move_animation.start()
 
+
     def animation_state_changed(self, new_state, old_state):
         if new_state == QAbstractAnimation.Stopped :
             self.movement_finished.emit(0)
@@ -463,6 +285,23 @@ class GraphicsRobotObject(QObject):
         self.move_animation.start()
 
 
+    def on_candle_kicker(self, packet):
+        if packet.side == SIDE_LEFT:
+            if packet.which == CANDLE_KICKER_LOWER:
+                self.left_lower_arm.process(packet)
+            else:
+                self.left_upper_arm.process(packet)
+        else:
+            if packet.which == CANDLE_KICKER_LOWER:
+                self.right_lower_arm.process(packet)
+            else:
+                self.right_upper_arm.process(packet)
+
+
+    def on_gift_opener(self, packet):
+        self.gift_arm.process(packet)
+
+
 
 
 class RobotLayer(fieldview.Layer):
@@ -477,14 +316,7 @@ class RobotLayer(fieldview.Layer):
         self.robot = GraphicsRobotObject(self)
         self.robot.item.setVisible(False)
         self.robot.movement_finished.connect(self.movement_finished)
-        self.robot.arm.arm_movement_finished.connect(self.map_arm_movement_finished)
-        self.robot.arm.gripper_movement_finished.connect(self.map_gripper_movement_finished)
-        self.robot.left_gripper.movement_finished.connect(self.gripper_movement_finished)
-        self.robot.right_gripper.movement_finished.connect(self.gripper_movement_finished)
-        self.robot.sweeper.movement_finished.connect(self.sweeper_movement_finished)
         self.dynamics = None
-        self.expected_gripper_movements = 0
-        self.gripper_packet = None
 
 
     def reset(self):
@@ -528,137 +360,8 @@ class RobotLayer(fieldview.Layer):
         self.robot_controller.send_goto_finished(REASON_DESTINATION_REACHED, goto_packet_point_index)
 
 
-    def on_map_arm_control(self, packet):
-        if self.robot.arm.is_arm_retracted and packet.move == MAP_ARM_OPEN:
-            self.robot.arm.deploy_arm()
-        elif not self.robot.arm.is_arm_retracted and packet.move == MAP_ARM_CLOSE:
-            self.robot.arm.retract_arm()
-        else:
-            self.robot_controller.send_packet(packet)
-
-
-    def map_arm_movement_finished(self):
-        packet = packets.MapArmControl()
-        if self.robot.arm.is_arm_retracted:
-            packet.move = MAP_ARM_CLOSE
-        else:
-            packet.move = MAP_ARM_OPEN
-        self.robot_controller.send_packet(packet)
-
-
-    def on_map_gripper_control(self, packet):
-        if self.robot.arm.is_gripper_retracted and packet.move == MAP_GRIPPER_OPEN:
-            self.robot.arm.deploy_gripper()
-        elif not self.robot.arm.is_gripper_retracted and packet.move == MAP_GRIPPER_CLOSE:
-            self.robot.arm.retract_gripper()
-        else:
-            self.robot_controller.send_packet(packet)
-
-
-    def map_gripper_movement_finished(self):
-        packet = packets.MapGripperControl()
-        if self.robot.arm.is_gripper_retracted:
-            packet.move = MAP_GRIPPER_CLOSE
-            self.field_view_controller.game_elements_layer.remove_fabric(self.robot_controller.team)
-        else:
-            packet.move = MAP_GRIPPER_OPEN
-        self.robot_controller.send_packet(packet)
-
-
-    def on_fabric_store_control(self, packet):
-        if packet.move == FABRIC_STORE_HIGH:
-            self.robot.fabric.show()
-        self.robot_controller.send_packet(packet)
-
-
-    def on_gripper_control(self, packet):
-        if packet.which == GRIPPER_SIDE_LEFT or packet.which == GRIPPER_SIDE_BOTH:
-            if packet.move == GRIPPER_CLOSE:
-                self.robot.left_gripper.retract()
-            else:
-                self.robot.left_gripper.deploy()
-            self.expected_gripper_movements += 1
-        if packet.which == GRIPPER_SIDE_RIGHT or packet.which == GRIPPER_SIDE_BOTH:
-            if packet.move == GRIPPER_CLOSE:
-                self.robot.right_gripper.retract()
-            else:
-                self.robot.right_gripper.deploy()
-            self.expected_gripper_movements += 1
-        self.gripper_packet = packet
-
-
-    def gripper_movement_finished(self):
-        self.expected_gripper_movements -= 1
-        if self.expected_gripper_movements == 0:
-            if self.gripper_packet.which == GRIPPER_SIDE_BOTH and self.gripper_packet.move == GRIPPER_CLOSE:
-                pos = self.robot.item.pos()
-                elements_layer = self.field_view_controller.game_elements_layer
-                if pos.y() < 1000:
-                    if pos.x() < 1500:
-                        elements = elements_layer.blue_map_tower_treasure
-                        elements_layer.blue_map_tower_treasure_present = False
-                    else:
-                        elements = elements_layer.red_map_tower_treasure
-                        elements_layer.red_map_tower_treasure_present = False
-                else:
-                    if pos.x() < 1500:
-                        elements = elements_layer.blue_bottle_tower_treasure
-                        elements_layer.blue_bottle_tower_treasure_present = False
-                    else:
-                        elements = elements_layer.red_bottle_tower_treasure
-                        elements_layer.red_bottle_tower_treasure_present = False
-                self.robot.carried_treasure = elements
-                for elt in elements:
-                    elt.setPos(pos)
-                    self.robot.item.addToGroup(elt)
-            self.robot_controller.send_packet(self.gripper_packet)
-            self.gripper_packet = None
-
-
-    def on_sweeper_control(self, packet):
-        if packet.move == SWEEPER_CLOSE:
-            self.robot.sweeper.retract()
-        else:
-            self.robot.sweeper.deploy()
-
-
-    def sweeper_movement_finished(self):
-        packet = packets.SweeperControl()
-        if self.robot.sweeper.is_retracted:
-            packet.move = SWEEPER_CLOSE
-        else:
-            packet.move = SWEEPER_OPEN
-        self.robot_controller.send_packet(packet)
-
-
-    def on_empty_tank_control(self, packet):
-        angle = self.robot.item.rotation() / 180.0 * math.pi
-        dest_x = self.robot.item.x() + math.cos(angle) * 300
-        dest_y = self.robot.item.y() + math.sin(angle) * 300
-        for elt in self.robot.carried_treasure:
-            elt.setPos(dest_x, dest_y)
-            self.robot.item.removeFromGroup(elt)
-        self.robot_controller.send_packet(packet)
-
-
-    def on_gold_bar_detection(self, packet):
-        pos = self.robot.item.pos()
-        elements_layer = self.field_view_controller.game_elements_layer
-        if pos.y() < 1000:
-            if pos.x() < 1500:
-                gold_bar_present = elements_layer.blue_map_tower_treasure_present
-            else:
-                gold_bar_present = elements_layer.red_map_tower_treasure_present
-        else:
-            if pos.x() < 1500:
-                gold_bar_present = elements_layer.blue_bottle_tower_treasure_present
-            else:
-                gold_bar_present = elements_layer.red_bottle_tower_treasure_present
-        if gold_bar_present:
-            packet.status = GOLD_BAR_PRESENT
-        else:
-            packet.status = GOLD_BAR_MISSING
-        self.robot_controller.send_packet(packet)
+    def on_packet(self, packet):
+        packet.dispatch(self.robot)
 
 
     def key_press_event(self, pos, event):
