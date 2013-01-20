@@ -291,376 +291,11 @@ class BasePacket(object):
             getattr(obj, 'on_packet')(self)
 
 
-
-
 ################################################################################
 # Packet classes
 
 
-
-
-class ControllerReady(BasePacket):
-
-    TYPE = 0
-    LOGVIEW_DEFAULT_ENABLED = True
-    LOGVIEW_COLOR = "#a52a2a"
-
-
-
-
-class DeviceBusy(BasePacket):
-
-    TYPE = 1
-    LOGVIEW_COLOR = "#5f9ea0"
-    DEFINITION = (
-        ('remote_device', UEnum8(REMOTE_DEVICE, REMOTE_DEVICE_PIC)),
-    )
-
-
-
-
-class DeviceReady(BasePacket):
-
-    TYPE = 2
-    LOGVIEW_COLOR = "#7fff00"
-    DEFINITION = (
-        ('team',          UEnum8(TEAM         , TEAM_UNKNOWN     )),
-        ('remote_device', UEnum8(REMOTE_DEVICE, REMOTE_DEVICE_PIC)),
-    )
-
-
-
-
-class Start(BasePacket):
-
-    TYPE = 3
-    LOGVIEW_COLOR = "#d2691e"
-    DEFINITION = (
-        ('team', UEnum8(TEAM, TEAM_UNKNOWN)),
-    )
-
-
-
-class Goto(BasePacket):
-
-    TYPE = 4
-    LOGVIEW_COLOR = "#ff7f50"
-    DEFINITION = (
-        ('movement' , UEnum8       (MOVEMENT,  MOVEMENT_MOVE)),
-        ('direction', Enum8        (DIRECTION, DIRECTION_FORWARD)),
-        ('angle'    , OptionalAngle(None, "Destination angle")),
-        ('points'   , List         (62, Point(), [], "List of points to follow")),
-    )
-
-
-
-
-class GotoStarted(BasePacket):
-
-    TYPE = 5
-    LOGVIEW_COLOR = "#6495ed"
-
-
-
-
-class GotoFinished(BasePacket):
-
-    TYPE = 6
-    LOGVIEW_COLOR = "#daa520"
-    DEFINITION = (
-        ('reason'             , UEnum8(REASON, REASON_DESTINATION_REACHED)),
-        ('current_pose'       , Pose  ("Robot pose at the end of the movement")),
-        ('current_point_index', UInt8 (0, "Last reached point index of the point list given in the Goto packet")),
-    )
-
-
-
-
-class EnableAntiBlocking(BasePacket):
-
-    TYPE = 8
-    LOGVIEW_COLOR = "#00ffff"
-
-
-
-
-class DisableAntiBlocking(BasePacket):
-
-    TYPE = 9
-    LOGVIEW_COLOR = "#00008b"
-
-
-
-
-class KeepAlive(BasePacket):
-
-    TYPE = 10
-    LOGVIEW_COLOR = "#8b008b"
-    LOGVIEW_DEFAULT_ENABLED = False
-    DEFINITION = (
-        ('current_pose' , Pose  ("Current robot pose")),
-        ('match_started', Bool  (False, "Flag defining if the match has already started")),
-        ('match_time'   , UInt32(0, "Time elapsed since the start of the match")),
-    )
-
-
-
-
-class PositionControlConfig(BasePacket):
-
-    TYPE = 11
-    LOGVIEW_COLOR = "#556b2f"
-    DEFINITION = (
-        ('t_acc'   , Float(0.0)),
-        ('f_va_max', Float(0.0)),
-    )
-
-
-
-
-class Stop(BasePacket):
-
-    TYPE = 12
-    LOGVIEW_COLOR = "#b22222"
-
-
-
-
-class Resettle(BasePacket):
-
-    TYPE = 13
-    LOGVIEW_COLOR = "#ff1493"
-    DEFINITION = (
-        ('axis'    , UEnum8     (AXIS, AXIS_X)),
-        ('position', Float      (0.0, "Robot position on the given axis")),
-        ('angle'   , FloatRadian(0.0, "Robot angle")),
-    )
-
-
-
-
-class GlassPresent(BasePacket):
-
-    TYPE = 14
-    DEFINITION = (
-        ('side', UEnum8(SIDE, SIDE_LEFT)),
-    )
-
-
-
-
-class Nipper(BasePacket):
-
-    TYPE = 15
-    DEFINITION = (
-        ('side', UEnum8(SIDE, SIDE_LEFT)),
-        ('move', UEnum8(MOVE, MOVE_CLOSE)),
-    )
-
-
-
-
-class Lifter(BasePacket):
-
-    TYPE = 15
-    DEFINITION = (
-        ('side', UEnum8(SIDE       , SIDE_LEFT)),
-        ('move', UEnum8(LIFTER_MOVE, LIFTER_MOVE_DOWN)),
-    )
-
-
-
-
-class Gripper(BasePacket):
-
-    TYPE = 15
-    DEFINITION = (
-        ('side', UEnum8(SIDE, SIDE_LEFT)),
-        ('move', UEnum8(MOVE, MOVE_CLOSE)),
-    )
-
-
-
-
-class Holder(BasePacket):
-
-    TYPE = 15
-    DEFINITION = (
-        ('side', UEnum8(SIDE, SIDE_LEFT)),
-        ('move', UEnum8(MOVE, MOVE_CLOSE)),
-    )
-
-
-
-
-class CandleKicker(BasePacket):
-
-    TYPE = 15
-    DEFINITION = (
-        ('team'    , UEnum8(SIDE                  , SIDE_LEFT)),
-        ('which'   , UEnum8(CANDLE_KICKER         , CANDLE_KICKER_LOWER)),
-        ('position', UEnum8(CANDLE_KICKER_POSITION, CANDLE_KICKER_POSITION_IDLE)),
-    )
-
-
-
-
-class GiftOpener(BasePacket):
-
-    TYPE = 15
-    DEFINITION = (
-        ('position', UEnum8(GIFT_OPENER_POSITION, GIFT_OPENER_POSITION_IDLE)),
-    )
-
-
-
-
-class Pump(BasePacket):
-
-    TYPE = 15
-    DEFINITION = (
-        ('action', UEnum8(PUMP, PUMP_OFF)),
-    )
-
-
-
-
-class Reinitialize(BasePacket):
-
-    TYPE = 100
-    LOGVIEW_COLOR = "#db7093"
-
-
-
-
-class SimulatorData(BasePacket):
-
-    TYPE = 101
-    LOGVIEW_DEFAULT_ENABLED = False
-    LOGVIEW_COLOR = "#4169e1"
-    DEFINITION = (
-        ('leds', UInt8(0, "Dockstar leds status")),
-    )
-
-
-
-
-class SimulatorResetRoutePath(BasePacket):
-
-    TYPE = 102
-    LOGVIEW_DEFAULT_ENABLED = False
-    LOGVIEW_COLOR = "#ff00ff"
-
-
-
-
-class SimulatorRoutePath(BasePacket):
-
-    TYPE = 103
-    LOGVIEW_DEFAULT_ENABLED = False
-    LOGVIEW_COLOR = "#8b4513"
-    DEFINITION = (
-        ('points', List(84, SimulatorPoint(), [], "Route path points")),
-    )
-
-
-
-
-class SimulatorSimplifiedRoutePath(BasePacket):
-
-    TYPE = 104
-    LOGVIEW_DEFAULT_ENABLED = False
-    LOGVIEW_COLOR = "#8b4513"
-    DEFINITION = (
-        ('points', List(84, SimulatorPoint(), [], "Route path points")),
-    )
-
-
-
-
-class SimulatorRouteResetZones(BasePacket):
-
-    TYPE = 105
-    LOGVIEW_DEFAULT_ENABLED = False
-    LOGVIEW_COLOR = "#40e0d0"
-
-
-
-
-class SimulatorRouteRects(BasePacket):
-
-    TYPE = 106
-    LOGVIEW_DEFAULT_ENABLED = False
-    LOGVIEW_COLOR = "#d8bfd8"
-    DEFINITION = (
-        ('is_forbidden_zone', Bool(True, "Represents forbidden zones or not")),
-        ('shapes',            List(42, SimulatorRect(), [], "Route rects")),
-    )
-
-
-
-
-class SimulatorRouteCircles(BasePacket):
-
-    TYPE = 107
-    LOGVIEW_DEFAULT_ENABLED = False
-    LOGVIEW_COLOR = "#ff6347"
-    DEFINITION = (
-        ('is_forbidden_zone', Bool(True, "Represents forbidden zones or not")),
-        ('shapes',            List(63, SimulatorCircle(), [], "Route circles")),
-    )
-
-
-
-
-class SimulatorOpponentsPositions(BasePacket):
-
-    TYPE = 108
-    LOGVIEW_DEFAULT_ENABLED = False
-    LOGVIEW_COLOR = "#ba55d3"
-    DEFINITION = (
-        ('robot'   , UEnum8(OPPONENT_ROBOT, OPPONENT_ROBOT_MAIN)),
-        ('present' , Bool  (True, "Opponent present")),
-        ('x'       , Float (-1.0, "Opponent X coordinate")),
-        ('y'       , Float (-1.0, "Opponent Y coordinate")),
-        ('distance', Float (-1.0, "Estimated distannce")),
-    )
-
-
-
-
-class SimulatorClearGraphMapEdges(BasePacket):
-
-    TYPE = 109
-    LOGVIEW_DEFAULT_ENABLED = False
-    LOGVIEW_COLOR = "#ba55d3"
-
-
-
-
-class SimulatorGraphMapEdges(BasePacket):
-
-    TYPE = 110
-    LOGVIEW_DEFAULT_ENABLED = False
-    LOGVIEW_COLOR = "#ba55d3"
-    DEFINITION = (
-        ('points', List(63, Float(0.0), [], "Route circles")),
-    )
-
-
-
-
-class SimulatorGraphMapRoute(BasePacket):
-
-    TYPE = 111
-    LOGVIEW_DEFAULT_ENABLED = False
-    LOGVIEW_COLOR = "#ba55d3"
-    DEFINITION = (
-        ('points', List(63, Float(0.0), [], "Edges")),
-    )
-
-
-
+# Turret packets
 
 class TurretDetect(BasePacket):
 
@@ -708,6 +343,383 @@ class TurretBoot(BasePacket):
     MAX_SIZE = 1
     TYPE = 35
     LOGVIEW_COLOR = "#20b2aa"
+
+
+# PIC 32 packets
+
+
+class Reinitialize(BasePacket):
+
+    TYPE = 50
+    LOGVIEW_COLOR = "#db7093"
+
+
+
+
+class ControllerReady(BasePacket):
+
+    TYPE = 51
+    LOGVIEW_DEFAULT_ENABLED = True
+    LOGVIEW_COLOR = "#a52a2a"
+
+
+
+
+class DeviceBusy(BasePacket):
+
+    TYPE = 52
+    LOGVIEW_COLOR = "#5f9ea0"
+    DEFINITION = (
+        ('remote_device', UEnum8(REMOTE_DEVICE, REMOTE_DEVICE_PIC)),
+    )
+
+
+
+
+class DeviceReady(BasePacket):
+
+    TYPE = 53
+    LOGVIEW_COLOR = "#7fff00"
+    DEFINITION = (
+        ('team',          UEnum8(TEAM         , TEAM_UNKNOWN     )),
+        ('remote_device', UEnum8(REMOTE_DEVICE, REMOTE_DEVICE_PIC)),
+    )
+
+
+
+
+class Start(BasePacket):
+
+    TYPE = 54
+    LOGVIEW_COLOR = "#d2691e"
+    DEFINITION = (
+        ('team', UEnum8(TEAM, TEAM_UNKNOWN)),
+    )
+
+
+
+class Goto(BasePacket):
+
+    TYPE = 55
+    LOGVIEW_COLOR = "#ff7f50"
+    DEFINITION = (
+        ('movement' , UEnum8       (MOVEMENT,  MOVEMENT_MOVE)),
+        ('direction', Enum8        (DIRECTION, DIRECTION_FORWARD)),
+        ('angle'    , OptionalAngle(None, "Destination angle")),
+        ('points'   , List         (62, Point(), [], "List of points to follow")),
+    )
+
+
+
+
+class GotoStarted(BasePacket):
+
+    TYPE = 56
+    LOGVIEW_COLOR = "#6495ed"
+
+
+
+
+class GotoFinished(BasePacket):
+
+    TYPE = 57
+    LOGVIEW_COLOR = "#daa520"
+    DEFINITION = (
+        ('reason'             , UEnum8(REASON, REASON_DESTINATION_REACHED)),
+        ('current_pose'       , Pose  ("Robot pose at the end of the movement")),
+        ('current_point_index', UInt8 (0, "Last reached point index of the point list given in the Goto packet")),
+    )
+
+
+
+
+class EnableAntiBlocking(BasePacket):
+
+    TYPE = 58
+    LOGVIEW_COLOR = "#00ffff"
+
+
+
+
+class DisableAntiBlocking(BasePacket):
+
+    TYPE = 59
+    LOGVIEW_COLOR = "#00008b"
+
+
+
+
+class KeepAlive(BasePacket):
+
+    TYPE = 60
+    LOGVIEW_COLOR = "#8b008b"
+    LOGVIEW_DEFAULT_ENABLED = False
+    DEFINITION = (
+        ('current_pose' , Pose  ("Current robot pose")),
+        ('match_started', Bool  (False, "Flag defining if the match has already started")),
+        ('match_time'   , UInt32(0, "Time elapsed since the start of the match")),
+    )
+
+
+
+
+class PositionControlConfig(BasePacket):
+
+    TYPE = 61
+    LOGVIEW_COLOR = "#556b2f"
+    DEFINITION = (
+        ('t_acc'   , Float(0.0)),
+        ('f_va_max', Float(0.0)),
+    )
+
+
+
+
+class Stop(BasePacket):
+
+    TYPE = 62
+    LOGVIEW_COLOR = "#b22222"
+
+
+
+
+class Resettle(BasePacket):
+
+    TYPE = 63
+    LOGVIEW_COLOR = "#ff1493"
+    DEFINITION = (
+        ('axis'    , UEnum8     (AXIS, AXIS_X)),
+        ('position', Float      (0.0, "Robot position on the given axis")),
+        ('angle'   , FloatRadian(0.0, "Robot angle")),
+    )
+
+
+
+
+class StopAll(BasePacket):
+
+    TYPE = 64
+    LOGVIEW_COLOR = "#ff1493"
+
+
+
+
+class GlassPresent(BasePacket):
+
+    TYPE = 65
+    DEFINITION = (
+        ('side', UEnum8(SIDE, SIDE_LEFT)),
+    )
+
+
+
+
+class Nipper(BasePacket):
+
+    TYPE = 66
+    DEFINITION = (
+        ('side', UEnum8(SIDE, SIDE_LEFT)),
+        ('move', UEnum8(MOVE, MOVE_CLOSE)),
+    )
+
+
+
+
+class Lifter(BasePacket):
+
+    TYPE = 67
+    DEFINITION = (
+        ('side', UEnum8(SIDE       , SIDE_LEFT)),
+        ('move', UEnum8(LIFTER_MOVE, LIFTER_MOVE_DOWN)),
+    )
+
+
+
+
+class Gripper(BasePacket):
+
+    TYPE = 68
+    DEFINITION = (
+        ('side', UEnum8(SIDE, SIDE_LEFT)),
+        ('move', UEnum8(MOVE, MOVE_CLOSE)),
+    )
+
+
+
+
+class Holder(BasePacket):
+
+    TYPE = 79
+    DEFINITION = (
+        ('side', UEnum8(SIDE, SIDE_LEFT)),
+        ('move', UEnum8(MOVE, MOVE_CLOSE)),
+    )
+
+
+
+
+class CandleKicker(BasePacket):
+
+    TYPE = 70
+    DEFINITION = (
+        ('side'    , UEnum8(SIDE                  , SIDE_LEFT)),
+        ('which'   , UEnum8(CANDLE_KICKER         , CANDLE_KICKER_LOWER)),
+        ('position', UEnum8(CANDLE_KICKER_POSITION, CANDLE_KICKER_POSITION_IDLE)),
+    )
+
+
+
+
+class GiftOpener(BasePacket):
+
+    TYPE = 71
+    DEFINITION = (
+        ('position', UEnum8(GIFT_OPENER_POSITION, GIFT_OPENER_POSITION_IDLE)),
+    )
+
+
+
+
+class Pump(BasePacket):
+
+    TYPE = 72
+    DEFINITION = (
+        ('action', UEnum8(PUMP, PUMP_OFF)),
+    )
+
+
+
+
+
+
+# Simulator
+
+
+class SimulatorData(BasePacket):
+
+    TYPE = 200
+    LOGVIEW_DEFAULT_ENABLED = False
+    LOGVIEW_COLOR = "#4169e1"
+    DEFINITION = (
+        ('leds', UInt8(0, "Dockstar leds status")),
+    )
+
+
+
+
+class SimulatorResetRoutePath(BasePacket):
+
+    TYPE = 201
+    LOGVIEW_DEFAULT_ENABLED = False
+    LOGVIEW_COLOR = "#ff00ff"
+
+
+
+
+class SimulatorRoutePath(BasePacket):
+
+    TYPE = 202
+    LOGVIEW_DEFAULT_ENABLED = False
+    LOGVIEW_COLOR = "#8b4513"
+    DEFINITION = (
+        ('points', List(84, SimulatorPoint(), [], "Route path points")),
+    )
+
+
+
+
+class SimulatorSimplifiedRoutePath(BasePacket):
+
+    TYPE = 203
+    LOGVIEW_DEFAULT_ENABLED = False
+    LOGVIEW_COLOR = "#8b4513"
+    DEFINITION = (
+        ('points', List(84, SimulatorPoint(), [], "Route path points")),
+    )
+
+
+
+
+class SimulatorRouteResetZones(BasePacket):
+
+    TYPE = 204
+    LOGVIEW_DEFAULT_ENABLED = False
+    LOGVIEW_COLOR = "#40e0d0"
+
+
+
+
+class SimulatorRouteRects(BasePacket):
+
+    TYPE = 205
+    LOGVIEW_DEFAULT_ENABLED = False
+    LOGVIEW_COLOR = "#d8bfd8"
+    DEFINITION = (
+        ('is_forbidden_zone', Bool(True, "Represents forbidden zones or not")),
+        ('shapes',            List(42, SimulatorRect(), [], "Route rects")),
+    )
+
+
+
+
+class SimulatorRouteCircles(BasePacket):
+
+    TYPE = 206
+    LOGVIEW_DEFAULT_ENABLED = False
+    LOGVIEW_COLOR = "#ff6347"
+    DEFINITION = (
+        ('is_forbidden_zone', Bool(True, "Represents forbidden zones or not")),
+        ('shapes',            List(63, SimulatorCircle(), [], "Route circles")),
+    )
+
+
+
+
+class SimulatorOpponentsPositions(BasePacket):
+
+    TYPE = 207
+    LOGVIEW_DEFAULT_ENABLED = False
+    LOGVIEW_COLOR = "#ba55d3"
+    DEFINITION = (
+        ('robot'   , UEnum8(OPPONENT_ROBOT, OPPONENT_ROBOT_MAIN)),
+        ('present' , Bool  (True, "Opponent present")),
+        ('x'       , Float (-1.0, "Opponent X coordinate")),
+        ('y'       , Float (-1.0, "Opponent Y coordinate")),
+        ('distance', Float (-1.0, "Estimated distannce")),
+    )
+
+
+
+
+class SimulatorClearGraphMapEdges(BasePacket):
+
+    TYPE = 208
+    LOGVIEW_DEFAULT_ENABLED = False
+    LOGVIEW_COLOR = "#ba55d3"
+
+
+
+
+class SimulatorGraphMapEdges(BasePacket):
+
+    TYPE = 209
+    LOGVIEW_DEFAULT_ENABLED = False
+    LOGVIEW_COLOR = "#ba55d3"
+    DEFINITION = (
+        ('points', List(63, Float(0.0), [], "Route circles")),
+    )
+
+
+
+
+class SimulatorGraphMapRoute(BasePacket):
+
+    TYPE = 210
+    LOGVIEW_DEFAULT_ENABLED = False
+    LOGVIEW_COLOR = "#ba55d3"
+    DEFINITION = (
+        ('points', List(63, Float(0.0), [], "Edges")),
+    )
 
 
 
