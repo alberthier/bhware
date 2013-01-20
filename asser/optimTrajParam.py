@@ -265,8 +265,18 @@ def trajFunction(d_cfgTraj):
     #~ 
     #~ deplacement = commandMsg("MSG_MAIN_GOTO 0 1 1.57")
     ###############
-    send_init_pose(simulator_process, x=0.2, y=0.2, angle=math.pi/2.0) #4.71
-    deplacement = commandMsg("MSG_MAIN_GOTO 0 1 -1.57")
+    #~ #test rotation
+    #~ send_init_pose(simulator_process, x=0.2, y=0.2, angle=math.pi/2.0) #4.71
+    #~ deplacement = commandMsg("MSG_MAIN_GOTO 0 1 -1.57")
+
+    #~ for i in range(2) :
+    deplacement = commandMsg("MSG_MAIN_GOTO 1 1 -1100000")
+    deplacement.addPose("0.2 1.5")
+    simulator_process.stdin.write(deplacement.cmdMsgGeneration())
+        
+    deplacement = commandMsg("MSG_MAIN_GOTO 1 -1 -1100000")
+    deplacement.addPose("0.2 0.2")
+    simulator_process.stdin.write(deplacement.cmdMsgGeneration())
     
     #~ deplacement = commandMsg("MSG_MAIN_GOTO 1 1 -1100000")
     #~ deplacement.addPose("0.2 1.0")
@@ -291,7 +301,7 @@ def trajFunction(d_cfgTraj):
     #~ deplacement.addPose("0.5 1.2")
 
     #transmission de commandes de deplacement par l'entree standard
-    simulator_process.stdin.write(deplacement.cmdMsgGeneration())
+    #simulator_process.stdin.write(deplacement.cmdMsgGeneration())
     
     #~ send_init_pose(simulator_process, x=0.31, y=0.177, angle=4.71) #4.71
     
@@ -714,9 +724,10 @@ def affichageTraj2011(d_traj):
     plot(temps, d_traj["Phase"], label='Phase')
     plot(temps, d_traj["fFin"], label='flag Fin')
     plot(temps, d_traj["vitLongitudinale"], '--', label='consigne vit long')
+    plot(temps, d_traj["vitLongitudinaleEffective"], '--', label='consigne vit long effec')
     print(str(len(d_traj["VpiD"])) + " " + str(len(d_traj["VitesseProfil"]))) 
-    #~ plot(temps, d_traj["VposG"], label='VposG')
-    #~ plot(temps, d_traj["VposD"], label='VposD')
+    plot(temps, d_traj["VposG"], label='VposG')
+    plot(temps, d_traj["VposD"], label='VposD')
     #~ plot(temps, d_traj["VpiG"], label='VpiG')
     #~ plot(temps, d_traj["VpiD"], label='VpiD')
     

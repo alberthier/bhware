@@ -399,9 +399,9 @@ extern void POS_ConversionVitessesLongRotToConsignesPWMRouesRobotUnicycle(float 
     do
     {
         vitRoueGauche = (m_sensMarcheMouvement * vitesseLongitudinale) - ((vitesseAngulaireRotation * ECART_ROUE_LIBRE) / 2.0);
-        if (vitRoueGauche > DonneeVmaxGauche)
+        if (fabs(vitRoueGauche) > DonneeVmaxGauche)
         {
-            extra_vitRoueGauche = vitRoueGauche - DonneeVmaxGauche;
+            extra_vitRoueGauche = fabs(vitRoueGauche) - DonneeVmaxGauche;
             vitesseLongitudinale = vitesseLongitudinale - (extra_vitRoueGauche + 0.001);
         }
         else
@@ -409,9 +409,9 @@ extern void POS_ConversionVitessesLongRotToConsignesPWMRouesRobotUnicycle(float 
             extra_vitRoueGauche = -1.0;
         }
         vitRoueDroite = (m_sensMarcheMouvement * vitesseLongitudinale) + ((vitesseAngulaireRotation * ECART_ROUE_LIBRE) / 2.0);
-        if (vitRoueDroite > DonneeVmaxDroite)
+        if (fabs(vitRoueDroite) > DonneeVmaxDroite)
         {
-            extra_vitRoueDroite = vitRoueDroite - DonneeVmaxDroite;
+            extra_vitRoueDroite = fabs(vitRoueDroite) - DonneeVmaxDroite;
             vitesseLongitudinale = vitesseLongitudinale - (extra_vitRoueDroite + 0.001);
         }
         else
