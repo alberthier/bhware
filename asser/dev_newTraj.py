@@ -33,60 +33,49 @@ def spline34(t ,t1, n, q, a, b, c, deriv) :
         
 def trajectoire_sp34(t, dcfg_traj, sp_type, deriv) :
     t1 = dcfg_traj['t1']
-    if (sp_type == 'sp4_sp4_1') or (sp_type == 'sp4_sp3_1') :
-        if (sp_type == 'sp4_sp4_1') :
+    
+    theta_seg = dcfg_traj['theta_seg']
+    
+    if (sp_type == 'sp1_type') :
+        if (dcfg_traj[sp_type] == 'sp4') or (dcfg_traj[sp_type] == 'sp4_n') :
             n = 1
-        if (sp_type == 'sp4_sp3_1') :
+        if (dcfg_traj[sp_type] == 'sp3') :
             n = 0
 
-        x0 = dcfg_traj['x1_sp4']
-        y0 = dcfg_traj['y1_sp4']
-        ax = dcfg_traj['ax1_sp4']
-        ay = dcfg_traj['ay1_sp4']
-        bx = dcfg_traj['bx1_sp4']
-        by = dcfg_traj['by1_sp4']
-        qx = dcfg_traj['qx1_sp4']
-        qy = dcfg_traj['qy1_sp4']
-        theta_seg = dcfg_traj['theta_seg']
+        if (dcfg_traj[sp_type] == 'sp4_n') :
+            x0 = dcfg_traj['x1_n']
+            y0 = dcfg_traj['y1_n']
+        else :
+            x0 = dcfg_traj['x1']
+            y0 = dcfg_traj['y1']
             
-    if (sp_type == 'sp4_sp4_2') or (sp_type == 'sp4_sp3_2'):
-        if (sp_type == 'sp4_sp4_2') :
-            n = 1
-        if (sp_type == 'sp4_sp3_2') :
-            n = 0
-        y0 = dcfg_traj['y2_sp4']
-        x0 = dcfg_traj['x2_sp4']
-        ax = dcfg_traj['ax2_sp4']
-        ay = dcfg_traj['ay2_sp4']
-        bx = dcfg_traj['bx2_sp4']
-        by = dcfg_traj['by2_sp4']
-        qx = dcfg_traj['qx2_sp4']
-        qy = dcfg_traj['qy2_sp4']
-        theta_seg = dcfg_traj['theta_seg']
+        ax = dcfg_traj['ax1']
+        ay = dcfg_traj['ay1']
+        bx = dcfg_traj['bx1']
+        by = dcfg_traj['by1']
+        qx = dcfg_traj['qx1']
+        qy = dcfg_traj['qy1']
         
-    if (sp_type == 'sp4_sp4_n_1') or (sp_type == 'sp4_sp4_n_2') :
-        n = 1
-        if (sp_type == 'sp4_sp4_n_1') :
-            x0 = dcfg_traj['x1_sp4_n']
-            y0 = dcfg_traj['y1_sp4_n']
-            ax = dcfg_traj['ax1_sp4_n']
-            ay = dcfg_traj['ay1_sp4_n']
-            bx = dcfg_traj['bx1_sp4_n']
-            by = dcfg_traj['by1_sp4_n']
-            qx = dcfg_traj['qx1_sp4_n']
-            qy = dcfg_traj['qy1_sp4_n']
-            theta_seg = dcfg_traj['theta_seg_n']
+    if (sp_type == 'sp2_type') :
+        if (dcfg_traj[sp_type] == 'sp4') or (dcfg_traj[sp_type] == 'sp4_n') :
+            n = 1
+        if (dcfg_traj[sp_type] == 'sp3') :
+            n = 0
+
+        if (dcfg_traj[sp_type] == 'sp4_n') :
+            x0 = dcfg_traj['x2_n']
+            y0 = dcfg_traj['y2_n']
+        else :
+            x0 = dcfg_traj['x2']
+            y0 = dcfg_traj['y2']
             
-        if (sp_type == 'sp4_sp4_n_2') :
-            y0 = dcfg_traj['y2_sp4_n']
-            x0 = dcfg_traj['x2_sp4_n']
-            ax = dcfg_traj['ax2_sp4_n']
-            ay = dcfg_traj['ay2_sp4_n']
-            bx = dcfg_traj['bx2_sp4_n']
-            by = dcfg_traj['by2_sp4_n']
-            qx = dcfg_traj['qx2_sp4_n']
-            qy = dcfg_traj['qy2_sp4_n']
-            theta_seg = dcfg_traj['theta_seg_n']
+        ax = dcfg_traj['ax2']
+        ay = dcfg_traj['ay2']
+        bx = dcfg_traj['bx2']
+        by = dcfg_traj['by2']
+        qx = dcfg_traj['qx2']
+        qy = dcfg_traj['qy2']
+        
             
     x = spline34(t, t1, n, qx, ax, bx, x0, deriv)
     y = spline34(t, t1, n, qy, ay, by, y0, deriv)
@@ -141,102 +130,155 @@ def trajectoire_rotation(t, dcfg_traj, rotation_type) :
     
     return [x, y]
     
-def rotation_config(dcfg_traj, rotation_type) :
-    t1 = dcfg_traj['t1']
-    if rotation_type == 'r1' :
-        sp = 'sp3r_1'
-        ax = dcfg_traj['ax_sp3r_1']
-        ay = dcfg_traj['ay_sp3r_1']
-        bx = dcfg_traj['bx_sp3r_1']
-        by = dcfg_traj['by_sp3r_1']
-        x1 = dcfg_traj['x1']
-        y1 = dcfg_traj['y1']
-    if rotation_type == 'r2' :
-        sp = 'sp3r_2'
-        ax = dcfg_traj['ax_sp3r_2']
-        ay = dcfg_traj['ay_sp3r_2']
-        bx = dcfg_traj['bx_sp3r_2']
-        by = dcfg_traj['by_sp3r_2']
-        x1 = dcfg_traj['x2']
-        y1 = dcfg_traj['y2']
-        
-    pos_f = trajectoire_sp3(t1, dcfg_traj, sp, 0)
-    Diff1BS_f = trajectoire_sp3(t1, dcfg_traj, sp, 1)
-    if rotation_type == 'r1' :
-        sp = 'sp3r_1'
-        angle = dcfg_traj['angle_r1']
-    if rotation_type == 'r2' :
-        sp = 'sp3r_2'
-        angle = dcfg_traj['angle_r2']
-    Rinv_sp3 = Rinv_courbure(t1, dcfg_traj, sp)
-    
-    if Rinv_sp3 > 0.0 :
-        signe_Rinv_sp3 = 1.0
-    else :
-        signe_Rinv_sp3 = -1.0
-    theta_f = atan2(Diff1BS_f[1], Diff1BS_f[0])
-    if (Rinv_sp3 < 0.0) :
+def init_q(pos_f, theta_f, signe_Rinv_sp3, Rinv_sp3) :
+    if (signe_Rinv_sp3*Rinv_sp3 < 0.0) :
         theta_cr = theta_f - pi/2.0
     else :
         theta_cr = theta_f + pi/2.0
         
-    x_cr1 = pos_f[0] + cos(theta_cr) / fabs(Rinv_sp3)
-    y_cr1 = pos_f[1] + sin(theta_cr) / fabs(Rinv_sp3)
+    x_cr1 = pos_f[0] + cos(theta_cr) / Rinv_sp3
+    y_cr1 = pos_f[1] + sin(theta_cr) / Rinv_sp3
     theta0_r1 = modulo_angle(theta_cr + pi)
     
-    theta_fr = modulo_angle(theta_f + angle)
-    pos_fr = [x_cr1 + cos(modulo_angle(theta0_r1 + angle)) / fabs(Rinv_sp3)
-            , y_cr1 + sin(modulo_angle(theta0_r1 + angle)) / fabs(Rinv_sp3)]
-    
     dtheta = signe_Rinv_sp3 * 1e-4*pi
-    theta_p1 = modulo_angle(theta0_r1 + angle)
+    #~ theta_p1 = modulo_angle(theta0_r1 + angle)
+    theta_p1 = theta0_r1
     theta_p1 = modulo_angle(theta_p1 - 2.0*dtheta)
     theta_p2 = modulo_angle(theta_p1 + dtheta)
     theta_p3 = modulo_angle(theta_p2 + dtheta)
-    xp1 = x_cr1 + cos(theta_p1) / fabs(Rinv_sp3)
-    yp1 = y_cr1 + sin(theta_p1) / fabs(Rinv_sp3)
-    xp2 = x_cr1 + cos(theta_p2) / fabs(Rinv_sp3)
-    yp2 = y_cr1 + sin(theta_p2) / fabs(Rinv_sp3)
-    xp3 = x_cr1 + cos(theta_p3) / fabs(Rinv_sp3)
-    yp3 = y_cr1 + sin(theta_p3) / fabs(Rinv_sp3)
+    xp1 = x_cr1 + cos(theta_p1) / Rinv_sp3
+    yp1 = y_cr1 + sin(theta_p1) / Rinv_sp3
+    xp2 = x_cr1 + cos(theta_p2) / Rinv_sp3
+    yp2 = y_cr1 + sin(theta_p2) / Rinv_sp3
+    xp3 = x_cr1 + cos(theta_p3) / Rinv_sp3
+    yp3 = y_cr1 + sin(theta_p3) / Rinv_sp3
     
     dx1 = xp2 - xp1
     dy1 = yp2 - yp1
     dx2 = xp3 - xp2
     dy2 = yp3 - yp2
     #0.82
-    qx = 1.0 * (dx2 - dx1) / pow(dtheta / fabs(Rinv_sp3), 2)
-    qy = 1.0 * (dy2 - dy1) / pow(dtheta / fabs(Rinv_sp3), 2)
+    qx = 1.0 * (dx2 - dx1) / pow(dtheta / Rinv_sp3, 2)
+    qy = 1.0 * (dy2 - dy1) / pow(dtheta / Rinv_sp3, 2)
+    
+    return [qx, qy]
+    
+def rotation_config(dcfg_traj, rotation_type) :
+    t1 = dcfg_traj['t1']
+    
+    if ((dcfg_traj['curve1'] == False) and (rotation_type == 'r1')) or ((dcfg_traj['curve2'] == False) and (rotation_type == 'r2')) :
+        if (rotation_type == 'r1') :
+            sp = 'sp3r_1'
+            ax = dcfg_traj['ax_sp3r_1']
+            ay = dcfg_traj['ay_sp3r_1']
+            bx = dcfg_traj['bx_sp3r_1']
+            by = dcfg_traj['by_sp3r_1']
+            x1 = dcfg_traj['x1']
+            y1 = dcfg_traj['y1']
+            angle = dcfg_traj['angle_r1']
+            
+        if rotation_type == 'r2' :
+            sp = 'sp3r_2'
+            ax = dcfg_traj['ax_sp3r_2']
+            ay = dcfg_traj['ay_sp3r_2']
+            bx = dcfg_traj['bx_sp3r_2']
+            by = dcfg_traj['by_sp3r_2']
+            x1 = dcfg_traj['x2']
+            y1 = dcfg_traj['y2']
+            angle = dcfg_traj['angle_r2']
+        
+        pos_f = trajectoire_sp3(t1, dcfg_traj, sp, 0)
+        Diff1BS_f = trajectoire_sp3(t1, dcfg_traj, sp, 1)
+        theta_f = atan2(Diff1BS_f[1], Diff1BS_f[0])
+            
+        Rinv_sp3 = Rinv_courbure(t1, dcfg_traj, sp)
+        if Rinv_sp3 > 0.0 :
+            signe_Rinv_sp3 = 1.0
+        else :
+            signe_Rinv_sp3 = -1.0
+        Rinv_sp3 = fabs(Rinv_sp3)
+
+    else :
+        if rotation_type == 'r1' :
+            angle = dcfg_traj['angle_r1']
+            pos_f = [dcfg_traj['x1'], dcfg_traj['y1']]
+            theta_f = dcfg_traj['theta1']
+            signe_Rinv_sp3 = dcfg_traj['s_Rinv_1']
+        if rotation_type == 'r2' :
+            angle = dcfg_traj['angle_r2']
+            pos_f = [dcfg_traj['x2'], dcfg_traj['y2']]
+            theta_f = modulo_angle(dcfg_traj['theta2'] + pi)
+            signe_Rinv_sp3 = dcfg_traj['s_Rinv_2']
+        Rinv_sp3 = dcfg_traj['Rinv_ref']
+        
+
+#~ def init_q(pos_f, theta_f, signe_Rinv_sp3, Rinv_sp3) :
+    if (signe_Rinv_sp3*Rinv_sp3 < 0.0) :
+        theta_cr = theta_f - pi/2.0
+    else :
+        theta_cr = theta_f + pi/2.0
+        
+    x_cr1 = pos_f[0] + cos(theta_cr) / Rinv_sp3
+    y_cr1 = pos_f[1] + sin(theta_cr) / Rinv_sp3
+    theta0_r1 = modulo_angle(theta_cr + pi)
+    
+    theta_fr = modulo_angle(theta_f + angle)
+    pos_fr = [x_cr1 + cos(modulo_angle(theta0_r1 + angle)) / Rinv_sp3
+            , y_cr1 + sin(modulo_angle(theta0_r1 + angle)) / Rinv_sp3]
+    
+    dtheta = signe_Rinv_sp3 * 1e-4*pi
+    theta_p1 = modulo_angle(theta0_r1 + angle)
+    theta_p1 = modulo_angle(theta_p1 - 2.0*dtheta)
+    theta_p2 = modulo_angle(theta_p1 + dtheta)
+    theta_p3 = modulo_angle(theta_p2 + dtheta)
+    xp1 = x_cr1 + cos(theta_p1) / Rinv_sp3
+    yp1 = y_cr1 + sin(theta_p1) / Rinv_sp3
+    xp2 = x_cr1 + cos(theta_p2) / Rinv_sp3
+    yp2 = y_cr1 + sin(theta_p2) / Rinv_sp3
+    xp3 = x_cr1 + cos(theta_p3) / Rinv_sp3
+    yp3 = y_cr1 + sin(theta_p3) / Rinv_sp3
+    
+    dx1 = xp2 - xp1
+    dy1 = yp2 - yp1
+    dx2 = xp3 - xp2
+    dy2 = yp3 - yp2
+    #0.82
+    qx = 1.0 * (dx2 - dx1) / pow(dtheta / Rinv_sp3, 2)
+    qy = 1.0 * (dy2 - dy1) / pow(dtheta / Rinv_sp3, 2)
     
     if rotation_type == 'r1' :
         dcfg_traj['x_cr1'] = x_cr1
         dcfg_traj['y_cr1'] = y_cr1
-        dcfg_traj['Rinv_sp3_1'] = fabs(Rinv_sp3)
+        dcfg_traj['Rinv_sp3_1'] = Rinv_sp3
         dcfg_traj['signe_Rinv_sp3_1'] = signe_Rinv_sp3
         dcfg_traj['theta0_r1'] = theta0_r1
-        dcfg_traj['qx1_n'] = qx
-        dcfg_traj['qy1_n'] = qy
+        dcfg_traj['qx1'] = qx
+        dcfg_traj['qy1'] = qy
         dcfg_traj['x1_n'] = pos_fr[0]
         dcfg_traj['y1_n'] = pos_fr[1]
         dcfg_traj['theta1_n'] = theta_fr
     if rotation_type == 'r2' :
         dcfg_traj['x_cr2'] = x_cr1
         dcfg_traj['y_cr2'] = y_cr1
-        dcfg_traj['Rinv_sp3_2'] = fabs(Rinv_sp3)
+        dcfg_traj['Rinv_sp3_2'] = Rinv_sp3
         dcfg_traj['signe_Rinv_sp3_2'] = signe_Rinv_sp3
         dcfg_traj['theta0_r2'] = theta0_r1
-        dcfg_traj['qx2_n'] = qx
-        dcfg_traj['qy2_n'] = qy
+        dcfg_traj['qx2'] = qx
+        dcfg_traj['qy2'] = qy
         dcfg_traj['x2_n'] = pos_fr[0]
         dcfg_traj['y2_n'] = pos_fr[1]
         dcfg_traj['theta2_n'] = modulo_angle(theta_fr + pi)
+        if (dcfg_traj['curve2'] == True) :
+            dcfg_traj['Rinv_final'] = Rinv_sp3
+            dcfg_traj['s_Rinv_final'] = -signe_Rinv_sp3
     
     return dcfg_traj
    
-def Rinv_courbure(t, dcfg_traj, sp_type) :
-    if (sp_type == 'sp4_sp4_1') or (sp_type == 'sp4_sp4_2') or (sp_type == 'sp4_sp4_n_1') or (sp_type == 'sp4_sp4_n_2') or (sp_type == 'sp4_sp3_1') or (sp_type == 'sp4_sp3_2'):
-        diff1BS = trajectoire_sp34(t, dcfg_traj, sp_type, 1)
-        diff2BS = trajectoire_sp34(t, dcfg_traj, sp_type, 2)
+def Rinv_courbure(t, dcfg_traj, sp_type) :    
+    if (sp_type == 'sp1_type') or (sp_type == 'sp2_type') :
+        if (dcfg_traj[sp_type] == 'sp4') or (dcfg_traj[sp_type] == 'sp3') or (dcfg_traj[sp_type] == 'sp4_n'):
+            diff1BS = trajectoire_sp34(t, dcfg_traj, sp_type, 1)
+            diff2BS = trajectoire_sp34(t, dcfg_traj, sp_type, 2)
         
     if (sp_type == 'sp3r_1') or (sp_type == 'sp3r_2') :
         diff1BS = trajectoire_sp3(t, dcfg_traj, sp_type, 1)
@@ -342,50 +384,48 @@ def rotation_coord(theta, x, y) :
     y_n = x * sin(theta) + y * cos(theta)
     return [x_n, y_n]
 
-def sds_ab(dcfg_traj, traj_type) :
+def sds_ab(dcfg_traj) :
     t1 = dcfg_traj['t1']
     
-    if traj_type == 'sp4_sp4' :
-        n1 = 1
-        n2 = 1
+    if (dcfg_traj['sp1_type'] == 'sp4') or (dcfg_traj['sp1_type'] == 'sp3'):
+        if (dcfg_traj['sp1_type'] == 'sp4') :
+            n1 = 1
+        if (dcfg_traj['sp1_type'] == 'sp3') :
+            n1 = 0
         x1 = dcfg_traj['x1']
         y1 = dcfg_traj['y1']
         theta1 = dcfg_traj['theta1']
+        qx1 = 0.0
+        qy1 = 0.0
+        
+    if (dcfg_traj['sp2_type'] == 'sp4') or (dcfg_traj['sp2_type'] == 'sp3'):
+        if (dcfg_traj['sp2_type'] == 'sp4') :
+            n2 = 1
+        if (dcfg_traj['sp2_type'] == 'sp3') :
+            n2 = 0
+        n2 = 1
         x2 = dcfg_traj['x2']
         y2 = dcfg_traj['y2']
         theta2 = dcfg_traj['theta2']
-        qx1 = 0.0
-        qy1 = 0.0
         qx2 = 0.0
         qy2 = 0.0
         
-    if traj_type == 'sp4_sp4_n' :
+    if (dcfg_traj['sp1_type'] == 'sp4_n') :
         n1 = 1
-        n2 = 1
         x1 = dcfg_traj['x1_n']
         y1 = dcfg_traj['y1_n']
         theta1 = dcfg_traj['theta1_n']
+        qx1 = dcfg_traj['qx1']
+        qy1 = dcfg_traj['qy1']
+        
+    if (dcfg_traj['sp2_type'] == 'sp4_n') :
+        n2 = 1
         x2 = dcfg_traj['x2_n']
         y2 = dcfg_traj['y2_n']
         theta2 = dcfg_traj['theta2_n']
-        qx1 = dcfg_traj['qx1_n']
-        qy1 = dcfg_traj['qy1_n']
-        qx2 = dcfg_traj['qx2_n']
-        qy2 = dcfg_traj['qy2_n']
+        qx2 = dcfg_traj['qx2']
+        qy2 = dcfg_traj['qy2']
         
-    if traj_type == 'sp4_sp3' :
-        n1 = 1
-        n2 = 0
-        x1 = dcfg_traj['x1']
-        y1 = dcfg_traj['y1']
-        theta1 = dcfg_traj['theta1']
-        x2 = dcfg_traj['x2']
-        y2 = dcfg_traj['y2']
-        theta2 = dcfg_traj['theta2']
-        qx1 = 0.0
-        qy1 = 0.0
-        qx2 = 0.0
-        qy2 = 0.0
     
     theta_seg = atan2(y2-y1, x2-x1)
     theta1_base = modulo_angle(theta1 - theta_seg)
@@ -403,47 +443,40 @@ def sds_ab(dcfg_traj, traj_type) :
     
     [ax1, ay1, bx1, by1, ax2, ay2, bx2, by2, qx1, qy1, qx2, qy2] = sds_ab_base(x1, y1, theta1_base, x2_base, theta2_base, t1, n1, n2, qx1_base, qy1_base, qx2_base, qy2_base)
     
-    if (traj_type == 'sp4_sp4') or (traj_type == 'sp4_sp3') :
-        dcfg_traj['x1_sp4'] = x1
-        dcfg_traj['y1_sp4'] = y1
-        dcfg_traj['ax1_sp4'] = ax1
-        dcfg_traj['ay1_sp4'] = ay1
-        dcfg_traj['bx1_sp4'] = bx1
-        dcfg_traj['by1_sp4'] = by1
-        dcfg_traj['qx1_sp4'] = qx1
-        dcfg_traj['qy1_sp4'] = qy1
+    dcfg_traj['ax1'] = ax1
+    dcfg_traj['ay1'] = ay1
+    dcfg_traj['bx1'] = bx1
+    dcfg_traj['by1'] = by1
+    dcfg_traj['qx1'] = qx1
+    dcfg_traj['qy1'] = qy1
+    
+    dcfg_traj['ax2'] = ax2
+    dcfg_traj['ay2'] = ay2
+    dcfg_traj['bx2'] = bx2
+    dcfg_traj['by2'] = by2
+    dcfg_traj['qx2'] = qx2
+    dcfg_traj['qy2'] = qy2
+    
+    dcfg_traj['theta_seg'] = theta_seg
+    
+    if theta1 - theta_seg > 0.0 :
+        dcfg_traj['s_Rinv_1'] = -1.0
+    else :
+        dcfg_traj['s_Rinv_1'] = 1.0
         
-        dcfg_traj['x2_sp4'] = x2
-        dcfg_traj['y2_sp4'] = y2
-        dcfg_traj['ax2_sp4'] = ax2
-        dcfg_traj['ay2_sp4'] = ay2
-        dcfg_traj['bx2_sp4'] = bx2
-        dcfg_traj['by2_sp4'] = by2
-        dcfg_traj['qx2_sp4'] = qx2
-        dcfg_traj['qy2_sp4'] = qy2
+    if theta2 - theta_seg > 0.0 :
+        dcfg_traj['s_Rinv_2'] = -1.0
+    else :
+        dcfg_traj['s_Rinv_2'] = 1.0
         
-        dcfg_traj['theta_seg'] = theta_seg
-        
-    if traj_type == 'sp4_sp4_n' :
-        dcfg_traj['x1_sp4_n'] = x1
-        dcfg_traj['y1_sp4_n'] = y1
-        dcfg_traj['ax1_sp4_n'] = ax1
-        dcfg_traj['ay1_sp4_n'] = ay1
-        dcfg_traj['bx1_sp4_n'] = bx1
-        dcfg_traj['by1_sp4_n'] = by1
-        dcfg_traj['qx1_sp4_n'] = qx1
-        dcfg_traj['qy1_sp4_n'] = qy1
-        
-        dcfg_traj['x2_sp4_n'] = x2
-        dcfg_traj['y2_sp4_n'] = y2
-        dcfg_traj['ax2_sp4_n'] = ax2
-        dcfg_traj['ay2_sp4_n'] = ay2
-        dcfg_traj['bx2_sp4_n'] = bx2
-        dcfg_traj['by2_sp4_n'] = by2
-        dcfg_traj['qx2_sp4_n'] = qx2
-        dcfg_traj['qy2_sp4_n'] = qy2
-        
-        dcfg_traj['theta_seg_n'] = theta_seg
+    Rinv_final = Rinv_courbure(0.0, dcfg_traj, 'sp2_type')
+    if Rinv_final < 0.0 :
+        signe_Rinv_final = 1.0
+    else :
+        signe_Rinv_final = -1.0
+    Rinv_final = fabs(Rinv_final)
+    dcfg_traj['Rinv_final'] = Rinv_final
+    dcfg_traj['s_Rinv_final'] = signe_Rinv_final
         
     return (dcfg_traj)
 
@@ -550,14 +583,19 @@ def sds_ab_base(x1, y1, theta1, x2, theta2, t1, n1, n2, qx1_0, qy1_0, qx2_0, qy2
     return ([ax1, ay1, bx1, by1, ax2, ay2, bx2, by2, qx1, qy1, qx2, qy2])
 
 def test_courbure(dcfg_traj) :
-    if dcfg_traj['traj_type'] == 'sp4_sp4' :
+    if (dcfg_traj['sp1_type'] == 'sp4') or (dcfg_traj['sp1_type'] == 'sp4_n'):
         t_test = t1/2.0
-        Rinv_sp_1 = Rinv_courbure(t_test, dcfg_traj, 'sp4_sp4_1')
-        Rinv_sp_2 = Rinv_courbure(t_test, dcfg_traj, 'sp4_sp4_2')
-    if dcfg_traj['traj_type'] == 'sp4_sp3' :
+    if dcfg_traj['sp1_type'] == 'sp3' :
         t_test = 0.0
-        Rinv_sp_1 = Rinv_courbure(t_test, dcfg_traj, 'sp4_sp3_1')
-        Rinv_sp_2 = Rinv_courbure(t_test, dcfg_traj, 'sp4_sp3_2')
+
+    Rinv_sp_1 = Rinv_courbure(t_test, dcfg_traj, 'sp1_type')
+    
+    if (dcfg_traj['sp2_type'] == 'sp4') or (dcfg_traj['sp2_type'] == 'sp4_n'):
+        t_test = t1/2.0
+    if dcfg_traj['sp2_type'] == 'sp3' :
+        t_test = 0.0
+
+    Rinv_sp_2 = Rinv_courbure(t_test, dcfg_traj, 'sp2_type')
     
     v_Rinv_sp_1 = vitesse_limite(vmax, EcartRoue, fabs(Rinv_sp_1))
     v_Rinv_sp_2 = vitesse_limite(vmax, EcartRoue, fabs(Rinv_sp_2))
@@ -591,12 +629,17 @@ def generation_curvatureForced(dcfg_traj) :
     # Initialisation
     if dcfg_traj['curvature_forced_1'] == True :
         flag_rotation_angle_value_1 = False
-        dcfg_traj = initialSplineForCircle(dcfg_traj, 'sp3r_1')
+        if dcfg_traj['curve1'] == False :
+            dcfg_traj = initialSplineForCircle(dcfg_traj, 'sp3r_1')
+        dcfg_traj['sp1_type'] = 'sp4_n'
     else :
         flag_rotation_angle_value_1 = True
+        
     if dcfg_traj['curvature_forced_2'] == True :
         flag_rotation_angle_value_2 = False
-        dcfg_traj = initialSplineForCircle(dcfg_traj, 'sp3r_2')
+        if dcfg_traj['curve2'] == False :
+            dcfg_traj = initialSplineForCircle(dcfg_traj, 'sp3r_2')
+        dcfg_traj['sp2_type'] = 'sp4_n'
     else :
         flag_rotation_angle_value_2 = True
         
@@ -611,15 +654,17 @@ def generation_curvatureForced(dcfg_traj) :
             dcfg_traj = rotation_config(dcfg_traj, 'r2')
         
         ### nouvelle s4s4 ###
-        dcfg_traj = sds_ab(dcfg_traj, 'sp4_sp4_n')
+        dcfg_traj = sds_ab(dcfg_traj)
         
-        Rinv_sp4_1_n_0 = Rinv_courbure(0, dcfg_traj, 'sp4_sp4_n_1')
-        Rinv_sp4_1_n_1 = Rinv_courbure(0.01*t1, dcfg_traj, 'sp4_sp4_n_1')
-        dRinv_sp4_1_n = fabs(Rinv_sp4_1_n_1) - fabs(Rinv_sp4_1_n_0)
+        if flag_rotation_angle_value_1 == False :
+            Rinv_sp4_1_n_0 = Rinv_courbure(0, dcfg_traj, 'sp1_type')
+            Rinv_sp4_1_n_1 = Rinv_courbure(0.01*t1, dcfg_traj, 'sp1_type')
+            dRinv_sp4_1_n = fabs(Rinv_sp4_1_n_1) - fabs(Rinv_sp4_1_n_0)
         
-        Rinv_sp4_2_n_0 = Rinv_courbure(0, dcfg_traj, 'sp4_sp4_n_2')
-        Rinv_sp4_2_n_1 = Rinv_courbure(0.01*t1, dcfg_traj, 'sp4_sp4_n_2')
-        dRinv_sp4_2_n = fabs(Rinv_sp4_2_n_1) - fabs(Rinv_sp4_2_n_0)
+        if flag_rotation_angle_value_2 == False :
+            Rinv_sp4_2_n_0 = Rinv_courbure(0, dcfg_traj, 'sp2_type')
+            Rinv_sp4_2_n_1 = Rinv_courbure(0.01*t1, dcfg_traj, 'sp2_type')
+            dRinv_sp4_2_n = fabs(Rinv_sp4_2_n_1) - fabs(Rinv_sp4_2_n_0)
         
         if flag_rotation_angle_value_1 == False :
             if dRinv_sp4_1_n < 0.0 :
@@ -648,10 +693,12 @@ def generation_curvatureForced(dcfg_traj) :
 
 chemin = [[0.0, 0.0, pi*0.1]
         , [0.3, 0.7, pi*0.6] #angle=0.6
-        #, [0.0, 1.0, pi*1.0]
+        , [0.0, 1.0, pi*1.0]
+        , [-0.2, 1.2, pi*0.5]
         ]
 l_dcfg_traj = []
 nb_pts = len(chemin)-1
+l_v_lim = []
 
 for iSegment in range(nb_pts) :
     pos1 = chemin[iSegment]
@@ -686,27 +733,33 @@ for iSegment in range(nb_pts) :
                 , 'x1_n': x1
                 , 'y1_n': y1
                 , 'theta1_n': theta1
-                , 'qx1_n': 0.0
-                , 'qy1_n': 0.0
+                , 'qx1': 0.0
+                , 'qy1': 0.0
                 , 'x2_n': x2
                 , 'y2_n': y2
                 , 'theta2_n': theta2
-                , 'qx2_n': 0.0
-                , 'qy2_n': 0.0
-                , 'traj_type': ''
+                , 'qx2': 0.0
+                , 'qy2': 0.0
+                , 'sp1_type': ''
+                , 'sp2_type': ''
+                , 'curve1': False
+                , 'curve2': False
                 , 'curvature_forced': False
                 , 'curvature_forced_1': False
                 , 'curvature_forced_2': False
                 }
     
     if nb_pts == 1 :
-        dcfg_traj['traj_type'] = 'sp4_sp4'
-        dcfg_traj = sds_ab(dcfg_traj, 'sp4_sp4')
+        dcfg_traj['curve1'] = False
+        dcfg_traj['curve2'] = False
+        dcfg_traj['sp1_type'] = 'sp4'
+        dcfg_traj['sp2_type'] = 'sp4'
+        
+        dcfg_traj = sds_ab(dcfg_traj)
         
         dcfg_traj = test_courbure(dcfg_traj)
         
         if (dcfg_traj['curvature_forced'] == True) :
-            dcfg_traj['traj_type'] = 'sp4_sp4_n'
             dcfg_traj = generation_curvatureForced(dcfg_traj)
         
         #~ dcfg_traj['qx1_n'] = 0.0
@@ -717,13 +770,47 @@ for iSegment in range(nb_pts) :
         
     if nb_pts > 1 :
         if iSegment == 0 :
-            dcfg_traj['traj_type'] = 'sp4_sp3'
-            dcfg_traj = sds_ab(dcfg_traj, 'sp4_sp3')
-            #~ dcfg_traj = test_courbure(dcfg_traj)
-            #~ 
-            #~ if (dcfg_traj['curvature_forced'] == True) :
-                #~ dcfg_traj['traj_type'] = 'sp4_sp4_n'
-                #~ dcfg_traj = generation_curvatureForced(dcfg_traj)
+            dcfg_traj['curve1'] = False
+            dcfg_traj['curve2'] = True
+            dcfg_traj['sp1_type'] = 'sp4'
+            dcfg_traj['sp2_type'] = 'sp3'
+            
+            dcfg_traj = sds_ab(dcfg_traj)
+            
+            dcfg_traj = test_courbure(dcfg_traj)
+            
+            if (dcfg_traj['curvature_forced'] == True) :
+                dcfg_traj = generation_curvatureForced(dcfg_traj)
+        else :
+            # Initialiser la courbure induite par la fin du segment precedent
+            dcfg_traj_p = l_dcfg_traj[-1]
+            [dcfg_traj['qx1'], dcfg_traj['qy1']] = init_q([dcfg_traj['x1'], dcfg_traj['y1']], dcfg_traj['theta1'], dcfg_traj_p['s_Rinv_final'], dcfg_traj_p['Rinv_final'])
+            
+            #
+            if iSegment == (nb_pts - 1) :
+                dcfg_traj['curve1'] = True
+                dcfg_traj['curve2'] = False
+                dcfg_traj['sp1_type'] = 'sp4_n'
+                dcfg_traj['sp2_type'] = 'sp4'
+                
+                dcfg_traj = sds_ab(dcfg_traj)
+                
+                dcfg_traj = test_courbure(dcfg_traj)
+                
+                if (dcfg_traj['curvature_forced'] == True) :
+                    dcfg_traj = generation_curvatureForced(dcfg_traj)
+            else :
+                dcfg_traj['curve1'] = True
+                dcfg_traj['curve2'] = True
+                dcfg_traj['sp1_type'] = 'sp4_n'
+                dcfg_traj['sp2_type'] = 'sp3'
+                
+                dcfg_traj = sds_ab(dcfg_traj)
+                
+                dcfg_traj = test_courbure(dcfg_traj)
+                
+                if (dcfg_traj['curvature_forced'] == True) :
+                    dcfg_traj = generation_curvatureForced(dcfg_traj)
     
         
     l_dcfg_traj.append(dcfg_traj)
@@ -751,7 +838,8 @@ for iSegment in range(nb_pts) :
     l_x_r2 = []
     l_y_r2 = []
     l_Rinv_c = []
-    l_v_lim = []
+    #~ l_v_lim = []
+    l_v_lim_s1 = []
     l_v_lim_s2 = []
     l_v_lim_s4_n1 = []
     l_v_lim_s4_n2 = []
@@ -760,119 +848,142 @@ for iSegment in range(nb_pts) :
     
     for t in l_t :
         
-        if (dcfg_traj['traj_type'] == 'sp4_sp4') :
-            [x_1, y_1] = trajectoire_sp34(t, dcfg_traj, 'sp4_sp4_1',0)
-            l_x_1.append(x_1)
-            l_y_1.append(y_1)
-            
-            [x_2, y_2] = trajectoire_sp34(t, dcfg_traj, 'sp4_sp4_2', 0)
-            l_x_2.append(x_2)
-            l_y_2.append(y_2)
+        [x_1, y_1] = trajectoire_sp34(t, dcfg_traj, 'sp1_type',0)
+        l_x_1.append(x_1)
+        l_y_1.append(y_1)
         
-        if (dcfg_traj['traj_type'] == 'sp4_sp3') :
-            [x_1, y_1] = trajectoire_sp34(t, dcfg_traj, 'sp4_sp3_1',0)
-            l_x_1.append(x_1)
-            l_y_1.append(y_1)
-            
-            [x_2, y_2] = trajectoire_sp34(t, dcfg_traj, 'sp4_sp3_2', 0)
-            l_x_2.append(x_2)
-            l_y_2.append(y_2)
+        [x_2, y_2] = trajectoire_sp34(t, dcfg_traj, 'sp2_type', 0)
+        l_x_2.append(x_2)
+        l_y_2.append(y_2)
+        #~ if (dcfg_traj['traj_type'] == 'sp4_sp4') :
+            #~ [x_1, y_1] = trajectoire_sp34(t, dcfg_traj, 'sp4_sp4_1',0)
+            #~ l_x_1.append(x_1)
+            #~ l_y_1.append(y_1)
+            #~ 
+            #~ [x_2, y_2] = trajectoire_sp34(t, dcfg_traj, 'sp4_sp4_2', 0)
+            #~ l_x_2.append(x_2)
+            #~ l_y_2.append(y_2)
+        #~ 
+        #~ if (dcfg_traj['traj_type'] == 'sp4_sp3') :
+            #~ [x_1, y_1] = trajectoire_sp34(t, dcfg_traj, 'sp4_sp3_1',0)
+            #~ l_x_1.append(x_1)
+            #~ l_y_1.append(y_1)
+            #~ 
+            #~ [x_2, y_2] = trajectoire_sp34(t, dcfg_traj, 'sp4_sp3_2', 0)
+            #~ l_x_2.append(x_2)
+            #~ l_y_2.append(y_2)
     
         if dcfg_traj['curvature_forced_1'] == True :
-            [x_sp3_1, y_sp3_1] = trajectoire_sp3(t, dcfg_traj, 'sp3r_1', 0)
-            l_x_sp3_1.append(x_sp3_1)
-            l_y_sp3_1.append(y_sp3_1)
+            if dcfg_traj['curve1'] == False :
+                [x_sp3_1, y_sp3_1] = trajectoire_sp3(t, dcfg_traj, 'sp3r_1', 0)
+                l_x_sp3_1.append(x_sp3_1)
+                l_y_sp3_1.append(y_sp3_1)
             [x_r1, y_r1] = trajectoire_rotation(t, dcfg_traj, 'r1')
             l_x_r1.append(x_r1)
             l_y_r1.append(y_r1)
         
         if dcfg_traj['curvature_forced_2'] == True :
-            [x_sp3_2, y_sp3_2] = trajectoire_sp3(t, dcfg_traj, 'sp3r_2', 0)
-            l_x_sp3_2.append(x_sp3_2)
-            l_y_sp3_2.append(y_sp3_2)
+            if dcfg_traj['curve2'] == False :
+                [x_sp3_2, y_sp3_2] = trajectoire_sp3(t, dcfg_traj, 'sp3r_2', 0)
+                l_x_sp3_2.append(x_sp3_2)
+                l_y_sp3_2.append(y_sp3_2)
             [x_r2, y_r2] = trajectoire_rotation(t, dcfg_traj, 'r2')
             l_x_r2.append(x_r2)
             l_y_r2.append(y_r2)
         
-        if (dcfg_traj['curvature_forced_1'] == True) or (dcfg_traj['curvature_forced_2'] == True) :
-            [x_sp4_n1, y_sp4_n1] = trajectoire_sp34(t, dcfg_traj, 'sp4_sp4_n_1',0)
-            l_x_sp4_n1.append(x_sp4_n1)
-            l_y_sp4_n1.append(y_sp4_n1)
-            [x_sp4_n2, y_sp4_n2] = trajectoire_sp34(t, dcfg_traj, 'sp4_sp4_n_2', 0)
-            l_x_sp4_n2.append(x_sp4_n2)
-            l_y_sp4_n2.append(y_sp4_n2)
+        #~ if (dcfg_traj['curvature_forced_1'] == True) or (dcfg_traj['curvature_forced_2'] == True) :
+            #~ [x_sp4_n1, y_sp4_n1] = trajectoire_sp34(t, dcfg_traj, 'sp4_sp4_n_1',0)
+            #~ l_x_sp4_n1.append(x_sp4_n1)
+            #~ l_y_sp4_n1.append(y_sp4_n1)
+            #~ [x_sp4_n2, y_sp4_n2] = trajectoire_sp34(t, dcfg_traj, 'sp4_sp4_n_2', 0)
+            #~ l_x_sp4_n2.append(x_sp4_n2)
+            #~ l_y_sp4_n2.append(y_sp4_n2)
         
-        if (dcfg_traj['traj_type'] == 'sp4_sp4') or (dcfg_traj['traj_type'] == 'sp4_sp4_n') :
-            l_Rinv_c.append(Rinv_courbure(t, dcfg_traj, 'sp4_sp4_1'))
-            l_v_lim.append(vitesse_limite(0.6, 0.17, l_Rinv_c[-1]))
-            l_v_lim_s2.append(vitesse_limite(0.6, 0.17, Rinv_courbure(t1-t, dcfg_traj, 'sp4_sp4_2')))
+        #~ if (dcfg_traj['traj_type'] == 'sp4_sp4') or (dcfg_traj['traj_type'] == 'sp4_sp4_n') :
+        l_Rinv_c.append(Rinv_courbure(t, dcfg_traj, 'sp1_type'))
+        l_v_lim_s1.append(vitesse_limite(0.6, 0.17, l_Rinv_c[-1]))
+        l_v_lim_s2.append(vitesse_limite(0.6, 0.17, Rinv_courbure(t1-t, dcfg_traj, 'sp2_type')))
+        
         if dcfg_traj['curvature_forced_1'] == True :
-            l_v_lim_r.append(vitesse_limite(0.6, 0.17, Rinv_courbure(t, dcfg_traj, 'sp3r_1')))
+            if dcfg_traj['curve1'] == False :
+                l_v_lim_r.append(vitesse_limite(0.6, 0.17, Rinv_courbure(t, dcfg_traj, 'sp3r_1')))
         if dcfg_traj['curvature_forced_2'] == True :
-            l_v_lim_r2.append(vitesse_limite(vmax, 0.17, Rinv_courbure(t1-t, dcfg_traj, 'sp3r_2')))
-        if (dcfg_traj['curvature_forced_1'] == True) or (dcfg_traj['curvature_forced_2'] == True) :
-            l_v_lim_s4_n1.append(vitesse_limite(vmax, EcartRoue, Rinv_courbure(t, dcfg_traj, 'sp4_sp4_n_1')))
-            l_v_lim_s4_n2.append(vitesse_limite(vmax, EcartRoue, Rinv_courbure(t1-t, dcfg_traj, 'sp4_sp4_n_2')))
+            if dcfg_traj['curve2'] == False :
+                l_v_lim_r2.append(vitesse_limite(vmax, 0.17, Rinv_courbure(t1-t, dcfg_traj, 'sp3r_2')))
             
-        if (dcfg_traj['traj_type'] == 'sp4_sp3') :
-            l_v_lim.append(vitesse_limite(0.6, 0.17, Rinv_courbure(t, dcfg_traj, 'sp4_sp3_1')))
-            l_v_lim_s2.append(vitesse_limite(0.6, 0.17, Rinv_courbure(t1-t, dcfg_traj, 'sp4_sp3_2')))
+        #~ if (dcfg_traj['curvature_forced_1'] == True) or (dcfg_traj['curvature_forced_2'] == True) :
+            #~ l_v_lim_s4_n1.append(vitesse_limite(vmax, EcartRoue, Rinv_courbure(t, dcfg_traj, 'sp4_sp4_n_1')))
+            #~ l_v_lim_s4_n2.append(vitesse_limite(vmax, EcartRoue, Rinv_courbure(t1-t, dcfg_traj, 'sp4_sp4_n_2')))
+            
+        #~ if (dcfg_traj['traj_type'] == 'sp4_sp3') :
+            #~ l_v_lim.append(vitesse_limite(0.6, 0.17, Rinv_courbure(t, dcfg_traj, 'sp4_sp3_1')))
+            #~ l_v_lim_s2.append(vitesse_limite(0.6, 0.17, Rinv_courbure(t1-t, dcfg_traj, 'sp4_sp3_2')))
         
     
     figure(1)
-    if ((dcfg_traj['traj_type'] == 'sp4_sp4') and (dcfg_traj['curvature_forced'] == False)) or (dcfg_traj['traj_type'] == 'sp4_sp3') :
-        plot(l_x_1, l_y_1, 'o')
-        plot(l_x_2, l_y_2, 'o')
-        plot([l_x_1[-1], l_x_2[-1]], [l_y_1[-1], l_y_2[-1]], '-r')
+    #~ if ((dcfg_traj['traj_type'] == 'sp4_sp4') and (dcfg_traj['curvature_forced'] == False)) or (dcfg_traj['traj_type'] == 'sp4_sp3') :
+    plot(l_x_1, l_y_1, 'o')
+    plot(l_x_2, l_y_2, 'o')
+    plot([l_x_1[-1], l_x_2[-1]], [l_y_1[-1], l_y_2[-1]], '-r')
     
     if dcfg_traj['curvature_forced_1'] == True :
-        plot(l_x_sp3_1, l_y_sp3_1, 'o')
+        if dcfg_traj['curve1'] == False :
+            plot(l_x_sp3_1, l_y_sp3_1, 'o')
         #centre de rotation 1
         plot(dcfg_traj['x_cr1'], dcfg_traj['y_cr1'], 'or')
         plot(l_x_r1, l_y_r1, 'o')
         plot(l_x_r1[0], l_y_r1[0], 'oy')
     
     if dcfg_traj['curvature_forced_2'] == True :
-        plot(l_x_sp3_2, l_y_sp3_2, 'o')
+        if dcfg_traj['curve2'] == False :
+            plot(l_x_sp3_2, l_y_sp3_2, 'o')
         #centre de rotation 2
         plot(dcfg_traj['x_cr2'], dcfg_traj['y_cr2'], 'or')
         plot(l_x_r2, l_y_r2, 'o')
         plot(l_x_r2[0], l_y_r2[0], 'oy')
     
-    if (dcfg_traj['curvature_forced'] == True) :
-        plot(l_x_sp4_n1, l_y_sp4_n1, 'o')
-        plot(l_x_sp4_n2, l_y_sp4_n2, 'o')
-        plot([l_x_sp4_n1[-1], l_x_sp4_n2[-1]], [l_y_sp4_n1[-1], l_y_sp4_n2[-1]], '-r')
+    #~ if (dcfg_traj['curvature_forced'] == True) :
+        #~ plot(l_x_sp4_n1, l_y_sp4_n1, 'o')
+        #~ plot(l_x_sp4_n2, l_y_sp4_n2, 'o')
+        #~ plot([l_x_sp4_n1[-1], l_x_sp4_n2[-1]], [l_y_sp4_n1[-1], l_y_sp4_n2[-1]], '-r')
     
     grid()
-    xlim(-0.1, 1.5)
+    xlim(-0.3, 1.5)
     ylim(-0.1, 1.5)
     
     
-    figure(2)
-    #~ plot(l_Rinv_c, '-o')
-    if (dcfg_traj['traj_type'] == 'sp4_sp4') or (dcfg_traj['traj_type'] == 'sp4_sp4_n') or (dcfg_traj['traj_type'] == 'sp4_sp3') :
-        l_v_lim.extend(l_v_lim_s2)
-        l_v_lim.extend([0.0])
+    #~ figure(2)
     if dcfg_traj['curvature_forced_1'] == True :
-        l_v_lim.extend(l_v_lim_r)
-        l_v_lim.extend([0.0])
-    if (dcfg_traj['curvature_forced_1'] == True) or (dcfg_traj['curvature_forced_2'] == True) :
-        l_v_lim.extend(l_v_lim_s4_n1)
-        l_v_lim.extend([0.0])
-        l_v_lim.extend(l_v_lim_s4_n2)
-    if dcfg_traj['curvature_forced_2'] == True :
-        l_v_lim.extend([0.0])
-        l_v_lim.extend(l_v_lim_r2)
-    plot(l_v_lim, '-o')
-    vmin = vitesse_limite(vmax, EcartRoue, 1.0/(EcartRoue/2.0))
-    plot([0, len(l_v_lim)], [vmin, vmin], '-k')
-    ylim(0.0, vmax+0.02)
+        if dcfg_traj['curve1'] == False :
+            l_v_lim.extend(l_v_lim_r)
+            #~ l_v_lim.extend([0.0])
     
-    ## temp ##
-    grid()
-    show()
-    ### fin temp ###
+    #~ if (dcfg_traj['traj_type'] == 'sp4_sp4') or (dcfg_traj['traj_type'] == 'sp4_sp4_n') or (dcfg_traj['traj_type'] == 'sp4_sp3') :
+    l_v_lim.extend(l_v_lim_s1)
+    l_v_lim.extend(l_v_lim_s2)
+    #~ l_v_lim.extend([0.0])
+    
+    #~ if (dcfg_traj['curvature_forced_1'] == True) or (dcfg_traj['curvature_forced_2'] == True) :
+        #~ l_v_lim.extend(l_v_lim_s4_n1)
+        #~ l_v_lim.extend([0.0])
+        #~ l_v_lim.extend(l_v_lim_s4_n2)
+        
+    if dcfg_traj['curvature_forced_2'] == True :
+        if dcfg_traj['curve2'] == False :
+            #~ l_v_lim.extend([0.0])
+            l_v_lim.extend(l_v_lim_r2)
+    l_v_lim.extend([0.0])
+        
+figure(2)
+plot(l_v_lim, '-o')
+vmin = vitesse_limite(vmax, EcartRoue, 1.0/(EcartRoue/2.0))
+plot([0, len(l_v_lim)], [vmin, vmin], '-k')
+ylim(0.0, vmax+0.02)
+
+## temp ##
+#~ grid()
+#~ show()
+### fin temp ###
     
 grid()
 show()
