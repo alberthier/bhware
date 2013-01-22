@@ -41,10 +41,10 @@ class WaitStart(statemachine.State):
 class Test1(statemachine.State):
 
     def on_enter(self):
-        walk = commonstates.TrajectoryWalk()
-        walk.look_at(1.8, 1.8)
-        walk.move_to(1.8, 1.8)
-        self.switch_to_substate(walk)
+        self.send_packet(packets.CandleKicker(side = SIDE_LEFT,
+                                              which = CANDLE_KICKER_UPPER,
+                                              position = CANDLE_KICKER_POSITION_UP))
+
 
 
 

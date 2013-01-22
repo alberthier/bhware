@@ -52,6 +52,7 @@ class GraphicsRobotArmObject(QObject):
 
 
     def set_position(self, p):
+        logger.log("position={}".format(p))
         self.item.setLine(0.0, 0.0, 0.0, p)
 
 
@@ -218,7 +219,8 @@ class GraphicsRobotObject(QObject):
 
 
     def create_rotation_animation(self, angle):
-        # Map from robot field reference to Qt referenef_angle = self.convert_angle(angle)
+        # Map from robot field reference to Qt reference
+        ref_angle = self.convert_angle(angle)
         angle_deg = ((ref_angle) / math.pi * 180.0)
 
         current = self.item.rotation() % 360.0
@@ -707,54 +709,56 @@ class GameElementsLayer(fieldview.Layer):
 
 
     def scene_changed(self):
-        blue_robot = self.field_view_controller.ui.game_controller.blue_robot.robot_layer.robot
-        red_robot = self.field_view_controller.ui.game_controller.red_robot.robot_layer.robot
-        for elt in self.glasses:
-            if not elt in blue_robot.carried_elements and not elt in red_robot.carried_elements:
-                robot = None
-                if elt.collidesWithItem(blue_robot.robot_item):
-                    robot = blue_robot
-                elif elt.collidesWithItem(red_robot.robot_item):
-                    robot = red_robot
-                if robot != None:
-                    angle = (robot.item.rotation() / 180.0 * math.pi) % (math.pi * 2.0)
-
-                    ex = elt.pos().x() - robot.item.x()
-                    ey = elt.pos().y() - robot.item.y()
-                    elt_angle = math.atan2(ey, ex) % (math.pi * 2.0)
-
-                    ref = abs(angle - elt_angle)
-
-                    if ref < math.pi / 4.0 or ref >= 7.0 * math.pi / 4.0:
-                        sign = 1.0
-                    elif ref >= math.pi / 4.0 and ref < 3.0 * math.pi / 4.0:
-                        sign = -1.0
-                        angle += math.pi / 2.0
-                    elif ref >= 3.0 * math.pi / 4.0 and ref < 5.0 * math.pi / 4.0:
-                        sign = -1.0
-                    else:
-                        sign = 1.0
-                        angle -= math.pi / 2.0
-
-                    dist = 20
-                    dx = sign * math.cos(angle) * dist
-                    dy = sign * math.sin(angle) * dist
-                    elt.setPos(elt.pos().x() + dx, elt.pos().y() + dy)
+        blue_robot_layer = self.field_view_controller.ui.game_controller.blue_robot.robot_layer
+        red_robot_layer = self.field_view_controller.ui.game_controller.red_robot.robot_layer
+#        for elt in self.elements:
+#            if not elt in blue_robot_layer.robot.carried_treasure and not elt in red_robot_layer.robot.carried_treasure:
+#                robot = None
+#                if elt.collidesWithItem(blue_robot_layer.robot.robot_item):
+#                    robot = blue_robot_layer.robot
+#                elif elt.collidesWithItem(red_robot_layer.robot.robot_item):
+#                    robot = red_robot_layer.robot
+#                if robot != None:
+#                    angle = (robot.item.rotation() / 180.0 * math.pi) % (math.pi * 2.0)
+#
+#                    ex = elt.pos().x() - robot.item.x()
+#                    ey = elt.pos().y() - robot.item.y()
+#                    elt_angle = math.atan2(ey, ex) % (math.pi * 2.0)
+#
+#                    ref = abs(angle - elt_angle)
+#
+#                    if ref < math.pi / 4.0 or ref >= 7.0 * math.pi / 4.0:
+#                        sign = 1.0
+#                    elif ref >= math.pi / 4.0 and ref < 3.0 * math.pi / 4.0:
+#                        sign = -1.0
+#                        angle += math.pi / 2.0
+#                    elif ref >= 3.0 * math.pi / 4.0 and ref < 5.0 * math.pi / 4.0:
+#                        sign = -1.0
+#                    else:
+#                        sign = 1.0
+#                        angle -= math.pi / 2.0
+#
+#                    dist = 20
+#                    dx = sign * math.cos(angle) * dist
+#                    dy = sign * math.sin(angle) * dist
+#                    elt.setPos(elt.pos().x() + dx, elt.pos().y() + dy)
 
         if self.main_bar.opponent_detection.isChecked():
-            distance = tools.distance(blue_robot.item.x(), blue_robot.item.y(), red_robot.item.x(), red_robot.item.y())
+            blue_robot_item = blue_robot_layer.robot.item
+            red_robot_item = red_robot_layer.robot.item
+            distance = tools.distance(blue_robot_item.x(), blue_robot_item.y(), red_robot_item.x(), red_robot_item.y())
             if distance < TURRET_SHORT_DISTANCE_DETECTION_RANGE * 1000.0:
-                self.send_turret_detect(blue_robot, red_robot, 0)
-                self.send_turret_detect(red_robot, blue_robot, 0)
+                self.send_turret_detect(blue_robot_layer, red_robot_layer, 0)
+                self.send_turret_detect(red_robot_layer, blue_robot_layer, 0)
             elif distance < TURRET_LONG_DISTANCE_DETECTION_RANGE * 1000.0:
-                self.send_turret_detect(blue_robot, red_robot, 1)
-                self.send_turret_detect(red_robot, blue_robot, 1)
+                self.send_turret_detect(blue_robot_layer, red_robot_layer, 1)
+                self.send_turret_detect(red_robot_layer, blue_robot_layer, 1)
 
 
-    def send_turret_detect(self, detecting_robot, detected_robot, distance):
-        dx = detected_robot.item.x() - detecting_robot.item.x()
-        dy = detected_robot.item.y() - detecting_robot.item.y()
-        angle = (detecting_robot.item.rotation() / 180.0 * math.pi) - math.atan2(dy, dx)
+    def send_turret_detect(self, detecting_robot_layer, detected_robot_layer, distance):
+        dx = detected_robot_layer.robot.item.x() - detecting_robot_layer.robot.item.x()
+        dy = detected_robot_layer.robot.item.y() - detecting_robot_layer.robot.item.y()
+        angle = (detecting_robot_layer.robot.item.rotation() / 180.0 * math.pi) - math.atan2(dy, dx)
         angle %= 2.0 * math.pi
         angle = int(angle / (2.0 * math.pi) * 18.0)
 
@@ -763,7 +767,7 @@ class GameElementsLayer(fieldview.Layer):
         packet.robot = OPPONENT_ROBOT_MAIN
         packet.angle = angle
 
-        detecting_robot.layer.robot_controller.send_packet(packet)
+        detecting_robot_layer.robot_controller.send_packet(packet)
 
 
 
