@@ -7,10 +7,10 @@ import shutil
 from subprocess import *
 
 
-BUILDROOT_VERSION = "2012.02"
+BUILDROOT_VERSION = "2012.08"
 BUILDROOT         = "buildroot-{}".format(BUILDROOT_VERSION)
 BUILDROOT_ARCHIVE = "{}.tar.bz2".format(BUILDROOT)
-BUILDROOT_URL     = "http://buildroot.net/downloads/{}".format(BUILDROOT_ARCHIVE)
+BUILDROOT_URL     = "http://www.buildroot.org/downloads/{}".format(BUILDROOT_ARCHIVE)
 
 PACKAGES = [
              (BUILDROOT_ARCHIVE, BUILDROOT_URL)
@@ -30,17 +30,17 @@ def download():
     if not os.path.exists("{}/Makefile".format(BUILDROOT)):
         archive_file = "dl/{}".format(BUILDROOT_ARCHIVE)
         call(["tar", "xjf", archive_file])
-        call(["patch", "-d", BUILDROOT, "-p1", "-i", "../buildroot-2012.02-fix-microperl-compilation.patch"])
-        call(["patch", "-d", BUILDROOT, "-p1", "-i", "../buildroot-2012.02-fix-library-copy.patch"])
-        call(["patch", "-d", BUILDROOT, "-p1", "-i", "../buildroot-2012.02-mercurial.patch"])
-	call(["patch", "-d", BUILDROOT, "-p1", "-i", "../buildroot-2012.02-fou-rtc-no-sync.patch"])
+        for f in os.listdir("."):
+            if f.startswith(BUILDROOT) and f.endswith(".patch"):
+                print("Applying {}".format(f))
+                call(["patch", "-d", BUILDROOT, "-p1", "-i", "../{}".format(f)])
 
 
 def build():
     # Build
     os.chdir(BUILDROOT)
     if not os.path.exists(".config"):
-        shutil.copyfile("../{0}.config".format(BUILDROOT), ".config")
+        shutil.copyfile("../buildroot.config", ".config")
     call(["make"])
 
 

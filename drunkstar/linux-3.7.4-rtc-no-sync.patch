@@ -1,0 +1,19 @@
+--- a/drivers/rtc/rtc-mv.c	2013-01-25 11:43:58.489213720 +0100
++++ b/drivers/rtc/rtc-mv.c	2013-01-25 11:45:29.909217855 +0100
+@@ -246,16 +246,6 @@
+ 		return -EINVAL;
+ 	}
+ 
+-	/* make sure it is actually functional */
+-	if (rtc_time == 0x01000000) {
+-		ssleep(1);
+-		rtc_time = readl(pdata->ioaddr + RTC_TIME_REG_OFFS);
+-		if (rtc_time == 0x01000000) {
+-			dev_err(&pdev->dev, "internal RTC not ticking\n");
+-			return -ENODEV;
+-		}
+-	}
+-
+ 	pdata->irq = platform_get_irq(pdev, 0);
+ 
+ 	platform_set_drvdata(pdev, pdata);
