@@ -299,6 +299,17 @@ class GraphicsRobotObject(QObject):
         self.gift_arm.process(packet)
 
 
+    def check_glass_collision(self, glass):
+        if self.layer.robot_controller.is_main:
+            for angle, side in zip([10, -10], [SIDE_LEFT, SIDE_RIGHT]):
+                a = math.radians(self.robot_item.rotation() + angle)
+                x = self.robot_item.scenePos().x() + math.cos(a) * 150
+                y = self.robot_item.scenePos().y() + math.sin(a) * 150
+                if glass.contains(QPointF(x, y)):
+                    print("glass {}".format(side))
+                    self.layer.robot_controller.send_packet(packets.GlassPresent(side))
+
+
 
 
 class RobotLayer(fieldview.Layer):
@@ -678,21 +689,20 @@ class GameElementsLayer(fieldview.Layer):
         candle_colors += [TEAM_COLOR_RED for x in range(10)]
         random.shuffle(candle_colors)
         color_iter = iter(candle_colors)
-        self.candles = []
-        for i in range(6):
+        self.top_candles = []
+        self.bottom_candles = []
+        for i in range(12):
             angle = math.radians(7.5 + i * 15.0)
             dx = math.cos(angle) * 450.0
             dy = math.sin(angle) * 450.0
-            self.candles.append(Candle(1500 - dx, dy, next(color_iter), self))
-            self.candles.append(Candle(1500 + dx, dy, next(color_iter), self))
-        for i in range(4):
+            self.bottom_candles.append(Candle(1500 - dx, dy, next(color_iter), self))
+        for i in range(8):
             angle = math.radians(11.25 + i * 22.5)
             dx = math.cos(angle) * 350.0
             dy = math.sin(angle) * 350.0
-            self.candles.append(Candle(1500 - dx, dy, next(color_iter), self))
-            self.candles.append(Candle(1500 + dx, dy, next(color_iter), self))
+            self.top_candles.append(Candle(1500 - dx, dy, next(color_iter), self))
 
-        self.elements = self.glasses + self.gifts + self.candles
+        self.elements = self.glasses + self.gifts + self.top_candles + self.bottom_candles
 
         for piece in self.elements:
             self.addToGroup(piece)
@@ -740,6 +750,7 @@ class GameElementsLayer(fieldview.Layer):
                     dx = sign * math.cos(angle) * dist
                     dy = sign * math.sin(angle) * dist
                     elt.setPos(elt.pos().x() + dx, elt.pos().y() + dy)
+                    robot.check_glass_collision(elt)
 
         if self.main_bar.opponent_detection.isChecked():
             distance = tools.distance(blue_robot.item.x(), blue_robot.item.y(), red_robot.item.x(), red_robot.item.y())

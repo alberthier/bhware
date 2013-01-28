@@ -24,6 +24,7 @@ class RobotController(object):
         else:
             self.team_name = "Red"
             self.team_color = TEAM_COLOR_RED
+        self.is_main = True
         self.output_view = output_view
         self.game_controller = game_controller
 
