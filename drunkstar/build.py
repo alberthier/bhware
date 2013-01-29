@@ -30,7 +30,7 @@ def download():
     if not os.path.exists("{}/Makefile".format(BUILDROOT)):
         archive_file = "dl/{}".format(BUILDROOT_ARCHIVE)
         call(["tar", "xjf", archive_file])
-        for f in os.listdir("."):
+        for f in sorted(os.listdir(".")):
             if f.startswith(BUILDROOT) and f.endswith(".patch"):
                 print("Applying {}".format(f))
                 call(["patch", "-d", BUILDROOT, "-p1", "-i", "../{}".format(f)])
