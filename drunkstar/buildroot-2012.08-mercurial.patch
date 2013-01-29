@@ -90,4 +90,4 @@ index 0000000..a46d8d2
 +    (cd $(@D); sed -i -e 's/^#!.*\/usr\/bin\/python/#!\/usr\/bin\/python/' $(TARGET_DIR)/usr/bin/hg)
 +endef
 +
-+$(eval $(call GENTARGETS))
++$(eval $(generic-package))
