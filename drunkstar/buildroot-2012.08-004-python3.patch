@@ -612,7 +612,7 @@ index 0000000..752b15a
 + 		--install-platlib=$(DESTSHARED) \
 diff --git a/package/python3/python3-3.3-007-change-pyconfig-h-location.patch b/package/python3/python3-3.3-007-change-pyconfig-h-location.patch
 new file mode 100644
-index 0000000..8d45dae
+index 0000000..c0a7a39
 --- /dev/null
 +++ b/package/python3/python3-3.3-007-change-pyconfig-h-location.patch
 @@ -0,0 +1,76 @@
@@ -654,7 +654,7 @@ index 0000000..8d45dae
 +     else:
 +-        inc_dir = get_python_inc(plat_specific=1)
 ++        lib_dir = get_python_lib(plat_specific=1, standard_lib=1)
-++        inc_dir = os.path.join(lib_dir, "config")
+++        inc_dir = os.path.join(lib_dir, "config-{}.{}{}".format(sys.version_info.major, sys.version_info.minor, sys.abiflags))
 +     if get_python_version() < '2.2':
 +         config_h = 'config.h'
 +     else:
@@ -667,7 +667,7 @@ index 0000000..8d45dae
 +             inc_dir = _sys_home or _PROJECT_BASE
 +     else:
 +-        inc_dir = get_path('platinclude')
-++        inc_dir = os.path.join(get_path('stdlib'), "config")
+++        inc_dir = os.path.join(get_path('stdlib'), "config-{}.{}{}".format(sys.version_info.major, sys.version_info.minor, sys.abiflags))
 +     return os.path.join(inc_dir, 'pyconfig.h')
 + 
 + 
@@ -885,12 +885,81 @@ index 0000000..33286ce
 + then
 + 	if test $ipv6 = yes
 + 	then
+diff --git a/package/python3/python3-3.3-012-old-stdlib-cache.patch b/package/python3/python3-3.3-012-old-stdlib-cache.patch
+new file mode 100644
+index 0000000..5a2cf8b
+--- /dev/null
++++ b/package/python3/python3-3.3-012-old-stdlib-cache.patch
+@@ -0,0 +1,63 @@
++python3: Fix pyc-only related runtime exceptions
++
++Python3 changes the pyc lookup strategy, ignoring the
++__pycache__ directory if the .py file is missing. Change
++install location to enable use of .pyc without their parent .py
++
++See http://www.python.org/dev/peps/pep-3147
++
++Signed-off-by: Daniel Nelson <daniel@sigpwr.com>
++
++--- python3-3.3.0/configure.ac	2013-01-27 16:35:52.429067797 -0800
+++++ python3-3.3.0/configure.ac	2013-01-27 16:43:43.528601443 -0800
++@@ -1827,6 +1827,23 @@
++     LIBTOOL_CRUFT=$LIBTOOL_CRUFT' -compatibility_version $(VERSION) -current_version $(VERSION)';;
++ esac
++ 
+++STDLIB_CACHE_FLAGS=
+++AC_MSG_CHECKING(for --enable-old-stdlib-cache)
+++AC_ARG_ENABLE(old-stdlib-cache,
+++    AS_HELP_STRING([--enable-old-stdlib-cache], [enable pre-pep3147 stdlib cache]),
+++[
+++    if test "$enableval" = "yes"
+++    then
+++        STDLIB_CACHE_FLAGS="-b"
+++    else
+++        STDLIB_CACHE_FLAGS="" 
+++    fi
+++],
+++[
+++    STDLIB_CACHE_FLAGS="" 
+++])
+++AC_SUBST(STDLIB_CACHE_FLAGS)
+++
++ AC_MSG_CHECKING(for --enable-framework)
++ if test "$enable_framework"
++ then
++--- python3-3.3.0/Makefile.pre.in	2013-01-27 16:35:52.422067642 -0800
+++++ python3-3.3.0/Makefile.pre.in	2013-01-27 16:37:03.710650439 -0800
++@@ -143,6 +143,9 @@
++ # Options to enable prebinding (for fast startup prior to Mac OS X 10.3)
++ OTHER_LIBTOOL_OPT=@OTHER_LIBTOOL_OPT@
++ 
+++# Option to enable old-style precompiled stdlib
+++STDLIB_CACHE_FLAGS=@STDLIB_CACHE_FLAGS@
+++
++ # Environment to run shared python without installed libraries
++ RUNSHARED=       @RUNSHARED@
++ 
++@@ -1079,12 +1082,12 @@
++ 	fi
++ 	-PYTHONPATH=$(DESTDIR)$(LIBDEST)  $(RUNSHARED) \
++ 		$(PYTHON_FOR_BUILD) -Wi $(DESTDIR)$(LIBDEST)/compileall.py \
++-		-d $(LIBDEST) -f \
+++		-d $(LIBDEST) -f $(STDLIB_CACHE_FLAGS) \
++ 		-x 'bad_coding|badsyntax|site-packages|lib2to3/tests/data' \
++ 		$(DESTDIR)$(LIBDEST)
++ 	-PYTHONPATH=$(DESTDIR)$(LIBDEST)  $(RUNSHARED) \
++ 		$(PYTHON_FOR_BUILD) -Wi $(DESTDIR)$(LIBDEST)/compileall.py \
++-		-d $(LIBDEST)/site-packages -f \
+++		-d $(LIBDEST)/site-packages -f $(STDLIB_CACHE_FLAGS) \
++ 		-x badsyntax $(DESTDIR)$(LIBDEST)/site-packages
++ 	-PYTHONPATH=$(DESTDIR)$(LIBDEST) $(RUNSHARED) \
++ 		$(PYTHON_FOR_BUILD) -m lib2to3.pgen2.driver $(DESTDIR)$(LIBDEST)/lib2to3/Grammar.txt
 diff --git a/package/python3/python3.mk b/package/python3/python3.mk
 new file mode 100644
-index 0000000..e7c0983
+index 0000000..d5afc7f
 --- /dev/null
 +++ b/package/python3/python3.mk
-@@ -0,0 +1,181 @@
+@@ -0,0 +1,187 @@
 +#############################################################
 +#
 +# python3
@@ -961,6 +1030,10 @@ index 0000000..e7c0983
 +PYTHON3_CONF_OPT += --with-expat=system
 +else
 +PYTHON3_CONF_OPT += --with-expat=none
++endif
++
++ifeq ($(BR2_PACKAGE_PYTHON3_PYC_ONLY),y)
++PYTHON3_CONF_OPT += --enable-old-stdlib-cache
 +endif
 +
 +ifeq ($(BR2_PACKAGE_PYTHON3_SQLITE),y)
@@ -1066,6 +1139,8 @@ index 0000000..e7c0983
 +	done
 +endef
 +endif
++
++rm -rf $(TARGET_DIR)/usr/lib/python$(PYTHON3_VERSION_MAJOR)/test
 +
 +PYTHON3_POST_INSTALL_TARGET_HOOKS += PYTHON3_REMOVE_MODULES_FILES
 +
