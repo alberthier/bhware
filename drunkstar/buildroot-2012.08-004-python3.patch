@@ -1128,6 +1128,7 @@ index 0000000..d5afc7f
 +		 -name __pycache__` ; do \
 +		rm -rf $$i ; \
 +	done
++	rm -rf $(TARGET_DIR)/usr/lib/python$(PYTHON3_VERSION_MAJOR)/test
 +endef
 +endif
 +
@@ -1140,7 +1141,6 @@ index 0000000..d5afc7f
 +endef
 +endif
 +
-+rm -rf $(TARGET_DIR)/usr/lib/python$(PYTHON3_VERSION_MAJOR)/test
 +
 +PYTHON3_POST_INSTALL_TARGET_HOOKS += PYTHON3_REMOVE_MODULES_FILES
 +
