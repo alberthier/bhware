@@ -186,20 +186,20 @@ bool ColorDetector::wait()
 
 void ColorDetector::initDisplay()
 {
-#ifdef HAVE_OPENCV_HIGHGUI
+#ifndef __arm__
     cv::namedWindow(BGR_IMAGE, cv::WINDOW_NORMAL);
     cv::resizeWindow(BGR_IMAGE, 640, 480);
 
     cv::namedWindow(BINARIZED_IMAGE, cv::WINDOW_NORMAL);
     cv::resizeWindow(BINARIZED_IMAGE, 640, 480);
     cv::moveWindow(BINARIZED_IMAGE, 710, 0);
-#endif // HAVE_OPENCV_HIGHGUI
+#endif // !__arm__
 }
 
 
 void ColorDetector::updateDisplay()
 {
-#ifdef HAVE_OPENCV_HIGHGUI
+#ifndef __arm__
     for (std::vector<Rect>::const_iterator it = m_calibrationZoneRects.begin(); it != m_calibrationZoneRects.end(); ++it) {
         cv::rectangle(m_bgrImage, cv::Point(it->x, it->y), cv::Point(it->x + it->width, it->y + it->height), cv::Scalar(0, 0, 200));
     }
@@ -211,7 +211,7 @@ void ColorDetector::updateDisplay()
         cv::imshow(BINARIZED_IMAGE, m_binImage);
     }
     cv::waitKey(1);
-#endif // HAVE_OPENCV_HIGHGUI
+#endif // !__arm__
 }
 
 
