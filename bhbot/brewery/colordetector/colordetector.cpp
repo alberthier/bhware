@@ -66,6 +66,7 @@ private:
     int m_thresholdHue;
     int m_thresholdSaturation;
     int m_thresholdTolerance;
+    std::string m_logfile;
     std::vector<Rect> m_detectionZoneRects;
     std::vector<cv::Mat> m_detectionZones;
     std::vector<Rect> m_calibrationZoneRects;
@@ -140,6 +141,9 @@ bool ColorDetector::processLine(std::istream& stream)
         return false;
     } else if (command == "fetch") {
         bgrCheck();
+        if (!m_logfile.empty()) {
+            cv::imwrite(m_logfile.c_str(), m_bgrImage);
+        }
     } else if (command == "poll_timeout") {
         sstr >> m_pollTimeout;
     } else if (command == "threshold_hue") {
@@ -148,6 +152,8 @@ bool ColorDetector::processLine(std::istream& stream)
         sstr >> m_thresholdSaturation;
     } else if (command == "threshold_tolerance") {
         sstr >> m_thresholdTolerance;
+    } else if (command == "set_log_file") {
+        sstr >> m_logfile;
     } else if (command == "add_calibration_zone") {
         addZone(sstr, m_calibrationZoneRects, m_calibrationZones);
     } else if (command == "add_detection_zone") {
