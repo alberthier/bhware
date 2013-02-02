@@ -10,6 +10,7 @@ import packets
 import logger
 import eventloop
 import binarizer
+import builder
 from definitions import *
 from position import Pose, VirtualPose
 
@@ -372,24 +373,9 @@ class Map(object):
         pyversion = "python{}.{}{}".format(sys.version_info.major, sys.version_info.minor, sys.abiflags)
         include_dir = sys.exec_prefix + "/include/" + pyversion
         lib_dir = sys.exec_prefix + "/lib"
-        working_dir = "/tmp/bhware"
-        source_file = os.path.join(os.path.dirname(__file__), "pathfinding.c")
-        output_file = os.path.join(working_dir, "pathfinding.so")
-        if not os.path.exists(working_dir):
-            os.makedirs(working_dir)
-            os.utime(source_file, None)
-        if not working_dir in sys.path:
-            sys.path.append(working_dir)
-        if not os.path.exists(output_file) or os.stat(source_file).st_mtime > os.stat(output_file).st_mtime:
-            cmd = ["gcc", "-O2", "-shared", "-fPIC", "-o", output_file, "-I" + include_dir, "-L" + lib_dir, source_file, "-l" + pyversion]
-            print(cmd)
-            gcc = subprocess.Popen(cmd, stdout = subprocess.PIPE, stderr = subprocess.PIPE, cwd=working_dir)
-            (out, err) = gcc.communicate()
-            if gcc.returncode == 0:
-                logger.log("Pathfinding C module compiled successfully")
-            for l in out.splitlines():
-                logger.log(l)
-            for l in err.splitlines():
-                logger.log(l)
-        else:
-            logger.log("Pathfinding C module already up to date")
+        working_dir = os.path.dirname(__file__)
+        source_file = "pathfinding.c"
+        output_file = "pathfinding.so"
+        commands = ["gcc", "-O2", "-shared", "-fPIC", "-o", output_file, "-I" + include_dir, "-L" + lib_dir, source_file, "-l" + pyversion]
+        bld = builder.Builder(source_file, output_file, commands, working_dir)
+        bld.build()
