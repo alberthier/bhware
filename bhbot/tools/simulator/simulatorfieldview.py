@@ -33,6 +33,7 @@ class GraphicsRobotArmObject(QObject):
         self.size0 = size0
         self.size1 = size1
         self.size2 = size2
+        self.is_down = False
         self.item = QGraphicsLineItem(robot_object.item)
         self.item.setPen(QPen(QColor("#111111"), 15))
 
@@ -63,6 +64,7 @@ class GraphicsRobotArmObject(QObject):
     def process(self, packet):
         self.current_packet = packet
         size = [self.size0, self.size1, self.size2][packet.position]
+        self.is_down = packet.position == 2
         self.arm_animation.setStartValue(self.get_position())
         self.arm_animation.setEndValue(size)
         self.arm_animation.start()
@@ -326,6 +328,20 @@ class GraphicsRobotObject(QObject):
 
     def hits_gift(self, gift):
         return self.item is not None and gift.collidesWithItem(self.gift_arm.item)
+
+
+    def hits_upper_candle(self, candle):
+        if self.item is not None:
+            return self.left_upper_arm.is_down and self.left_upper_arm.item.collidesWithItem(candle) or \
+                   self.right_upper_arm.is_down and self.right_upper_arm.item.collidesWithItem(candle)
+        return False
+
+
+    def hits_lower_candle(self, candle):
+        if self.item is not None:
+            return self.left_lower_arm.is_down and self.left_lower_arm.item.collidesWithItem(candle) or \
+                   self.right_lower_arm.is_down and self.right_lower_arm.item.collidesWithItem(candle)
+        return False
 
 
 
@@ -714,20 +730,20 @@ class GameElementsLayer(fieldview.Layer):
         candle_colors += [TEAM_COLOR_RED for x in range(10)]
         random.shuffle(candle_colors)
         color_iter = iter(candle_colors)
-        self.top_candles = []
-        self.bottom_candles = []
+        self.upper_candles = []
+        self.lower_candles = []
         for i in range(12):
             angle = math.radians(7.5 + i * 15.0)
             dx = math.cos(angle) * 450.0
             dy = math.sin(angle) * 450.0
-            self.bottom_candles.append(Candle(1500 - dx, dy, next(color_iter), self))
+            self.lower_candles.append(Candle(1500 - dx, dy, next(color_iter), self))
         for i in range(8):
             angle = math.radians(11.25 + i * 22.5)
             dx = math.cos(angle) * 350.0
             dy = math.sin(angle) * 350.0
-            self.top_candles.append(Candle(1500 - dx, dy, next(color_iter), self))
+            self.upper_candles.append(Candle(1500 - dx, dy, next(color_iter), self))
 
-        self.elements = self.glasses + self.gifts + self.top_candles + self.bottom_candles
+        self.elements = self.glasses + self.gifts + self.upper_candles + self.lower_candles
 
         for piece in self.elements:
             self.addToGroup(piece)
@@ -779,6 +795,12 @@ class GameElementsLayer(fieldview.Layer):
         for gift in self.gifts:
             if robot_a.hits_gift(gift) or robot_b.hits_gift(gift):
                 gift.hide()
+        for candle in self.upper_candles:
+            if robot_a.hits_upper_candle(candle) or robot_b.hits_upper_candle(candle):
+                candle.blow()
+        for candle in self.lower_candles:
+            if robot_a.hits_lower_candle(candle) or robot_b.hits_lower_candle(candle):
+                candle.blow()
 
         if self.main_bar.opponent_detection.isChecked():
             distance = tools.distance(robot_a.item.x(), robot_a.item.y(), robot_b.item.x(), robot_b.item.y())
