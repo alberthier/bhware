@@ -772,6 +772,11 @@ class GameElementsLayer(fieldview.Layer):
                     dy = sign * math.sin(angle) * dist
                     elt.setPos(elt.pos().x() + dx, elt.pos().y() + dy)
                     robot.check_glass_collision(elt)
+        for gift in self.gifts:
+            hide = robot_a.item is not None and gift.collidesWithItem(robot_a.gift_arm.item) or \
+                   robot_b.item is not None and gift.collidesWithItem(robot_b.gift_arm.item)
+            if hide:
+                gift.hide()
 
         if self.main_bar.opponent_detection.isChecked():
             distance = tools.distance(robot_a.item.x(), robot_a.item.y(), robot_b.item.x(), robot_b.item.y())
