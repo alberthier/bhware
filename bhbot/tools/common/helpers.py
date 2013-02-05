@@ -49,9 +49,19 @@ def get_last_logfile():
 
 
 def create_main_robot_base_item(pen, brush, gyration_pen):
-    robot = QGraphicsRectItem(-126.0, -126.0, 252.0, 254.0)
-    robot.setPen(pen)
-    robot.setBrush(brush)
+    robot = QGraphicsItemGroup()
+
+    base = QGraphicsRectItem(-126.0, -126.0, 254.0, 252.0)
+    base.setPen(pen)
+    base.setBrush(brush)
+    robot.addToGroup(base)
+
+    line = QGraphicsLineItem(0.0, -126.0, 126.0, 0.0)
+    line.setPen(pen)
+    robot.addToGroup(line)
+    line = QGraphicsLineItem(126.0, 0.0, 0.0, 126.0)
+    line.setPen(pen)
+    robot.addToGroup(line)
 
     gyration_radius = MAIN_ROBOT_GYRATION_RADIUS * 1000.0
     gyration = QGraphicsEllipseItem(-gyration_radius, -gyration_radius, 2.0 * gyration_radius, 2.0 * gyration_radius)
@@ -67,9 +77,19 @@ def create_main_robot_base_item(pen, brush, gyration_pen):
 
 
 def create_secondary_robot_base_item(pen, brush, gyration_pen):
-    robot = QGraphicsRectItem(-63.5, -53.0, 127.0, 172.0)
-    robot.setPen(pen)
-    robot.setBrush(brush)
+    robot = QGraphicsItemGroup()
+
+    base = QGraphicsRectItem(-53.0, -63.5, 172.0, 127.0)
+    base.setPen(pen)
+    base.setBrush(brush)
+    robot.addToGroup(base)
+
+    line = QGraphicsLineItem(0.0, -63.5, 119.0, 0.0)
+    line.setPen(pen)
+    robot.addToGroup(line)
+    line = QGraphicsLineItem(119.0, 0.0, 0.0, 63.5)
+    line.setPen(pen)
+    robot.addToGroup(line)
 
     gyration_radius = SECONDARY_ROBOT_GYRATION_RADIUS * 1000.0
     gyration = QGraphicsEllipseItem(-gyration_radius, -gyration_radius, 2.0 * gyration_radius, 2.0 * gyration_radius)
