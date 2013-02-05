@@ -1,12 +1,8 @@
 #!/usr/bin/env python3
 # encoding: utf-8
 
-import eventloop
 import signal
-import logger
 import argparse
-import leds
-from definitions import *
 
 
 
@@ -21,15 +17,26 @@ def signal_handler(signum, frame):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description = "BH Team's main strategy program.", add_help = True)
-    parser.add_argument("--webserver-port", action = "store", type = int, default = WEB_SERVER_PORT, metavar = "PORT", help = "Internal web server port")
-    parser.add_argument('statemachine', action="store", nargs='?', default = STATE_MACHINE)
-    args = parser.parse_args()
-
-    logger.initialize()
-
     signal.signal(signal.SIGINT, signal_handler)
     signal.signal(signal.SIGTERM, signal_handler)
+
+    import definitions
+
+    parser = argparse.ArgumentParser(description = "BH Team's main strategy program.", add_help = True)
+    parser.add_argument("--webserver-port", action = "store", type = int, default = definitions.WEB_SERVER_PORT, metavar = "PORT", help = "Internal web server port")
+    parser.add_argument("--main", action = "store_true", default = None, help = "Main robot definitions")
+    parser.add_argument('statemachine', action="store", nargs='?', default = definitions.STATE_MACHINE)
+    args = parser.parse_args()
+
+    if args.main is not None:
+        definitions.IS_MAIN_ROBOT = args.main
+    definitions.setup_definitions()
+
+    import eventloop
+    import logger
+    import leds
+
+    logger.initialize()
 
     loop = eventloop.EventLoop(args.statemachine, args.webserver_port)
     leds.initialize(loop)

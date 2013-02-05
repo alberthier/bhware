@@ -2,41 +2,64 @@
 
 import os
 import math
+import platform
 import socket
 
 
 ########################################################################
 # Constants
 
+# Brewery execution host
+IS_MAIN_ROBOT                          = socket.gethostname() == "sheldon"
+IS_HOST_DEVICE_ARM                     = platform.machine() == "armv5tel"
+IS_HOST_DEVICE_PC                      = not IS_HOST_DEVICE_ARM
+
 # Field
 FIELD_Y_SIZE                           = 3.0
 FIELD_X_SIZE                           = 2.0
 
-# Game elements
-COIN_RADIUS                            = 0.060
-COIN_COLOR_WHITE                       = "#ffffff"
-COIN_COLOR_BLACK                       = "#000000"
-GOLD_BAR_WIDTH                         = 0.070
-GOLD_BAR_LENGTH                        = 0.150
-GOLD_BAR_COLOR                         = "#ffdd00"
+# Main robot
+MAIN_ROBOT_X_SIZE                      = 0.254
+MAIN_ROBOT_Y_SIZE                      = 0.252
+MAIN_ROBOT_CENTER_X                    = 0.126
+MAIN_ROBOT_CENTER_Y                    = 0.126
+MAIN_ROBOT_GYRATION_RADIUS             = 0.174
 
-# Robot
-ROBOT_X_SIZE                           = 0.276
-ROBOT_Y_SIZE                           = 0.322
-ROBOT_CENTER_X                         = 0.099
-ROBOT_CENTER_Y                         = 0.161
-ROBOT_GYRATION_RADIUS                  = 0.2386
-ROBOT_EXPANDED_GRIPPER_GYRATION_RADIUS = 0.321965
-ROBOT_EXPANDED_SWEEPER_GYRATION_RADIUS = 0.289355
-ROBOT_EXPANDED_GYRATION_RADIUS         = max(ROBOT_EXPANDED_GRIPPER_GYRATION_RADIUS, ROBOT_EXPANDED_SWEEPER_GYRATION_RADIUS)
+# Secondary robot
+SECONDARY_ROBOT_X_SIZE                 = 0.172
+SECONDARY_ROBOT_Y_SIZE                 = 0.127
+SECONDARY_ROBOT_CENTER_X               = 0.0530
+SECONDARY_ROBOT_CENTER_Y               = 0.0635
+SECONDARY_ROBOT_GYRATION_RADIUS        = 0.161
 
-# Start positons (the robot starts 90 degrees rotated that's why *_START_Y use ROBOT_X_SIZE and ROBOT_CENTER_X)
-BLUE_START_X                         = 0.310
-BLUE_START_Y                         = 0.364
-BLUE_START_ANGLE                     = -math.pi / 2.0
-RED_START_X                            = 0.310
-RED_START_Y                            = FIELD_Y_SIZE - BLUE_START_Y
-RED_START_ANGLE                        = math.pi / 2.0
+# Main start positons (the robot starts 90 degrees rotated that's why *_START_Y use ROBOT_X_SIZE and ROBOT_CENTER_X)
+MAIN_BLUE_START_Y                      = 0.126
+MAIN_BLUE_START_X                      = 1.0
+MAIN_BLUE_START_ANGLE                  = -math.pi / 2.0
+MAIN_RED_START_X                       = 1.0
+MAIN_RED_START_Y                       = FIELD_Y_SIZE - MAIN_BLUE_START_Y
+MAIN_RED_START_ANGLE                   = math.pi / 2.0
+
+# Secondary start positons (the robot starts 90 degrees rotated that's why *_START_Y use ROBOT_X_SIZE and ROBOT_CENTER_X)
+SECONDARY_BLUE_START_Y                 = 0.053
+SECONDARY_BLUE_START_X                 = 1.5
+SECONDARY_BLUE_START_ANGLE             = -math.pi / 2.0
+SECONDARY_RED_START_X                  = 1.5
+SECONDARY_RED_START_Y                  = FIELD_Y_SIZE - SECONDARY_BLUE_START_Y
+SECONDARY_RED_START_ANGLE              = math.pi / 2.0
+
+def setup_definitions():
+    globals()["ROBOT_X_SIZE"]          = MAIN_ROBOT_X_SIZE          if IS_MAIN_ROBOT else SECONDARY_ROBOT_X_SIZE
+    globals()["ROBOT_Y_SIZE"]          = MAIN_ROBOT_Y_SIZE          if IS_MAIN_ROBOT else SECONDARY_ROBOT_Y_SIZE
+    globals()["ROBOT_CENTER_X"]        = MAIN_ROBOT_CENTER_X        if IS_MAIN_ROBOT else SECONDARY_ROBOT_CENTER_X
+    globals()["ROBOT_CENTER_Y"]        = MAIN_ROBOT_CENTER_Y        if IS_MAIN_ROBOT else SECONDARY_ROBOT_CENTER_Y
+    globals()["ROBOT_GYRATION_RADIUS"] = MAIN_ROBOT_GYRATION_RADIUS if IS_MAIN_ROBOT else SECONDARY_ROBOT_GYRATION_RADIUS
+    globals()["BLUE_START_Y"]          = MAIN_BLUE_START_Y          if IS_MAIN_ROBOT else SECONDARY_BLUE_START_Y
+    globals()["BLUE_START_X"]          = MAIN_BLUE_START_X          if IS_MAIN_ROBOT else SECONDARY_BLUE_START_X
+    globals()["BLUE_START_ANGLE"]      = MAIN_BLUE_START_ANGLE      if IS_MAIN_ROBOT else SECONDARY_BLUE_START_ANGLE
+    globals()["RED_START_Y"]           = MAIN_RED_START_Y           if IS_MAIN_ROBOT else SECONDARY_RED_START_Y
+    globals()["RED_START_X"]           = MAIN_RED_START_X           if IS_MAIN_ROBOT else SECONDARY_RED_START_X
+    globals()["RED_START_ANGLE"]       = MAIN_RED_START_ANGLE       if IS_MAIN_ROBOT else SECONDARY_RED_START_ANGLE
 
 # Rule specific
 MATCH_DURATION_MS                      = 90000
@@ -47,10 +70,6 @@ TEAM_COLOR_BLUE                        = "#004c90"
 KEEP_ALIVE_DELAY_MS                    = 250
 KEEP_ALIVE_MINIMUM_AGE_S               = (KEEP_ALIVE_DELAY_MS * 4.0 / 5.0) / 1000.0
 EVENT_LOOP_TICK_RESOLUTION_S           = 0.05
-
-# Brewery execution host
-IS_HOST_DEVICE_ARM                     = socket.gethostname() == "drunkstar"
-IS_HOST_DEVICE_PC                      = not IS_HOST_DEVICE_ARM
 
 # Remote device connection
 if IS_HOST_DEVICE_ARM:

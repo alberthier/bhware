@@ -72,7 +72,10 @@ class RobotController(object):
                 port = "8000"
             else:
                 port = "8001"
-            self.process.start(brewery, ["--webserver-port", port])
+            args = ["--webserver-port", port]
+            if self.is_main:
+                args.append("--main")
+            self.process.start(brewery, args)
 
 
     def reset(self):

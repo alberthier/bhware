@@ -101,12 +101,12 @@ class GraphicsRobotObject(QObject):
         self.gift_arm = GraphicsRobotArmObject(0, 250, -250, self)
         self.arms.append(self.gift_arm)
 
-        tower = QGraphicsRectItem(0.0, -40.0, 80.0, 80.0)
+        tower = QGraphicsRectItem(-40.0, -40.0, 80.0, 80.0)
         tower.setPen(QPen(0))
         tower.setBrush(QColor("#838383"))
         self.item.addToGroup(tower)
 
-        self.team_indicator = QGraphicsEllipseItem(15.0, -25.0, 50.0, 50.0)
+        self.team_indicator = QGraphicsEllipseItem(-25.0, -25.0, 50.0, 50.0)
         self.team_indicator.setBrush(QColor(layer.color))
         self.team_indicator.setPen(QPen(0))
         self.item.addToGroup(self.team_indicator)
