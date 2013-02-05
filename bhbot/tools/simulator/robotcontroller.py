@@ -4,6 +4,7 @@ import os
 import random
 
 from PyQt4.QtCore import *
+from PyQt4.QtGui import *
 from PyQt4.QtNetwork import *
 
 import packets
@@ -16,22 +17,25 @@ import simulatorfieldview
 
 class RobotController(object):
 
-    def __init__(self, team, game_controller, main_window, output_view):
-        self.team = team
-        if team == TEAM_BLUE:
-            self.team_name = "Blue"
-            self.team_color = TEAM_COLOR_BLUE
-        else:
-            self.team_name = "Red"
-            self.team_color = TEAM_COLOR_RED
-        self.is_main = True
-        self.output_view = output_view
+    def __init__(self, game_controller, main_window, output_view, offset):
         self.game_controller = game_controller
+        self.output_view = output_view
+        self.offset = offset
 
+        self.team = None
+        self.team_name = "?"
+        self.team_color = "#555753"
+        self.is_main = None
+
+        self.layers = []
         self.robot_layer = simulatorfieldview.RobotLayer(main_window.field_view_controller, self)
+        self.layers.append(self.robot_layer)
         self.trajectory_layer = simulatorfieldview.RobotTrajectoryLayer(main_window.field_view_controller, self)
+        self.layers.append(self.trajectory_layer)
         self.grid_routing_layer = simulatorfieldview.GridRoutingLayer(main_window.field_view_controller, self)
+        self.layers.append(self.grid_routing_layer)
         self.graph_routing_layer = simulatorfieldview.GraphRoutingLayer(main_window.field_view_controller, self)
+        self.layers.append(self.graph_routing_layer)
 
         self.process = None
         self.socket = None
@@ -54,32 +58,44 @@ class RobotController(object):
         return self.ready
 
 
-    def setup(self):
+    def hide_all(self):
+        for layer in self.layers:
+            layer.hide()
+
+
+    def setup(self, team, is_main):
         if self.process == None:
             self.incoming_packet_buffer = ""
             self.incoming_packet = None
             self.resettle_count = 0
+            self.team = team
+            self.is_main = is_main
 
-            self.output_view.clear()
-            self.robot_layer.setup()
-            self.trajectory_layer.setup()
+            if team == TEAM_BLUE:
+                self.team_name = "blue"
+                self.team_color = TEAM_COLOR_BLUE
+            else:
+                self.team_name = "red"
+                self.team_color = TEAM_COLOR_RED
+            if is_main:
+                self.team_name = "Main " + self.team_name
+            else:
+                self.team_name = "Secondary " + self.team_name
+                self.team_color = QColor(self.team_color).lighter().name()
+
+            self.output_view.setup(team, is_main)
+            for layer in self.layers:
+                layer.show()
+                layer.setup()
 
             brewery = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))), "brewery", "brewery.py")
             self.process = QProcess()
             self.process.setReadChannelMode(QProcess.MergedChannels)
             self.process.readyRead.connect(self.read_output)
-            if self.team == TEAM_RED:
-                port = "8000"
-            else:
-                port = "8001"
-            args = ["--webserver-port", port]
+            args = ["--webserver-port", str(8080 + self.offset)]
             if self.is_main:
                 args.append("--main")
             self.process.start(brewery, args)
-
-
-    def reset(self):
-        self.robot_layer.reset()
 
 
     def shutdown(self):
@@ -125,7 +141,6 @@ class RobotController(object):
 
 
     def on_goto(self, packet):
-        self.stop_requested = False
         self.send_packet(packets.GotoStarted())
 
 
@@ -146,7 +161,6 @@ class RobotController(object):
 
 
     def on_stop(self, packet):
-        self.stop_requested = True
         self.stop()
 
 
@@ -203,10 +217,7 @@ class RobotController(object):
     def send_goto_finished(self, reason, current_point_index):
         self.goto_packet = None
         packet = packets.GotoFinished()
-        if self.stop_requested:
-            packet.reason = REASON_STOP_REQUESTED
-        else:
-            packet.reason = reason
+        packet.reason = reason
         packet.current_pose = self.robot_layer.get_pose()
         packet.current_point_index = current_point_index
         self.send_packet(packet)
@@ -220,8 +231,7 @@ class RobotController(object):
     def stop(self):
         if self.robot_layer.robot.move_animation.state() == QAbstractAnimation.Running:
             self.robot_layer.robot.move_animation.stop()
-        else:
-            self.send_goto_finished(REASON_STOP_REQUESTED, 0)
+
 
     def resume(self):
         if self.robot_layer.robot.move_animation.state() == QAbstractAnimation.Paused:

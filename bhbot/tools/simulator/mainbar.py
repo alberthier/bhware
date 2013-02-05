@@ -23,16 +23,15 @@ class MainBar(QWidget, MainBar_Ui):
         self.set_icon(self.reload, "refresh")
         self.set_icon(self.start_pause, "start")
         self.set_icon(self.stop, "stop")
-        self.set_color_icon(self.blue_robot, TEAM_COLOR_BLUE)
-        self.set_color_icon(self.red_robot, TEAM_COLOR_RED)
+        self.set_color_icon(self.main_blue_robot, TEAM_COLOR_BLUE)
+        self.set_color_icon(self.secondary_blue_robot, TEAM_COLOR_BLUE)
+        self.set_color_icon(self.main_red_robot, TEAM_COLOR_RED)
+        self.set_color_icon(self.secondary_red_robot, TEAM_COLOR_RED)
 
-        self.button_group = QButtonGroup(self)
-        self.button_group.setExclusive(True)
-        self.button_group.addButton(self.basic_dynamics)
-        self.button_group.addButton(self.advanced_dynamics)
-
-        self.blue_robot.toggled.connect(self.blue_toggled)
-        self.red_robot.toggled.connect(self.red_toggled)
+        self.main_blue_robot.toggled.connect(self.main_blue_toggled)
+        self.secondary_blue_robot.toggled.connect(self.secondary_blue_toggled)
+        self.main_red_robot.toggled.connect(self.main_red_toggled)
+        self.secondary_red_robot.toggled.connect(self.secondary_red_toggled)
 
 
     def set_icon(self, button, icon_name):
@@ -46,11 +45,45 @@ class MainBar(QWidget, MainBar_Ui):
         button.setIcon(QIcon(pixmap))
 
 
-    def blue_toggled(self):
-        if not self.blue_robot.isChecked() and not self.red_robot.isChecked():
-            self.red_robot.toggle()
+    def main_blue_toggled(self):
+        self.button_toggled(self.main_blue_robot)
 
 
-    def red_toggled(self):
-        if not self.blue_robot.isChecked() and not self.red_robot.isChecked():
-            self.blue_robot.toggle()
+    def secondary_blue_toggled(self):
+        self.button_toggled(self.secondary_blue_robot)
+
+
+    def main_red_toggled(self):
+        self.button_toggled(self.main_red_robot)
+
+
+    def secondary_red_toggled(self):
+        self.button_toggled(self.secondary_red_robot)
+
+
+    def button_toggled(self, toggled):
+        buttons = [ self.main_blue_robot, self.secondary_blue_robot, self.main_red_robot, self.secondary_red_robot ]
+        cpt = 0
+        for button in buttons:
+            if button.isChecked():
+                cpt += 1
+        if cpt == 0:
+            button.setChecked(True)
+        if cpt > 2:
+            for button in reversed(buttons):
+                if button.isChecked():
+                    button.setChecked(False)
+                    break
+
+
+    def get_expected_robots(self):
+        expected = []
+        buttons = [ self.main_blue_robot, self.secondary_blue_robot, self.main_red_robot, self.secondary_red_robot ]
+        teams = [ TEAM_BLUE, TEAM_BLUE, TEAM_RED, TEAM_RED ]
+        robot_type = [ True, False, True, False ]
+
+        for button, team, is_main in zip(buttons, teams, robot_type):
+            if button.isChecked():
+                expected.append((team, is_main))
+
+        return expected

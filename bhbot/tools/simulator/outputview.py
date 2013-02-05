@@ -19,7 +19,7 @@ from definitions import *
 
 class OutputView(QWidget, OutputView_Ui):
 
-    def __init__(self, parent, team):
+    def __init__(self, parent):
         QWidget.__init__(self, parent)
         OutputView_Ui.__init__(self)
         self.setupUi(self)
@@ -29,15 +29,9 @@ class OutputView(QWidget, OutputView_Ui):
         self.log_view.setCurrentFont(font)
 
         self.default_color = self.log_view.textColor()
-        if team == TEAM_RED:
-            self.color = QColor(TEAM_COLOR_RED)
-        elif team == TEAM_BLUE:
-            self.color = QColor(TEAM_COLOR_BLUE)
-        palette = self.palette()
-        palette.setColor(QPalette.Window, QColor(self.color))
-        self.setPalette(palette)
+        self.setup(None, None)
 
-        self.led_off_color = QApplication.instance().palette().color(QPalette.Window)
+        self.led_off_color = QPalette().color(QPalette.Window)
         self.led_orange_color = QColor("#f57900")
         self.led_green_color = QColor("#73d216")
 
@@ -53,6 +47,21 @@ class OutputView(QWidget, OutputView_Ui):
 
     def clear(self):
         self.log_view.clear()
+        self.setup(None, None)
+
+
+    def setup(self, team, is_main):
+        palette = QPalette()
+        if team is not None:
+            if team == TEAM_RED:
+                self.color = QColor(TEAM_COLOR_RED)
+            elif team == TEAM_BLUE:
+                self.color = QColor(TEAM_COLOR_BLUE)
+            color = self.color
+            if not is_main:
+                color = color.lighter()
+            palette.setColor(QPalette.Window, QColor(color))
+        self.setPalette(palette)
 
 
     def handle_led(self, led_data):

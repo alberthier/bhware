@@ -56,12 +56,8 @@ def create_main_robot_base_item(pen, brush, gyration_pen):
     base.setBrush(brush)
     robot.addToGroup(base)
 
-    line = QGraphicsLineItem(0.0, -126.0, 126.0, 0.0)
-    line.setPen(pen)
-    robot.addToGroup(line)
-    line = QGraphicsLineItem(126.0, 0.0, 0.0, 126.0)
-    line.setPen(pen)
-    robot.addToGroup(line)
+    robot.addToGroup(create_arrow(pen, -100.0, -100.0, 40.0, 200.0))
+    robot.addToGroup(create_arrow(pen, 60.0, -100.0, 40.0, 200.0))
 
     gyration_radius = MAIN_ROBOT_GYRATION_RADIUS * 1000.0
     gyration = QGraphicsEllipseItem(-gyration_radius, -gyration_radius, 2.0 * gyration_radius, 2.0 * gyration_radius)
@@ -84,12 +80,7 @@ def create_secondary_robot_base_item(pen, brush, gyration_pen):
     base.setBrush(brush)
     robot.addToGroup(base)
 
-    line = QGraphicsLineItem(0.0, -63.5, 119.0, 0.0)
-    line.setPen(pen)
-    robot.addToGroup(line)
-    line = QGraphicsLineItem(119.0, 0.0, 0.0, 63.5)
-    line.setPen(pen)
-    robot.addToGroup(line)
+    robot.addToGroup(create_arrow(pen, -20.0, -45.0, 40.0, 160.0))
 
     gyration_radius = SECONDARY_ROBOT_GYRATION_RADIUS * 1000.0
     gyration = QGraphicsEllipseItem(-gyration_radius, -gyration_radius, 2.0 * gyration_radius, 2.0 * gyration_radius)
@@ -101,3 +92,18 @@ def create_secondary_robot_base_item(pen, brush, gyration_pen):
 
     return (all_group, robot, gyration)
 
+
+
+
+def create_arrow(pen, x, y, width, length):
+    path = QPainterPath()
+    path.moveTo(y, x)
+    path.lineTo(y + length - width * 2.0, x)
+    path.lineTo(y + length, x + width / 2.0)
+    path.lineTo(y + length - width * 2.0, x + width)
+    path.lineTo(y, x + width)
+    path.closeSubpath()
+
+    item = QGraphicsPathItem(path)
+    item.setPen(pen)
+    return item

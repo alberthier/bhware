@@ -71,23 +71,23 @@
        <property name="orientation">
         <enum>Qt::Horizontal</enum>
        </property>
-       <widget class="QWidget" name="blue_output_view_container" native="true">
+       <widget class="QWidget" name="robot_a_output_view_container" native="true">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
           <horstretch>0</horstretch>
           <verstretch>1</verstretch>
          </sizepolicy>
         </property>
-        <layout class="QVBoxLayout" name="blue_output_view_container_layout"/>
+        <layout class="QVBoxLayout" name="robot_a_output_view_container_layout"/>
        </widget>
-       <widget class="QWidget" name="red_output_view_container" native="true">
+       <widget class="QWidget" name="robot_b_output_view_container" native="true">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
           <horstretch>0</horstretch>
           <verstretch>1</verstretch>
          </sizepolicy>
         </property>
-        <layout class="QVBoxLayout" name="red_output_view_container_layout"/>
+        <layout class="QVBoxLayout" name="robot_b_output_view_container_layout"/>
        </widget>
       </widget>
      </widget>

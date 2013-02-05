@@ -43,7 +43,7 @@ class GraphicsRobotArmObject(QObject):
         self.current_packet = None
 
 
-    def reset(self):
+    def setup(self):
         self.set_position(self.size0)
 
 
@@ -84,12 +84,24 @@ class GraphicsRobotObject(QObject):
         self.move_animation.stateChanged.connect(self.animation_state_changed)
         self.layer = layer
 
-        self.item = QGraphicsItemGroup(layer)
+        self.item = None
+        self.robot_item = None
 
-        if layer.robot_controller.is_main:
-            (self.structure, self.robot_item, self.gyration_item) = helpers.create_main_robot_base_item(QColor("#838383"), QColor("#e9eaff"), QColor(layer.color).darker(150))
+        self.carried_elements = []
+        self.cpt = 0
+
+
+    def setup(self):
+        if self.item is not None:
+            self.layer.field_view_controller.field_scene.removeItem(self.item)
+            del self.item
+
+        self.item = QGraphicsItemGroup(self.layer)
+
+        if self.layer.robot_controller.is_main:
+            (self.structure, self.robot_item, self.gyration_item) = helpers.create_main_robot_base_item(QColor("#838383"), QColor("#e9eaff"), QColor(self.layer.color).darker(150))
         else:
-            (self.structure, self.robot_item, self.gyration_item) = helpers.create_secondary_robot_base_item(QColor("#838383"), QColor("#e9eaff"), QColor(layer.color).darker(150))
+            (self.structure, self.robot_item, self.gyration_item) = helpers.create_secondary_robot_base_item(QColor("#838383"), QColor("#e9eaff"), QColor(self.layer.color).darker(150))
         self.item.addToGroup(self.structure)
 
         self.arms = []
@@ -110,32 +122,29 @@ class GraphicsRobotObject(QObject):
         self.item.addToGroup(tower)
 
         self.team_indicator = QGraphicsEllipseItem(-25.0, -25.0, 50.0, 50.0)
-        self.team_indicator.setBrush(QColor(layer.color))
+        self.team_indicator.setBrush(QColor(self.layer.color))
         self.team_indicator.setPen(QPen(0))
         self.item.addToGroup(self.team_indicator)
 
         detection_radius = TURRET_SHORT_DISTANCE_DETECTION_RANGE * 1000.0
         self.short_detection_circle = QGraphicsEllipseItem(-detection_radius, -detection_radius, 2.0 * detection_radius, 2.0 * detection_radius)
-        self.short_detection_circle.setPen(QPen(QColor(layer.color), 2, Qt.DashLine))
+        self.short_detection_circle.setPen(QPen(QColor(self.layer.color), 2, Qt.DashLine))
         self.item.addToGroup(self.short_detection_circle)
 
         detection_radius = TURRET_LONG_DISTANCE_DETECTION_RANGE * 1000.0
         self.long_detection_circle = QGraphicsEllipseItem(-detection_radius, -detection_radius, 2.0 * detection_radius, 2.0 * detection_radius)
-        self.long_detection_circle.setPen(QPen(QColor(layer.color), 2, Qt.DashLine))
+        self.long_detection_circle.setPen(QPen(QColor(self.layer.color), 2, Qt.DashLine))
         self.item.addToGroup(self.long_detection_circle)
 
-        self.carried_elements = []
-
-
-    def reset(self):
         for elt in self.carried_elements:
             self.item.removeFromGroup(elt)
         self.carried_treasure = []
         self.item.setVisible(False)
         self.item.setPos(0.0, 0.0)
         self.set_rotation(0.0)
+
         for arm in self.arms:
-            arm.reset()
+            arm.setup()
 
 
     def get_position(self):
@@ -207,7 +216,7 @@ class GraphicsRobotObject(QObject):
                 if current > angle_deg:
                     offset += 360.0
                 else:
-                    offset -= 360.0
+                    offsemovement_finishedt -= 360.0
             current = angle_deg
             angle_deg += offset
             rotate_animation.setKeyValueAt(time / end_time, angle_deg)
@@ -325,17 +334,15 @@ class RobotLayer(fieldview.Layer):
                                  robot_controller.team_color)
         self.robot_controller = robot_controller
         self.robot = GraphicsRobotObject(self)
-        self.robot.item.setVisible(False)
         self.robot.movement_finished.connect(self.movement_finished)
         self.dynamics = None
 
 
-    def reset(self):
-        self.robot.reset()
-
-
     def setup(self):
+        self.update_title(self.robot_controller.team_name + " robot", self.robot_controller.team_color)
+        self.robot.setup()
         self.robot.item.setVisible(True)
+        self.use_advanced_dynamics(False)
 
 
     def use_advanced_dynamics(self, advanced):
@@ -423,12 +430,14 @@ class RobotTrajectoryLayer(fieldview.Layer):
                                  field_view_controller,
                                  robot_controller.team_name + " robot trajectory",
                                  robot_controller.team_color)
+        self.robot_controller = robot_controller
         self.item = QGraphicsPathItem()
-        self.item.setPen(QPen(QColor(self.color), 8.0))
         self.addToGroup(self.item)
 
 
     def setup(self):
+        self.update_title(self.robot_controller.team_name + " robot trajectory", self.robot_controller.team_color)
+        self.item.setPen(QPen(QColor(self.color), 8.0))
         self.item.setPath(QPainterPath())
 
 
@@ -459,12 +468,19 @@ class GridRoutingLayer(fieldview.Layer):
                                  field_view_controller,
                                  robot_controller.team_name + " robot grid routing",
                                  robot_controller.team_color)
+        self.robot_controller = robot_controller
         self.path_blocks = []
         self.zones = []
         #self.setVisible(False)
 
         self.main_opponent_zone = self.create_opponent_zone(MAIN_OPPONENT_AVOIDANCE_RANGE * 2.0 * 1000.0)
         self.secondary_opponent_zone = self.create_opponent_zone(SECONDARY_OPPONENT_AVOIDANCE_RANGE * 2.0 * 1000.0)
+
+
+    def setup(self):
+        self.update_title(self.robot_controller.team_name + " robot grid routing", self.robot_controller.team_color)
+        self.main_opponent_zone.hide()
+        self.secondary_opponent_zone.hide()
 
 
     def create_opponent_zone(self, distance):
@@ -562,11 +578,6 @@ class GridRoutingLayer(fieldview.Layer):
                 self.secondary_opponent_zone.hide()
 
 
-    def reset(self):
-        self.main_opponent_zone.hide()
-        self.secondary_opponent_zone.hide()
-
-
 
 
 class GraphRoutingLayer(fieldview.Layer):
@@ -576,8 +587,13 @@ class GraphRoutingLayer(fieldview.Layer):
                                  field_view_controller,
                                  robot_controller.team_name + " robot graph routing",
                                  robot_controller.team_color)
+        self.robot_controller = robot_controller
         self.edges = []
         self.robot = robot_controller.robot_layer.robot
+
+
+    def setup(self):
+        self.update_title(self.robot_controller.team_name + " robot graph routing", self.robot_controller.team_color)
 
 
     def on_simulator_clear_graph_map_edges(self, packet):
@@ -720,15 +736,15 @@ class GameElementsLayer(fieldview.Layer):
 
 
     def scene_changed(self):
-        blue_robot = self.field_view_controller.ui.game_controller.blue_robot.robot_layer.robot
-        red_robot = self.field_view_controller.ui.game_controller.red_robot.robot_layer.robot
+        robot_a = self.field_view_controller.ui.game_controller.robot_a.robot_layer.robot
+        robot_b = self.field_view_controller.ui.game_controller.robot_b.robot_layer.robot
         for elt in self.glasses:
-            if not elt in blue_robot.carried_elements and not elt in red_robot.carried_elements:
+            if not elt in robot_a.carried_elements and not elt in robot_b.carried_elements:
                 robot = None
-                if elt.collidesWithItem(blue_robot.robot_item):
-                    robot = blue_robot
-                elif elt.collidesWithItem(red_robot.robot_item):
-                    robot = red_robot
+                if elt.collidesWithItem(robot_a.robot_item):
+                    robot = robot_a
+                elif elt.collidesWithItem(robot_b.robot_item):
+                    robot = robot_b
                 if robot != None:
                     angle = (robot.item.rotation() / 180.0 * math.pi) % (math.pi * 2.0)
 
@@ -756,13 +772,13 @@ class GameElementsLayer(fieldview.Layer):
                     robot.check_glass_collision(elt)
 
         if self.main_bar.opponent_detection.isChecked():
-            distance = tools.distance(blue_robot.item.x(), blue_robot.item.y(), red_robot.item.x(), red_robot.item.y())
+            distance = tools.distance(robot_a.item.x(), robot_a.item.y(), robot_b.item.x(), robot_b.item.y())
             if distance < TURRET_SHORT_DISTANCE_DETECTION_RANGE * 1000.0:
-                self.send_turret_detect(blue_robot, red_robot, 0)
-                self.send_turret_detect(red_robot, blue_robot, 0)
+                self.send_turret_detect(robot_a, robot_b, 0)
+                self.send_turret_detect(robot_b, robot_a, 0)
             elif distance < TURRET_LONG_DISTANCE_DETECTION_RANGE * 1000.0:
-                self.send_turret_detect(blue_robot, red_robot, 1)
-                self.send_turret_detect(red_robot, blue_robot, 1)
+                self.send_turret_detect(robot_a, robot_b, 1)
+                self.send_turret_detect(robot_b, robot_a, 1)
 
 
     def send_turret_detect(self, detecting_robot, detected_robot, distance):
@@ -786,7 +802,6 @@ class SimulatorFieldViewController(fieldview.FieldViewController):
 
     def __init__(self, ui):
         fieldview.FieldViewController.__init__(self, ui)
-        self.ui.main_bar.stop.clicked.connect(self.user_stop)
 
         fieldview.GhostRobotLayer(self)
 
@@ -796,7 +811,3 @@ class SimulatorFieldViewController(fieldview.FieldViewController):
     def setup(self):
         for layer in self.layers:
             layer.setup()
-
-
-    def user_stop(self):
-        self.setup()

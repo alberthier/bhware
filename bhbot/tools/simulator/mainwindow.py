@@ -28,10 +28,10 @@ class MainWindow(QMainWindow, MainWindow_Ui):
 
         self.main_bar = MainBar(self)
         self.main_bar_container_layout.addWidget(self.main_bar)
-        self.blue_output_view = OutputView(self, TEAM_BLUE)
-        self.blue_output_view_container_layout.addWidget(self.blue_output_view)
-        self.red_output_view = OutputView(self, TEAM_RED)
-        self.red_output_view_container_layout.addWidget(self.red_output_view)
+        self.robot_a_output_view = OutputView(self)
+        self.robot_a_output_view_container_layout.addWidget(self.robot_a_output_view)
+        self.robot_b_output_view = OutputView(self)
+        self.robot_b_output_view_container_layout.addWidget(self.robot_b_output_view)
 
         self.field_view_controller = SimulatorFieldViewController(self)
         self.game_controller = GameController(self)

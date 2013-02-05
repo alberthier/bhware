@@ -99,10 +99,13 @@ class Layer(QGraphicsItemGroup):
 
     def __init__(self, field_view_controller, name = "Unnamed", color = "#000000", visible = True):
         QGraphicsItemGroup.__init__(self)
-
         self.field_view_controller = field_view_controller
-        self.name = name
-        self.color = color
+
+        self.model_item = QStandardItem()
+        self.model_item.setData(self, FieldViewController.LAYERS_MODEL_LAYER_ROLE)
+        field_view_controller.layers_model.appendRow([self.model_item])
+
+        self.update_title(name, color)
         self.setVisible(visible)
 
         self.setParentItem(field_view_controller.field_scene.root)
@@ -110,13 +113,6 @@ class Layer(QGraphicsItemGroup):
         if len(field_view_controller.layers) != 0:
             self.stackBefore(field_view_controller.layers[-1])
         field_view_controller.layers.append(self)
-
-        icon_size = QSize(16, 16)
-        pixmap = QPixmap(icon_size)
-        pixmap.fill(QColor(color))
-        item = QStandardItem(QIcon(pixmap), self.name)
-        item.setData(self, FieldViewController.LAYERS_MODEL_LAYER_ROLE)
-        field_view_controller.layers_model.appendRow([item])
 
         if self.isVisible():
             idx = field_view_controller.layers_model.index(len(field_view_controller.layers) - 1, 0)
@@ -128,6 +124,16 @@ class Layer(QGraphicsItemGroup):
         field_view_controller.field_scene.mouse_move_event_listeners.append(self)
         field_view_controller.field_scene.wheel_event_listeners.append(self)
         field_view_controller.field_scene.mouse_press_event_listeners.append(self)
+
+
+    def update_title(self, name, color):
+        self.name = name
+        self.color = color
+        icon_size = QSize(16, 16)
+        pixmap = QPixmap(icon_size)
+        pixmap.fill(QColor(color))
+        self.model_item.setText(name)
+        self.model_item.setIcon(QIcon(pixmap))
 
 
     def setup(self):
