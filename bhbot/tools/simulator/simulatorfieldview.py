@@ -324,6 +324,10 @@ class GraphicsRobotObject(QObject):
                     self.layer.robot_controller.send_packet(packets.GlassPresent(side))
 
 
+    def hits_gift(self, gift):
+        return self.item is not None and gift.collidesWithItem(self.gift_arm.item)
+
+
 
 
 class RobotLayer(fieldview.Layer):
@@ -773,9 +777,7 @@ class GameElementsLayer(fieldview.Layer):
                     elt.setPos(elt.pos().x() + dx, elt.pos().y() + dy)
                     robot.check_glass_collision(elt)
         for gift in self.gifts:
-            hide = robot_a.item is not None and gift.collidesWithItem(robot_a.gift_arm.item) or \
-                   robot_b.item is not None and gift.collidesWithItem(robot_b.gift_arm.item)
-            if hide:
+            if robot_a.hits_gift(gift) or robot_b.hits_gift(gift):
                 gift.hide()
 
         if self.main_bar.opponent_detection.isChecked():
