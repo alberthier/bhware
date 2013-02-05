@@ -25,10 +25,11 @@ import dynamics
 
 class GraphicsRobotArmObject(QObject):
 
-    def __init__(self, size0, size1, size2, robot_object):
+    def __init__(self, x, size0, size1, size2, robot_object):
         QObject.__init__(self)
         self.robot_object = robot_object
 
+        self.x = x
         self.size0 = size0
         self.size1 = size1
         self.size2 = size2
@@ -52,7 +53,7 @@ class GraphicsRobotArmObject(QObject):
 
 
     def set_position(self, p):
-        self.item.setLine(0.0, 0.0, 0.0, p)
+        self.item.setLine(self.x, 0.0, self.x, p)
 
 
     #declare 'arm_position' to Qt's property system
@@ -98,23 +99,25 @@ class GraphicsRobotObject(QObject):
 
         self.item = QGraphicsItemGroup(self.layer)
 
+        arm_idle = 110 if self.layer.robot_controller.is_main else 0
+
+        self.arms = []
+        self.left_upper_arm = GraphicsRobotArmObject(-57, -arm_idle, -250, -334, self)
+        self.arms.append(self.left_upper_arm)
+        self.left_lower_arm = GraphicsRobotArmObject(-67, -arm_idle, -180, -224, self)
+        self.arms.append(self.left_lower_arm)
+        self.right_upper_arm = GraphicsRobotArmObject(-57, arm_idle, 250, 334, self)
+        self.arms.append(self.right_upper_arm)
+        self.right_lower_arm = GraphicsRobotArmObject(-67, arm_idle, 180, 224, self)
+        self.arms.append(self.right_lower_arm)
+        self.gift_arm = GraphicsRobotArmObject(-54, 0, -190, 190, self)
+        self.arms.append(self.gift_arm)
+
         if self.layer.robot_controller.is_main:
             (self.structure, self.robot_item, self.gyration_item) = helpers.create_main_robot_base_item(QColor("#838383"), QColor("#e9eaff"), QColor(self.layer.color).darker(150))
         else:
             (self.structure, self.robot_item, self.gyration_item) = helpers.create_secondary_robot_base_item(QColor("#838383"), QColor("#e9eaff"), QColor(self.layer.color).darker(150))
         self.item.addToGroup(self.structure)
-
-        self.arms = []
-        self.left_upper_arm = GraphicsRobotArmObject(0, -400, -450, self)
-        self.arms.append(self.left_upper_arm)
-        self.left_lower_arm = GraphicsRobotArmObject(0, -300, -400, self)
-        self.arms.append(self.left_lower_arm)
-        self.right_upper_arm = GraphicsRobotArmObject(0, 400, 450, self)
-        self.arms.append(self.right_upper_arm)
-        self.right_lower_arm = GraphicsRobotArmObject(0, 300, 400, self)
-        self.arms.append(self.right_lower_arm)
-        self.gift_arm = GraphicsRobotArmObject(0, 250, -250, self)
-        self.arms.append(self.gift_arm)
 
         tower = QGraphicsRectItem(-40.0, -40.0, 80.0, 80.0)
         tower.setPen(QPen(0))
@@ -318,7 +321,6 @@ class GraphicsRobotObject(QObject):
                 x = self.robot_item.scenePos().x() + math.cos(a) * 150
                 y = self.robot_item.scenePos().y() + math.sin(a) * 150
                 if glass.contains(QPointF(x, y)):
-                    print("glass {}".format(side))
                     self.layer.robot_controller.send_packet(packets.GlassPresent(side))
 
 

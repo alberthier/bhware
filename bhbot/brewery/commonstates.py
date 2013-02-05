@@ -237,13 +237,48 @@ class Antiblocking(statemachine.State):
         else :
             self.packet = packets.DisableAntiBlocking()
 
+
     def on_enter(self):
         self.send_packet(self.packet)
+
 
     def on_enable_anti_blocking(self, packet):
         self.exit_substate()
 
+
     def on_disable_anti_blocking(self, packet):
+        self.exit_substate()
+
+
+
+
+class CandleKicker(statemachine.State):
+
+    def __init__(self, side, which, position):
+        self.packet = packets.CandleKicker(side = side, which = which, position = position)
+
+
+    def on_enter(self):
+        self.send_packet(self.packet)
+
+
+    def on_candle_kicker(self, packet):
+        self.exit_substate()
+
+
+
+
+class GiftOpener(statemachine.State):
+
+    def __init__(self, position):
+        self.packet = packets.GiftOpener(position = position)
+
+
+    def on_enter(self):
+        self.send_packet(self.packet)
+
+
+    def on_gift_opener(self, packet):
         self.exit_substate()
 
 

@@ -42,6 +42,13 @@ class Test1(statemachine.State):
 
     def on_enter(self):
         walk = commonstates.TrajectoryWalk()
+        #walk.wait_for(commonstates.CandleKicker(SIDE_RIGHT, CANDLE_KICKER_LOWER, CANDLE_KICKER_POSITION_UP))
+        #walk.wait_for(commonstates.CandleKicker(SIDE_RIGHT, CANDLE_KICKER_LOWER, CANDLE_KICKER_POSITION_KICK))
+        #walk.wait_for(commonstates.CandleKicker(SIDE_RIGHT, CANDLE_KICKER_LOWER, CANDLE_KICKER_POSITION_IDLE))
+        walk.wait_for(commonstates.GiftOpener(GIFT_OPENER_POSITION_LEFT))
+        walk.wait_for(commonstates.GiftOpener(GIFT_OPENER_POSITION_IDLE))
+        walk.wait_for(commonstates.GiftOpener(GIFT_OPENER_POSITION_RIGHT))
+        walk.wait_for(commonstates.GiftOpener(GIFT_OPENER_POSITION_IDLE))
         walk.look_at(1.8, 1.8)
         walk.move_to(1.8, 1.8)
         self.switch_to_substate(walk)
