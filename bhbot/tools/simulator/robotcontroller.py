@@ -172,6 +172,16 @@ class RobotController(object):
             self.game_controller.try_start()
 
 
+    def on_nipper(self, packet):
+        if packet.move == MOVE_CLOSE:
+            self.robot_layer.robot.grab_glass(packet.side)
+
+
+    def on_holder(self, packet):
+        if packet.move == MOVE_CLOSE:
+            self.robot_layer.robot.grab_glass(packet.side)
+
+
     def on_simulator_data(self, packet):
         self.output_view.handle_led(packet.leds)
 

@@ -162,7 +162,7 @@ class GraphicsRobotObject(QObject):
 
         for elt in self.carried_elements:
             self.item.removeFromGroup(elt)
-        self.carried_treasure = []
+        self.carried_elements = []
         self.item.setVisible(False)
         self.item.setPos(0.0, 0.0)
         self.set_rotation(0.0)
@@ -240,7 +240,7 @@ class GraphicsRobotObject(QObject):
                 if current > angle_deg:
                     offset += 360.0
                 else:
-                    offsemovement_finishedt -= 360.0
+                    offset -= 360.0
             current = angle_deg
             angle_deg += offset
             rotate_animation.setKeyValueAt(time / end_time, angle_deg)
@@ -354,11 +354,22 @@ class GraphicsRobotObject(QObject):
 
 
     def hits_glass(self, glass):
-        for detector in self.glass_detectors:
-            if detector.collidesWithItem(glass):
-                self.layer.robot_controller.send_packet(packets.GlassPresent(side = detector.side))
-                break
+        if glass not in self.carried_elements:
+            for detector in self.glass_detectors:
+                if detector.collidesWithItem(glass):
+                    self.layer.robot_controller.send_packet(packets.GlassPresent(side = detector.side))
+                    break
 
+
+    def grab_glass(self, side):
+        game_elements_layer = self.layer.field_view_controller.game_elements_layer
+        for glass in game_elements_layer.glasses:
+            if glass not in self.carried_elements:
+                for detector in self.glass_detectors:
+                    if detector.collidesWithItem(glass):
+                        self.item.addToGroup(glass)
+                        self.carried_elements.append(glass)
+                        break
 
 
 
