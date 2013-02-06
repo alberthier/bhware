@@ -76,6 +76,15 @@ class GraphicsRobotArmObject(QObject):
 
 
 
+class GlassDetector(QGraphicsLineItem):
+
+    def __init__(self, x, y, side):
+        QGraphicsLineItem.__init__(self, x, y, x, y + 100)
+        self.side = side
+        self.setPen(QPen(QBrush(), 1.0, Qt.NoPen))
+
+
+
 class GraphicsRobotObject(QObject):
 
     movement_finished = pyqtSignal(int)
@@ -90,6 +99,7 @@ class GraphicsRobotObject(QObject):
         self.item = None
         self.robot_item = None
 
+        self.glass_detectors = []
         self.carried_elements = []
         self.cpt = 0
 
@@ -98,6 +108,7 @@ class GraphicsRobotObject(QObject):
         if self.item is not None:
             self.layer.field_view_controller.field_scene.removeItem(self.item)
             del self.item
+            self.glass_detectors = []
 
         self.item = QGraphicsItemGroup(self.layer)
 
@@ -117,8 +128,16 @@ class GraphicsRobotObject(QObject):
 
         if self.layer.robot_controller.is_main:
             (self.structure, self.robot_item, self.gyration_item) = helpers.create_main_robot_base_item(QColor("#838383"), QColor("#e9eaff"), QColor(self.layer.color).darker(150))
+            lgd = GlassDetector(140, -110, SIDE_LEFT)
+            rgd = GlassDetector(140, 10, SIDE_RIGHT)
+            self.glass_detectors = [lgd, rgd]
+            self.item.addToGroup(lgd)
+            self.item.addToGroup(rgd)
         else:
             (self.structure, self.robot_item, self.gyration_item) = helpers.create_secondary_robot_base_item(QColor("#838383"), QColor("#e9eaff"), QColor(self.layer.color).darker(150))
+            gd = GlassDetector(130, -50, SIDE_LEFT)
+            self.glass_detectors = [gd]
+            self.item.addToGroup(gd)
         self.item.addToGroup(self.structure)
 
         tower = QGraphicsRectItem(-40.0, -40.0, 80.0, 80.0)
@@ -316,16 +335,6 @@ class GraphicsRobotObject(QObject):
         self.gift_arm.process(packet)
 
 
-    def check_glass_collision(self, glass):
-        if self.layer.robot_controller.is_main:
-            for angle, side in zip([10, -10], [SIDE_LEFT, SIDE_RIGHT]):
-                a = math.radians(self.robot_item.rotation() + angle)
-                x = self.robot_item.scenePos().x() + math.cos(a) * 150
-                y = self.robot_item.scenePos().y() + math.sin(a) * 150
-                if glass.contains(QPointF(x, y)):
-                    self.layer.robot_controller.send_packet(packets.GlassPresent(side))
-
-
     def hits_gift(self, gift):
         return self.item is not None and gift.collidesWithItem(self.gift_arm.item)
 
@@ -342,6 +351,14 @@ class GraphicsRobotObject(QObject):
             return self.left_lower_arm.is_down and self.left_lower_arm.item.collidesWithItem(candle) or \
                    self.right_lower_arm.is_down and self.right_lower_arm.item.collidesWithItem(candle)
         return False
+
+
+    def hits_glass(self, glass):
+        for detector in self.glass_detectors:
+            if detector.collidesWithItem(glass):
+                self.layer.robot_controller.send_packet(packets.GlassPresent(side = detector.side))
+                break
+
 
 
 
@@ -791,7 +808,9 @@ class GameElementsLayer(fieldview.Layer):
                     dx = sign * math.cos(angle) * dist
                     dy = sign * math.sin(angle) * dist
                     elt.setPos(elt.pos().x() + dx, elt.pos().y() + dy)
-                    robot.check_glass_collision(elt)
+        for glass in self.glasses:
+            robot_a.hits_glass(glass)
+            robot_b.hits_glass(glass)
         for gift in self.gifts:
             if robot_a.hits_gift(gift) or robot_b.hits_gift(gift):
                 gift.hide()
