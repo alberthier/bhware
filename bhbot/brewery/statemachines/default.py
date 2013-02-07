@@ -41,17 +41,32 @@ class WaitStart(statemachine.State):
 class Test1(statemachine.State):
 
     def on_enter(self):
-        walk = commonstates.TrajectoryWalk()
-        #walk.wait_for(commonstates.CandleKicker(SIDE_RIGHT, CANDLE_KICKER_LOWER, CANDLE_KICKER_POSITION_UP))
-        #walk.wait_for(commonstates.CandleKicker(SIDE_RIGHT, CANDLE_KICKER_LOWER, CANDLE_KICKER_POSITION_KICK))
-        #walk.wait_for(commonstates.CandleKicker(SIDE_RIGHT, CANDLE_KICKER_LOWER, CANDLE_KICKER_POSITION_IDLE))
-        walk.wait_for(commonstates.GiftOpener(GIFT_OPENER_POSITION_LEFT))
-        walk.wait_for(commonstates.GiftOpener(GIFT_OPENER_POSITION_IDLE))
-        walk.wait_for(commonstates.GiftOpener(GIFT_OPENER_POSITION_RIGHT))
-        walk.wait_for(commonstates.GiftOpener(GIFT_OPENER_POSITION_IDLE))
-        walk.look_at(1.8, 1.8)
-        walk.move_to(1.8, 1.8)
-        self.switch_to_substate(walk)
+        self.walk = commonstates.TrajectoryWalk()
+        #self.walk.wait_for(commonstates.CandleKicker(SIDE_RIGHT, CANDLE_KICKER_LOWER, CANDLE_KICKER_POSITION_UP))
+        #self.walk.wait_for(commonstates.CandleKicker(SIDE_RIGHT, CANDLE_KICKER_LOWER, CANDLE_KICKER_POSITION_KICK))
+        #self.walk.wait_for(commonstates.CandleKicker(SIDE_RIGHT, CANDLE_KICKER_LOWER, CANDLE_KICKER_POSITION_IDLE))
+        #self.walk.wait_for(commonstates.GiftOpener(GIFT_OPENER_POSITION_LEFT))
+        #self.walk.wait_for(commonstates.GiftOpener(GIFT_OPENER_POSITION_IDLE))
+        #self.walk.wait_for(commonstates.GiftOpener(GIFT_OPENER_POSITION_RIGHT))
+        self.walk.look_at(1.5, 1.6)
+        self.walk.move_to(1.5, 1.6)
+        self.walk.on_glass_present = self.on_glass_present
+        self.switch_to_substate(self.walk)
+        self.first = True
+
+
+    def on_glass_present(self, packet):
+        self.send_packet(packets.Stop())
+
+
+    def on_exit_substate(self, substate):
+        if self.first:
+            self.first = False
+            self.send_packet(packets.Nipper(side=SIDE_LEFT, move=MOVE_CLOSE))
+            self.walk = commonstates.TrajectoryWalk()
+            self.walk.look_at(1.0, 1.0)
+            self.walk.move_to(1.0, 1.0)
+            self.switch_to_substate(self.walk)
 
 
 

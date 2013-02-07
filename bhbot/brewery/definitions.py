@@ -36,7 +36,7 @@ SECONDARY_ROBOT_GYRATION_RADIUS        = 0.161
 MAIN_BLUE_START_Y                      = 0.126
 MAIN_BLUE_START_X                      = 1.0
 MAIN_BLUE_START_ANGLE                  = math.pi / 2.0
-MAIN_RED_START_X                       = 1.0
+MAIN_RED_START_X                       = MAIN_BLUE_START_X
 MAIN_RED_START_Y                       = FIELD_Y_SIZE - MAIN_BLUE_START_Y
 MAIN_RED_START_ANGLE                   = -math.pi / 2.0
 
@@ -44,7 +44,7 @@ MAIN_RED_START_ANGLE                   = -math.pi / 2.0
 SECONDARY_BLUE_START_Y                 = 0.053
 SECONDARY_BLUE_START_X                 = 1.5
 SECONDARY_BLUE_START_ANGLE             = math.pi / 2.0
-SECONDARY_RED_START_X                  = 1.5
+SECONDARY_RED_START_X                  = SECONDARY_BLUE_START_X
 SECONDARY_RED_START_Y                  = FIELD_Y_SIZE - SECONDARY_BLUE_START_Y
 SECONDARY_RED_START_ANGLE              = -math.pi / 2.0
 
