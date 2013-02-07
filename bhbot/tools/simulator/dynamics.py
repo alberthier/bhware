@@ -19,11 +19,10 @@ class BasicDynamics(QObject):
 
     simulation_finished = pyqtSignal(list)
 
-    def __init__(self):
+    def __init__(self, robot):
         QObject.__init__(self)
-        self.x = 0.0
-        self.y = 0.0
-        self.angle = 0.0
+        self.robot = robot
+        self.pose = position.Pose(0.0, 0.0, 0.0)
 
 
     def setup(self):
@@ -32,10 +31,10 @@ class BasicDynamics(QObject):
 
     def resettle(self, packet):
         if packet.axis == AXIS_X:
-            self.x = packet.position
+            self.pose.x = packet.position
         elif packet.axis == AXIS_Y:
-            self.y = packet.position
-        self.angle = packet.angle
+            self.pose.y = packet.position
+        self.pose.angle = packet.angle
 
 
     def goto(self, packet):
@@ -43,20 +42,19 @@ class BasicDynamics(QObject):
         linear_speed = 0.60 # m/s
         angular_speed = math.pi * 2.0 # rad/s
         segmentNb = 0
+        self.pose = self.robot.get_pose()
 
         if packet.movement == MOVEMENT_MOVE:
             time = 0.0
             for pose in packet.points:
                 if packet.direction == DIRECTION_FORWARD:
-                    pose.angle = tools.angle_between(self.x, self.y, pose.x, pose.y)
+                    pose.angle = tools.angle_between(self.pose.x, self.pose.y, pose.x, pose.y)
                 else:
-                    pose.angle = tools.angle_between(pose.x, pose.y, self.x, self.y)
-                d = tools.distance(self.x, self.y, pose.x, pose.y)
+                    pose.angle = tools.angle_between(pose.x, pose.y, self.pose.x, self.pose.y)
+                d = tools.distance(self.pose.x, self.pose.y, pose.x, pose.y)
                 time += d / linear_speed
                 traj.append((segmentNb, time, pose))
-                self.x = pose.x
-                self.y = pose.y
-                self.angle = pose.angle
+                self.pose = pose
                 segmentNb += 1
             if packet.angle is not None:
                 if packet.direction == DIRECTION_FORWARD:
@@ -64,18 +62,18 @@ class BasicDynamics(QObject):
                 else:
                     angle = packet.angle + math.pi
                 traj[-1][2].angle = angle
-                self.angle = angle
+                self.pose.angle = angle
         elif packet.movement == MOVEMENT_LINE:
             pose = packet.points[0]
-            d = tools.distance(self.x, self.y, pose.x, pose.y)
+            d = tools.distance(self.pose.x, self.pose.y, pose.x, pose.y)
             time = d / linear_speed
             traj.append((segmentNb, time, pose))
-            self.x = pose.x
-            self.y = pose.y
+            self.pose.x = pose.x
+            self.pose.y = pose.y
         else:
-            time = abs(self.angle - packet.angle) / angular_speed
-            traj.append((segmentNb, time, position.Pose(self.x, self.y, packet.angle)))
-            self.angle = packet.angle
+            time = abs(self.pose.angle - packet.angle) / angular_speed
+            traj.append((segmentNb, time, position.Pose(self.pose.x, self.pose.y, packet.angle)))
+            self.pose.angle = packet.angle
 
         self.simulation_finished.emit(traj)
 

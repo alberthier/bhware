@@ -106,6 +106,10 @@ class GraphicsRobotObject(QObject):
 
     def setup(self):
         if self.item is not None:
+            for elt in self.carried_elements:
+                self.item.removeFromGroup(elt)
+            self.carried_elements = []
+
             self.layer.field_view_controller.field_scene.removeItem(self.item)
             del self.item
             self.glass_detectors = []
@@ -160,9 +164,6 @@ class GraphicsRobotObject(QObject):
         self.long_detection_circle.setPen(QPen(QColor(self.layer.color), 2, Qt.DashLine))
         self.item.addToGroup(self.long_detection_circle)
 
-        for elt in self.carried_elements:
-            self.item.removeFromGroup(elt)
-        self.carried_elements = []
         self.item.setVisible(False)
         self.item.setPos(0.0, 0.0)
         self.set_rotation(0.0)
@@ -207,7 +208,6 @@ class GraphicsRobotObject(QObject):
 
     def animate(self, points):
         self.move_animation.clear()
-
         end_time = points[-1][1]
         if end_time == 0.0:
             self.movement_finished.emit(0)
@@ -399,7 +399,7 @@ class RobotLayer(fieldview.Layer):
         if advanced:
             self.dynamics = dynamics.PositionControlSimulatorDynamics()
         else:
-            self.dynamics = dynamics.BasicDynamics()
+            self.dynamics = dynamics.BasicDynamics(self.robot)
         self.dynamics.setup()
         self.dynamics.simulation_finished.connect(self.robot.animate)
         self.dynamics.simulation_finished.connect(self.robot_controller.trajectory_layer.set_points)

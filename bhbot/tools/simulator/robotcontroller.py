@@ -211,11 +211,12 @@ class RobotController(object):
 
 
     def send_keep_alive(self):
-        packet = packets.KeepAlive()
-        packet.current_pose = self.robot_layer.get_pose()
-        packet.match_started = self.game_controller.started
-        packet.match_time = self.game_controller.time
-        self.send_packet(packet)
+        if self.robot_layer.robot.item is not None:
+            packet = packets.KeepAlive()
+            packet.current_pose = self.robot_layer.get_pose()
+            packet.match_started = self.game_controller.started
+            packet.match_time = self.game_controller.time
+            self.send_packet(packet)
 
 
     def send_start_signal(self):
