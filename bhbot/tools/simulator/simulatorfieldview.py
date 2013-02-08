@@ -367,8 +367,10 @@ class GraphicsRobotObject(QObject):
             if glass not in self.carried_elements:
                 for detector in self.glass_detectors:
                     if detector.collidesWithItem(glass):
+                        glass.setParentItem(self.item)
                         self.item.addToGroup(glass)
                         self.carried_elements.append(glass)
+                        glass.setPos(detector.line().x1() - 38.5, detector.line().y1() + 50 - 38.5)
                         break
 
 
@@ -433,38 +435,39 @@ class RobotLayer(fieldview.Layer):
 
 
     def key_press_event(self, pos, event):
-        dx = pos.x() - self.robot.item.x()
-        dy = pos.y() - self.robot.item.y()
-        angle = (self.robot.item.rotation() / 180.0 * math.pi) - math.atan2(dy, dx)
-        angle %= 2.0 * math.pi
-        angle = int(angle / (2.0 * math.pi) * 18.0)
+        if self.robot.item:
+            dx = pos.x() - self.robot.item.x()
+            dy = pos.y() - self.robot.item.y()
+            angle = (self.robot.item.rotation() / 180.0 * math.pi) - math.atan2(dy, dx)
+            angle %= 2.0 * math.pi
+            angle = int(angle / (2.0 * math.pi) * 18.0)
 
-        packet = packets.TurretDetect()
-        packet.angle = angle
+            packet = packets.TurretDetect()
+            packet.angle = angle
 
-        key = event.text()
-        team = self.robot_controller.team
+            key = event.text()
+            team = self.robot_controller.team
 
-        if team == TEAM_BLUE and key == 'q' or team == TEAM_RED and key == 's':
-            # Main opponent - short distance
-            packet.distance = 0
-            packet.robot = OPPONENT_ROBOT_MAIN
-            self.robot_controller.send_packet(packet)
-        elif team == TEAM_BLUE and key == 'Q' or team == TEAM_RED and key == 'S':
-            # Main opponent - long distance
-            packet.distance = 1
-            packet.robot = OPPONENT_ROBOT_MAIN
-            self.robot_controller.send_packet(packet)
-        elif team == TEAM_BLUE and key == 'w' or team == TEAM_RED and key == 'x':
-            # Secondary opponent - short distance
-            packet.distance = 0
-            packet.robot = OPPONENT_ROBOT_SECONDARY
-            self.robot_controller.send_packet(packet)
-        elif team == TEAM_BLUE and key == 'W' or team == TEAM_RED and key == 'X':
-            # Secondary opponent - long distance
-            packet.distance = 1
-            packet.robot = OPPONENT_ROBOT_SECONDARY
-            self.robot_controller.send_packet(packet)
+            if team == TEAM_BLUE and key == 'q' or team == TEAM_RED and key == 's':
+                # Main opponent - short distance
+                packet.distance = 0
+                packet.robot = OPPONENT_ROBOT_MAIN
+                self.robot_controller.send_packet(packet)
+            elif team == TEAM_BLUE and key == 'Q' or team == TEAM_RED and key == 'S':
+                # Main opponent - long distance
+                packet.distance = 1
+                packet.robot = OPPONENT_ROBOT_MAIN
+                self.robot_controller.send_packet(packet)
+            elif team == TEAM_BLUE and key == 'w' or team == TEAM_RED and key == 'x':
+                # Secondary opponent - short distance
+                packet.distance = 0
+                packet.robot = OPPONENT_ROBOT_SECONDARY
+                self.robot_controller.send_packet(packet)
+            elif team == TEAM_BLUE and key == 'W' or team == TEAM_RED and key == 'X':
+                # Secondary opponent - long distance
+                packet.distance = 1
+                packet.robot = OPPONENT_ROBOT_SECONDARY
+                self.robot_controller.send_packet(packet)
 
 
     def terminate(self):
@@ -689,8 +692,9 @@ class GraphRoutingLayer(fieldview.Layer):
 
 class Glass(QGraphicsEllipseItem):
 
-    def __init__(self, x, y, parent):
-        QGraphicsEllipseItem.__init__(self, 0, 0, 75, 75, parent)
+    def __init__(self, x, y, game_elements_layer):
+        QGraphicsEllipseItem.__init__(self, 0, 0, 75, 75, game_elements_layer)
+        self.game_elements_layer = game_elements_layer
         self.x = x - 38.5
         self.y = y - 38.5
         self.setPen(QPen(QColor("#888a85"), 10))
@@ -698,6 +702,7 @@ class Glass(QGraphicsEllipseItem):
 
 
     def setup(self):
+        self.setParentItem(self.game_elements_layer)
         self.setPos(self.x, self.y)
 
 
