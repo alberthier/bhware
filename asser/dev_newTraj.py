@@ -142,7 +142,7 @@ def trajectoire_rotation(t, dcfg_traj, rotation_type, deriv) :
 def rotation_config(dcfg_traj, rotation_type) :
     t1 = dcfg_traj['t1']
     
-    if ((dcfg_traj['curve1'] == False) and (rotation_type == 'r1')) or ((dcfg_traj['curve2'] == False) and (rotation_type == 'r2')) :
+    if ((dcfg_traj['spline4rot'] == True) and (rotation_type == 'r1')) or ((dcfg_traj['curve2'] == False) and (rotation_type == 'r2')) :
         if (rotation_type == 'r1') :
             sp = 'sp3r_1'
             ax = dcfg_traj['ax_sp3r_1']
@@ -422,12 +422,15 @@ def sds_ab(dcfg_traj) :
     theta_seg = atan2(y2-y1, x2-x1)
     theta1_base = modulo_angle(theta1 - theta_seg)
     theta2_base = modulo_angle(modulo_angle(theta2 - pi) - theta_seg)
-    [x2_base, y2_base] = rotation_coord(-theta_seg, x2, y2)
+    [x2_base, y2_base] = rotation_coord(-theta_seg, x2-x1, y2-y1)
+    x2_base = x1 + x2_base
+    y2_base = y1 + y2_base
     [qx1_base, qy1_base] = rotation_coord(-theta_seg, qx1, qy1)
     [qx2_base, qy2_base] = rotation_coord(-theta_seg, qx2, qy2)
     
     bx1 = dcfg_traj['Rb_prec'] * cos(theta1_base)
     print("Rb_prec: {0}, bx1: {1}".format(dcfg_traj['Rb_prec'], bx1))
+    print("D0 : {0}".format(sqrt(pow(x2-x1,2) + pow(y2-y1,2))))
     
     [ax1, ay1, bx1, by1, ax2, ay2, bx2, by2, qx1, qy1, qx2, qy2, C] = sds_ab_base(x1, y1, theta1_base, x2_base, theta2_base, t1, n1, n2, qx1_base, qy1_base, qx2_base, qy2_base, bx1)
     
@@ -482,8 +485,9 @@ def sds_ab_base(x1, y1, theta1, x2, theta2, t1, n1, n2, qx1_0, qy1_0, qx2_0, qy2
     
     y2 = y1
     D = fabs(x2-x1)
+    print("D : {0}".format(D))
     Cmax = 0.06
-    Cmin = 0.02#0.03
+    Cmin = 0.03#0.03
     if 0.05*D > Cmax :
         C = Cmax
     else :
@@ -493,7 +497,7 @@ def sds_ab_base(x1, y1, theta1, x2, theta2, t1, n1, n2, qx1_0, qy1_0, qx2_0, qy2
     print("C: {0}".format(C))
     #~ C=0.04
         
-    CoefC = C / t1
+    CoefC = (C / t1)
     print("CoefC: {0}".format(CoefC))
     qx1 = qx1_0 * CoefC
     qy1 = qy1_0 * CoefC
@@ -547,8 +551,8 @@ def sds_ab_base(x1, y1, theta1, x2, theta2, t1, n1, n2, qx1_0, qy1_0, qx2_0, qy2
     A30 = -(A31*A28 + tan(theta2)*A24 + (Ty1 + Ty2)) / A32
     A50 = 1.0 + A31*A15
     A51 = -A42*A25 - t1*A23 + A41*A15 + t1
-    A52 = Tx1
-    A53 = -A42*A26 - t1*A24 - A41*A16 + t1 + T2x1 - T2x2 + x1 - x2
+    A52 = Tx1 - A31*A16
+    A53 = -A42*A26 - t1*A24 - A41*A16 + T2x1 - T2x2 + x1 - x2
     A54 = A31*A27 + tan(theta1)
     A55 = -A42*A29 - t1*tan(theta2)*A23 + A41*A27 + t1*tan(theta1)
     A56 = A31*A28 + Ty1
@@ -587,9 +591,32 @@ def sds_ab_base(x1, y1, theta1, x2, theta2, t1, n1, n2, qx1_0, qy1_0, qx2_0, qy2
     by1 = bx1 * tan(theta1)
     by2 = bx2 * tan(theta2)
         
-
-    #~ print("x_p1(t1)+x_p2(t1) : {0}".format( (A3*ax1 + (t1/2.0)*qx1 + bx1) + (A3*ax2 + (t1/2.0)*qx2 + bx2) ))
-    #~ print("y_p1(t1)+y_p2(t1) : {0}".format( (A3*ay1 + (t1/2.0)*qy1 + by1) + (A3*ay2 + (t1/2.0)*qy2 + by2) ))
+    th = 1e-10
+    l_eq = []
+    # Eq.1
+    l_eq.append( (A41*ax1 + t1*bx1 + (pow(t1,2)/3.0)*qx1) + S1*(A41*ay1 + t1*by1 + (pow(t1,2)/3.0)*qy1) - C )
+    # Eq.2
+    l_eq.append( -(A42*ax2 + t1*bx2 + (pow(t1,2)/3.0)*qx2) + S2*(A42*ay2 + t1*by2 + (pow(t1,2)/3.0)*qy2) - C )
+    # Eq.3
+    l_eq.append( tan(theta1) - (by1/bx1) )
+    # Eq.4
+    l_eq.append( tan(theta2) - (by2/bx2) )
+    # Eq.5
+    l_eq.append( A32*ax2 + (t1/2.0)*qx2 + bx2 + (A31*ax1 + bx1 + (t1/2.0)*qx1) )
+    # Eq.6
+    l_eq.append( A32*ay2 + (t1/2.0)*qy2 + by2 + (A31*ay1 + by1 + (t1/2.0)*qy1) )
+    # Eq.7
+    l_eq.append( A31*ax1 + bx1 + (t1/2.0)*qx1 - k*(A42*ax2 + t1*bx2 + (pow(t1,2)/3.0)*qx2 + x2 - (A41*ax1 + t1*bx1 + (pow(t1,2)/3.0)*qx1 + x1)) )
+    # Eq.8
+    l_eq.append( A31*ay1 + by1 + (t1/2.0)*qy1 - k*(A42*ay2 + t1*by2 + (pow(t1,2)/3.0)*qy2 + y2 - (A41*ay1 + t1*by1 + (pow(t1,2)/3.0)*qy1 + y1)))
+    # Eq.9
+    l_eq.append( bx1 - (A31*ax1 + bx1 + (t1/2.0)*qx1)*cos(theta1) )
+    
+    for i_eq in range(len(l_eq)) :
+        if fabs(l_eq[i_eq]) < th :
+            print("eq.{0} : OK".format(i_eq+1))
+        else :
+            print("eq.{0} : {1}".format(i_eq+1, l_eq[i_eq]))
     
     return ([ax1, ay1, bx1, by1, ax2, ay2, bx2, by2, qx1, qy1, qx2, qy2, C])
 
@@ -641,7 +668,7 @@ def generation_curvatureForced(dcfg_traj) :
     if dcfg_traj['curvature_forced_1'] == True :
         flag_rotation_angle_value_1 = False
         print("curve1: {0}".format(dcfg_traj['curve1']))
-        if dcfg_traj['curve1'] == False :
+        if dcfg_traj['spline4rot'] == True :
             print("### initialSplineForCircle 1")
             dcfg_traj = initialSplineForCircle(dcfg_traj, 'sp3r_1')
         dcfg_traj['sp1_type'] = 'sp4_n'
@@ -650,14 +677,15 @@ def generation_curvatureForced(dcfg_traj) :
         
     if dcfg_traj['curvature_forced_2'] == True :
         flag_rotation_angle_value_2 = False
-        if dcfg_traj['curve2'] == False :
+        if (dcfg_traj['curve2'] == False) :
             print("### initialSplineForCircle 2")
             dcfg_traj = initialSplineForCircle(dcfg_traj, 'sp3r_2')
         dcfg_traj['sp2_type'] = 'sp4_n'
     else :
         flag_rotation_angle_value_2 = True
-    #~ sys.exit(2)
+
     # Determination des angles de rotation
+    cpt = 0
     while (flag_rotation_angle_value_1 == False) or (flag_rotation_angle_value_2 == False) :
         if flag_rotation_angle_value_1 == False :
         ### rotation 1 ###
@@ -669,6 +697,9 @@ def generation_curvatureForced(dcfg_traj) :
         
         ### nouvelle s4s4 ###
         dcfg_traj = sds_ab(dcfg_traj)
+        
+        #~ if cpt == 10 :
+            #~ break
         
         if flag_rotation_angle_value_1 == False :
             Rinv_sp4_1_n_0 = Rinv_courbure(0, dcfg_traj, 'sp1_type')
@@ -691,19 +722,9 @@ def generation_curvatureForced(dcfg_traj) :
                 flag_rotation_angle_value_2 = True
             else :
                 dcfg_traj['angle_r2'] = dcfg_traj['angle_r2'] + dcfg_traj['signe_Rinv_sp3_2'] * dcfg_traj['angle_step']
+                
+        cpt = cpt + 1
         
-    #~ dcfg_traj['angle_r1'] = -0.4
-    #~ dcfg_traj['angle_r2'] = -0.4
-    #~ if dcfg_traj['curvature_forced_1'] == True :
-    #~ ### rotation 1 ###
-        #~ dcfg_traj = rotation_config(dcfg_traj, 'r1')
-    #~ 
-    #~ if dcfg_traj['curvature_forced_2'] == True :
-        #~ ### rotation 2 ###
-        #~ dcfg_traj = rotation_config(dcfg_traj, 'r2')
-    #~ 
-    #~ ### nouvelle s4s4 ###
-    #~ dcfg_traj = sds_ab(dcfg_traj)
     
     print("angle_r1 : {0}".format(dcfg_traj['angle_r1']/pi))
     print("angle_r2 : {0}".format(dcfg_traj['angle_r2']/pi))
@@ -820,18 +841,29 @@ def plot_arcOfCircle_trajectory() :
         #~ , [-0.2, 1.2, pi*0.5]
         #~ ]
 E = 0.05      
-#~ chemin = [[0.2, 1.0, 0.0]
-        #~ , [0.9, 1.05-E, 0.0] #angle=0.6
-        #~ , [1.05, 0.8+E, 0.0]
-        #~ , [1.2, 1.05-E, 0.0]
-        #~ , [1.35, 0.8+E, 0.0]
-        #~ ]
 chemin = [[0.2, 1.0, 0.0]
         , [0.9, 1.05-E, 0.0] #angle=0.6
-        , [1.05, 0.8 + 0.0 +E, 0.0]
+        , [1.05, 0.8+E, 0.0]
         , [1.2, 1.05-E, 0.0]
         , [1.35, 0.8+E, 0.0]
         ]
+        
+#~ offsetX = 0.0
+#~ offsetY = 0.3
+#~ chemin = [[0.2, 1.0, 0.0]
+        #~ , [0.9, 1.05-E, 0.0] #angle=0.6
+        #~ , [1.05 +offsetX, 0.8 + offsetY +E, 0.0]
+        #~ , [1.2 +2.0*offsetX, 1.05-E, 0.0]
+        #~ , [1.35 +3.0*offsetX, 0.8 + offsetY +E, 0.0]
+        #~ ]
+        
+#~ #test
+#~ chemin = [[1.05, 0.9, pi*1.0]
+        #~ , [0.9, 1.05-E, pi*0.6] #angle=0.6
+        #~ , [1.05 +offsetX, 0.8 + offsetY +E, 0.0]
+        #~ , [1.2 +2.0*offsetX, 1.05-E, 0.0]
+        #~ , [1.35 +3.0*offsetX, 0.8 + offsetY +E, 0.0]
+        #~ ]
         
 l_dcfg_traj = []
 nb_pts = len(chemin)-1
@@ -861,7 +893,7 @@ for iSegment in range(nb_pts) :
     t1 = 0.1
     vmax = 0.6
     EcartRoue = 0.17
-    Rinv_ref = 1.0 / (EcartRoue/2.0)
+    Rinv_ref = 1.0 / ((EcartRoue/2.0)*0.6) ### MODIFICATION DE L'ECART DES ROUES ###
     v_Rinv_ref = vitesse_limite(vmax, EcartRoue, Rinv_ref)
     Db = 0.017 #0.03 #0.05
     Da = 0.0006 #0.0018 #0.006
@@ -897,6 +929,7 @@ for iSegment in range(nb_pts) :
                 , 'curvature_forced_1': False
                 , 'curvature_forced_2': False
                 , 'curvature_forced_2_prec': False
+                , 'spline4rot': True
                 }
                 
     dcfg_traj['inflexion_point'] = False
@@ -931,6 +964,11 @@ for iSegment in range(nb_pts) :
                 dcfg_traj['Rb_prec'] = dcfg_traj_p['Rb_2']
             else :
                 dcfg_traj_p['curvature_forced_2_prec'] = True
+                
+            if dcfg_traj_p['curvature_forced_2'] == True :
+                dcfg_traj['spline4rot'] = False
+            else :
+                dcfg_traj['spline4rot'] = True
             
             # Dernier segment
             if iSegment == (nb_pts - 1) :
@@ -954,10 +992,12 @@ for iSegment in range(nb_pts) :
             dcfg_traj['sp2_type'] = 'sp4'
     
     dcfg_traj = sds_ab(dcfg_traj)
-    #~ dcfg_traj = test_courbure(dcfg_traj)
-    #~ if (dcfg_traj['curvature_forced'] == True) :
-        #~ print("## generation_curvatureForced")
-        #~ dcfg_traj = generation_curvatureForced(dcfg_traj)
+    dcfg_traj = test_courbure(dcfg_traj)
+    if (dcfg_traj['curvature_forced'] == True) :
+        print("## generation_curvatureForced")
+        dcfg_traj = generation_curvatureForced(dcfg_traj)
+    
+    print("spline4rot : {0}".format(dcfg_traj['spline4rot']))
         
     l_dcfg_traj.append(dcfg_traj)
     #~ sys.exit(2)
@@ -1029,7 +1069,7 @@ for iSegment in range(nb_pts) :
         ###
         cnonzero = 1e-12
         if dcfg_traj['curvature_forced_1'] == True :
-            if dcfg_traj['curve1'] == False :
+            if dcfg_traj['spline4rot'] == True :
                 [x_sp3_1, y_sp3_1] = trajectoire_sp3(t, dcfg_traj, 'sp3r_1', 0)
                 l_x_sp3_1.append(x_sp3_1)
                 l_y_sp3_1.append(y_sp3_1)
@@ -1168,7 +1208,7 @@ for iSegment in range(nb_pts) :
         l_v_lim_s2.append(vitesse_limite(0.6, 0.17, Rinv_courbure(t1-t, dcfg_traj, 'sp2_type')))
         
         if dcfg_traj['curvature_forced_1'] == True :
-            if dcfg_traj['curve1'] == False :
+            if dcfg_traj['spline4rot'] == True :
                 l_v_lim_r.append(vitesse_limite(0.6, 0.17, Rinv_courbure(t, dcfg_traj, 'sp3r_1')))
         if dcfg_traj['curvature_forced_2'] == True :
             if dcfg_traj['curve2'] == False :
@@ -1179,7 +1219,7 @@ for iSegment in range(nb_pts) :
     ###
     figure(1)
     if dcfg_traj['curvature_forced_1'] == True :
-        if dcfg_traj['curve1'] == False :
+        if dcfg_traj['spline4rot'] == True :
             plot(l_x_sp3_1, l_y_sp3_1, 'ob')
             if len(l_xp) > 0 :
                 l_xp.extend(l_xp_spr_1[1:])
@@ -1249,14 +1289,14 @@ for iSegment in range(nb_pts) :
             l_d2l_dt2.extend(d_l_dl_dt['spr_2'])
     
     grid()
-    xlim(-0.3, 1.5)
-    ylim(-0.1, 1.5)
+    #~ xlim(-0.3, 1.5)
+    #~ ylim(-0.1, 1.5)
     
     ######
     ### Enregistrement des vitesses limites ###
     ###
     if dcfg_traj['curvature_forced_1'] == True :
-        if dcfg_traj['curve1'] == False :
+        if dcfg_traj['spline4rot'] == True :
             l_v_lim.extend(l_v_lim_r)
             #~ l_v_lim.extend([0.0])
     
@@ -1342,6 +1382,8 @@ grid()
 #~ plot(l_qy, '-o')
 #~ ylabel('qy')
 #~ grid()
+
+#~ print("angle_r1 : {0}, angle_r2 : {1}".format(dcfg_traj['angle_r1']/pi, dcfg_traj['angle_r2']/pi))
 
 show()
     
