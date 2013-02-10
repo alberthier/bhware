@@ -172,7 +172,9 @@ def rotation_config(dcfg_traj, rotation_type) :
             signe_Rinv_sp3 = 1.0
         else :
             signe_Rinv_sp3 = -1.0
-        Rinv_sp3 = fabs(Rinv_sp3)
+        ### Forcage au rayon inverse de reference
+        #~ Rinv_sp3 = fabs(Rinv_sp3)
+        Rinv_sp3 = dcfg_traj['Rinv_ref']
 
     else :
         if rotation_type == 'r1' :
@@ -842,10 +844,16 @@ def plot_arcOfCircle_trajectory() :
         #~ ]
 E = 0.05      
 chemin = [[0.2, 1.0, 0.0]
-        , [0.9, 1.05-E, 0.0] #angle=0.6
+        , [0.9, 1.05-E, 0.0]
         , [1.05, 0.8+E, 0.0]
         , [1.2, 1.05-E, 0.0]
         , [1.35, 0.8+E, 0.0]
+        ]
+        
+verres = [[0.9, 1.05, 0.0]
+        , [1.05, 0.8, 0.0]
+        , [1.2, 1.05, 0.0]
+        , [1.35, 0.8, 0.0]
         ]
         
 #~ offsetX = 0.0
@@ -892,8 +900,8 @@ for iSegment in range(nb_pts) :
     #config
     t1 = 0.1
     vmax = 0.6
-    EcartRoue = 0.17
-    Rinv_ref = 1.0 / ((EcartRoue/2.0)*0.6) ### MODIFICATION DE L'ECART DES ROUES ###
+    EcartRoue = 0.1
+    Rinv_ref = 1.0 / ((EcartRoue/2.0)) ### MODIFICATION DE L'ECART DES ROUES ###
     v_Rinv_ref = vitesse_limite(vmax, EcartRoue, Rinv_ref)
     Db = 0.017 #0.03 #0.05
     Da = 0.0006 #0.0018 #0.006
@@ -1318,7 +1326,11 @@ for iSegment in range(nb_pts) :
     l_qy.extend(d_l_q['s2_qy'])
     #~ print("qx0: {0}, qy0: {1}".format(dcfg_traj['qx0'], dcfg_traj['qy0']))
     #~ show()
-    
+    plot(chemin[iSegment+1][0], chemin[iSegment+1][1], c='r', marker='o', markersize=15)
+    plot(verres[iSegment][0], verres[iSegment][1], c='k', marker='o', markersize=25)
+
+#~ plot(chemin[1][0], chemin[1][1], c='b', marker='o', markersize=5)
+
 title('Trajectoire')
 xlabel('x (m)')
 ylabel('y (m)')
@@ -1326,7 +1338,7 @@ grid()
         
 figure(2)
 plot(l_v_lim, '-o')
-vmin = vitesse_limite(vmax, EcartRoue, 1.0/(EcartRoue/2.0))
+vmin = dcfg_traj['v_Rinv_ref']
 plot([0, len(l_v_lim)], [vmin, vmin], '-k')
 title('Vitesse max admissible')
 ylabel('v_lim (m/s)')
@@ -1372,16 +1384,16 @@ plot(l_d2l_dt2, '-o')
 ylabel('d2l/dt2')
 grid()
 
-#~ figure(6)
-#~ subplot(211)
-#~ plot(l_qx, '-o')
-#~ ylabel('qx')
-#~ title('Derives secondes q')
-#~ grid()
-#~ subplot(212)
-#~ plot(l_qy, '-o')
-#~ ylabel('qy')
-#~ grid()
+figure(6)
+subplot(211)
+plot(l_qx, '-o')
+ylabel('qx')
+title('Derives secondes q')
+grid()
+subplot(212)
+plot(l_qy, '-o')
+ylabel('qy')
+grid()
 
 #~ print("angle_r1 : {0}, angle_r2 : {1}".format(dcfg_traj['angle_r1']/pi, dcfg_traj['angle_r2']/pi))
 
