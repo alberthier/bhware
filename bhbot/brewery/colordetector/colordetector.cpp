@@ -59,7 +59,7 @@ private:
     void initDisplay();
     void updateDisplay();
     void updateZones(std::vector<Rect>& zoneRects, std::vector<cv::Mat>& zones);
-    void bgrCheck();
+    std::string bgrCheck();
 
 private:
     int m_pollTimeout;
@@ -135,12 +135,13 @@ bool ColorDetector::processLine(std::istream& stream)
     getline(stream, line);
     std::stringstream sstr(line);
     std::string command;
+    std::string output("None");
 
     sstr >> command;
     if (command == "quit") {
-        return false;
+        again = false;
     } else if (command == "fetch") {
-        bgrCheck();
+        output = bgrCheck();
         if (!m_logfile.empty()) {
             cv::imwrite(m_logfile.c_str(), m_bgrImage);
         }
@@ -159,8 +160,10 @@ bool ColorDetector::processLine(std::istream& stream)
     } else if (command == "add_detection_zone") {
         addZone(sstr, m_detectionZoneRects, m_detectionZones);
     } else if (!command.empty() && command[0] != '#') {
-        std::cout << "Unknown command '" << command << "'" << std::endl;
+        output = "\"Unknown command '" + command + "'\"";
     }
+
+    std::cout << output << std::endl;
 
     return again;
 }
@@ -231,8 +234,9 @@ void ColorDetector::updateZones(std::vector<Rect>& zoneRects, std::vector<cv::Ma
 }
 
 
-void ColorDetector::bgrCheck()
+std::string ColorDetector::bgrCheck()
 {
+    std::stringstream output;
     float calibBlue = 0.0;
     float calibRed = 0.0;
 
@@ -246,6 +250,7 @@ void ColorDetector::bgrCheck()
 
     bool isCalibRed = calibBlue < calibRed;
 
+    output << '[';
     for (size_t i = 0; i < m_detectionZones.size(); ++i) {
         Rect& rect = m_detectionZoneRects[i];
         cv::Mat& image = m_detectionZones[i];
@@ -260,9 +265,18 @@ void ColorDetector::bgrCheck()
             rect.match = blue > red;
         }
 
-        std::cout << rect.match << ',';
+        if (rect.match) {
+            output << "True";
+        } else {
+            output << "False";
+        }
+        if (i != m_detectionZones.size() - 1) {
+            output << ',';
+        }
     }
-    std::cout << std::endl;
+    output << ']';
+
+    return output.str();
 }
 
 
