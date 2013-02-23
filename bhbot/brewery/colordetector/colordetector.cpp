@@ -60,6 +60,7 @@ private:
     void updateDisplay();
     void updateZones(std::vector<Rect>& zoneRects, std::vector<cv::Mat>& zones);
     std::string bgrCheck();
+    void logImage();
 
 private:
     int m_pollTimeout;
@@ -144,6 +145,7 @@ bool ColorDetector::processLine(std::istream& stream)
         output = bgrCheck();
         if (!m_logfile.empty()) {
             cv::imwrite(m_logfile.c_str(), m_bgrImage);
+            logImage();
         }
     } else if (command == "poll_timeout") {
         sstr >> m_pollTimeout;
@@ -209,13 +211,14 @@ void ColorDetector::initDisplay()
 void ColorDetector::updateDisplay()
 {
 #ifndef __arm__
+    cv::Mat img = m_bgrImage.clone();
     for (std::vector<Rect>::const_iterator it = m_calibrationZoneRects.begin(); it != m_calibrationZoneRects.end(); ++it) {
-        cv::rectangle(m_bgrImage, cv::Point(it->x, it->y), cv::Point(it->x + it->width, it->y + it->height), cv::Scalar(0, 0, 200));
+        cv::rectangle(img, cv::Point(it->x, it->y), cv::Point(it->x + it->width, it->y + it->height), cv::Scalar(0, 0, 200));
     }
     for (std::vector<Rect>::const_iterator it = m_detectionZoneRects.begin(); it != m_detectionZoneRects.end(); ++it) {
-        cv::rectangle(m_bgrImage, cv::Point(it->x, it->y), cv::Point(it->x + it->width, it->y + it->height), cv::Scalar(0, 200, 0));
+        cv::rectangle(img, cv::Point(it->x, it->y), cv::Point(it->x + it->width, it->y + it->height), cv::Scalar(0, 200, 0));
     }
-    cv::imshow(BGR_IMAGE, m_bgrImage);
+    cv::imshow(BGR_IMAGE, img);
     if (!m_binImage.empty()) {
         cv::imshow(BINARIZED_IMAGE, m_binImage);
     }
@@ -277,6 +280,31 @@ std::string ColorDetector::bgrCheck()
     output << ']';
 
     return output.str();
+}
+
+
+void ColorDetector::logImage()
+{
+    std::string fname = m_logfile.substr(0, m_logfile.rfind('.')) + ".svg";
+    std::string imageName = m_logfile.substr(m_logfile.rfind('/') + 1);
+    std::fstream img(fname.c_str(), std::ios_base::out);
+
+    img << "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>" << std::endl;
+    img << "<svg xmlns:xlink=\"http://www.w3.org/1999/xlink\" xmlns=\"http://www.w3.org/2000/svg\" height=\"" << m_bgrImage.rows << "\" width=\"" << m_bgrImage.cols << "\" id=\"svg2\" version=\"1.1\">" << std::endl;
+    img << "<image y=\"0.0\" x=\"0.0\" id=\"image\" xlink:href=\"" << imageName << "\" height=\"" << m_bgrImage.rows << "\" width=\"" << m_bgrImage.cols << "\" />" << std::endl;
+    for (std::vector<Rect>::const_iterator it = m_calibrationZoneRects.begin(); it != m_calibrationZoneRects.end(); ++it) {
+        img << "<rect style=\"fill:none;stroke:#cc0000;stroke-width:1\" width=\"" << it->width << "\" height=\"" << it->height << "\" x=\"" << it->x << "\" y=\"" << it->y << "\" />" << std::endl;
+    }
+    for (std::vector<Rect>::const_iterator it = m_detectionZoneRects.begin(); it != m_detectionZoneRects.end(); ++it) {
+        img << "<rect style=\"fill:none;stroke:#73d216;stroke-width:1";
+        if (!it->match) {
+            img << ";stroke-dasharray:5,5";
+        }
+        img << "\" width=\"" << it->width << "\" height=\"" << it->height << "\" x=\"" << it->x << "\" y=\"" << it->y << "\" />" << std::endl;
+    }
+    img << "</svg>" << std::endl;
+
+    img.close();
 }
 
 
