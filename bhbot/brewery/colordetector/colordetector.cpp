@@ -166,6 +166,7 @@ bool ColorDetector::processLine(std::istream& stream)
     }
 
     std::cout << output << std::endl;
+    std::cout.flush();
 
     return again;
 }
