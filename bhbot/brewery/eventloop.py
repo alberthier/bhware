@@ -25,6 +25,7 @@ import geometry
 import goalmanager
 import tools
 import webinterface
+import colordetector
 from definitions import *
 
 if IS_HOST_DEVICE_ARM :
@@ -274,6 +275,11 @@ class EventLoop(object):
         self.timers = []
         self.state_history = []
         self.last_ka_date = datetime.datetime.now()
+        if IS_HOST_DEVICE_ARM:
+            self.colordetector = colordetector.ColorDetector()
+            self.colordetector.reinit()
+        else:
+            self.colordetector = None
 
 
     def handle_read(self, channel):
@@ -416,4 +422,6 @@ class EventLoop(object):
             self.robot_control_channel.close()
         if self.robot_log_channel is not None:
             self.robot_log_channel.close()
+        if self.colordetector is not None:
+            self.colordetector.quit()
         logger.close()
