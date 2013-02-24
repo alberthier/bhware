@@ -76,7 +76,7 @@ class HardwareLed(BaseLed):
 
     def __init__(self, device_file_path):
         BaseLed.__init__(self)
-        self.device_file = file(device_file_path, "w")
+        self.device_file = open(device_file_path, "w")
         self.state = False
         self.do_set(False)
 
