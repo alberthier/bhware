@@ -726,6 +726,7 @@ class Candle(QGraphicsEllipseItem):
 
     def __init__(self, x, y, color, parent):
         QGraphicsEllipseItem.__init__(self, x - 38.5, y - 38.5, 75, 75, parent)
+        self.color = color
         self.setPen(QPen(QColor(color), 10))
 
 

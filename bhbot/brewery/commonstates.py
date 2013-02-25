@@ -284,6 +284,23 @@ class GiftOpener(statemachine.State):
 
 
 
+class FetchCandleColors(statemachine.State):
+
+    def on_enter(self):
+        if IS_HOST_DEVICE_ARM:
+            self.colors = self.event_loop.colordetector.invoke("fetch")
+            self.exit_substate()
+        else:
+            self.send_packet(packets.SimulatorFetchColors())
+
+
+    def on_simulator_fetch_colors(self, packet):
+        self.colors = packet.colors
+        self.exit_substate()
+
+
+
+
 class TrajectoryWalk(statemachine.State):
     """Walk a path"""
 

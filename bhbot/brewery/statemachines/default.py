@@ -42,6 +42,7 @@ class Test1(statemachine.State):
 
     def on_enter(self):
         self.walk = commonstates.TrajectoryWalk()
+        self.walk.wait_for(commonstates.FetchCandleColors())
         #self.walk.wait_for(commonstates.CandleKicker(SIDE_RIGHT, CANDLE_KICKER_LOWER, CANDLE_KICKER_POSITION_UP))
         #self.walk.wait_for(commonstates.CandleKicker(SIDE_RIGHT, CANDLE_KICKER_LOWER, CANDLE_KICKER_POSITION_KICK))
         #self.walk.wait_for(commonstates.CandleKicker(SIDE_RIGHT, CANDLE_KICKER_LOWER, CANDLE_KICKER_POSITION_IDLE))

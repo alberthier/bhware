@@ -593,7 +593,7 @@ class Pump(BasePacket):
 
 class SimulatorData(BasePacket):
 
-    TYPE = 200
+    TYPE = 150
     LOGVIEW_DEFAULT_ENABLED = False
     LOGVIEW_COLOR = "#4169e1"
     DEFINITION = (
@@ -605,7 +605,7 @@ class SimulatorData(BasePacket):
 
 class SimulatorResetRoutePath(BasePacket):
 
-    TYPE = 201
+    TYPE = 151
     LOGVIEW_DEFAULT_ENABLED = False
     LOGVIEW_COLOR = "#ff00ff"
 
@@ -614,7 +614,7 @@ class SimulatorResetRoutePath(BasePacket):
 
 class SimulatorRoutePath(BasePacket):
 
-    TYPE = 202
+    TYPE = 152
     LOGVIEW_DEFAULT_ENABLED = False
     LOGVIEW_COLOR = "#8b4513"
     DEFINITION = (
@@ -626,7 +626,7 @@ class SimulatorRoutePath(BasePacket):
 
 class SimulatorSimplifiedRoutePath(BasePacket):
 
-    TYPE = 203
+    TYPE = 153
     LOGVIEW_DEFAULT_ENABLED = False
     LOGVIEW_COLOR = "#8b4513"
     DEFINITION = (
@@ -638,7 +638,7 @@ class SimulatorSimplifiedRoutePath(BasePacket):
 
 class SimulatorRouteResetZones(BasePacket):
 
-    TYPE = 204
+    TYPE = 154
     LOGVIEW_DEFAULT_ENABLED = False
     LOGVIEW_COLOR = "#40e0d0"
 
@@ -647,7 +647,7 @@ class SimulatorRouteResetZones(BasePacket):
 
 class SimulatorRouteRects(BasePacket):
 
-    TYPE = 205
+    TYPE = 155
     LOGVIEW_DEFAULT_ENABLED = False
     LOGVIEW_COLOR = "#d8bfd8"
     DEFINITION = (
@@ -660,7 +660,7 @@ class SimulatorRouteRects(BasePacket):
 
 class SimulatorRouteCircles(BasePacket):
 
-    TYPE = 206
+    TYPE = 156
     LOGVIEW_DEFAULT_ENABLED = False
     LOGVIEW_COLOR = "#ff6347"
     DEFINITION = (
@@ -673,7 +673,7 @@ class SimulatorRouteCircles(BasePacket):
 
 class SimulatorOpponentsPositions(BasePacket):
 
-    TYPE = 207
+    TYPE = 157
     LOGVIEW_DEFAULT_ENABLED = False
     LOGVIEW_COLOR = "#ba55d3"
     DEFINITION = (
@@ -689,7 +689,7 @@ class SimulatorOpponentsPositions(BasePacket):
 
 class SimulatorClearGraphMapEdges(BasePacket):
 
-    TYPE = 208
+    TYPE = 158
     LOGVIEW_DEFAULT_ENABLED = False
     LOGVIEW_COLOR = "#ba55d3"
 
@@ -698,7 +698,7 @@ class SimulatorClearGraphMapEdges(BasePacket):
 
 class SimulatorGraphMapEdges(BasePacket):
 
-    TYPE = 209
+    TYPE = 159
     LOGVIEW_DEFAULT_ENABLED = False
     LOGVIEW_COLOR = "#ba55d3"
     DEFINITION = (
@@ -710,13 +710,24 @@ class SimulatorGraphMapEdges(BasePacket):
 
 class SimulatorGraphMapRoute(BasePacket):
 
-    TYPE = 210
+    TYPE = 160
     LOGVIEW_DEFAULT_ENABLED = False
     LOGVIEW_COLOR = "#ba55d3"
     DEFINITION = (
         ('points', List(63, Float(0.0), [], "Edges")),
     )
 
+
+
+
+class SimulatorFetchColors(BasePacket):
+
+    TYPE = 161
+    LOGVIEW_DEFAULT_ENABLED = False
+    LOGVIEW_COLOR = "#ba55d3"
+    DEFINITION = (
+        ('colors', List(20, Bool(False), [], "Detections")),
+    )
 
 
 

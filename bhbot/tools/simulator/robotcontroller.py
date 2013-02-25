@@ -186,6 +186,21 @@ class RobotController(object):
         self.output_view.handle_led(packet.leds)
 
 
+    def on_simulator_fetch_colors(self, packet):
+        detect = []
+        if self.team == TEAM_BLUE:
+            upper = self.game_controller.game_elements_layer.upper_candles[:5]
+            lower = self.game_controller.game_elements_layer.lower_candles[:6]
+        else:
+            upper = reversed(self.game_controller.game_elements_layer.upper_candles[:-5])
+            lower = reversed(self.game_controller.game_elements_layer.lower_candles[:-6])
+        for candle in upper:
+            detect.append(candle.color == self.team_color)
+        for candle in lower:
+            detect.append(candle.color == self.team_color)
+        self.send_packet(packets.SimulatorFetchColors(colors = detect))
+
+
     def send_packet(self, packet):
         if self.is_connected():
             self.socket.write(packet.serialize())
