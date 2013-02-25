@@ -35,7 +35,7 @@ class ColorDetector:
         if os.path.exists(cfg_path):
             cfg = open(cfg_path)
             for line in cfg:
-                self.invoke(line[:-1])
+                self.invoke(line.strip())
         log = "{}-{}.jpg".format(os.path.splitext(logger.filepath)[0], self.count)
         self.invoke("set_log_file", log)
         self.count += 1
