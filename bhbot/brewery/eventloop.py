@@ -367,7 +367,12 @@ class EventLoop(object):
         if self.root_state.sub_state is not None:
             logger.log_packet(packet, "ARM")
             buffer = packet.serialize()
-            self.robot_control_channel.send(buffer)
+            if packet.TYPE < 50:
+                self.turret_channel.send(buffer)
+            elif packet.TYPE < 200:
+                self.robot_control_channel.send(buffer)
+            else:
+                self.interbot_channel.send(buffer)
 
 
     def inject_goto_finished(self):
