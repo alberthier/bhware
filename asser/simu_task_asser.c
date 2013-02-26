@@ -44,7 +44,7 @@ extern void SIMU_REDEF_ASSER_GoTo(unsigned char Mouvement, Data_Goto * Data)
         case MOVE_CURVE :
 
             /* Initialisation du sens de marche AVANT ou ARRIERE, du module POSITION */
-            POS_InitialisationSensMarche(Data->courbe.Marche);
+            POS_InitialisationSensMarche(Data->curve.Marche);
 
             break;
 

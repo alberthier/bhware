@@ -109,8 +109,8 @@ int depCommandMsgTreatment(char *buffer, unsigned char * p_mouvement, Data_Goto 
             else
                 marche = 1;
 
-            Data->rotation.Marche = marche;
-            Data->rotation.Angle = angle_rad;
+            Data->rotate.Marche = marche;
+            Data->rotate.Angle = angle_rad;
 
             sscanf(buffer, "%s %s %s", msg_mvt, strMarche, strAngleRad);
             msgSize = strlen(msg_mvt) + strlen(strMarche) + strlen(strAngleRad) + 3;
@@ -125,10 +125,10 @@ int depCommandMsgTreatment(char *buffer, unsigned char * p_mouvement, Data_Goto 
             else
                 marche = 1;
 
-            Data->courbe.Marche = marche;
-            Data->courbe.Use_Angle = use_angle;
-            Data->courbe.Angle = angle_rad;
-            Data->courbe.NbrePtsChemin = nbPts;
+            Data->curve.Marche = marche;
+            Data->curve.Use_Angle = use_angle;
+            Data->curve.Angle = angle_rad;
+            Data->curve.NbrePtsChemin = nbPts;
 
             sscanf(buffer, "%s %s %s %s %s", msg_mvt, strMarche, strUseAngle, strAngleRad, strNbPts);
             msgSize = strlen(msg_mvt) + strlen(strMarche) + strlen(strUseAngle) + strlen(strAngleRad) + strlen(strNbPts) + 5;
@@ -141,8 +141,8 @@ int depCommandMsgTreatment(char *buffer, unsigned char * p_mouvement, Data_Goto 
             }
             for(iVal = 0; iVal < nbPts; iVal++)
             {
-                Data->courbe.Chemin[iVal].x = CONVERT_FLOAT2SHORT_DISTANCE(data[iVal*2]);
-                Data->courbe.Chemin[iVal].y = CONVERT_FLOAT2SHORT_DISTANCE(data[iVal*2 + 1]);
+                Data->curve.Chemin[iVal].x = CONVERT_FLOAT2SHORT_DISTANCE(data[iVal*2]);
+                Data->curve.Chemin[iVal].y = CONVERT_FLOAT2SHORT_DISTANCE(data[iVal*2 + 1]);
             }
 
             break;

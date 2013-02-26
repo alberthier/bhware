@@ -603,7 +603,7 @@ extern void ASSER_TRAJ_InitialisationTrajectoire(Pose poseRobot, unsigned char M
     {
         case ROTATE :
             /* Position a atteindre (condition d'arret du test de fin d'asservissement) */
-            angle_fin_rotation = POS_ModuloAngle(Data->rotation.Angle);
+            angle_fin_rotation = POS_ModuloAngle(Data->rotate.Angle);
             chemin.rotation.angle_final = angle_fin_rotation;
 
             chemin.posArrivee.x = poseRobot.x + NORME_BARRE_SUIVI_TRAJ * cosf(angle_fin_rotation);
@@ -638,14 +638,14 @@ extern void ASSER_TRAJ_InitialisationTrajectoire(Pose poseRobot, unsigned char M
             break;
 
         case MOVE_CURVE :
-            chemin.use_angle = Data->courbe.Use_Angle;
-            angle_rad = Data->courbe.Angle;
-            chemin.nbreSegments = Data->courbe.NbrePtsChemin;
-            m_sensDeplacement = Data->courbe.Marche;
+            chemin.use_angle = Data->curve.Use_Angle;
+            angle_rad = Data->curve.Angle;
+            chemin.nbreSegments = Data->curve.NbrePtsChemin;
+            m_sensDeplacement = Data->curve.Marche;
 
-            if (Data->courbe.Use_Angle == ANGLE)
+            if (Data->curve.Use_Angle == ANGLE)
             {
-                if (Data->courbe.Marche == MARCHE_ARRIERE)
+                if (Data->curve.Marche == MARCHE_ARRIERE)
                 {
                     angle_rad = POS_ModuloAngle(angle_rad + PI);
                 }
@@ -656,20 +656,20 @@ extern void ASSER_TRAJ_InitialisationTrajectoire(Pose poseRobot, unsigned char M
             }
 
             /* Position a atteindre (condition d'arret du test de fin d'asservissment) */
-            chemin.posArrivee.x = CONVERT_DISTANCE(Data->courbe.Chemin[(Data->courbe.NbrePtsChemin - 1)].x);
-            chemin.posArrivee.y = CONVERT_DISTANCE(Data->courbe.Chemin[(Data->courbe.NbrePtsChemin - 1)].y);
+            chemin.posArrivee.x = CONVERT_DISTANCE(Data->curve.Chemin[(Data->curve.NbrePtsChemin - 1)].x);
+            chemin.posArrivee.y = CONVERT_DISTANCE(Data->curve.Chemin[(Data->curve.NbrePtsChemin - 1)].y);
 
             /* Configuration du profil de vitesse */
             chemin.profilVitesse.vmax = POS_GetConsVitesseMax();                /* UMAX * GAIN_STATIQUE_MOTEUR */
 
-            lenSeg = ASSER_TRAJ_LongueurSegment(poseRobot.x, poseRobot.y, CONVERT_DISTANCE(Data->courbe.Chemin[0].x), CONVERT_DISTANCE(Data->courbe.Chemin[0].y));
+            lenSeg = ASSER_TRAJ_LongueurSegment(poseRobot.x, poseRobot.y, CONVERT_DISTANCE(Data->curve.Chemin[0].x), CONVERT_DISTANCE(Data->curve.Chemin[0].y));
             C = C_init * lenSeg;
             k0 = k0_init * lenSeg;
 
             chemin.segmentTrajBS[0].bx = poseRobot.x;
             chemin.segmentTrajBS[0].by = poseRobot.y;
-            chemin.segmentTrajBS[1].bx = CONVERT_DISTANCE(Data->courbe.Chemin[0].x);
-            chemin.segmentTrajBS[1].by = CONVERT_DISTANCE(Data->courbe.Chemin[0].y);
+            chemin.segmentTrajBS[1].bx = CONVERT_DISTANCE(Data->curve.Chemin[0].x);
+            chemin.segmentTrajBS[1].by = CONVERT_DISTANCE(Data->curve.Chemin[0].y);
 
             theta0 = poseRobot.angle;
 
@@ -677,7 +677,7 @@ extern void ASSER_TRAJ_InitialisationTrajectoire(Pose poseRobot, unsigned char M
             chemin.segmentTrajBS[0].ay = k0 * sinf(theta0);
 
             k1 = k0;
-            theta1 = ASSER_TRAJ_CalculTheta1(1, Data->courbe.NbrePtsChemin, Data->courbe.Chemin, angle_rad, poseRobot.x, poseRobot.y);
+            theta1 = ASSER_TRAJ_CalculTheta1(1, Data->curve.NbrePtsChemin, Data->curve.Chemin, angle_rad, poseRobot.x, poseRobot.y);
 
             ASSER_TRAJ_LogAsserValPC("theta1", theta1);
             ASSER_TRAJ_LogAsserValPC("angle_rad", angle_rad);
@@ -690,8 +690,8 @@ extern void ASSER_TRAJ_InitialisationTrajectoire(Pose poseRobot, unsigned char M
             ASSER_TRAJ_SolveSegment_v2(poseRobot.x,
                                        poseRobot.y,
                                        theta0,
-                                       CONVERT_DISTANCE(Data->courbe.Chemin[0].x),
-                                       CONVERT_DISTANCE(Data->courbe.Chemin[0].y),
+                                       CONVERT_DISTANCE(Data->curve.Chemin[0].x),
+                                       CONVERT_DISTANCE(Data->curve.Chemin[0].y),
                                        theta1,
                                        k0,
                                        &k1,
@@ -720,8 +720,8 @@ extern void ASSER_TRAJ_InitialisationTrajectoire(Pose poseRobot, unsigned char M
             chemin.segmentTrajBS[iSegment].bix = pos_ti.x;
             chemin.segmentTrajBS[iSegment].biy = pos_ti.y;
 
-            ASSER_TRAJ_LogAsserValPC("pti", CONVERT_DISTANCE(Data->courbe.Chemin[0].x));
-            ASSER_TRAJ_LogAsserValPC("pti", CONVERT_DISTANCE(Data->courbe.Chemin[0].y));
+            ASSER_TRAJ_LogAsserValPC("pti", CONVERT_DISTANCE(Data->curve.Chemin[0].x));
+            ASSER_TRAJ_LogAsserValPC("pti", CONVERT_DISTANCE(Data->curve.Chemin[0].y));
             ASSER_TRAJ_LogAsserValPC("pti", theta1);
             ASSER_TRAJ_LogAsserValPC("pti", k0);
             ASSER_TRAJ_LogAsserValPC("pti", k1);
@@ -732,15 +732,15 @@ extern void ASSER_TRAJ_InitialisationTrajectoire(Pose poseRobot, unsigned char M
             ASSER_TRAJ_LogAsserValPC("pti", pos_tj.x);
             ASSER_TRAJ_LogAsserValPC("pti", pos_tj.y);
 
-            prec_x = CONVERT_DISTANCE(Data->courbe.Chemin[0].x);
-            prec_y = CONVERT_DISTANCE(Data->courbe.Chemin[0].y);
+            prec_x = CONVERT_DISTANCE(Data->curve.Chemin[0].x);
+            prec_y = CONVERT_DISTANCE(Data->curve.Chemin[0].y);
 
-            for(iSegment = 2; iSegment <= Data->courbe.NbrePtsChemin; iSegment++)
+            for(iSegment = 2; iSegment <= Data->curve.NbrePtsChemin; iSegment++)
             {
-                chemin.segmentTrajBS[iSegment].bx = CONVERT_DISTANCE(Data->courbe.Chemin[(iSegment - 1)].x);
-                chemin.segmentTrajBS[iSegment].by = CONVERT_DISTANCE(Data->courbe.Chemin[(iSegment - 1)].y);
+                chemin.segmentTrajBS[iSegment].bx = CONVERT_DISTANCE(Data->curve.Chemin[(iSegment - 1)].x);
+                chemin.segmentTrajBS[iSegment].by = CONVERT_DISTANCE(Data->curve.Chemin[(iSegment - 1)].y);
 
-                lenSeg = ASSER_TRAJ_LongueurSegment(prec_x, prec_y, CONVERT_DISTANCE(Data->courbe.Chemin[(iSegment - 1)].x), CONVERT_DISTANCE(Data->courbe.Chemin[(iSegment - 1)].y));
+                lenSeg = ASSER_TRAJ_LongueurSegment(prec_x, prec_y, CONVERT_DISTANCE(Data->curve.Chemin[(iSegment - 1)].x), CONVERT_DISTANCE(Data->curve.Chemin[(iSegment - 1)].y));
                 C = C_init * lenSeg;
                 k0 = k1;
                 k1 = k0_init * lenSeg;
@@ -748,7 +748,7 @@ extern void ASSER_TRAJ_InitialisationTrajectoire(Pose poseRobot, unsigned char M
                 /* Calcul de l'angle au point intermediaire */
                 theta0 = theta1;
 
-                theta1 = ASSER_TRAJ_CalculTheta1(iSegment, Data->courbe.NbrePtsChemin, Data->courbe.Chemin, angle_rad, prec_x, prec_y);
+                theta1 = ASSER_TRAJ_CalculTheta1(iSegment, Data->curve.NbrePtsChemin, Data->curve.Chemin, angle_rad, prec_x, prec_y);
 
                 cos_theta1 = cosf(theta1);
                 sin_theta1 = sinf(theta1);
@@ -759,8 +759,8 @@ extern void ASSER_TRAJ_InitialisationTrajectoire(Pose poseRobot, unsigned char M
                 ASSER_TRAJ_SolveSegment_v2(prec_x,
                                            prec_y,
                                            theta0,
-                                           CONVERT_DISTANCE(Data->courbe.Chemin[(iSegment - 1)].x),
-                                           CONVERT_DISTANCE(Data->courbe.Chemin[(iSegment - 1)].y),
+                                           CONVERT_DISTANCE(Data->curve.Chemin[(iSegment - 1)].x),
+                                           CONVERT_DISTANCE(Data->curve.Chemin[(iSegment - 1)].y),
                                            theta1,
                                            k0,
                                            &k1,
@@ -790,8 +790,8 @@ extern void ASSER_TRAJ_InitialisationTrajectoire(Pose poseRobot, unsigned char M
                 chemin.segmentTrajBS[iSegment].bix = pos_ti.x;
                 chemin.segmentTrajBS[iSegment].biy = pos_ti.y;
 
-                prec_x = CONVERT_DISTANCE(Data->courbe.Chemin[(iSegment - 1)].x);
-                prec_y = CONVERT_DISTANCE(Data->courbe.Chemin[(iSegment - 1)].y);
+                prec_x = CONVERT_DISTANCE(Data->curve.Chemin[(iSegment - 1)].x);
+                prec_y = CONVERT_DISTANCE(Data->curve.Chemin[(iSegment - 1)].y);
 
             }
 
