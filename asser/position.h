@@ -27,9 +27,10 @@ extern unsigned short                   DonneeNbrPasCdrDroite;
 /* Define asser de position */
 
 /** Flag de mouvement */
-#define     ROTATION                    ((unsigned char)     0u)
-#define     DEPLACEMENT                 ((unsigned char)     1u)
-#define     DEPLACEMENT_LIGNE_DROITE    ((unsigned char)     2u)
+#define     ROTATE                      ((unsigned char)     0u)
+#define     MOVE_CURVE                  ((unsigned char)     1u)
+#define     MOVE_LINE                   ((unsigned char)     2u)
+#define     MOVE_ARC                    ((unsigned char)     3u)
 
 #define     MARCHE_AVANT                ((signed char)       1)
 #define     MARCHE_ARRIERE              ((signed char)       -1)
@@ -43,6 +44,9 @@ extern unsigned short                   DonneeNbrPasCdrDroite;
 #define     BORNE_PWM_AV                2047u
 #define     BORNE_PWM_AR                0u
 #define     OffsetPWM                   1023u
+/* Nombre maximum de veteurs dans une trame */
+#define     MaxNbrPtTrajInTrame1        ((int)((256 - sizeof(unsigned char) - sizeof(unsigned char) - sizeof(signed char) - sizeof(unsigned char) - sizeof(float) - sizeof(unsigned char)) / sizeof(PtTraj)))
+#define     MaxNbrPtTrajInTrame2        ((int)((256 - sizeof(unsigned char) - sizeof(unsigned char) - sizeof(signed char) - sizeof(PtTraj)) / sizeof(float)))
 
 /** Structure de coordonnees et de vitesses */
 typedef struct __attribute__ ((packed))
@@ -69,6 +73,49 @@ typedef struct __attribute__ ((packed))
     float longitudinale;
     float rotation;
 } VitessesRobotUnicycle;
+typedef enum
+{
+    NO_ANGLE         = (unsigned char)0,
+    ANGLE        = (unsigned char)1
+} Type_Deplacement;
+
+typedef union
+{
+    /* params de rotation */
+    struct __attribute__ ((packed))
+    {        
+        signed char     Marche;    
+        float           Angle;
+    } rotation;
+
+    /* params courbe */
+    struct __attribute__ ((packed))
+    {   
+        signed char     Marche; 
+        unsigned char   Use_Angle;
+        float           Angle;
+        unsigned char   NbrePtsChemin;
+        PtTraj          Chemin[MaxNbrPtTrajInTrame1];
+    } courbe;
+
+    /* params courbe */
+    struct __attribute__ ((packed))
+    {
+        signed char     Marche;
+        unsigned char   NbrePtsChemin;
+        PtTraj          Chemin[MaxNbrPtTrajInTrame1];
+    } line;
+
+    /* params arc */
+    struct __attribute__ ((packed))
+    {
+        signed char     Marche;
+        PtTraj          Centre_rotation;
+        float           Rayon;
+        unsigned char   NbrePtsChemin;
+        float           Chemin[MaxNbrPtTrajInTrame2];
+    } arc;
+} Data_Goto;
 
 /* Variables globales */
 

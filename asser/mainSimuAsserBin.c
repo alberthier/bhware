@@ -8,7 +8,6 @@
 #include "position.h"
 #include "asserv_trajectoire.h"
 #include "define.h"
-//#include "position.h"
 //#include "asserv_trajectoire.h"
 #include "task_asser.h"
 #include "simuAsser.h"
@@ -21,11 +20,12 @@ typedef struct
     float value;
 } Parameter;
 
-void ASSER_GoTo(PtTraj *p_chemin, unsigned int nbrePtsChemin, unsigned int Mouvement, signed int Marche, float angle_rad)
+void ASSER_GoTo(unsigned char Mouvement, Data_Goto * Data)
 {
-    SIMU_REDEF_ASSER_GoTo(p_chemin, nbrePtsChemin, Mouvement, Marche, angle_rad);
-    SIMU_InitGabaritVitesse(&chemin);
+    SIMU_REDEF_ASSER_GoTo(Mouvement, Data);
+    //SIMU_InitGabaritVitesse(&chemin);
 }
+
 
 int commandMsgTreatment(char *buffer, unsigned char *p_mouvement, char *p_marche, float *p_angle_rad, unsigned int *p_nbPts, PtTraj *p_chemin)
 {
@@ -67,6 +67,145 @@ int commandMsgTreatment(char *buffer, unsigned char *p_mouvement, char *p_marche
     return msgSize;
 }
 
+int depCommandMsgTreatment(char *buffer, unsigned char * p_mouvement, Data_Goto * Data)
+{
+    char msg_mvt[25], strMvt[30], strUseAngle[30], strMarche[30], strXCentre[30], strYCentre[30], strRayon[30], strAngleRad[30], strNbPts[30], strValTemp[30];
+    unsigned char use_angle;
+    char marche;
+    float angle_rad;
+    unsigned int nbPts;
+    int iVal, iAngle, shiftChar = 0, msgSize = 0;
+    float data[150], valTemp;
+    float xCentre, yCentre, rayon;
+    PtTraj Centre;
+
+    /* decryptage du message de l'entree standard */
+    sscanf(buffer, "%s", msg_mvt);
+
+    if (strcmp(msg_mvt, "MSG_ROTATE") == 0)
+    {
+        *p_mouvement = ROTATE;
+    }
+    else if (strcmp(msg_mvt, "MSG_MOVE_CURVE") == 0)
+    {
+        *p_mouvement = MOVE_CURVE;
+    }
+    else if (strcmp(msg_mvt, "MSG_MOVE_LINE") == 0)
+    {
+        *p_mouvement = MOVE_LINE;
+    }
+    else if (strcmp(msg_mvt, "MSG_MOVE_ARC") == 0)
+    {
+        *p_mouvement = MOVE_ARC;
+    }
+
+    switch(*p_mouvement)
+    {
+        case ROTATE :
+            /* decryptage du message de l'entree standard */
+            sscanf(buffer, "%s %s %f", msg_mvt, strMarche, &angle_rad);
+            if (strMarche[0] == '-')
+                marche = -1;
+            else
+                marche = 1;
+
+            Data->rotation.Marche = marche;
+            Data->rotation.Angle = angle_rad;
+
+            sscanf(buffer, "%s %s %s", msg_mvt, strMarche, strAngleRad);
+            msgSize = strlen(msg_mvt) + strlen(strMarche) + strlen(strAngleRad) + 3;
+
+            break;
+
+        case MOVE_CURVE :
+            /* decryptage du message de l'entree standard */
+            sscanf(buffer, "%s %s %hhu %f %u", msg_mvt, strMarche, &use_angle, &angle_rad, &nbPts);
+            if (strMarche[0] == '-')
+                marche = -1;
+            else
+                marche = 1;
+
+            Data->courbe.Marche = marche;
+            Data->courbe.Use_Angle = use_angle;
+            Data->courbe.Angle = angle_rad;
+            Data->courbe.NbrePtsChemin = nbPts;
+
+            sscanf(buffer, "%s %s %s %s %s", msg_mvt, strMarche, strUseAngle, strAngleRad, strNbPts);
+            msgSize = strlen(msg_mvt) + strlen(strMarche) + strlen(strUseAngle) + strlen(strAngleRad) + strlen(strNbPts) + 5;
+            for(iVal = 0; iVal < ((nbPts)*2); iVal++)
+            {
+                sscanf(&(buffer[msgSize]), "%s", strValTemp);
+                sscanf(strValTemp, "%f", &valTemp);
+                data[iVal] = valTemp;
+                msgSize = msgSize + strlen(strValTemp) + 1;
+            }
+            for(iVal = 0; iVal < nbPts; iVal++)
+            {
+                Data->courbe.Chemin[iVal].x = CONVERT_FLOAT2SHORT_DISTANCE(data[iVal*2]);
+                Data->courbe.Chemin[iVal].y = CONVERT_FLOAT2SHORT_DISTANCE(data[iVal*2 + 1]);
+            }
+
+            break;
+
+        case MOVE_LINE :
+            /* decryptage du message de l'entree standard */
+            sscanf(buffer, "%s %s %u", msg_mvt, strMarche, &nbPts);
+            if (strMarche[0] == '-')
+                marche = -1;
+            else
+                marche = 1;
+
+            Data->line.Marche = marche;
+            Data->line.NbrePtsChemin = nbPts;
+
+            sscanf(buffer, "%s %s %s", msg_mvt, strMarche, strNbPts);
+            msgSize = strlen(msg_mvt) + strlen(strMarche) + strlen(strNbPts) + 3;
+            for(iVal = 0; iVal < ((nbPts)*2); iVal++)
+            {
+                sscanf(&(buffer[msgSize]), "%s", strValTemp);
+                sscanf(strValTemp, "%f", &valTemp);
+                data[iVal] = valTemp;
+                msgSize = msgSize + strlen(strValTemp) + 1;
+            }
+            for(iVal = 0; iVal < nbPts; iVal++)
+            {
+                Data->line.Chemin[iVal].x = CONVERT_FLOAT2SHORT_DISTANCE(data[iVal*2]);
+                Data->line.Chemin[iVal].y = CONVERT_FLOAT2SHORT_DISTANCE(data[iVal*2 + 1]);
+            }
+
+            break;
+
+        case MOVE_ARC :
+            /* decryptage du message de l'entree standard */
+            sscanf(buffer, "%s %s %f %f %f %u", msg_mvt, strMarche, &xCentre, &yCentre, &rayon, &nbPts);
+            if (strMarche[0] == '-')
+                marche = -1;
+            else
+                marche = 1;
+
+            Data->arc.Marche = marche;
+            Centre.x = CONVERT_FLOAT2SHORT_DISTANCE(xCentre);
+            Centre.y = CONVERT_FLOAT2SHORT_DISTANCE(yCentre);
+            Data->arc.Centre_rotation = Centre;
+            Data->arc.Rayon = rayon;
+            Data->arc.NbrePtsChemin = nbPts;
+
+            sscanf(buffer, "%s %s %s %s %s", msg_mvt, strMarche, strXCentre, strYCentre, strRayon, strNbPts);
+            msgSize = strlen(msg_mvt) + strlen(strMarche) + strlen(strXCentre) + strlen(strYCentre) + strlen(strRayon) + strlen(strNbPts) + 6;
+            for(iAngle = 0; iAngle < nbPts; iAngle++)
+            {
+                sscanf(&(buffer[msgSize]), "%s", strValTemp);
+                sscanf(strValTemp, "%f", &valTemp);
+                Data->arc.Chemin[iAngle] = (float)valTemp;
+                msgSize = msgSize + strlen(strValTemp) + 1;
+            }
+
+            break;
+    }
+
+    return msgSize;
+}
+
 int parameterMsgTreatment(char *buffer, unsigned int *p_nbParam, Parameter *p_param, unsigned int nbMaxParam)
 {
     char cmd[25], strNbParam[30], paramName[30], strValTemp[30];
@@ -101,6 +240,8 @@ int main(void)
     unsigned int nbrPtsChemin, nbrPtsNull, nbrParameters, iParam;
     float angleArrivee;
     Parameter paramPI[2], paramK[3], paramR[2], paramT[8], paramConfAsser[2], paramMotor[9];
+    Data_Goto Data_deplacement;
+    short iPt, iAngle;
 
     printf("asserSimulator: Demarrage simulateur\n");
 
@@ -144,27 +285,19 @@ int main(void)
             printf("asserSimulator: Initialisation effectuee\n");
             fflush(stdout);
         }
-        else if (strcmp(command, "MSG_MAIN_GOTO") == 0)
+        else if ((strcmp(command, "MSG_ROTATE") == 0)
+                 | (strcmp(command, "MSG_MOVE_CURVE") == 0)
+                 | (strcmp(command, "MSG_MOVE_LINE") == 0)
+                 | (strcmp(command, "MSG_MOVE_ARC") == 0) )
         {
-            commandMsgTreatment(buffer, &mouvement, &marche, &angle_rad, &nbrPtsChemin, chemin);
-            if (mouvement >= 10u)
-            {
-                mouvement -= 10u;
+            depCommandMsgTreatment(buffer, &mouvement, &Data_deplacement);
 
-                SIMU_InitialisationLogRobot();
-                /* initialisation des données pour l'ordre de déplacement */
-                /* lancement du deplacement */
-                ASSER_GoTo(chemin, nbrPtsChemin, mouvement, marche, angle_rad);
-            }
-            else
-            {
-                SIMU_InitialisationLogRobot();
-                /* initialisation des données pour l'ordre de déplacement */
-                /* lancement du deplacement */
-                ASSER_GoTo(chemin, nbrPtsChemin, mouvement, marche, angle_rad);
-                // execution du deplacement
-                SIMU_Mouvement();
-            }
+            SIMU_InitialisationLogRobot();
+            /* initialisation des données pour l'ordre de déplacement */
+            /* lancement du deplacement */
+            ASSER_GoTo(mouvement, &Data_deplacement);
+            // execution du deplacement
+            SIMU_Mouvement();
         }
         else if (strcmp(command, "MSG_TEST_PI") == 0)
         {

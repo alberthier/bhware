@@ -18,6 +18,7 @@
 #ifdef PIC32_BUILD
 #include "includes.h"
 #include "tools.h"
+#include "position.h"
 #include "HTTPpages.h"
 #include "task_uart.h"
 #ifndef S_SPLINT_S

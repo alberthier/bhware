@@ -24,28 +24,46 @@ unsigned char   ASSER_FragmentTraj  =   False;
 
 //const float     PI              =   3.1415;
 
-//extern void SIMU_REDEF_ASSER_GoTo(Vecteur *pointInter, unsigned int nbrPtsInter, Pose poseArrivee, unsigned int Mouvement, signed int Marche)
-extern void SIMU_REDEF_ASSER_GoTo(PtTraj *p_chemin, unsigned int nbrePtsChemin, unsigned int Mouvement, signed int Marche, float angle_rad)
+extern void SIMU_REDEF_ASSER_GoTo(unsigned char Mouvement, Data_Goto * Data)
 {
-//    #ifdef ASSER_POS
-//        Vecteur arrivee;
-//    #endif
-
-    /* Initialisation du module Position:couche d'abstraction des capteurs et actionneurs de positionnement */
-    if (ASSER_Running == False)
+    /* Cas de changement de trajectoire (evitement) */
+    if (ASSER_Running == True)
     {
-        POS_InitialisationSensMarche(Marche);
+        ASSER_Running = False;
     }
 
-//    /* Initialisation du module d'asservissement */
-//    #ifdef ASSER_POS
-//        arrivee.x = p_chemin[0].x;
-//        arrivee.y = p_chemin[0].y;
-//        ASSER_POS_Initialisation(arrivee, Mouvement);
-//    #endif
+    switch(Mouvement)
+    {
+        case ROTATE :
 
-    //ASSER_TRAJ_InitialisationTrajectoire(POS_GetPoseAsserRobot(), pointInter, nbrPtsInter, poseArrivee, Mouvement);
-    ASSER_TRAJ_InitialisationTrajectoire(POS_GetPoseAsserRobot(), p_chemin, nbrePtsChemin, Mouvement, angle_rad);
+            /* Initialisation du sens de marche AVANT ou ARRIERE, du module POSITION */
+            POS_InitialisationSensMarche(MARCHE_AVANT);
+
+            break;
+
+        case MOVE_CURVE :
+
+            /* Initialisation du sens de marche AVANT ou ARRIERE, du module POSITION */
+            POS_InitialisationSensMarche(Data->courbe.Marche);
+
+            break;
+
+        case MOVE_LINE :
+
+            /* Initialisation du sens de marche AVANT ou ARRIERE, du module POSITION */
+            POS_InitialisationSensMarche(Data->line.Marche);
+
+            break;
+
+        case MOVE_ARC :
+
+            /* Initialisation du sens de marche AVANT ou ARRIERE, du module POSITION */
+            POS_InitialisationSensMarche(Data->arc.Marche);
+
+            break;
+    }
+
+    ASSER_TRAJ_InitialisationTrajectoire(POS_GetPoseAsserRobot(), Mouvement, Data);
 
     /* Declenchement de l'asservissement */
     ASSER_Running = True;

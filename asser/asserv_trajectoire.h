@@ -96,6 +96,7 @@ typedef struct
 typedef struct
 {
     unsigned char           mouvement;
+    unsigned char           use_angle;
     ParametresProfilVitesse profilVitesse;
     segmentTrajectoireBS    segmentTrajBS[(NBRE_MAX_PTS_TRAJ + 1)];
     unsigned int            nbreSegments;
@@ -131,10 +132,11 @@ extern Trajectoire          chemin;
 
 extern float                VminMouv;
 
+extern const float          EcartVitesseDecc;
 /* Prototypes de function globales asserv_trajectoire */
 
 extern void                 ASSER_TRAJ_InitialisationGenerale(void);
-extern void                 ASSER_TRAJ_InitialisationTrajectoire(Pose poseRobot, PtTraj * point, unsigned int nbrePts, unsigned int mouvement, float angle_rad);
+extern void                 ASSER_TRAJ_InitialisationTrajectoire(Pose poseRobot, unsigned char Mouvement, Data_Goto * Data);
 extern void                 ASSER_TRAJ_AsservissementMouvementRobot(Pose poseRobot, VitessesRobotUnicycle * vitessesConsignes);
 extern Pose                 ASSER_TRAJ_Trajectoire(segmentTrajectoireBS * segmentTraj, unsigned int iSegment, float t);
 extern void                 ASSER_TRAJ_ParcoursTrajectoire(Trajectoire *traj, float delta_distance, unsigned int *segmentCourant, float *paramPoseSegTraj, unsigned char * pReturn);

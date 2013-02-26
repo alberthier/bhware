@@ -22,6 +22,9 @@
 
 #define                         NbrMesuresMax           150u   
 
+/* Macro */
+
+#define                         CONVERT_V(x)            (((float)x * 20.0) / 128.0)
 /************************************************************************************************/
 
 /* Variables globales */
@@ -58,8 +61,13 @@ extern  float                   Vitesse_MD_PIC_PI;
 extern  float                   Vitesse_MG_PIC_PI;
 
 /** Flag de saturation du PI*/
-extern unsigned char    		SaturationPIDflag;
-extern unsigned char    		SaturationPIGflag;
+extern unsigned char            SaturationPIDflag;
+extern unsigned char            SaturationPIGflag;
+
+/** Tension batteries D */
+extern unsigned char            VBatD;
+/** Tension batteries G */
+extern unsigned char            VBatG;
 
 /*! @} */
 

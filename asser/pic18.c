@@ -63,6 +63,10 @@ unsigned char                   SaturationPIDflag                           =   
 /** Flag de saturation du PI G */
 unsigned char                   SaturationPIGflag                           =   False;
 
+/** Tension batteries D */
+unsigned char                   VBatD                                       =   0;
+/** Tension batteries G */
+unsigned char                   VBatG                                       =   0;
 /*! @} */
 
 /*! @} */
