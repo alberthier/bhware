@@ -179,6 +179,7 @@ MOVEMENT = Enum("Movement",
 )
 
 DIRECTION = Enum("Direction",
+    DIRECTION_AUTO     =  0,
     DIRECTION_FORWARD  =  1,
     DIRECTION_BACKWARD = -1,
 )

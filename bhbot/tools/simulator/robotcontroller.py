@@ -107,7 +107,6 @@ class RobotController(object):
             self.process = None
             self.socket = None
             self.ready = False
-            self.robot_layer.terminate()
 
 
     def connected(self, socket):
@@ -138,10 +137,6 @@ class RobotController(object):
                     packet.dispatch(self.trajectory_layer)
                     packet.dispatch(self.grid_routing_layer)
                     packet.dispatch(self.graph_routing_layer)
-
-
-    def on_goto(self, packet):
-        self.send_packet(packets.GotoStarted())
 
 
     def on_enable_anti_blocking(self, packet):

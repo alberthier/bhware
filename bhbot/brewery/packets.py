@@ -142,24 +142,28 @@ class Pose(Struct):
 
 
 
-class OptionalAngle(FloatRadian):
+class OptionalAngle(AbstractItem):
 
+    C_TYPE = 'Bf'
     DESCRIPTION = "Optional angle"
 
     def __init__(self, default_value, description = None):
-        FloatRadian.__init__(self, default_value, description)
+        AbstractItem.__init__(self, default_value, description)
 
 
     def serialize(self, value, buf):
         if value is not None:
+            buf.append(1)
             buf.append(value)
         else:
+            buf.append(0)
             buf.append(-1100000.0)
 
 
     def deserialize(self, iterator):
+        use_angle = next(iterator)
         angle = next(iterator)
-        if angle < -1000000.0:
+        if not use_angle:
             angle = None
         return angle
 
@@ -398,12 +402,24 @@ class Start(BasePacket):
 
 
 
-class Goto(BasePacket):
+
+class Rotate(BasePacket):
 
     TYPE = 55
     LOGVIEW_COLOR = "#ff7f50"
     DEFINITION = (
-        ('movement' , UEnum8       (MOVEMENT,  MOVEMENT_MOVE)),
+        ('direction', Enum8(DIRECTION, DIRECTION_AUTO)),
+        ('angle'    , Float(0.0, "Destination angle")),
+    )
+
+
+
+
+class MoveCurve(BasePacket):
+
+    TYPE = 56
+    LOGVIEW_COLOR = "#ff7f50"
+    DEFINITION = (
         ('direction', Enum8        (DIRECTION, DIRECTION_FORWARD)),
         ('angle'    , OptionalAngle(None, "Destination angle")),
         ('points'   , List         (62, Point(), [], "List of points to follow")),
@@ -412,9 +428,43 @@ class Goto(BasePacket):
 
 
 
+class MoveLine(BasePacket):
+
+    TYPE = 57
+    LOGVIEW_COLOR = "#ff7f50"
+    DEFINITION = (
+        ('direction', Enum8(DIRECTION, DIRECTION_FORWARD)),
+        ('points'   , List (63, Point(), [], "List of points to follow")),
+    )
+
+
+
+
+class MoveArc(BasePacket):
+
+    TYPE = 58
+    LOGVIEW_COLOR = "#ff7f50"
+    DEFINITION = (
+        ('direction', Enum8(DIRECTION, DIRECTION_FORWARD)),
+        ('center'   , Point()),
+        ('radius'   , Float(0.0, "Arc radius")),
+        ('points'   , List (63, Float(0.0), [], "List of points to follow")),
+    )
+
+
+
+
 class GotoStarted(BasePacket):
 
-    TYPE = 56
+    TYPE = 59
+    LOGVIEW_COLOR = "#6495ed"
+
+
+
+
+class WaypointReached(BasePacket):
+
+    TYPE = 60
     LOGVIEW_COLOR = "#6495ed"
 
 
@@ -422,7 +472,7 @@ class GotoStarted(BasePacket):
 
 class GotoFinished(BasePacket):
 
-    TYPE = 57
+    TYPE = 61
     LOGVIEW_COLOR = "#daa520"
     DEFINITION = (
         ('reason'             , UEnum8(REASON, REASON_DESTINATION_REACHED)),
@@ -435,7 +485,7 @@ class GotoFinished(BasePacket):
 
 class EnableAntiBlocking(BasePacket):
 
-    TYPE = 58
+    TYPE = 62
     LOGVIEW_COLOR = "#00ffff"
 
 
@@ -443,7 +493,7 @@ class EnableAntiBlocking(BasePacket):
 
 class DisableAntiBlocking(BasePacket):
 
-    TYPE = 59
+    TYPE = 63
     LOGVIEW_COLOR = "#00008b"
 
 
@@ -451,7 +501,7 @@ class DisableAntiBlocking(BasePacket):
 
 class KeepAlive(BasePacket):
 
-    TYPE = 60
+    TYPE = 64
     LOGVIEW_COLOR = "#8b008b"
     LOGVIEW_DEFAULT_ENABLED = False
     DEFINITION = (
@@ -465,7 +515,7 @@ class KeepAlive(BasePacket):
 
 class PositionControlConfig(BasePacket):
 
-    TYPE = 61
+    TYPE = 65
     LOGVIEW_COLOR = "#556b2f"
     DEFINITION = (
         ('t_acc'   , Float(0.0)),
@@ -477,7 +527,7 @@ class PositionControlConfig(BasePacket):
 
 class Stop(BasePacket):
 
-    TYPE = 62
+    TYPE = 66
     LOGVIEW_COLOR = "#b22222"
 
 
@@ -485,7 +535,7 @@ class Stop(BasePacket):
 
 class Resettle(BasePacket):
 
-    TYPE = 63
+    TYPE = 67
     LOGVIEW_COLOR = "#ff1493"
     DEFINITION = (
         ('axis'    , UEnum8     (AXIS, AXIS_X)),
@@ -498,7 +548,7 @@ class Resettle(BasePacket):
 
 class StopAll(BasePacket):
 
-    TYPE = 64
+    TYPE = 68
     LOGVIEW_COLOR = "#ff1493"
 
 
@@ -506,7 +556,7 @@ class StopAll(BasePacket):
 
 class GlassPresent(BasePacket):
 
-    TYPE = 65
+    TYPE = 69
     DEFINITION = (
         ('side', UEnum8(SIDE, SIDE_LEFT)),
     )
@@ -516,7 +566,7 @@ class GlassPresent(BasePacket):
 
 class Nipper(BasePacket):
 
-    TYPE = 66
+    TYPE = 70
     DEFINITION = (
         ('side', UEnum8(SIDE, SIDE_LEFT)),
         ('move', UEnum8(MOVE, MOVE_CLOSE)),
@@ -527,7 +577,7 @@ class Nipper(BasePacket):
 
 class Lifter(BasePacket):
 
-    TYPE = 67
+    TYPE = 71
     DEFINITION = (
         ('side', UEnum8(SIDE       , SIDE_LEFT)),
         ('move', UEnum8(LIFTER_MOVE, LIFTER_MOVE_DOWN)),
@@ -538,7 +588,7 @@ class Lifter(BasePacket):
 
 class Gripper(BasePacket):
 
-    TYPE = 68
+    TYPE = 72
     DEFINITION = (
         ('side', UEnum8(SIDE, SIDE_LEFT)),
         ('move', UEnum8(MOVE, MOVE_CLOSE)),
@@ -549,7 +599,7 @@ class Gripper(BasePacket):
 
 class Holder(BasePacket):
 
-    TYPE = 79
+    TYPE = 73
     DEFINITION = (
         ('side', UEnum8(SIDE, SIDE_LEFT)),
         ('move', UEnum8(MOVE, MOVE_CLOSE)),
@@ -560,7 +610,7 @@ class Holder(BasePacket):
 
 class CandleKicker(BasePacket):
 
-    TYPE = 70
+    TYPE = 74
     DEFINITION = (
         ('side'    , UEnum8(SIDE                  , SIDE_LEFT)),
         ('which'   , UEnum8(CANDLE_KICKER         , CANDLE_KICKER_LOWER)),
@@ -572,7 +622,7 @@ class CandleKicker(BasePacket):
 
 class GiftOpener(BasePacket):
 
-    TYPE = 71
+    TYPE = 75
     DEFINITION = (
         ('position', UEnum8(GIFT_OPENER_POSITION, GIFT_OPENER_POSITION_IDLE)),
     )
@@ -582,7 +632,7 @@ class GiftOpener(BasePacket):
 
 class Pump(BasePacket):
 
-    TYPE = 72
+    TYPE = 76
     DEFINITION = (
         ('action', UEnum8(PUMP, PUMP_OFF)),
     )

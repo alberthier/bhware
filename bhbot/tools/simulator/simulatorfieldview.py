@@ -18,7 +18,6 @@ import logger
 
 import fieldview
 import helpers
-import dynamics
 
 
 
@@ -87,8 +86,6 @@ class GlassDetector(QGraphicsLineItem):
 
 class GraphicsRobotObject(QObject):
 
-    movement_finished = pyqtSignal(int)
-
     def __init__(self, layer):
         QObject.__init__(self)
 
@@ -101,7 +98,8 @@ class GraphicsRobotObject(QObject):
 
         self.glass_detectors = []
         self.carried_elements = []
-        self.cpt = 0
+        self.current_goto_packet = None
+        self.current_point_index = 0
 
 
     def setup(self):
@@ -206,55 +204,14 @@ class GraphicsRobotObject(QObject):
         return position.Pose(x, y, angle)
 
 
-    def animate(self, points):
-        self.move_animation.clear()
-        end_time = points[-1][1]
-        if end_time == 0.0:
-            self.movement_finished.emit(0)
-            print("end_time == 0.0 !?")
-            return
-
-        rotate_animation = QPropertyAnimation()
-        self.move_animation.addAnimation(rotate_animation)
-        rotate_animation.setDuration(end_time * 1000.0)
-        rotate_animation.setTargetObject(self)
-        rotate_animation.setPropertyName("angle")
-
-        pos_animation = QPropertyAnimation()
-        self.move_animation.addAnimation(pos_animation)
-        pos_animation.setDuration(end_time * 1000.0)
-        pos_animation.setTargetObject(self)
-        pos_animation.setPropertyName("position")
-
-        current = self.item.rotation() % 360.0
-        rotate_animation.setKeyValueAt(0.0, current)
-        offset = 0.0
-        for (segmentNb, time, pose) in points:
-            pos_animation.setKeyValueAt(time / end_time, QPointF(pose.y * 1000.0, pose.x * 1000.0))
-            if pose.angle != None:
-                ref_angle = self.convert_angle(pose.angle)
-                angle_deg = ((ref_angle) / math.pi * 180.0) % 360.0
-            else:
-                angle_deg = current
-            if abs(current - angle_deg) > 180.0:
-                if current > angle_deg:
-                    offset += 360.0
-                else:
-                    offset -= 360.0
-            current = angle_deg
-            angle_deg += offset
-            rotate_animation.setKeyValueAt(time / end_time, angle_deg)
-
-        self.move_animation.start()
-
-
     def animation_state_changed(self, new_state, old_state):
         if new_state == QAbstractAnimation.Stopped :
-            self.movement_finished.emit(0)
+            self.process()
 
 
     def create_rotation_animation(self, angle):
-        # Map from robot field reference to Qt referenef_angle = self.convert_angle(angle)
+        # Map from robot field reference to Qt reference
+        ref_angle = self.convert_angle(angle)
         angle_deg = ((ref_angle) / math.pi * 180.0)
 
         current = self.item.rotation() % 360.0
@@ -276,13 +233,6 @@ class GraphicsRobotObject(QObject):
         return rotate_animation
 
 
-    def robot_rotation(self, angle):
-        rotate_animation = self.create_rotation_animation(angle)
-        self.move_animation.clear()
-        self.move_animation.addAnimation(rotate_animation)
-        self.move_animation.start()
-
-
     def create_linear_animation(self, x, y):
         # Map from robot field reference to Qt reference
         ref_x = y * 1000.0
@@ -301,6 +251,16 @@ class GraphicsRobotObject(QObject):
         return pos_animation
 
 
+    def create_arc_animation(self, center, radius, angle):
+        pass
+
+    def robot_rotation(self, angle):
+        rotate_animation = self.create_rotation_animation(angle)
+        self.move_animation.clear()
+        self.move_animation.addAnimation(rotate_animation)
+        self.move_animation.start()
+
+
     def robot_line(self, x, y):
         pos_animation = self.create_linear_animation(x, y)
         self.move_animation.clear()
@@ -316,6 +276,68 @@ class GraphicsRobotObject(QObject):
         self.move_animation.addAnimation(rotate_animation)
         self.move_animation.addAnimation(pos_animation)
         self.move_animation.start()
+
+
+    def on_rotate(self, packet):
+        self.layer.robot_controller.send_packet(packets.GotoStarted())
+        self.robot_rotation(packet.angle)
+
+
+    def on_move_curve(self, packet):
+        self.layer.robot_controller.send_packet(packets.GotoStarted())
+        p1 = self.get_pose()
+        for p2 in packet.points:
+            p2.angle = tools.angle_between(p1.x, p1.y, p2.x, p2.y)
+            p1 = p2
+        if packet.angle is not None:
+            p1.angle = packet.angle
+        self.current_goto_packet = packet
+        self.process()
+
+
+    def on_move_line(self, packet):
+        self.layer.robot_controller.send_packet(packets.GotoStarted())
+        self.current_goto_packet = packet
+        self.process()
+
+
+    def on_move_arc(self, packet):
+        self.layer.robot_controller.send_packet(packets.GotoStarted())
+        self.current_goto_packet = packet
+        self.process()
+
+
+    def process(self):
+        if self.current_goto_packet is None or len(self.current_goto_packet.points) == 0:
+            p = packets.GotoFinished(reason = REASON_DESTINATION_REACHED,
+                                     current_pose = self.get_pose(),
+                                     current_point_index = self.current_point_index)
+            self.layer.robot_controller.send_packet(p)
+            self.current_goto_packet = None
+            self.current_point_index = 0
+        else:
+            if self.current_point_index != 0:
+                self.layer.robot_controller.send_packet(packets.WaypointReached())
+            p = self.current_goto_packet.points[0]
+            del self.current_goto_packet.points[0]
+            self.current_point_index += 1
+            if isinstance(self.current_goto_packet, packets.MoveCurve):
+                self.robot_move(p.x, p.y, p.angle)
+            elif isinstance(self.current_goto_packet, packets.MoveLine):
+                self.robot_line(p.x, p.y)
+            elif isinstance(self.current_goto_packet, packets.MoveArc):
+                self.robot_arc(self.current_goto_packet.center.x, self.current_goto_packet.center.y, self.current_goto_packet.radius, p)
+            else:
+                raise NotImplementedError("Unimplemented move")
+
+
+    def on_resettle(self, packet):
+        if packet.axis == AXIS_X:
+            self.item.setY(packet.position * 1000.0)
+        elif packet.axis == AXIS_Y:
+            self.item.setX(packet.position * 1000.0)
+        angle_deg = self.convert_angle(packet.angle) / math.pi * 180.0
+        self.set_rotation(angle_deg)
 
 
     def on_candle_kicker(self, packet):
@@ -378,7 +400,6 @@ class GraphicsRobotObject(QObject):
 
 class RobotLayer(fieldview.Layer):
 
-
     def __init__(self, field_view_controller, robot_controller):
         fieldview.Layer.__init__(self,
                                  field_view_controller,
@@ -386,48 +407,16 @@ class RobotLayer(fieldview.Layer):
                                  robot_controller.team_color)
         self.robot_controller = robot_controller
         self.robot = GraphicsRobotObject(self)
-        self.robot.movement_finished.connect(self.movement_finished)
-        self.dynamics = None
 
 
     def setup(self):
         self.update_title(self.robot_controller.team_name + " robot", self.robot_controller.team_color)
         self.robot.setup()
         self.robot.item.setVisible(True)
-        self.use_advanced_dynamics(False)
-
-
-    def use_advanced_dynamics(self, advanced):
-        if advanced:
-            self.dynamics = dynamics.PositionControlSimulatorDynamics()
-        else:
-            self.dynamics = dynamics.BasicDynamics(self.robot)
-        self.dynamics.setup()
-        self.dynamics.simulation_finished.connect(self.robot.animate)
-        self.dynamics.simulation_finished.connect(self.robot_controller.trajectory_layer.set_points)
 
 
     def get_pose(self):
         return self.robot.get_pose()
-
-
-    def on_goto(self, packet):
-        self.dynamics.goto(packet)
-
-
-    def on_resettle(self, packet):
-        if packet.axis == AXIS_X:
-            self.robot.item.setY(packet.position * 1000.0)
-            self.dynamics.resettle(packet)
-        elif packet.axis == AXIS_Y:
-            self.robot.item.setX(packet.position * 1000.0)
-            self.dynamics.resettle(packet)
-        angle_deg = self.robot.convert_angle(packet.angle) / math.pi * 180.0
-        self.robot.set_rotation(angle_deg)
-
-
-    def movement_finished(self, goto_packet_point_index):
-        self.robot_controller.send_goto_finished(REASON_DESTINATION_REACHED, goto_packet_point_index)
 
 
     def on_packet(self, packet):
@@ -468,10 +457,6 @@ class RobotLayer(fieldview.Layer):
                 packet.distance = 1
                 packet.robot = OPPONENT_ROBOT_SECONDARY
                 self.robot_controller.send_packet(packet)
-
-
-    def terminate(self):
-        self.dynamics.terminate()
 
 
 
