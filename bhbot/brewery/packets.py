@@ -448,7 +448,7 @@ class MoveArc(BasePacket):
         ('direction', Enum8(DIRECTION, DIRECTION_FORWARD)),
         ('center'   , Point()),
         ('radius'   , Float(0.0, "Arc radius")),
-        ('points'   , List (63, Float(0.0), [], "List of points to follow")),
+        ('points'   , List (61, Float(0.0), [], "List of points to follow")),
     )
 
 
