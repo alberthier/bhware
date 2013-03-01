@@ -251,8 +251,26 @@ class GraphicsRobotObject(QObject):
         return pos_animation
 
 
-    def create_arc_animation(self, center, radius, angle):
-        pass
+    def create_arc_animation(self, center_x, center_y, radius, angle):
+        r = radius * 1000.0
+        cx = center_y * 1000.0
+        cy = center_x * 1000.0
+        ca = tools.angle_between(cx, cy, self.item.pos().x(), self.item.pos().y())
+        da = self.convert_angle(angle) - ca
+        duration = abs(r * da)
+        pos_animation = QPropertyAnimation()
+        pos_animation.setTargetObject(self)
+        pos_animation.setPropertyName("position")
+        pos_animation.setDuration(duration)
+        pos_animation.setStartValue(self.item.pos())
+        for i in range(10):
+            step = float(i + 1) / 10.0
+            x = cx + math.cos(ca + step * da) * r
+            y = cy + math.sin(ca + step * da) * r
+            pos_animation.setKeyValueAt(step, QPointF(x, y))
+            na = (self.item.rotation() % 360.0 + math.degrees(da)) * step
+        return pos_animation
+
 
     def robot_rotation(self, angle):
         rotate_animation = self.create_rotation_animation(angle)
@@ -271,6 +289,16 @@ class GraphicsRobotObject(QObject):
     def robot_move(self, x, y, angle):
         rotate_animation = self.create_rotation_animation(angle)
         pos_animation = self.create_linear_animation(x, y)
+        rotate_animation.setDuration(pos_animation.duration())
+        self.move_animation.clear()
+        self.move_animation.addAnimation(rotate_animation)
+        self.move_animation.addAnimation(pos_animation)
+        self.move_animation.start()
+
+
+    def robot_arc(self, center_x, center_y, radius, angle):
+        rotate_animation = self.create_rotation_animation(angle + math.pi / 2.0)
+        pos_animation = self.create_arc_animation(center_x, center_y, radius, angle)
         rotate_animation.setDuration(pos_animation.duration())
         self.move_animation.clear()
         self.move_animation.addAnimation(rotate_animation)
