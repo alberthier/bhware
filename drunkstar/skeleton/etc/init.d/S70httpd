@@ -1,0 +1,2 @@
+#!/bin/sh
+/usr/sbin/httpd -c /etc/httpd.conf
