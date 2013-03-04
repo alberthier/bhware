@@ -429,4 +429,3 @@ class EventLoop(object):
             self.robot_log_channel.close()
         if self.colordetector is not None:
             self.colordetector.quit()
-        logger.close()

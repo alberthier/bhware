@@ -41,3 +41,4 @@ if __name__ == "__main__":
     loop = eventloop.EventLoop(args.statemachine, args.webserver_port)
     leds.initialize(loop)
     loop.start()
+    logger.close()

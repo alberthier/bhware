@@ -17,7 +17,7 @@ LOG_LINE_PACKET  = 2
 LOG_LINE_CONTENT = 3
 
 filepath = None
-log_file = None
+log_lines = []
 start_time = None
 color_start = ""
 color_stop = ""
@@ -25,29 +25,10 @@ color_stop = ""
 
 def initialize():
     global filepath
-    global log_file
     global start_time
-    if log_file is None:
+    if filepath is None:
         start_time = datetime.datetime.now()
         filepath = get_next_log_filepath()
-        #noinspection PyBroadException
-        try:
-            log_file = open(filepath, "w")
-            os.chmod(filepath, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR | stat.S_IRGRP | stat.S_IXGRP | stat.S_IROTH | stat.S_IXOTH)
-        except:
-            log_file = open(os.devnull, "w")
-        log_file.write("#!/usr/bin/env python3\n")
-        log_file.write("# encoding: utf-8\n\n")
-        log_file.write("from packets import *\n")
-        log_file.write("from trajectory import *\n\n")
-        log_file.write("log = []\n\n")
-        log_file.write("if __name__ == '__main__':\n")
-        log_file.write("    def l(line):\n")
-        log_file.write("        print(line)\n")
-        log_file.write("else:\n")
-        log_file.write("    def l(line):\n")
-        log_file.write("        global log\n")
-        log_file.write("        log.append(line)\n\n")
         log("Logging to '{}'".format(os.path.split(filepath)[1]))
 
 
@@ -63,31 +44,46 @@ def set_team(team):
 
 
 def close():
-    global log_file
     global filepath
-    if log_file is None:
+    global log_lines
+    if filepath is None:
         return
-    log_file.close()
+    try:
+        log_file = open(filepath, "w")
+        os.chmod(filepath, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR | stat.S_IRGRP | stat.S_IXGRP | stat.S_IROTH | stat.S_IXOTH)
+        log_file.write("#!/usr/bin/env python3\n")
+        log_file.write("# encoding: utf-8\n\n")
+        log_file.write("from packets import *\n")
+        log_file.write("from trajectory import *\n\n")
+        log_file.write("log = []\n\n")
+        log_file.write("if __name__ == '__main__':\n")
+        log_file.write("    def l(line):\n")
+        log_file.write("        print(line)\n")
+        log_file.write("else:\n")
+        log_file.write("    def l(line):\n")
+        log_file.write("        global log\n")
+        log_file.write("        log.append(line)\n\n")
+        for log_line in log_lines:
+            log_file.write(log_line)
+        log_file.close()
+    except:
+        pass
     filepath = None
-    log_file = None
+    log_lines = []
     subprocess.Popen(["/bin/sync"]).wait()
 
 
 def log(text, sender = "ARM"):
-    global log_file
     global start_time
     global color_start
     global color_stop
+    global log_lines
     initialize()
     delta = datetime.datetime.now() - start_time
     time = "'{:=0.02f}'".format(delta.total_seconds())
     if type(text) != str:
         text = str(text)
-    #noinspection PyBroadException
-    try:
-        log_file.write("l([" + time + ",'" + sender + "','LOG','# " + text.replace("'", "\\'") + "'])\n")
-    except:
-        print("Failed to write to file")
+    log_lines.append("l([" + time + ",'" + sender + "','LOG','# " + text.replace("'", "\\'") + "'])\n")
     sys.stdout.write(color_start + text + color_stop + "\n")
     sys.stdout.flush()
 
@@ -100,15 +96,13 @@ def log_exception(exc):
 
 
 def log_packet(packet, sender = "ARM"):
+    global log_lines
     initialize()
     delta = datetime.datetime.now() - start_time
     time = "'{:=0.02f}'".format(delta.total_seconds())
     text = "'" + sender + "'," + type(packet).__name__ + ",\"" + packet.to_dump() + "\"]"
-    #noinspection PyBroadException
-    try:
-        log_file.write("l([" + time + "," + text + ")\n")
-    except:
-        print("Failed to write to file")
+    if not isinstance(packet, packets.KeepAlive) or packet.match_time > 0 and packet.match_time < 90000:
+        log_lines.append("l([" + time + "," + text + ")\n")
     if not isinstance(packet, packets.KeepAlive) and not type(packet).__name__.startswith("Simulator"):
         sys.stdout.write("[" + text + "\n")
         sys.stdout.flush()
