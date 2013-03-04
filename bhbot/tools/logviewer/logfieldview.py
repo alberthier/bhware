@@ -36,7 +36,7 @@ class RealTrajectoryLayer(fieldview.Layer):
                 self.path.moveTo(y * 1000.0, x * 1000.0)
             else:
                 self.path.lineTo(y * 1000.0, x * 1000.0)
-        if packet_type is packets.Goto:
+        if packet_type is packets.Rotate or packet_type is packets.MoveLine or packet_type is packets.MoveCurve or packet_type is packets.MoveArc:
             movement = logtools.get_value(log_line[logger.LOG_LINE_CONTENT], "movement")
             if movement != MOVEMENT_ROTATE:
                 self.has_first_goto = True
@@ -45,7 +45,6 @@ class RealTrajectoryLayer(fieldview.Layer):
             path_item = QGraphicsPathItem(self)
             path_item.setPen(QPen(QColor(self.color), 10))
             path_item.setPath(self.path)
-
 
 
 
@@ -68,13 +67,20 @@ class ExpectedTrajectoryLayer(fieldview.Layer):
                 self.path.moveTo(self.path.currentPosition().x(), position * 1000.0)
             else:
                 self.path.moveTo(position * 1000.0, self.path.currentPosition().y())
-        if packet_type is packets.Goto:
-            movement = logtools.get_value(log_line[logger.LOG_LINE_CONTENT], "movement")
-            if movement != MOVEMENT_ROTATE:
-                for p in logtools.get_value(log_line[logger.LOG_LINE_CONTENT], "points"):
-                    x = logtools.get_value(p, "x")
-                    y = logtools.get_value(p, "y")
-                    self.path.lineTo(y * 1000.0, x * 1000.0)
+        if packet_type is packets.MoveLine or packet_type is packets.MoveCurve:
+            for p in logtools.get_value(log_line[logger.LOG_LINE_CONTENT], "points"):
+                x = logtools.get_value(p, "x")
+                y = logtools.get_value(p, "y")
+                self.path.lineTo(y * 1000.0, x * 1000.0)
+        elif packet_type is packets.MoveArc:
+            center_x = logtools.get_value(logtools.get_value(log_line, "center"), 'x')
+            center_y = logtools.get_value(logtools.get_value(log_line, "center"), 'y')
+            radius = logtools.get_value(log_line, "radius")
+            points = logtools.get_value(log_line, "points")
+            for p in points:
+                x = center_x + radius * math.cos(p)
+                y = center_y + radius * math.cos(p)
+                self.path.lineTo(y * 1000.0, x * 1000.0)
 
         if lineno == last_lineno:
             path_item = QGraphicsPathItem(self)
