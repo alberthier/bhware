@@ -101,7 +101,7 @@ else:
     LOG_DIR                            = os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file__))), "logs")
 
 # Brewery's web sever
-WEB_SERVER_PORT                        = 80
+WEB_SERVER_PORT                        = 8080
 
 # Default state machine name
 STATE_MACHINE                          = "default"
