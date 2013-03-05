@@ -408,8 +408,8 @@ class EventLoop(object):
             except serial.SerialException:
                 logger.log("Unable to open serial port {}".format(SERIAL_PORT_PATH))
                 self.turret_channel = None
-        RobotControlDeviceStarter(self)
         logger.log("Starting brewery with state machine '{}'".format(self.state_machine_name))
+        RobotControlDeviceStarter(self)
         while not self.stopping:
             asyncore.loop(EVENT_LOOP_TICK_RESOLUTION_S, True, None, 1)
             self.get_current_state().on_timer_tick()
