@@ -73,10 +73,12 @@ class ExpectedTrajectoryLayer(fieldview.Layer):
                 y = logtools.get_value(p, "y")
                 self.path.lineTo(y * 1000.0, x * 1000.0)
         elif packet_type is packets.MoveArc:
-            center_x = logtools.get_value(logtools.get_value(log_line, "center"), 'x')
-            center_y = logtools.get_value(logtools.get_value(log_line, "center"), 'y')
-            radius = logtools.get_value(log_line, "radius")
-            points = logtools.get_value(log_line, "points")
+            content = log_line[logger.LOG_LINE_CONTENT]
+            center = logtools.get_value(content, "center")
+            center_x = logtools.get_value(center, 'x')
+            center_y = logtools.get_value(center, 'y')
+            radius = logtools.get_value(content, "radius")
+            points = logtools.get_value(content, "points")
             for p in points:
                 x = center_x + radius * math.cos(p)
                 y = center_y + radius * math.cos(p)
