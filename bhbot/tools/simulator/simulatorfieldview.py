@@ -268,7 +268,6 @@ class GraphicsRobotObject(QObject):
             x = cx + math.cos(ca + step * da) * r
             y = cy + math.sin(ca + step * da) * r
             pos_animation.setKeyValueAt(step, QPointF(x, y))
-            na = (self.item.rotation() % 360.0 + math.degrees(da)) * step
         return pos_animation
 
 
@@ -297,7 +296,7 @@ class GraphicsRobotObject(QObject):
 
 
     def robot_arc(self, center_x, center_y, radius, angle):
-        rotate_animation = self.create_rotation_animation(angle + math.pi / 2.0)
+        rotate_animation = self.create_rotation_animation(angle + math.copysign(math.pi / 2.0, angle))
         pos_animation = self.create_arc_animation(center_x, center_y, radius, angle)
         rotate_animation.setDuration(pos_animation.duration())
         self.move_animation.clear()
