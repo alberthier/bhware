@@ -361,6 +361,10 @@ class TrajectoryWalk(statemachine.State):
         self.jobs.append(('create_follow_packet', (points, angle, direction)))
 
 
+    def follow_arc(self, direction, center, radius, *args):
+        self.jobs.append(('create_follow_arc_packet', (direction, center, radius, args)))
+
+
     def wait_for(self, substate):
         self.jobs.append(substate)
 
@@ -371,13 +375,8 @@ class TrajectoryWalk(statemachine.State):
 
 
     def create_move_to_packet(self, x, y, direction = DIRECTION_FORWARD):
-        packet = packets.Goto()
-        packet.movement = MOVEMENT_LINE
+        packet = packets.MoveLine()
         packet.direction = direction
-        #if tools.quasi_equal(x, 0.0) or tools.quasi_equal(x, self.robot().pose.x):
-            #x += 0.001
-        #if tools.quasi_equal(y, 0.0) or tools.quasi_equal(y, self.robot().pose.y):
-            #y += 0.001
         packet.points = [ position.Pose(x, y, None, True) ]
         return packet
 
@@ -422,24 +421,14 @@ class TrajectoryWalk(statemachine.State):
 
     def create_rotate_to_packet(self, angle):
         angle = position.Pose(0.0, 0.0, angle, True).angle
-        packet = packets.Goto()
-        packet.movement = MOVEMENT_ROTATE
-        angle = tools.normalize_angle(angle)
-        #if tools.quasi_equal(angle, self.robot().pose.angle) or \
-            #tools.quasi_equal(angle, 0.0) or \
-            #tools.quasi_equal(angle, math.pi / 2.0) or \
-            #tools.quasi_equal(angle, math.pi) or \
-            #tools.quasi_equal(angle, -math.pi) or \
-            #tools.quasi_equal(angle, -math.pi / 2.0):
-            #angle += 0.001
-        packet.angle = angle
+        packet = packets.Rotate()
+        packet.angle = tools.normalize_angle(angle)
         return packet
 
 
     def create_goto_packet(self, x, y, angle, direction = DIRECTION_FORWARD):
         dest = position.Pose(x, y, angle, True)
-        packet = packets.Goto()
-        packet.movement = MOVEMENT_MOVE
+        packet = packets.MoveCurve()
         packet.direction = direction
         packet.angle = dest.angle
         packet.points = [ dest ]
@@ -464,11 +453,24 @@ class TrajectoryWalk(statemachine.State):
 
     def create_follow_packet(self, points, angle = None, direction = DIRECTION_FORWARD):
         dest = position.Pose(0.0, 0.0, angle, True)
-        packet = packets.Goto()
-        packet.movement = MOVEMENT_MOVE
+        packet = packets.MoveCurve()
         packet.direction = direction
         packet.angle = dest.angle
         packet.points = points
+        return packet
+
+
+    def create_follow_arc_packet(self, direction, center, radius, *args):
+        angles = []
+        for angle in args[0]:
+            logger.log(angle)
+            dest = position.Pose(0.0, 0.0, angle, True)
+            angles.append(dest.angle)
+        packet = packets.MoveArc()
+        packet.direction = direction
+        packet.center = center
+        packet.radius = radius
+        packet.points = angles
         return packet
 
 
