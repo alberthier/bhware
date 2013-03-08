@@ -22,7 +22,7 @@ class LinearSpeedViewController(QObject):
         self.ui = ui
 
         self.points = []
-        self.speeds = []
+        self.speeds = [0.0]
 
         self.max_speed = 0.0
         self.average_speed = 0.0
@@ -74,7 +74,7 @@ class AngularSpeedViewController(QObject):
         self.ui = ui
 
         self.angles = []
-        self.speeds = []
+        self.speeds = [0.0]
 
         self.max_speed = 0.0
         self.average_speed = 0.0
