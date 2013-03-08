@@ -52,16 +52,17 @@ class LinearSpeedViewController(QObject):
 
 
     def log_loaded(self):
-        self.average_speed = self.average_speed / float(self.average_speed_count)
-        self.speeds.append(0.0)
-        if self.plot_widget.has_matplotlib:
-            x = list(map(lambda x: x * KEEP_ALIVE_DELAY_MS / 1000.0, range(len(self.speeds))))
-            speed_plot = self.plot_widget.add_plot()
-            speed_plot.set_xlabel("Time (s)")
-            speed_plot.set_ylabel("Speed (m/s)")
-            speed_plot.fill(x, self.speeds, color='#729fcf', edgecolor='#3465a4', alpha=0.75)
-            speed_plot.axhline(self.average_speed, color='#73d216')
-            speed_plot.axhline(self.max_speed, color='#cc0000')
+        if self.average_speed_count > 0.0:
+            self.average_speed = self.average_speed / float(self.average_speed_count)
+            self.speeds.append(0.0)
+            if self.plot_widget.has_matplotlib:
+                x = list(map(lambda x: x * KEEP_ALIVE_DELAY_MS / 1000.0, range(len(self.speeds))))
+                speed_plot = self.plot_widget.add_plot()
+                speed_plot.set_xlabel("Time (s)")
+                speed_plot.set_ylabel("Speed (m/s)")
+                speed_plot.fill(x, self.speeds, color='#729fcf', edgecolor='#3465a4', alpha=0.75)
+                speed_plot.axhline(self.average_speed, color='#73d216')
+                speed_plot.axhline(self.max_speed, color='#cc0000')
 
 
 
@@ -101,13 +102,14 @@ class AngularSpeedViewController(QObject):
 
 
     def log_loaded(self):
-        self.average_speed = self.average_speed / float(self.average_speed_count)
-        self.speeds.append(0.0)
-        if self.plot_widget.has_matplotlib:
-            x = list(map(lambda x: x * KEEP_ALIVE_DELAY_MS / 1000.0, range(len(self.speeds))))
-            speed_plot = self.plot_widget.add_plot()
-            speed_plot.set_xlabel("Time (s)")
-            speed_plot.set_ylabel("Speed (rd/s)")
-            speed_plot.fill(x, self.speeds, color='#729fcf', edgecolor='#3465a4', alpha=0.75)
-            speed_plot.axhline(self.average_speed, color='#73d216')
-            speed_plot.axhline(self.max_speed, color='#cc0000')
+        if self.average_speed_count > 0.0:
+            self.average_speed = self.average_speed / float(self.average_speed_count)
+            self.speeds.append(0.0)
+            if self.plot_widget.has_matplotlib:
+                x = list(map(lambda x: x * KEEP_ALIVE_DELAY_MS / 1000.0, range(len(self.speeds))))
+                speed_plot = self.plot_widget.add_plot()
+                speed_plot.set_xlabel("Time (s)")
+                speed_plot.set_ylabel("Speed (rd/s)")
+                speed_plot.fill(x, self.speeds, color='#729fcf', edgecolor='#3465a4', alpha=0.75)
+                speed_plot.axhline(self.average_speed, color='#73d216')
+                speed_plot.axhline(self.max_speed, color='#cc0000')
