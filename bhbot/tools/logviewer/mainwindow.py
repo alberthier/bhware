@@ -55,6 +55,16 @@ class MainWindowController(QObject):
             self.load_log()
 
 
+    def find_svg_images(self, log_name, files):
+        basename = os.path.splitext(log_name)[0]
+        res = []
+        for f in files:
+            base, ext = os.path.splitext(f)
+            if ext == ".svg" and base.startswith(basename):
+                res.append(f)
+        return res
+
+
     def load_log(self):
         log = imp.load_source("logcontent", self.log_file).log
         lineno = 1
@@ -72,6 +82,17 @@ class MainWindowController(QObject):
                         continue
                 view.process_log_line(log_line, lineno, last_lineno)
             lineno += 1
+        dir_name, log_name = os.path.split(self.log_file)
+        if len(dir_name) == 0:
+            dir_name = "."
+        svg_list = self.find_svg_images(log_name, os.listdir(dir_name))
+        cwd = os.getcwd()
+        os.chdir(dir_name)
+        for svg in svg_list:
+            lbl = QLabel()
+            lbl.setPixmap(QPixmap(svg))
+            self.ui.tabWidget.addTab(lbl, svg)
+        os.chdir(cwd)
         for view in self.views:
             view.log_loaded()
 
