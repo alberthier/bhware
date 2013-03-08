@@ -43,9 +43,13 @@ class Test1(statemachine.State):
 
     def on_enter(self):
         #self.send_packet(packets.Rotate(angle = math.pi / 4))
-        self.send_packet(packets.MoveCurve(angle = 0.0, points = [Pose(RED_START_X + 0.2, 1.0), Pose(RED_START_X + 0.4, 1.5)]))
+        #self.send_packet(packets.MoveCurve(angle = 0.0, points = [Pose(RED_START_X + 0.2, 1.0), Pose(RED_START_X + 0.4, 1.5)]))
         #self.send_packet(packets.MoveArc(center = Pose(0.0, 0.0), radius = RED_START_X, points = [math.pi / 4, math.pi / 2]))
-        #self.walk = commonstates.TrajectoryWalk()
+        self.walk = commonstates.TrajectoryWalk()
+        self.walk.look_at_opposite(ROBOT_CENTER_X, 1.0 - ROBOT_CENTER_Y)
+        self.walk.move_to(ROBOT_CENTER_X, 1.0 - ROBOT_CENTER_Y, DIRECTION_BACKWARD)
+        self.walk.rotate_to(0.0)
+        self.walk.follow_arc(DIRECTION_FORWARD, Pose(0.0, 1.5), 0.5 + ROBOT_Y_SIZE / 2.0, math.pi / 2.0 - math.pi / 12.0)
         #self.walk.wait_for(commonstates.FetchCandleColors())
         #self.walk.wait_for(commonstates.CandleKicker(SIDE_RIGHT, CANDLE_KICKER_LOWER, CANDLE_KICKER_POSITION_UP))
         #self.walk.wait_for(commonstates.CandleKicker(SIDE_RIGHT, CANDLE_KICKER_LOWER, CANDLE_KICKER_POSITION_KICK))
@@ -56,7 +60,7 @@ class Test1(statemachine.State):
         #self.walk.look_at(1.5, 1.6)
         #self.walk.move_to(1.5, 1.6)
         #self.walk.on_glass_present = self.on_glass_present
-        #self.switch_to_substate(self.walk)
+        self.switch_to_substate(self.walk)
         #self.first = True
 
 
@@ -65,6 +69,7 @@ class Test1(statemachine.State):
 
 
     def on_exit_substate(self, substate):
+        return
         if self.first:
             self.first = False
             self.send_packet(packets.Nipper(side=SIDE_LEFT, move=MOVE_CLOSE))
