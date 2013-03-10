@@ -7,7 +7,6 @@ import datetime
 import subprocess
 import traceback
 
-import packets
 from definitions import *
 
 
@@ -101,9 +100,9 @@ def log_packet(packet, sender = "ARM"):
     delta = datetime.datetime.now() - start_time
     time = "'{:=0.02f}'".format(delta.total_seconds())
     text = "'" + sender + "'," + type(packet).__name__ + ",\"" + packet.to_dump() + "\"]"
-    if not isinstance(packet, packets.KeepAlive) or packet.match_time > 0 and packet.match_time < 90000:
+    if not packet.is_keep_alive() or packet.match_time > 0 and packet.match_time < 90000:
         log_lines.append("l([" + time + "," + text + ")\n")
-    if not isinstance(packet, packets.KeepAlive) and not type(packet).__name__.startswith("Simulator"):
+    if not packet.is_keep_alive() and not type(packet).__name__.startswith("Simulator"):
         sys.stdout.write("[" + text + "\n")
         sys.stdout.flush()
 
