@@ -115,7 +115,7 @@ GOAL_EVALUATION_USES_PATHFINDING       = True
 # Router map resolution
 ROUTING_MAP_RESOLUTION                 = 0.02
 EVALUATOR_MAP_RESOLUTION               = 0.04
-MAP_WALLS_DISTANCE                     = 0.20
+MAP_WALLS_DISTANCE                     = 0.127
 ASTAR_EFFECTIVE_VS_HEURISTIC_TRADEOFF  = 1.5
 ROUTE_SPLIT_ANGLE                      = 2.0 * math.pi
 MAIN_OPPONENT_AVOIDANCE_RANGE          = 0.5

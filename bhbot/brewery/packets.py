@@ -206,7 +206,6 @@ class SimulatorRect(Struct):
 
 class SimulatorCircle(Struct):
 
-    C_TYPE = 'BHB'
     DESCRIPTION = "Route circle"
 
     def __init__(self, description = None):

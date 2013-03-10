@@ -35,7 +35,7 @@ class Map(object):
         lateral_distance = ROBOT_X_SIZE - ROBOT_CENTER_X - max(ROUTING_MAP_RESOLUTION, EVALUATOR_MAP_RESOLUTION)
         captain_room_reduction = 0.05
 
-        only_rects = True
+        only_rects = False
 
         if only_rects:
             # Captain room
@@ -49,22 +49,11 @@ class Map(object):
             self.add_rect(FIELD_X_SIZE - MAP_WALLS_DISTANCE, 0.0, FIELD_X_SIZE, FIELD_Y_SIZE / 2.0, self.zone_cost * 2.0, True, True) # Bottom edge
             self.add_rect(0.0, 0.0, FIELD_X_SIZE, lateral_distance, self.zone_cost * 2.0, True, True) # Bridge edge
         else:
-            # Captain room
-            self.add_rect(0.5 - MAP_WALLS_DISTANCE + captain_room_reduction, 0.0, 0.52 + MAP_WALLS_DISTANCE - captain_room_reduction, 0.4, self.zone_cost * 2.0, True, True)
-            self.add_circle(0.51, 0.4, MAP_WALLS_DISTANCE, self.zone_cost * 2.0, True, True)
-            # Bridge
-            self.add_rect(1.25 - MAP_WALLS_DISTANCE, 0.0, 1.25, 0.380, self.zone_cost * 2.0, True, True)
-            self.add_rect(1.25, 0.0, 2.0, 0.380 + MAP_WALLS_DISTANCE, self.zone_cost * 2.0, True, True)
-            self.add_circle(1.25, 0.380, MAP_WALLS_DISTANCE, self.zone_cost * 2.0, True, True)
-            # Island
-            self.add_rect(0.875 - MAP_WALLS_DISTANCE, 0.975, 1.125 + MAP_WALLS_DISTANCE, 2.025, self.zone_cost * 2.0, True, True)
-            self.add_rect(0.875, 0.975 - MAP_WALLS_DISTANCE, 1.125, 0.975, self.zone_cost * 2.0, True, True)
-            self.add_circle(0.875, 0.975, MAP_WALLS_DISTANCE, self.zone_cost * 2.0, True, True)
-            self.add_circle(1.125, 2.025, MAP_WALLS_DISTANCE, self.zone_cost * 2.0, True, True)
+            self.add_circle(0.0, 1.5, 0.5 + ROBOT_Y_SIZE / 2.0, self.zone_cost * 2.0, True, False)
             # Edges
             self.add_rect(0.0, 0.0, MAP_WALLS_DISTANCE, FIELD_Y_SIZE / 2.0, self.zone_cost * 2.0, True, True) # Top edge
             self.add_rect(FIELD_X_SIZE - MAP_WALLS_DISTANCE, 0.0, FIELD_X_SIZE, FIELD_Y_SIZE / 2.0, self.zone_cost * 2.0, True, True) # Bottom edge
-            self.add_rect(0.0, 0.0, FIELD_X_SIZE, lateral_distance, self.zone_cost * 2.0, True, True) # Bridge edge
+            self.add_rect(0.0, 0.0, FIELD_X_SIZE, MAP_WALLS_DISTANCE, self.zone_cost * 2.0, True, True) # Bridge edge
 
 
     def create_pathfinder(self, map_resolution):
@@ -351,7 +340,7 @@ class Map(object):
                     penalized_rects_packet.shapes.append(s)
             self.simulator_rect_shapes = []
             for circle in self.simulator_circle_shapes:
-                s = binarizer.StructInstance(x = rect[0], y = rect[1], radius = rect[2])
+                s = binarizer.StructInstance(x = circle[0], y = circle[1], radius = circle[2])
                 if circle[-1]:
                     forbidden_circles_packet.shapes.append(s)
                 else:
