@@ -4,10 +4,13 @@ import unittest
 import run_tests
 run_tests.patch_pythonpath()
 
+import mock
 
-import statemachine
+with mock.patch.dict('sys.modules', nanow=mock.MagicMock()):
+    import statemachine
 
 from definitions import *
+
 
 
 ########################################################################
@@ -261,6 +264,7 @@ class TestNewStateMachine(unittest.TestCase):
 
             def on_keep_alive(self):
                 self.log("State2")
+                yield None
 
         class State1(statemachine.State):
             def __init__(self):
@@ -282,7 +286,7 @@ class TestNewStateMachine(unittest.TestCase):
         fsm.dispatch(DummyPacket())
         fsm.dispatch(DummyPacket())
 
-        self.assertEquals(None, fsm.current_state)
+        self.assertIsInstance(fsm.current_state, State1)
 
         self.assertEqual(trim(
             """
@@ -303,6 +307,7 @@ class TestNewStateMachine(unittest.TestCase):
             def on_keep_alive(self):
                 self.log("State2")
                 self.result = 1
+                yield None
 
         class State1(statemachine.State):
             def __init__(self):
@@ -345,6 +350,7 @@ class TestNewStateMachine(unittest.TestCase):
 
             def on_keep_alive(self):
                 self.log("State2")
+                yield None
 
         class State1(statemachine.State):
             def __init__(self):

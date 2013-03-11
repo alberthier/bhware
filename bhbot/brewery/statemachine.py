@@ -31,12 +31,18 @@ class StateGenerator(object):
         :param fsm: StateMachine
         """
         self.fsm = fsm
+        self.started = False
+        self.generator = None
+
+    def start(self):
+        logger.log('Starting StateGenerator')
+        if not self.started :
+            self.fsm.push_state(self.fsm.root_state)
+            self.generator = iter(self)
+            self.generator.next()
 
     def __iter__(self):
         previous_value = None
-
-        self.fsm.current_state.fsm = self.fsm
-        self.fsm.current_state.on_enter()
 
         while True :
             packet = (yield)
@@ -45,35 +51,45 @@ class StateGenerator(object):
 
             self.fsm.current_state.current_method = generator
 
-            if generator :
+            while True :
                 try :
+                    if not generator :
+                        logger.log('We are not in a generator, staying in same state, '
+                                   'waiting for new packet')
+                        break
+
                     new_state = generator.send(previous_value)
-                    self.fsm.push_state(new_state)
 
+                    # yield None veut dire -> Exit State
+                    if new_state :
+                        previous_value = None
+                        self.fsm.push_state(new_state)
+                        break
+                    else :
+                        previous_value = self.fsm.current_state
+                        self.fsm.pop_state()
+                        generator = self.fsm.current_state.current_method
                 except StopIteration :
-                    self.fsm.pop_state()
-            else :
-                previous_value = self.fsm.current_state
-                self.fsm.pop_state()
+                    logger.log('Generator has stopped, staying in same state, waiting for new packet')
+                    break
 
-                generator = self.fsm.current_state.current_method
 
-                try :
-                    new_state = generator.send(previous_value)
-                    self.fsm.push_state(new_state)
-                except StopIteration :
-                    self.fsm.pop_state()
+
+    def as_generator(self):
+        self.start()
+        return self.generator
 
 
 
 class StateMachine(object):
     def __init__(self, root_state):
-        self.state_history = [root_state]
+        self.state_history = []
         """:type: self.state_history : list of State"""
+        self.root_state = root_state
         self.return_value = None
         self.logger = None
-        self.state_generator = iter(StateGenerator(self))
-        next(self.state_generator)
+        self.state_generator = StateGenerator(self).as_generator()
+
 
     def init_state(self, s):
         s.fsm = self
@@ -91,10 +107,9 @@ class StateMachine(object):
 
     def push_state(self, state):
         logger.log("Switching to state {}".format(state.name))
-        state.fsm = self
-        state.on_enter()
+        self.init_state(state)
         self.state_history.append(state)
-
+        state.on_enter()
 
     def pop_state(self):
         logger.log("Exiting state {}".format(self.current_state.name))
