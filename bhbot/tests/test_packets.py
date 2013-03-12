@@ -91,22 +91,66 @@ class PacketTestMixin(object):
         self.assertEqual(count, 1)
 
 
-    def inspect_logview_structure(self, s, parent):
-        self.assertTrue("name" in s)
-        if parent != None:
-            self.assertTrue("parent" in s)
-            self.assertEqual(s["parent"], parent)
-
-        if "children" in s:
-            for c in s["children"]:
-                self.inspect_logview_structure(c, s)
-        elif parent != None:
-            self.assertTrue("value" in s)
-
 
 
 ########################################################################
 # Packet test cases
+
+
+
+
+class TurretDetectPacketTestCase(unittest.TestCase, PacketTestMixin):
+
+    def create_packet(self):
+        return packets.TurretDetect()
+
+
+    def initialize_packet(self, packet):
+        packet.distance = 26
+        packet.angle = 3
+
+
+
+
+class TurretInitPacketTestCase(unittest.TestCase, PacketTestMixin):
+
+    def create_packet(self):
+        return packets.TurretInit()
+
+
+    def initialize_packet(self, packet):
+        packet.mode = TURRET_INIT_MODE_WRITE
+        packet.short_distance = 12
+        packet.long_distance = 25
+
+
+
+
+class TurretDistancesPacketTestCase(unittest.TestCase, PacketTestMixin):
+
+    def create_packet(self):
+        return packets.TurretDistances()
+
+
+    def initialize_packet(self, packet):
+        packet.short_distance = 12
+        packet.long_distance = 25
+
+
+
+
+class TurretBootPacketTestCase(unittest.TestCase, PacketTestMixin):
+
+    def create_packet(self):
+        return packets.TurretBoot()
+
+
+
+
+class ReinitializePacketTestCase(unittest.TestCase, PacketTestMixin):
+
+    def create_packet(self):
+        return packets.Reinitialize()
 
 
 
@@ -156,14 +200,26 @@ class StartPacketTestCase(unittest.TestCase, PacketTestMixin):
 
 
 
-class GotoPacketTestCase(unittest.TestCase, PacketTestMixin):
+class RotatePacketTestCase(unittest.TestCase, PacketTestMixin):
 
     def create_packet(self):
-        return packets.Goto()
+        return packets.Rotate()
 
 
     def initialize_packet(self, packet):
-        packet.movement = MOVEMENT_ROTATE
+        packet.direction = DIRECTION_BACKWARD
+        packet.angle = 2.56
+
+
+
+
+class MoveCurvePacketTestCase(unittest.TestCase, PacketTestMixin):
+
+    def create_packet(self):
+        return packets.MoveCurve()
+
+
+    def initialize_packet(self, packet):
         packet.direction = DIRECTION_BACKWARD
         packet.angle = 2.56
         packet.points.append(position.Pose(1.5, 2.3))
@@ -174,10 +230,52 @@ class GotoPacketTestCase(unittest.TestCase, PacketTestMixin):
 
 
 
+class MoveLinePacketTestCase(unittest.TestCase, PacketTestMixin):
+
+    def create_packet(self):
+        return packets.MoveLine()
+
+
+    def initialize_packet(self, packet):
+        packet.direction = DIRECTION_BACKWARD
+        packet.points.append(position.Pose(1.5, 2.3))
+        packet.points.append(position.Pose(0.6, 1.7))
+        packet.points.append(position.Pose(2.0, 0.2))
+        packet.points.append(position.Pose(1.2, 2.7))
+
+
+
+
+class MoveArcPacketTestCase(unittest.TestCase, PacketTestMixin):
+
+    def create_packet(self):
+        return packets.MoveArc()
+
+
+    def initialize_packet(self, packet):
+        packet.direction = DIRECTION_BACKWARD
+        packet.center = position.Pose(2.34, 1.78)
+        packet.radius = 2.56
+        packet.points.append(1.5)
+        packet.points.append(1.7)
+        packet.points.append(2.0)
+        packet.points.append(2.7)
+
+
+
+
 class GotoStartedPacketTestCase(unittest.TestCase, PacketTestMixin):
 
     def create_packet(self):
         return packets.GotoStarted()
+
+
+
+
+class WaypointReachedPacketTestCase(unittest.TestCase, PacketTestMixin):
+
+    def create_packet(self):
+        return packets.WaypointReached()
 
 
 
@@ -261,113 +359,109 @@ class ResettlePacketTestCase(unittest.TestCase, PacketTestMixin):
 
 
 
-class GripperControlTestCase(unittest.TestCase, PacketTestMixin):
+class StopAllPacketTestCase(unittest.TestCase, PacketTestMixin):
 
     def create_packet(self):
-        return packets.GripperControl()
+        return packets.StopAll()
+
+
+
+
+class GlassPresentPacketTestCase(unittest.TestCase, PacketTestMixin):
+
+    def create_packet(self):
+        return packets.GlassPresent()
 
 
     def initialize_packet(self, packet):
-        packet.move = GRIPPER_OPEN
-        packet.which = GRIPPER_SIDE_BOTH
+        packet.side = SIDE_RIGHT
 
 
 
 
-class SweeperControlTestCase(unittest.TestCase, PacketTestMixin):
+class NipperPacketTestCase(unittest.TestCase, PacketTestMixin):
 
     def create_packet(self):
-        return packets.SweeperControl()
+        return packets.Nipper()
 
 
     def initialize_packet(self, packet):
-        packet.move = SWEEPER_OPEN
+        packet.side = SIDE_RIGHT
+        packet.move = MOVE_OPEN
 
 
 
 
-class MapArmControlTestCase(unittest.TestCase, PacketTestMixin):
+class LifterPacketTestCase(unittest.TestCase, PacketTestMixin):
 
     def create_packet(self):
-        return packets.MapArmControl()
+        return packets.Lifter()
 
 
     def initialize_packet(self, packet):
-        packet.move = MAP_ARM_OPEN
+        packet.side = SIDE_RIGHT
+        packet.move = MOVE_OPEN
 
 
 
 
-class MapGripperControlTestCase(unittest.TestCase, PacketTestMixin):
+class GripperPacketTestCase(unittest.TestCase, PacketTestMixin):
 
     def create_packet(self):
-        return packets.MapGripperControl()
+        return packets.Gripper()
 
 
     def initialize_packet(self, packet):
-        packet.move = MAP_GRIPPER_OPEN
+        packet.side = SIDE_RIGHT
+        packet.move = MOVE_OPEN
 
 
 
 
-class EmptyTankControlTestCase(unittest.TestCase, PacketTestMixin):
+class HolderPacketTestCase(unittest.TestCase, PacketTestMixin):
 
     def create_packet(self):
-        return packets.EmptyTankControl()
+        return packets.Holder()
 
 
     def initialize_packet(self, packet):
-        packet.move = TANK_DEPLOY
+        packet.side = SIDE_RIGHT
+        packet.move = MOVE_OPEN
 
 
 
 
-class GoldBarDetectionTestCase(unittest.TestCase, PacketTestMixin):
-
-    def create_packet(self):
-        return packets.GoldBarDetection()
-
-
-
-
-class FabricStoreControlTestCase(unittest.TestCase, PacketTestMixin):
+class CandleKickerPacketTestCase(unittest.TestCase, PacketTestMixin):
 
     def create_packet(self):
-        return packets.FabricStoreControl()
+        return packets.CandleKicker()
 
 
     def initialize_packet(self, packet):
-        packet.move = FABRIC_STORE_LOW
+        packet.side = SIDE_RIGHT
+        packet.which = CANDLE_KICKER_UPPER
+        packet.position = CANDLE_KICKER_POSITION_UP
 
 
 
 
-class ReinitializePacketTestCase(unittest.TestCase, PacketTestMixin):
-
-    def create_packet(self):
-        return packets.Reinitialize()
-
-
-
-
-class SimulatorDataPacketTestCase(unittest.TestCase, PacketTestMixin):
+class GiftOpenerPacketTestCase(unittest.TestCase, PacketTestMixin):
 
     def create_packet(self):
-        return packets.SimulatorData()
+        return packets.GiftOpener()
 
 
     def initialize_packet(self, packet):
-        packet.leds = 10
+        packet.position = GIFT_OPENER_POSITION_LEFT
 
 
 
 
-class TurretDetectPacketTestCase(unittest.TestCase, PacketTestMixin):
+class PumpPacketTestCase(unittest.TestCase, PacketTestMixin):
 
     def create_packet(self):
-        return packets.TurretDetect()
+        return packets.Pump()
 
 
     def initialize_packet(self, packet):
-        packet.distance = 26
-        packet.angle = 3
+        packet.action = PUMP_ON

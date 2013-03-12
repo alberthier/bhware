@@ -19,6 +19,8 @@ def patch_pythonpath():
 
 if __name__ == "__main__":
     patch_pythonpath()
+    import definitions
+    definitions.setup_definitions()
     names = []
     for f in os.listdir(os.path.dirname(os.path.realpath(__file__))):
         if f.endswith(".py") and f.startswith("test"):

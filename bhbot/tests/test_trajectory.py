@@ -97,7 +97,7 @@ class TestMap(unittest.TestCase):
 
 
     def test_unroutable(self):
-        route = self.map.route(position.Pose(BLUE_START_X, BLUE_START_Y), position.Pose(1.6, 2.8))
+        route = self.map.route(position.Pose(BLUE_START_X, BLUE_START_Y), position.Pose(1.99, 2.99))
         self.assertEquals(len(route), 0)
 
 

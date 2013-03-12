@@ -4,10 +4,7 @@ import unittest
 import run_tests
 run_tests.patch_pythonpath()
 
-import mock
-
-with mock.patch.dict('sys.modules', nanow=mock.MagicMock()):
-    import statemachine
+import statemachine
 
 from definitions import *
 
