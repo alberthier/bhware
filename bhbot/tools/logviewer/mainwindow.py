@@ -38,6 +38,7 @@ class MainWindowController(QObject):
         self.views.append(opponentdetectionview.OpponentDectectionViewController(self.ui))
 
         self.log_file = log_file
+        self.remote_files_to_download = 0
         self.host = log_file
         self.port = port
         self.network_manager = None
@@ -101,14 +102,28 @@ class MainWindowController(QObject):
     def download_remote_loglist(self):
         self.network_manager = QNetworkAccessManager()
         self.network_manager.finished.connect(self.display_log_chooser)
-        self.network_manager.get(QNetworkRequest(QUrl("http://{}:{}/logurls".format(self.host, self.port))))
+        url = "http://{}:{}/root/bhware/bhbot/logs/".format(self.host, self.port)
+        self.network_manager.get(QNetworkRequest(QUrl(url)))
 
 
     def display_log_chooser(self, reply):
         logs = []
+        images = []
         while reply.canReadLine():
-            logs.append(str(reply.readLine()).strip())
-
+            line = str(reply.readLine(), "utf-8").strip()
+            if line.startswith("<tr "):
+                idx = line.find("<a href=")
+                if idx != -1:
+                    idx += 9
+                    eidx = line.find("'>", idx)
+                    if eidx != -1:
+                        fname = line[idx:eidx]
+                        if fname.endswith(".py"):
+                            logs.append(fname)
+                        elif fname.endswith(".jpg") or fname.endswith(".svg"):
+                            images.append(fname)
+        logs.sort()
+        rlogs = [l for l in reversed(logs)]
         if len(logs) == 0:
             QMessageBox.critical(self.ui, "Error", "No remote log file")
             QApplication.instance().quit();
@@ -116,7 +131,7 @@ class MainWindowController(QObject):
 
         self.download_dialog = uic.loadUi(os.path.dirname(__file__) + "/downloaddialog.ui")
         list_view = self.download_dialog.list_view
-        list_view.setModel(QStringListModel(logs))
+        list_view.setModel(QStringListModel(rlogs))
         list_view.selectionModel().select(list_view.model().createIndex(0, 0), QItemSelectionModel.Select)
         if self.download_dialog.exec_() == QDialog.Accepted:
             selected = list_view.selectionModel().currentIndex().row()
@@ -124,7 +139,15 @@ class MainWindowController(QObject):
                 self.network_manager.finished.disconnect(self.display_log_chooser)
                 self.network_manager.finished.connect(self.save_remote_log)
                 self.log_file = logs[selected]
-                self.network_manager.get(QNetworkRequest(QUrl("http://{}:{}/{}".format(self.host, self.port, self.log_file))))
+                log_base = os.path.splitext(self.log_file)[0]
+                for img in images:
+                    if img.startswith(log_base):
+                        self.remote_files_to_download += 1
+                        url = "http://{}:{}/root/bhware/bhbot/logs/{}".format(self.host, self.port, img)
+                        self.network_manager.get(QNetworkRequest(QUrl(url)))
+                self.remote_files_to_download += 1
+                url = "http://{}:{}/root/bhware/bhbot/logs/{}".format(self.host, self.port, self.log_file)
+                self.network_manager.get(QNetworkRequest(QUrl(url)))
                 return
         QApplication.instance().quit();
 
@@ -134,10 +157,19 @@ class MainWindowController(QObject):
         log_dir = os.path.join(brewery_root_path, "remote_logs")
         if not os.path.exists(log_dir):
             os.mkdir(log_dir)
-        self.log_file = os.path.join(log_dir, os.path.basename(self.log_file))
-        remote_log = file(self.log_file, "w")
-        while reply.canReadLine():
-            remote_log.write(reply.readLine())
+        log_file = os.path.basename(reply.request().url().path())
+        log_path = os.path.join(log_dir, log_file)
+        if log_path.endswith(".py"):
+            self.log_file = log_path
+        remote_log = open(log_path, "wb")
+        while True:
+            data = reply.read(4096)
+            if data != None:
+                remote_log.write(data)
+            else:
+                break
         remote_log.close()
-        self.load_log()
+        self.remote_files_to_download -= 1
+        if self.remote_files_to_download == 0:
+            self.load_log()
 
