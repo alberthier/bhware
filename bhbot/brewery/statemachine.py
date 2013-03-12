@@ -39,7 +39,7 @@ class StateGenerator(object):
         if not self.started :
             self.fsm.push_state(self.fsm.root_state)
             self.generator = iter(self)
-            self.generator.next()
+            next(self.generator)
 
     def __iter__(self):
         previous_value = None
