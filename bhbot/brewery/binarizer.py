@@ -228,10 +228,6 @@ class UEnum8(Enum8):
     C_TYPE = 'B'
     DESCRIPTION = "8 bytes enum value (unsigned char)"
 
-    def __init__(self, enum, default_value):
-        self.enum = enum
-        UInt8.__init__(self, default_value, self.enum.description)
-
 
 
 
