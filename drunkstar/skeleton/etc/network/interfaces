@@ -7,9 +7,17 @@ iface eth0 inet static
     address 192.168.2.201
     netmask 255.255.255.0
 
+# Wireless through an Ad-Hoc network
 auto wlan0
 iface wlan0 inet static
-    pre-up wpa_supplicant -B -Dwext -iwlan0 -c/etc/wpa_supplicant/wpa_supplicant.conf
-    wireless-power off
+    pre-up iwconfig wlan0 mode ad-hoc channel 3 essid BHInterbot key 0011223344
     address 192.168.1.42
     netmask 255.255.255.0
+
+# Wireless through a router
+#auto wlan0
+#iface wlan0 inet static
+#    pre-up wpa_supplicant -B -Dwext -iwlan0 -c/etc/wpa_supplicant/wpa_supplicant.conf
+#    wireless-power off
+#    address 192.168.1.42
+#    netmask 255.255.255.0
