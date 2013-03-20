@@ -38,3 +38,5 @@ asser/asserv_trajectoire.c.bak
 asser/config.py.bak
 asser/optimTrajParam.py.tsst
 asser/optimTrajParam.py~RF19145bb1.TMP
+.idea
+venv
