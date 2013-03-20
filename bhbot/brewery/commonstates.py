@@ -225,7 +225,116 @@ class DefinePosition(statemachine.State):
         else:
             self.exit_substate()
 
+class WaitPacket(statemachine.State):
+    def __init__(self, packet_class):
+        logger.log('Waiting for packet type {}'.format(packet_class.__name__))
+        self.packet_class = packet_class
 
+    def on_packet(self, packet):
+        if isinstance(packet, self.packet_class):
+            yield None
+
+class DefinePosition2(statemachine.State):
+
+    def __init__(self, x = None, y = None, angle = None):
+        statemachine.State.__init__(self)
+        if x is None or y is None or angle is None:
+            self.pose = None
+        else:
+            self.pose = position.Pose(x, y, angle, True)
+        self.x_sent = False
+        self.y_sent = False
+
+
+    def on_enter(self):
+        if self.pose is None:
+            self.pose = position.Pose(BLUE_START_X, BLUE_START_Y, BLUE_START_ANGLE, True)
+
+        packet = packets.Resettle()
+        packet.axis = AXIS_X
+        packet.position = self.pose.x
+        packet.angle = self.pose.angle
+        self.send_packet(packet)
+
+        yield WaitPacket(packets.Resettle)
+
+        packet = packets.Resettle()
+        packet.axis = AXIS_Y
+        packet.position = self.pose.y
+        packet.angle = self.pose.angle
+        self.send_packet(packet)
+
+        yield WaitPacket(packets.Resettle)
+        yield None
+
+
+
+
+
+
+
+    def on_resettle(self, packet):
+        self.process()
+
+
+    def process(self):
+        if not self.x_sent:
+            packet = packets.Resettle()
+            packet.axis = AXIS_X
+            packet.position = self.pose.x
+            packet.angle = self.pose.angle
+            self.send_packet(packet)
+            yield WaitResettle()
+            self.x_sent = True
+        elif not self.y_sent:
+            packet = packets.Resettle()
+            packet.axis = AXIS_Y
+            packet.position = self.pose.y
+            packet.angle = self.pose.angle
+            self.send_packet(packet)
+            self.y_sent = True
+        else:
+            self.exit_substate()
+
+class DefinePosition3(statemachine.State):
+
+    def __init__(self, x = None, y = None, angle = None):
+        statemachine.State.__init__(self)
+        if x is None or y is None or angle is None:
+            self.pose = None
+        else:
+            self.pose = position.Pose(x, y, angle, True)
+        self.x_sent = False
+        self.y_sent = False
+
+
+    def on_enter(self):
+        if self.pose is None:
+            self.pose = position.Pose(BLUE_START_X, BLUE_START_Y, BLUE_START_ANGLE, True)
+        self.process()
+
+
+    def on_resettle(self, packet):
+        self.process()
+
+
+    def process(self):
+        if not self.x_sent:
+            packet = packets.Resettle()
+            packet.axis = AXIS_X
+            packet.position = self.pose.x
+            packet.angle = self.pose.angle
+            self.send_packet(packet)
+            yield self
+            self.x_sent = True
+        elif not self.y_sent:
+            packet = packets.Resettle()
+            packet.axis = AXIS_Y
+            packet.position = self.pose.y
+            packet.angle = self.pose.angle
+            self.send_packet(packet)
+            yield self
+            self.y_sent = True
 
 
 class Antiblocking(statemachine.State):

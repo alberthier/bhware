@@ -6,22 +6,27 @@ import imp
 import inspect
 import datetime
 
+
 #TODO : improve import mechanism by using this tutorial : http://www.doughellmann.com/PyMOTW/imp/
 # then when could remove sys.path manipulations
 
-def instantiate_state_machine(state_machine_name, eventloop):
+
+def instantiate_state_machine(state_machine_name):
     state_machines_dir = os.path.join(os.path.dirname(__file__), "statemachines")
     state_machine_file = os.path.join(state_machines_dir, state_machine_name + ".py")
     state_machine_module = imp.load_source(state_machine_name, state_machine_file)
     for (item_name, item_type) in inspect.getmembers(state_machine_module):
         if inspect.isclass(item_type) and issubclass(item_type, State) and item_name == "Main":
             root_state = item_type()
-            root_state.event_loop = eventloop
             logger.log("Successfully instatiated state '{}' from file '{}'".format(item_name, state_machine_file))
             return root_state
     else:
         logger.log("No 'Main' state found in '{}'".format(state_machine_file))
     return None
+
+class Stay(object):
+    pass
+
 
 
 class StateGenerator(object):
@@ -33,6 +38,10 @@ class StateGenerator(object):
         self.fsm = fsm
         self.started = False
         self.generator = None
+
+    def log(self,packet,s):
+        if not "KeepAlive" in packet.__class__.__name__ :
+            logger.log(s)
 
     def start(self):
         logger.log('Starting StateGenerator')
@@ -47,25 +56,30 @@ class StateGenerator(object):
         while True :
             packet = (yield)
 
+            self.log(packet, str(self.fsm.current_state) + " " + str(packet))
             generator = packet.dispatch(self.fsm.current_state)
+            self.log(packet, "Dispatch return value = {}".format(str(generator)))
 
             self.fsm.current_state.current_method = generator
 
             while True :
                 try :
                     if not generator :
-                        logger.log('We are not in a generator, staying in same state, '
-                                   'waiting for new packet')
+                        self.log(packet, 'We are not in a generator, staying in same state, waiting for new packet')
                         break
 
                     new_state = generator.send(previous_value)
 
                     # yield None veut dire -> Exit State
                     if new_state :
+                        self.log(packet, 'Got new state to enter : {}'.format(new_state))
                         previous_value = None
-                        self.fsm.push_state(new_state)
-                        break
+                        # on_enter can yield a generator
+                        generator = self.fsm.push_state(new_state)
+                        self.log(packet, "on_enter return value = {}".format(generator))
+                        # TODO  : gérer yield dans on_enter (récursivité ?)
                     else :
+                        logger.log('Yield None --> pop')
                         previous_value = self.fsm.current_state
                         self.fsm.pop_state()
                         generator = self.fsm.current_state.current_method
@@ -82,9 +96,12 @@ class StateGenerator(object):
 
 
 class StateMachine(object):
-    def __init__(self, root_state):
+    def __init__(self, event_loop, root_state):
+        self.state_stack = []
+        """:type: self.state_stack : list of State"""
         self.state_history = []
         """:type: self.state_history : list of State"""
+        self.event_loop = event_loop
         self.root_state = root_state
         self.return_value = None
         self.logger = None
@@ -93,6 +110,7 @@ class StateMachine(object):
 
     def init_state(self, s):
         s.fsm = self
+        s.event_loop = self.event_loop
 
     def log(self, s):
         if self.logger :
@@ -100,7 +118,7 @@ class StateMachine(object):
 
     @property
     def current_state(self):
-        return self.state_history[-1] if self.state_history else None
+        return self.state_stack[-1] if self.state_stack else None
 
     def dispatch(self, packet):
         self.state_generator.send(packet)
@@ -108,12 +126,15 @@ class StateMachine(object):
     def push_state(self, state):
         logger.log("Switching to state {}".format(state.name))
         self.init_state(state)
+        self.state_stack.append(state)
         self.state_history.append(state)
-        state.on_enter()
+        return state.on_enter()
 
     def pop_state(self):
-        logger.log("Exiting state {}".format(self.current_state.name))
-        self.state_history.pop()
+        state = self.current_state
+        logger.log("Exiting state {}".format(state.name))
+        state.on_exit()
+        self.state_stack.pop()
 
 
 
@@ -121,12 +142,10 @@ class StateMachine(object):
 class State(object):
 
     def __init__(self):
+        self.fsm = None
         self.event_loop = None
-        self.sub_state = None
-        self.parent_state = None
         self.short_description = None
         self.current_method = None
-        self.fsm = None
 
     @property
     def name(self):
@@ -145,35 +164,35 @@ class State(object):
         return self.short_description
 
 
-    def switch_to_state(self, new_state):
-        self.on_exit()
-        new_state.event_loop = self.event_loop
-        new_state.sub_state = None
-        new_state.parent_state = self.parent_state
-        self.parent_state.sub_state = new_state
-        logger.log("Switching to state {}".format(type(new_state).__name__))
-        self.event_loop.state_history.append(new_state)
-        new_state.on_enter()
-
-
-    def switch_to_substate(self, new_state):
-        new_state.event_loop = self.event_loop
-        new_state.sub_state = None
-        new_state.parent_state = self
-        self.sub_state = new_state
-        logger.log("Pushing sub-state {}".format(type(new_state).__name__))
-        self.event_loop.state_history.append(new_state)
-        new_state.on_enter()
-
-
-    def exit_substate(self, exit_status = None):
-        logger.log("Poping sub-state {}".format(type(self).__name__))
-        if exit_status is not None :
-            logger.log("Substate exit status = {}".format(exit_status))
-        self.parent_state.sub_state = None
-        if not self.event_loop.state_history[:-1] is self :
-            self.event_loop.state_history.append(self)
-        self.parent_state.on_exit_substate(self)
+    # def switch_to_state(self, new_state):
+    #     self.on_exit()
+    #     new_state.event_loop = self.event_loop
+    #     new_state.sub_state = None
+    #     new_state.parent_state = self.parent_state
+    #     self.parent_state.sub_state = new_state
+    #     logger.log("Switching to state {}".format(type(new_state).__name__))
+    #     # self.event_loop.state_history.append(new_state)
+    #     new_state.on_enter()
+    #
+    #
+    # def switch_to_substate(self, new_state):
+    #     new_state.event_loop = self.event_loop
+    #     new_state.sub_state = None
+    #     new_state.parent_state = self
+    #     self.sub_state = new_state
+    #     logger.log("Pushing sub-state {}".format(type(new_state).__name__))
+    #     # self.event_loop.state_history.append(new_state)
+    #     new_state.on_enter()
+    #
+    #
+    # def exit_substate(self, exit_status = None):
+    #     logger.log("Poping sub-state {}".format(type(self).__name__))
+    #     if exit_status is not None :
+    #         logger.log("Substate exit status = {}".format(exit_status))
+    #     self.parent_state.sub_state = None
+    #     # if not self.event_loop.state_history[:-1] is self :
+    #     #     self.event_loop.state_history.append(self)
+    #     self.parent_state.on_exit_substate(self)
 
 
     def send_packet(self, packet):

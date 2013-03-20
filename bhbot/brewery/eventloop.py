@@ -263,9 +263,8 @@ class EventLoop(object):
         self.robot_log_channel = None
         self.turret_channel = None
         self.web_server = None
-        self.root_state = statemachine.State()
-        self.root_state.event_loop = self
         self.robot = robot.Robot(self)
+        self.fsm = None
         self.state_machine_name = state_machine_name
         self.webserver_port = webserver_port
         self.opponent_detector = opponentdetector.OpponentDetector(self)
@@ -274,7 +273,6 @@ class EventLoop(object):
         #self.eval_map = trajectory.Map(self)
         #self.map = graphpathfinding.Map(self)
         self.timers = []
-        self.state_history = []
         self.last_ka_date = datetime.datetime.now()
         if IS_HOST_DEVICE_ARM:
             self.colordetector = colordetector.ColorDetector()
@@ -333,7 +331,7 @@ class EventLoop(object):
                         channel.packet.dispatch(self.opponent_detector)
                         channel.packet.dispatch(self.map)
                         #channel.packet.dispatch(self.eval_map)
-                        channel.packet.dispatch(self.get_current_state())
+                        self.fsm.dispatch(channel.packet)
 
                         channel.packet = None
                 except Exception as e:
@@ -365,15 +363,14 @@ class EventLoop(object):
 
 
     def send_packet(self, packet):
-        if self.root_state.sub_state is not None:
-            logger.log_packet(packet, "ARM")
-            buffer = packet.serialize()
-            if packet.TYPE < 50:
-                self.turret_channel.send(buffer)
-            elif packet.TYPE < 200:
-                self.robot_control_channel.send(buffer)
-            else:
-                self.interbot_channel.send(buffer)
+        logger.log_packet(packet, "ARM")
+        buffer = packet.serialize()
+        if packet.TYPE < 50:
+            self.turret_channel.send(buffer)
+        elif packet.TYPE < 200:
+            self.robot_control_channel.send(buffer)
+        else:
+            self.interbot_channel.send(buffer)
 
 
     def inject_goto_finished(self):
@@ -381,22 +378,20 @@ class EventLoop(object):
         packet.reason = REASON_DESTINATION_REACHED
         packet.current_pose = self.robot.pose
         packet.current_point_index = 0
-        packet.dispatch(self.get_current_state())
+        self.fsm.dispatch(packet)
 
 
     def get_current_state(self):
-        state = self.root_state
-        while state.sub_state is not None:
-            state = state.sub_state
-        return state
+        if self.fsm is not None:
+            return self.fsm.current_state
 
 
     def create_fsm(self):
-        state = statemachine.instantiate_state_machine(self.state_machine_name, self)
+        state = statemachine.instantiate_state_machine(self.state_machine_name)
         if state is None:
             self.stop()
         else:
-            self.root_state.switch_to_substate(state)
+            self.fsm = statemachine.StateMachine(self, state)
             self.send_packet(packets.ControllerReady())
 
 
@@ -413,7 +408,9 @@ class EventLoop(object):
         RobotControlDeviceStarter(self)
         while not self.stopping:
             asyncore.loop(EVENT_LOOP_TICK_RESOLUTION_S, True, None, 1)
-            self.get_current_state().on_timer_tick()
+            state = self.get_current_state()
+            if state is not None:
+                state.on_timer_tick()
             while len(self.timers) != 0:
                 if not self.timers[0].check_timeout():
                     break

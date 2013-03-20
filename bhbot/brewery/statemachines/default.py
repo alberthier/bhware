@@ -14,8 +14,32 @@ from position import *
 
 
 
-
 class Main(statemachine.State):
+
+    def on_enter(self):
+        logger.log("Main - on enter")
+
+    def on_device_ready(self, packet):
+        print("Main - on device ready")
+        logger.log("Main - on device ready")
+        yield WaitStart()
+
+
+class NewTest(statemachine.State):
+
+    def on_enter(self):
+        logger.log("NewTest - on enter")
+
+    def on_exit(self):
+        logger.log("NewTest - on exit")
+
+    def on_start(self, packet):
+        yield None
+
+
+
+
+class Main2(statemachine.State):
 
     def on_device_ready(self, packet):
         self.switch_to_substate(commonstates.DefinePosition())
@@ -30,11 +54,12 @@ class Main(statemachine.State):
 class WaitStart(statemachine.State):
 
     def on_start(self, packet):
-        self.switch_to_substate(commonstates.DefinePosition())
+        yield commonstates.DefinePosition2()
+        yield Test1()
 
 
-    def on_exit_substate(self, substate):
-        self.switch_to_state(Test1())
+    # def on_exit_substate(self, substate):
+    #     self.switch_to_state(Test1())
 
 
 
