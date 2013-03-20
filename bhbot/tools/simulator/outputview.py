@@ -11,6 +11,7 @@ from mainbar import *
 
 import leds
 from definitions import *
+import sys
 
 (OutputView_Ui, OutputView_Widget) = uic.loadUiType(os.path.join(os.path.dirname(__file__), "outputview.ui"))
 
@@ -24,7 +25,11 @@ class OutputView(QWidget, OutputView_Ui):
         OutputView_Ui.__init__(self)
         self.setupUi(self)
 
-        font = QFont("", 8)
+        font = None
+        if sys.platform == 'darwin' :
+            font = QFont("Monaco", 8)
+        else :
+            font = QFont("", 8)
         font.setStyleHint(QFont.TypeWriter)
         self.log_view.setCurrentFont(font)
 
