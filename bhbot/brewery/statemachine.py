@@ -41,7 +41,7 @@ class StateGenerator(object):
 
     def log(self,packet,s):
         if not "KeepAlive" in packet.__class__.__name__ :
-            logger.log(s)
+            logger.log("[{}] {}".format(self.fsm.current_state.name,s))
 
     def start(self):
         logger.log('Starting StateGenerator')
@@ -56,7 +56,7 @@ class StateGenerator(object):
         while True :
             packet = (yield)
 
-            self.log(packet, str(self.fsm.current_state) + " " + str(packet))
+            self.log(packet, "Got packet {}".format( str(packet)))
             generator = packet.dispatch(self.fsm.current_state)
             self.log(packet, "Dispatch return value = {}".format(str(generator)))
 
@@ -65,24 +65,26 @@ class StateGenerator(object):
             while True :
                 try :
                     if not generator :
-                        self.log(packet, 'We are not in a generator, staying in same state, waiting for new packet')
+                        self.log(packet, 'No current generator, staying in same state, waiting for new packet')
                         break
 
                     new_state = generator.send(previous_value)
 
                     # yield None veut dire -> Exit State
                     if new_state :
-                        self.log(packet, 'Got new state to enter : {}'.format(new_state))
+                        self.log(packet, 'Got new state to enter : {}'.format(new_state.name))
                         previous_value = None
                         # on_enter can yield a generator
                         generator = self.fsm.push_state(new_state)
+                        self.fsm.current_state.current_method = generator
                         self.log(packet, "on_enter return value = {}".format(generator))
                         # TODO  : gérer yield dans on_enter (récursivité ?)
                     else :
-                        logger.log('Yield None --> pop')
+                        self.log(packet, 'Yield None --> pop')
                         previous_value = self.fsm.current_state
                         self.fsm.pop_state()
                         generator = self.fsm.current_state.current_method
+                        self.log(packet, "Generator is {}".format(generator))
                 except StopIteration :
                     logger.log('Generator has stopped, staying in same state, waiting for new packet')
                     break
@@ -118,6 +120,10 @@ class StateMachine(object):
 
     @property
     def current_state(self):
+        """
+        :return: Current state
+        :rtype: State
+        """
         return self.state_stack[-1] if self.state_stack else None
 
 
