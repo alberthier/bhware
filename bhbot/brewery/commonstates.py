@@ -194,7 +194,7 @@ class MoveCurve(AbstractMove):
 
     def __init__(self, direction, angle, points, chained = None):
         AbstractMove.__init__(self, chained)
-        self.packet = packets.Rotate(direction = direction, angle = angle, points = points)
+        self.packet = packets.MoveCurve(direction = direction, angle = angle, points = points)
 
 
 
