@@ -180,8 +180,8 @@ MOVEMENT = Enum("Movement",
 
 DIRECTION = Enum("Direction",
     DIRECTION_AUTO     =  0,
-    DIRECTION_FORWARD  =  1,
-    DIRECTION_BACKWARD = -1,
+    DIRECTION_FORWARDS  =  1,
+    DIRECTION_BACKWARDS = -1,
 )
 
 REASON = Enum("Goto finished reason",

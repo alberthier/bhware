@@ -207,7 +207,7 @@ class RotatePacketTestCase(unittest.TestCase, PacketTestMixin):
 
 
     def initialize_packet(self, packet):
-        packet.direction = DIRECTION_BACKWARD
+        packet.direction = DIRECTION_BACKWARDS
         packet.angle = 2.56
 
 
@@ -220,7 +220,7 @@ class MoveCurvePacketTestCase(unittest.TestCase, PacketTestMixin):
 
 
     def initialize_packet(self, packet):
-        packet.direction = DIRECTION_BACKWARD
+        packet.direction = DIRECTION_BACKWARDS
         packet.angle = 2.56
         packet.points.append(position.Pose(1.5, 2.3))
         packet.points.append(position.Pose(0.6, 1.7))
@@ -237,7 +237,7 @@ class MoveLinePacketTestCase(unittest.TestCase, PacketTestMixin):
 
 
     def initialize_packet(self, packet):
-        packet.direction = DIRECTION_BACKWARD
+        packet.direction = DIRECTION_BACKWARDS
         packet.points.append(position.Pose(1.5, 2.3))
         packet.points.append(position.Pose(0.6, 1.7))
         packet.points.append(position.Pose(2.0, 0.2))
@@ -253,7 +253,7 @@ class MoveArcPacketTestCase(unittest.TestCase, PacketTestMixin):
 
 
     def initialize_packet(self, packet):
-        packet.direction = DIRECTION_BACKWARD
+        packet.direction = DIRECTION_BACKWARDS
         packet.center = position.Pose(2.34, 1.78)
         packet.radius = 2.56
         packet.points.append(1.5)

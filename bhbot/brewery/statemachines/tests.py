@@ -31,8 +31,8 @@ class Main(statemachine.State):
 
         for start_pose in start_poses:
             # Line moves
-            self.add_goto_test(TestMove(DIRECTION_FORWARD , 1.0, start_pose), seq, start_pose)
-            self.add_goto_test(TestMove(DIRECTION_BACKWARD, 1.0, start_pose), seq, start_pose)
+            self.add_goto_test(TestMove(DIRECTION_FORWARDS , 1.0, start_pose), seq, start_pose)
+            self.add_goto_test(TestMove(DIRECTION_BACKWARDS, 1.0, start_pose), seq, start_pose)
 
             self.add_goto_test(TestForwardBackward(1.0, start_pose), seq, start_pose)
 
@@ -44,26 +44,26 @@ class Main(statemachine.State):
             self.add_goto_test(TestCircleRotation(8, trigo, start_pose), seq, start_pose)
 
             # Go forward - rotate - go forward - rotate
-            self.add_goto_test(TestMoveAndReturn(DIRECTION_FORWARD, 1.0, start_pose), seq, start_pose)
+            self.add_goto_test(TestMoveAndReturn(DIRECTION_FORWARDS, 1.0, start_pose), seq, start_pose)
 
             # Square
-            self.add_goto_test(TestSquare(DIRECTION_BACKWARD, 1.0,     trigo, start_pose), seq, start_pose)
-            self.add_goto_test(TestSquare(DIRECTION_BACKWARD, 1.0, not trigo, start_pose), seq, start_pose)
-            self.add_goto_test(TestSquare(DIRECTION_FORWARD , 1.0,     trigo, start_pose), seq, start_pose)
-            self.add_goto_test(TestSquare(DIRECTION_FORWARD , 1.0, not trigo, start_pose), seq, start_pose)
+            self.add_goto_test(TestSquare(DIRECTION_BACKWARDS, 1.0,     trigo, start_pose), seq, start_pose)
+            self.add_goto_test(TestSquare(DIRECTION_BACKWARDS, 1.0, not trigo, start_pose), seq, start_pose)
+            self.add_goto_test(TestSquare(DIRECTION_FORWARDS , 1.0,     trigo, start_pose), seq, start_pose)
+            self.add_goto_test(TestSquare(DIRECTION_FORWARDS , 1.0, not trigo, start_pose), seq, start_pose)
 
             # Multipoint 'M' shape
-            self.add_goto_test(TestMultipointMShape(DIRECTION_FORWARD , 1.0, start_pose), seq, start_pose)
-            self.add_goto_test(TestMultipointMShape(DIRECTION_BACKWARD, 1.0, start_pose), seq, start_pose)
+            self.add_goto_test(TestMultipointMShape(DIRECTION_FORWARDS , 1.0, start_pose), seq, start_pose)
+            self.add_goto_test(TestMultipointMShape(DIRECTION_BACKWARDS, 1.0, start_pose), seq, start_pose)
 
             # Multipoint Square
-            self.add_goto_test(TestMultipointSquare(DIRECTION_FORWARD , 1.0, trigo, start_pose), seq, start_pose)
-            self.add_goto_test(TestMultipointSquare(DIRECTION_BACKWARD, 1.0, trigo, start_pose), seq, start_pose)
+            self.add_goto_test(TestMultipointSquare(DIRECTION_FORWARDS , 1.0, trigo, start_pose), seq, start_pose)
+            self.add_goto_test(TestMultipointSquare(DIRECTION_BACKWARDS, 1.0, trigo, start_pose), seq, start_pose)
 
             self.add_goto_test(TestTakeTreasure(start_pose), seq, start_pose)
 
         seq.add(TestLookAt())
-        seq.add(TestMultipointCircle(DIRECTION_FORWARD, 0.4))
+        seq.add(TestMultipointCircle(DIRECTION_FORWARDS, 0.4))
 
         # Actuators
         seq.add(TestGripper(GRIPPER_SIDE_LEFT))
@@ -140,10 +140,10 @@ class TestForwardBackward(statemachine.State):
 
     def on_enter(self):
         walk = commonstates.TrajectoryWalk()
-        dst = get_destination_pose(DIRECTION_FORWARD, self.distance, 0.0, True, self.start_pose)
-        walk.move_to(dst.x, dst.y, DIRECTION_FORWARD)
-        dst = get_destination_pose(DIRECTION_BACKWARD, self.distance, 0.0, True, dst)
-        walk.move_to(dst.x, dst.y, DIRECTION_BACKWARD)
+        dst = get_destination_pose(DIRECTION_FORWARDS, self.distance, 0.0, True, self.start_pose)
+        walk.move_to(dst.x, dst.y, DIRECTION_FORWARDS)
+        dst = get_destination_pose(DIRECTION_BACKWARDS, self.distance, 0.0, True, dst)
+        walk.move_to(dst.x, dst.y, DIRECTION_BACKWARDS)
         self.switch_to_substate(walk)
 
 
@@ -162,7 +162,7 @@ class TestRotation(statemachine.State):
 
 
     def on_enter(self):
-        dst = get_destination_pose(DIRECTION_FORWARD, 0.0, self.delta_angle, self.trigo, self.start_pose)
+        dst = get_destination_pose(DIRECTION_FORWARDS, 0.0, self.delta_angle, self.trigo, self.start_pose)
         walk = commonstates.TrajectoryWalk()
         walk.rotate_to(dst.angle)
         self.switch_to_substate(walk)
@@ -185,7 +185,7 @@ class TestCircleRotation(statemachine.State):
     def on_enter(self):
         walk = commonstates.TrajectoryWalk()
         for i in range(self.steps):
-            dst = get_destination_pose(DIRECTION_FORWARD, 0.0, float(i + 1) * math.pi * 2.0 / float(self.steps), self.trigo, self.start_pose)
+            dst = get_destination_pose(DIRECTION_FORWARDS, 0.0, float(i + 1) * math.pi * 2.0 / float(self.steps), self.trigo, self.start_pose)
             walk.rotate_to(dst.angle)
         self.switch_to_substate(walk)
 
@@ -208,7 +208,7 @@ class TestMoveAndReturn(statemachine.State):
         dst = get_destination_pose(self.direction, self.distance, 0.0, True, self.start_pose)
         walk = commonstates.TrajectoryWalk()
         walk.move_to(dst.x, dst.y, self.direction)
-        dst = get_destination_pose(DIRECTION_FORWARD, 0.0, math.pi, True, self.start_pose)
+        dst = get_destination_pose(DIRECTION_FORWARDS, 0.0, math.pi, True, self.start_pose)
         walk.rotate_to(dst.angle)
         walk.move_to(self.start_pose.x, self.start_pose.y, self.direction)
         walk.rotate_to(self.start_pose.angle)
@@ -354,7 +354,7 @@ class TestMultipointCircle(statemachine.State):
 
 
     def on_enter(self):
-        if self.direction == DIRECTION_FORWARD:
+        if self.direction == DIRECTION_FORWARDS:
             angle = math.pi / 2.0
         else:
             angle = -math.pi / 2.0
@@ -485,13 +485,13 @@ class TestTakeTreasure(statemachine.State):
     def on_enter(self):
         walk = commonstates.TrajectoryWalk()
         walk.wait_for(commonstates.Gripper(GRIPPER_SIDE_BOTH, GRIPPER_OPEN))
-        dst = get_destination_pose(DIRECTION_FORWARD, 1.0, 0.0, True, self.start_pose)
-        walk.move_to(dst.x, dst.y, DIRECTION_FORWARD)
+        dst = get_destination_pose(DIRECTION_FORWARDS, 1.0, 0.0, True, self.start_pose)
+        walk.move_to(dst.x, dst.y, DIRECTION_FORWARDS)
         walk.wait_for(commonstates.Gripper(GRIPPER_SIDE_BOTH, GRIPPER_CLOSE))
-        dst = get_destination_pose(DIRECTION_BACKWARD, 1.0, 0.0, True, dst)
-        walk.move_to(dst.x, dst.y, DIRECTION_BACKWARD)
+        dst = get_destination_pose(DIRECTION_BACKWARDS, 1.0, 0.0, True, dst)
+        walk.move_to(dst.x, dst.y, DIRECTION_BACKWARDS)
         walk.rotate_to(math.pi / 2.0)
-        walk.move_to(1.0, 1.1, DIRECTION_FORWARD)
+        walk.move_to(1.0, 1.1, DIRECTION_FORWARDS)
         walk.wait_for(commonstates.Gripper(GRIPPER_SIDE_BOTH, GRIPPER_OPEN))
         walk.wait_for(commonstates.EmptyTank(TANK_DEPLOY))
         walk.wait_for(commonstates.EmptyTank(TANK_RETRACT))
@@ -503,7 +503,7 @@ class TestTakeTreasure(statemachine.State):
         walk.wait_for(commonstates.EmptyTank(TANK_RETRACT))
         walk.wait_for(commonstates.EmptyTank(TANK_DEPLOY))
         walk.wait_for(commonstates.EmptyTank(TANK_RETRACT))
-        walk.move_to(1.0, 1.0, DIRECTION_BACKWARD)
+        walk.move_to(1.0, 1.0, DIRECTION_BACKWARDS)
         walk.rotate_to(0.0)
         walk.wait_for(commonstates.Gripper(GRIPPER_SIDE_BOTH, GRIPPER_CLOSE))
         self.switch_to_substate(walk)
@@ -531,9 +531,9 @@ class TestTrajectory(statemachine.State):
             x = p.x
             y = p.y
             walk.look_at_opposite(x, y)
-            walk.move_to(x, y, DIRECTION_BACKWARD)
+            walk.move_to(x, y, DIRECTION_BACKWARDS)
         g = packets.Goto()
-        g.direction = DIRECTION_BACKWARD
+        g.direction = DIRECTION_BACKWARDS
         g.points = points
         #self.send_packet(g)
         self.switch_to_substate(walk)

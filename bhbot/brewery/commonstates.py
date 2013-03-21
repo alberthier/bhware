@@ -144,11 +144,11 @@ class AbstractMove(statemachine.State):
 
 
     def on_opponent_in_front(self, packet):
-        self.on_opponent_detected(packet, DIRECTION_FORWARD)
+        self.on_opponent_detected(packet, DIRECTION_FORWARDS)
 
 
     def on_opponent_in_back(self, packet):
-        self.on_opponent_detected(packet, DIRECTION_BACKWARD)
+        self.on_opponent_detected(packet, DIRECTION_BACKWARDS)
 
 
     def on_opponent_detected(self, packet, opponent_direction):
@@ -370,11 +370,11 @@ class WaitForOpponentLeave(statemachine.State):
         self.opponent_disappeared = False
         self.timer_expired = False
         self.exit_reason = None
-        if self.current_move_direction == DIRECTION_FORWARD:
-            direction = DIRECTION_BACKWARD
+        if self.current_move_direction == DIRECTION_FORWARDS:
+            direction = DIRECTION_BACKWARDS
             distance = -0.100
         else:
-            direction = DIRECTION_FORWARD
+            direction = DIRECTION_FORWARDS
             distance = 0.100
 
         current_pose = self.robot().pose
@@ -428,11 +428,11 @@ class TrajectoryWalk(statemachine.State):
         self.current_opponent = None
 
 
-    def move(self, dx, dy, direction = DIRECTION_FORWARD):
+    def move(self, dx, dy, direction = DIRECTION_FORWARDS):
         self.jobs.append(('create_move_packet', (dx, dy, direction)))
 
 
-    def move_to(self, x, y, direction = DIRECTION_FORWARD):
+    def move_to(self, x, y, direction = DIRECTION_FORWARDS):
         self.jobs.append(('create_move_to_packet', (x, y, direction)))
 
 
@@ -460,19 +460,19 @@ class TrajectoryWalk(statemachine.State):
         self.jobs.append(('create_rotate_to_packet', (angle,)))
 
 
-    def goto(self, x, y, angle, direction = DIRECTION_FORWARD):
+    def goto(self, x, y, angle, direction = DIRECTION_FORWARDS):
         self.jobs.append(('create_goto_packet', (x, y, angle, direction)))
 
 
-    def goto_looking_at(self, x, y, look_at_x, look_at_y, direction = DIRECTION_FORWARD):
+    def goto_looking_at(self, x, y, look_at_x, look_at_y, direction = DIRECTION_FORWARDS):
         self.jobs.append(('create_goto_looking_at_packet', (dx, dy, look_at_x, look_at_y, direction)))
 
 
-    def goto_looking_at_opposite(self, x, y, look_at_x, look_at_y, direction = DIRECTION_FORWARD):
+    def goto_looking_at_opposite(self, x, y, look_at_x, look_at_y, direction = DIRECTION_FORWARDS):
         self.jobs.append(('create_goto_looking_at_opposite_packet', (dx, dy, look_at_x, look_at_y, direction)))
 
 
-    def follow(self, points, angle = None, direction = DIRECTION_FORWARD):
+    def follow(self, points, angle = None, direction = DIRECTION_FORWARDS):
         self.jobs.append(('create_follow_packet', (points, angle, direction)))
 
 
@@ -484,12 +484,12 @@ class TrajectoryWalk(statemachine.State):
         self.jobs.append(substate)
 
 
-    def create_move_packet(self, dx, dy, direction = DIRECTION_FORWARD):
+    def create_move_packet(self, dx, dy, direction = DIRECTION_FORWARDS):
         current_pose = self.robot().pose
         return self.create_move_to_packet(current_pose.virt.x + dx, current_pose.virt.y + dy, direction)
 
 
-    def create_move_to_packet(self, x, y, direction = DIRECTION_FORWARD):
+    def create_move_to_packet(self, x, y, direction = DIRECTION_FORWARDS):
         packet = packets.MoveLine()
         packet.direction = direction
         packet.points = [ position.Pose(x, y, None, True) ]
@@ -507,7 +507,7 @@ class TrajectoryWalk(statemachine.State):
         current_pose = self.robot().pose
         dx = -math.cos(current_pose.virt.angle) * distance
         dy = -math.sin(current_pose.virt.angle) * distance
-        return self.create_move_packet(dx, dy, DIRECTION_BACKWARD)
+        return self.create_move_packet(dx, dy, DIRECTION_BACKWARDS)
 
 
     def create_look_at_packet(self, x, y):
@@ -541,7 +541,7 @@ class TrajectoryWalk(statemachine.State):
         return packet
 
 
-    def create_goto_packet(self, x, y, angle, direction = DIRECTION_FORWARD):
+    def create_goto_packet(self, x, y, angle, direction = DIRECTION_FORWARDS):
         dest = position.Pose(x, y, angle, True)
         packet = packets.MoveCurve()
         packet.direction = direction
@@ -550,7 +550,7 @@ class TrajectoryWalk(statemachine.State):
         return packet
 
 
-    def create_goto_looking_at_packet(self, x, y, look_at_x, look_at_y, direction = DIRECTION_FORWARD):
+    def create_goto_looking_at_packet(self, x, y, look_at_x, look_at_y, direction = DIRECTION_FORWARDS):
         current_pose = self.robot().pose
         dest = position.Pose(look_at_x, look_at_y, None, True)
         dx = dest.virt.x - current_pose.virt.x
@@ -558,7 +558,7 @@ class TrajectoryWalk(statemachine.State):
         return self.create_goto_packet(x, y, math.atan2(dy, dx))
 
 
-    def create_goto_looking_at_opposite_packet(self, x, y, look_at_x, look_at_y, direction = DIRECTION_FORWARD):
+    def create_goto_looking_at_opposite_packet(self, x, y, look_at_x, look_at_y, direction = DIRECTION_FORWARDS):
         current_pose = self.robot().pose
         dest = position.Pose(look_at_x, look_at_y, None, True)
         dx = dest.virt.x - current_pose.virt.x
@@ -566,7 +566,7 @@ class TrajectoryWalk(statemachine.State):
         return self.create_goto_packet(x, y, math.atan2(dy, dx) + math.pi)
 
 
-    def create_follow_packet(self, points, angle = None, direction = DIRECTION_FORWARD):
+    def create_follow_packet(self, points, angle = None, direction = DIRECTION_FORWARDS):
         dest = position.Pose(0.0, 0.0, angle, True)
         packet = packets.MoveCurve()
         packet.direction = direction
@@ -637,11 +637,11 @@ class TrajectoryWalk(statemachine.State):
 
 
     def on_opponent_in_front(self, packet):
-        self.on_opponent_detected(packet, DIRECTION_FORWARD)
+        self.on_opponent_detected(packet, DIRECTION_FORWARDS)
 
 
     def on_opponent_in_back(self, packet):
-        self.on_opponent_detected(packet, DIRECTION_BACKWARD)
+        self.on_opponent_detected(packet, DIRECTION_BACKWARDS)
 
 
     def on_opponent_detected(self, packet, opponent_direction):
@@ -657,7 +657,7 @@ class TrajectoryWalk(statemachine.State):
 
 class Navigate(statemachine.State):
 
-    def __init__(self, x, y, direction = DIRECTION_FORWARD):
+    def __init__(self, x, y, direction = DIRECTION_FORWARDS):
         statemachine.State.__init__(self)
         self.destination = position.Pose(x, y, None, True)
         self.direction = direction
@@ -689,7 +689,7 @@ class Navigate(statemachine.State):
     def multipoint_walk(self, path):
         for sub_path in path:
             first_point = sub_path[0]
-            if self.direction == DIRECTION_FORWARD:
+            if self.direction == DIRECTION_FORWARDS:
                 if not self.robot().is_looking_at(first_point):
                     self.walk.look_at(first_point.virt.x, first_point.virt.y)
             else:
@@ -702,7 +702,7 @@ class Navigate(statemachine.State):
     def monopoint_walk(self, path):
         for sub_path in path:
             for point in sub_path:
-                if self.direction == DIRECTION_FORWARD:
+                if self.direction == DIRECTION_FORWARDS:
                     if not self.robot().is_looking_at(point):
                         self.walk.look_at(point.virt.x, point.virt.y)
                 else:

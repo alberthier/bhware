@@ -280,7 +280,7 @@ class BHWeb(object):
             pose.angle = self.eventloop.robot.pose.angle + angle
             packet = packets.Goto()
             packet.movement = MOVEMENT_ROTATE
-            packet.direction = DIRECTION_FORWARD
+            packet.direction = DIRECTION_FORWARDS
             packet.points = [ pose ]
             self.eventloop.send_packet(packet)
         elif command == "Move":
@@ -288,9 +288,9 @@ class BHWeb(object):
             pose = position.Pose()
             packet = packets.Goto()
             if "forward" in vars:
-                packet.direction = DIRECTION_FORWARD
+                packet.direction = DIRECTION_FORWARDS
             else:
-                packet.direction = DIRECTION_BACKWARD
+                packet.direction = DIRECTION_BACKWARDS
             pose.x = self.eventloop.robot.pose.x + packet.direction * math.cos(self.eventloop.robot.pose.angle) * distance
             pose.y = self.eventloop.robot.pose.y + packet.direction * math.sin(self.eventloop.robot.pose.angle) * distance
             packet.movement = MOVEMENT_MOVE

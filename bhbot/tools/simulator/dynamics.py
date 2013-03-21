@@ -47,7 +47,7 @@ class BasicDynamics(QObject):
         if packet.movement == MOVEMENT_MOVE:
             time = 0.0
             for pose in packet.points:
-                if packet.direction == DIRECTION_FORWARD:
+                if packet.direction == DIRECTION_FORWARDS:
                     pose.angle = tools.angle_between(self.pose.x, self.pose.y, pose.x, pose.y)
                 else:
                     pose.angle = tools.angle_between(pose.x, pose.y, self.pose.x, self.pose.y)
@@ -57,7 +57,7 @@ class BasicDynamics(QObject):
                 self.pose = pose
                 segmentNb += 1
             if packet.angle is not None:
-                if packet.direction == DIRECTION_FORWARD:
+                if packet.direction == DIRECTION_FORWARDS:
                     angle = packet.angle
                 else:
                     angle = packet.angle + math.pi

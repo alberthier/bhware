@@ -53,7 +53,7 @@ class Main(statemachine.State):
     def on_enter(self):
         gm = goalmanager.GoalManager(self.event_loop)
         self.robot().goal_manager = gm
-        map_goal = goalmanager.Goal("MAP", 1.0, 0.31, 1.37, DIRECTION_BACKWARD, GrabMap)
+        map_goal = goalmanager.Goal("MAP", 1.0, 0.31, 1.37, DIRECTION_BACKWARDS, GrabMap)
         gm.harvesting_goals.append(map_goal)
         gm.emptying_goals.append(map_goal)
 
@@ -62,20 +62,20 @@ class Main(statemachine.State):
         offset_x = (1.0 - x1) * 2.0
         offset_y = 0.80
 
-        gm.harvesting_goals.append(goalmanager.Goal("SELF_NORTH" , 1.0, x1           , y1           , DIRECTION_BACKWARD, TakeGoldBar))
-        gm.harvesting_goals.append(goalmanager.Goal("SELF_NORTH" , 1.0, x2           , y2           , DIRECTION_BACKWARD, TakeGoldBar))
-        gm.harvesting_goals.append(goalmanager.Goal("SELF_SOUTH" , 1.0, x1 + offset_x, y1           , DIRECTION_BACKWARD, TakeGoldBar))
-        gm.harvesting_goals.append(goalmanager.Goal("SELF_SOUTH" , 1.0, x2 + offset_x, y2           , DIRECTION_BACKWARD, TakeGoldBar))
-        gm.harvesting_goals.append(goalmanager.Goal("OTHER_NORTH", 1.0, x1           , y1 + offset_y, DIRECTION_BACKWARD, TakeGoldBar))
-        gm.harvesting_goals.append(goalmanager.Goal("OTHER_NORTH", 1.0, x2           , y2 + offset_y, DIRECTION_BACKWARD, TakeGoldBar))
-        gm.harvesting_goals.append(goalmanager.Goal("OTHER_SOUTH", 1.0, x1 + offset_x, y1 + offset_y, DIRECTION_BACKWARD, TakeGoldBar))
-        gm.harvesting_goals.append(goalmanager.Goal("OTHER_SOUTH", 1.0, x2 + offset_x, y2 + offset_y, DIRECTION_BACKWARD, TakeGoldBar))
-        #        gm.harvesting_goals.append(goalmanager.Goal("SWIFFER"    , 0.5, 1.37         , 2.0          , DIRECTION_BACKWARD, Swiffer))
+        gm.harvesting_goals.append(goalmanager.Goal("SELF_NORTH" , 1.0, x1           , y1           , DIRECTION_BACKWARDS, TakeGoldBar))
+        gm.harvesting_goals.append(goalmanager.Goal("SELF_NORTH" , 1.0, x2           , y2           , DIRECTION_BACKWARDS, TakeGoldBar))
+        gm.harvesting_goals.append(goalmanager.Goal("SELF_SOUTH" , 1.0, x1 + offset_x, y1           , DIRECTION_BACKWARDS, TakeGoldBar))
+        gm.harvesting_goals.append(goalmanager.Goal("SELF_SOUTH" , 1.0, x2 + offset_x, y2           , DIRECTION_BACKWARDS, TakeGoldBar))
+        gm.harvesting_goals.append(goalmanager.Goal("OTHER_NORTH", 1.0, x1           , y1 + offset_y, DIRECTION_BACKWARDS, TakeGoldBar))
+        gm.harvesting_goals.append(goalmanager.Goal("OTHER_NORTH", 1.0, x2           , y2 + offset_y, DIRECTION_BACKWARDS, TakeGoldBar))
+        gm.harvesting_goals.append(goalmanager.Goal("OTHER_SOUTH", 1.0, x1 + offset_x, y1 + offset_y, DIRECTION_BACKWARDS, TakeGoldBar))
+        gm.harvesting_goals.append(goalmanager.Goal("OTHER_SOUTH", 1.0, x2 + offset_x, y2 + offset_y, DIRECTION_BACKWARDS, TakeGoldBar))
+        #        gm.harvesting_goals.append(goalmanager.Goal("SWIFFER"    , 0.5, 1.37         , 2.0          , DIRECTION_BACKWARDS, Swiffer))
 
-        gm.emptying_goals.append(goalmanager.Goal("DEPOSIT_CAPTAIN", 2.0, 0.30, 0.60, DIRECTION_FORWARD, DepositTreasure))
-        gm.emptying_goals.append(goalmanager.Goal("DEPOSIT_2",       1.0, 0.90, 0.45, DIRECTION_FORWARD, DepositTreasure))
-        gm.emptying_goals.append(goalmanager.Goal("DEPOSIT_3",       1.0, 0.80, 0.45, DIRECTION_FORWARD, DepositTreasure))
-        gm.emptying_goals.append(goalmanager.Goal("DEPOSIT_4",       1.0, 1.00, 0.45, DIRECTION_FORWARD, DepositTreasure))
+        gm.emptying_goals.append(goalmanager.Goal("DEPOSIT_CAPTAIN", 2.0, 0.30, 0.60, DIRECTION_FORWARDS, DepositTreasure))
+        gm.emptying_goals.append(goalmanager.Goal("DEPOSIT_2",       1.0, 0.90, 0.45, DIRECTION_FORWARDS, DepositTreasure))
+        gm.emptying_goals.append(goalmanager.Goal("DEPOSIT_3",       1.0, 0.80, 0.45, DIRECTION_FORWARDS, DepositTreasure))
+        gm.emptying_goals.append(goalmanager.Goal("DEPOSIT_4",       1.0, 1.00, 0.45, DIRECTION_FORWARDS, DepositTreasure))
 
 
     def on_device_ready(self, packet):
@@ -217,7 +217,7 @@ class TakeGoldBar(statemachine.State):
         walk = commonstates.TrajectoryWalk()
 
         walk.look_at_opposite(self.start_pos[0], self.start_pos[1])
-        walk.move_to(self.start_pos[0], self.start_pos[1], DIRECTION_BACKWARD)
+        walk.move_to(self.start_pos[0], self.start_pos[1], DIRECTION_BACKWARDS)
 
         walk.wait_for(commonstates.Antiblocking(True))
         walk.rotate_to(self.start_pos[2])
@@ -278,11 +278,11 @@ class DetectAndTakeGoldbar(statemachine.State):
             totem_take_pose = totem_approach_end_positions[self.goal.identifier][0:2]
             walk.look_at(*totem_take_pose)
             #bump again totem
-            walk.move_to(*totem_take_pose,direction=DIRECTION_FORWARD)
+            walk.move_to(*totem_take_pose,direction=DIRECTION_FORWARDS)
             #close gripper
             walk.wait_for(commonstates.Gripper(GRIPPER_SIDE_BOTH, GRIPPER_CLOSE))
             #go backwards
-            walk.move_to(*totem_approach_start_positions[self.goal.identifier][0:2],direction=DIRECTION_BACKWARD)
+            walk.move_to(*totem_approach_start_positions[self.goal.identifier][0:2],direction=DIRECTION_BACKWARDS)
             yield walk
             self.robot().tank_full = True
             return
@@ -309,9 +309,9 @@ class Swiffer(statemachine.State):
         walk = commonstates.TrajectoryWalk()
         walk.rotate_to(math.pi)
         walk.wait_for(commonstates.Sweeper(SWEEPER_OPEN))
-        walk.move_to(1.65, 2.05, direction=DIRECTION_BACKWARD)
+        walk.move_to(1.65, 2.05, direction=DIRECTION_BACKWARDS)
         walk.rotate_to(math.pi / 2)
-        walk.move_to(1.65, 0.67, direction=DIRECTION_BACKWARD)
+        walk.move_to(1.65, 0.67, direction=DIRECTION_BACKWARDS)
         walk.rotate_to(0.0)
         walk.backward(0.7)
         walk.rotate_to(math.pi/2)
