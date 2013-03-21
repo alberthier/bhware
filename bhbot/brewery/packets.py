@@ -569,7 +569,7 @@ class GlassPresent(BasePacket):
 
 
 
-class Nipper(BasePacket):
+class BottomHolder(BasePacket):
 
     TYPE = 70
     DEFINITION = (
@@ -602,7 +602,7 @@ class Gripper(BasePacket):
 
 
 
-class Holder(BasePacket):
+class TopHolder(BasePacket):
 
     TYPE = 73
     DEFINITION = (

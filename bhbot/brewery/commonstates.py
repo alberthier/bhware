@@ -25,17 +25,322 @@ class Timer(statemachine.State):
         @param miliseconds: Time to wait in miliseconds
         @type miliseconds: float
         """
-        logger.log("Enter timer {}".format(datetime.datetime.now()))
+        self.miliseconds = miliseconds
+
+
+    def on_enter(self):
         statemachine.State.__init__(self)
-        self.end_time = datetime.datetime.now() + datetime.timedelta(0, 0, 0, miliseconds)
+        self.end_time = datetime.datetime.now() + datetime.timedelta(0, 0, 0, self.miliseconds)
 
 
     def on_timer_tick(self):
         if datetime.datetime.now() > self.end_time:
-            logger.log("End timer {}".format(datetime.datetime.now()))
-            self.exit_substate(self.TIMEOUT)
+            self.return_value = Timer.TIMEOUT
+            yield None
 
 
+
+
+class SetupPositionControl(statemachine.State):
+
+    def __init__(self, t_acc = 0.0, f_va_max = 0.0):
+        statemachine.State.__init__(self)
+        self.packet = packets.PositionControlConfig()
+        self.packet.t_acc = t_acc
+        self.packet.f_va_max = f_va_max
+
+
+    def on_enter(self):
+        self.send_packet(self.packet)
+
+
+    def on_position_control_config(self, packet):
+        yield None
+
+
+
+
+class DefinePosition(statemachine.State):
+
+    def __init__(self, x = None, y = None, angle = None):
+        statemachine.State.__init__(self)
+        if x is None or y is None or angle is None:
+            self.pose = None
+        else:
+            self.pose = position.Pose(x, y, angle, True)
+        self.x_sent = False
+        self.y_sent = False
+
+
+    def on_enter(self):
+        if self.pose is None:
+            self.pose = position.Pose(BLUE_START_X, BLUE_START_Y, BLUE_START_ANGLE, True)
+        return self.process()
+
+
+    def on_resettle(self, packet):
+        return self.process()
+
+
+    def process(self):
+        logger.log("Processing ...")
+        if not self.x_sent:
+            packet = packets.Resettle()
+            packet.axis = AXIS_X
+            packet.position = self.pose.x
+            packet.angle = self.pose.angle
+            self.send_packet(packet)
+            self.x_sent = True
+        elif not self.y_sent:
+            packet = packets.Resettle()
+            packet.axis = AXIS_Y
+            packet.position = self.pose.y
+            packet.angle = self.pose.angle
+            self.send_packet(packet)
+            self.y_sent = True
+        else:
+            yield None
+
+
+
+
+class Antiblocking(statemachine.State):
+
+    def __init__(self, desired_status):
+        self.status = desired_status
+        if desired_status :
+            self.packet = packets.EnableAntiBlocking()
+        else :
+            self.packet = packets.DisableAntiBlocking()
+
+
+    def on_enter(self):
+        self.send_packet(self.packet)
+
+
+    def on_enable_anti_blocking(self, packet):
+        yield None
+
+
+    def on_disable_anti_blocking(self, packet):
+        yield None
+
+
+
+
+class AbstractMove(statemachine.State):
+
+    def __init__(self):
+        self.current_opponent = None
+
+
+    def on_enter(self):
+        self.send_packet(self.packet)
+
+
+    def on_opponent_in_front(self, packet):
+        self.on_opponent_detected(packet, DIRECTION_FORWARD)
+
+
+    def on_opponent_in_back(self, packet):
+        self.on_opponent_detected(packet, DIRECTION_BACKWARD)
+
+
+    def on_opponent_detected(self, packet, opponent_direction):
+        if not isinstance(self, Rotate) and self.direction == opponent_direction and self.current_opponent is None:
+            logger.log("Opponent detected. direction = {}. Robot stopped".format(opponent_direction))
+            self.send_packet(packets.Stop())
+            self.current_opponent = packet.robot
+
+
+    def on_goto_finished(self, packet):
+        if packet.reason == REASON_DESTINATION_REACHED:
+            self.exit_reason = TRAJECTORY_DESTINATION_REACHED
+            yield None
+        elif packet.reason == REASON_BLOCKED_FRONT or packet.reason == REASON_BLOCKED_BACK:
+            self.exit_reason = TRAJECTORY_BLOCKED
+            yield None
+        elif self.current_opponent is not None:
+            self.exit_reason = TRAJECTORY_OPPONENT_DETECTED
+            yield None
+            #reason = (yield WaitForOpponentLeave(self.current_opponent, self.opponent_wait_time, self.current_goto_packet.direction)).exit_reason
+            #if reason = WaitForOpponentLeave.TIMEOUT:
+                #yield None
+            #else:
+                #return self.continue_when_opponent_left(packet.current_point_index)
+
+
+    def continue_when_opponent_left(self, index):
+        self.send_packet(self.packet)
+
+
+
+
+class Rotate(AbstractMove):
+
+    def __init__(self, direction, angle):
+        AbstractMove.__init__(self)
+        self.packet = packets.Rotate(direction = direction, angle = angle)
+
+
+
+
+class MoveCurve(AbstractMove):
+
+    def __init__(self, direction, angle, points):
+        AbstractMove.__init__(self)
+        self.packet = packets.Rotate(direction = direction, angle = angle, points = points)
+
+
+
+
+class MoveLine(AbstractMove):
+
+    def __init__(self, direction, angle):
+        AbstractMove.__init__(self)
+        self.packet = packets.Rotate(direction = direction, points = points)
+
+
+
+
+class MoveArc(AbstractMove):
+
+    def __init__(self, direction, center, radius, points):
+        AbstractMove.__init__(self)
+        self.packet = packets.Rotate(direction = direction, center = center, radius = radius, points = points)
+
+
+
+
+class BottomHolder(statemachine.State):
+
+    def __init__(self, side, move):
+        self.packet = packets.BottomHolder(side = side, move = move)
+
+
+    def on_enter(self):
+        self.send_packet(self.packet)
+
+
+    def on_bottom_holder(self, packet):
+        yield None
+
+
+
+
+class Lifter(statemachine.State):
+
+    def __init__(self, side, move):
+        self.packet = packets.Lifter(side = side, move = move)
+
+
+    def on_enter(self):
+        self.send_packet(self.packet)
+
+
+    def on_lifter(self, packet):
+        yield None
+
+
+
+
+class Gripper(statemachine.State):
+
+    def __init__(self, side, move):
+        self.packet = packets.Gripper(side = side, move = move)
+
+
+    def on_enter(self):
+        self.send_packet(self.packet)
+
+
+    def on_gripper(self, packet):
+        yield None
+
+
+
+
+class TopHolder(statemachine.State):
+
+    def __init__(self, side, move):
+        self.packet = packets.TopHolder(side = side, move = move)
+
+
+    def on_enter(self):
+        self.send_packet(self.packet)
+
+
+    def on_top_holder(self, packet):
+        yield None
+
+
+
+
+class CandleKicker(statemachine.State):
+
+    def __init__(self, side, which, position):
+        self.packet = packets.CandleKicker(side = side, which = which, position = position)
+
+
+    def on_enter(self):
+        self.send_packet(self.packet)
+
+
+    def on_candle_kicker(self, packet):
+        yield None
+
+
+
+
+class GiftOpener(statemachine.State):
+
+    def __init__(self, position):
+        self.packet = packets.GiftOpener(position = position)
+
+
+    def on_enter(self):
+        self.send_packet(self.packet)
+
+
+    def on_gift_opener(self, packet):
+        yield None
+
+
+
+
+class Pump(statemachine.State):
+
+    def __init__(self, action):
+        self.packet = packets.Pump(action = action)
+
+
+    def on_enter(self):
+        self.send_packet(self.packet)
+
+
+    def on_pump(self, packet):
+        yield None
+
+
+
+
+class FetchCandleColors(statemachine.State):
+
+    def on_enter(self):
+        if IS_HOST_DEVICE_ARM:
+            self.colors = self.event_loop.colordetector.invoke("fetch")
+            yield None
+        else:
+            self.send_packet(packets.SimulatorFetchColors())
+
+
+    def on_simulator_fetch_colors(self, packet):
+        self.colors = packet.colors
+        yield None
+
+
+#####################################
+#####################################
 
 
 class WaitForOpponentLeave(statemachine.State):

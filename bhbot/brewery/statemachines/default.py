@@ -10,19 +10,31 @@ import commonstates
 import goalmanager
 
 from definitions import *
+from commonstates import *
 from position import *
 
 
 
 class Main(statemachine.State):
-
     def on_enter(self):
         logger.log("Main - on enter")
 
     def on_device_ready(self, packet):
-        print("Main - on device ready")
         logger.log("Main - on device ready")
-        yield WaitStart()
+        yield Timer(1000)
+        yield SetupPositionControl()
+        logger.log("Main - after pos control")
+        yield DefinePosition()
+        yield Antiblocking(True)
+        yield Antiblocking(False)
+        yield BottomHolder(SIDE_RIGHT, MOVE_OPEN)
+        yield Lifter(SIDE_RIGHT, LIFTER_MOVE_MIDDLE)
+        yield Gripper(SIDE_RIGHT, MOVE_OPEN)
+        yield TopHolder(SIDE_RIGHT, MOVE_OPEN)
+        yield CandleKicker(SIDE_RIGHT, CANDLE_KICKER_UPPER, CANDLE_KICKER_POSITION_KICK)
+        yield GiftOpener(GIFT_OPENER_POSITION_RIGHT)
+        yield Pump(PUMP_ON)
+        yield FetchCandleColors()
 
 
 class NewTest(statemachine.State):

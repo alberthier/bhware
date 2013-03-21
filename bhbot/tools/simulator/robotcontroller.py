@@ -167,14 +167,28 @@ class RobotController(object):
             self.game_controller.try_start()
 
 
-    def on_nipper(self, packet):
-        if packet.move == MOVE_CLOSE:
-            self.robot_layer.robot.grab_glass(packet.side)
+    def on_bottom_holder(self, packet):
+        self.send_packet(packet)
 
 
-    def on_holder(self, packet):
-        if packet.move == MOVE_CLOSE:
-            self.robot_layer.robot.grab_glass(packet.side)
+    def on_lifter(self, packet):
+        self.send_packet(packet)
+
+
+    def on_gripper(self, packet):
+        self.send_packet(packet)
+
+
+    def on_top_holder(self, packet):
+        self.send_packet(packet)
+
+
+    def on_pump(self, packet):
+        self.send_packet(packet)
+
+
+    def on_stop_all(self, packet):
+        self.send_packet(packet)
 
 
     def on_simulator_data(self, packet):
