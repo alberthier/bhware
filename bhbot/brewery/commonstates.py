@@ -130,12 +130,17 @@ class Antiblocking(statemachine.State):
 
 class AbstractMove(statemachine.State):
 
-    def __init__(self):
+    def __init__(self, chained):
         self.current_opponent = None
+        self.chained = chained
 
 
     def on_enter(self):
-        self.send_packet(self.packet)
+        if self.chained is not None and self.chained.exit_reason != REASON_DESTINATION_REACHED:
+            self.exit_reason = self.chained.exit_reason
+            yield None
+        else:
+            self.send_packet(self.packet)
 
 
     def on_opponent_in_front(self, packet):
@@ -178,8 +183,8 @@ class AbstractMove(statemachine.State):
 
 class Rotate(AbstractMove):
 
-    def __init__(self, direction, angle):
-        AbstractMove.__init__(self)
+    def __init__(self, direction, angle, chained = None):
+        AbstractMove.__init__(self, chained)
         self.packet = packets.Rotate(direction = direction, angle = angle)
 
 
@@ -187,8 +192,8 @@ class Rotate(AbstractMove):
 
 class MoveCurve(AbstractMove):
 
-    def __init__(self, direction, angle, points):
-        AbstractMove.__init__(self)
+    def __init__(self, direction, angle, points, chained = None):
+        AbstractMove.__init__(self, chained)
         self.packet = packets.Rotate(direction = direction, angle = angle, points = points)
 
 
@@ -196,18 +201,18 @@ class MoveCurve(AbstractMove):
 
 class MoveLine(AbstractMove):
 
-    def __init__(self, direction, angle):
-        AbstractMove.__init__(self)
-        self.packet = packets.Rotate(direction = direction, points = points)
+    def __init__(self, direction, points, chained = None):
+        AbstractMove.__init__(self, chained)
+        self.packet = packets.MoveLine(direction = direction, points = points)
 
 
 
 
 class MoveArc(AbstractMove):
 
-    def __init__(self, direction, center, radius, points):
-        AbstractMove.__init__(self)
-        self.packet = packets.Rotate(direction = direction, center = center, radius = radius, points = points)
+    def __init__(self, direction, center, radius, points, chained = None):
+        AbstractMove.__init__(self, chained)
+        self.packet = packets.MoveArc(direction = direction, center = center, radius = radius, points = points)
 
 
 
