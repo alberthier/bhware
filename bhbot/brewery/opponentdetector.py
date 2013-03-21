@@ -74,14 +74,14 @@ class Opponent(object):
 
     def notify_state_machine(self, packet, is_in_front, is_in_back):
         if is_in_front:
-            self.detector.event_loop.get_current_state().on_opponent_in_front(packet)
+            self.detector.event_loop.fsm.on_opponent_in_front(packet)
         else:
-            self.detector.event_loop.get_current_state().on_opponent_disapeared(self.opponent_type, True)
+            self.detector.event_loop.fsm.on_opponent_disapeared(self.opponent_type, True)
 
         if is_in_back:
-            self.detector.event_loop.get_current_state().on_opponent_in_back(packet)
+            self.detector.event_loop.fsm.on_opponent_in_back(packet)
         else:
-            self.detector.event_loop.get_current_state().on_opponent_disapeared(self.opponent_type, False)
+            self.detector.event_loop.fsm.on_opponent_disapeared(self.opponent_type, False)
 
 
 

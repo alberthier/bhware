@@ -331,7 +331,7 @@ class EventLoop(object):
                         channel.packet.dispatch(self.opponent_detector)
                         channel.packet.dispatch(self.map)
                         #channel.packet.dispatch(self.eval_map)
-                        self.fsm.dispatch(channel.packet)
+                        channel.packet.dispatch(self.fsm)
 
                         channel.packet = None
                 except Exception as e:
@@ -408,9 +408,7 @@ class EventLoop(object):
         RobotControlDeviceStarter(self)
         while not self.stopping:
             asyncore.loop(EVENT_LOOP_TICK_RESOLUTION_S, True, None, 1)
-            state = self.get_current_state()
-            if state is not None:
-                state.on_timer_tick()
+            self.fsm.on_timer_tick()
             while len(self.timers) != 0:
                 if not self.timers[0].check_timeout():
                     break

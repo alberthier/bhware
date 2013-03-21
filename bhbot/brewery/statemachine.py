@@ -120,8 +120,37 @@ class StateMachine(object):
     def current_state(self):
         return self.state_stack[-1] if self.state_stack else None
 
-    def dispatch(self, packet):
-        self.state_generator.send(packet)
+
+    def on_timer_tick(self):
+        if self.current_state is not None:
+            generator = self.current_state.on_timer_tick()
+            #self.state_generator.process(generator)
+
+
+    def on_opponent_in_front(self, packet):
+        if self.current_state is not None:
+            generator = self.current_state.on_opponent_in_front(packet)
+            #self.state_generator.process(generator)
+
+
+    def on_opponent_in_back(self, packet):
+        if self.current_state is not None:
+            generator = self.current_state.on_opponent_in_back(packet)
+            #self.state_generator.process(generator)
+
+
+    def on_opponent_disapeared(self, opponent, is_in_front):
+        if self.current_state is not None:
+            generator = self.current_state.on_opponent_disapeared(opponent, is_in_front)
+            #self.state_generator.process(generator)
+
+
+    def on_packet(self, packet):
+        if self.current_state is not None:
+            #generator = packet.dispatch(self.current_state)
+            #self.state_generator.process(generator)
+            self.state_generator.send(packet)
+
 
     def push_state(self, state):
         logger.log("Switching to state {}".format(state.name))
