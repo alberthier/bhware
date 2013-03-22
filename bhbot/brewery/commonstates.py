@@ -64,6 +64,18 @@ class SetupPositionControl(statemachine.State):
 
 
 
+class WaitPacket(statemachine.State):
+    def __init__(self, packet_class):
+        logger.log('Waiting for packet type {}'.format(packet_class.__name__))
+        self.packet_class = packet_class
+
+    def on_packet(self, packet):
+        if isinstance(packet, self.packet_class):
+            yield None
+
+
+
+
 class DefinePosition(statemachine.State):
 
     def __init__(self, x = None, y = None, angle = None):
@@ -79,31 +91,23 @@ class DefinePosition(statemachine.State):
     def on_enter(self):
         if self.pose is None:
             self.pose = position.Pose(BLUE_START_X, BLUE_START_Y, BLUE_START_ANGLE, True)
-        return self.process()
 
+        packet = packets.Resettle()
+        packet.axis = AXIS_X
+        packet.position = self.pose.x
+        packet.angle = self.pose.angle
+        self.send_packet(packet)
 
-    def on_resettle(self, packet):
-        return self.process()
+        yield WaitPacket(packets.Resettle)
 
+        packet = packets.Resettle()
+        packet.axis = AXIS_Y
+        packet.position = self.pose.y
+        packet.angle = self.pose.angle
+        self.send_packet(packet)
 
-    def process(self):
-        logger.log("Processing ...")
-        if not self.x_sent:
-            packet = packets.Resettle()
-            packet.axis = AXIS_X
-            packet.position = self.pose.x
-            packet.angle = self.pose.angle
-            self.send_packet(packet)
-            self.x_sent = True
-        elif not self.y_sent:
-            packet = packets.Resettle()
-            packet.axis = AXIS_Y
-            packet.position = self.pose.y
-            packet.angle = self.pose.angle
-            self.send_packet(packet)
-            self.y_sent = True
-        else:
-            yield None
+        yield WaitPacket(packets.Resettle)
+        yield None
 
 
 
@@ -410,9 +414,28 @@ class FetchCandleColors(statemachine.State):
         self.colors = packet.colors
         yield None
 
+#TODO : Créer un State générique "Movement" qui gère le goto_finished
+class Move(statemachine.State):
+    def __init__(self, x, y, direction = DIRECTION_FORWARD):
+        statemachine.State.__init__(self)
+        self.x = x
+        self.y = y
+        self.direction = direction
 
-#####################################
-#####################################
+    def on_enter(self):
+        packet = packets.MoveLine()
+        packet.direction = self.direction
+        packet.points = [ position.Pose(self.x, self.y, None, True) ]
+
+        self.send_packet(packet)
+
+    def on_goto_finished(self, reason):
+        #TODO : à implémenter
+        yield None
+
+
+
+
 
 
 
