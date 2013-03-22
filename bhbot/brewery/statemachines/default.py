@@ -35,10 +35,13 @@ class Main(statemachine.State):
         #yield GiftOpener(GIFT_OPENER_POSITION_RIGHT)
         #yield Pump(PUMP_ON)
         #yield FetchCandleColors()
-        move = yield Rotate(DIRECTION_FORWARDS, math.pi)
-        move = yield MoveLine(DIRECTION_FORWARDS, [Pose(1.5, 0.3)], move)
-        move = yield MoveArc(DIRECTION_FORWARDS, Pose(1.5, 0.0), 0.5, [0.0, math.pi], move)
-        move = yield MoveCurve(DIRECTION_FORWARDS, 0.0, [Pose(0.5, 1.0), Pose(0.3, 1.6)], move)
+        #move = yield Rotate(DIRECTION_FORWARDS, math.pi)
+        #move = yield MoveLine(DIRECTION_FORWARDS, [Pose(1.5, 0.3)], move)
+        #move = yield MoveArc(DIRECTION_FORWARDS, Pose(1.5, 0.0), 0.5, [0.0, math.pi], move)
+
+    def on_start(self, packet):
+        yield Timer(5000)
+        move = yield MoveCurve(DIRECTION_FORWARDS, 0.0, [Pose(0.5, 1.0), Pose(0.3, 1.6)])
         logger.log(move.exit_reason)
 
 
