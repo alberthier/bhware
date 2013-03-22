@@ -50,12 +50,8 @@ class OutputView(QWidget, OutputView_Ui):
         self.log_view.setTextColor(self.default_color)
 
 
-    def clear(self):
-        self.log_view.clear()
-        self.setup(None, None)
-
-
     def setup(self, team, is_main):
+        self.log_view.clear()
         palette = QPalette()
         if team is not None:
             if team == TEAM_RED:
