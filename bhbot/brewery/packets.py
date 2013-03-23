@@ -785,6 +785,13 @@ class SimulatorFetchColors(BasePacket):
     )
 
 
+# Interbot
+
+
+class InterbotHello(BasePacket):
+
+    TYPE = 200
+
 
 ################################################################################
 # Packets lookup setup
