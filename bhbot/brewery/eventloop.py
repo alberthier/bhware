@@ -194,8 +194,11 @@ class InterbotChannel(asyncore.dispatcher_with_send):
 
 
     def handle_read(self):
-        logger.log("data from interbot")
         self.event_loop.handle_read(self)
+
+
+    def handle_close(self):
+        self.socket.close()
 
 
 
