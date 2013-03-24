@@ -362,9 +362,22 @@ class Map(object):
         pyversion = "python{}.{}{}".format(sys.version_info.major, sys.version_info.minor, sys.abiflags)
         include_dir = sys.exec_prefix + "/include/" + pyversion
         lib_dir = sys.exec_prefix + "/lib"
+
         working_dir = os.path.dirname(__file__)
         source_file = "pathfinding.c"
         output_file = "pathfinding.so"
-        commands = ["gcc", "-O2", "-shared", "-fPIC", "-o", output_file, "-I" + include_dir, "-L" + lib_dir, source_file, "-l" + pyversion]
+        exe = "gcc"
+
+        if sys.platform == "darwin" :
+            lib_dir = "/usr/local/Cellar/python3/3.3.0/Frameworks/Python.framework/Versions/3.3/lib"
+
+        params = ["-O2", "-shared", "-fPIC", "-o", output_file, "-I" + include_dir, "-L" + lib_dir,
+                    source_file, "-l" + "python3.3"]
+
+        if sys.platform == "darwin" :
+            params = ["-dynamiclib"] + params
+
+        commands = [exe] + params
+
         bld = builder.Builder(source_file, output_file, commands, working_dir)
         bld.build()
