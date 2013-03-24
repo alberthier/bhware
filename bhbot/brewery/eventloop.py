@@ -166,6 +166,65 @@ class RobotLogDeviceChannel(asyncore.dispatcher):
 
 
 
+class InterbotChannel(asyncore.dispatcher_with_send):
+
+    def __init__(self, event_loop, sock = None):
+        self.event_loop = event_loop
+        try:
+            if sock is None:
+                # Connect to the main robot
+                sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
+                sock.connect((MAIN_INTERBOT_IP, MAIN_INTERBOT_PORT))
+            else:
+                sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
+            asyncore.dispatcher_with_send.__init__(self, sock)
+            self.buffer = bytes()
+            self.packet = None
+            self.event_loop.interbot_channel = self
+            logger.log("Interbot channel connected")
+        except Exception as e:
+            logger.log("Unable to connect the interbot channel")
+
+
+    def bytes_available(self):
+        available = ctypes.c_int()
+        fcntl.ioctl(self.socket.fileno(), termios.FIONREAD, available)
+        return available.value
+
+
+    def handle_read(self):
+        self.event_loop.handle_read(self)
+
+
+    def handle_close(self):
+        self.socket.close()
+
+
+
+
+class InterbotServer(asyncore.dispatcher):
+
+    def __init__(self, event_loop, host, port):
+        self.event_loop = event_loop
+        try:
+            asyncore.dispatcher.__init__ (self)
+            self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
+            self.set_reuse_addr()
+            self.bind((host, port))
+            self.listen(5)
+            self.event_loop.interbot_channel = self
+            logger.log("Starting interbot server on port {}".format(MAIN_INTERBOT_PORT))
+        except Exception as e:
+            logger.log("Unable to start interbot server on port {}".format(MAIN_INTERBOT_PORT))
+
+
+    def handle_accepted(self, sock, addr):
+        InterbotChannel(self.event_loop, sock)
+
+
+
+
 class Timer(object):
 
     def __init__(self, eventloop, timeout_ms, callback, single_shot = True):
@@ -262,6 +321,8 @@ class EventLoop(object):
         self.robot_control_channel = None
         self.robot_log_channel = None
         self.turret_channel = None
+        self.interbot_channel = None
+        self.interbot_server = None
         self.web_server = None
         self.robot = robot.Robot(self)
         self.fsm = None
@@ -366,10 +427,14 @@ class EventLoop(object):
         logger.log_packet(packet, "ARM")
         buffer = packet.serialize()
         if packet.TYPE < 50:
+            # 0 <= type < 50 : Turret packet
             self.turret_channel.send(buffer)
         elif packet.TYPE < 200:
+            #  50 <= type < 150 : PIC 32 packet
+            # 150 <= type < 200 : Simulator packet
             self.robot_control_channel.send(buffer)
-        else:
+        elif self.interbot_channel is not None:
+            # 200 <= type : Interbot packet
             self.interbot_channel.send(buffer)
 
 
@@ -396,6 +461,10 @@ class EventLoop(object):
 
 
     def start(self):
+        if IS_MAIN_ROBOT:
+            InterbotServer(self, "", MAIN_INTERBOT_PORT)
+        else:
+            InterbotChannel(self)
         logger.log("Starting internal web server on port {}".format(self.webserver_port))
         self.web_server = asyncwsgiserver.WsgiServer("", self.webserver_port, nanow.Application(webinterface.BHWeb(self)))
         if SERIAL_PORT_PATH is not None:
@@ -423,5 +492,9 @@ class EventLoop(object):
             self.robot_control_channel.close()
         if self.robot_log_channel is not None:
             self.robot_log_channel.close()
+        if self.interbot_channel is not None:
+            self.interbot_channel.close()
+        if self.interbot_server is not None:
+            self.interbot_server.close()
         if self.colordetector is not None:
             self.colordetector.quit()

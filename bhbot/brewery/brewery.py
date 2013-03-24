@@ -24,12 +24,11 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description = "BH Team's main strategy program.", add_help = True)
     parser.add_argument("--webserver-port", action = "store", type = int, default = definitions.WEB_SERVER_PORT, metavar = "PORT", help = "Internal web server port")
-    parser.add_argument("--main", action = "store_true", default = None, help = "Main robot definitions")
+    parser.add_argument("--main", action = "store_true", default = definitions.IS_MAIN_ROBOT, help = "Main robot definitions")
     parser.add_argument('statemachine', action="store", nargs='?', default = definitions.STATE_MACHINE)
     args = parser.parse_args()
 
-    if args.main is not None:
-        definitions.IS_MAIN_ROBOT = args.main
+    definitions.IS_MAIN_ROBOT = args.main
     definitions.setup_definitions()
 
     import eventloop

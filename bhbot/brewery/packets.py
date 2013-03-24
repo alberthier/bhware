@@ -422,7 +422,7 @@ class MoveCurve(BasePacket):
     TYPE = 56
     LOGVIEW_COLOR = "#ff7f50"
     DEFINITION = (
-        ('direction', Enum8        (DIRECTION, DIRECTION_FORWARD)),
+        ('direction', Enum8        (DIRECTION, DIRECTION_FORWARDS)),
         ('angle'    , OptionalAngle(None, "Destination angle")),
         ('points'   , List         (62, Point(), [], "List of points to follow")),
     )
@@ -435,7 +435,7 @@ class MoveLine(BasePacket):
     TYPE = 57
     LOGVIEW_COLOR = "#ff7f50"
     DEFINITION = (
-        ('direction', Enum8(DIRECTION, DIRECTION_FORWARD)),
+        ('direction', Enum8(DIRECTION, DIRECTION_FORWARDS)),
         ('points'   , List (63, Point(), [], "List of points to follow")),
     )
 
@@ -447,7 +447,7 @@ class MoveArc(BasePacket):
     TYPE = 58
     LOGVIEW_COLOR = "#ff7f50"
     DEFINITION = (
-        ('direction', Enum8(DIRECTION, DIRECTION_FORWARD)),
+        ('direction', Enum8(DIRECTION, DIRECTION_FORWARDS)),
         ('center'   , Point()),
         ('radius'   , Float(0.0, "Arc radius")),
         ('points'   , List (61, Float(0.0), [], "List of points to follow")),
@@ -784,6 +784,13 @@ class SimulatorFetchColors(BasePacket):
         ('colors', List(20, Bool(False), [], "Detections")),
     )
 
+
+# Interbot
+
+
+class InterbotHello(BasePacket):
+
+    TYPE = 200
 
 
 ################################################################################

@@ -20,8 +20,8 @@ class WsgiRequestHandler(asynchat.async_chat):
     READING_DONE = 2
 
 
-    def __init__(self, connection, address, server):
-        asynchat.async_chat.__init__(self, connection)
+    def __init__(self, sock, address, server):
+        asynchat.async_chat.__init__(self, sock)
         self.address = address
         self.server = server
         self.ibuffer = bytes()
@@ -126,17 +126,8 @@ class WsgiServer(asyncore.dispatcher):
         self.listen(5)
 
 
-    def handle_accept(self):
-        try:
-            ret = self.accept()
-        except socket.error as msg:
-            logger.log("Warning: server accept() threw an exception ({})".format(msg))
-            return
-        except TypeError:
-            logger.log("Warning: server accept() threw EWOULDBLOCK")
-            return
-
-        WsgiRequestHandler(ret[0], ret[1], self)
+    def handle_accepted(self, sock, addr):
+        WsgiRequestHandler(sock, addr, self)
 
 
     def get_app(self):

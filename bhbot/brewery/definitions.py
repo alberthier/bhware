@@ -79,6 +79,12 @@ else:
 REMOTE_PORT                            = 7001
 REMOTE_LOG_PORT                        = 23
 
+if IS_HOST_DEVICE_ARM:
+    MAIN_INTERBOT_IP = "192.168.1.1"
+else:
+    MAIN_INTERBOT_IP = "127.0.0.1"
+MAIN_INTERBOT_PORT = 7002
+
 # Serial port
 if IS_HOST_DEVICE_ARM:
     SERIAL_PORT_PATH                   = "/dev/ttyUSB0"
@@ -180,8 +186,8 @@ MOVEMENT = Enum("Movement",
 
 DIRECTION = Enum("Direction",
     DIRECTION_AUTO     =  0,
-    DIRECTION_FORWARD  =  1,
-    DIRECTION_BACKWARD = -1,
+    DIRECTION_FORWARDS  =  1,
+    DIRECTION_BACKWARDS = -1,
 )
 
 REASON = Enum("Goto finished reason",
