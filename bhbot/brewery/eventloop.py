@@ -45,7 +45,6 @@ class TurretChannel(asyncore.file_dispatcher):
         self.packet = None
         self.synchronized = False
         self.out_buffer = bytes()
-        self.turret_packets = [ packets.TurretDetect.TYPE, packets.TurretInit.TYPE, packets.TurretDistances.TYPE, packets.TurretBoot.TYPE ]
 
 
     def bytes_available(self):
@@ -76,7 +75,7 @@ class TurretChannel(asyncore.file_dispatcher):
             while self.bytes_available():
                 data = self.recv(1)
                 (packet_type,) = struct.unpack("<B", data)
-                if packet_type in self.turret_packets:
+                if packet_type < Packets.TURRET_RANGE_END:
                     self.synchronized = True
                     self.buffer += data
                     self.packet = packets.create_packet(self.buffer)
@@ -447,15 +446,13 @@ class EventLoop(object):
     def send_packet(self, packet):
         logger.log_packet(packet, "ARM")
         buffer = packet.serialize()
-        if packet.TYPE < 50:
-            # 0 <= type < 50 : Turret packet
+        if packet.TYPE < packets.TURRET_RANGE_END:
             self.turret_channel.send(buffer)
-        elif packet.TYPE < 200:
-            #  50 <= type < 150 : PIC 32 packet
-            # 150 <= type < 200 : Simulator packet
+        elif packet.TYPE < packets.PIC32_RANGE_END:
+            self.robot_control_channel.send(buffer)
+        elif packet.TYPE < packets.SIMULATOR_RANGE_END:
             self.robot_control_channel.send(buffer)
         elif self.interbot_channel is not None:
-            # 200 <= type : Interbot packet
             self.interbot_channel.send(buffer)
 
 

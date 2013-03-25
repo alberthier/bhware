@@ -298,6 +298,18 @@ class BasePacket(object):
 
 
 ################################################################################
+# Packet type ranges
+
+TURRET_RANGE_START    = 0
+TURRET_RANGE_END      = 50
+PIC32_RANGE_START     = TURRET_RANGE_END
+PIC32_RANGE_END       = 150
+SIMULATOR_RANGE_START = PIC32_RANGE_END
+SIMULATOR_RANGE_END   = 200
+INTERBOT_RANGE_START  = SIMULATOR_RANGE_END
+INTERBOT_RANGE_END    = 256
+
+################################################################################
 # Packet classes
 
 
