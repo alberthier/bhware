@@ -372,7 +372,7 @@ class Map(object):
             lib_dir = "/usr/local/Cellar/python3/3.3.0/Frameworks/Python.framework/Versions/3.3/lib"
 
         params = ["-O2", "-shared", "-fPIC", "-o", output_file, "-I" + include_dir, "-L" + lib_dir,
-                    source_file, "-l" + "python3.3"]
+                    source_file, "-l" + pyversion]
 
         if sys.platform == "darwin" :
             params = ["-dynamiclib"] + params
