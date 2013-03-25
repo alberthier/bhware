@@ -246,7 +246,8 @@ class Map(object):
             tmp = y2
             y2 = FIELD_Y_SIZE - y1
             y1 = FIELD_Y_SIZE - tmp
-        self.add_rect(x1, y1, x2, y2, self.zone_cost, False, False)
+        # Secondary robot rect
+        #self.add_rect(x1, y1, x2, y2, self.zone_cost, False, False)
         self.send_zones_to_simulator()
 
 
