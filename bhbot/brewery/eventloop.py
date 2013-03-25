@@ -188,10 +188,6 @@ class InterbotChannel(asyncore.dispatcher_with_send):
         self.event_loop.handle_read(self)
 
 
-    def handle_close(self):
-        self.socket.close()
-
-
 
 
 class InterbotServer(asyncore.dispatcher):
