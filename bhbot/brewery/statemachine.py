@@ -133,21 +133,15 @@ class StateMachine(object):
             #self.state_generator.process(generator)
 
 
-    def on_opponent_in_front(self, packet):
+    def on_opponent_detected(self, packet, opponent_direction, x, y):
         if self.current_state is not None:
-            generator = self.current_state.on_opponent_in_front(packet)
+            generator = self.current_state.on_opponent_detected(packet, opponent_direction, x, y)
             #self.state_generator.process(generator)
 
 
-    def on_opponent_in_back(self, packet):
+    def on_opponent_disapeared(self, opponent, opponent_direction):
         if self.current_state is not None:
-            generator = self.current_state.on_opponent_in_back(packet)
-            #self.state_generator.process(generator)
-
-
-    def on_opponent_disapeared(self, opponent, is_in_front):
-        if self.current_state is not None:
-            generator = self.current_state.on_opponent_disapeared(opponent, is_in_front)
+            generator = self.current_state.on_opponent_disapeared(opponent, opponent_direction)
             #self.state_generator.process(generator)
 
 
@@ -254,11 +248,11 @@ class State(object):
         pass
 
 
-    def on_opponent_in_front(self, packet):
+    def on_opponent_detected(self, packet, opponent_direction, x, y):
         pass
 
 
-    def on_opponent_in_back(self, packet):
+    def on_opponent_disapeared(self, opponent, opponent_direction):
         pass
 
 

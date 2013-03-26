@@ -142,12 +142,13 @@ class WaitForOpponentLeave(Timer):
     OPPONENT_LEFT = 1
 
     def __init__(self, opponent, miliseconds, move_direction):
-        Timer.__init__(miliseconds)
+        Timer.__init__(self, miliseconds)
         self.opponent = opponent
         self.move_direction = move_direction
 
 
     def on_enter(self):
+        Timer.on_enter(self)
         self.goto_finished = False
         self.opponent_disappeared = False
         self.timer_expired = False
@@ -180,7 +181,7 @@ class WaitForOpponentLeave(Timer):
         return self.try_leave()
 
 
-    def on_opponent_disapeared(self, opponent, is_in_front):
+    def on_opponent_disapeared(self, opponent, opponent_direction):
         if opponent == self.opponent:
             self.exit_reason = self.OPPONENT_LEFT
             self.opponent_disappeared = True
@@ -191,7 +192,7 @@ class WaitForOpponentLeave(Timer):
 
     def try_leave(self):
         if self.goto_finished and (self.timer_expired or self.opponent_disappeared):
-            logger.log("WaitForOpponentLeave : exit on opponent leave reason={}".format(self.exit_reason))
+            logger.log("WaitForOpponentLeave : exit reason={}".format(self.exit_reason))
             yield None
 
 
@@ -213,17 +214,9 @@ class AbstractMove(statemachine.State):
             self.send_packet(self.packet)
 
 
-    def on_opponent_in_front(self, packet):
-        self.on_opponent_detected(packet, DIRECTION_FORWARDS)
-
-
-    def on_opponent_in_back(self, packet):
-        self.on_opponent_detected(packet, DIRECTION_BACKWARDS)
-
-
-    def on_opponent_detected(self, packet, opponent_direction):
-        if not isinstance(self, Rotate) and self.direction == opponent_direction and self.current_opponent is None:
-            logger.log("Opponent detected. direction = {}. Robot stopped".format(opponent_direction))
+    def on_opponent_detected(self, packet, opponent_direction, x, y):
+        if not isinstance(self, Rotate) and self.packet.direction == opponent_direction and self.current_opponent is None:
+            logger.log("Opponent detected. direction = {}. Stop robot".format(opponent_direction))
             self.send_packet(packets.Stop())
             self.current_opponent = packet.robot
 
@@ -239,11 +232,12 @@ class AbstractMove(statemachine.State):
             if self.wait_opponent_leave:
                 reason = (yield WaitForOpponentLeave(self.current_opponent, 2000, self.packet.direction)).exit_reason
                 if reason == WaitForOpponentLeave.TIMEOUT:
+                    self.exit_reason = TRAJECTORY_OPPONENT_DETECTED
                     yield None
                 else:
                     # Continue the current move
                     if hasattr(self.packet, "points"):
-                        self.packet.points = self.packet.points[index:]
+                        self.packet.points = self.packet.points[packet.current_point_index:]
                     self.send_packet(self.packet)
             else:
                 self.exit_reason = TRAJECTORY_OPPONENT_DETECTED

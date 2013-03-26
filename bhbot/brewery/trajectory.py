@@ -289,7 +289,7 @@ class Map(object):
             self.evaluator.remove_penalized_zone(ez)
 
 
-    def opponent_detected(self, packet, x, y):
+    def on_opponent_detected(self, packet, opponent_direction, x, y):
         if packet.robot == OPPONENT_ROBOT_MAIN:
             if packet.distance == 0:
                 self.pathfinder.set_main_opponent_position(int(round(x / ROUTING_MAP_RESOLUTION)), int(round(y / ROUTING_MAP_RESOLUTION)))
@@ -299,7 +299,7 @@ class Map(object):
             self.evaluator.set_secondary_opponent_position(int(round(x / EVALUATOR_MAP_RESOLUTION)), int(round(y / EVALUATOR_MAP_RESOLUTION)))
 
 
-    def opponent_disapeared(self, opponent):
+    def on_opponent_disapeared(self, opponent, opponent_direction):
         if opponent == OPPONENT_ROBOT_MAIN:
             self.pathfinder.clear_main_opponent_position()
             self.evaluator.clear_main_opponent_position()
