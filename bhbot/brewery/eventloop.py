@@ -408,7 +408,8 @@ class EventLoop(object):
                         channel.packet.dispatch(self.opponent_detector)
                         channel.packet.dispatch(self.map)
                         #channel.packet.dispatch(self.eval_map)
-                        channel.packet.dispatch(self.fsm)
+                        if self.fsm is not None:
+                            channel.packet.dispatch(self.fsm)
 
                         channel.packet = None
                 except Exception as e:
@@ -430,6 +431,8 @@ class EventLoop(object):
 
     def on_start(self, packet):
         self.is_match_started = True
+        Timer(self, MATCH_DURATION_MS, self.on_match_end).start()
+        Timer(self, FULL_DURATION_MS, self.on_funny_action_end).start()
 
 
     def on_turret_boot(self, packet):
@@ -441,6 +444,18 @@ class EventLoop(object):
             buffer = packet.serialize()
             logger.log_packet(packet, "ARM")
             self.turret_channel.send(buffer)
+
+
+    def on_match_end(self):
+        logger.log("End of match. Starting the funny action")
+        self.fsm = None
+        self.send_packet(packets.StopAll())
+        self.send_packet(packets.Pump(action = PUMP_ON))
+
+
+    def on_funny_action_end(self):
+        logger.log("Stop the funny action. Full stop")
+        self.send_packet(packets.Pump(action = PUMP_OFF))
 
 
     def send_packet(self, packet):
@@ -461,7 +476,8 @@ class EventLoop(object):
         packet.reason = REASON_DESTINATION_REACHED
         packet.current_pose = self.robot.pose
         packet.current_point_index = 0
-        self.fsm.dispatch(packet)
+        if self.fsm is not None:
+            self.fsm.dispatch(packet)
 
 
     def get_current_state(self):
@@ -495,7 +511,8 @@ class EventLoop(object):
         RobotControlDeviceStarter(self)
         while not self.stopping:
             asyncore.loop(EVENT_LOOP_TICK_RESOLUTION_S, True, None, 1)
-            self.fsm.on_timer_tick()
+            if self.fsm is not None:
+                self.fsm.on_timer_tick()
             while len(self.timers) != 0:
                 if not self.timers[0].check_timeout():
                     break

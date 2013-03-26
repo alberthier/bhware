@@ -28,7 +28,7 @@ class GameController(object):
         self.start_requested = False
         self.started = False
         self.setting_up = False
-        self.time = MATCH_DURATION_MS
+        self.time = 0
         self.expected_robots = []
         self.keep_alive_timer = QTimer()
         self.keep_alive_timer.setInterval(KEEP_ALIVE_DELAY_MS)
@@ -40,7 +40,7 @@ class GameController(object):
             self.user_stop()
         if not self.robot_a.is_process_started() and not self.robot_b.is_process_started():
             self.game_elements_layer.setup()
-            self.time = MATCH_DURATION_MS
+            self.time = 0
             self.main_bar.chronograph.setText(str(round(self.time/1000.0, 1)))
             self.setting_up = True
             self.robot_a.hide_all()
@@ -124,8 +124,8 @@ class GameController(object):
         self.robot_b.send_keep_alive()
         self.robot_a.send_keep_alive()
         if self.started:
-            self.time -= KEEP_ALIVE_DELAY_MS
+            self.time += KEEP_ALIVE_DELAY_MS
             self.main_bar.chronograph.setText(str(round(self.time/1000.0, 1)))
-        if self.time == 0:
+        if self.time == FULL_DURATION_MS + 5000:
             self.stop()
 

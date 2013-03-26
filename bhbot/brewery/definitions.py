@@ -63,6 +63,8 @@ def setup_definitions():
 
 # Rule specific
 MATCH_DURATION_MS                      = 90000
+FUNNY_ACTION_DURATION_MS               = 10000
+FULL_DURATION_MS                       = MATCH_DURATION_MS + FUNNY_ACTION_DURATION_MS
 TEAM_COLOR_RED                         = "#a1011d"
 TEAM_COLOR_BLUE                        = "#004c90"
 
