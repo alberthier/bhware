@@ -94,7 +94,9 @@ class RobotController(object):
             self.process.readyRead.connect(self.read_output)
             args = ["--webserver-port", str(8080 + self.offset)]
             if self.is_main:
-                args.append("--main")
+                args.append("sheldon")
+            else:
+                args.append("leonard")
             self.process.start(brewery, args)
 
 

@@ -3,14 +3,12 @@
 import os
 import math
 import platform
-import socket
 
 
 ########################################################################
 # Constants
 
 # Brewery execution host
-IS_MAIN_ROBOT                          = socket.gethostname() == "sheldon"
 IS_HOST_DEVICE_ARM                     = platform.machine() == "armv5tel"
 IS_HOST_DEVICE_PC                      = not IS_HOST_DEVICE_ARM
 
@@ -48,7 +46,8 @@ SECONDARY_RED_START_X                  = SECONDARY_BLUE_START_X
 SECONDARY_RED_START_Y                  = FIELD_Y_SIZE - SECONDARY_BLUE_START_Y
 SECONDARY_RED_START_ANGLE              = -math.pi / 2.0
 
-def setup_definitions():
+def setup_definitions(is_main_robot):
+    globals()["IS_MAIN_ROBOT"]         = is_main_robot
     globals()["ROBOT_X_SIZE"]          = MAIN_ROBOT_X_SIZE          if IS_MAIN_ROBOT else SECONDARY_ROBOT_X_SIZE
     globals()["ROBOT_Y_SIZE"]          = MAIN_ROBOT_Y_SIZE          if IS_MAIN_ROBOT else SECONDARY_ROBOT_Y_SIZE
     globals()["ROBOT_CENTER_X"]        = MAIN_ROBOT_CENTER_X        if IS_MAIN_ROBOT else SECONDARY_ROBOT_CENTER_X
@@ -110,9 +109,6 @@ else:
 
 # Brewery's web sever
 WEB_SERVER_PORT                        = 8080
-
-# Default state machine name
-STATE_MACHINE                          = "default"
 
 # Use multipoint Goto for navigation
 NAVIGATION_USES_MULTIPOINT             = True
