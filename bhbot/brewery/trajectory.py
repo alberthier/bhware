@@ -318,8 +318,8 @@ class Map(object):
             if len(packet.points) == max_elements:
                 self.eventloop.send_packet(packet)
                 packet.points = []
-            if isinstance(cell, Pose):
-                packet.points.append((cell.x, cell.y))
+            if not isinstance(cell, Pose):
+                packet.points.append(Pose(cell[0], cell[1]))
             else:
                 packet.points.append(cell)
         if len(packet.points) != 0:

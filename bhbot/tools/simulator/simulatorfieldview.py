@@ -607,8 +607,8 @@ class GridRoutingLayer(fieldview.Layer):
         cell_size = ROUTING_MAP_RESOLUTION * 1000.0
         brush = QBrush(color)
         pen = QPen(QBrush(), 0)
-        for (x, y) in packet.points:
-            item = QGraphicsRectItem(y * cell_size, x * cell_size, cell_size, cell_size)
+        for point in packet.points:
+            item = QGraphicsRectItem(point.y * cell_size, point.x * cell_size, cell_size, cell_size)
             item.setBrush(brush)
             item.setPen(pen)
             self.addToGroup(item)
