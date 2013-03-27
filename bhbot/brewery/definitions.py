@@ -33,7 +33,7 @@ SECONDARY_ROBOT_CENTER_Y               = 0.0635
 SECONDARY_ROBOT_GYRATION_RADIUS        = 0.161
 
 # Main start positons (the robot starts 90 degrees rotated that's why *_START_Y use ROBOT_X_SIZE and ROBOT_CENTER_X)
-MAIN_BLUE_START_Y                      = 0.126
+MAIN_BLUE_START_Y                      = 0.25
 MAIN_BLUE_START_X                      = 1.0
 MAIN_BLUE_START_ANGLE                  = math.pi / 2.0
 MAIN_RED_START_X                       = MAIN_BLUE_START_X
@@ -41,7 +41,7 @@ MAIN_RED_START_Y                       = FIELD_Y_SIZE - MAIN_BLUE_START_Y
 MAIN_RED_START_ANGLE                   = -math.pi / 2.0
 
 # Secondary start positons (the robot starts 90 degrees rotated that's why *_START_Y use ROBOT_X_SIZE and ROBOT_CENTER_X)
-SECONDARY_BLUE_START_Y                 = 0.053
+SECONDARY_BLUE_START_Y                 = 0.25
 SECONDARY_BLUE_START_X                 = 1.5
 SECONDARY_BLUE_START_ANGLE             = math.pi / 2.0
 SECONDARY_RED_START_X                  = SECONDARY_BLUE_START_X
@@ -115,7 +115,7 @@ WEB_SERVER_PORT                        = 8080
 STATE_MACHINE                          = "default"
 
 # Use multipoint Goto for navigation
-NAVIGATION_USES_MULTIPOINT             = False
+NAVIGATION_USES_MULTIPOINT             = True
 
 # Use pathfinding algorithm to evaluate the best goal
 GOAL_EVALUATION_USES_PATHFINDING       = True

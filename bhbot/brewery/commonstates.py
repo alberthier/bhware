@@ -255,6 +255,50 @@ class Rotate(AbstractMove):
 
 
 
+class LookAt(AbstractMove):
+
+    def __init__(self, direction, x, y, chained = None):
+        AbstractMove.__init__(self, chained, False)
+        self.to_x = x
+        self.to_y = y
+        self.to_direction = direction
+
+
+    def on_enter(self):
+        current_pose = self.robot().pose
+        dest = position.Pose(self.to_x, self.to_y, None, True)
+        dx = dest.virt.x - current_pose.virt.x
+        dy = dest.virt.y - current_pose.virt.y
+        angle = math.atan2(dy, dx)
+        self.packet = packets.Rotate(direction = self.to_direction, angle = angle)
+        return AbstractMove.on_enter(self)
+
+
+
+
+class LookAtOpposite(AbstractMove):
+
+    def __init__(self, direction, x, y, chained = None):
+        AbstractMove.__init__(self, chained, False)
+        self.to_x = x
+        self.to_y = y
+        self.to_direction = direction
+
+
+    def on_enter(self):
+        current_pose = self.robot().pose
+        dest = position.Pose(self.to_x, self.to_y, None, True)
+        dx = dest.virt.x - current_pose.virt.x
+        dy = dest.virt.y - current_pose.virt.y
+        angle = math.atan2(dy, dx) + math.pi
+        if angle > math.pi:
+            angle -= 2.0 * math.pi
+        self.packet = packets.Rotate(direction = self.to_direction, angle = angle)
+        return AbstractMove.on_enter(self)
+
+
+
+
 class MoveCurve(AbstractMove):
 
     def __init__(self, direction, angle, points, chained = None):
@@ -410,12 +454,6 @@ class FetchCandleColors(statemachine.State):
 
 
 
-########################################################
-
-# States to port to new FSM
-
-
-
 
 class Navigate(statemachine.State):
 
@@ -423,75 +461,56 @@ class Navigate(statemachine.State):
         statemachine.State.__init__(self)
         self.destination = position.Pose(x, y, None, True)
         self.direction = direction
-        self.walk = TrajectoryWalk()
-        self.walk.opponent_wait_time = 0
         self.exit_reason = TRAJECTORY_DESTINATION_REACHED
-
-
-    def do_walk(self):
-        seq = Sequence( Antiblocking(True),
-                        self.walk,
-                        Antiblocking(False)
-                      )
-        self.switch_to_substate(seq)
 
 
     def on_enter(self):
         path = self.event_loop.map.route(self.robot().pose, self.destination)
         if len(path) == 0:
             self.exit_reason = TRAJECTORY_DESTINATION_UNREACHABLE
-            self.exit_substate()
-        elif NAVIGATION_USES_MULTIPOINT:
-            self.multipoint_walk(path)
+            yield None
+            return
+        yield Antiblocking(True)
+        if NAVIGATION_USES_MULTIPOINT:
+            yield self.multipoint_walk(path)
         else:
-            self.monopoint_walk(path)
+            yield self.monopoint_walk(path)
+        yield Antiblocking(False)
+        yield None
 
 
 
     def multipoint_walk(self, path):
+        move = None
         for sub_path in path:
             first_point = sub_path[0]
             if self.direction == DIRECTION_FORWARDS:
                 if not self.robot().is_looking_at(first_point):
-                    self.walk.look_at(first_point.virt.x, first_point.virt.y)
+                    move = yield LookAt(DIRECTION_FORWARDS, first_point.virt.x, first_point.virt.y, move)
             else:
                 if not self.robot().is_looking_at_opposite(first_point):
-                    self.walk.look_at_opposite(first_point.virt.x, first_point.virt.y)
-            self.walk.follow(sub_path, None, self.direction)
-        self.do_walk()
+                    move = yield LookAtOpposite(DIRECTION_FORWARDS, first_point.virt.x, first_point.virt.y, move)
+            move = yield MoveCurve(self.direction, None, sub_path, move)
+        self.exit_reason = move.exit_reason
 
 
     def monopoint_walk(self, path):
+        move = None
         for sub_path in path:
             for point in sub_path:
                 if self.direction == DIRECTION_FORWARDS:
                     if not self.robot().is_looking_at(point):
-                        self.walk.look_at(point.virt.x, point.virt.y)
+                        move = yield LookAt(DIRECTION_FORWARDS, point.virt.x, point.virt.y, move)
                 else:
                     if not self.robot().is_looking_at_opposite(point):
-                        self.walk.look_at_opposite(point.virt.x, point.virt.y)
-                self.walk.move_to(point.virt.x, point.virt.y, self.direction)
-        self.do_walk()
-
-
-    def on_exit_substate(self, substate):
-        self.exit_reason = self.walk.exit_reason
-        self.exit_substate()
+                        move = yield LookAtOpposite(DIRECTION_FORWARDS, point.virt.x, point.virt.y, move)
+                move = yield MoveLine(self.direction, [point], move)
+        self.exit_reason = move.exit_reason
 
 
 
 
-class GotoHome(statemachine.State):
+class GotoHome(Navigate):
 
-    def on_enter(self):
-        seq = Sequence()
-        seq.add(Navigate(BLUE_START_X, 0.60))
-        walk = TrajectoryWalk()
-        walk.look_at(BLUE_START_X, BLUE_START_Y + 0.03)
-        walk.move_to(BLUE_START_X, BLUE_START_Y + 0.03)
-        seq.add(walk)
-        self.switch_to_substate(seq)
-
-
-    def on_exit_substate(self, substate):
-        self.exit_substate()
+    def __init__(self):
+        Navigate.__init__(self, BLUE_START_X, BLUE_START_Y)
