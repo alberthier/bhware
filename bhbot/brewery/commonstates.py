@@ -326,6 +326,18 @@ class MoveArc(AbstractMove):
 
 
 
+class StopAll(statemachine.State):
+
+    def on_enter(self):
+        self.send_packet(packets.StopAll())
+
+
+    def on_stop_all(self, packet):
+        yield None
+
+
+
+
 class BottomHolder(statemachine.State):
 
     def __init__(self, side, move):

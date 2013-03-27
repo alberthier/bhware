@@ -340,6 +340,8 @@ class EventLoop(object):
         self.interbot_server = None
         self.web_server = None
         self.robot = robot.Robot(self)
+        self.main_state = None
+        self.end_of_match_state = None
         self.fsm = None
         self.state_machine_name = state_machine_name
         self.webserver_port = webserver_port
@@ -431,8 +433,7 @@ class EventLoop(object):
 
     def on_start(self, packet):
         self.is_match_started = True
-        Timer(self, MATCH_DURATION_MS, self.on_match_end).start()
-        Timer(self, FULL_DURATION_MS, self.on_funny_action_end).start()
+        Timer(self, MATCH_DURATION_MS, self.on_end_of_match).start()
 
 
     def on_turret_boot(self, packet):
@@ -446,16 +447,9 @@ class EventLoop(object):
             self.turret_channel.send(buffer)
 
 
-    def on_match_end(self):
+    def on_end_of_match(self):
         logger.log("End of match. Starting the funny action")
-        self.fsm = None
-        self.send_packet(packets.StopAll())
-        self.send_packet(packets.Pump(action = PUMP_ON))
-
-
-    def on_funny_action_end(self):
-        logger.log("Stop the funny action. Full stop")
-        self.send_packet(packets.Pump(action = PUMP_OFF))
+        self.fsm = statemachine.StateMachine(self, self.end_of_match_state)
 
 
     def send_packet(self, packet):
@@ -486,11 +480,12 @@ class EventLoop(object):
 
 
     def create_fsm(self):
-        state = statemachine.instantiate_state_machine(self.state_machine_name)
-        if state is None:
+        (self.main_state, self.end_of_match_state) = statemachine.instantiate_state_machine(self.state_machine_name)
+        if self.main_state is None or self.end_of_match_state is None:
+            logger.log("One of 'Main' or 'EndOfMatch' state is missing")
             self.stop()
         else:
-            self.fsm = statemachine.StateMachine(self, state)
+            self.fsm = statemachine.StateMachine(self, self.main_state)
             self.send_packet(packets.ControllerReady())
 
 

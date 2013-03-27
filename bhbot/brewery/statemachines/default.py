@@ -127,4 +127,9 @@ class Test1(statemachine.State):
 
 class EndOfMatch(statemachine.State):
 
-    pass
+    def on_enter(self):
+        yield StopAll();
+        yield Pump(PUMP_ON)
+        yield Timer(9000)
+        yield Pump(PUMP_OFF)
+
