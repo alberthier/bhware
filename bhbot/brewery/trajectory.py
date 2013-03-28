@@ -246,7 +246,8 @@ class Map(object):
             tmp = y2
             y2 = FIELD_Y_SIZE - y1
             y1 = FIELD_Y_SIZE - tmp
-        self.add_rect(x1, y1, x2, y2, self.zone_cost, False, False)
+        # Secondary robot rect
+        #self.add_rect(x1, y1, x2, y2, self.zone_cost, False, False)
         self.send_zones_to_simulator()
 
 
@@ -288,7 +289,7 @@ class Map(object):
             self.evaluator.remove_penalized_zone(ez)
 
 
-    def opponent_detected(self, packet, x, y):
+    def on_opponent_detected(self, packet, opponent_direction, x, y):
         if packet.robot == OPPONENT_ROBOT_MAIN:
             if packet.distance == 0:
                 self.pathfinder.set_main_opponent_position(int(round(x / ROUTING_MAP_RESOLUTION)), int(round(y / ROUTING_MAP_RESOLUTION)))
@@ -298,7 +299,7 @@ class Map(object):
             self.evaluator.set_secondary_opponent_position(int(round(x / EVALUATOR_MAP_RESOLUTION)), int(round(y / EVALUATOR_MAP_RESOLUTION)))
 
 
-    def opponent_disapeared(self, opponent):
+    def on_opponent_disapeared(self, opponent, opponent_direction):
         if opponent == OPPONENT_ROBOT_MAIN:
             self.pathfinder.clear_main_opponent_position()
             self.evaluator.clear_main_opponent_position()
@@ -317,8 +318,8 @@ class Map(object):
             if len(packet.points) == max_elements:
                 self.eventloop.send_packet(packet)
                 packet.points = []
-            if isinstance(cell, Pose):
-                packet.points.append((cell.x, cell.y))
+            if not isinstance(cell, Pose):
+                packet.points.append(Pose(cell[0], cell[1]))
             else:
                 packet.points.append(cell)
         if len(packet.points) != 0:
@@ -372,7 +373,7 @@ class Map(object):
             lib_dir = "/usr/local/Cellar/python3/3.3.0/Frameworks/Python.framework/Versions/3.3/lib"
 
         params = ["-O2", "-shared", "-fPIC", "-o", output_file, "-I" + include_dir, "-L" + lib_dir,
-                    source_file, "-l" + "python3.3"]
+                    source_file, "-l" + pyversion]
 
         if sys.platform == "darwin" :
             params = ["-dynamiclib"] + params

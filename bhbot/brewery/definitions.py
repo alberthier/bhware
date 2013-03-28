@@ -3,14 +3,12 @@
 import os
 import math
 import platform
-import socket
 
 
 ########################################################################
 # Constants
 
 # Brewery execution host
-IS_MAIN_ROBOT                          = socket.gethostname() == "sheldon"
 IS_HOST_DEVICE_ARM                     = platform.machine() == "armv5tel"
 IS_HOST_DEVICE_PC                      = not IS_HOST_DEVICE_ARM
 
@@ -33,7 +31,7 @@ SECONDARY_ROBOT_CENTER_Y               = 0.0635
 SECONDARY_ROBOT_GYRATION_RADIUS        = 0.161
 
 # Main start positons (the robot starts 90 degrees rotated that's why *_START_Y use ROBOT_X_SIZE and ROBOT_CENTER_X)
-MAIN_BLUE_START_Y                      = 0.126
+MAIN_BLUE_START_Y                      = 0.25
 MAIN_BLUE_START_X                      = 1.0
 MAIN_BLUE_START_ANGLE                  = math.pi / 2.0
 MAIN_RED_START_X                       = MAIN_BLUE_START_X
@@ -41,14 +39,15 @@ MAIN_RED_START_Y                       = FIELD_Y_SIZE - MAIN_BLUE_START_Y
 MAIN_RED_START_ANGLE                   = -math.pi / 2.0
 
 # Secondary start positons (the robot starts 90 degrees rotated that's why *_START_Y use ROBOT_X_SIZE and ROBOT_CENTER_X)
-SECONDARY_BLUE_START_Y                 = 0.053
+SECONDARY_BLUE_START_Y                 = 0.25
 SECONDARY_BLUE_START_X                 = 1.5
 SECONDARY_BLUE_START_ANGLE             = math.pi / 2.0
 SECONDARY_RED_START_X                  = SECONDARY_BLUE_START_X
 SECONDARY_RED_START_Y                  = FIELD_Y_SIZE - SECONDARY_BLUE_START_Y
 SECONDARY_RED_START_ANGLE              = -math.pi / 2.0
 
-def setup_definitions():
+def setup_definitions(is_main_robot):
+    globals()["IS_MAIN_ROBOT"]         = is_main_robot
     globals()["ROBOT_X_SIZE"]          = MAIN_ROBOT_X_SIZE          if IS_MAIN_ROBOT else SECONDARY_ROBOT_X_SIZE
     globals()["ROBOT_Y_SIZE"]          = MAIN_ROBOT_Y_SIZE          if IS_MAIN_ROBOT else SECONDARY_ROBOT_Y_SIZE
     globals()["ROBOT_CENTER_X"]        = MAIN_ROBOT_CENTER_X        if IS_MAIN_ROBOT else SECONDARY_ROBOT_CENTER_X
@@ -63,6 +62,8 @@ def setup_definitions():
 
 # Rule specific
 MATCH_DURATION_MS                      = 90000
+FUNNY_ACTION_DURATION_MS               = 10000
+FULL_DURATION_MS                       = MATCH_DURATION_MS + FUNNY_ACTION_DURATION_MS
 TEAM_COLOR_RED                         = "#a1011d"
 TEAM_COLOR_BLUE                        = "#004c90"
 
@@ -109,11 +110,8 @@ else:
 # Brewery's web sever
 WEB_SERVER_PORT                        = 8080
 
-# Default state machine name
-STATE_MACHINE                          = "default"
-
 # Use multipoint Goto for navigation
-NAVIGATION_USES_MULTIPOINT             = False
+NAVIGATION_USES_MULTIPOINT             = True
 
 # Use pathfinding algorithm to evaluate the best goal
 GOAL_EVALUATION_USES_PATHFINDING       = True
@@ -132,7 +130,7 @@ BLOCKED_ZONE_SIZE                      = 0.08
 BLOCKED_ZONE_DISAPEARING_MS            = 1000
 
 # Opponent detection
-OPPONENT_DETECTION_DISAPEARING_MS      = 3000
+OPPONENT_DETECTION_DISAPEARING_MS      = 800
 
 # Blocking opponent handling
 DEFAULT_OPPONENT_WAIT_MS               = 2000

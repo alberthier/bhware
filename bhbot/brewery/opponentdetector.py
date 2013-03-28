@@ -19,10 +19,11 @@ class Opponent(object):
     def __init__(self, detector, opponent_type):
         self.detector = detector
         self.opponent_type = opponent_type
+        self.opponent_direction = None
         self.x = None
         self.y = None
         self.timer = eventloop.Timer(self.detector.event_loop, OPPONENT_DETECTION_DISAPEARING_MS, self.opponent_disapear_timout)
-        self.enabled = False
+        self.enabled = True
 
 
     def on_turret_detect(self, packet):
@@ -42,8 +43,13 @@ class Opponent(object):
         self.x = robot_pose.x + distance * math.cos(real_angle)
         self.y = robot_pose.y + distance * math.sin(real_angle)
 
-        self.detector.event_loop.map.opponent_detected(packet, self.x, self.y)
-        self.detector.event_loop.eval_map.opponent_detected(packet, self.x, self.y)
+        previous_direction = self.opponent_direction
+        if packet.angle in self.IN_FRONT_ANGLES:
+            self.opponent_direction = DIRECTION_FORWARDS
+        elif packet.angle in self.IN_BACK_ANGLES:
+            self.opponent_direction = DIRECTION_BACKWARDS
+        else:
+            self.opponent_direction = None
 
         if IS_HOST_DEVICE_PC:
             sim_packet = packets.SimulatorOpponentsPositions()
@@ -54,34 +60,28 @@ class Opponent(object):
             sim_packet.distance = distance
             self.detector.event_loop.send_packet(sim_packet)
 
-        is_in_front = packet.angle in self.IN_FRONT_ANGLES
-        is_in_back  = packet.angle in self.IN_BACK_ANGLES
-        self.notify_state_machine(packet, is_in_front, is_in_back)
+        self.detector.event_loop.map.on_opponent_detected(packet, self.opponent_direction, self.x, self.y)
+        #self.detector.event_loop.eval_map.on_opponent_detected(packet, self.opponent_direction)
+
+        if self.detector.event_loop.fsm is not None:
+            if self.opponent_direction is None:
+                self.detector.event_loop.fsm.on_opponent_disapeared(self.opponent_type, previous_direction)
+            else:
+                self.detector.event_loop.fsm.on_opponent_detected(packet, self.opponent_direction, self.x, self.y)
 
         self.timer.restart()
 
 
     def opponent_disapear_timout(self):
-        self.detector.event_loop.map.opponent_disapeared(self.opponent_type)
-        self.detector.event_loop.eval_map.opponent_disapeared(self.opponent_type)
+        previous_direction = self.opponent_direction
+        self.opponent_direction = None
+        self.detector.event_loop.map.on_opponent_disapeared(self.opponent_type, previous_direction)
+        #self.detector.event_loop.eval_map.on_opponent_disapeared(self.opponent_type, previous_direction)
         if IS_HOST_DEVICE_PC:
-            sim_packet = packets.SimulatorOpponentsPositions()
-            sim_packet.robot = self.opponent_type
-            sim_packet.present = False
+            sim_packet = packets.SimulatorOpponentsPositions(robot = self.opponent_type, present = False)
             self.detector.event_loop.send_packet(sim_packet)
-        self.notify_state_machine(None, False, False)
-
-
-    def notify_state_machine(self, packet, is_in_front, is_in_back):
-        if is_in_front:
-            self.detector.event_loop.fsm.on_opponent_in_front(packet)
-        else:
-            self.detector.event_loop.fsm.on_opponent_disapeared(self.opponent_type, True)
-
-        if is_in_back:
-            self.detector.event_loop.fsm.on_opponent_in_back(packet)
-        else:
-            self.detector.event_loop.fsm.on_opponent_disapeared(self.opponent_type, False)
+        if self.detector.event_loop.fsm is not None:
+            self.detector.event_loop.fsm.on_opponent_disapeared(self.opponent_type, previous_direction)
 
 
 

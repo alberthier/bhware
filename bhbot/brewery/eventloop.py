@@ -45,7 +45,6 @@ class TurretChannel(asyncore.file_dispatcher):
         self.packet = None
         self.synchronized = False
         self.out_buffer = bytes()
-        self.turret_packets = [ packets.TurretDetect.TYPE, packets.TurretInit.TYPE, packets.TurretDistances.TYPE, packets.TurretBoot.TYPE ]
 
 
     def bytes_available(self):
@@ -76,7 +75,7 @@ class TurretChannel(asyncore.file_dispatcher):
             while self.bytes_available():
                 data = self.recv(1)
                 (packet_type,) = struct.unpack("<B", data)
-                if packet_type in self.turret_packets:
+                if packet_type < Packets.TURRET_RANGE_END:
                     self.synchronized = True
                     self.buffer += data
                     self.packet = packets.create_packet(self.buffer)
@@ -169,22 +168,13 @@ class RobotLogDeviceChannel(asyncore.dispatcher):
 class InterbotChannel(asyncore.dispatcher_with_send):
 
     def __init__(self, event_loop, sock = None):
+        asyncore.dispatcher_with_send.__init__(self, sock)
         self.event_loop = event_loop
-        try:
-            if sock is None:
-                # Connect to the main robot
-                sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
-                sock.connect((MAIN_INTERBOT_IP, MAIN_INTERBOT_PORT))
-            else:
-                sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
-            asyncore.dispatcher_with_send.__init__(self, sock)
-            self.buffer = bytes()
-            self.packet = None
-            self.event_loop.interbot_channel = self
-            logger.log("Interbot channel connected")
-        except Exception as e:
-            logger.log("Unable to connect the interbot channel")
+        sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
+        self.buffer = bytes()
+        self.packet = None
+        self.event_loop.interbot_channel = self
+        logger.log("Interbot channel connected")
 
 
     def bytes_available(self):
@@ -195,10 +185,6 @@ class InterbotChannel(asyncore.dispatcher_with_send):
 
     def handle_read(self):
         self.event_loop.handle_read(self)
-
-
-    def handle_close(self):
-        self.socket.close()
 
 
 
@@ -221,6 +207,35 @@ class InterbotServer(asyncore.dispatcher):
 
     def handle_accepted(self, sock, addr):
         InterbotChannel(self.event_loop, sock)
+
+
+
+
+class InterbotClientStarter(object):
+
+    def __init__(self, event_loop):
+        logger.log("Interbot - Connecting to {}:{} ...".format(MAIN_INTERBOT_IP, MAIN_INTERBOT_PORT))
+        self.socket = None
+        self.event_loop = event_loop
+        self.timer = Timer(event_loop, 1000, self.try_connect, False)
+        if not self.try_connect():
+            self.timer.start()
+
+
+    def try_connect(self):
+        try:
+            if self.event_loop.is_match_started:
+                self.timer.stop()
+                return
+            # Connect to the main robot
+            self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self.socket.connect((MAIN_INTERBOT_IP, MAIN_INTERBOT_PORT))
+            self.event_loop.robot_control_channel = InterbotChannel(self.event_loop, self.socket)
+            self.timer.stop()
+            return True
+        except Exception as e:
+            logger.log("Interbot - Unable to connect to {}:{} ({}), retrying".format(MAIN_INTERBOT_IP, MAIN_INTERBOT_PORT, e))
+        return False
 
 
 
@@ -325,11 +340,14 @@ class EventLoop(object):
         self.interbot_server = None
         self.web_server = None
         self.robot = robot.Robot(self)
+        self.main_state = None
+        self.end_of_match_state = None
         self.fsm = None
         self.state_machine_name = state_machine_name
         self.webserver_port = webserver_port
         self.opponent_detector = opponentdetector.OpponentDetector(self)
         self.stopping = False
+        self.is_match_started = False
         self.map = trajectory.Map(self)
         #self.eval_map = trajectory.Map(self)
         #self.map = graphpathfinding.Map(self)
@@ -392,7 +410,8 @@ class EventLoop(object):
                         channel.packet.dispatch(self.opponent_detector)
                         channel.packet.dispatch(self.map)
                         #channel.packet.dispatch(self.eval_map)
-                        channel.packet.dispatch(self.fsm)
+                        if self.fsm is not None:
+                            channel.packet.dispatch(self.fsm)
 
                         channel.packet = None
                 except Exception as e:
@@ -412,6 +431,11 @@ class EventLoop(object):
             leds.green.heartbeat_tick()
 
 
+    def on_start(self, packet):
+        self.is_match_started = True
+        Timer(self, MATCH_DURATION_MS, self.on_end_of_match).start()
+
+
     def on_turret_boot(self, packet):
         if self.turret_channel is not None:
             packet = packets.TurretInit()
@@ -423,18 +447,21 @@ class EventLoop(object):
             self.turret_channel.send(buffer)
 
 
+    def on_end_of_match(self):
+        logger.log("End of match. Starting the funny action")
+        self.fsm = statemachine.StateMachine(self, self.end_of_match_state)
+
+
     def send_packet(self, packet):
         logger.log_packet(packet, "ARM")
         buffer = packet.serialize()
-        if packet.TYPE < 50:
-            # 0 <= type < 50 : Turret packet
+        if packet.TYPE < packets.TURRET_RANGE_END:
             self.turret_channel.send(buffer)
-        elif packet.TYPE < 200:
-            #  50 <= type < 150 : PIC 32 packet
-            # 150 <= type < 200 : Simulator packet
+        elif packet.TYPE < packets.PIC32_RANGE_END:
+            self.robot_control_channel.send(buffer)
+        elif packet.TYPE < packets.SIMULATOR_RANGE_END:
             self.robot_control_channel.send(buffer)
         elif self.interbot_channel is not None:
-            # 200 <= type : Interbot packet
             self.interbot_channel.send(buffer)
 
 
@@ -443,7 +470,8 @@ class EventLoop(object):
         packet.reason = REASON_DESTINATION_REACHED
         packet.current_pose = self.robot.pose
         packet.current_point_index = 0
-        self.fsm.dispatch(packet)
+        if self.fsm is not None:
+            self.fsm.dispatch(packet)
 
 
     def get_current_state(self):
@@ -452,11 +480,12 @@ class EventLoop(object):
 
 
     def create_fsm(self):
-        state = statemachine.instantiate_state_machine(self.state_machine_name)
-        if state is None:
+        (self.main_state, self.end_of_match_state) = statemachine.instantiate_state_machine(self.state_machine_name)
+        if self.main_state is None or self.end_of_match_state is None:
+            logger.log("One of 'Main' or 'EndOfMatch' state is missing")
             self.stop()
         else:
-            self.fsm = statemachine.StateMachine(self, state)
+            self.fsm = statemachine.StateMachine(self, self.main_state)
             self.send_packet(packets.ControllerReady())
 
 
@@ -464,7 +493,7 @@ class EventLoop(object):
         if IS_MAIN_ROBOT:
             InterbotServer(self, "", MAIN_INTERBOT_PORT)
         else:
-            InterbotChannel(self)
+            InterbotClientStarter(self)
         logger.log("Starting internal web server on port {}".format(self.webserver_port))
         self.web_server = asyncwsgiserver.WsgiServer("", self.webserver_port, nanow.Application(webinterface.BHWeb(self)))
         if SERIAL_PORT_PATH is not None:
@@ -477,7 +506,8 @@ class EventLoop(object):
         RobotControlDeviceStarter(self)
         while not self.stopping:
             asyncore.loop(EVENT_LOOP_TICK_RESOLUTION_S, True, None, 1)
-            self.fsm.on_timer_tick()
+            if self.fsm is not None:
+                self.fsm.on_timer_tick()
             while len(self.timers) != 0:
                 if not self.timers[0].check_timeout():
                     break

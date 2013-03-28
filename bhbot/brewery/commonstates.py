@@ -157,12 +157,13 @@ class WaitForOpponentLeave(Timer):
     OPPONENT_LEFT = 1
 
     def __init__(self, opponent, miliseconds, move_direction):
-        Timer.__init__(miliseconds)
+        Timer.__init__(self, miliseconds)
         self.opponent = opponent
         self.move_direction = move_direction
 
 
     def on_enter(self):
+        Timer.on_enter(self)
         self.goto_finished = False
         self.opponent_disappeared = False
         self.timer_expired = False
@@ -195,7 +196,7 @@ class WaitForOpponentLeave(Timer):
         return self.try_leave()
 
 
-    def on_opponent_disapeared(self, opponent, is_in_front):
+    def on_opponent_disapeared(self, opponent, opponent_direction):
         if opponent == self.opponent:
             self.exit_reason = self.OPPONENT_LEFT
             self.opponent_disappeared = True
@@ -206,7 +207,7 @@ class WaitForOpponentLeave(Timer):
 
     def try_leave(self):
         if self.goto_finished and (self.timer_expired or self.opponent_disappeared):
-            logger.log("WaitForOpponentLeave : exit on opponent leave reason={}".format(self.exit_reason))
+            logger.log("WaitForOpponentLeave : exit reason={}".format(self.exit_reason))
             yield None
 
 
@@ -228,17 +229,9 @@ class AbstractMove(statemachine.State):
             self.send_packet(self.packet)
 
 
-    def on_opponent_in_front(self, packet):
-        self.on_opponent_detected(packet, DIRECTION_FORWARDS)
-
-
-    def on_opponent_in_back(self, packet):
-        self.on_opponent_detected(packet, DIRECTION_BACKWARDS)
-
-
-    def on_opponent_detected(self, packet, opponent_direction):
-        if not isinstance(self, Rotate) and self.direction == opponent_direction and self.current_opponent is None:
-            logger.log("Opponent detected. direction = {}. Robot stopped".format(opponent_direction))
+    def on_opponent_detected(self, packet, opponent_direction, x, y):
+        if not isinstance(self, Rotate) and self.packet.direction == opponent_direction and self.current_opponent is None:
+            logger.log("Opponent detected. direction = {}. Stop robot".format(opponent_direction))
             self.send_packet(packets.Stop())
             self.current_opponent = packet.robot
 
@@ -254,11 +247,12 @@ class AbstractMove(statemachine.State):
             if self.wait_opponent_leave:
                 reason = (yield WaitForOpponentLeave(self.current_opponent, 2000, self.packet.direction)).exit_reason
                 if reason == WaitForOpponentLeave.TIMEOUT:
+                    self.exit_reason = TRAJECTORY_OPPONENT_DETECTED
                     yield None
                 else:
                     # Continue the current move
                     if hasattr(self.packet, "points"):
-                        self.packet.points = self.packet.points[index:]
+                        self.packet.points = self.packet.points[packet.current_point_index:]
                     self.send_packet(self.packet)
             else:
                 self.exit_reason = TRAJECTORY_OPPONENT_DETECTED
@@ -272,6 +266,50 @@ class Rotate(AbstractMove):
     def __init__(self, direction, angle, chained = None):
         AbstractMove.__init__(self, chained, False)
         self.packet = packets.Rotate(direction = direction, angle = angle)
+
+
+
+
+class LookAt(AbstractMove):
+
+    def __init__(self, direction, x, y, chained = None):
+        AbstractMove.__init__(self, chained, False)
+        self.to_x = x
+        self.to_y = y
+        self.to_direction = direction
+
+
+    def on_enter(self):
+        current_pose = self.robot().pose
+        dest = position.Pose(self.to_x, self.to_y, None, True)
+        dx = dest.virt.x - current_pose.virt.x
+        dy = dest.virt.y - current_pose.virt.y
+        angle = math.atan2(dy, dx)
+        self.packet = packets.Rotate(direction = self.to_direction, angle = angle)
+        return AbstractMove.on_enter(self)
+
+
+
+
+class LookAtOpposite(AbstractMove):
+
+    def __init__(self, direction, x, y, chained = None):
+        AbstractMove.__init__(self, chained, False)
+        self.to_x = x
+        self.to_y = y
+        self.to_direction = direction
+
+
+    def on_enter(self):
+        current_pose = self.robot().pose
+        dest = position.Pose(self.to_x, self.to_y, None, True)
+        dx = dest.virt.x - current_pose.virt.x
+        dy = dest.virt.y - current_pose.virt.y
+        angle = math.atan2(dy, dx) + math.pi
+        if angle > math.pi:
+            angle -= 2.0 * math.pi
+        self.packet = packets.Rotate(direction = self.to_direction, angle = angle)
+        return AbstractMove.on_enter(self)
 
 
 
@@ -299,6 +337,18 @@ class MoveArc(AbstractMove):
     def __init__(self, direction, center, radius, points, chained = None):
         AbstractMove.__init__(self, chained, True)
         self.packet = packets.MoveArc(direction = direction, center = center, radius = radius, points = points)
+
+
+
+
+class StopAll(statemachine.State):
+
+    def on_enter(self):
+        self.send_packet(packets.StopAll())
+
+
+    def on_stop_all(self, packet):
+        yield None
 
 
 
@@ -431,12 +481,6 @@ class FetchCandleColors(statemachine.State):
 
 
 
-########################################################
-
-# States to port to new FSM
-
-
-
 
 class Navigate(statemachine.State):
 
@@ -444,75 +488,56 @@ class Navigate(statemachine.State):
         statemachine.State.__init__(self)
         self.destination = position.Pose(x, y, None, True)
         self.direction = direction
-        self.walk = TrajectoryWalk()
-        self.walk.opponent_wait_time = 0
         self.exit_reason = TRAJECTORY_DESTINATION_REACHED
-
-
-    def do_walk(self):
-        seq = Sequence( Antiblocking(True),
-                        self.walk,
-                        Antiblocking(False)
-                      )
-        self.switch_to_substate(seq)
 
 
     def on_enter(self):
         path = self.event_loop.map.route(self.robot().pose, self.destination)
         if len(path) == 0:
             self.exit_reason = TRAJECTORY_DESTINATION_UNREACHABLE
-            self.exit_substate()
-        elif NAVIGATION_USES_MULTIPOINT:
-            self.multipoint_walk(path)
+            yield None
+            return
+        yield Antiblocking(True)
+        if NAVIGATION_USES_MULTIPOINT:
+            yield self.multipoint_walk(path)
         else:
-            self.monopoint_walk(path)
+            yield self.monopoint_walk(path)
+        yield Antiblocking(False)
+        yield None
 
 
 
     def multipoint_walk(self, path):
+        move = None
         for sub_path in path:
             first_point = sub_path[0]
             if self.direction == DIRECTION_FORWARDS:
                 if not self.robot().is_looking_at(first_point):
-                    self.walk.look_at(first_point.virt.x, first_point.virt.y)
+                    move = yield LookAt(DIRECTION_FORWARDS, first_point.virt.x, first_point.virt.y, move)
             else:
                 if not self.robot().is_looking_at_opposite(first_point):
-                    self.walk.look_at_opposite(first_point.virt.x, first_point.virt.y)
-            self.walk.follow(sub_path, None, self.direction)
-        self.do_walk()
+                    move = yield LookAtOpposite(DIRECTION_FORWARDS, first_point.virt.x, first_point.virt.y, move)
+            move = yield MoveCurve(self.direction, None, sub_path, move)
+        self.exit_reason = move.exit_reason
 
 
     def monopoint_walk(self, path):
+        move = None
         for sub_path in path:
             for point in sub_path:
                 if self.direction == DIRECTION_FORWARDS:
                     if not self.robot().is_looking_at(point):
-                        self.walk.look_at(point.virt.x, point.virt.y)
+                        move = yield LookAt(DIRECTION_FORWARDS, point.virt.x, point.virt.y, move)
                 else:
                     if not self.robot().is_looking_at_opposite(point):
-                        self.walk.look_at_opposite(point.virt.x, point.virt.y)
-                self.walk.move_to(point.virt.x, point.virt.y, self.direction)
-        self.do_walk()
-
-
-    def on_exit_substate(self, substate):
-        self.exit_reason = self.walk.exit_reason
-        self.exit_substate()
+                        move = yield LookAtOpposite(DIRECTION_FORWARDS, point.virt.x, point.virt.y, move)
+                move = yield MoveLine(self.direction, [point], move)
+        self.exit_reason = move.exit_reason
 
 
 
 
-class GotoHome(statemachine.State):
+class GotoHome(Navigate):
 
-    def on_enter(self):
-        seq = Sequence()
-        seq.add(Navigate(BLUE_START_X, 0.60))
-        walk = TrajectoryWalk()
-        walk.look_at(BLUE_START_X, BLUE_START_Y + 0.03)
-        walk.move_to(BLUE_START_X, BLUE_START_Y + 0.03)
-        seq.add(walk)
-        self.switch_to_substate(seq)
-
-
-    def on_exit_substate(self, substate):
-        self.exit_substate()
+    def __init__(self):
+        Navigate.__init__(self, BLUE_START_X, BLUE_START_Y)

@@ -235,8 +235,8 @@ class BasePacket(object):
     BIN_STRUCT = None
     HANDLER_METHOD = None
 
-    def __init__(self, *args, **kwargs):
-        cls = type(self)
+    @classmethod
+    def static_init(cls):
         if cls.STRUCT is None:
             cls.BIN_STRUCT = Struct(StructInstance, "", *cls.DEFINITION)
             fmt = "<B" + cls.BIN_STRUCT.C_TYPE
@@ -254,6 +254,8 @@ class BasePacket(object):
                 else:
                     cls.HANDLER_METHOD += c
 
+
+    def __init__(self, *args, **kwargs):
         for name, item in self.DEFINITION:
             value = None
             for aname, avalue in args:
@@ -296,6 +298,18 @@ class BasePacket(object):
     def is_keep_alive(self):
         return False
 
+
+################################################################################
+# Packet type ranges
+
+TURRET_RANGE_START    = 32
+TURRET_RANGE_END      = 50
+PIC32_RANGE_START     = TURRET_RANGE_END
+PIC32_RANGE_END       = 150
+SIMULATOR_RANGE_START = PIC32_RANGE_END
+SIMULATOR_RANGE_END   = 200
+INTERBOT_RANGE_START  = SIMULATOR_RANGE_END
+INTERBOT_RANGE_END    = 256
 
 ################################################################################
 # Packet classes
@@ -805,7 +819,7 @@ PACKETS_LIST = []
 for (item_name, item_type) in inspect.getmembers(sys.modules[__name__]):
     if inspect.isclass(item_type) and issubclass(item_type, BasePacket) and item_type != BasePacket:
         # Create a packet instance a first time to finish the setup
-        item_type()
+        item_type.static_init()
         PACKETS_BY_NAME[item_name] = item_type
         PACKETS_BY_TYPE[item_type.TYPE] = item_type
     PACKETS_LIST = list(PACKETS_BY_TYPE.values())

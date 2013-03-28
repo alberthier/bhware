@@ -94,7 +94,9 @@ class RobotController(object):
             self.process.readyRead.connect(self.read_output)
             args = ["--webserver-port", str(8080 + self.offset)]
             if self.is_main:
-                args.append("--main")
+                args.append("sheldon")
+            else:
+                args.append("leonard")
             self.process.start(brewery, args)
 
 
@@ -260,14 +262,14 @@ class RobotController(object):
 
     def pause(self):
         if self.robot_layer.robot.move_animation.state() == QAbstractAnimation.Running:
-            self.robot_layer.robot.move_animation.pause()
+            self.robot_layer.robot.pause_animation()
 
 
     def stop(self):
         if self.robot_layer.robot.move_animation.state() == QAbstractAnimation.Running:
-            self.robot_layer.robot.move_animation.stop()
+            self.robot_layer.robot.stop_animation()
 
 
     def resume(self):
         if self.robot_layer.robot.move_animation.state() == QAbstractAnimation.Paused:
-            self.robot_layer.robot.move_animation.resume()
+            self.robot_layer.robot.resume_animation()

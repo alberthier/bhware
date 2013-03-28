@@ -15,14 +15,24 @@ def instantiate_state_machine(state_machine_name):
     state_machines_dir = os.path.join(os.path.dirname(__file__), "statemachines")
     state_machine_file = os.path.join(state_machines_dir, state_machine_name + ".py")
     state_machine_module = imp.load_source(state_machine_name, state_machine_file)
+    main_state = None
+    end_of_match_state = None
     for (item_name, item_type) in inspect.getmembers(state_machine_module):
-        if inspect.isclass(item_type) and issubclass(item_type, State) and item_name == "Main":
-            root_state = item_type()
-            logger.log("Successfully instatiated state '{}' from file '{}'".format(item_name, state_machine_file))
-            return root_state
-    else:
-        logger.log("No 'Main' state found in '{}'".format(state_machine_file))
-    return None
+        if inspect.isclass(item_type) and issubclass(item_type, State):
+            if item_name == "Main":
+                main_state = item_type()
+                logger.log("Successfully instatiated state '{}' from file '{}'".format(item_name, state_machine_file))
+            elif item_name == "EndOfMatch":
+                end_of_match_state = item_type()
+                logger.log("Successfully instatiated state '{}' from file '{}'".format(item_name, state_machine_file))
+            if main_state != None and end_of_match_state != None:
+                break
+    if main_state == None:
+        logger.log("Error: no 'Main' state found in '{}'".format(state_machine_file))
+    if end_of_match_state == None:
+        logger.log("Error: no 'EndOfMatch' state found in '{}'".format(state_machine_file))
+    return (main_state, end_of_match_state)
+
 
 class Stay(object):
     pass
@@ -137,13 +147,13 @@ class StateMachine(object):
             self.process(generator)
 
 
-    def on_opponent_in_front(self, packet):
+    def on_opponent_detected(self, packet, opponent_direction, x, y):
         if self.current_state is not None:
             generator = self.current_state.on_opponent_in_front(packet)
             self.process(generator)
 
 
-    def on_opponent_in_back(self, packet):
+    def on_opponent_disapeared(self, opponent, opponent_direction):
         if self.current_state is not None:
             generator = self.current_state.on_opponent_in_back(packet)
             self.process(generator)
@@ -306,11 +316,11 @@ class State(object):
         pass
 
 
-    def on_opponent_in_front(self, packet):
+    def on_opponent_detected(self, packet, opponent_direction, x, y):
         pass
 
 
-    def on_opponent_in_back(self, packet):
+    def on_opponent_disapeared(self, opponent, opponent_direction):
         pass
 
 
