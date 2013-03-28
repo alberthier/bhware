@@ -76,6 +76,8 @@ class StateGenerator(object):
                         previous_value = None
                         # on_enter can yield a generator
                         generator = self.fsm.push_state(new_state)
+                        if generator :
+                            next(generator)
                         self.fsm.current_state.current_method = generator
                         self.log(packet, "on_enter return value = {}".format(generator))
                         # TODO  : gérer yield dans on_enter (récursivité ?)
@@ -85,8 +87,10 @@ class StateGenerator(object):
                         self.fsm.pop_state()
                         generator = self.fsm.current_state.current_method
                         self.log(packet, "Generator is {}".format(generator))
+                        if generator :
+                            next(generator)
                 except StopIteration :
-                    logger.log('Generator has stopped, staying in same state, waiting for new packet')
+                    self.log(packet, 'Generator has stopped, staying in same state, waiting for new packet')
                     break
 
 
@@ -130,55 +134,103 @@ class StateMachine(object):
     def on_timer_tick(self):
         if self.current_state is not None:
             generator = self.current_state.on_timer_tick()
-            #self.state_generator.process(generator)
+            self.process(generator)
 
 
     def on_opponent_in_front(self, packet):
         if self.current_state is not None:
             generator = self.current_state.on_opponent_in_front(packet)
-            #self.state_generator.process(generator)
+            self.process(generator)
 
 
     def on_opponent_in_back(self, packet):
         if self.current_state is not None:
             generator = self.current_state.on_opponent_in_back(packet)
-            #self.state_generator.process(generator)
+            self.process(generator)
 
 
     def on_opponent_disapeared(self, opponent, is_in_front):
         if self.current_state is not None:
             generator = self.current_state.on_opponent_disapeared(opponent, is_in_front)
-            #self.state_generator.process(generator)
+            self.process(generator)
 
 
     def on_packet(self, packet):
         if self.current_state is not None:
-            #generator = packet.dispatch(self.current_state)
-            #self.state_generator.process(generator)
-            self.state_generator.send(packet)
+            generator = packet.dispatch(self.current_state)
+            self.process(generator)
+            # self.state_generator.send(packet)
 
 
     def push_state(self, state):
-        logger.log("Switching to state {}".format(state.name))
+        logger.log("Switching to state {new} ({old} -> {new})".format(new=state.name,
+                                                                      old=self.current_state.name if self.current_state
+                                                                            else "" )
+        )
         self.init_state(state)
         self.state_stack.append(state)
         self.state_history.append(state)
         return state.on_enter()
 
     def pop_state(self):
-        state = self.current_state
-        logger.log("Exiting state {}".format(state.name))
-        state.on_exit()
+        previous_state = self.current_state
+        previous_state.on_exit()
         self.state_stack.pop()
+        new_state = self.current_state
+        logger.log("Exiting state {previous} ({previous} -> {current})".format(previous=previous_state.name,
+                                                                               current=new_state.name))
+        
+    def log(self,s):
+        # if not "KeepAlive" in packet.__class__.__name__ :
+        #     logger.log("[{}] {}".format(self.fsm.current_state.name,s))
+        logger.log("[{}] {}".format(self.current_state.name,s))
 
+    def process(self, generator):
+        previous_value = None
+    
+        while generator:
 
+            try:
+                new_state = generator.send(previous_value)
+    
+                # yield None veut dire -> Exit State
+                if new_state:
+                    self.log( 'Got new state to enter : {}'.format(new_state.name))
+                    previous_value = None
+                    # on_enter can yield a generator
+                    self.current_state.current_method = generator
+                    generator = self.push_state(new_state)
+                    # if generator:
+                    #     next(generator)
+                    # self.current_state.current_method = generator
+                    self.log( "on_enter return value = {}".format(generator))
+                else:
+                    self.log( 'Yield None --> pop')
+                    previous_value = self.current_state
+                    self.pop_state()
+                    generator = self.current_state.current_method
+                    self.log( "Generator is {}".format(generator))
+                    # if generator:
+                    #     next(generator)
+            except StopIteration:
+                self.log( 'Generator has stopped, staying in same state, waiting for new packet')
+                break
+
+        
+        
+class FakeEventLoop(object):
+    def send_packet(self, packet):
+        raise Exception("Ooops - don't send a packet from here !")
+
+fsm = None
+event_loop = FakeEventLoop()
 
 
 class State(object):
 
     def __init__(self):
-        self.fsm = None
-        self.event_loop = None
+        self.fsm = fsm
+        self.event_loop = event_loop
         self.short_description = None
         self.current_method = None
 
