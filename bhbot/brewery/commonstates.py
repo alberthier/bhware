@@ -71,6 +71,23 @@ class WaitPacket(statemachine.State):
 
     def on_packet(self, packet):
         if isinstance(packet, self.packet_class):
+            logger.log("Got expected packet, exiting state")
+            yield None
+
+class SendPacketAndWait(statemachine.State):
+    def __init__(self, packet_to_send, packet_class_to_wait):
+        super().__init__()
+        self.packet_to_send = packet_to_send
+        self.packet_class_to_wait = packet_class_to_wait
+
+    def on_enter(self):
+        logger.log("Sending packet {}".format(self.packet_to_send))
+        self.send_packet(self.packet_to_send)
+        logger.log('Waiting for packet type {}'.format(self.packet_class_to_wait.__name__))
+
+    def on_packet(self, packet):
+        if isinstance(packet, self.packet_class_to_wait):
+            logger.log("Got expected packet, exiting state")
             yield None
 
 
@@ -96,17 +113,15 @@ class DefinePosition(statemachine.State):
         packet.axis = AXIS_X
         packet.position = self.pose.x
         packet.angle = self.pose.angle
-        self.send_packet(packet)
 
-        yield WaitPacket(packets.Resettle)
+        yield SendPacketAndWait(packet, packets.Resettle)
 
         packet = packets.Resettle()
         packet.axis = AXIS_Y
         packet.position = self.pose.y
         packet.angle = self.pose.angle
-        self.send_packet(packet)
 
-        yield WaitPacket(packets.Resettle)
+        yield SendPacketAndWait(packet, packets.Resettle)
         yield None
 
 
