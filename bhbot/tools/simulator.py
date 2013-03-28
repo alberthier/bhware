@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # encoding: utf-8
+from argparse import ArgumentParser
 
 import sys
 import os
@@ -18,6 +19,18 @@ from mainwindow import *
 
 if __name__ == "__main__":
 
+    parser = ArgumentParser()
+    parser.add_argument("--pydev-debug", nargs=2)
+
+    args = parser.parse_args()
+
+    debug_host = None
+    debug_port = 0
+
+    if args.pydev_debug :
+        debug_host, debug_port = args.pydev_debug
+        debug_port = int(debug_port)
+
     random.seed()
 
     app = QApplication(sys.argv)
@@ -28,7 +41,7 @@ if __name__ == "__main__":
     else:
         piece_config = ""
 
-    mw = MainWindow(piece_config)
+    mw = MainWindow(piece_config, debug_host = debug_host, debug_port =  debug_port)
     mw.show()
 
     sys.exit(app.exec_())

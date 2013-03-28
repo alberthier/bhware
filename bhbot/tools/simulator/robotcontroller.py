@@ -63,7 +63,7 @@ class RobotController(object):
             layer.hide()
 
 
-    def setup(self, team, is_main):
+    def setup(self, team, is_main, debug_host = None, debug_port=0):
         if self.process == None:
             self.incoming_packet_buffer = ""
             self.incoming_packet = None
@@ -97,6 +97,12 @@ class RobotController(object):
                 args.append("sheldon")
             else:
                 args.append("leonard")
+
+            if debug_host :
+                args.append("--pydev-debug")
+                args.append(debug_host)
+                args.append(str(debug_port))
+
             self.process.start(brewery, args)
 
 
