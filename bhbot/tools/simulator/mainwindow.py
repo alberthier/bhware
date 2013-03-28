@@ -20,7 +20,7 @@ from definitions import *
 
 class MainWindow(QMainWindow, MainWindow_Ui):
 
-    def __init__(self, piece_config, parent = None):
+    def __init__(self, piece_config, parent = None, debug_host = None, debug_port = None):
         QMainWindow.__init__(self, parent)
         MainWindow_Ui.__init__(self)
         self.setupUi(self)
@@ -34,5 +34,5 @@ class MainWindow(QMainWindow, MainWindow_Ui):
         self.robot_b_output_view_container_layout.addWidget(self.robot_b_output_view)
 
         self.field_view_controller = SimulatorFieldViewController(self)
-        self.game_controller = GameController(self)
+        self.game_controller = GameController(self, debug_host = debug_host, debug_port = debug_port)
 

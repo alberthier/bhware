@@ -13,7 +13,7 @@ from robotcontroller import *
 
 class GameController(object):
 
-    def __init__(self, main_window):
+    def __init__(self, main_window, debug_host, debug_port):
         self.server = QTcpServer()
         self.server.newConnection.connect(self.brewery_connected)
         self.server.listen(QHostAddress.Any, REMOTE_PORT)
@@ -33,6 +33,8 @@ class GameController(object):
         self.keep_alive_timer = QTimer()
         self.keep_alive_timer.setInterval(KEEP_ALIVE_DELAY_MS)
         self.keep_alive_timer.timeout.connect(self.timer_tick)
+        self.debug_host = debug_host
+        self.debug_port = debug_port
 
 
     def setup(self):
@@ -47,7 +49,7 @@ class GameController(object):
             self.robot_b.hide_all()
             self.expected_robots = self.main_bar.get_expected_robots()
         if not self.robot_a.is_process_started() and len(self.expected_robots) >= 1:
-            self.robot_a.setup(*self.expected_robots[0])
+            self.robot_a.setup(*self.expected_robots[0], debug_host = self.debug_host, debug_port = self.debug_port)
         elif not self.robot_b.is_process_started() and len(self.expected_robots) >= 2:
             del self.expected_robots[0]
             self.robot_b.setup(*self.expected_robots[0])

@@ -369,9 +369,6 @@ class Map(object):
         output_file = "pathfinding.so"
         exe = "gcc"
 
-        if sys.platform == "darwin" :
-            lib_dir = "/usr/local/Cellar/python3/3.3.0/Frameworks/Python.framework/Versions/3.3/lib"
-
         params = ["-O2", "-shared", "-fPIC", "-o", output_file, "-I" + include_dir, "-L" + lib_dir,
                     source_file, "-l" + pyversion]
 
