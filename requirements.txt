@@ -1,3 +1,2 @@
 coverage==3.6b1
 mock==1.0.1
-wsgiref==0.1.2
