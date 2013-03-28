@@ -92,7 +92,7 @@ class RobotController(object):
             self.process = QProcess()
             self.process.setReadChannelMode(QProcess.MergedChannels)
             self.process.readyRead.connect(self.read_output)
-            args = ["--webserver-port", str(8080 + self.offset)]
+            args = []
             if self.is_main:
                 args.append("sheldon")
             else:

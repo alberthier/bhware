@@ -135,11 +135,9 @@ class WsgiServer(asyncore.dispatcher):
         self.current_environ = {}
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
         self.set_reuse_addr()
-        bind_port = port
-        if bind_port is None :
-            logger.log("No open port found, finding one")
-            bind_port = find_open_port(host, 8080, 9000)
-            logger.log("New port is : {}".format(bind_port))
+        logger.log("Finding available port for web server")
+        bind_port = find_open_port(host, port, port+1001)
+        logger.log("Webserver port is : {}".format(bind_port))
         self.bind((self.host, bind_port))
         self.listen(5)
 
