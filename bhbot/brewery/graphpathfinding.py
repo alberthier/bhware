@@ -95,19 +95,19 @@ class AbstractZone(object):
 
 
     def create_symetric_zone(self):
-        return NotImplementedError()
+        raise NotImplementedError()
 
 
     def create_nodes(self, map):
-        return NotImplementedError()
+        raise NotImplementedError()
 
 
     def contains(self, node):
-        return NotImplementedError()
+        raise NotImplementedError()
 
 
     def intersects(self, node1, node2):
-        return NotImplementedError()
+        raise NotImplementedError()
 
 
 
@@ -322,33 +322,12 @@ class Map(object):
 
 
     def on_device_ready(self, packet):
-        # Captain room
-        self.add_zone(True, True, RectZone(max(0.5 - MAP_WALLS_DISTANCE, BLUE_START_X + 0.005),
-                                           0.000,
-                                           0.020 + MAP_WALLS_DISTANCE * 2.0,
-                                           0.400 + MAP_WALLS_DISTANCE,
+        # Cake
+        self.add_zone(True, True, RectZone(0.0,
+                                           1.0,
+                                           0.5,
+                                           1.0,
                                            True, self.penality))
-        # Bridge
-        self.add_zone(True, True, RectZone(1.250 - MAP_WALLS_DISTANCE,
-                                           0.000,
-                                           0.750 + MAP_WALLS_DISTANCE * 2.0,
-                                           0.380 + MAP_WALLS_DISTANCE,
-                                           True, self.penality))
-        # Island
-        self.add_zone(False, True, RectZone(0.845 - MAP_WALLS_DISTANCE,
-                                            0.945 - MAP_WALLS_DISTANCE,
-                                            0.310 + MAP_WALLS_DISTANCE * 2.0,
-                                            1.110 + MAP_WALLS_DISTANCE * 2.0,
-                                            True, self.penality))
-
-        # BH Secondary robot zone
-        x = 0.700
-        y = 2.200
-        x_size = 1.300
-        y_size = 0.800
-        if packet.team == TEAM_RED:
-            y = FIELD_Y_SIZE - y - y_size
-        self.add_zone(False, False, RectZone(x, y, x_size, y_size, False, self.penality))
 
         self.link_nodes()
 
@@ -461,9 +440,9 @@ class Map(object):
         pass
 
 
-    def opponent_detected(self, packet, x, y):
+    def on_opponent_detected(self, packet, opponent_direction, x, y):
         self.set_opponent(packet.robot, x, y)
 
 
-    def opponent_disapeared(self, opponent):
+    def on_opponent_disapeared(self, opponent, opponent_direction):
         self.clear_opponent(opponent)
