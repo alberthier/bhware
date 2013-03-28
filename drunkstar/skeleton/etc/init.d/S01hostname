@@ -5,25 +5,25 @@
 
 case "$1" in
   start)
-	echo -n "Update hostname: "
+    echo -n "Update hostname: "
     MAC_ADDRESS=`ifconfig eth0 | head -n1 | tail -c 20`
-    if [ $MAC_ADDRESS == "00:11:22:33:44:55" ]; then
+    if [ "$MAC_ADDRESS" = "00:11:22:33:44:55" ]; then
         hostname sheldon
         echo "OK"
-    elif [ $MAC_ADDRESS == "66:77:88:99:AA:BB" ]; then
+    elif [ "$MAC_ADDRESS" = "66:77:88:99:AA:BB" ]; then
         hostname leonard
         echo "OK"
     else
-    	echo "Unchanged"
+        echo "Unchanged"
     fi
-	;;
+    ;;
   stop)
-	;;
+    ;;
   restart|reload)
-	;;
+    ;;
   *)
-	echo "Usage: $0 {start|stop|restart}"
-	exit 1
+    echo "Usage: $0 {start|stop|restart}"
+    exit 1
 esac
 
 exit $?
