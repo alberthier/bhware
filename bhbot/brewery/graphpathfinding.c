@@ -99,8 +99,7 @@ static void node_create_edges_array(Node* self, int size)
 
 static void node_add_edge(Node* self, Edge* edge)
 {
-    self->edges[self->edges_count] = edge;
-    ++self->edges_count;
+    self->edges[self->edges_count++] = edge;
 }
 
 
@@ -187,12 +186,11 @@ static int edge_intersects(Edge* self, Edge* other)
     float cross_x = 0.0;
     float cross_y = 0.0;
 
-    /*if ( self->node1 == other->node1 || self->node1 == other->node2 || self->node2 == other->node1 || self->node2 == other->node2) {*/
-        /*return 0;*/
-    /*}*/
+    if ( self->node1 == other->node1 || self->node1 == other->node2 || self->node2 == other->node1 || self->node2 == other->node2) {
+        return 0;
+    }
     if (!isfinite(self->a) && !isfinite(other->a)) {
         /* Two vertical lines */
-        printf("1 sa=%f sb=%f oa=%f ob=%f cx=%f cy=%f\n", self->a, self->b, other->a, other->b, cross_x, cross_y); fflush(stdout);
         return tools_quasi_equal(self->node1->x, other->node1->x) &&
                 (tools_is_between(self->node1->y, self->node2->y, other->node1->y) ||
                  tools_is_between(self->node1->y, self->node2->y, other->node2->y));
@@ -200,18 +198,14 @@ static int edge_intersects(Edge* self, Edge* other)
     if (!isfinite(self->a)) {
         cross_x = self->node1->x;
         cross_y = other->a * cross_x + other->b;
-        printf("2 sa=%f sb=%f oa=%f ob=%f cx=%f cy=%f\n", self->a, self->b, other->a, other->b, cross_x, cross_y); fflush(stdout);
     } else if (!isfinite(other->a)) {
         cross_x = other->node1->x;
         cross_y = self->a * cross_x + self->b;
-        printf("3 sa=%f sb=%f oa=%f ob=%f cx=%f cy=%f\n", self->a, self->b, other->a, other->b, cross_x, cross_y); fflush(stdout);
     } else if (!tools_quasi_equal(self->a, other->a)) {
         cross_x = (other->b - self->b) / (self->a - other->a);
         cross_y = self->a * cross_x + self->b;
-        printf("4 sa=%f sb=%f oa=%f ob=%f cx=%f cy=%f\n", self->a, self->b, other->a, other->b, cross_x, cross_y); fflush(stdout);
     } else {
         /* Two segments on the same line */
-        printf("5 sa=%f sb=%f oa=%f ob=%f cx=%f cy=%f\n", self->a, self->b, other->a, other->b, cross_x, cross_y); fflush(stdout);
         return tools_quasi_equal(self->b, other->b) &&
                 (tools_is_between(self->node1->x, self->node2->x, other->node1->x) ||
                  tools_is_between(self->node1->x, self->node2->x, other->node2->x));
