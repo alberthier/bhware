@@ -19,7 +19,7 @@ import leds
 import robot
 import opponentdetector
 import trajectory
-import graphpathfinding
+import graphmap
 import commonstates
 import geometry
 import goalmanager
@@ -348,9 +348,7 @@ class EventLoop(object):
         self.opponent_detector = opponentdetector.OpponentDetector(self)
         self.stopping = False
         self.is_match_started = False
-        self.map = trajectory.Map(self)
-        #self.eval_map = trajectory.Map(self)
-        #self.map = graphpathfinding.Map(self)
+        self.map = graphmap.Map(self)
         self.timers = []
         self.last_ka_date = datetime.datetime.now()
         if IS_HOST_DEVICE_ARM:
@@ -409,7 +407,6 @@ class EventLoop(object):
                         channel.packet.dispatch(self.robot)
                         channel.packet.dispatch(self.opponent_detector)
                         channel.packet.dispatch(self.map)
-                        #channel.packet.dispatch(self.eval_map)
                         if self.fsm is not None:
                             channel.packet.dispatch(self.fsm)
 
