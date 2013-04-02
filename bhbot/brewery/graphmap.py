@@ -41,6 +41,14 @@ class Map:
         self.send_to_simulator()
 
 
+    def on_opponent_detected(self, packet, opponent_direction, x, y):
+        pass
+
+
+    def on_opponent_disapeared(self, opponent, opponent_direction):
+        pass
+
+
     def build_module(self):
         pyversion = "python{}.{}{}".format(sys.version_info.major, sys.version_info.minor, sys.abiflags)
         include_dir = sys.exec_prefix + "/include/" + pyversion

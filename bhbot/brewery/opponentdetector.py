@@ -61,7 +61,6 @@ class Opponent(object):
             self.detector.event_loop.send_packet(sim_packet)
 
         self.detector.event_loop.map.on_opponent_detected(packet, self.opponent_direction, self.x, self.y)
-        #self.detector.event_loop.eval_map.on_opponent_detected(packet, self.opponent_direction)
 
         if self.detector.event_loop.fsm is not None:
             if self.opponent_direction is None:
@@ -76,7 +75,6 @@ class Opponent(object):
         previous_direction = self.opponent_direction
         self.opponent_direction = None
         self.detector.event_loop.map.on_opponent_disapeared(self.opponent_type, previous_direction)
-        #self.detector.event_loop.eval_map.on_opponent_disapeared(self.opponent_type, previous_direction)
         if IS_HOST_DEVICE_PC:
             sim_packet = packets.SimulatorOpponentsPositions(robot = self.opponent_type, present = False)
             self.detector.event_loop.send_packet(sim_packet)
