@@ -602,20 +602,22 @@ static PyObject* pathfinder_find_path(PathFinder* self, PyObject* args)
 
         for (i = 0; i < current->edges_count; ++i) {
             Edge* edge = current->edges[i];
-            Node* neighbor = edge_other_node(edge, current);
-            if (!neighbor->is_in_closedset) {
-                float tentative_g_score = current->g_score + pathfinder_effective_cost(self, edge);
-                if (!neighbor->is_in_openset) {
-                    neighbor->h_score = pathfinder_heuristic_cost_estimate(self, neighbor);
-                    neighbor->g_score = tentative_g_score;
-                    neighbor->f_score = neighbor->g_score + neighbor->h_score;
-                    neighbor->came_from = current;
-                    openset = node_list_insert_sorted(openset, neighbor);
-                    neighbor->is_in_openset = 1;
-                } else if (tentative_g_score < neighbor->g_score) {
-                    neighbor->g_score = tentative_g_score;
-                    neighbor->f_score = neighbor->g_score + neighbor->h_score;
-                    neighbor->came_from = current;
+            if (edge->allowed) {
+                Node* neighbor = edge_other_node(edge, current);
+                if (!neighbor->is_in_closedset) {
+                    float tentative_g_score = current->g_score + pathfinder_effective_cost(self, edge);
+                    if (!neighbor->is_in_openset) {
+                        neighbor->h_score = pathfinder_heuristic_cost_estimate(self, neighbor);
+                        neighbor->g_score = tentative_g_score;
+                        neighbor->f_score = neighbor->g_score + neighbor->h_score;
+                        neighbor->came_from = current;
+                        openset = node_list_insert_sorted(openset, neighbor);
+                        neighbor->is_in_openset = 1;
+                    } else if (tentative_g_score < neighbor->g_score) {
+                        neighbor->g_score = tentative_g_score;
+                        neighbor->f_score = neighbor->g_score + neighbor->h_score;
+                        neighbor->came_from = current;
+                    }
                 }
             }
         }
