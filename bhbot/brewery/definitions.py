@@ -110,9 +110,6 @@ else:
 # Brewery's web sever
 WEB_SERVER_PORT                        = 8080
 
-# Use multipoint Goto for navigation
-NAVIGATION_USES_MULTIPOINT             = True
-
 # Use pathfinding algorithm to evaluate the best goal
 GOAL_EVALUATION_USES_PATHFINDING       = True
 

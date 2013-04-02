@@ -5,6 +5,7 @@ import sys
 import packets
 import builder
 import logger
+import position
 
 from definitions import *
 
@@ -20,25 +21,42 @@ class Map:
         self.pathfinder = graphpathfinding.PathFinder(0.1, 0.1, 1.9, 2.9)
 
 
-    def send_to_simulator(self):
+    def route(self, start, end):
+        (cost, path) = self.pathfinder.find_path(start.x, start.y, end.x, end.y)
+        logger.log("Route computed. Cost: {}".format(cost))
+        logger.log(str(path))
+        pose_path = []
+        for (x, y) in path:
+            pose_path.append(position.Pose(x, y))
+        self.send_to_simulator(pose_path)
+        return (cost, pose_path)
+
+
+    def send_to_simulator(self, path):
         logger.log("sending ...")
         if IS_HOST_DEVICE_PC:
             self.event_loop.send_packet(packets.SimulatorClearGraphMapEdges())
             packet = packets.SimulatorGraphMapEdges()
             for v in self.pathfinder.get_edges():
-                logger.log(v)
                 packet.points.append(v)
                 if len(packet.points) == 60:
                     self.event_loop.send_packet(packet)
                     packet.points = []
             if len(packet.points) != 0:
                 self.event_loop.send_packet(packet)
+            if path is not None:
+                points = []
+                for p in path:
+                    points.append(p.x)
+                    points.append(p.y)
+                packet = packets.SimulatorGraphMapRoute(points = points)
+                self.event_loop.send_packet(packet)
 
 
     def on_device_ready(self, packet):
         self.pathfinder.add_zone([(0.5, 0.8), (1.3, 1.0), (0.8, 1.2)])
         self.pathfinder.field_config_done()
-        self.send_to_simulator()
+        self.send_to_simulator(None)
 
 
     def on_opponent_detected(self, packet, opponent_direction, x, y):

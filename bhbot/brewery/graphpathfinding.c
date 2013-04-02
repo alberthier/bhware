@@ -47,6 +47,14 @@ static int tools_is_between(float a, float b, float x)
 }
 
 
+static float tools_distance(float x1, float y1, float x2, float y2)
+{
+    float dx = x2 - x1;
+    float dy = y2 - y1;
+    return sqrt(dx * dx + dy * dy);
+}
+
+
 /*****************************************************************************/
 /* Path finding code                                                         */
 /*****************************************************************************/
@@ -65,6 +73,10 @@ typedef struct _Node
     float f_score;
     struct _Edge** edges;
     int edges_count;
+    int is_in_openset;
+    int is_in_closedset;
+    struct _Node* next;
+    struct _Node* came_from;
 } Node;
 
 
@@ -78,6 +90,10 @@ static Node* node_new(float x, float y)
     self->f_score = 0.0;
     self->edges = NULL;
     self->edges_count = 0;
+    self->is_in_openset = 0;
+    self->is_in_closedset = 0;
+    self->next = NULL;
+    self->came_from = NULL;
     return self;
 }
 
@@ -103,6 +119,48 @@ static void node_add_edge(Node* self, Edge* edge)
 }
 
 
+static Node* node_list_insert_sorted(Node* self, Node* other)
+{
+    Node* previous = NULL;
+    Node* current = NULL;
+
+    /* The list is empty */
+    if (self == NULL) {
+        other->next = NULL;
+        return other;
+    }
+
+    /* Middle of the list */
+    for (current = self; current != NULL; current = current->next) {
+        if (current->f_score >= other->f_score) {
+            if (previous != NULL) {
+                previous->next = other;
+                other->next = current;
+                return self;
+            } else {
+                other->next = self;
+                return other;
+            }
+        }
+        previous = current;
+    }
+
+    /* other is greater than all list items */
+    previous->next = other;
+    other->next = NULL;
+    return self;
+}
+
+
+static Node* node_list_pop(Node* self)
+{
+    Node* popped = self;
+    self = self->next;
+    popped->next = NULL;
+    return self;
+}
+
+
 /* Edge */
 
 typedef struct _Edge
@@ -113,6 +171,7 @@ typedef struct _Edge
     float b;
     int enabled;
     int allowed;
+    float length;
 } Edge;
 
 
@@ -143,6 +202,16 @@ static int edge_links(Edge* self, Node* node1, Node* node2)
 }
 
 
+static Node* edge_other_node(Edge* self, Node* node)
+{
+    if (self->node1 == node) {
+        return self->node2;
+    } else if (self->node2 == node) {
+        return self-> node1;
+    }
+    return NULL;
+}
+
 static void edge_update(Edge* self)
 {
     self->allowed = self->enabled;
@@ -155,6 +224,7 @@ static void edge_update(Edge* self)
         self->a = (self->node2->y - self->node1->y) / (self->node2->x - self->node1->x);
         self->b = self->node1->y - self->a * self->node1->x;
     }
+    self->length = tools_distance(self->node1->x, self->node1->y, self->node2->x, self->node2->y);
 }
 
 
@@ -302,9 +372,9 @@ static int pathfinder_init(PathFinder* self, PyObject* args, PyObject* kwds)
     self->nodes[self->nodes_count++] = node_new(field_x1, field_y2);
     self->nodes[self->nodes_count++] = node_new(field_x2, field_y2);
     self->nodes[self->nodes_count++] = node_new(field_x2, field_y1);
-    self->start_node = node_new(1.0, 0.5);
+    self->start_node = node_new(0.0, 0.0);
     self->nodes[self->nodes_count++] = self->start_node;
-    self->end_node = node_new(1.0, 2.0);
+    self->end_node = node_new(0.0, 0.0);
     self->nodes[self->nodes_count++] = self->end_node;
 
     return 0;
@@ -476,6 +546,85 @@ static PyObject* pathfinder_field_config_done(PathFinder* self)
 }
 
 
+float pathfinder_effective_cost(PathFinder* self, Edge* edge)
+{
+    return edge->length;
+}
+
+
+float pathfinder_heuristic_cost_estimate(PathFinder* self, Node* neighbor)
+{
+    return tools_distance(neighbor->x, neighbor->y, self->end_node->x, self->end_node->y);
+}
+
+
+static PyObject* pathfinder_find_path(PathFinder* self, PyObject* args)
+{
+    int i = 0;
+    Node* openset = self->start_node;
+
+    if (!PyArg_ParseTuple(args, "ffff", &self->start_node->x,
+                                        &self->start_node->y,
+                                        &self->end_node->x,
+                                        &self->end_node->y)) {
+        return NULL;
+    }
+
+    pathfinder_synchronize(self);
+
+    for (i = 0; i < self->nodes_count; ++i) {
+        Node* node = self->nodes[i];
+        node->is_in_openset = 0;
+        node->is_in_closedset = 0;
+    }
+    self->start_node->g_score = 0.0;
+    self->start_node->f_score = 0.0;
+    self->start_node->h_score = 0.0;
+    self->start_node->came_from = NULL;
+    self->start_node->next = NULL;
+    self->start_node->is_in_openset = 1;
+
+    while (openset != NULL) {
+        Node* current = openset;
+        openset = node_list_pop(openset);
+        printf("Openset not null\n"); fflush(stdout);
+        if (current == self->end_node) {
+            float cost = current->f_score;
+            PyObject* path = PyList_New(0);
+            for (; current != NULL; current = current->came_from) {
+                cost += current->f_score;
+                PyList_Insert(path, 0, Py_BuildValue("(ff)", current->x, current->y));
+            }
+            return Py_BuildValue("(fN)", cost, path);
+        }
+        current->is_in_openset = 0;
+        current->is_in_closedset = 1;
+
+        for (i = 0; i < current->edges_count; ++i) {
+            Edge* edge = current->edges[i];
+            Node* neighbor = edge_other_node(edge, current);
+            if (!neighbor->is_in_closedset) {
+                float tentative_g_score = current->g_score + pathfinder_effective_cost(self, edge);
+                if (!neighbor->is_in_openset) {
+                    neighbor->h_score = pathfinder_heuristic_cost_estimate(self, neighbor);
+                    neighbor->g_score = tentative_g_score;
+                    neighbor->f_score = neighbor->g_score + neighbor->h_score;
+                    neighbor->came_from = current;
+                    openset = node_list_insert_sorted(openset, neighbor);
+                    neighbor->is_in_openset = 1;
+                } else if (tentative_g_score < neighbor->g_score) {
+                    neighbor->g_score = tentative_g_score;
+                    neighbor->f_score = neighbor->g_score + neighbor->h_score;
+                    neighbor->came_from = current;
+                }
+            }
+        }
+    }
+    printf("Nothing found :(\n"); fflush(stdout);
+    return Py_BuildValue("(fN)", 0.0, PyList_New(0));
+}
+
+
 /****************************/
 /* Python object definition */
 /****************************/
@@ -486,18 +635,7 @@ static PyMethodDef PathFinder_methods[] = {
     { "add_zone"                         , (PyCFunction) pathfinder_add_zone                         , METH_VARARGS, "Add a zone. Takes a list of points (x, y) as argument" },
     { "field_config_done"                , (PyCFunction) pathfinder_field_config_done                , METH_NOARGS , "Field config done. prepare data for pathfinding requests" },
     { "get_edges"                        , (PyCFunction) pathfinder_get_edges                        , METH_NOARGS , "returns the list of edges [x1, y1, x2, y2, ...]" },
-/*
-    { "find"                             , (PyCFunction) pathfinder_find                             , METH_VARARGS, "Find the route from (x1, y1) to (x2, y2)" },
-    { "find"                             , (PyCFunction) pathfinder_find                             , METH_VARARGS, "Find the route from (x1, y1) to (x2, y2)" },
-    { "add_forbidden_rect"               , (PyCFunction) pathfinder_add_forbidden_rect_zone          , METH_VARARGS, "Add a forbidden rect (x1, y1) to (x2, y2)" },
-    { "add_forbidden_circle"             , (PyCFunction) pathfinder_add_forbidden_circle_zone        , METH_VARARGS, "Add a forbidden circle centered at (x, y), radius r" },
-    { "add_penalized_rect"               , (PyCFunction) pathfinder_add_penalized_rect_zone          , METH_VARARGS, "Add a penalized rect (x1, y1) to (x2, y2) with the given cost" },
-    { "add_penalized_circle"             , (PyCFunction) pathfinder_add_penalized_circle_zone        , METH_VARARGS, "Add a penalized circle centered at (x, y), radius r" },
-    { "set_main_opponent_position"       , (PyCFunction) pathfinder_set_main_opponent_position       , METH_VARARGS, "Sets the main opponent position" },
-    { "clear_main_opponent_position"     , (PyCFunction) pathfinder_clear_main_opponent_position     , METH_NOARGS , "Clears the main opponent position" },
-    { "set_secondary_opponent_position"  , (PyCFunction) pathfinder_set_secondary_opponent_position  , METH_VARARGS, "Sets the secondary opponent position" },
-    { "clear_secondary_opponent_position", (PyCFunction) pathfinder_clear_secondary_opponent_position, METH_NOARGS , "Clears the main opponent position" },
-*/
+    { "find_path"                        , (PyCFunction) pathfinder_find_path                        , METH_VARARGS, "Finds a path from (x1, y1) to (x2, y2)" },
     {NULL}  /* Sentinel */
 };
 

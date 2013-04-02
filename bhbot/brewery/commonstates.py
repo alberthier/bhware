@@ -492,47 +492,27 @@ class Navigate(statemachine.State):
 
 
     def on_enter(self):
-        path = self.event_loop.map.route(self.robot().pose, self.destination)
+        (cost, path) = self.event_loop.map.route(self.robot().pose, self.destination)
+        logger.log(str(path))
         if len(path) == 0:
             self.exit_reason = TRAJECTORY_DESTINATION_UNREACHABLE
             yield None
             return
-        yield Antiblocking(True)
-        if NAVIGATION_USES_MULTIPOINT:
-            yield self.multipoint_walk(path)
+        #yield Antiblocking(True)
+        move = None
+        first_point = path[0]
+        if self.direction == DIRECTION_FORWARDS:
+            if not self.robot().is_looking_at(first_point):
+                move = yield LookAt(DIRECTION_FORWARDS, first_point.virt.x, first_point.virt.y, move)
         else:
-            yield self.monopoint_walk(path)
-        yield Antiblocking(False)
+            if not self.robot().is_looking_at_opposite(first_point):
+                move = yield LookAtOpposite(DIRECTION_FORWARDS, first_point.virt.x, first_point.virt.y, move)
+        move = yield MoveCurve(self.direction, None, path, move)
+        self.exit_reason = move.exit_reason
+        #else:
+            #return self.monopoint_walk(path)
+        #yield Antiblocking(False)
         yield None
-
-
-
-    def multipoint_walk(self, path):
-        move = None
-        for sub_path in path:
-            first_point = sub_path[0]
-            if self.direction == DIRECTION_FORWARDS:
-                if not self.robot().is_looking_at(first_point):
-                    move = yield LookAt(DIRECTION_FORWARDS, first_point.virt.x, first_point.virt.y, move)
-            else:
-                if not self.robot().is_looking_at_opposite(first_point):
-                    move = yield LookAtOpposite(DIRECTION_FORWARDS, first_point.virt.x, first_point.virt.y, move)
-            move = yield MoveCurve(self.direction, None, sub_path, move)
-        self.exit_reason = move.exit_reason
-
-
-    def monopoint_walk(self, path):
-        move = None
-        for sub_path in path:
-            for point in sub_path:
-                if self.direction == DIRECTION_FORWARDS:
-                    if not self.robot().is_looking_at(point):
-                        move = yield LookAt(DIRECTION_FORWARDS, point.virt.x, point.virt.y, move)
-                else:
-                    if not self.robot().is_looking_at_opposite(point):
-                        move = yield LookAtOpposite(DIRECTION_FORWARDS, point.virt.x, point.virt.y, move)
-                move = yield MoveLine(self.direction, [point], move)
-        self.exit_reason = move.exit_reason
 
 
 
