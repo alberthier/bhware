@@ -48,7 +48,7 @@ class StateMachine(object):
         self.return_value = None
         self.logger = None
 
-        self.push_state(root_state)
+        self.process(self.push_state(root_state))
 
 
     def init_state(self, s):
