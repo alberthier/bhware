@@ -29,7 +29,7 @@ static void* array_ensure_capacity_(void* self, size_t item_size, size_t count, 
 
 /* Tools */
 
-#define TOOLS_EPSILON 1e-6
+#define TOOLS_EPSILON 0.001
 
 
 static int tools_quasi_equal(float a, float b)
@@ -41,7 +41,7 @@ static int tools_quasi_equal(float a, float b)
 static int tools_is_between(float a, float b, float x)
 {
     if (tools_quasi_equal(a, x) || tools_quasi_equal(b, x)) {
-        return 0;
+        return 1;
     }
     if (a < b) {
         return a < x && x < b;
@@ -122,6 +122,12 @@ static void node_create_edges_array(Node* self, int size)
 static void node_add_edge(Node* self, Edge* edge)
 {
     self->edges[self->edges_count++] = edge;
+}
+
+
+static int node_coords_equal(Node* self, Node* other)
+{
+    return tools_quasi_equal(self->x, other->x) && tools_quasi_equal(self->y, other->y);
 }
 
 
@@ -221,7 +227,7 @@ static Node* edge_other_node(Edge* self, Node* node)
 
 static void edge_update(Edge* self)
 {
-    self->allowed = !self->zone_internal && self->node1->enabled && self->node2->enabled;
+    self->allowed = (!self->zone_internal) && self->node1->enabled && self->node2->enabled;
     if (self->allowed) {
         if (tools_quasi_equal(self->node1->x, self->node2->x)) {
             /* Vertical edge */
@@ -268,11 +274,17 @@ static int edge_intersects(Edge* self, Edge* other)
     if ( self->node1 == other->node1 || self->node1 == other->node2 || self->node2 == other->node1 || self->node2 == other->node2) {
         return 0;
     }
+    if (node_coords_equal(self->node1, other->node1) ||
+        node_coords_equal(self->node1, other->node2) ||
+        node_coords_equal(self->node2, other->node1) ||
+        node_coords_equal(self->node2, other->node2)) {
+        return 0;
+    }
     if (!isfinite(self->a) && !isfinite(other->a)) {
         /* Two vertical lines */
         return tools_quasi_equal(self->node1->x, other->node1->x) &&
-                (tools_is_between(self->node1->y, self->node2->y, other->node1->y) ||
-                 tools_is_between(self->node1->y, self->node2->y, other->node2->y));
+                (edge_contains(self, other->node1->x, other->node1->y) ||
+                 edge_contains(self, other->node2->x, other->node2->y));
     }
     if (!isfinite(self->a)) {
         cross_x = self->node1->x;
@@ -636,13 +648,11 @@ static PyObject* pathfinder_field_config_done(PathFinder* self)
     /* Mark zones internal edges */
     for (i = 0; i < self->edges_count; ++i) {
         Edge* edge = self->edges[i];
-        if (!edge->zone_internal) {
-            for (j = 0; j < self->zones_count; ++j) {
-                Zone* zone = self->zones[j];
-                if (zone_is_internal_edge(zone, edge)) {
-                    edge->zone_internal = 1;
-                    break;
-                }
+        for (j = 0; j < self->zones_count; ++j) {
+            Zone* zone = self->zones[j];
+            if (zone_is_internal_edge(zone, edge)) {
+                edge->zone_internal = 1;
+                break;
             }
         }
     }
@@ -696,7 +706,6 @@ static PyObject* pathfinder_find_path(PathFinder* self, PyObject* args)
     while (openset != NULL) {
         Node* current = openset;
         openset = node_list_pop(openset);
-        printf("Openset not null\n"); fflush(stdout);
         if (current == self->end_node) {
             float cost = current->f_score;
             PyObject* path = PyList_New(0);
@@ -731,7 +740,6 @@ static PyObject* pathfinder_find_path(PathFinder* self, PyObject* args)
             }
         }
     }
-    printf("Nothing found :(\n"); fflush(stdout);
     return Py_BuildValue("(fN)", 0.0, PyList_New(0));
 }
 

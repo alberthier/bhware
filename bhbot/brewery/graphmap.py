@@ -26,10 +26,12 @@ class Map:
         radius = 0.5 + ROBOT_GYRATION_RADIUS
         npoints = 6
         angles = []
-        angles.append(-13 * math.pi / 32)
+        angles.append(-math.pi / 2.0)
+        angles.append(-13 * math.pi / 32.0)
         for i in range(npoints - 2):
             angles.append(-math.pi / 2.0 + float(i + 1) * math.pi / float(npoints - 1))
-        angles.append(13 * math.pi / 32)
+        angles.append(13 * math.pi / 32.0)
+        angles.append(math.pi / 2.0)
         for a in angles:
             x = math.cos(a) * radius
             y = 1.5 + math.sin(a) * radius
@@ -43,17 +45,16 @@ class Map:
         else:
             self.teammate_zone = self.add_circular_zone(0.130 + ROBOT_GYRATION_RADIUS)
 
-        self.pathfinder.move_zone(self.main_opponent_zone, 0.2, 0.3)
-        self.pathfinder.move_zone(self.secondary_opponent_zone, 1.5, 2.5)
-        self.pathfinder.move_zone(self.teammate_zone, 0.5, 2.3)
+        self.pathfinder.move_zone(self.main_opponent_zone, 1.4, 0.3)
+        self.pathfinder.move_zone(self.secondary_opponent_zone, 1.4, 0.6)
+        self.pathfinder.move_zone(self.teammate_zone, 1.5, 2.4)
 
         self.pathfinder.field_config_done()
 
 
     def add_circular_zone(self, radius):
         coords = []
-        # Prefer odd values for number of points to avoid corner cases where zone nodes are aligned
-        npoints = 9
+        npoints = 8
         for i in range(npoints):
             a = float(i) * 2.0 * math.pi / float(npoints)
             x = math.cos(a) * radius
