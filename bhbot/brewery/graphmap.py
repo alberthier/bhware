@@ -7,6 +7,7 @@ import builder
 import logger
 import position
 import math
+import datetime
 
 from definitions import *
 
@@ -45,11 +46,11 @@ class Map:
         else:
             self.teammate_zone = self.add_circular_zone(0.130 + ROBOT_GYRATION_RADIUS)
 
-        self.pathfinder.move_zone(self.main_opponent_zone, 1.4, 0.3)
-        self.pathfinder.move_zone(self.secondary_opponent_zone, 1.4, 0.6)
-        self.pathfinder.move_zone(self.teammate_zone, 1.5, 2.4)
-
         self.pathfinder.field_config_done()
+
+        self.pathfinder.enable_zone(self.main_opponent_zone, False)
+        self.pathfinder.enable_zone(self.secondary_opponent_zone, False)
+        self.pathfinder.enable_zone(self.teammate_zone, False)
 
 
     def add_circular_zone(self, radius):
@@ -64,8 +65,11 @@ class Map:
 
 
     def route(self, start, end):
+        logger.log("Compute route from ({}, {}) to ({}, {})".format(start.x, start.y, end.x, end.y))
+        start_date = datetime.datetime.now()
         (cost, path) = self.pathfinder.find_path(start.x, start.y, end.x, end.y)
-        logger.log("Route computed. Cost: {}".format(cost))
+        delta = datetime.datetime.now() - start_date
+        logger.log("Route computed. Cost: {}. compuation time: {}".format(cost, delta.total_seconds()))
         logger.log(str(path))
         pose_path = []
         for (x, y) in path:

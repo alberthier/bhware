@@ -377,6 +377,44 @@ static int zone_is_internal_edge(Zone* self, Edge* edge)
     return node1InZone && node2InZone;
 }
 
+
+static int zone_contains_node(Zone* self, Node* node)
+{
+    /* WARNING ! This function works only for convex polygon zones */
+
+    Node* node1 = NULL;
+    Node* node2 = NULL;
+    int i = 0;
+    int sign = 0;
+    int k = 0;
+    float dx1 = 0.0;
+    float dy1 = 0.0;
+    float dx2 = 0.0;
+    float dy2 = 0.0;
+    float cross_product = 0.0;
+
+    node1 = self->nodes[self->nodes_count - 1];
+    for (i = 0; i < self->nodes_count; ++i) {
+        node2 = self->nodes[i];
+        if (node1 == node) {
+            return 0;
+        }
+        dx1 = node2->x - node1->x;
+        dy1 = node2->y - node1->y;
+        dx2 = node->x - node1->x;
+        dy2 = node->y - node1->y;
+        cross_product = dx1 * dy2 - dy1 * dx2;
+        k = cross_product >= 0.0 ? 1 : -1;
+        if (sign == 0) {
+            sign = k;
+        } else if (sign != k) {
+            return 0;
+        }
+        node1 = node2;
+    }
+    return 1;
+}
+
 /* Pathfinder methods */
 
 typedef struct _PathFinder
@@ -577,6 +615,19 @@ static void pathfinder_synchronize(PathFinder* self)
         }
         zone->dx = 0.0;
         zone->dy = 0.0;
+    }
+    /* Remove nodes in a zone*/
+    for (i = 0; i < self->nodes_count; ++i) {
+        Node* node = self->nodes[i];
+        if (node->enabled) {
+            for (j = 0; j < self->zones_count; ++j) {
+                Zone* zone = self->zones[j];
+                if (zone_contains_node(zone, node)) {
+                    node->enabled = 0;
+                    break;
+                }
+            }
+        }
     }
     /* Start node is always enabled */
     self->start_node->enabled = 1;
