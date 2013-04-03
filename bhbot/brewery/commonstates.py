@@ -64,26 +64,37 @@ class SetupPositionControl(statemachine.State):
 
 
 
-class WaitPacket(statemachine.State):
-    def __init__(self, packet_class):
-        logger.log('Waiting for packet type {}'.format(packet_class.__name__))
-        self.packet_class = packet_class
+class WaitPackets(statemachine.State):
+
+    def __init__(self, *args):
+        self.packet_classes = [ pc for pc in args ]
+
 
     def on_packet(self, packet):
-        if isinstance(packet, self.packet_class):
-            logger.log("Got expected packet, exiting state")
-            yield None
+        for i in range(len(self.packet_classes)):
+            if isinstance(packet, self.packet_classes[i]):
+                del self.packet_classes[i]
+                if len(self.packet_classes) == 0:
+                    yield None
+                    return
+                break
+
+
+
 
 class SendPacketAndWait(statemachine.State):
+
     def __init__(self, packet_to_send, packet_class_to_wait):
         super().__init__()
         self.packet_to_send = packet_to_send
         self.packet_class_to_wait = packet_class_to_wait
 
+
     def on_enter(self):
         logger.log("Sending packet {}".format(self.packet_to_send))
         self.send_packet(self.packet_to_send)
         logger.log('Waiting for packet type {}'.format(self.packet_class_to_wait.__name__))
+
 
     def on_packet(self, packet):
         if isinstance(packet, self.packet_class_to_wait):
