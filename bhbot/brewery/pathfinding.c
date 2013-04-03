@@ -657,12 +657,14 @@ PyMODINIT_FUNC PyInit_pathfinding(void)
 {
     PyObject* m;
 
-    if (PyType_Ready(&PathFinderType) < 0)
-        return;
+    if (PyType_Ready(&PathFinderType) < 0) {
+        return NULL;
+    }
 
     m = PyModule_Create(&pathfindingmodule);
-    if (m == NULL)
+    if (m == NULL) {
         return NULL;
+    }
 
     Py_INCREF(&PathFinderType);
     PyModule_AddObject(m, "PathFinder", (PyObject*) &PathFinderType);
