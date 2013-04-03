@@ -6,6 +6,7 @@ import packets
 import builder
 import logger
 import position
+import math
 
 from definitions import *
 
@@ -18,7 +19,47 @@ class Map:
         self.event_loop = event_loop
         self.build_module()
         import graphpathfinding
-        self.pathfinder = graphpathfinding.PathFinder(0.1, 0.1, 1.9, 2.9)
+        self.pathfinder = graphpathfinding.PathFinder(ROBOT_GYRATION_RADIUS, ROBOT_GYRATION_RADIUS, 2.0 - ROBOT_GYRATION_RADIUS, 3.0 - ROBOT_GYRATION_RADIUS)
+
+        # Half cake
+        coords = []
+        radius = 0.5 + ROBOT_GYRATION_RADIUS
+        npoints = 6
+        angles = []
+        angles.append(-13 * math.pi / 32)
+        for i in range(npoints - 2):
+            angles.append(-math.pi / 2.0 + float(i + 1) * math.pi / float(npoints - 1))
+        angles.append(13 * math.pi / 32)
+        for a in angles:
+            x = math.cos(a) * radius
+            y = 1.5 + math.sin(a) * radius
+            coords.append((x, y))
+        self.pathfinder.add_zone(coords)
+
+        self.main_opponent_zone = self.add_circular_zone(0.130 + ROBOT_GYRATION_RADIUS)
+        self.secondary_opponent_zone = self.add_circular_zone(0.080 + ROBOT_GYRATION_RADIUS)
+        if IS_MAIN_ROBOT:
+            self.teammate_zone = self.add_circular_zone(0.080 + ROBOT_GYRATION_RADIUS)
+        else:
+            self.teammate_zone = self.add_circular_zone(0.130 + ROBOT_GYRATION_RADIUS)
+
+        self.pathfinder.move_zone(self.main_opponent_zone, 0.2, 0.3)
+        self.pathfinder.move_zone(self.secondary_opponent_zone, 1.5, 2.5)
+        self.pathfinder.move_zone(self.teammate_zone, 0.5, 2.3)
+
+        self.pathfinder.field_config_done()
+
+
+    def add_circular_zone(self, radius):
+        coords = []
+        # Prefer odd values for number of points to avoid corner cases where zone nodes are aligned
+        npoints = 9
+        for i in range(npoints):
+            a = float(i) * 2.0 * math.pi / float(npoints)
+            x = math.cos(a) * radius
+            y = math.sin(a) * radius
+            coords.append((x, y))
+        return self.pathfinder.add_zone(coords)
 
 
     def route(self, start, end):
@@ -53,12 +94,6 @@ class Map:
                 self.event_loop.send_packet(packet)
 
 
-    def on_device_ready(self, packet):
-        self.pathfinder.add_zone([(0.5, 0.8), (1.3, 1.0), (0.8, 1.2)])
-        self.pathfinder.field_config_done()
-        self.send_to_simulator(None)
-
-
     def on_opponent_detected(self, packet, opponent_direction, x, y):
         pass
 
@@ -77,8 +112,7 @@ class Map:
         output_file = "graphpathfinding.so"
         exe = "gcc"
 
-        #params = ["-O2", "-shared", "-fPIC", "-o", output_file, "-I" + include_dir, "-L" + lib_dir, source_file, "-l" + pyversion]
-        params = ["-g", "-shared", "-fPIC", "-o", output_file, "-I" + include_dir, "-L" + lib_dir, source_file, "-l" + pyversion]
+        params = ["-O2", "-shared", "-Wall", "-fPIC", "-o", output_file, "-I" + include_dir, "-L" + lib_dir, source_file, "-l" + pyversion]
 
         if sys.platform == "darwin" :
             params = ["-dynamiclib"] + params

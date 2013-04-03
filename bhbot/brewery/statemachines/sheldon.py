@@ -40,8 +40,7 @@ class Main(statemachine.State):
         #move = yield MoveArc(DIRECTION_FORWARDS, Pose(1.5, 0.0), 0.5, [0.0, math.pi], move)
 
     def on_start(self, packet):
-        yield Timer(5000)
-        move = yield MoveCurve(DIRECTION_FORWARDS, 0.0, [Pose(0.5, 1.0), Pose(0.3, 1.6)])
+        move = yield Navigate(1.0, 2.5)
         logger.log(move.exit_reason)
 
 

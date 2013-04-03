@@ -12,6 +12,7 @@
 #define array_capacity(count) (((count / ARRAY_CHUNK_CAPACITY) + (count % ARRAY_CHUNK_CAPACITY > 0)) * ARRAY_CHUNK_CAPACITY)
 #define array_new(type, count) (type*) malloc(array_capacity(count) * sizeof(type))
 
+
 static void* array_ensure_capacity_(void* self, size_t item_size, size_t count, size_t required)
 {
     size_t current_capacity = array_capacity(count);
@@ -22,6 +23,7 @@ static void* array_ensure_capacity_(void* self, size_t item_size, size_t count, 
     return self;
 }
 
+
 #define array_ensure_capacity(self, type, count, required) (type*) array_ensure_capacity_(self, sizeof(type), count, required)
 
 
@@ -29,10 +31,12 @@ static void* array_ensure_capacity_(void* self, size_t item_size, size_t count, 
 
 #define TOOLS_EPSILON 1e-6
 
+
 static int tools_quasi_equal(float a, float b)
 {
     return fabs(a - b) < TOOLS_EPSILON;
 }
+
 
 static int tools_is_between(float a, float b, float x)
 {
@@ -75,6 +79,7 @@ typedef struct _Node
     int edges_count;
     int is_in_openset;
     int is_in_closedset;
+    int enabled;
     struct _Node* next;
     struct _Node* came_from;
 } Node;
@@ -92,6 +97,7 @@ static Node* node_new(float x, float y)
     self->edges_count = 0;
     self->is_in_openset = 0;
     self->is_in_closedset = 0;
+    self->enabled = 1;
     self->next = NULL;
     self->came_from = NULL;
     return self;
@@ -169,9 +175,9 @@ typedef struct _Edge
     Node* node2;
     float a;
     float b;
-    int enabled;
     int allowed;
     float length;
+    int zone_internal;
 } Edge;
 
 
@@ -183,8 +189,9 @@ static Edge* edge_new(Node* node1, Node* node2)
     self->node2 = node2;
     self->a = INFINITY;
     self->b = INFINITY;
-    self->enabled = 1;
     self->allowed = 1;
+    self->length = 0.0;
+    self->zone_internal = 0;
 
     return self;
 }
@@ -214,17 +221,19 @@ static Node* edge_other_node(Edge* self, Node* node)
 
 static void edge_update(Edge* self)
 {
-    self->allowed = self->enabled;
-    if (tools_quasi_equal(self->node1->x, self->node2->x)) {
-        /* Vertical edge */
-        self->a = INFINITY;
-        self->b = INFINITY;
-    } else {
-        /* General case */
-        self->a = (self->node2->y - self->node1->y) / (self->node2->x - self->node1->x);
-        self->b = self->node1->y - self->a * self->node1->x;
+    self->allowed = !self->zone_internal && self->node1->enabled && self->node2->enabled;
+    if (self->allowed) {
+        if (tools_quasi_equal(self->node1->x, self->node2->x)) {
+            /* Vertical edge */
+            self->a = INFINITY;
+            self->b = INFINITY;
+        } else {
+            /* General case */
+            self->a = (self->node2->y - self->node1->y) / (self->node2->x - self->node1->x);
+            self->b = self->node1->y - self->a * self->node1->x;
+        }
+        self->length = tools_distance(self->node1->x, self->node1->y, self->node2->x, self->node2->y);
     }
-    self->length = tools_distance(self->node1->x, self->node1->y, self->node2->x, self->node2->y);
 }
 
 
@@ -294,6 +303,8 @@ typedef struct _Zone
     int nodes_count;
     int id;
     int enabled;
+    float dx;
+    float dy;
 } Zone;
 
 
@@ -302,13 +313,15 @@ static Zone* zone_new(int id, PyObject* points_list)
     Zone* self = (Zone*) malloc(sizeof(Zone));
     PyObject* iterator = PyObject_GetIter(points_list);
     PyObject* item = NULL;
+    self->nodes = (Node**) malloc(PySequence_Length(points_list) * sizeof(Node*));
+    self->edges = (Edge**) malloc(PySequence_Length(points_list) * sizeof(Edge*));
+    self->nodes_count = 0;
     self->id = id;
     self->enabled = 1;
-    self->nodes = (Node**) malloc(PySequence_Length(points_list) * sizeof(Node*));
-    self->nodes_count = 0;
-    self->edges = (Edge**) malloc(PySequence_Length(points_list) * sizeof(Edge*));
+    self->dx = 0.0;
+    self->dy = 0.0;
 
-    while (item = PyIter_Next(iterator)) {
+    while ((item = PyIter_Next(iterator))) {
         float x = 0.0;
         float y = 0.0;
         if (!PyArg_ParseTuple(item, "ff", &x, &y)) {
@@ -332,11 +345,35 @@ static void zone_free(Zone* self)
 }
 
 
+static int zone_is_internal_edge(Zone* self, Edge* edge)
+{
+    int i;
+    int node1InZone = 0;
+    int node2InZone = 0;
+    Node* previous_node = self->nodes[self->nodes_count - 1];
+
+    for (i = 0; i < self->nodes_count; ++i) {
+        Node* node = self->nodes[i];
+        if (edge_links(edge, previous_node, node)) {
+            return 0;
+        }
+        node1InZone |= edge->node1 == node;
+        node2InZone |= edge->node2 == node;
+        previous_node = node;
+    }
+
+    return node1InZone && node2InZone;
+}
+
 /* Pathfinder methods */
 
 typedef struct _PathFinder
 {
     PyObject_HEAD
+    float field_x1;
+    float field_y1;
+    float field_x2;
+    float field_y2;
     int is_field_config_done;
     Node* start_node;
     Node* end_node;
@@ -351,16 +388,12 @@ typedef struct _PathFinder
 
 static int pathfinder_init(PathFinder* self, PyObject* args, PyObject* kwds)
 {
-    float field_x1 = 0.0;
-    float field_y1 = 0.0;
-    float field_x2 = 0.0;
-    float field_y2 = 0.0;
-    if (!PyArg_ParseTuple(args, "ffff", &field_x1, &field_y1, &field_x2, &field_y2)) {
+    if (!PyArg_ParseTuple(args, "ffff", &self->field_x1, &self->field_y1, &self->field_x2, &self->field_y2)) {
         return -1;
     }
 
     self->is_field_config_done = 0;
-    self->nodes = array_new(Node*, 6);
+    self->nodes = array_new(Node*, 2);
     self->nodes_count = 0;
     self->zones = NULL;
     self->zones_count = 0;
@@ -368,10 +401,6 @@ static int pathfinder_init(PathFinder* self, PyObject* args, PyObject* kwds)
     self->edges_count = 0;
 
     /* Field nodes */
-    self->nodes[self->nodes_count++] = node_new(field_x1, field_y1);
-    self->nodes[self->nodes_count++] = node_new(field_x1, field_y2);
-    self->nodes[self->nodes_count++] = node_new(field_x2, field_y2);
-    self->nodes[self->nodes_count++] = node_new(field_x2, field_y1);
     self->start_node = node_new(0.0, 0.0);
     self->nodes[self->nodes_count++] = self->start_node;
     self->end_node = node_new(0.0, 0.0);
@@ -432,6 +461,43 @@ static PyObject* pathfinder_add_zone(PathFinder* self, PyObject* args)
 }
 
 
+static PyObject* pathfinder_enable_zone(PathFinder* self, PyObject* args)
+{
+    int id = 0;
+    int enabled = 0;
+
+    if (!PyArg_ParseTuple(args, "ii", &id, &enabled)) {
+        return NULL;
+    }
+
+    if (id >= 0 && id < self->zones_count) {
+        self->zones[id]->enabled = enabled;
+    }
+
+    Py_RETURN_NONE;
+}
+
+
+static PyObject* pathfinder_move_zone(PathFinder* self, PyObject* args)
+{
+    int id = 0;
+    float dx = 0.0;
+    float dy = 0.0;
+
+    if (!PyArg_ParseTuple(args, "iff", &id, &dx, &dy)) {
+        return NULL;
+    }
+
+    if (id >= 0 && id < self->zones_count) {
+        Zone* zone = self->zones[id];
+        zone->dx += dx;
+        zone->dy += dy;
+    }
+
+    Py_RETURN_NONE;
+}
+
+
 static PyObject* pathfinder_get_edges(PathFinder* self)
 {
     int i = 0;
@@ -456,6 +522,7 @@ static Edge* pathfinder_fetch_edge(PathFinder* self, Node* node1, Node* node2)
 {
     Edge* edge = NULL;
     int i = 0;
+
     for (i = 0; i < self->edges_count; ++i) {
         edge = self->edges[i];
         if (edge_links(edge, node1, node2)) {
@@ -469,11 +536,38 @@ static Edge* pathfinder_fetch_edge(PathFinder* self, Node* node1, Node* node2)
 }
 
 
+static int pathfinder_is_node_in_field(PathFinder* self, Node* node)
+{
+    return tools_is_between(self->field_x1, self->field_x2, node->x) &&
+           tools_is_between(self->field_y1, self->field_y2, node->y);
+}
+
+
 static void pathfinder_synchronize(PathFinder* self)
 {
     int i = 0;
     int j = 0;
     int k = 0;
+
+    /* Remove nodes outside of field */
+    for (i = 0; i < self->nodes_count; ++i) {
+        Node* node = self->nodes[i];
+        node->enabled = pathfinder_is_node_in_field(self, node);
+    }
+    /* Remove nodes of disabled zones. Apply zones translations */
+    for (i = 0; i < self->zones_count; ++i) {
+        Zone* zone = self->zones[i];
+        for (j = 0; j < zone->nodes_count; ++j) {
+            Node* node = zone->nodes[j];
+            node->x += zone->dx;
+            node->y += zone->dy;
+            node->enabled &= zone->enabled;
+        }
+        zone->dx = 0.0;
+        zone->dy = 0.0;
+    }
+    /* Start node is always enabled */
+    self->start_node->enabled = 1;
 
     for (i = 0; i < self->edges_count; ++i) {
         edge_update(self->edges[i]);
@@ -487,7 +581,7 @@ static void pathfinder_synchronize(PathFinder* self)
                 if (zone->enabled) {
                     for (k = 0; k < zone->nodes_count && edge1->allowed; ++k) {
                         Edge* edge2 = zone->edges[k];
-                        if (edge1 != edge2) {
+                        if (edge1 != edge2 && edge2->allowed) {
                             if (edge_intersects(edge1, edge2)) {
                                 edge1->allowed = 0;
                             }
@@ -505,18 +599,19 @@ static PyObject* pathfinder_field_config_done(PathFinder* self)
     int i = 0;
     int j = 0;
     int max_edges = 0;
-    Node* node = NULL;
-    Zone* zone = NULL;
 
     if (self->is_field_config_done) {
         Py_RETURN_NONE;
     }
 
+    /* Number of edges in a graph of N nodes: N * (N - 1) / 2 */
     max_edges = self->nodes_count * (self->nodes_count - 1) / 2;
     self->edges = (Edge**) malloc(max_edges * sizeof(Edge*));
+    /* Create edges arrays on nodes */
     for (i = 0; i < self->nodes_count; ++i) {
         node_create_edges_array(self->nodes[i], self->nodes_count - 1);
     }
+    /* Create all edges */
     for (i = 0; i < self->nodes_count; ++i) {
         Node* node1 = self->nodes[i];
         for (j = 0; j < self->nodes_count; ++j) {
@@ -527,6 +622,7 @@ static PyObject* pathfinder_field_config_done(PathFinder* self)
             }
         }
     }
+    /* Register surrounding edges of each zone */
     for (i = 0; i < self->zones_count; ++i) {
         Zone* zone = self->zones[i];
         Node* previous_node = zone->nodes[zone->nodes_count - 1];
@@ -535,6 +631,19 @@ static PyObject* pathfinder_field_config_done(PathFinder* self)
             Edge* edge = pathfinder_fetch_edge(self, previous_node, node);
             zone->edges[j] = edge;
             previous_node = node;
+        }
+    }
+    /* Mark zones internal edges */
+    for (i = 0; i < self->edges_count; ++i) {
+        Edge* edge = self->edges[i];
+        if (!edge->zone_internal) {
+            for (j = 0; j < self->zones_count; ++j) {
+                Zone* zone = self->zones[j];
+                if (zone_is_internal_edge(zone, edge)) {
+                    edge->zone_internal = 1;
+                    break;
+                }
+            }
         }
     }
 
@@ -635,6 +744,8 @@ static PyObject* pathfinder_find_path(PathFinder* self, PyObject* args)
 /* Object methods */
 static PyMethodDef PathFinder_methods[] = {
     { "add_zone"                         , (PyCFunction) pathfinder_add_zone                         , METH_VARARGS, "Add a zone. Takes a list of points (x, y) as argument" },
+    { "enable_zone"                      , (PyCFunction) pathfinder_enable_zone                      , METH_VARARGS, "Enables/disables a zone identified by id" },
+    { "move_zone"                        , (PyCFunction) pathfinder_move_zone                        , METH_VARARGS, "Moves the zone identified by id of (dx, dy)" },
     { "field_config_done"                , (PyCFunction) pathfinder_field_config_done                , METH_NOARGS , "Field config done. prepare data for pathfinding requests" },
     { "get_edges"                        , (PyCFunction) pathfinder_get_edges                        , METH_NOARGS , "returns the list of edges [x1, y1, x2, y2, ...]" },
     { "find_path"                        , (PyCFunction) pathfinder_find_path                        , METH_VARARGS, "Finds a path from (x1, y1) to (x2, y2)" },
@@ -708,12 +819,14 @@ PyMODINIT_FUNC PyInit_graphpathfinding(void)
 {
     PyObject* m;
 
-    if (PyType_Ready(&PathFinderType) < 0)
-        return;
+    if (PyType_Ready(&PathFinderType) < 0) {
+        return NULL;
+    }
 
     m = PyModule_Create(&graphpathfindingmodule);
-    if (m == NULL)
+    if (m == NULL) {
         return NULL;
+    }
 
     Py_INCREF(&PathFinderType);
     PyModule_AddObject(m, "PathFinder", (PyObject*) &PathFinderType);
