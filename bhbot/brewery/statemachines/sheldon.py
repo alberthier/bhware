@@ -41,6 +41,7 @@ class Main(statemachine.State):
 
     def on_start(self, packet):
         move = yield Navigate(1.0, 2.5)
+        logger.log("elapsed: " + str(self.event_loop.get_elapsed_match_time()))
         logger.log(move.exit_reason)
 
 

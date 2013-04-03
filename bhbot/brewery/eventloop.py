@@ -351,6 +351,7 @@ class EventLoop(object):
         self.map = graphmap.Map(self)
         self.timers = []
         self.last_ka_date = datetime.datetime.now()
+        self.start_date = None
         if IS_HOST_DEVICE_ARM:
             self.colordetector = colordetector.ColorDetector()
             self.colordetector.reinit()
@@ -430,6 +431,7 @@ class EventLoop(object):
 
     def on_start(self, packet):
         self.is_match_started = True
+        self.start_date = datetime.datetime.now()
         Timer(self, MATCH_DURATION_MS, self.on_end_of_match).start()
 
 
@@ -447,6 +449,14 @@ class EventLoop(object):
     def on_end_of_match(self):
         logger.log("End of match. Starting the funny action")
         self.fsm = statemachine.StateMachine(self, self.end_of_match_state)
+
+
+    def get_elapsed_match_time(self):
+        if self.start_date is None:
+            return 0.0
+        delta = datetime.datetime.now() - self.start_date
+        return delta.total_seconds()
+
 
 
     def send_packet(self, packet):
