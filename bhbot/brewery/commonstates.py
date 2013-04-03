@@ -112,8 +112,6 @@ class DefinePosition(statemachine.State):
             self.pose = None
         else:
             self.pose = position.Pose(x, y, angle, True)
-        self.x_sent = False
-        self.y_sent = False
 
 
     def on_enter(self):
@@ -509,7 +507,7 @@ class Navigate(statemachine.State):
             self.exit_reason = TRAJECTORY_DESTINATION_UNREACHABLE
             yield None
             return
-        #yield Antiblocking(True)
+        yield Antiblocking(True)
         move = None
         first_point = path[0]
         if self.direction == DIRECTION_FORWARDS:
@@ -520,9 +518,7 @@ class Navigate(statemachine.State):
                 move = yield LookAtOpposite(DIRECTION_FORWARDS, first_point.virt.x, first_point.virt.y, move)
         move = yield MoveCurve(self.direction, None, path, move)
         self.exit_reason = move.exit_reason
-        #else:
-            #return self.monopoint_walk(path)
-        #yield Antiblocking(False)
+        yield Antiblocking(False)
         yield None
 
 
