@@ -528,3 +528,20 @@ class GotoHome(Navigate):
 
     def __init__(self):
         Navigate.__init__(self, BLUE_START_X, BLUE_START_Y)
+
+
+
+
+class CalibratePosition(statemachine.State):
+
+    def on_device_ready(self, packet):
+        estimated_start_y = 0.5
+        yield DefinePosition(ROBOT_CENTER_X, estimated_start_y, 0.0)
+        yield MoveLine(DIRECTION_FORWARDS, [position.Pose(1.0, estimated_start_y, None, True)])
+        p = position.Pose(0.0, 0.0, math.pi / 2.0, True)
+        yield Rotate(DIRECTION_FORWARDS, p.angle)
+        yield MoveLine(DIRECTION_BACKWARDS, [position.Pose(1.0, 0.0, None, True)])
+        yield DefinePosition(1.0, ROBOT_CENTER_X, math.pi / 2.0)
+        yield MoveLine(DIRECTION_FORWARDS, [position.Pose(1.0, 0.20, None, True)])
+        p = position.Pose(0.0, 0.0, 2.0 * math.pi / 3.0, True)
+        yield Rotate(DIRECTION_FORWARDS, p.angle)
