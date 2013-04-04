@@ -328,7 +328,7 @@ class MoveCurve(AbstractMove):
         poses = []
         for pt in points:
             if isinstance(pt, tuple):
-                poses.append(position.Pose(p[0], p[1], None, True))
+                poses.append(position.Pose(pt[0], pt[1], None, True))
             else:
                 poses.append(pt)
         self.packet = packets.MoveCurve(direction = direction, angle = apose.angle, points = poses)
@@ -342,8 +342,8 @@ class MoveLine(AbstractMove):
         AbstractMove.__init__(self, chained, True)
         poses = []
         for pt in points:
-            if type(p) == tuple:
-                poses.append(position.Pose(p[0], p[1], None, True))
+            if type(pt) == tuple:
+                poses.append(position.Pose(pt[0], pt[1], None, True))
             else:
                 poses.append(pt)
         self.packet = packets.MoveLine(direction = direction, points = poses)
@@ -563,7 +563,7 @@ class GotoHome(Navigate):
 
 class CalibratePosition(statemachine.State):
 
-    def on_device_ready(self, packet):
+    def on_enter(self):
         estimated_start_y = 0.5
         yield DefinePosition(ROBOT_CENTER_X, estimated_start_y, 0.0)
         yield MoveLineTo(1.0, estimated_start_y)
