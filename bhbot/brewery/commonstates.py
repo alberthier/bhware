@@ -501,13 +501,19 @@ class FetchCandleColors(statemachine.State):
     def on_enter(self):
         if IS_HOST_DEVICE_ARM:
             self.colors = self.event_loop.colordetector.invoke("fetch")
+            self.event_loop.colordetector.reinit()
             yield None
         else:
             self.send_packet(packets.SimulatorFetchColors())
 
 
     def on_simulator_fetch_colors(self, packet):
-        self.colors = packet.colors
+        self.colors = {}
+        c = iter(packet.colors)
+        for i in range(8):
+            self.colors["top" + str(i + 1)] = next(c)
+        for i in range(12):
+            self.colors["bottom" + str(i + 1)] = next(c)
         yield None
 
 

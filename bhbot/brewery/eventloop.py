@@ -352,9 +352,8 @@ class EventLoop(object):
         self.timers = []
         self.last_ka_date = datetime.datetime.now()
         self.start_date = None
-        if IS_HOST_DEVICE_ARM:
-            self.colordetector = colordetector.ColorDetector()
-            self.colordetector.reinit()
+        if IS_HOST_DEVICE_ARM and IS_MAIN_ROBOT:
+            self.colordetector = colordetector.ColorDetector(self)
         else:
             self.colordetector = None
 
@@ -419,6 +418,8 @@ class EventLoop(object):
 
     def on_device_ready(self, packet):
         logger.set_team(packet.team)
+        if self.colordetector is not None:
+            self.colordetector.set_team(packet.team)
 
 
     def on_keep_alive(self, packet):

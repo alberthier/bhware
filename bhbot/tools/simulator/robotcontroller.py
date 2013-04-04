@@ -206,11 +206,11 @@ class RobotController(object):
     def on_simulator_fetch_colors(self, packet):
         detect = []
         if self.team == TEAM_BLUE:
-            upper = self.game_controller.game_elements_layer.upper_candles[:5]
-            lower = self.game_controller.game_elements_layer.lower_candles[:6]
+            upper = self.game_controller.game_elements_layer.upper_candles
+            lower = self.game_controller.game_elements_layer.lower_candles
         else:
-            upper = reversed(self.game_controller.game_elements_layer.upper_candles[:-5])
-            lower = reversed(self.game_controller.game_elements_layer.lower_candles[:-6])
+            upper = reversed(self.game_controller.game_elements_layer.upper_candles)
+            lower = reversed(self.game_controller.game_elements_layer.lower_candles)
         for candle in upper:
             detect.append(candle.color == self.team_color)
         for candle in lower:

@@ -20,8 +20,9 @@
 class Rect
 {
 public:
-    Rect(int x_, int y_, int width_, int height_);
+    Rect(std::istream& stream);
 
+    std::string id;
     int x;
     int y;
     int width;
@@ -30,13 +31,10 @@ public:
 };
 
 
-Rect::Rect(int x_, int y_, int width_, int height_) :
-    x(x_),
-    y(y_),
-    width(width_),
-    height(height_),
+Rect::Rect(std::istream& stream) :
     match(false)
 {
+    stream >> id >> x >> y >> width >> height;
 }
 
 
@@ -174,12 +172,7 @@ bool ColorDetector::processLine(std::istream& stream)
 
 void ColorDetector::addZone(std::istream& stream, std::vector<Rect>& zoneRects, std::vector<cv::Mat>& zones)
 {
-    int x = 0;
-    int y = 0;
-    int width = 0;
-    int height = 0;
-    stream >> x >> y >> width >> height;
-    zoneRects.push_back(Rect(x, y, width, height));
+    zoneRects.push_back(Rect(stream));
     updateZones(zoneRects, zones);
 }
 
@@ -254,7 +247,7 @@ std::string ColorDetector::bgrCheck()
 
     bool isCalibRed = calibBlue < calibRed;
 
-    output << '[';
+    output << '{';
     for (size_t i = 0; i < m_detectionZones.size(); ++i) {
         Rect& rect = m_detectionZoneRects[i];
         cv::Mat& image = m_detectionZones[i];
@@ -269,6 +262,7 @@ std::string ColorDetector::bgrCheck()
             rect.match = blue > red;
         }
 
+        output << '\'' << rect.id << "':";
         if (rect.match) {
             output << "True";
         } else {
@@ -278,7 +272,7 @@ std::string ColorDetector::bgrCheck()
             output << ',';
         }
     }
-    output << ']';
+    output << '}';
 
     return output.str();
 }
