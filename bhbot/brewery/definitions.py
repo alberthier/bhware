@@ -31,7 +31,7 @@ SECONDARY_ROBOT_CENTER_Y               = 0.0635
 SECONDARY_ROBOT_GYRATION_RADIUS        = 0.161
 
 # Main start positons (the robot starts 90 degrees rotated that's why *_START_Y use ROBOT_X_SIZE and ROBOT_CENTER_X)
-MAIN_BLUE_START_Y                      = 0.25
+MAIN_BLUE_START_Y                      = 0.21
 MAIN_BLUE_START_X                      = 1.0
 MAIN_BLUE_START_ANGLE                  = math.pi / 2.0
 MAIN_RED_START_X                       = MAIN_BLUE_START_X
@@ -39,8 +39,8 @@ MAIN_RED_START_Y                       = FIELD_Y_SIZE - MAIN_BLUE_START_Y
 MAIN_RED_START_ANGLE                   = -math.pi / 2.0
 
 # Secondary start positons (the robot starts 90 degrees rotated that's why *_START_Y use ROBOT_X_SIZE and ROBOT_CENTER_X)
-SECONDARY_BLUE_START_Y                 = 0.25
-SECONDARY_BLUE_START_X                 = 1.5
+SECONDARY_BLUE_START_Y                 = 0.27
+SECONDARY_BLUE_START_X                 = 1.450
 SECONDARY_BLUE_START_ANGLE             = math.pi / 2.0
 SECONDARY_RED_START_X                  = SECONDARY_BLUE_START_X
 SECONDARY_RED_START_Y                  = FIELD_Y_SIZE - SECONDARY_BLUE_START_Y

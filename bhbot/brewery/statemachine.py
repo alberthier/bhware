@@ -50,6 +50,7 @@ class StateMachine(object):
         s.current_method = None
         s.fsm = self
         s.event_loop = self.event_loop
+        s.robot = self.event_loop.robot
 
 
     @property
@@ -152,10 +153,6 @@ class State(object):
 
     def send_packet(self, packet):
         self.event_loop.send_packet(packet)
-
-
-    def robot(self):
-        return self.event_loop.robot
 
 
     def on_enter(self):

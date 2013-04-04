@@ -108,29 +108,29 @@ class DefinePosition(statemachine.State):
 
     def __init__(self, x = None, y = None, angle = None):
         statemachine.State.__init__(self)
-        if x is None or y is None or angle is None:
-            self.pose = None
-        else:
-            self.pose = position.Pose(x, y, angle, True)
+        self.has_x = x is not None
+        self.has_y = y is not None
+        px = x if self.has_x else 0.0
+        py = y if self.has_y else 0.0
+        pangle = angle if angle is not None else 0.0
+        self.pose = position.Pose(px, py, pangle, True)
 
 
     def on_enter(self):
-        if self.pose is None:
-            self.pose = position.Pose(BLUE_START_X, BLUE_START_Y, BLUE_START_ANGLE, True)
+        if self.has_x:
+            packet = packets.Resettle()
+            packet.axis = AXIS_X
+            packet.position = self.pose.x
+            packet.angle = self.pose.angle
+            yield SendPacketAndWait(packet, packets.Resettle)
 
-        packet = packets.Resettle()
-        packet.axis = AXIS_X
-        packet.position = self.pose.x
-        packet.angle = self.pose.angle
+        if self.has_y is not None:
+            packet = packets.Resettle()
+            packet.axis = AXIS_Y
+            packet.position = self.pose.y
+            packet.angle = self.pose.angle
+            yield SendPacketAndWait(packet, packets.Resettle)
 
-        yield SendPacketAndWait(packet, packets.Resettle)
-
-        packet = packets.Resettle()
-        packet.axis = AXIS_Y
-        packet.position = self.pose.y
-        packet.angle = self.pose.angle
-
-        yield SendPacketAndWait(packet, packets.Resettle)
         yield None
 
 
@@ -184,7 +184,7 @@ class WaitForOpponentLeave(Timer):
             direction = DIRECTION_FORWARDS
             distance = 0.100
 
-        current_pose = self.robot().pose
+        current_pose = self.robot.pose
         x = current_pose.virt.x + math.cos(current_pose.virt.angle) * distance
         y = current_pose.virt.y + math.sin(current_pose.virt.angle) * distance
         packet = packets.MoveLine()
@@ -289,7 +289,7 @@ class LookAt(AbstractMove):
 
 
     def on_enter(self):
-        current_pose = self.robot().pose
+        current_pose = self.robot.pose
         dx = self.pose.x - current_pose.x
         dy = self.pose.y - current_pose.y
         angle = math.atan2(dy, dx)
@@ -308,7 +308,7 @@ class LookAtOpposite(AbstractMove):
 
 
     def on_enter(self):
-        current_pose = self.robot().pose
+        current_pose = self.robot.pose
         dx = self.pose.x - current_pose.x
         dy = self.pose.y - current_pose.y
         angle = math.atan2(dy, dx) + math.pi
@@ -529,7 +529,7 @@ class Navigate(statemachine.State):
 
 
     def on_enter(self):
-        (cost, path) = self.event_loop.map.route(self.robot().pose, self.destination)
+        (cost, path) = self.event_loop.map.route(self.robot.pose, self.destination)
         logger.log(str(path))
         if len(path) == 0:
             self.exit_reason = TRAJECTORY_DESTINATION_UNREACHABLE
@@ -539,11 +539,11 @@ class Navigate(statemachine.State):
         move = None
         first_point = path[0]
         if self.direction == DIRECTION_FORWARDS:
-            if not self.robot().is_looking_at(first_point):
+            if not self.robot.is_looking_at(first_point):
                 logger.log("look at {}".format(first_point))
                 move = yield LookAt(first_point.virt.x, first_point.virt.y, DIRECTION_FORWARDS, move) 
         else:
-            if not self.robot().is_looking_at_opposite(first_point):
+            if not self.robot.is_looking_at_opposite(first_point):
                 move = yield LookAtOpposite(first_point.virt.x, first_point.virt.y, DIRECTION_FORWARDS, move)
         move = yield MoveCurve(None, path, self.direction, move)
         self.exit_reason = move.exit_reason
@@ -564,12 +564,16 @@ class GotoHome(Navigate):
 class CalibratePosition(statemachine.State):
 
     def on_enter(self):
-        estimated_start_y = 0.5
+        if IS_HOST_DEVICE_ARM:
+            estimated_start_y = 1.0
+        else:
+            estimated_start_y = 0.5
         yield DefinePosition(ROBOT_CENTER_X, estimated_start_y, 0.0)
-        yield MoveLineTo(1.0, estimated_start_y)
+        yield MoveLineTo(BLUE_START_X, estimated_start_y)
         yield Rotate(math.pi / 2.0)
-        yield MoveLineTo(1.0, 0.0, DIRECTION_BACKWARDS)
-        yield DefinePosition(1.0, ROBOT_CENTER_X, math.pi / 2.0)
-        yield MoveLineTo(1.0, 0.20)
-        yield LookAt(0.0, 1.5)
+        yield MoveLineTo(BLUE_START_X, 0.0, DIRECTION_BACKWARDS)
+        yield DefinePosition(None, ROBOT_CENTER_X, math.pi / 2.0)
+        yield MoveLineTo(BLUE_START_X, BLUE_START_Y)
+        if IS_MAIN_ROBOT:
+            yield LookAt(0.0, 1.5)
         yield None

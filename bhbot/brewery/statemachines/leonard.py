@@ -18,7 +18,8 @@ from position import *
 class Main(statemachine.State):
 
     def on_device_ready(self, packet):
-        yield DefinePosition()
+        yield CalibratePosition()
+
 
     def on_start(self, packet):
         logger.log("Match started")
