@@ -272,29 +272,28 @@ class AbstractMove(statemachine.State):
 
 class Rotate(AbstractMove):
 
-    def __init__(self, direction, angle, chained = None):
+    def __init__(self, angle, direction = DIRECTION_FORWARDS, chained = None):
         AbstractMove.__init__(self, chained, False)
-        self.packet = packets.Rotate(direction = direction, angle = angle)
+        pose = position.Pose(0.0, 0.0, angle, True)
+        self.packet = packets.Rotate(direction = direction, angle = pose.angle)
 
 
 
 
 class LookAt(AbstractMove):
 
-    def __init__(self, direction, x, y, chained = None):
+    def __init__(self, x, y, direction = DIRECTION_FORWARDS, chained = None):
         AbstractMove.__init__(self, chained, False)
-        self.to_x = x
-        self.to_y = y
-        self.to_direction = direction
+        self.pose = position.Pose(x, y, None, True)
+        self.direction = direction
 
 
     def on_enter(self):
         current_pose = self.robot().pose
-        dest = position.Pose(self.to_x, self.to_y, None, True)
-        dx = dest.virt.x - current_pose.virt.x
-        dy = dest.virt.y - current_pose.virt.y
+        dx = self.pose.x - current_pose.x
+        dy = self.pose.y - current_pose.y
         angle = math.atan2(dy, dx)
-        self.packet = packets.Rotate(direction = self.to_direction, angle = angle)
+        self.packet = packets.Rotate(direction = self.direction, angle = angle)
         return AbstractMove.on_enter(self)
 
 
@@ -302,22 +301,20 @@ class LookAt(AbstractMove):
 
 class LookAtOpposite(AbstractMove):
 
-    def __init__(self, direction, x, y, chained = None):
+    def __init__(self, x, y, direction = DIRECTION_FORWARDS, chained = None):
         AbstractMove.__init__(self, chained, False)
-        self.to_x = x
-        self.to_y = y
-        self.to_direction = direction
+        self.pose = position.Pose(x, y, None, True)
+        self.direction = direction
 
 
     def on_enter(self):
         current_pose = self.robot().pose
-        dest = position.Pose(self.to_x, self.to_y, None, True)
-        dx = dest.virt.x - current_pose.virt.x
-        dy = dest.virt.y - current_pose.virt.y
+        dx = self.pose.x - current_pose.x
+        dy = self.pose.y - current_pose.y
         angle = math.atan2(dy, dx) + math.pi
         if angle > math.pi:
             angle -= 2.0 * math.pi
-        self.packet = packets.Rotate(direction = self.to_direction, angle = angle)
+        self.packet = packets.Rotate(direction = self.direction, angle = angle)
         return AbstractMove.on_enter(self)
 
 
@@ -325,27 +322,52 @@ class LookAtOpposite(AbstractMove):
 
 class MoveCurve(AbstractMove):
 
-    def __init__(self, direction, angle, points, chained = None):
+    def __init__(self, angle, points, direction = DIRECTION_FORWARDS, chained = None):
         AbstractMove.__init__(self, chained, True)
-        self.packet = packets.MoveCurve(direction = direction, angle = angle, points = points)
+        apose = position.Pose(0.0, 0.0, angle, True)
+        poses = []
+        for pt in points:
+            if isinstance(pt, tuple):
+                poses.append(position.Pose(p[0], p[1], None, True))
+            else:
+                poses.append(pt)
+        self.packet = packets.MoveCurve(direction = direction, angle = apose.angle, points = poses)
 
 
 
 
 class MoveLine(AbstractMove):
 
-    def __init__(self, direction, points, chained = None):
+    def __init__(self, points, direction = DIRECTION_FORWARDS, chained = None):
         AbstractMove.__init__(self, chained, True)
-        self.packet = packets.MoveLine(direction = direction, points = points)
+        poses = []
+        for pt in points:
+            if type(p) == tuple:
+                poses.append(position.Pose(p[0], p[1], None, True))
+            else:
+                poses.append(pt)
+        self.packet = packets.MoveLine(direction = direction, points = poses)
 
+
+
+
+class MoveLineTo(MoveLine):
+
+    def __init__(self, x, y, direction = DIRECTION_FORWARDS, chained = None):
+        MoveLine.__init__(self, [position.Pose(x, y, None, True)], direction, chained)
 
 
 
 class MoveArc(AbstractMove):
 
-    def __init__(self, direction, center, radius, points, chained = None):
+    def __init__(self, center_x, center_y, radius, points, direction = DIRECTION_FORWARDS, chained = None):
         AbstractMove.__init__(self, chained, True)
-        self.packet = packets.MoveArc(direction = direction, center = center, radius = radius, points = points)
+        cpose = position.Pose(center_x, center_y, None, True)
+        angles = []
+        for a in points:
+            apose = position.Pose(0.0, 0.0, a, True)
+            angles.append(apose.angle)
+        self.packet = packets.MoveArc(direction = direction, center = cpose, radius = radius, points = angles)
 
 
 
@@ -512,11 +534,12 @@ class Navigate(statemachine.State):
         first_point = path[0]
         if self.direction == DIRECTION_FORWARDS:
             if not self.robot().is_looking_at(first_point):
-                move = yield LookAt(DIRECTION_FORWARDS, first_point.virt.x, first_point.virt.y, move)
+                logger.log("look at {}".format(first_point))
+                move = yield LookAt(first_point.virt.x, first_point.virt.y, DIRECTION_FORWARDS, move) 
         else:
             if not self.robot().is_looking_at_opposite(first_point):
-                move = yield LookAtOpposite(DIRECTION_FORWARDS, first_point.virt.x, first_point.virt.y, move)
-        move = yield MoveCurve(self.direction, None, path, move)
+                move = yield LookAtOpposite(first_point.virt.x, first_point.virt.y, DIRECTION_FORWARDS, move)
+        move = yield MoveCurve(None, path, self.direction, move)
         self.exit_reason = move.exit_reason
         yield Antiblocking(False)
         yield None
@@ -537,11 +560,10 @@ class CalibratePosition(statemachine.State):
     def on_device_ready(self, packet):
         estimated_start_y = 0.5
         yield DefinePosition(ROBOT_CENTER_X, estimated_start_y, 0.0)
-        yield MoveLine(DIRECTION_FORWARDS, [position.Pose(1.0, estimated_start_y, None, True)])
-        p = position.Pose(0.0, 0.0, math.pi / 2.0, True)
-        yield Rotate(DIRECTION_FORWARDS, p.angle)
-        yield MoveLine(DIRECTION_BACKWARDS, [position.Pose(1.0, 0.0, None, True)])
+        yield MoveLineTo(1.0, estimated_start_y)
+        yield Rotate(math.pi / 2.0)
+        yield MoveLineTo(1.0, 0.0, DIRECTION_BACKWARDS)
         yield DefinePosition(1.0, ROBOT_CENTER_X, math.pi / 2.0)
-        yield MoveLine(DIRECTION_FORWARDS, [position.Pose(1.0, 0.20, None, True)])
-        p = position.Pose(0.0, 0.0, 2.0 * math.pi / 3.0, True)
-        yield Rotate(DIRECTION_FORWARDS, p.angle)
+        yield MoveLineTo(1.0, 0.20)
+        yield LookAt(0.0, 1.5)
+        yield None
