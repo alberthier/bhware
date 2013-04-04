@@ -14,6 +14,16 @@ from definitions import *
 
 
 
+class ZoneData:
+
+    def __init__(self, id):
+        self.id = id
+        self.x = 0.0
+        self.y = 0.0
+
+
+
+
 class Map:
 
     def __init__(self, event_loop):
@@ -48,9 +58,9 @@ class Map:
 
         self.pathfinder.field_config_done()
 
-        self.pathfinder.enable_zone(self.main_opponent_zone, False)
-        self.pathfinder.enable_zone(self.secondary_opponent_zone, False)
-        self.pathfinder.enable_zone(self.teammate_zone, False)
+        self.pathfinder.enable_zone(self.main_opponent_zone.id, False)
+        self.pathfinder.enable_zone(self.secondary_opponent_zone.id, False)
+        self.pathfinder.enable_zone(self.teammate_zone.id, False)
 
 
     def add_circular_zone(self, radius):
@@ -61,7 +71,7 @@ class Map:
             x = math.cos(a) * radius
             y = math.sin(a) * radius
             coords.append((x, y))
-        return self.pathfinder.add_zone(coords)
+        return ZoneData(self.pathfinder.add_zone(coords))
 
 
     def route(self, start, end):
@@ -72,7 +82,8 @@ class Map:
         logger.log("Route computed. Cost: {}. compuation time: {}".format(cost, delta.total_seconds()))
         logger.log(str(path))
         pose_path = []
-        for (x, y) in path:
+        # remove start node and convert to poses
+        for (x, y) in path[1:]:
             pose_path.append(position.Pose(x, y))
         self.send_to_simulator(pose_path)
         return (cost, pose_path)
@@ -100,11 +111,24 @@ class Map:
 
 
     def on_opponent_detected(self, packet, opponent_direction, x, y):
-        pass
+        if packet.opponent == OPPONENT_ROBOT_MAIN:
+            opponent = self.main_opponent_zone
+        else:
+            opponent = self.secondary_opponent_zone
+        self.pathfinder.enable_zone(opponent, True)
+        dx = x - opponent.x
+        dy = y - opponent.y
+        opponent.x = x
+        opponent.y = y
+        self.pathfinder.move_zone(opponent, dx, dy)
 
 
     def on_opponent_disapeared(self, opponent, opponent_direction):
-        pass
+        if packet.opponent == OPPONENT_ROBOT_MAIN:
+            opponent = self.main_opponent_zone
+        else:
+            opponent = self.secondary_opponent_zone
+        self.pathfinder.enable_zone(opponent, False)
 
 
     def build_module(self):
