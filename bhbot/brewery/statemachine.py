@@ -34,8 +34,6 @@ def instantiate_state_machine(state_machine_name):
     return (main_state, end_of_match_state)
 
 
-class Stay(object):
-    pass
 
 
 class StateMachine(object):
@@ -45,19 +43,14 @@ class StateMachine(object):
         self.state_history = []
         """:type: self.state_history : list of State"""
         self.event_loop = event_loop
-        self.return_value = None
-        self.logger = None
-
         self.process(self.push_state(root_state))
 
 
     def init_state(self, s):
+        s.current_method = None
         s.fsm = self
         s.event_loop = self.event_loop
 
-    def log(self, s):
-        if self.logger :
-            self.logger.log(s)
 
     @property
     def current_state(self):
@@ -99,69 +92,50 @@ class StateMachine(object):
 
 
     def push_state(self, state):
-        logger.log("Switching to state {new} ({old} -> {new})".format(new=state.name,
-                                                                      old=self.current_state.name if self.current_state
-                                                                            else "" )
-        )
+        logger.log("Switching to state {new} ({old} -> {new})".format(new = state.name,
+                                                                      old = self.current_state.name if self.current_state else "" ))
         self.init_state(state)
         self.state_stack.append(state)
         self.state_history.append(state)
         return state.on_enter()
+
 
     def pop_state(self):
         previous_state = self.current_state
         previous_state.on_exit()
         self.state_stack.pop()
         new_state = self.current_state
-        logger.log("Exiting state {previous} ({previous} -> {current})".format(previous=previous_state.name,
-                                                                               current=new_state.name))
-        
-    def log(self,s):
-        # if not "KeepAlive" in packet.__class__.__name__ :
-        #     logger.log("[{}] {}".format(self.fsm.current_state.name,s))
-        logger.log("[{}] {}".format(self.current_state.name,s))
+        logger.log("Exiting state {previous} ({previous} -> {current})".format(previous = previous_state.name,
+                                                                               current = new_state.name))
 
     def process(self, generator):
         previous_value = None
-    
+        self.current_state.current_method = generator
         while generator:
-
             try:
                 new_state = generator.send(previous_value)
-    
                 # yield None veut dire -> Exit State
-                if new_state:
-                    self.log( 'Got new state to enter : {}'.format(new_state.name))
+                if isinstance(new_state, State):
                     previous_value = None
                     # on_enter can yield a generator
                     self.current_state.current_method = generator
                     generator = self.push_state(new_state)
-                    self.log( "on_enter return value = {}".format(generator))
-                else:
-                    self.log( 'Yield None --> pop')
+                elif new_state is None:
                     previous_value = self.current_state
                     self.pop_state()
                     generator = self.current_state.current_method
-                    self.log( "Generator is {}".format(generator))
             except StopIteration:
-                self.log( 'Generator has stopped, staying in same state, waiting for new packet')
-                break
+                generator = None
+                self.current_state.current_method = None
 
-        
-        
-class FakeEventLoop(object):
-    def send_packet(self, packet):
-        raise Exception("Ooops - don't send a packet from here !")
 
-fsm = None
-event_loop = FakeEventLoop()
 
 
 class State(object):
 
     def __init__(self):
-        self.fsm = fsm
-        self.event_loop = event_loop
+        self.fsm = None
+        self.event_loop = None
         self.short_description = None
         self.current_method = None
 
@@ -169,17 +143,12 @@ class State(object):
     def name(self):
         return self.__class__.__name__
 
-    def log(self, s):
-        """
-        Log to state machine
-        :param s: state machine
-        """
-        self.fsm.log(s)
 
     def get_short_description(self):
         if not self.short_description :
             return self.__doc__
         return self.short_description
+
 
     def send_packet(self, packet):
         self.event_loop.send_packet(packet)
@@ -213,6 +182,5 @@ class State(object):
         pass
 
 
-    #noinspection PyUnusedLocal
     def on_opponent_disapeared(self, opponent, is_in_front):
         pass
