@@ -181,7 +181,7 @@ typedef struct _Edge
     Node* node2;
     float a;
     float b;
-    int allowed;
+    int enabled;
     float length;
     int zone_internal;
 } Edge;
@@ -195,7 +195,7 @@ static Edge* edge_new(Node* node1, Node* node2)
     self->node2 = node2;
     self->a = INFINITY;
     self->b = INFINITY;
-    self->allowed = 1;
+    self->enabled = 1;
     self->length = 0.0;
     self->zone_internal = 0;
 
@@ -227,7 +227,6 @@ static Node* edge_other_node(Edge* self, Node* node)
 
 static void edge_update(Edge* self)
 {
-    self->allowed = (!self->zone_internal) && self->node1->enabled && self->node2->enabled;
     if (tools_quasi_equal(self->node1->x, self->node2->x)) {
         /* Vertical edge */
         self->a = INFINITY;
@@ -557,7 +556,7 @@ static PyObject* pathfinder_get_edges(PathFinder* self)
 
     for (i = 0; i < self->edges_count; ++i) {
         Edge* edge = self->edges[i];
-        if (edge->allowed) {
+        if (edge->enabled) {
             PyList_Append(edge_list, Py_BuildValue("f", edge->node1->x));
             PyList_Append(edge_list, Py_BuildValue("f", edge->node1->y));
             PyList_Append(edge_list, Py_BuildValue("f", edge->node2->x));
@@ -643,19 +642,21 @@ static void pathfinder_synchronize(PathFinder* self)
 
     /* Update edge affine params */
     for (i = 0; i < self->edges_count; ++i) {
-        edge_update(self->edges[i]);
+        Edge* edge = self->edges[i];
+        edge_update(edge);
+        edge->enabled = (!edge->zone_internal) && edge->node1->enabled && edge->node2->enabled;
     }
 
     /* Remove intersecting edges */
     for (i = 0; i < self->edges_count; ++i) {
         Edge* edge1 = self->edges[i];
-        for (j = 0; j < self->zones_count && edge1->allowed; ++j) {
+        for (j = 0; j < self->zones_count && edge1->enabled; ++j) {
             Zone* zone = self->zones[j];
             if (zone->enabled) {
-                for (k = 0; k < zone->nodes_count && edge1->allowed; ++k) {
+                for (k = 0; k < zone->nodes_count && edge1->enabled; ++k) {
                     Edge* edge2 = zone->edges[k];
                     if (edge1 != edge2 && edge_intersects(edge1, edge2)) {
-                        edge1->allowed = 0;
+                        edge1->enabled = 0;
                     }
                 }
             }
@@ -778,7 +779,7 @@ static PyObject* pathfinder_find_path(PathFinder* self, PyObject* args)
 
         for (i = 0; i < current->edges_count; ++i) {
             Edge* edge = current->edges[i];
-            if (edge->allowed) {
+            if (edge->enabled) {
                 Node* neighbor = edge_other_node(edge, current);
                 if (!neighbor->is_in_closedset) {
                     float tentative_g_score = current->g_score + pathfinder_effective_cost(self, edge);
