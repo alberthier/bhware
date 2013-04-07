@@ -228,18 +228,16 @@ static Node* edge_other_node(Edge* self, Node* node)
 static void edge_update(Edge* self)
 {
     self->allowed = (!self->zone_internal) && self->node1->enabled && self->node2->enabled;
-    if (self->allowed) {
-        if (tools_quasi_equal(self->node1->x, self->node2->x)) {
-            /* Vertical edge */
-            self->a = INFINITY;
-            self->b = INFINITY;
-        } else {
-            /* General case */
-            self->a = (self->node2->y - self->node1->y) / (self->node2->x - self->node1->x);
-            self->b = self->node1->y - self->a * self->node1->x;
-        }
-        self->length = tools_distance(self->node1->x, self->node1->y, self->node2->x, self->node2->y);
+    if (tools_quasi_equal(self->node1->x, self->node2->x)) {
+        /* Vertical edge */
+        self->a = INFINITY;
+        self->b = INFINITY;
+    } else {
+        /* General case */
+        self->a = (self->node2->y - self->node1->y) / (self->node2->x - self->node1->x);
+        self->b = self->node1->y - self->a * self->node1->x;
     }
+    self->length = tools_distance(self->node1->x, self->node1->y, self->node2->x, self->node2->y);
 }
 
 
@@ -371,10 +369,14 @@ static int zone_is_internal_edge(Zone* self, Edge* edge)
         }
         node1InZone |= edge->node1 == node;
         node2InZone |= edge->node2 == node;
+        if (node1InZone && node2InZone) {
+            return 1;
+        }
+
         previous_node = node;
     }
 
-    return node1InZone && node2InZone;
+    return 0;
 }
 
 
@@ -599,22 +601,29 @@ static void pathfinder_synchronize(PathFinder* self)
     int j = 0;
     int k = 0;
 
-    /* Remove nodes outside of field */
-    for (i = 0; i < self->nodes_count; ++i) {
-        Node* node = self->nodes[i];
-        node->enabled = pathfinder_is_node_in_field(self, node);
-    }
-    /* Remove nodes of disabled zones. Apply zones translations */
+    /* Apply zone translations */
     for (i = 0; i < self->zones_count; ++i) {
         Zone* zone = self->zones[i];
         for (j = 0; j < zone->nodes_count; ++j) {
             Node* node = zone->nodes[j];
             node->x += zone->dx;
             node->y += zone->dy;
-            node->enabled &= zone->enabled;
         }
         zone->dx = 0.0;
         zone->dy = 0.0;
+    }
+    /* Remove nodes outside of field */
+    for (i = 0; i < self->nodes_count; ++i) {
+        Node* node = self->nodes[i];
+        node->enabled = pathfinder_is_node_in_field(self, node);
+    }
+    /* Remove disabled zones nodes */
+    for (i = 0; i < self->zones_count; ++i) {
+        Zone* zone = self->zones[i];
+        for (j = 0; j < zone->nodes_count; ++j) {
+            Node* node = zone->nodes[j];
+            node->enabled &= zone->enabled;
+        }
     }
     /* Remove nodes in a zone*/
     for (i = 0; i < self->nodes_count; ++i) {
@@ -622,7 +631,7 @@ static void pathfinder_synchronize(PathFinder* self)
         if (node->enabled) {
             for (j = 0; j < self->zones_count; ++j) {
                 Zone* zone = self->zones[j];
-                if (zone_contains_node(zone, node)) {
+                if (zone->enabled && zone_contains_node(zone, node)) {
                     node->enabled = 0;
                     break;
                 }
@@ -632,23 +641,21 @@ static void pathfinder_synchronize(PathFinder* self)
     /* Start node is always enabled */
     self->start_node->enabled = 1;
 
+    /* Update edge affine params */
     for (i = 0; i < self->edges_count; ++i) {
         edge_update(self->edges[i]);
     }
 
+    /* Remove intersecting edges */
     for (i = 0; i < self->edges_count; ++i) {
         Edge* edge1 = self->edges[i];
-        if (edge1->allowed) {
-            for (j = 0; j < self->zones_count && edge1->allowed; ++j) {
-                Zone* zone = self->zones[j];
-                if (zone->enabled) {
-                    for (k = 0; k < zone->nodes_count && edge1->allowed; ++k) {
-                        Edge* edge2 = zone->edges[k];
-                        if (edge1 != edge2 && edge2->allowed) {
-                            if (edge_intersects(edge1, edge2)) {
-                                edge1->allowed = 0;
-                            }
-                        }
+        for (j = 0; j < self->zones_count && edge1->allowed; ++j) {
+            Zone* zone = self->zones[j];
+            if (zone->enabled) {
+                for (k = 0; k < zone->nodes_count && edge1->allowed; ++k) {
+                    Edge* edge2 = zone->edges[k];
+                    if (edge1 != edge2 && edge_intersects(edge1, edge2)) {
+                        edge1->allowed = 0;
                     }
                 }
             }
