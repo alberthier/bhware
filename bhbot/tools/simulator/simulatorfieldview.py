@@ -299,7 +299,9 @@ class GraphicsRobotObject(QObject):
         self.move_animation.start()
 
 
-    def robot_curve(self, x, y, angle):
+    def robot_curve(self, x, y, angle, direction):
+        if direction < 0:
+            angle += math.pi
         rotate_animation = self.create_rotation_animation(angle)
         pos_animation = self.create_linear_animation(x, y)
         rotate_animation.setDuration(pos_animation.duration())
@@ -353,7 +355,7 @@ class GraphicsRobotObject(QObject):
 
 
     def process(self):
-        if self.current_goto_packet is None or len(self.current_goto_packet.points) == 0 or self.stop_requested:
+        if self.current_goto_packet is None or self.current_point_index == len(self.current_goto_packet.points) or self.stop_requested:
             if self.stop_requested:
                 reason = REASON_STOP_REQUESTED
             else:
@@ -367,11 +369,14 @@ class GraphicsRobotObject(QObject):
         else:
             if self.current_point_index != 0:
                 self.layer.robot_controller.send_packet(packets.WaypointReached())
-            p = self.current_goto_packet.points[0]
-            del self.current_goto_packet.points[0]
+            p = self.current_goto_packet.points[self.current_point_index]
             self.current_point_index += 1
             if isinstance(self.current_goto_packet, packets.MoveCurve):
-                self.robot_curve(p.x, p.y, p.angle)
+                if len(self.current_goto_packet.points) == self.current_point_index:
+                    angle = self.current_goto_packet.angle
+                else:
+                    angle = p.angle
+                self.robot_curve(p.x, p.y, angle, self.current_goto_packet.direction)
             elif isinstance(self.current_goto_packet, packets.MoveLine):
                 self.robot_line(p.x, p.y)
             elif isinstance(self.current_goto_packet, packets.MoveArc):

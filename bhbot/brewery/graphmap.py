@@ -79,8 +79,10 @@ class Map:
         start_date = datetime.datetime.now()
         (cost, path) = self.pathfinder.find_path(start.x, start.y, end.x, end.y)
         delta = datetime.datetime.now() - start_date
-        logger.log("Route computed. Cost: {}. compuation time: {}".format(cost, delta.total_seconds()))
-        logger.log(str(path))
+        if len(path) == 0:
+            logger.log("No route found.")
+        else:
+            logger.log("Route computed. Cost: {}. compuation time: {}".format(cost, delta.total_seconds()))
         pose_path = []
         # remove start node and convert to poses
         for (x, y) in path[1:]:

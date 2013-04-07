@@ -525,9 +525,9 @@ class FetchCandleColors(statemachine.State):
 
 class Navigate(statemachine.State):
 
-    def __init__(self, x, y, direction = DIRECTION_FORWARDS):
+    def __init__(self, x, y, angle, direction = DIRECTION_FORWARDS):
         statemachine.State.__init__(self)
-        self.destination = position.Pose(x, y, None, True)
+        self.destination = position.Pose(x, y, angle, True)
         self.direction = direction
         self.exit_reason = TRAJECTORY_DESTINATION_REACHED
 
@@ -549,7 +549,7 @@ class Navigate(statemachine.State):
         else:
             if not self.robot.is_looking_at_opposite(first_point):
                 move = yield LookAtOpposite(first_point.virt.x, first_point.virt.y, DIRECTION_FORWARDS, move)
-        move = yield MoveCurve(None, path, self.direction, move)
+        move = yield MoveCurve(self.destination.angle, path, self.direction, move)
         self.exit_reason = move.exit_reason
         yield Antiblocking(False)
         yield None
