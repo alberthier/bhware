@@ -123,6 +123,8 @@ class DefinePosition(statemachine.State):
             packet.position = self.pose.x
             packet.angle = self.pose.angle
             yield SendPacketAndWait(packet, packets.Resettle)
+            self.robot.pose.x = self.pose.x
+            self.robot.pose.angle = self.pose.angle
 
         if self.has_y is not None:
             packet = packets.Resettle()
@@ -130,6 +132,8 @@ class DefinePosition(statemachine.State):
             packet.position = self.pose.y
             packet.angle = self.pose.angle
             yield SendPacketAndWait(packet, packets.Resettle)
+            self.robot.pose.y = self.pose.y
+            self.robot.pose.angle = self.pose.angle
 
         yield None
 
@@ -564,16 +568,16 @@ class GotoHome(Navigate):
 class CalibratePosition(statemachine.State):
 
     def on_enter(self):
-        if IS_HOST_DEVICE_ARM:
-            estimated_start_y = 1.0
+        if IS_HOST_DEVICE_PC:
+            yield DefinePosition(BLUE_START_X, BLUE_START_Y, math.pi / 2.0)
         else:
-            estimated_start_y = 0.5
-        yield DefinePosition(ROBOT_CENTER_X, estimated_start_y, 0.0)
-        yield MoveLineTo(BLUE_START_X, estimated_start_y)
-        yield Rotate(math.pi / 2.0)
-        yield MoveLineTo(BLUE_START_X, 0.0, DIRECTION_BACKWARDS)
-        yield DefinePosition(None, ROBOT_CENTER_X, math.pi / 2.0)
-        yield MoveLineTo(BLUE_START_X, BLUE_START_Y)
+            estimated_start_y = 1.0
+            yield DefinePosition(ROBOT_CENTER_X, estimated_start_y, 0.0)
+            yield MoveLineTo(BLUE_START_X, estimated_start_y)
+            yield Rotate(math.pi / 2.0)
+            yield MoveLineTo(BLUE_START_X, 0.0, DIRECTION_BACKWARDS)
+            yield DefinePosition(None, ROBOT_CENTER_X, math.pi / 2.0)
+            yield MoveLineTo(BLUE_START_X, BLUE_START_Y)
         if IS_MAIN_ROBOT:
             yield LookAt(0.0, 1.5)
         yield None
