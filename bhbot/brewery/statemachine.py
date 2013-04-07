@@ -47,7 +47,7 @@ class StateMachine(object):
 
 
     def init_state(self, s):
-        s.current_method = None
+        s.fsm_current_method = None
         s.fsm = self
         s.event_loop = self.event_loop
         s.robot = self.event_loop.robot
@@ -111,44 +111,30 @@ class StateMachine(object):
 
     def process(self, generator):
         previous_value = None
-        self.current_state.current_method = generator
         while generator:
             try:
                 new_state = generator.send(previous_value)
-                # yield None veut dire -> Exit State
                 if isinstance(new_state, State):
                     previous_value = None
                     # on_enter can yield a generator
-                    self.current_state.current_method = generator
+                    self.current_state.fsm_current_method = generator
                     generator = self.push_state(new_state)
                 elif new_state is None:
+                    # yield None means exit current State
                     previous_value = self.current_state
                     self.pop_state()
-                    generator = self.current_state.current_method
+                    generator = self.current_state.fsm_current_method
             except StopIteration:
                 generator = None
-                self.current_state.current_method = None
 
 
 
 
 class State(object):
 
-    def __init__(self):
-        self.fsm = None
-        self.event_loop = None
-        self.short_description = None
-        self.current_method = None
-
     @property
     def name(self):
         return self.__class__.__name__
-
-
-    def get_short_description(self):
-        if not self.short_description :
-            return self.__doc__
-        return self.short_description
 
 
     def send_packet(self, packet):
@@ -176,8 +162,4 @@ class State(object):
 
 
     def on_opponent_disapeared(self, opponent, opponent_direction):
-        pass
-
-
-    def on_opponent_disapeared(self, opponent, is_in_front):
         pass
