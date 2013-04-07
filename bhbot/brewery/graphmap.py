@@ -111,24 +111,24 @@ class Map:
 
 
     def on_opponent_detected(self, packet, opponent_direction, x, y):
-        if packet.opponent == OPPONENT_ROBOT_MAIN:
+        if packet.robot == OPPONENT_ROBOT_MAIN:
             opponent = self.main_opponent_zone
         else:
             opponent = self.secondary_opponent_zone
-        self.pathfinder.enable_zone(opponent, True)
+        self.pathfinder.enable_zone(opponent.id, True)
         dx = x - opponent.x
         dy = y - opponent.y
         opponent.x = x
         opponent.y = y
-        self.pathfinder.move_zone(opponent, dx, dy)
+        self.pathfinder.move_zone(opponent.id, dx, dy)
 
 
     def on_opponent_disapeared(self, opponent, opponent_direction):
-        if packet.opponent == OPPONENT_ROBOT_MAIN:
+        if packet.robot == OPPONENT_ROBOT_MAIN:
             opponent = self.main_opponent_zone
         else:
             opponent = self.secondary_opponent_zone
-        self.pathfinder.enable_zone(opponent, False)
+        self.pathfinder.enable_zone(opponent.id, False)
 
 
     def build_module(self):
