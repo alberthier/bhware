@@ -795,7 +795,7 @@ class SimulatorFetchColors(BasePacket):
     LOGVIEW_DEFAULT_ENABLED = False
     LOGVIEW_COLOR = "#ba55d3"
     DEFINITION = (
-        ('colors', List(20, Bool(False), [], "Detections")),
+        ('colors', List(20, Struct(StructInstance, "", ('index', UInt8(0)), ('detect', Bool(False))), [], "Detections")),
     )
 
 

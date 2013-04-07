@@ -513,11 +513,11 @@ class FetchCandleColors(statemachine.State):
 
     def on_simulator_fetch_colors(self, packet):
         self.colors = {}
-        c = iter(packet.colors)
-        for i in range(8):
-            self.colors["top" + str(i + 1)] = next(c)
-        for i in range(12):
-            self.colors["bottom" + str(i + 1)] = next(c)
+        for s in packet.colors:
+            if s.index >= 100:
+                self.colors["top" + str(s.index - 100)] = s.detect
+            else:
+                self.colors["bottom" + str(s.index)] = s.detect
         yield None
 
 

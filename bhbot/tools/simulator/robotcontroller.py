@@ -8,6 +8,7 @@ from PyQt4.QtGui import *
 from PyQt4.QtNetwork import *
 
 import packets
+import binarizer
 from definitions import *
 
 import simulatorfieldview
@@ -211,10 +212,10 @@ class RobotController(object):
         else:
             upper = reversed(self.game_controller.game_elements_layer.upper_candles)
             lower = reversed(self.game_controller.game_elements_layer.lower_candles)
-        for candle in upper:
-            detect.append(candle.color == self.team_color)
-        for candle in lower:
-            detect.append(candle.color == self.team_color)
+        for i, candle in enumerate(upper):
+            detect.append(binarizer.StructInstance(index = 100 + i, detect = candle.color == self.team_color))
+        for i, candle in enumerate(lower):
+            detect.append(binarizer.StructInstance(index = i, detect = candle.color == self.team_color))
         self.send_packet(packets.SimulatorFetchColors(colors = detect))
 
 
