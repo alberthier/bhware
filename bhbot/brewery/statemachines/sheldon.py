@@ -70,9 +70,14 @@ class Main(statemachine.State):
 
 
     def on_start(self, packet):
-        move = yield Navigate(1.5, 2.4)
-        logger.log("elapsed: " + str(self.event_loop.get_elapsed_match_time()))
-        logger.log(move.exit_reason)
+        detector = yield FetchCandleColors()
+        logger.log("First candles detection: {}".format(detector.colors))
+        self.fsm.cake.update_with_detection(detector.colors)
+        yield Rotate(-math.pi /2.0)
+        yield Navigate(ROBOT_GYRATION_RADIUS, 1.0 - ROBOT_GYRATION_RADIUS, math.pi, DIRECTION_BACKWARDS)
+        yield BlowCandlesOut()
+        #logger.log("elapsed: " + str(self.event_loop.get_elapsed_match_time()))
+        #logger.log(move.exit_reason)
 
 
 
@@ -98,8 +103,8 @@ class BlowCandlesOut(statemachine.State):
         self.exit_reason = move.exit_reason == TRAJECTORY_DESTINATION_REACHED
         if self.exit_reason:
             yield MoveLineTo(0.5, self.robot.pose.virt.y, DIRECTION_BACKWARDS)
-            self.send_packet(packets.CandleKicker(self.side, CANDLE_KICKER_UPPER, CANDLE_KICKER_POSITION_IDLE))
-            self.send_packet(packets.CandleKicker(self.side, CANDLE_KICKER_LOWER, CANDLE_KICKER_POSITION_IDLE))
+            self.send_packet(packets.CandleKicker(side = self.side, which = CANDLE_KICKER_UPPER, position = CANDLE_KICKER_POSITION_IDLE))
+            self.send_packet(packets.CandleKicker(side = self.side, which = CANDLE_KICKER_LOWER, position = CANDLE_KICKER_POSITION_IDLE))
         yield None
 
 
@@ -107,12 +112,12 @@ class BlowCandlesOut(statemachine.State):
         candle = self.candles[self.current]
         self.current += 1
         if candle.to_blow:
-            self.send_packet(packets.CandleKicker(self.side, candle.which, CANDLE_KICKER_POSITION_KICK))
-    
+            self.send_packet(packets.CandleKicker(side = self.side, which = candle.which, position = CANDLE_KICKER_POSITION_KICK))
+
 
     def on_candle_kicker(self, packet):
         if packet.position == CANDLE_KICKER_POSITION_KICK:
-            self.send_packet(packets.CandleKicker(self.side, candle.which, CANDLE_KICKER_POSITION_UP))
+            self.send_packet(packets.CandleKicker(side = self.side, which = candle.which, position = CANDLE_KICKER_POSITION_UP))
 
 
 
