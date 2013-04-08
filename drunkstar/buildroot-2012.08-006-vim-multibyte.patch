@@ -1,0 +1,13 @@
+diff --git a/package/vim/vim.mk b/package/vim/vim.mk
+index 7fed822..14341c3 100644
+--- a/package/vim/vim.mk
++++ b/package/vim/vim.mk
+@@ -20,7 +20,7 @@ VIM_CONF_ENV = vim_cv_toupper_broken=no \
+ 		ac_cv_sizeof_int=4 \
+ 		ac_cv_small_wchar_t=no
+ # GUI/X11 headers leak from the host so forcibly disable them
+-VIM_CONF_OPT = --with-tlib=ncurses --enable-gui=no --without-x
++VIM_CONF_OPT = --enable-multibyte --with-tlib=ncurses --enable-gui=no --without-x
+ 
+ define VIM_INSTALL_TARGET_CMDS
+ 	cd $(@D)/src; \
