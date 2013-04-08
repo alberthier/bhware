@@ -11,7 +11,7 @@
 #include "task_asser.h"
 
 #ifndef TEMPS_SIMULATION
-#define TEMPS_SIMULATION 15 /* secondes */
+#define TEMPS_SIMULATION 12 //15 /* secondes */
 #endif
 
 #define     SIMU_CR     0
@@ -450,96 +450,6 @@ void SIMU_TabGabarit_AddAcceleration(float acceleration)
 }
 
 /**********************************************************************/
-/*! \brief ASSER_TRAJ_GabaritVitesse
- *
- *  \note   Determination du gabarit de la vitesse longitudinale de consigne, dependant de la courbure de trajectoire
- *             et des fonctions d'acceleration et de decceleration.
- *
- *  \param [in]     traj            pointeur de structure definissant la trajectoire
- *
- *  \return           None
- */
-/**********************************************************************/
-void SIMU_GabaritVitesse(Trajectoire * traj)
-{
-    unsigned int    numSegment                      = 1;
-    float           paramPosition                   = 0.0;
-    float           vitesse_consigne                = 0.0;
-    float           vitesse_limite                  = 0.0;
-    float           distanceRestante;
-    unsigned char   flag_finTraj                    = False;
-    float           diffThetaTrajectoire            = 0.0;
-    float           vitesse_consigne_gabarit        = 0.0;
-    float           acceleration_consigne_gabarit   = 0.0;
-    float           vit_ini                         = 0.05;
-    unsigned int    i                               = 0u;
-
-    distanceRestante = traj->distance;
-
-    ASSER_TRAJ_LogAsserValPC("distanceRestante_FD", distanceRestante);
-
-    /* Parcourir la trajectoire en l'echantillonnant sur N pas de distance pas_echantillon_distance */
-    vitesse_consigne = vit_ini;
-
-    SIMU_TabGabarit_AddVitesse(traj->profilVitesse.vmax);
-
-    while (flag_finTraj == 0)
-    {
-        ASSER_TRAJ_ParcoursTrajectoire(traj, traj->profilVitesse.pas_echantillon_distance, &numSegment, &paramPosition, &flag_finTraj);
-        distanceRestante -= traj->profilVitesse.pas_echantillon_distance;
-
-        ASSER_TRAJ_LogAsserValPC("distanceRestante_FD", distanceRestante);
-
-        if (ASSER_TRAJ_isDeplacement(traj) == True)
-        {
-            diffThetaTrajectoire = ASSER_TRAJ_DiffThetaBSplinePerLenghtUnit(traj->segmentTrajBS, numSegment, paramPosition);
-
-            vitesse_limite = ASSER_TRAJ_VitesseLimiteEnVirage(traj, diffThetaTrajectoire);
-
-            vitesse_consigne_gabarit = vitesse_limite;
-        }
-        else
-        {
-            vitesse_consigne_gabarit = vitesse_consigne;
-        }
-
-        if (vitesse_consigne_gabarit < VminMouv)
-        {
-            vitesse_consigne_gabarit = VminMouv;
-        }
-
-        acceleration_consigne_gabarit = (powf(vitesse_consigne_gabarit, 2.0) - powf(g_tab_gabarit_vitesse[g_index_tab_gabarit_vitesse - 1], 2.0)) / (2.0 * traj->profilVitesse.pas_echantillon_distance);
-
-        SIMU_TabGabarit_AddAcceleration(acceleration_consigne_gabarit);
-        SIMU_TabGabarit_AddVitesse(vitesse_consigne_gabarit);
-
-    }
-
-    if (ASSER_TRAJ_isDeplacement(traj) == False)
-    {
-        for(i = 0; i < g_index_tab_gabarit_acceleration; i++)
-        {
-            ASSER_TRAJ_LogAsserValPC("gabarit_acceleration_new", g_tab_gabarit_acceleration[i]);
-            ASSER_TRAJ_LogAsserValPC("gabarit_vitesse_new", g_tab_gabarit_vitesse[i]);
-        }
-    }
-}
-
-extern void SIMU_InitGabaritVitesse(Trajectoire *traj)
-{
-   /* Initialisation du profil de vitessee */
-   traj->profilVitesse.pas_echantillon_distance = (traj->distance * 1000.0) / ((float)(TAILLE_TAB_GABARIT_VITESSE - 1));
-   traj->profilVitesse.pas_echantillon_distance = (floorf(traj->profilVitesse.pas_echantillon_distance) + 1.0) / 1000.0;
-
-   ASSER_TRAJ_LogAsserValPC("pas_ech", traj->profilVitesse.pas_echantillon_distance);
-
-   g_index_tab_gabarit_vitesse = 0;
-   g_index_tab_gabarit_acceleration = 0;
-
-   SIMU_GabaritVitesse(traj);
-}
-
-/**********************************************************************/
 /*! \brief ASSER_TRAJ_AfficheInfoFinAsser
  *
  *  \note   Affiche les info de fin d'asser
@@ -575,22 +485,26 @@ void SIMU_BoucleVitesse(void)
     /* Mesure des instants de saturation du correcteur PI gauche */
     if ((tensionPWM_G < -(OffsetPWM-0.1)) || (tensionPWM_G > (OffsetPWM-0.1)))
     {
-        ASSER_TRAJ_LogAsserValPC("saturationPIgauche", 1.0);
+        /* NOLOG */
+        //ASSER_TRAJ_LogAsserValPC("saturationPIgauche", 1.0);
     }
     else
     {
-        ASSER_TRAJ_LogAsserValPC("saturationPIgauche", 0.0);
+        /* NOLOG */
+        //ASSER_TRAJ_LogAsserValPC("saturationPIgauche", 0.0);
     }
 
     tensionPWM_D = (signed int)SIMU_RegulateurPI_BHT(DROIT, erreurVitesseMoteurD, &integPI_D, KI_DROIT, KP_DROIT, OffsetPWM, TE_PI);
     /* Mesure des instants de saturation du correcteur PI droit */
     if ((tensionPWM_D < -(OffsetPWM-0.1)) || (tensionPWM_D > (OffsetPWM-0.1)))
     {
-        ASSER_TRAJ_LogAsserValPC("saturationPIdroit", 1.0);
+        /* NOLOG */
+        //ASSER_TRAJ_LogAsserValPC("saturationPIdroit", 1.0);
     }
     else
     {
-        ASSER_TRAJ_LogAsserValPC("saturationPIdroit", 0.0);
+        /* NOLOG */
+        //ASSER_TRAJ_LogAsserValPC("saturationPIdroit", 0.0);
     }
 
     /* Reinitialisation des integrales des PI au lancement d'une nouvelle commande d'asser */
@@ -675,6 +589,7 @@ void SIMU_BoucleVitesse(void)
 void SIMU_CalculPeriodique(void)
 {
     int p;
+        /* NOLOG */
         ASSER_TRAJ_LogAsserValPC("ASSER_Running", ASSER_Running);
         asserRunning_ant = ASSER_Running;
         SIMU_REDEF_ASSER_RecoverNbrPas(vitesseMoteurG, vitesseMoteurD, &deltaPasCodeurG, &deltaPasCodeurD);
@@ -687,13 +602,15 @@ void SIMU_CalculPeriodique(void)
 //        #endif
         /* Application de l'asservissement de trajectoire */
         ASSER_TRAJ_AsservissementMouvementRobot(POS_GetPoseAsserRobot(), &vitessesConsignes);
+        ASSER_TRAJ_LogAsserValPC("FinPeriode", ASSER_compteurPeriode);
 
         //if (ASSER_Running == True)
         //{        		        
             POS_ConversionVitessesLongRotToConsignesPWMRouesRobotUnicycle(vitessesConsignes.longitudinale, vitessesConsignes.rotation, &g_ConsigneMoteurG, &g_ConsigneMoteurD);
-            
-         		ASSER_TRAJ_LogAsserValPC("VpiG", ((((float)(g_ConsigneMoteurG - 1023)) * 0.630) / 1023.0));
-         		ASSER_TRAJ_LogAsserValPC("VpiD", ((((float)(g_ConsigneMoteurD - 1023)) * 0.606) / 1023.0));
+
+            /* NOLOG */
+                //ASSER_TRAJ_LogAsserValPC("VpiG", ((((float)(g_ConsigneMoteurG - 1023)) * 0.630) / 1023.0));
+                ASSER_TRAJ_LogAsserValPC("VpiD", ((((float)(g_ConsigneMoteurD - 1023)) * 0.606) / 1023.0));
 
             /***********************************/
             /* Envois des consignes des boucles de vitesse au PIC asser */
@@ -713,11 +630,15 @@ void SIMU_CalculPeriodique(void)
 
 int SIMU_Mouvement(void)
 {
+
     while( ((ASSER_Running == True) || (vitesseMoteurG > 10.1) || (vitesseMoteurD > 10.1)) && (ASSER_compteurPeriode < (unsigned int)(TEMPS_SIMULATION / TE)))
     {
         SIMU_CalculPeriodique();
+#ifdef PLOTS_SIMU
         SIMU_LogRobot();
+#endif /* PLOTS_SIMU */
     }
+
     ASSER_TRAJ_LogAsserValPC("time", ASSER_compteurPeriode * TE);
     /* FIN 1er DEPLACEMENT */
     if (ASSER_Running == True)

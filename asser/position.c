@@ -18,9 +18,6 @@
 #ifdef PIC32_BUILD
 #include "includes.h"
 #include "tools.h"
-#include "position.h"
-#include "HTTPpages.h"
-#include "task_uart.h"
 #ifndef S_SPLINT_S
 #include "math.h"
 #endif /* S_SPLINT_S */
@@ -33,7 +30,7 @@
 #include "pic18.h"
 #include "asserv_trajectoire.h"
 
-/*! \addtogroup Task_Asser
+/*! \addtogroup Asser
  *  @{
  */
 
@@ -66,7 +63,7 @@ float                   GAIN_STATIQUE_MOTEUR_G;                                 
 float                   GAIN_STATIQUE_MOTEUR;
 
 float                   ECART_ROUE_LIBRE        = 0.235;                            /* Ecart entre les roues libres des codeurs incrementaux */
-float                   ECART_ROUE_MOTRICE      = 0.1735;                           /* Entraxe des roues motrices */
+float                   ECART_ROUE_MOTRICE      = 0.1 ; //0.1735;                           /* Entraxe des roues motrices */
 float                   COEFFICIENT_DE_GLISSEMENT_LATERAL = 0.0;
 
 /** Tolerances de la condition d'arret des asservissements */
@@ -251,7 +248,8 @@ extern void POS_Positionnement(signed int delta_impDroite, signed int delta_impG
     VitesseReelleMesure = Delta_moy / TE;
     
 #ifndef PIC32_BUILD 
-    ASSER_TRAJ_LogAsserValPC("VitesseReelleMesure", VitesseReelleMesure);
+    /* NOLOG */
+    //ASSER_TRAJ_LogAsserValPC("VitesseReelleMesure", VitesseReelleMesure);
 #endif /* PIC32_BUILD */ 
 
     Dx = (Delta_moy * cosf(m_poseRobot.angle));
@@ -391,44 +389,78 @@ extern float POS_ErreurOrientation(Pose poseRobot, Vecteur posArrivee)
 /**********************************************************************/
 extern void POS_ConversionVitessesLongRotToConsignesPWMRouesRobotUnicycle(float vitesseLongitudinale, float vitesseAngulaireRotation, unsigned short * consPWMRoueGauche, unsigned short * consPWMRoueDroite)
 {
-    float			vitRoueGauche, vitRoueDroite;
-    float           extra_vitRoueGauche             = -1.0;
-    float           extra_vitRoueDroite             = -1.0;
+    float           vitRoueGauche, vitRoueDroite;
+    float           extra_vitRoueGauche             = - 1.0;
+    float           extra_vitRoueDroite             = - 1.0;
     unsigned short  vitRoueGpwm, vitRoueDpwm;
-		
-    /* Algorithme pour privilegier la vitesse de rotation demandee sur la vitesse longitudinale qui pourra etre diminuee */
-    do
+    unsigned short  cpt = 0;
+
+    if (vitesseLongitudinale > MIN(DonneeVmaxGauche, DonneeVmaxDroite))
     {
+        vitesseLongitudinale = MIN(DonneeVmaxGauche, DonneeVmaxDroite);
+    }
+
+    /* Algorithme pour privilegier la vitesse de rotation demandee sur la vitesse longitudinale qui pourra etre diminuee */
+    //do
+    //{
         vitRoueGauche = (m_sensMarcheMouvement * vitesseLongitudinale) - ((vitesseAngulaireRotation * ECART_ROUE_LIBRE) / 2.0);
-        if (fabs(vitRoueGauche) > DonneeVmaxGauche)
+        if (fabsf(vitRoueGauche) > DonneeVmaxGauche)
         {
-            extra_vitRoueGauche = fabs(vitRoueGauche) - DonneeVmaxGauche;
+            extra_vitRoueGauche = fabsf(vitRoueGauche) - DonneeVmaxGauche;
             vitesseLongitudinale = vitesseLongitudinale - (extra_vitRoueGauche + 0.001);
         }
         else
         {
             extra_vitRoueGauche = -1.0;
         }
+        
         vitRoueDroite = (m_sensMarcheMouvement * vitesseLongitudinale) + ((vitesseAngulaireRotation * ECART_ROUE_LIBRE) / 2.0);
-        if (fabs(vitRoueDroite) > DonneeVmaxDroite)
+        if (fabsf(vitRoueDroite) > DonneeVmaxDroite)
         {
-            extra_vitRoueDroite = fabs(vitRoueDroite) - DonneeVmaxDroite;
-            vitesseLongitudinale = vitesseLongitudinale - (extra_vitRoueDroite + 0.001);
+            extra_vitRoueDroite = fabsf(vitRoueDroite) - DonneeVmaxDroite;
+            vitesseLongitudinale = vitesseLongitudinale - (extra_vitRoueDroite + 0.001);            
         }
         else
         {
             extra_vitRoueDroite = -1.0;
         }
-    } while( (extra_vitRoueGauche > 0.0) || (extra_vitRoueDroite > 0.0) );
 
+        if (vitesseLongitudinale < 0.0)
+        {
+            vitesseLongitudinale = 0.0;
+
+#ifdef PIC32_BUILD
+            //TOOLS_LogFault(AsserPosErr, True, INTEGER, (int *)&iSegment, True, "Asser: depassement du nombre de point possible"); /* TODO : message a adapter au ASSER_TRAJ_LogAsserMsgPC associe */
+#else /* PIC32_BUILD */
+            ASSER_TRAJ_LogAsserMsgPC("Position: ConversionVitesses: vitLong a zero", vitesseLongitudinale);
+#endif /* PIC32_BUILD */
+            return;
+        }
+        vitRoueDroite = (m_sensMarcheMouvement * vitesseLongitudinale) + ((vitesseAngulaireRotation * ECART_ROUE_LIBRE) / 2.0);
+        vitRoueGauche = (m_sensMarcheMouvement * vitesseLongitudinale) - ((vitesseAngulaireRotation * ECART_ROUE_LIBRE) / 2.0);
+
+        /* NOLOG */
+        /*
+        ASSER_TRAJ_LogAsserValPC("vitRoueGauche", vitRoueGauche);
+        ASSER_TRAJ_LogAsserValPC("extra_vitRoueGauche", extra_vitRoueGauche);
+        ASSER_TRAJ_LogAsserValPC("extra_vitRoueDroite", extra_vitRoueDroite);
+        */
+        ASSER_TRAJ_LogAsserValPC("fin_MVT", vitesseLongitudinale);
+        cpt ++;
+    //} while( ((extra_vitRoueGauche > 0.0) || (extra_vitRoueDroite > 0.0)) && (cpt <= 2) );
+
+
+#ifdef PLOTS_SIMU
     ASSER_TRAJ_LogAsserValPC("vitLongitudinaleEffective", vitesseLongitudinale);
     ASSER_TRAJ_LogAsserValPC("VposG", vitRoueGauche);
     ASSER_TRAJ_LogAsserValPC("VposD", vitRoueDroite);
-         		
+#endif
+
     vitRoueGpwm = ((unsigned short)(vitRoueGauche / GAIN_STATIQUE_MOTEUR_G)) + OffsetPWM;
     vitRoueDpwm = ((unsigned short)(vitRoueDroite / GAIN_STATIQUE_MOTEUR_D)) + OffsetPWM;
 
     /* Saturation des consignes PWM de vitesse */
+    
     /* Consigne roue gauche */
     if (vitRoueGpwm < (unsigned short)BORNE_PWM_AR)
     {
@@ -445,6 +477,7 @@ extern void POS_ConversionVitessesLongRotToConsignesPWMRouesRobotUnicycle(float 
             *consPWMRoueGauche = vitRoueGpwm;
         }
     }
+    
     /* Consigne roue droite */
     if (vitRoueDpwm < (unsigned short)BORNE_PWM_AR)
     {

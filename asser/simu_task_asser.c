@@ -135,9 +135,9 @@ float SIMU_RegulateurPI_BHT(char side, float erreurVitesse, float* integ, float 
             SaturationPIDflag = False;
         }
     }
-
-    ASSER_TRAJ_LogAsserValPC("SaturationPIGflag", SaturationPIGflag);
-    ASSER_TRAJ_LogAsserValPC("SaturationPIDflag", SaturationPIDflag);
+    /* NOLOG */
+    //ASSER_TRAJ_LogAsserValPC("SaturationPIGflag", SaturationPIGflag);
+    //ASSER_TRAJ_LogAsserValPC("SaturationPIDflag", SaturationPIDflag);
 
     //tensionPWM = (signed int)tensionPWMTemp;
     //return(tensionPWM);

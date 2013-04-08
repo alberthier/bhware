@@ -35,8 +35,6 @@ void    SIMU_InitialisationLogRobot(void);
 void    SIMU_LogRobot(void);
 void    SIMU_TabGabarit_AddVitesse(float vitesse);
 void    SIMU_TabGabarit_AddAcceleration(float acceleration);
-void    SIMU_GabaritVitesse(Trajectoire * traj);
-extern void SIMU_InitGabaritVitesse(Trajectoire *traj);
 void    SIMU_AfficheInfoFinAsser(void);
 void    SIMU_CalculPeriodique(void);
 int     SIMU_Mouvement(void);

@@ -12,39 +12,62 @@
 
 #include "position.h"
 
-/*! \addtogroup Task_Asser
+/*! \addtogroup Asser
  *  @{
  */
 
-/*! \addtogroup Asser_Position
+/*! \addtogroup Asser_Trajectoire
  *  @{
  */
 
-/*! \addtogroup Asser_Position_Interface
+/*! \addtogroup Asser_Trajectoire_Interface
  *  @{
  */
  
 /* MACROS */
 #define SQUARE(a) ((a)*(a))
-#define CUBE(a) ((a)*(a)*(a))
+#define CUBE(a)   ((a)*(a)*(a))
 #define POWER4(a) ((a)*(a)*(a)*(a))
 #define POWER5(a) ((a)*(a)*(a)*(a)*(a))
+#define TEST_BIT(a, n)  ((a & (1 << n)) >>  n)
 
 /* Nombre max de points pouvant definir la trajectoire */
-#define NBRE_MAX_PTS_TRAJ               62
+#define NBRE_MAX_PTS_TRAJ               63
 
-#ifndef PIC32_BUILD
-/** Parametres du profil de vitesse des trajectoires */
-#define NBR_ASSER_LOG_VALUE             60
-#else /* PIC32_BUILD */
-#define NBR_ASSER_LOG_VALUE             ((256 - (3 * sizeof(float)) - (2 * sizeof(unsigned char)) - sizeof(int)) / sizeof(float))
-#endif /* PIC32_BUILD */
 
 #define CONVERT_DISTANCE(d)             (((float)d)/10000.0)
 #define CONVERT_FLOAT2SHORT_DISTANCE(d) ((unsigned short)((d) * 10000.0))
 
+#define PLOTS_SIMU
+
+typedef enum
+{
+    SPLINE31     = (unsigned char)0,
+    ARC1         = (unsigned char)1,
+    SPLINE341    = (unsigned char)2,
+    LINE         = (unsigned char)3,
+    SPLINE342    = (unsigned char)4,
+    ARC2         = (unsigned char)5,
+    SPLINE32     = (unsigned char)6
+} Type_SubSeg;
+
+typedef enum
+{
+    SPLINE3      = (unsigned char)0,
+    SPLINE4      = (unsigned char)1,
+    SPLINE4_n    = (unsigned char)2
+} Type_Spline;
+
+typedef enum
+{
+    C_LINE         = (unsigned char)0,
+    C_SPLINE3      = (unsigned char)1,
+    C_SPLINE34     = (unsigned char)2,
+    C_ARC          = (unsigned char)3
+} Type_SegClass;
+
 /** Structure de parametres du profil de vitesse des trajectoires */
-typedef struct
+typedef struct __attribute__ ((packed))
 {
     float           vmax;
     unsigned int    p;
@@ -62,48 +85,158 @@ typedef struct
     float           DmaxRot;
 } ParametresProfilVitesse;
 
-typedef struct
+typedef struct __attribute__ ((packed))
 {
     Pose                    poseDepartRobot;
     float                   angle;
     float                   angle_final;
 } ParametresRotation;
 
-typedef struct
+typedef struct __attribute__ ((packed))
+{
+    float           ax;
+    float           ay;
+    float           bx;
+    float           by;
+} ConfigSpline3;
+
+typedef struct __attribute__ ((packed))
+{
+    float           x;
+    float           y;
+    float           theta;
+    unsigned char   split;
+
+} ConfigSpline3R;
+
+typedef struct __attribute__ ((packed))
+{
+    unsigned char   n;
+    float           ax;
+    float           ay;
+    float           bx;
+    float           by;
+    float           cx;
+    float           cy;
+    float           qx;
+    float           qy;
+    float           theta_seg;
+
+} ConfigSpline34;
+
+typedef struct __attribute__ ((packed))
+{
+    float   xc;
+    float   yc;
+    float   rayon_inverse;
+    float   theta0;
+    float   angle;
+} ConfigArc;
+
+typedef struct __attribute__ ((packed))
 {
     float                   distance;
-    Vecteur                 posDepart;
-    Vecteur                 vectDepart;
-    Vecteur                 posArrivee;
-    Vecteur                 vectArrivee;
+    float                   theta_seg;
+    union
+    {
+        struct __attribute__ ((packed))
+        {
+            unsigned char SPLINE31_USED     : 1;
+            unsigned char ARC1_USED         : 1;
+            unsigned char SPLINE341_USED    : 1;
+            unsigned char LINE_USED         : 1;
+            unsigned char SPLINE342_USED    : 1;
+            unsigned char ARC2_USED         : 1;
+            unsigned char SPLINE32_USED     : 1;
+            unsigned char Dummy             : 1;
+        } Flags;
+
+        unsigned char     Info;
+    } subSeg_used;
+    unsigned char           subSeg_firstUsed;
+    unsigned char           subSeg_lastUsed;
+
+    ConfigSpline3R          spline31;
+    ConfigSpline3R          spline32;
+    ConfigSpline34          spline41;
+    ConfigSpline34          spline42;
+    ConfigArc               arc1;
+    ConfigArc               arc2;
+
+    struct __attribute__ ((packed))
+    {
+        float                   ax;
+        float                   ay;
+        float                   bx;
+        float                   by;
+    } line;
+
+    unsigned char           line_used;
 } segmentTrajectoire;
 
-typedef struct
+typedef union
 {
-    float                   distance;
-    float                   qx[2];
-    float                   qy[2];
-    float                   ax;
-    float                   ay;
-    float                   bx;
-    float                   by;
-    float                   aix;
-    float                   aiy;
-    float                   bix;
-    float                   biy;
-} segmentTrajectoireBS;
+    struct __attribute__ ((packed))
+    {
+        unsigned char           use_angle;
+        segmentTrajectoire      segmentTraj[NBRE_MAX_PTS_TRAJ];
+        unsigned int            nbreSegments;
+        unsigned int            segmentCourant;
+        unsigned char           subSegmentCourant;
+        float                   paramPoseSubSegCourant;
+    } subTrajs;
 
-typedef struct
+    ParametresRotation          rotation;
+} Trajectoire;
+
+typedef struct __attribute__ ((packed))
 {
     unsigned char           mouvement;
-    unsigned char           use_angle;
-    ParametresProfilVitesse profilVitesse;
-    segmentTrajectoireBS    segmentTrajBS[(NBRE_MAX_PTS_TRAJ + 1)];
-    unsigned int            nbreSegments;
-    ParametresRotation      rotation;
-    float                   distance;
     Vecteur                 posArrivee;
-} Trajectoire;
+    float                   distance;
+    ParametresProfilVitesse profilVitesse;
+    Trajectoire             trajectoire;
+} Deplacement;
+
+typedef struct __attribute__ ((packed))
+{
+    float   v_Rinv_ref;
+    float   Rinv_ref;
+    float   x1;
+    float   y1;
+    float   theta1;
+    float   x2;
+    float   y2;
+    float   theta2;
+    float   x1_n;
+    float   y1_n;
+    float   theta1_n;
+    float   qx1;
+    float   qy1;
+    float   x2_n;
+    float   y2_n;
+    float   theta2_n;
+    float   qx2;
+    float   qy2;
+    float   Rb_prec;
+    float   qx0;
+    float   qy0;
+    unsigned char   sp1_type;
+    unsigned char   sp2_type;
+    float   angle_step;
+    float   angle_r1;
+    float   angle_r2;
+    unsigned char curve1;
+    unsigned char curve2;
+    unsigned char curvature_forced;
+    unsigned char curvature_forced_1;
+    unsigned char curvature_forced_2;
+    unsigned char spline4rot;
+    unsigned char inflexion_point;
+    float   theta_seg;
+    float   s_Rinv_1;
+    float   s_Rinv_2;
+} ConfigSegment;
 
 /* Variables globales de reglage de l'asser */
 
@@ -120,15 +253,13 @@ extern float                Ratio_Decc_Rot;
 extern float                A_MAX;
 extern float                D_MAX;
 
-extern float                k0_init; 
-extern float                C_init;
 
 extern float                VminMouvRef;
 
 extern unsigned int         ASSER_compteurPeriode;
 extern unsigned int         ASSER_segmentCourant;
 
-extern Trajectoire          chemin;
+extern Deplacement          chemin;
 
 extern float                VminMouv;
 
@@ -138,11 +269,11 @@ extern const float          EcartVitesseDecc;
 extern void                 ASSER_TRAJ_InitialisationGenerale(void);
 extern void                 ASSER_TRAJ_InitialisationTrajectoire(Pose poseRobot, unsigned char Mouvement, Data_Goto * Data);
 extern void                 ASSER_TRAJ_AsservissementMouvementRobot(Pose poseRobot, VitessesRobotUnicycle * vitessesConsignes);
-extern Pose                 ASSER_TRAJ_Trajectoire(segmentTrajectoireBS * segmentTraj, unsigned int iSegment, float t);
-extern void                 ASSER_TRAJ_ParcoursTrajectoire(Trajectoire *traj, float delta_distance, unsigned int *segmentCourant, float *paramPoseSegTraj, unsigned char * pReturn);
-extern unsigned char        ASSER_TRAJ_isDeplacement(Trajectoire *traj);
-extern float                ASSER_TRAJ_DiffThetaBSplinePerLenghtUnit(segmentTrajectoireBS * segmentTraj, unsigned int iSegment, float t);
-extern float                ASSER_TRAJ_VitesseLimiteEnVirage(Trajectoire *traj, float diffThetaTrajectoire);
+extern void                 ASSER_TRAJ_Trajectoire(Trajectoire * traj, unsigned int iSegment, unsigned char subSeg, float t, Pose * poseTraj, Vecteur * diff1Traj, Vecteur * diff2Traj);
+extern void                 ASSER_TRAJ_ParcoursTrajectoire(Deplacement *traj, float delta_distance, unsigned int *segmentCourant, unsigned char *subSegmentCourant, float *paramPoseSegTraj, unsigned char * pReturn);
+extern unsigned char        ASSER_TRAJ_isDeplacement(Deplacement *traj);
+extern float                ASSER_TRAJ_DiffThetaBSplinePerLenghtUnit(Trajectoire * traj, unsigned int iSegment, unsigned char iSubSegment, float t);
+extern float                ASSER_TRAJ_VitesseLimiteEnVirage(Deplacement *traj, float diffThetaTrajectoire);
 
 #ifdef PIC32_BUILD
 extern void                 ASSER_TRAJ_LogAsserPIC(char * keyWord, float Val1, float * pVal2, float * pVal3, float * pVal4, float * pVal5);
@@ -162,5 +293,5 @@ void                        ASSER_TRAJ_LogAsserMsgPC(char * message, float Val);
 
 #endif /* _ASSERV_TRAJECTOIRE_H_ */
 
-/* End of file : asserv_trahectoire.h */
+/* End of file : asserv_trajectoire.h */
 

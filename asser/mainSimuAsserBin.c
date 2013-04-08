@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <time.h>
 
 //#define TEMPS_SIMULATION 60 /* secondes */
 
@@ -23,7 +24,6 @@ typedef struct
 void ASSER_GoTo(unsigned char Mouvement, Data_Goto * Data)
 {
     SIMU_REDEF_ASSER_GoTo(Mouvement, Data);
-    //SIMU_InitGabaritVitesse(&chemin);
 }
 
 
@@ -190,7 +190,7 @@ int depCommandMsgTreatment(char *buffer, unsigned char * p_mouvement, Data_Goto 
             Data->arc.Rayon = rayon;
             Data->arc.NbrePtsChemin = nbPts;
 
-            sscanf(buffer, "%s %s %s %s %s", msg_mvt, strMarche, strXCentre, strYCentre, strRayon, strNbPts);
+            sscanf(buffer, "%s %s %s %s %s %s", msg_mvt, strMarche, strXCentre, strYCentre, strRayon, strNbPts);
             msgSize = strlen(msg_mvt) + strlen(strMarche) + strlen(strXCentre) + strlen(strYCentre) + strlen(strRayon) + strlen(strNbPts) + 6;
             for(iAngle = 0; iAngle < nbPts; iAngle++)
             {
@@ -198,7 +198,11 @@ int depCommandMsgTreatment(char *buffer, unsigned char * p_mouvement, Data_Goto 
                 sscanf(strValTemp, "%f", &valTemp);
                 Data->arc.Chemin[iAngle] = (float)valTemp;
                 msgSize = msgSize + strlen(strValTemp) + 1;
+
+                ASSER_TRAJ_LogAsserValPC("chemin_arc", (float)valTemp);
             }
+
+            ASSER_TRAJ_LogAsserMsgPC(buffer, 0.0);
 
             break;
     }
@@ -242,6 +246,7 @@ int main(void)
     Parameter paramPI[2], paramK[3], paramR[2], paramT[8], paramConfAsser[2], paramMotor[9];
     Data_Goto Data_deplacement;
     short iPt, iAngle;
+    clock_t temps_i, temps_f, temps_f2;
 
     printf("asserSimulator: Demarrage simulateur\n");
 
@@ -292,12 +297,20 @@ int main(void)
         {
             depCommandMsgTreatment(buffer, &mouvement, &Data_deplacement);
 
+#ifdef PLOTS_SIMU
             SIMU_InitialisationLogRobot();
+#endif /* PLOTS_SIMU */
+
             /* initialisation des données pour l'ordre de déplacement */
             /* lancement du deplacement */
+            temps_i = clock();
             ASSER_GoTo(mouvement, &Data_deplacement);
+            temps_f = clock();
+            ASSER_TRAJ_LogAsserValPC("temps_init", ((float)(temps_f - temps_i)) / CLOCKS_PER_SEC);
             // execution du deplacement
-            SIMU_Mouvement();
+            SIMU_Mouvement();  /* TOCHANGE */
+            temps_f2 = clock();
+            ASSER_TRAJ_LogAsserValPC("temps_init", ((float)(temps_f2 - temps_f)) / CLOCKS_PER_SEC);
         }
         else if (strcmp(command, "MSG_TEST_PI") == 0)
         {

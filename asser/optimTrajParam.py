@@ -230,15 +230,43 @@ def trajFunction(d_cfgTraj):
     #~ simulator_process.stdin.write(deplacement.cmdMsgGeneration())
 
     #test MOVE_CURVE
+    send_init_pose(simulator_process, x=0.2, y=1.0, angle=0.0)
     deplacement = commandMsg("MSG_MOVE_CURVE 1 1 0.0")
-    deplacement.addPose("1.0 0.5")
+    deplacement.addPose("0.9 1.0")
+    deplacement.addPose("1.05 0.85")
+    deplacement.addPose("1.2 1.0")
+    deplacement.addPose("1.35 0.85")
+    
+    #~ deplacement.addPose("0.5 1.0")
+    #~ deplacement.addPose("1.0 1.0")
+    #~ deplacement.addPose("1.5 1.0")
+    #~ deplacement.addPose("2.0 1.0")
+    
     simulator_process.stdin.write(deplacement.cmdMsgGeneration())
+    #~ print(MSG_init_pose(0.2, 0.2, 0.0))
+    # INIT_POSE_ROBOT 0 0 0.0 1 0.2 0.2
+    #~ print(deplacement.cmdMsgGeneration())
+    # MSG_MOVE_CURVE 1 1 0.0 4 0.9 1.0 1.05 0.85 1.2 1.0 1.35 0.85
     
     #test MOVE_LINE
     #~ deplacement = commandMsg("MSG_MOVE_LINE 1")
-    #~ deplacement.addPose("1.0 0.2")
+    #~ deplacement.addPose("1.2 0.2")
+    #~ #deplacement.addPose("1.3 0.2")
     #~ simulator_process.stdin.write(deplacement.cmdMsgGeneration())
-
+    #~ print(deplacement.cmdMsgGeneration())
+    # MSG_MOVE_LINE 1 1 1.0 0.2
+    
+    #test MOVE_ARC
+    #~ deplacement = commandMsg("MSG_MOVE_ARC 1 0.2 1.0 0.8")
+    #~ deplacement.addPose(str(- (2.0 * math.pi) / 8.0))
+    #~ deplacement.addPose(str(- (0.0 * math.pi) / 8.0))
+    
+    #~ deplacement.addPose(str(- (6.0 * math.pi) / 8.0))
+    #~ deplacement.addPose(str(- (8.0 * math.pi) / 8.0))
+    
+    #~ simulator_process.stdin.write(deplacement.cmdMsgGeneration())
+    
+    
     #transmission de la commande de d'arret du simulateur
     (stdoutdata, stderrdata) = simulator_process.communicate("QUIT\n")
 
@@ -506,14 +534,15 @@ def affichageTraj2011(d_traj):
 
     ### Affichage des donnees de vitesses ###
     temps = [index*periode for index in range(len(d_traj["vitesseMoteurGauche"]))]
-    
+    print("len temps: " + str(len(temps)))
+    print("len VitesseProfil: " + str(len(d_traj["VitesseProfil"])))
     figure(2)
     #setp( ax1.get_xticklabels(), fontsize=6)
 
     ax_v = subplot(211)
     ylabel("vitesse (m/s)")
     plot(temps, d_traj["vitesseMoteurGauche"], '-', label='mesure gauche')
-    #~ hold(True)
+    # hold(True)
     plot(temps, d_traj["vitesseMoteurDroit"], label='mesure droit')
     plot(temps, d_traj["VitesseProfil"], label='Vitesse Profil')
     plot(temps, d_traj["ConsigneMoteurDroit_MS"], label='consigne droit')
@@ -521,26 +550,26 @@ def affichageTraj2011(d_traj):
     plot(temps, d_traj["Phase"], label='Phase')
     plot(temps, d_traj["fFin"], label='flag Fin')
     plot(temps, d_traj["vitLongitudinale"], '--', label='consigne vit long')
-    plot(temps, d_traj["vitLongitudinaleEffective"], '--', label='consigne vit long effec')
+    #~ plot(temps, d_traj["vitLongitudinaleEffective"], '--', label='consigne vit long effec')
     print(str(len(d_traj["VpiD"])) + " " + str(len(d_traj["VitesseProfil"]))) 
-    plot(temps, d_traj["VposG"], label='VposG')
-    plot(temps, d_traj["VposD"], label='VposD')
-    #~ plot(temps, d_traj["VpiG"], label='VpiG')
-    #~ plot(temps, d_traj["VpiD"], label='VpiD')
+    #~ plot(temps, d_traj["VposG"], label='VposG')
+    #~ plot(temps, d_traj["VposD"], label='VposD')
+    # plot(temps, d_traj["VpiG"], label='VpiG')
+    # plot(temps, d_traj["VpiD"], label='VpiD')
     
-    #~ plot([index*periode for index in range(len(d_traj["ConsigneMoteurDroit"]))], [(cons-1024.0)*0.000985 for cons in d_traj["ConsigneMoteurDroit"]], label='consigne droit')
-    #~ plot([index*periode for index in range(len(d_traj["vitesseProfilConsigne"]))], d_traj["vitesseProfilConsigne"], 'o', label='vitesse profil')
-    #~ plot([index*periode for index in range(len(d_traj["vitLongitudinale"]))], d_traj["vitLongitudinale"], label='consigne long calculee')
-    #~ plot([index*periode for index in range(len(d_traj["parametrePositionSegmentTrajectoire"]))], d_traj["parametrePositionSegmentTrajectoire"], label='paramTraj')
-    #~ plot([index*periode for index in range(len(d_traj["xCCourant"]))], d_traj["xCCourant"], 'o', label='xCCourant')
-    #~ plot([index*periode for index in range(len(d_traj["xPoseReferenceRobot"]))], d_traj["xPoseReferenceRobot"], 'o', label='xPoseReferenceRobot')
-    #~ plot([index*periode for index in range(len(d_traj["distNormaliseeRestante"]))], d_traj["distNormaliseeRestante"], 'o', label='distNormaliseeRestante')
-    #~ plot([index*periode for index in range(len(d_traj["distance_restante"]))], d_traj["distance_restante"], 'o', label='distance_restante')
-    #~ plot([index*periode for index in range(len(d_traj["etat"]))], d_traj["etat"], label='etat')
-    #~ plot([index*periode for index in range(len(d_traj["limit"]))], d_traj["limit"], 'om', label='limit')
-    #~ plot([index*periode for index in range(len(d_traj["distance_decceleration"]))], d_traj["distance_decceleration"], '-', label='distDecc')
+    # plot([index*periode for index in range(len(d_traj["ConsigneMoteurDroit"]))], [(cons-1024.0)*0.000985 for cons in d_traj["ConsigneMoteurDroit"]], label='consigne droit')
+    # plot([index*periode for index in range(len(d_traj["vitesseProfilConsigne"]))], d_traj["vitesseProfilConsigne"], 'o', label='vitesse profil')
+    # plot([index*periode for index in range(len(d_traj["vitLongitudinale"]))], d_traj["vitLongitudinale"], label='consigne long calculee')
+    # plot([index*periode for index in range(len(d_traj["parametrePositionSegmentTrajectoire"]))], d_traj["parametrePositionSegmentTrajectoire"], label='paramTraj')
+    # plot([index*periode for index in range(len(d_traj["xCCourant"]))], d_traj["xCCourant"], 'o', label='xCCourant')
+    # plot([index*periode for index in range(len(d_traj["xPoseReferenceRobot"]))], d_traj["xPoseReferenceRobot"], 'o', label='xPoseReferenceRobot')
+    # plot([index*periode for index in range(len(d_traj["distNormaliseeRestante"]))], d_traj["distNormaliseeRestante"], 'o', label='distNormaliseeRestante')
+    # plot([index*periode for index in range(len(d_traj["distance_restante"]))], d_traj["distance_restante"], 'o', label='distance_restante')
+    # plot([index*periode for index in range(len(d_traj["etat"]))], d_traj["etat"], label='etat')
+    # plot([index*periode for index in range(len(d_traj["limit"]))], d_traj["limit"], 'om', label='limit')
+    # plot([index*periode for index in range(len(d_traj["distance_decceleration"]))], d_traj["distance_decceleration"], '-', label='distDecc')
 
-    #~ plot([index*periode for index in range(len(d_traj["ASSER_Running"]))], d_traj["ASSER_Running"], 'o', label='ASSER_Running')
+    # plot([index*periode for index in range(len(d_traj["ASSER_Running"]))], d_traj["ASSER_Running"], 'o', label='ASSER_Running')
 
     #plot([index*periode for index in range(len(d_traj["val_tab_vit"]))], d_traj["val_tab_vit"], '-', label='vitesse profil')
 
@@ -548,20 +577,20 @@ def affichageTraj2011(d_traj):
         for tpsNewSeg in traj["periodeNewSeg"] :
             plot([tpsNewSeg*periode, tpsNewSeg*periode], [-0.6, 0.6], '-k')
 
-    #~ print("decc_tempsAcc_float: " + str(d_traj["decc_tempsAcc_float"]))
-    #~ print("decc_tempsAcc: " + str(d_traj["decc_tempsAcc"]))
-    #~ print("decc_vmax: " + str(d_traj["decc_vmax"]))
+    # print("decc_tempsAcc_float: " + str(d_traj["decc_tempsAcc_float"]))
+    # print("decc_tempsAcc: " + str(d_traj["decc_tempsAcc"]))
+    # print("decc_vmax: " + str(d_traj["decc_vmax"]))
 
     ylim(-1.2, 1.2)
     legend(loc="lower center")
     grid(True)
     title("vitesses")
-
-    #~ figure(3)
+#~ 
+    #figure(3)
     ax_t = subplot(212, sharex=ax_v)
     ylabel("tension (unite PWM)")
     plot(temps, d_traj["tensionPWM_MoteurGauche"], label='moteur gauche')
-    #~ hold(True)
+    # hold(True)
     plot(temps, d_traj["tensionPWM_MoteurDroit"], label='moteur droit')
     
     if "periodeNewSeg" in traj.keys() :
@@ -573,6 +602,9 @@ def affichageTraj2011(d_traj):
     title("tensions moteurs")
 
     #~ figure(5)
+    #~ 
+    #~ plot(d_traj["dist_parcourue"], label="dist_p")
+    #~ plot(d_traj["paramPoseSubSegCourant"], label="param")
     
     #plot(d_traj["index_get_vitesseGabarit"])
     #~ plot(d_traj["index_tab_vit"])
@@ -590,8 +622,8 @@ def affichageTraj2011(d_traj):
     #~ print("poseRobotInitY: " + str(d_traj["poseRobotInitY"]))
     #~ plot(d_traj["thetaPoseReference"], label="thetaPoseReference")
     
-    #legend()
-    #~ grid(True)
+    legend()
+    grid(True)
     #~ title("Distance parcourue")
 
     figure(3)
@@ -843,7 +875,10 @@ def optimParam_TempsAcc(d_cfgTraj_local) :
 
     return(d_cfgTraj_local)
 
-
+def printLog(traj, logName) :
+    if logName in traj.keys() :
+        print(logName + " : " + str(traj[logName]))
+        
 
 #########################################################################
 #~ traj = testPI(d_cfgTraj)
@@ -867,7 +902,7 @@ def optimParam_TempsAcc(d_cfgTraj_local) :
 
 #~ d_cfgTraj = optimParam_TempsAcc(d_cfgTraj)
 traj = trajFunction(d_cfgTraj)
-print(len(traj.keys()))
+print("Nb var log : " + str(len(traj.keys())))
 
 #~ traj = trajTest(d_cfgTraj)
 
@@ -898,15 +933,6 @@ print(len(traj.keys()))
 #~ print("angle_rad: " + str(traj["angle_rad"]))
 
 #~ 
-
-#~ if (traj.keys().count("def_xTraj")) :
-    #~ figure()
-    #~ N = len(traj["def_xTraj"])
-    #~ plot(traj["def_xTraj"][:N], traj["def_yTraj"][:N], '-o')
-    #~ plot(traj["def_xTraj"][0], traj["def_yTraj"][0], '-oy')
-    #~ plot(traj["def_xTraj"][-1], traj["def_yTraj"][-1], '-or')
-    #~ plot(traj["def_xTraj"][30], traj["def_yTraj"][30], 'or')
-    #~ plot(traj["def_xTraj"][70], traj["def_yTraj"][70], 'or')
     
     #~ 
     #~ figure()
@@ -958,23 +984,124 @@ print(len(traj.keys()))
 #~ print(traj["debug_smooth"])
 
 if "vitesse_fin_profil" in traj.keys() :
-    print("vitesse_fin_profil (m/s):")
+    print("vitesse debut et fin profil (m/s):")
+    print(traj["vitesse_debut_profil"])
     print(traj["vitesse_fin_profil"])
 
-print("dist_parcourue: " + str(traj["dist_parcourue"][-1]))
-print("etat asser: " + str(traj["Motion"][0]))
+if "dist_parcourue" in traj.keys() :
+    print("dist_parcourue: " + str(traj["dist_parcourue"][-1]))
+    
+if "Motion" in traj.keys() :
+    print("etat asser: " + str(traj["Motion"][0]))
 
+print("Nb msg err : " + str(len(traj["message"])))
 for msg in traj['message'] :
     print(msg)
   
 if "periodeNewSeg" in traj.keys() :  
     print("periodeNewSeg : " + str(traj["periodeNewSeg"]))
+    
+### Debug new traj ###
+if "use_angle" in traj.keys() :  
+    print("use_angle : " + str(traj["use_angle"]))
+    
+if "NbSegCurve" in traj.keys() :  
+    print("NbSegCurve : " + str(traj["NbSegCurve"]))
+    
+if "flag_subSeg_used" in traj.keys() :
+    print("flag_subSeg_used : " + str(traj["flag_subSeg_used"]))
+    
+if "subSegClass" in traj.keys() :
+    print("subSegClass : " + str(traj["subSegClass"]))
 
+if "segConfigured" in traj.keys() :
+    print("segConfigured : " + str(traj["segConfigured"]))
+
+#~ printLog(traj, "data_sds_ab")
+printLog(traj, "angle_rad")
+
+#~ printLog(traj, "data_sds_ab_base")
+
+#~ NbV = 12
+#~ N = int(len(traj["data_sds_ab_base"]) / (NbV*1.0))
+#~ for n in range(N) :
+    #~ print("data_sds_ab_base : \n ax1: {0} \n bx1: {1} \n ay1: {2} \n by1: {3} \n qx1: {4} \n qy1: {5} \n ax2: {6} \n bx2: {7} \n ay2: {8} \n by2: {9} \n qx2: {10} \n qy2: {11}".format(traj["data_sds_ab_base"][n*NbV], traj["data_sds_ab_base"][n*NbV + 1], traj["data_sds_ab_base"][n*NbV + 2], traj["data_sds_ab_base"][n*NbV + 3], traj["data_sds_ab_base"][n*NbV + 4], traj["data_sds_ab_base"][n*NbV + 5], traj["data_sds_ab_base"][n*NbV + 6], traj["data_sds_ab_base"][n*NbV + 7], traj["data_sds_ab_base"][n*NbV + 8], traj["data_sds_ab_base"][n*NbV + 9], traj["data_sds_ab_base"][n*NbV + 10], traj["data_sds_ab_base"][n*NbV + 11]))
+
+
+#~ NbV = 4
+#~ N = int(len(traj["data_sds_ab"]) / (NbV*1.0))
+#~ for n in range(N) :
+    #~ print("data_sds_ab : \n qx1: {0} \n qy1: {1} \n qx2: {2} \n qy2: {3}".format(traj["data_sds_ab"][n*NbV], traj["data_sds_ab"][n*NbV + 1], traj["data_sds_ab"][n*NbV + 2], traj["data_sds_ab"][n*NbV + 3]))
+    #~ 
+#~ NbV = 3
+#~ N = int(len(traj["data_Rotation_config_arc1"]) / (NbV*1.0))
+#~ for n in range(N) :
+    #~ print("data_Rotation_config_arc1 : \n angle: {0} \n qx1: {1} \n qy1: {2}".format(traj["data_Rotation_config_arc1"][n*NbV], traj["data_Rotation_config_arc1"][n*NbV + 1], traj["data_Rotation_config_arc1"][n*NbV + 2]))
+
+#~ printLog(traj, "data_sds_ab_base_A")
+
+#~ print(traj["test_x"])
+printLog(traj, "test_x_init")
+#~ print("cpt xtraj : {0}".format(len(traj["def_xTraj"])))
+#~ print("cpt test x : {0}".format(len(traj["test_x"])))
+printLog(traj, "angle_r1")
+printLog(traj, "angle_r2")
+printLog(traj, "curvature_forced_2_prec")
+printLog(traj, "inflexion_point")
+printLog(traj, "inflexion_point_theta_seg")
+printLog(traj, "distance_seg")
+#~ printLog(traj, "poseReferenceRobot")
+
+#~ printLog(traj, "xRoueDroite")
+#~ printLog(traj, "yRoueDroite")
+#~ printLog(traj, "vitesseMoteurDroit")
+#~ printLog(traj, "paramPoseSubSegCourant")
+#~ printLog(traj, "ASSER_Running")
+#~ print("Nb Periode (len ASSER_Running) : " + str(len(traj["ASSER_Running"])))
+
+#~ if "fin_MVT" in traj.keys() : 
+    #~ print("fin_MVT : " + str(len(traj["fin_MVT"])))
+#~ else :
+    #~ print("fin_MVT : no log")
+#~ printLog(traj, "fin_MVT")
+
+#~ printLog(traj, "xPoseReferenceRobot")
+
+#~ printLog(traj, "VitesseProfil")
+#~ printLog(traj, "distanceTotale_Profil")
+
+printLog(traj, "temps_init")
+printLog(traj, "chemin_arc")
+printLog(traj, "theta0_arc")
+printLog(traj, "angle_arc")
+#~ printLog(traj, "cfgAsser")
+
+    
 matplotlib.rcParams.update({'font.size': 16})
-#~ affichageGabaritVitesse_2013(traj)
-affichageTraj2011(traj)
-#~ affichageTestAccDcecc(traj)
 
-#~ show()
+#~ if "def_xTraj" in traj.keys() :
+    #~ figure(10)
+    #~ N = len(traj["def_xTraj"])
+    #~ plot(traj["def_xTraj"][:N], traj["def_yTraj"][:N], 'o')
+    #~ grid()
+    #~ 
+    #~ figure(11)
+    #~ plot(traj["def_Rinv"], '-o')
+    #~ title('vitesse limite')
+    #~ grid()
+    #~ 
+    #~ figure(12)
+    #~ plot(traj["def_dl_dt"], '-o')
+    #~ title('dl_dt')
+    #~ grid()
+#~ else :
+    #~ print("No traj def plots")
+
+# affichageGabaritVitesse_2013(traj)
+
+affichageTraj2011(traj)
+
+
+show()
 
 #~ sys.exit(2)
