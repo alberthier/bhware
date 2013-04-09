@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 
+import sys
 from subprocess import *
 
 
@@ -36,7 +37,7 @@ def setup():
     call(["fw_setenv", "set_bootargs_usb"   , "setenv bootargs console=$console root=$usb_root rootdelay=$usb_rootdelay rootfstype=$usb_rootfstype $mtdparts"])
     call(["fw_setenv", "ubi_part"           , "data"])
     call(["fw_setenv", "ubi_volume"         , "rootfs"])
-    call(["fw_setenv", "preboot_disabled"   , "run if_netconsole start_netconsole"])
+    call(["fw_setenv", "preboot"            , "run if_netconsole start_netconsole"])
     call(["fw_setenv", "set_bootargs_nand"  , "setenv bootargs console=$console ubi.mtd=$ubi_part root=ubi0:$ubi_volume rootfstype=ubifs $mtdparts lpj=5955584"])
     call(["fw_setenv", "led_init"           , "green blinking"])
     call(["fw_setenv", "led_exit"           , "green off"])
@@ -53,6 +54,7 @@ def setup():
     call(["fw_setenv", "read_uImage2"       , "nand read.e 0x800000 0x400000 0x300000"])
     call(["fw_setenv", "bootcmd_nand"       , "run set_bootargs_nand; run read_uImage1; bootm 0x800000; run read_uImage2; bootm 0x800000"])
     call(["fw_setenv", "bootdelay"          , "1"])
+    call(["fw_printenv"])
 
 
 if __name__ == "__main__":
