@@ -99,6 +99,7 @@ class BlowCandlesOut(statemachine.State):
         angles = [ candle.angle for candle in self.candles ]
         move = MoveArc(0.0, 1.5, 0.5 + ROBOT_GYRATION_RADIUS, angles)
         move.on_waypoint_reached = self.on_waypoint_reached
+        move.on_candle_kicker = self.on_candle_kicker
         yield move
         self.exit_reason = move.exit_reason == TRAJECTORY_DESTINATION_REACHED
         if self.exit_reason:
@@ -117,7 +118,7 @@ class BlowCandlesOut(statemachine.State):
 
     def on_candle_kicker(self, packet):
         if packet.position == CANDLE_KICKER_POSITION_KICK:
-            self.send_packet(packets.CandleKicker(side = self.side, which = candle.which, position = CANDLE_KICKER_POSITION_UP))
+            self.send_packet(packets.CandleKicker(side = self.side, which = packet.which, position = CANDLE_KICKER_POSITION_UP))
 
 
 

@@ -213,9 +213,9 @@ class RobotController(object):
             upper = reversed(self.game_controller.game_elements_layer.upper_candles)
             lower = reversed(self.game_controller.game_elements_layer.lower_candles)
         for i, candle in enumerate(upper):
-            detect.append(binarizer.StructInstance(index = 100 + i, detect = candle.color == self.team_color))
+            detect.append(binarizer.StructInstance(index = i + 101, detect = candle.color == self.team_color))
         for i, candle in enumerate(lower):
-            detect.append(binarizer.StructInstance(index = i, detect = candle.color == self.team_color))
+            detect.append(binarizer.StructInstance(index = i + 1, detect = candle.color == self.team_color))
         self.send_packet(packets.SimulatorFetchColors(colors = detect))
 
 
