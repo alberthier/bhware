@@ -1075,6 +1075,8 @@ printLog(traj, "chemin_arc")
 printLog(traj, "theta0_arc")
 printLog(traj, "angle_arc")
 #~ printLog(traj, "cfgAsser")
+printLog(traj, "distSupp")
+printLog(traj, "resetProfil")
 
     
 matplotlib.rcParams.update({'font.size': 16})
@@ -1087,10 +1089,15 @@ matplotlib.rcParams.update({'font.size': 16})
     #~ 
     #~ figure(11)
     #~ plot(traj["def_Rinv"], '-o')
-    #~ title('vitesse limite')
+    #~ title('Rinv')
     #~ grid()
     #~ 
     #~ figure(12)
+    #~ plot(traj["def_vLim"], '-o')
+    #~ title('vitesse limite')
+    #~ grid()
+    #~ 
+    #~ figure(13)
     #~ plot(traj["def_dl_dt"], '-o')
     #~ title('dl_dt')
     #~ grid()

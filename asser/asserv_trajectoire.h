@@ -31,6 +31,22 @@
 #define POWER5(a) ((a)*(a)*(a)*(a)*(a))
 #define TEST_BIT(a, n)  ((a & (1 << n)) >>  n)
 
+/* Pour t = t1 = 0.1 */
+#define SQUARE_t1 0.01
+#define CUBE_t1   0.001
+#define POWER4_t1 0.0001
+#define POWER5_t1 0.00001
+#define POWER6_t1 0.000001
+#define POWER7_t1 0.0000001
+#define POWER8_t1 0.00000001
+#define POWER9_t1 0.000000001
+
+/* Pour t = t1/2.0 = 0.05 */
+#define SQUARE_t1_2 0.0025
+#define CUBE_t1_2   0.000125
+#define POWER4_t1_2 0.00000625
+#define POWER5_t1_2 0.0000003125
+
 /* Nombre max de points pouvant definir la trajectoire */
 #define NBRE_MAX_PTS_TRAJ               63
 
@@ -48,7 +64,9 @@ typedef enum
     LINE         = (unsigned char)3,
     SPLINE342    = (unsigned char)4,
     ARC2         = (unsigned char)5,
-    SPLINE32     = (unsigned char)6
+    SPLINE32     = (unsigned char)6,
+    SPLINE341_EXT = (unsigned char)7,
+    SPLINE342_EXT = (unsigned char)8
 } Type_SubSeg;
 
 typedef enum
