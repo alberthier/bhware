@@ -312,7 +312,10 @@ class GraphicsRobotObject(QObject):
 
 
     def robot_arc(self, center_x, center_y, radius, angle):
-        rotate_animation = self.create_rotation_animation(angle + math.copysign(math.pi / 2.0, angle))
+        pose = self.get_pose()
+        ra = tools.angle_between(center_x, center_y, pose.x, pose.y)
+        da = angle + math.copysign(math.pi / 2.0, angle - ra)
+        rotate_animation = self.create_rotation_animation(da)
         pos_animation = self.create_arc_animation(center_x, center_y, radius, angle)
         rotate_animation.setDuration(pos_animation.duration())
         self.move_animation.clear()
