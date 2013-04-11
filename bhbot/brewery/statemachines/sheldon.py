@@ -16,6 +16,33 @@ from position import *
 
 
 
+class Main(statemachine.State):
+
+    def on_enter(self):
+        self.fsm.cake = Cake()
+
+
+    def on_device_ready(self, packet):
+        yield CalibratePosition()
+
+
+    def on_start(self, packet):
+        detector = yield FetchCandleColors()
+        logger.log("First candles detection: {}".format(detector.colors))
+        self.fsm.cake.update_with_detection(detector.colors)
+        yield Rotate(-math.pi /2.0)
+        yield NavigateToCake(True)
+        yield BlowCandlesOut()
+
+
+
+
+##################################################
+# Blow candles out
+
+
+
+
 class Candle:
 
     def __init__(self, name, angle, which, to_blow):
@@ -55,29 +82,6 @@ class Cake:
         ordered = list(self.candles.values())
         ordered.sort(key = lambda candle: candle.angle)
         return ordered
-
-
-
-
-class Main(statemachine.State):
-
-    def on_enter(self):
-        self.fsm.cake = Cake()
-
-
-    def on_device_ready(self, packet):
-        yield CalibratePosition()
-
-
-    def on_start(self, packet):
-        detector = yield FetchCandleColors()
-        logger.log("First candles detection: {}".format(detector.colors))
-        self.fsm.cake.update_with_detection(detector.colors)
-        yield Rotate(-math.pi /2.0)
-        yield NavigateToCake(True)
-        yield BlowCandlesOut()
-        #logger.log("elapsed: " + str(self.event_loop.get_elapsed_match_time()))
-        #logger.log(move.exit_reason)
 
 
 
@@ -142,6 +146,12 @@ class BlowCandlesOut(statemachine.State):
     def on_candle_kicker(self, packet):
         if packet.position == CANDLE_KICKER_POSITION_KICK:
             self.send_packet(packets.CandleKicker(side = self.side, which = packet.which, position = CANDLE_KICKER_POSITION_UP))
+
+
+
+
+##################################################
+# End of match - Baloon
 
 
 
