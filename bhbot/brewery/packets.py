@@ -295,9 +295,6 @@ class BasePacket(object):
         if hasattr(obj, 'on_packet'):
             return getattr(obj, 'on_packet')(self)
 
-    def is_keep_alive(self):
-        return False
-
 
 ################################################################################
 # Packet type ranges
@@ -525,9 +522,6 @@ class KeepAlive(BasePacket):
         ('match_started', Bool  (False, "Flag defining if the match has already started")),
         ('match_time'   , UInt32(0, "Time elapsed since the start of the match")),
     )
-
-    def is_keep_alive(self):
-        return True
 
 
 
