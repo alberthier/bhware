@@ -532,8 +532,13 @@ class Navigate(statemachine.State):
         self.exit_reason = TRAJECTORY_DESTINATION_REACHED
 
 
-    def on_enter(self):
+    def create_path(self):
         (cost, path) = self.event_loop.map.route(self.robot.pose, self.destination)
+        return path
+
+
+    def on_enter(self):
+        path = self.create_path()
         logger.log(str(path))
         if len(path) == 0:
             self.exit_reason = TRAJECTORY_DESTINATION_UNREACHABLE

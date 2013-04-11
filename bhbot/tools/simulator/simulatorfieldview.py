@@ -311,10 +311,12 @@ class GraphicsRobotObject(QObject):
         self.move_animation.start()
 
 
-    def robot_arc(self, center_x, center_y, radius, angle):
+    def robot_arc(self, center_x, center_y, radius, angle, direction):
         pose = self.get_pose()
         ra = tools.angle_between(center_x, center_y, pose.x, pose.y)
         da = angle + math.copysign(math.pi / 2.0, angle - ra)
+        if direction < 0:
+            da += math.pi
         rotate_animation = self.create_rotation_animation(da)
         pos_animation = self.create_arc_animation(center_x, center_y, radius, angle)
         rotate_animation.setDuration(pos_animation.duration() * 5)
@@ -378,13 +380,15 @@ class GraphicsRobotObject(QObject):
             if isinstance(self.current_goto_packet, packets.MoveCurve):
                 if len(self.current_goto_packet.points) == self.current_point_index:
                     angle = self.current_goto_packet.angle
+                    if self.current_goto_packet.direction < 0:
+                        angle += math.pi
                 else:
                     angle = p.angle
                 self.robot_curve(p.x, p.y, angle, self.current_goto_packet.direction)
             elif isinstance(self.current_goto_packet, packets.MoveLine):
                 self.robot_line(p.x, p.y)
             elif isinstance(self.current_goto_packet, packets.MoveArc):
-                self.robot_arc(self.current_goto_packet.center.x, self.current_goto_packet.center.y, self.current_goto_packet.radius, p)
+                self.robot_arc(self.current_goto_packet.center.x, self.current_goto_packet.center.y, self.current_goto_packet.radius, p, self.current_goto_packet.direction)
             else:
                 raise NotImplementedError("Unimplemented move")
 

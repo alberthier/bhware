@@ -74,10 +74,34 @@ class Main(statemachine.State):
         logger.log("First candles detection: {}".format(detector.colors))
         self.fsm.cake.update_with_detection(detector.colors)
         yield Rotate(-math.pi /2.0)
-        yield Navigate(ROBOT_GYRATION_RADIUS, 1.0 - ROBOT_GYRATION_RADIUS, math.pi, DIRECTION_BACKWARDS)
+        yield NavigateToCake(True)
         yield BlowCandlesOut()
         #logger.log("elapsed: " + str(self.event_loop.get_elapsed_match_time()))
         #logger.log(move.exit_reason)
+
+
+
+
+class NavigateToCake(Navigate):
+
+    def __init__(self, team_side):
+        x = 0.35
+        if team_side:
+            y = 1.0 - ROBOT_GYRATION_RADIUS + 0.05
+            angle = 0.0
+            direction = DIRECTION_BACKWARDS
+        else:
+            y = 2.0 + ROBOT_GYRATION_RADIUS - 0.05
+            angle = math.pi
+            direction = DIRECTION_FORWARDS
+        Navigate.__init__(self, x, y, angle, direction)
+
+
+    def create_path(self):
+        path = Navigate.create_path(self)
+        if len(path) != 0:
+            path.append(Pose(ROBOT_CENTER_X, path[-1].y))
+        return path
 
 
 
@@ -91,13 +115,12 @@ class BlowCandlesOut(statemachine.State):
             # the robot is on the opposite site.
             reordered = [ candle for candle in reversed(self.candles) ]
             self.candles = reordered
-        if self.robot.pose.y > FIELD_Y_SIZE / 2.0:
-            # Use real coordinates to select the correct side
-            self.side = SIDE_RIGHT
+            direction = DIRECTION_BACKWARDS
         else:
-            self.side = SIDE_LEFT
+            direction = DIRECTION_FORWARDS
+        self.side = SIDE_LEFT if self.robot.team == TEAM_BLUE else SIDE_RIGHT
         angles = [ candle.angle for candle in self.candles ]
-        move = MoveArc(0.0, 1.5, 0.5 + ROBOT_GYRATION_RADIUS, angles)
+        move = MoveArc(0.0, 1.5, 0.5 + ROBOT_GYRATION_RADIUS, angles, direction)
         move.on_waypoint_reached = self.on_waypoint_reached
         move.on_candle_kicker = self.on_candle_kicker
         yield move
