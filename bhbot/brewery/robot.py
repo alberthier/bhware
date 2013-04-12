@@ -20,7 +20,7 @@ class Robot(object):
         self._team = TEAM_UNKNOWN
         self.event_loop = event_loop
         self.moving = False
-        self.tank_full = False
+        self.glasses_count = [0, 0]
 
 
     def is_looking_at(self, pose):
