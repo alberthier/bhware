@@ -15,14 +15,19 @@
 #ifdef PIC32_BUILD
 #include "includes.h"
 #include "task_uart.h"
+#include "position.h"
 #include "HTTPpages.h"
 #endif /* PIC32_BUILD */
 #include "pic18.h"
 
-/*! \addtogroup Task_Asser
+/*! \addtogroup Asser
  *  @{
  */
- 
+
+/*! \addtogroup configPIC18
+ *  @{
+ */
+
 /*! \addtogroup configPIC18_core
  *  @{
  */
@@ -67,6 +72,9 @@ unsigned char                   SaturationPIGflag                           =   
 unsigned char                   VBatD                                       =   0;
 /** Tension batteries G */
 unsigned char                   VBatG                                       =   0;
+
+/*! @} */
+
 /*! @} */
 
 /*! @} */

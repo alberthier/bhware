@@ -230,19 +230,20 @@ def trajFunction(d_cfgTraj):
     #~ simulator_process.stdin.write(deplacement.cmdMsgGeneration())
 
     #test MOVE_CURVE
-    send_init_pose(simulator_process, x=0.2, y=1.0, angle=0.0)
-    deplacement = commandMsg("MSG_MOVE_CURVE 1 1 0.0")
-    deplacement.addPose("0.9 1.0")
-    deplacement.addPose("1.05 0.85")
-    deplacement.addPose("1.2 1.0")
-    deplacement.addPose("1.35 0.85")
+    #~ send_init_pose(simulator_process, x=0.2, y=1.0, angle=0.0)
+    #~ deplacement = commandMsg("MSG_MOVE_CURVE 1 1 0.0")
+    #~ deplacement.addPose("0.9 1.0")
+    #deplacement.addPose("1.0 1.0")
+    #~ deplacement.addPose("1.05 0.85")
+    #~ deplacement.addPose("1.2 1.0")
+    #~ deplacement.addPose("1.35 0.85")
     
     #~ deplacement.addPose("0.5 1.0")
     #~ deplacement.addPose("1.0 1.0")
     #~ deplacement.addPose("1.5 1.0")
     #~ deplacement.addPose("2.0 1.0")
     
-    simulator_process.stdin.write(deplacement.cmdMsgGeneration())
+    #~ simulator_process.stdin.write(deplacement.cmdMsgGeneration())
     #~ print(MSG_init_pose(0.2, 0.2, 0.0))
     # INIT_POSE_ROBOT 0 0 0.0 1 0.2 0.2
     #~ print(deplacement.cmdMsgGeneration())
@@ -257,14 +258,14 @@ def trajFunction(d_cfgTraj):
     # MSG_MOVE_LINE 1 1 1.0 0.2
     
     #test MOVE_ARC
-    #~ deplacement = commandMsg("MSG_MOVE_ARC 1 0.2 1.0 0.8")
-    #~ deplacement.addPose(str(- (2.0 * math.pi) / 8.0))
-    #~ deplacement.addPose(str(- (0.0 * math.pi) / 8.0))
+    deplacement = commandMsg("MSG_MOVE_ARC 1 0.2 1.0 0.8")
+    deplacement.addPose(str(- (2.0 * math.pi) / 8.0))
+    deplacement.addPose(str(- (0.0 * math.pi) / 8.0))
     
     #~ deplacement.addPose(str(- (6.0 * math.pi) / 8.0))
     #~ deplacement.addPose(str(- (8.0 * math.pi) / 8.0))
     
-    #~ simulator_process.stdin.write(deplacement.cmdMsgGeneration())
+    simulator_process.stdin.write(deplacement.cmdMsgGeneration())
     
     
     #transmission de la commande de d'arret du simulateur
@@ -550,6 +551,8 @@ def affichageTraj2011(d_traj):
     plot(temps, d_traj["Phase"], label='Phase')
     plot(temps, d_traj["fFin"], label='flag Fin')
     plot(temps, d_traj["vitLongitudinale"], '--', label='consigne vit long')
+    #~ plot(temps, d_traj["vitLongMvt"], '-', label='consigne vit long Mvt')
+    
     #~ plot(temps, d_traj["vitLongitudinaleEffective"], '--', label='consigne vit long effec')
     print(str(len(d_traj["VpiD"])) + " " + str(len(d_traj["VitesseProfil"]))) 
     #~ plot(temps, d_traj["VposG"], label='VposG')
@@ -582,7 +585,7 @@ def affichageTraj2011(d_traj):
     # print("decc_vmax: " + str(d_traj["decc_vmax"]))
 
     ylim(-1.2, 1.2)
-    legend(loc="lower center")
+    #~ legend(loc="lower center")
     grid(True)
     title("vitesses")
 #~ 
@@ -601,8 +604,11 @@ def affichageTraj2011(d_traj):
     grid(True)
     title("tensions moteurs")
 
+
     #~ figure(5)
-    #~ 
+    #~ plot(traj["dist_parcourue"], d_traj["vitLongitudinaleEffective"], 'o', label="consigne vit longitudinale effective")
+    #~ plot(traj["dist_parcourue"][:-1], d_traj["vitLongitudinaleTest"], '-o', label="consigne vit longitudinale test")
+    
     #~ plot(d_traj["dist_parcourue"], label="dist_p")
     #~ plot(d_traj["paramPoseSubSegCourant"], label="param")
     
@@ -1077,7 +1083,7 @@ printLog(traj, "angle_arc")
 #~ printLog(traj, "cfgAsser")
 printLog(traj, "distSupp")
 printLog(traj, "resetProfil")
-
+printLog(traj, "ASSER_Running_TvF")
     
 matplotlib.rcParams.update({'font.size': 16})
 

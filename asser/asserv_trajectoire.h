@@ -29,6 +29,7 @@
 #define CUBE(a)   ((a)*(a)*(a))
 #define POWER4(a) ((a)*(a)*(a)*(a))
 #define POWER5(a) ((a)*(a)*(a)*(a)*(a))
+
 #define TEST_BIT(a, n)  ((a & (1 << n)) >>  n)
 
 /* Pour t = t1 = 0.1 */
@@ -50,11 +51,12 @@
 /* Nombre max de points pouvant definir la trajectoire */
 #define NBRE_MAX_PTS_TRAJ               63
 
-
 #define CONVERT_DISTANCE(d)             (((float)d)/10000.0)
 #define CONVERT_FLOAT2SHORT_DISTANCE(d) ((unsigned short)((d) * 10000.0))
 
+#ifndef PIC32_BUILD
 #define PLOTS_SIMU
+#endif /* PIC32_BUILD */
 
 typedef enum
 {
@@ -155,6 +157,7 @@ typedef struct __attribute__ ((packed))
 {
     float                   distance;
     float                   theta_seg;
+
     union
     {
         struct __attribute__ ((packed))
@@ -171,6 +174,7 @@ typedef struct __attribute__ ((packed))
 
         unsigned char     Info;
     } subSeg_used;
+
     unsigned char           subSeg_firstUsed;
     unsigned char           subSeg_lastUsed;
 
@@ -271,7 +275,6 @@ extern float                Ratio_Decc_Rot;
 extern float                A_MAX;
 extern float                D_MAX;
 
-
 extern float                VminMouvRef;
 
 extern unsigned int         ASSER_compteurPeriode;
@@ -282,6 +285,7 @@ extern Deplacement          chemin;
 extern float                VminMouv;
 
 extern const float          EcartVitesseDecc;
+
 /* Prototypes de function globales asserv_trajectoire */
 
 extern void                 ASSER_TRAJ_InitialisationGenerale(void);

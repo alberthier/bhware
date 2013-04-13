@@ -358,6 +358,7 @@ void SIMU_InitialisationLogRobot(void)
     ASSER_TRAJ_LogAsserValPC("ConsigneMoteurDroit", 0.0);
     ASSER_TRAJ_LogAsserValPC("vitLongitudinale", 0.0);
     ASSER_TRAJ_LogAsserValPC("vitLongitudinaleEffective", 0.0);
+    ASSER_TRAJ_LogAsserValPC("vitLongitudinaleTest", 0.0);
 
     ASSER_TRAJ_LogAsserValPC("erreurPose_x",  0.0);
     ASSER_TRAJ_LogAsserValPC("erreurPose_y",  0.0);
@@ -381,6 +382,8 @@ void SIMU_InitialisationLogRobot(void)
     ASSER_TRAJ_LogAsserValPC("VpiD", 0.0);
     ASSER_TRAJ_LogAsserValPC("VposG", 0.0);
     ASSER_TRAJ_LogAsserValPC("VposD", 0.0);        
+
+    ASSER_TRAJ_LogAsserValPC("vitLongMvt", 0.0);
 }
 
 void SIMU_LogRobot(void)
@@ -597,9 +600,6 @@ void SIMU_CalculPeriodique(void)
 
         /*************************************************************************************************/
         /****** Bloc d'instructions reellement present dans la compilation du code du robot, teste par le simulateur **********************************************/
-//        #ifdef ASSER_POS
-//            ASSER_POS_AsservissementMouvementRobot(POS_GetPoseAsserRobot(), &vitessesConsignes);   /* ASSER_Running est modifié par cette fonction */
-//        #endif
         /* Application de l'asservissement de trajectoire */
         ASSER_TRAJ_AsservissementMouvementRobot(POS_GetPoseAsserRobot(), &vitessesConsignes);
         ASSER_TRAJ_LogAsserValPC("FinPeriode", ASSER_compteurPeriode);
