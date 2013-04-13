@@ -11,6 +11,8 @@ import statemachine
 import commonstates
 from definitions import *
 
+from packets import *
+
 import math
 
 
@@ -64,6 +66,7 @@ class BHWeb(object):
       <li><a href="logs" target="linktarget">Logs</a></li>
       <li><a href="packets" target="linktarget">Packets</a></li>
       <li><a href="remote_control" target="linktarget">Remote Control</a></li>
+      <li><a href="packet_wizard" target="linktarget">Packet Wizard</a></li>
       <li><a href="http://{}:42080" target="linktarget">PIC</a></li>
     </ul>
   </div>
@@ -137,6 +140,27 @@ class BHWeb(object):
 """
         return html
 
+    def packet_wizard(self, headers, vars):
+        html = """<!DOCTYPE html>
+<html>
+<head>
+  <title>Packet wizard</title>
+  <link rel="stylesheet" type="text/css" href="static/bhweb.css" />
+</head>
+<body>
+  <div>
+    <h2>Packet wizard</h2>
+    <form action="/send_packet2">
+    <input type=text name="code">
+    <button action="submit">go !</button>
+    </form>
+
+  </div>
+</body>
+</html>
+"""
+        return html
+
 
     def logurls(self, headers, vars):
         text = ""
@@ -204,13 +228,24 @@ class BHWeb(object):
 
 
     def send_packet(self, headers, vars):
-        packet_type = packets.PACKETS_BY_NAME[vars["packet"]]
-        packet = packet_type()
-        for item in packet_type.DEFINITION:
-            setattr(packet, item.name, self.build_item_from_query(vars, item))
-        self.eventloop.send_packet(packet)
-        return self.packets()
+        try :
+            packet_type = packets.PACKETS_BY_NAME[vars["packet"]]
+            packet = packet_type()
+            for item in packet_type.DEFINITION:
+                setattr(packet, item.name, self.build_item_from_query(vars, item))
+            self.eventloop.send_packet(packet)
+        except Exception as e :
+            return str(e)
+        return "OK"
 
+    def send_packet2(self, headers, vars):
+        try :
+            code = vars["code"]
+            packet = eval(code)
+            self.eventloop.send_packet(packet)
+        except Exception as e :
+            return str(e)
+        return "OK"
 
     def build_item_from_query(self, query, item, name = None):
         if name is None:

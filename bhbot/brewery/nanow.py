@@ -105,6 +105,8 @@ class Application:
         splitted_path = url[1:].split('/')
         success = False
         mime = None
+        if len(splitted_path[0]) == 0 :
+            splitted_path = ['index']
         if hasattr(self.handler, splitted_path[0]):
             try:
                 headers = self.build_headers(environ)

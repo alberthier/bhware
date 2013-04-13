@@ -10,11 +10,15 @@
 #ifndef _configPIC18_H_
 #define _configPIC18_H_
 
-/*! \addtogroup Task_Asser
+/*! \addtogroup Asser
  *  @{
  */
- 
+
 /*! \addtogroup configPIC18
+ *  @{
+ */
+
+/*! \addtogroup configPIC18_Interface
  *  @{
  */
 
@@ -25,6 +29,7 @@
 /* Macro */
 
 #define                         CONVERT_V(x)            (((float)x * 20.0) / 128.0)
+
 /************************************************************************************************/
 
 /* Variables globales */
@@ -68,6 +73,8 @@ extern unsigned char            SaturationPIGflag;
 extern unsigned char            VBatD;
 /** Tension batteries G */
 extern unsigned char            VBatG;
+
+/*! @} */
 
 /*! @} */
 
