@@ -274,7 +274,10 @@ class BasePacket(object):
     def serialize(self):
         args = [ self.TYPE ]
         self.BIN_STRUCT.serialize(self, args)
-        return self.STRUCT.pack(*args)
+        try :
+            return self.STRUCT.pack(*args)
+        except Exception as e :
+            raise Exception("Error while serializing packet of type {} : {}".format(self.packet_type_string, e))
 
 
     def deserialize(self, buf):
@@ -294,6 +297,10 @@ class BasePacket(object):
             return getattr(obj, self.HANDLER_METHOD)(self)
         if hasattr(obj, 'on_packet'):
             return getattr(obj, 'on_packet')(self)
+
+    @property
+    def packet_type_string(self):
+        return self.__class__.__name__
 
 
 ################################################################################
