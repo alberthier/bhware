@@ -3,6 +3,8 @@
 import urllib.parse
 import os
 import os.path
+import traceback
+import sys
 
 
 
@@ -123,10 +125,16 @@ class Application:
                     (mime, content) = response
                 success = True
             except Exception as e:
-                mime = "text/plain"
-                content = str(e)
+                exc_type, exc_value, exc_traceback = sys.exc_info()
+                mime = "text/html"
+                content = "\n".join(traceback.format_exception(exc_type, exc_value,
+                                          exc_traceback))
+                content = "<pre>"+content+"</pre>"
         else:
             content = "'{}' not found".format(environ["PATH_INFO"])
+
+        if len(content) == 0 :
+            content = "Handler for {} returned an empty response".format(url[1:])
 
         if success:
             status = '200 OK'
