@@ -126,7 +126,7 @@ class Map:
 
 
     def on_opponent_disapeared(self, opponent, opponent_direction):
-        if packet.robot == OPPONENT_ROBOT_MAIN:
+        if opponent == OPPONENT_ROBOT_MAIN:
             opponent = self.main_opponent_zone
         else:
             opponent = self.secondary_opponent_zone
