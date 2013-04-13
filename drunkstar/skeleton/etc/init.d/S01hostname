@@ -7,10 +7,10 @@ case "$1" in
   start)
     echo -n "Update hostname: "
     MAC_ADDRESS=`ifconfig eth0 | head -n 1 | tail -c 20`
-    if [ "$MAC_ADDRESS" = "00:10:75:1A:BD:45" ]; then
+    if [ $MAC_ADDRESS = "00:10:75:1A:BD:45" ]; then
         hostname sheldon
         echo "OK"
-    elif [ "$MAC_ADDRESS" = "66:77:88:99:AA:BB" ]; then
+    elif [ $MAC_ADDRESS = "00:10:75:1A:86:F3" ]; then
         hostname leonard
         echo "OK"
     else
