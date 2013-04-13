@@ -74,15 +74,15 @@ class StateMachine(object):
             self.process(generator)
 
 
-    def on_opponent_disapeared(self, opponent, opponent_direction):
+    def on_opponent_disappeared(self, opponent, opponent_direction):
         if self.current_state is not None:
             generator = self.current_state.on_opponent_in_back(packet)
             self.process(generator)
 
 
-    def on_opponent_disapeared(self, opponent, is_in_front):
+    def on_opponent_disappeared(self, opponent, is_in_front):
         if self.current_state is not None:
-            generator = self.current_state.on_opponent_disapeared(opponent, is_in_front)
+            generator = self.current_state.on_opponent_disappeared(opponent, is_in_front)
             self.process(generator)
 
 
@@ -161,5 +161,5 @@ class State(object):
         pass
 
 
-    def on_opponent_disapeared(self, opponent, opponent_direction):
+    def on_opponent_disappeared(self, opponent, opponent_direction):
         pass

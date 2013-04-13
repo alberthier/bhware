@@ -125,7 +125,7 @@ class Map:
         self.pathfinder.move_zone(opponent.id, dx, dy)
 
 
-    def on_opponent_disapeared(self, opponent, opponent_direction):
+    def on_opponent_disappeared(self, opponent, opponent_direction):
         if opponent == OPPONENT_ROBOT_MAIN:
             opponent = self.main_opponent_zone
         else:

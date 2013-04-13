@@ -444,5 +444,5 @@ class Map(object):
         self.set_opponent(packet.robot, x, y)
 
 
-    def on_opponent_disapeared(self, opponent, opponent_direction):
+    def on_opponent_disappeared(self, opponent, opponent_direction):
         self.clear_opponent(opponent)

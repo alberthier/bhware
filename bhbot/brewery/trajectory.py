@@ -299,7 +299,7 @@ class Map(object):
             self.evaluator.set_secondary_opponent_position(int(round(x / EVALUATOR_MAP_RESOLUTION)), int(round(y / EVALUATOR_MAP_RESOLUTION)))
 
 
-    def on_opponent_disapeared(self, opponent, opponent_direction):
+    def on_opponent_disappeared(self, opponent, opponent_direction):
         if opponent == OPPONENT_ROBOT_MAIN:
             self.pathfinder.clear_main_opponent_position()
             self.evaluator.clear_main_opponent_position()

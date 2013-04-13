@@ -209,7 +209,7 @@ class WaitForOpponentLeave(Timer):
         return self.try_leave()
 
 
-    def on_opponent_disapeared(self, opponent, opponent_direction):
+    def on_opponent_disappeared(self, opponent, opponent_direction):
         if opponent == self.opponent:
             self.exit_reason = self.OPPONENT_LEFT
             self.opponent_disappeared = True

@@ -64,7 +64,7 @@ class Opponent(object):
 
         if self.detector.event_loop.fsm is not None:
             if self.opponent_direction is None:
-                self.detector.event_loop.fsm.on_opponent_disapeared(self.opponent_type, previous_direction)
+                self.detector.event_loop.fsm.on_opponent_disappeared(self.opponent_type, previous_direction)
             else:
                 self.detector.event_loop.fsm.on_opponent_detected(packet, self.opponent_direction, self.x, self.y)
 
@@ -74,12 +74,12 @@ class Opponent(object):
     def opponent_disapear_timout(self):
         previous_direction = self.opponent_direction
         self.opponent_direction = None
-        self.detector.event_loop.map.on_opponent_disapeared(self.opponent_type, previous_direction)
+        self.detector.event_loop.map.on_opponent_disappeared(self.opponent_type, previous_direction)
         if IS_HOST_DEVICE_PC:
             sim_packet = packets.SimulatorOpponentsPositions(robot = self.opponent_type, present = False)
             self.detector.event_loop.send_packet(sim_packet)
         if self.detector.event_loop.fsm is not None:
-            self.detector.event_loop.fsm.on_opponent_disapeared(self.opponent_type, previous_direction)
+            self.detector.event_loop.fsm.on_opponent_disappeared(self.opponent_type, previous_direction)
 
 
 
