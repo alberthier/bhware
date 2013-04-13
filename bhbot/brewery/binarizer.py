@@ -137,7 +137,7 @@ class Float(AbstractItem):
 
 
     def to_dump(self, value):
-        return "{:0.4f}".format(value)
+        return "{:0.4f}".format(value) if value else str(value)
 
 
     def from_dump(self, value):
@@ -273,15 +273,12 @@ class Struct(AbstractItem):
 
 
     def to_dump(self, value):
-        s = "("
-        first = True
-        for name, item in self.content:
-            if first:
-                first = False
-            else:
-                s += ", "
-            s += "('" + name + "', " + item.to_dump(getattr(value, name)) + ")"
-        return s + ")"
+        return '({})'.format(
+            ', '.join("('{name}', {val})".format(
+                name=name,
+                val=item.to_dump(getattr(value,name))) for name,item in self.content
+            )
+        )
 
 
     def from_dump(self, value):

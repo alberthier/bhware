@@ -465,3 +465,31 @@ class PumpPacketTestCase(unittest.TestCase, PacketTestMixin):
 
     def initialize_packet(self, packet):
         packet.action = PUMP_ON
+
+class StructTestCase(unittest.TestCase):
+
+    def test_to_dump(self):
+        from packets import Struct, ShortAsFloat
+
+        class PointTest(Struct):
+
+            DESCRIPTION = "Test"
+
+            def __init__(self, description = None):
+                Struct.__init__(self, position.Pose, description,
+                    ('x', ShortAsFloat(0.0, "X coordinate")),
+                    ('y', ShortAsFloat(0.0, "Y coordinate")),
+                )
+
+        p = PointTest()
+        p.x = 1.0
+        p.y = 2.0
+
+        self.assertEquals("(('x', 1.0000), ('y', 2.0000))",p.to_dump(p))
+
+        # should not crash
+        p = PointTest()
+        p.x = None
+        p.y = None
+
+        self.assertEquals("(('x', None), ('y', None))",p.to_dump(p))
