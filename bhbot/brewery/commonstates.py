@@ -14,6 +14,41 @@ import tools
 from definitions import *
 
 
+import functools
+
+class StateChain(statemachine.State):
+    def __init__(self, *args):
+        self.states = args
+        logger.log('StateChain : {}'.format(self.states))
+
+    def __getattr__(self, item):
+        if item.startswith('on_'):
+            method = functools.partial(self.handle_event, item)
+            setattr(self, item, method)
+            return method
+        raise AttributeError()
+
+    def on_enter(self, *args, **kwargs):
+        for s in self.states :
+            self.fsm.init_state(s)
+
+        real_ret = None
+        for state in self.states :
+            ret = state.on_enter(*args, **kwargs)
+            if ret :
+                real_ret = ret
+        return real_ret
+
+    def handle_event(self, event_name, *args, **kwargs):
+        logger.log('StateChain.handle_event : {}'.format(event_name))
+        for state in self.states :
+            method = getattr(state, event_name, None)
+            if method :
+                ret = method(*args, **kwargs)
+                if ret :
+                    return ret
+        return None
+
 
 
 class Timer(statemachine.State):
