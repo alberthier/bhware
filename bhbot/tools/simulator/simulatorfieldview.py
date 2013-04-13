@@ -886,13 +886,14 @@ class GameElementsLayer(fieldview.Layer):
                 candle.blow()
 
         if self.main_bar.opponent_detection.isChecked():
-            distance = tools.distance(robot_a.item.x(), robot_a.item.y(), robot_b.item.x(), robot_b.item.y())
-            if distance < TURRET_SHORT_DISTANCE_DETECTION_RANGE * 1000.0:
-                self.send_turret_detect(robot_a, robot_b, 0)
-                self.send_turret_detect(robot_b, robot_a, 0)
-            elif distance < TURRET_LONG_DISTANCE_DETECTION_RANGE * 1000.0:
-                self.send_turret_detect(robot_a, robot_b, 1)
-                self.send_turret_detect(robot_b, robot_a, 1)
+            if robot_a.item and robot_b.item :
+                distance = tools.distance(robot_a.item.x(), robot_a.item.y(), robot_b.item.x(), robot_b.item.y())
+                if distance < TURRET_SHORT_DISTANCE_DETECTION_RANGE * 1000.0:
+                    self.send_turret_detect(robot_a, robot_b, 0)
+                    self.send_turret_detect(robot_b, robot_a, 0)
+                elif distance < TURRET_LONG_DISTANCE_DETECTION_RANGE * 1000.0:
+                    self.send_turret_detect(robot_a, robot_b, 1)
+                    self.send_turret_detect(robot_b, robot_a, 1)
 
 
     def send_turret_detect(self, detecting_robot, detected_robot, distance):
