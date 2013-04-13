@@ -12,6 +12,11 @@ import platform
 IS_HOST_DEVICE_ARM                     = platform.machine() == "armv5tel"
 IS_HOST_DEVICE_PC                      = not IS_HOST_DEVICE_ARM
 
+#Teammate collaboration
+#Time between two position information
+#sent to teammate
+TEAMMATE_INFO_DELAY                    = 1.0
+
 # Field
 FIELD_Y_SIZE                           = 3.0
 FIELD_X_SIZE                           = 2.0

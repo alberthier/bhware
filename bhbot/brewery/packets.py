@@ -807,6 +807,16 @@ class InterbotHello(BasePacket):
 
     TYPE = 200
 
+class InterbotPosition(BasePacket):
+
+    TYPE = 201
+
+    LOGVIEW_COLOR = "#BB00CC"
+    DEFINITION = (
+        ('current_pose'       , Pose  ("Other robot pose")),
+        ('main_robot', Bool  (True, "Sender is main robot")),
+    )
+
 
 ################################################################################
 # Packets lookup setup

@@ -27,6 +27,7 @@ import goalmanager
 import tools
 import webinterface
 import colordetector
+import interbot
 
 from definitions import *
 
@@ -47,6 +48,7 @@ class TurretChannel(asyncore.file_dispatcher):
         self.packet = None
         self.synchronized = False
         self.out_buffer = bytes()
+        self.origin = "TUR"
 
 
     def bytes_available(self):
@@ -103,6 +105,7 @@ class RobotControlDeviceChannel(asyncore.dispatcher_with_send):
         self.eventloop = eventloop
         self.buffer = bytes()
         self.packet = None
+        self.origin = "PIC"
 
 
     def bytes_available(self):
@@ -176,6 +179,7 @@ class InterbotChannel(asyncore.dispatcher_with_send):
         self.buffer = bytes()
         self.packet = None
         self.event_loop.interbot_channel = self
+        self.origin = "TMM"
         logger.log("Interbot channel connected")
 
 
@@ -348,6 +352,7 @@ class EventLoop(object):
         self.state_machine_name = state_machine_name
         self.webserver_port = webserver_port
         self.opponent_detector = opponentdetector.OpponentDetector(self)
+        self.interbot_manager = interbot.InterBotManager(self)
         self.stopping = False
         self.is_match_started = False
         self.map = graphmap.Map(self)
@@ -403,12 +408,14 @@ class EventLoop(object):
                         channel.packet.deserialize(channel.buffer)
                         channel.buffer = bytes()
 
-                        logger.log_packet(channel.packet, "PIC")
+                        logger.log_packet(channel.packet, channel.origin)
 
                         channel.packet.dispatch(self)
                         channel.packet.dispatch(self.robot)
                         channel.packet.dispatch(self.opponent_detector)
                         channel.packet.dispatch(self.map)
+                        channel.packet.dispatch(self.interbot_manager)
+
                         if self.fsm is not None:
                             channel.packet.dispatch(self.fsm)
 
@@ -471,8 +478,9 @@ class EventLoop(object):
             self.robot_control_channel.send(buffer)
         elif packet.TYPE < packets.SIMULATOR_RANGE_END:
             self.robot_control_channel.send(buffer)
-        elif self.interbot_channel is not None:
-            self.interbot_channel.send(buffer)
+        elif packet.TYPE >= packets.INTERBOT_RANGE_START:
+            if self.interbot_channel :
+                self.interbot_channel.send(buffer)
 
 
     def inject_goto_finished(self):

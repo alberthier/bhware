@@ -152,3 +152,22 @@ class Map:
 
         bld = builder.Builder(source_file, output_file, commands, working_dir)
         bld.build()
+
+
+    def on_interbot_position(self, packet):
+        """
+        :type packet: packets.InterbotPosition
+        """
+        teammate = self.teammate_zone
+        x = packet.current_pose.x
+        y = packet.current_pose.y
+        self.pathfinder.enable_zone(teammate.id, True)
+        dx = x - teammate.x
+        dy = y - teammate.y
+        teammate.x = x
+        teammate.y = y
+        if abs(dx)<0.01 and abs(dy)<0.01:
+            logger.log("Movement too small, not updating zone (dx={} dy={})".format(dx,dy))
+        else :
+            logger.log("Move team mate zone dx={} dy={}".format(dx,dy))
+            self.pathfinder.move_zone(teammate.id, dx, dy)
