@@ -5,4 +5,5 @@ echo 1 > /proc/sys/net/ipv4/ip_forward
 iptables -P FORWARD ACCEPT
 iptables -A POSTROUTING -t nat -o eth0 -j MASQUERADE
 iptables -A PREROUTING -t nat -p tcp -i wlan0 --dport 42080 -j DNAT --to 192.168.2.200:80
+iptables -A PREROUTING -t nat -p tcp -i wlan0 --dport 42081 -j DNAT --to 192.168.0.1:80
 iptables -A PREROUTING -t nat -p tcp -i wlan0 --dport 42023 -j DNAT --to 192.168.2.200:23
