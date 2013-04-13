@@ -316,8 +316,6 @@ class LookAtOpposite(AbstractMove):
         dx = self.pose.x - current_pose.x
         dy = self.pose.y - current_pose.y
         angle = math.atan2(dy, dx) + math.pi
-        if angle > math.pi:
-            angle -= 2.0 * math.pi
         self.packet = packets.Rotate(direction = self.direction, angle = angle)
         return AbstractMove.on_enter(self)
 
@@ -360,6 +358,35 @@ class MoveLineTo(MoveLine):
     def __init__(self, x, y, direction = DIRECTION_FORWARDS, chained = None):
         MoveLine.__init__(self, [position.Pose(x, y, None, True)], direction, chained)
 
+
+class MoveRelative(statemachine.State):
+
+    def __init__(self, distance, direction = DIRECTION_FORWARDS, chained = None):
+        self.distance = distance
+        self.direction = direction
+        self.chained = chained
+
+
+    def on_enter(self):
+        current_pose = self.robot.pose
+        x = current_pose.virt.x + math.cos(current_pose.virt.angle) * self.distance
+        y = current_pose.virt.y + math.sin(current_pose.virt.angle) * self.distance
+        yield MoveLineTo(x, y, self.direction, self.chained)
+        yield None
+
+class RotateRelative(AbstractMove):
+
+    def __init__(self, relative_angle, chained = None):
+
+        AbstractMove.__init__(self, chained, False)
+
+        self.relative_angle = relative_angle
+        self.chained = chained
+
+    def on_enter(self):
+        current_pose = self.robot.pose
+        yield Rotate(current_pose.angle+self.relative_angle, chained=self.chained)
+        yield None
 
 
 class MoveArc(AbstractMove):
