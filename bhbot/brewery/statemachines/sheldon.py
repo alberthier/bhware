@@ -43,10 +43,9 @@ class Main(statemachine.State):
 
 
 
-class GlassesSuperS(statemachine.State):
+class GlassesSuperS(GrabGlasses):
 
-    def on_enter(self):
-        self.side_detection_handled = [False, False]
+    def create_move(self):
         glasses = [(0.95, 0.90),
                    (1.20, 1.05),
                    (0.95, 1.20),
@@ -55,59 +54,16 @@ class GlassesSuperS(statemachine.State):
                    (0.95, 1.80)]
         path = []
         for x, y in glasses:
-            offset = 0.05
+            xoffset = 0.05
             if x < 1.0:
-                x += offset
+                x += xoffset
             else:
-                x -= offset
+                x -= xoffset
             y -= 0.128
             path.append((x, y))
         move = MoveCurve(math.pi /2.0, path)
-        move.on_glass_present = self.on_glass_present
-        move.on_lifter = self.on_lifter
-        yield move
-        yield None
-
-
-    def on_glass_present(self, packet):
-        if not self.side_detection_handled[packet.side]:
-            self.side_detection_handled[packet.side] = True
-            glasses_count = self.robot.glasses_count[packet.side]
-            if glasses_count == 0:
-                self.send_packet(packets.Gripper(side = packet.side, move = MOVE_CLOSE))
-            if glasses_count == 1:
-                self.send_packet(packets.Gripper(side = packet.side, move = MOVE_CLOSE))
-            if glasses_count == 2:
-                self.send_packet(packets.BottomHolder(side = packet.side, move = MOVE_CLOSE))
-
-
-    def on_gripper(self, packet):
-        if packet.move == MOVE_CLOSE:
-            glasses_count = self.robot.glasses_count[packet.side]
-            if glasses_count == 0:
-                self.send_packet(packets.Lifter(side = packet.side, move = LIFTER_MOVE_UP))
-            if glasses_count == 1:
-                self.send_packet(packets.Lifter(side = packet.side, move = LIFTER_MOVE_MIDDLE))
-        else:
-            # First glass at top
-            self.send_packet(packets.Lifter(side = packet.side, move = LIFTER_MOVE_DOWN))
-
-
-    def on_lifter(self, packet):
-        if packet.move == LIFTER_MOVE_DOWN:
-            self.robot.glasses_count[packet.side] += 1
-            self.side_detection_handled[packet.side] = False
-        else:
-            glasses_count = self.robot.glasses_count[packet.side]
-            if glasses_count == 0:
-                self.send_packet(packets.TopHolder(side = packet.side, move = MOVE_CLOSE))
-            if glasses_count == 1:
-                self.robot.glasses_count[packet.side] += 1
-                self.side_detection_handled[packet.side] = False
-
-
-    def on_top_holder(self, packet):
-        self.send_packet(packets.Gripper(side = packet.side, move = MOVE_OPEN))
+        move.on_packet = self.on_packet
+        return move
 
 
 
