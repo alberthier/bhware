@@ -70,19 +70,13 @@ class StateMachine(object):
 
     def on_opponent_detected(self, packet, opponent_direction, x, y):
         if self.current_state is not None:
-            generator = self.current_state.on_opponent_in_front(packet)
+            generator = self.current_state.on_opponent_detected(packet, opponent_direction, x, y)
             self.process(generator)
 
 
     def on_opponent_disappeared(self, opponent, opponent_direction):
         if self.current_state is not None:
-            generator = self.current_state.on_opponent_in_back(packet)
-            self.process(generator)
-
-
-    def on_opponent_disappeared(self, opponent, is_in_front):
-        if self.current_state is not None:
-            generator = self.current_state.on_opponent_disappeared(opponent, is_in_front)
+            generator = self.current_state.on_opponent_disappeared(opponent, opponent_direction)
             self.process(generator)
 
 
