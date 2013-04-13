@@ -7,6 +7,8 @@ import time
 import builder
 import logger
 
+from definitions import *
+
 
 
 
@@ -34,13 +36,16 @@ class ColorDetector:
             self.team_name = "red"
         else:
             self.team_name = "blue"
+        self.reinit()
 
 
     def reinit(self):
         self.quit()
         folder = os.path.join(os.path.dirname(__file__), "colordetector")
         exe = os.path.join(folder, "colordetector")
-        cfg_path = os.path.join(folder, "{}{}.cfg".format(self.team_name, str(self.count)))
+        cfg_file = "{}{}.cfg".format(self.team_name, str(self.count))
+        cfg_path = os.path.join(folder, cfg_file)
+        logger.log("Initialization #{} of the color detector. config: {}".format(self.count, cfg_file))
         self.process = subprocess.Popen([exe], stdin = subprocess.PIPE, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
         if os.path.exists(cfg_path):
             cfg = open(cfg_path)
@@ -55,8 +60,10 @@ class ColorDetector:
         ret = None
         if self.process:
             cmd = " ".join(args) + "\n"
+            logger.log("> " + cmd[:-1])
             self.process.stdin.write(cmd.encode("utf-8"))
-            out = self.process.stdout.readline()
+            out = str(self.process.stdout.readline(), "utf-8")
+            logger.log("< " + out[:-1])
             ret = eval(out)
         return ret
 
