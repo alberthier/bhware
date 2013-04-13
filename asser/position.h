@@ -10,7 +10,7 @@
 #ifndef _POSITION_H_
 #define _POSITION_H_
 
-/*! \addtogroup Task_Asser
+/*! \addtogroup Asser
  *  @{
  */
 
@@ -22,8 +22,6 @@
  *  @{
  */
 
-extern unsigned short                   DonneeNbrPasCdrDroite;
-
 /* Define asser de position */
 
 /** Flag de mouvement */
@@ -32,7 +30,7 @@ extern unsigned short                   DonneeNbrPasCdrDroite;
 #define     MOVE_LINE                   ((unsigned char)     2u)
 #define     MOVE_ARC                    ((unsigned char)     3u)
 
-#define     MARCHE_AUTO                 ((signed char)       0)
+#define     SENS_AUTO                   ((signed char)       0)
 #define     MARCHE_AVANT                ((signed char)       1)
 #define     MARCHE_ARRIERE              ((signed char)       -1)
 
@@ -71,6 +69,7 @@ typedef struct __attribute__ ((packed))
     float longitudinale;
     float rotation;
 } VitessesRobotUnicycle;
+
 typedef enum
 {
     NO_ANGLE     = (unsigned char)0,

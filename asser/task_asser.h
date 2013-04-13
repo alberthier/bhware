@@ -12,6 +12,10 @@
 
 #include "position.h"
 
+/*! \addtogroup Asser
+ *  @{
+ */
+
 /*! \addtogroup Task_Asser
  *  @{
  */
@@ -72,6 +76,8 @@ extern void             logAsser0(char* nomFichier, char* mode, float valeur, ch
 #define DROIT           1
 
 #endif /* PIC32_BUILD */
+
+/*! @} */
 
 /*! @} */
 
