@@ -9,6 +9,7 @@ import fcntl
 import termios
 import ctypes
 import struct
+import time
 
 import logger
 import packets
@@ -26,6 +27,7 @@ import goalmanager
 import tools
 import webinterface
 import colordetector
+
 from definitions import *
 
 if IS_HOST_DEVICE_ARM :
