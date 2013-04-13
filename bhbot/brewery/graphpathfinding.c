@@ -175,7 +175,7 @@ static Node* node_list_pop(Node* self)
 
 /* Edge */
 
-typedef struct _Edge
+struct _Edge
 {
     Node* node1;
     Node* node2;
@@ -184,7 +184,7 @@ typedef struct _Edge
     int enabled;
     float length;
     int zone_internal;
-} Edge;
+};
 
 
 static Edge* edge_new(Node* node1, Node* node2)
