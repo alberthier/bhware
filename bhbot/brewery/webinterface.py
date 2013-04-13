@@ -282,17 +282,6 @@ class BHWeb(object):
         return html
 
 
-    def send_packet_2(self, headers, vars):
-        try :
-            packet_type = packets.PACKETS_BY_NAME[vars["packet"]]
-            packet = packet_type()
-            for item in packet_type.DEFINITION:
-                setattr(packet, item.name, self.build_item_from_query(vars, item))
-            self.eventloop.send_packet(packet)
-        except Exception as e :
-            return str(e)
-        return "OK"
-
     def packet_wizard_3(self, headers, vars):
         packet=None
 
