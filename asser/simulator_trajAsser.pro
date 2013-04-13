@@ -1,6 +1,8 @@
 TEMPLATE = app
 CONFIG = debug
 
+QMAKE_CFLAGS += -Wall
+
 HEADERS = \
     asserv_trajectoire.h \
     define.h \
@@ -17,4 +19,5 @@ SOURCES = \
     simuAsser.c \
     simu_task_asser.c \
     pic18.c
+
 
