@@ -487,6 +487,11 @@ class WaypointReached(BasePacket):
     TYPE = 60
     LOGVIEW_COLOR = "#6495ed"
 
+    DEFINITION = (
+        ('current_point_index', UInt8(0, "Reached waypoint index")),
+        ('current_pose' ,       Pose ("Current robot pose")),
+    )
+
 
 
 
