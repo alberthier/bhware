@@ -107,10 +107,7 @@ else:
     GREEN_LED_DEVICE_PATH              = None
 
 # Log directory
-if IS_HOST_DEVICE_ARM:
-    LOG_DIR                            = "/tmp/bhlogs"
-else:
-    LOG_DIR                            = os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file__))), "logs")
+LOG_DIR                            = os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file__))), "logs")
 
 # Brewery's web sever
 WEB_SERVER_PORT                        = 8080
