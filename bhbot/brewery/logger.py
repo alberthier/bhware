@@ -100,10 +100,11 @@ def log_packet(packet, sender = "ARM"):
     delta = datetime.datetime.now() - start_time
     time = "'{:=0.02f}'".format(delta.total_seconds())
     text = "'" + sender + "'," + type(packet).__name__ + ",\"" + packet.to_dump() + "\"]"
-    is_keep_alive = type(packet).__name__ == "KeepAlive"
-    if not is_keep_alive or packet.match_time > 0 and packet.match_time < 100000:
+    ignore = type(packet).__name__ == "KeepAlive" and (packet.match_time <= 0 or packet.match_time >= 100000)
+    if not ignore:
         log_lines.append("l([" + time + "," + text + ")\n")
-    if not is_keep_alive and not type(packet).__name__.startswith("Simulator"):
+    ignore |= type(packet).__name__ in [ "InterbotPosition", "KeepAlive" ]
+    if not ignore and not type(packet).__name__.startswith("Simulator"):
         sys.stdout.write("[" + text + "\n")
         sys.stdout.flush()
 
