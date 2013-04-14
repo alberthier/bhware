@@ -233,7 +233,6 @@ def trajFunction(d_cfgTraj):
     #~ send_init_pose(simulator_process, x=0.2, y=1.0, angle=0.0)
     #~ deplacement = commandMsg("MSG_MOVE_CURVE 1 1 0.0")
     #~ deplacement.addPose("0.9 1.0")
-    #deplacement.addPose("1.0 1.0")
     #~ deplacement.addPose("1.05 0.85")
     #~ deplacement.addPose("1.2 1.0")
     #~ deplacement.addPose("1.35 0.85")
@@ -250,22 +249,22 @@ def trajFunction(d_cfgTraj):
     # MSG_MOVE_CURVE 1 1 0.0 4 0.9 1.0 1.05 0.85 1.2 1.0 1.35 0.85
     
     #test MOVE_LINE
-    #~ deplacement = commandMsg("MSG_MOVE_LINE 1")
-    #~ deplacement.addPose("1.2 0.2")
-    #~ #deplacement.addPose("1.3 0.2")
-    #~ simulator_process.stdin.write(deplacement.cmdMsgGeneration())
+    deplacement = commandMsg("MSG_MOVE_LINE 1")
+    deplacement.addPose("1.2 0.2")
+    #deplacement.addPose("1.3 0.2")
+    simulator_process.stdin.write(deplacement.cmdMsgGeneration())
     #~ print(deplacement.cmdMsgGeneration())
     # MSG_MOVE_LINE 1 1 1.0 0.2
     
     #test MOVE_ARC
-    deplacement = commandMsg("MSG_MOVE_ARC 1 0.2 1.0 0.8")
-    deplacement.addPose(str(- (2.0 * math.pi) / 8.0))
-    deplacement.addPose(str(- (0.0 * math.pi) / 8.0))
+    #~ deplacement = commandMsg("MSG_MOVE_ARC 1 0.2 1.0 0.8")
+    #~ deplacement.addPose(str(- (2.0 * math.pi) / 8.0))
+    #~ deplacement.addPose(str(- (0.0 * math.pi) / 8.0))
     
     #~ deplacement.addPose(str(- (6.0 * math.pi) / 8.0))
     #~ deplacement.addPose(str(- (8.0 * math.pi) / 8.0))
     
-    simulator_process.stdin.write(deplacement.cmdMsgGeneration())
+    #~ simulator_process.stdin.write(deplacement.cmdMsgGeneration())
     
     
     #transmission de la commande de d'arret du simulateur
@@ -383,7 +382,11 @@ def testPI(d_cfgTraj) :
 
     #lancement du simulateur de deplacement
     print("Lancement du simulateur")
-    simulator_process = subprocess.Popen('simulator_trajAsser.exe', shell=True, stdin = subprocess.PIPE, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+    if (platform.system() == 'Linux') :
+        shellCommand = './simulator_trajAsser'
+    if (platform.system() == 'Windows') :
+        shellCommand = 'simulator_trajAsser.exe'
+    simulator_process = subprocess.Popen(shellCommand, shell=True, stdin = subprocess.PIPE, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
 
     # envoie de la configuration du simulateur
     send_config_simulator(simulator_process, d_cfgTraj)
@@ -413,7 +416,7 @@ def PI2011_coutOptimParam(paramPI, d_cfgTraj_local) :
     sommeErreurVitesseCarre = 0.0
     tensionMax = 0.0
     # cout de la tension maximum
-    for tension in d_traj["tensionPWM_MoteurGauche"]:
+    for tension in d_traj["tensionMesPI"]:
         if (tension > tensionMax) :
             tensionMax = tension
     coutTensionMax = ((1023-20) - tensionMax) / (1023-20)
@@ -421,7 +424,7 @@ def PI2011_coutOptimParam(paramPI, d_cfgTraj_local) :
         coutTensionMax = -10.0*coutTensionMax
 
     # cout de l'erreur de vitesse en regime permanent
-    indexMesureErrVitesse = len(d_traj["erreurVitesseMoteurGauche"]) - 1
+    indexMesureErrVitesse = len(d_traj["errVitMesPI"]) - 1
     vitcons_p = d_traj["vitconsPI"][0]
     for index_vitcons in range(len(d_traj["vitconsPI"][1:])) :
         if ((d_traj["vitconsPI"][1 + index_vitcons] - vitcons_p) < 0.001) :
@@ -430,14 +433,16 @@ def PI2011_coutOptimParam(paramPI, d_cfgTraj_local) :
                 break
         vitcons_p = d_traj["vitconsPI"][1 + index_vitcons]
 
-    if (indexMesureErrVitesse > (len(d_traj["erreurVitesseMoteurGauche"]) - 1) ) :
-        indexMesureErrVitesse = len(d_traj["erreurVitesseMoteurGauche"]) - 1
+    if (indexMesureErrVitesse > (len(d_traj["errVitMesPI"]) - 1) ) :
+        indexMesureErrVitesse = len(d_traj["errVitMesPI"]) - 1
+        
+    indexMesureErrVitesse = len(d_traj["errVitMesPI"]) - 1
 
-    coutErreurVitesse = math.fabs(d_traj["erreurVitesseMoteurGauche"][indexMesureErrVitesse] / d_traj["vitesseMoteurGauche"][indexMesureErrVitesse])
+    coutErreurVitesse = math.fabs(d_traj["errVitMesPI"][indexMesureErrVitesse] / d_traj["vitMesPI"][indexMesureErrVitesse])
 
     coutTotal = coutTensionMax + coutErreurVitesse
 
-    print([tensionMax, coutErreurVitesse, indexMesureErrVitesse, d_cfgTraj_local['Kp'], d_cfgTraj_local['Ki']])
+    print([len(d_traj["errVitMesPI"]), tensionMax, coutErreurVitesse, indexMesureErrVitesse, d_cfgTraj_local['Kp'], d_cfgTraj_local['Ki']])
     return coutTotal
 
 def coutOptim_TempsAcc(param, d_cfgTraj_local) :
@@ -545,7 +550,10 @@ def affichageTraj2011(d_traj):
     plot(temps, d_traj["vitesseMoteurGauche"], '-', label='mesure gauche')
     # hold(True)
     plot(temps, d_traj["vitesseMoteurDroit"], label='mesure droit')
-    plot(temps, d_traj["VitesseProfil"], label='Vitesse Profil')
+    if (len(d_traj["VitesseProfil"]) < len(temps)) :
+        plot(temps[:len(d_traj["VitesseProfil"])], d_traj["VitesseProfil"], label='Vitesse Profil')
+    else :
+        plot(temps, d_traj["VitesseProfil"], label='Vitesse Profil')
     plot(temps, d_traj["ConsigneMoteurDroit_MS"], label='consigne droit')
     plot(temps, d_traj["VgASR"], label='V g ASR')
     plot(temps, d_traj["Phase"], label='Phase')
@@ -719,40 +727,41 @@ def affichageTestAccDcecc(d_traj):
 
 def affichageTestPI2012(d_traj):
 
+    printLog(d_traj, "config_testPI")
+
     periode=d_traj["periode"][0]
-    temps = [ periode * x for x in range(len(d_traj["vitesseMoteurGauche"]))]
-    print("len: " + str(len(d_traj["vitesseMoteurGauche"])) )
+    temps = [ periode * x for x in range(len(d_traj["vitMesPI"]))]
+    print("len tps: " + str(len(d_traj["vitMesPI"])) )
 
     figure(1)
-    plot(temps, d_traj["tensionPWM_MoteurGauche"], label="tension moteur gauche")
+    plot(temps, d_traj["tensionMesPI"], '-o', label="tension moteur")
     hold(True)
-    #~ plot(temps, d_traj["tensionPWM_MoteurDroit"], label="tension moteur droit")
     grid(True)
     legend(loc="lower center")
     title("tensions moteurs")
 
     figure(2)
-    plot(temps, d_traj["vitconsPI"], label="vitconsPI")
-    plot(temps, d_traj["vitesseMoteurGauche"], label="vitesseG")
+    print("len vitconsPI: " + str(len(d_traj["vitconsPI"])) )
+    plot(temps, d_traj["vitconsPI"], '-o', label="vitconsPI")
+    plot(temps, d_traj["vitMesPI"], '-o', label="vitesse")
     grid(True)
     legend(loc="lower center")
 
-    figure(3)
-    plot(temps, d_traj["distPI"], label="distance parcourue")
-    grid(True)
-    legend(loc="upper left")
-    title("Distance parcourue")
+    #~ figure(3)
+    #~ plot(temps, d_traj["distPI"], label="distance parcourue")
+    #~ grid(True)
+    #~ legend(loc="upper left")
+    #~ title("Distance parcourue")
 
-    print("dist finale: " + str(d_traj["distPI"][-1]))
-
-
-    v = axis()
-    limits = []
-    for val in v:
-        limits.append(val)
-    #~ limits[2] = -1.5
-    #~ limits[3] = 1.5
-    axis(limits)
+    #~ print("dist finale: " + str(d_traj["distPI"][-1]))
+    
+    #~ v = axis()
+    #~ limits = []
+    #~ for val in v:
+        #~ limits.append(val)
+    #~ #limits[2] = -1.5
+    #~ #limits[3] = 1.5
+    #~ axis(limits)
 
     show()
 
@@ -865,8 +874,8 @@ def optimRayonRoue(d_cfgTraj_local) :
 
 def PI2011_optimParam(d_cfgTraj_local) :
     #optimisation des gains PI
-    p0 = [2.0, 2.0]
-    solPI = fmin(PI2011_coutOptimParam, p0, args=[d_cfgTraj_local], xtol=0.01, ftol=0.001, maxiter=45, disp = True, retall = True)
+    p0 = [d_cfgTraj_local["Kp"], d_cfgTraj_local["Ki"]]
+    solPI = fmin(PI2011_coutOptimParam, p0, args=[d_cfgTraj_local], xtol=0.01, ftol=0.01, maxiter=45, disp = True, retall = True)
     return(solPI[0])
 
 def optimParam_TempsAcc(d_cfgTraj_local) :
@@ -887,8 +896,9 @@ def printLog(traj, logName) :
         
 
 #########################################################################
+#~ d_cfgTraj["Kp"] = 3.0
+#~ d_cfgTraj["Ki"] = 11.0
 #~ traj = testPI(d_cfgTraj)
-#~ affichageGabaritVitesse_2012(traj)
 #~ affichageTestPI2012(traj)
 #~ sys.exit(2)
 
@@ -902,9 +912,11 @@ def printLog(traj, logName) :
 #~ optimParam_TempsAcc(d_cfgTraj)
 #~ sys.exit(2)
 
-#~ gainPI = PI2011_optimParam(d_cfgTraj)
-#~ print("Gains PI: " + str(gainPI))
-#~ sys.exit(2)
+d_cfgTraj["Kp"] = 2.0
+d_cfgTraj["Ki"] = 5.0
+gainPI = PI2011_optimParam(d_cfgTraj)
+print("Gains PI: " + str(gainPI))
+sys.exit(2)
 
 #~ d_cfgTraj = optimParam_TempsAcc(d_cfgTraj)
 traj = trajFunction(d_cfgTraj)

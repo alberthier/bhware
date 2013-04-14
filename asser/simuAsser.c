@@ -74,6 +74,8 @@ float                    g_tab_gabarit_acceleration[TAILLE_TAB_GABARIT_VITESSE];
 unsigned int             g_index_tab_gabarit_vitesse             = 0;
 unsigned int             g_index_tab_gabarit_acceleration        = 0;
 
+void SIMU_BoucleVitesse(void);
+
 
 extern void SIMU_SetGainsPI(float kp, float ki)
 {
@@ -472,6 +474,103 @@ extern void ASSER_TRAJ_AfficheInfoFinAsser(void)
 }
 
 /**********************************************************************/
+/*! \brief SIMU_AsserVitessePI
+ *
+ *  \note   fonction de test des gains PI
+ *
+ *  \return None
+ */
+/**********************************************************************/
+void SIMU_AsserVitessePI(void)
+{
+    int     cpt_periode = 0;
+    int     p, N;
+    float   vitesse_long = 0.0;
+    float   vitesse_rotation = 0.0;
+    float   vitesseMoteur = 0.0;
+    float   vit_max, Amax_tPI;
+    float   distanceTotale_Profil = 0.0;
+    float   distanceParcourue_Profil = 0.0;
+    char    moteur;
+
+    moteur = GAUCHE;
+
+    POS_InitialisationConfigRobot();
+
+    vitesseMoteurG = 0.0;
+    vitesseMoteurD = 0.0;
+
+    integPI_G = 0.0;
+    integPI_D = 0.0;
+
+    deltaPasCodeurD = 0;
+    deltaPasCodeurG = 0;
+
+    ASSER_TRAJ_LogAsserValPC("vitconsPI", 0.0);
+    ASSER_TRAJ_LogAsserValPC("vitMesPI", 0.0);
+    ASSER_TRAJ_LogAsserValPC("errVitMesPI", 0.0);
+    ASSER_TRAJ_LogAsserValPC("tensionMesPI", 0.0);
+
+    if (moteur == GAUCHE)
+    {
+        vit_max = Umax * GAIN_STATIQUE_MOTEUR_G;
+    }
+    if (moteur == DROIT)
+    {
+        vit_max = Umax * GAIN_STATIQUE_MOTEUR_D;
+    }
+    vit_max = vit_max * 1.0;
+
+    // acceleration
+    vitesse_long = 0.0;
+    Amax_tPI = 1.5;
+    N = 3.0 / TE;
+    distanceTotale_Profil = 8.0;
+
+    ASSER_TRAJ_LogAsserValPC("config_testPI", Amax_tPI);
+    ASSER_TRAJ_LogAsserValPC("config_testPI", N);
+    ASSER_TRAJ_LogAsserValPC("config_testPI", vit_max);
+
+    for (cpt_periode = 0; cpt_periode < N; cpt_periode++)
+    {
+        /* Determination du profil de vitesse de consigne */
+        //vitesse_long = vitesse_long + Amax_tPI * TE - ( (Amax_tPI * TE) / vit_max) * vitesse_long;
+
+        distanceParcourue_Profil += vitesseMoteur * TE;
+        ASSER_Running = ASSER_TRAJ_Profil_S_Curve(&vitesse_long, distanceTotale_Profil, 0.0, vit_max, Amax_tPI, Amax_tPI, 0.0, distanceParcourue_Profil, vitesseMoteur, 0);
+
+        ASSER_TRAJ_LogAsserValPC("vitconsPI", vitesse_long);
+
+        POS_ConversionVitessesLongRotToConsignesPWMRouesRobotUnicycle(vitesse_long, vitesse_rotation, &g_ConsigneMoteurG, &g_ConsigneMoteurD);
+
+        /* Envois des consignes des boucles de vitesse au PIC asser */
+        SIMU_REDEF_ASSER_SendConsigne(g_ConsigneMoteurD, g_ConsigneMoteurG);
+
+        /* Boucle de vitesse, avec une periode de 1ms */
+        for (p = 0; p < floor(TE/TE_PI); p++)
+        {
+            SIMU_BoucleVitesse();
+        }
+
+        SIMU_LogRobot();
+
+        if (moteur == GAUCHE)
+        {
+            vitesseMoteur = vitesseMoteurG;
+            ASSER_TRAJ_LogAsserValPC("errVitMesPI", erreurVitesseMoteurG);
+            ASSER_TRAJ_LogAsserValPC("tensionMesPI", tensionPWM_G);
+        }
+        if (moteur == DROIT)
+        {
+            vitesseMoteur = vitesseMoteurD;
+            ASSER_TRAJ_LogAsserValPC("errVitMesPI", erreurVitesseMoteurD);
+            ASSER_TRAJ_LogAsserValPC("tensionMesPI", tensionPWM_D);
+        }
+        ASSER_TRAJ_LogAsserValPC("vitMesPI", vitesseMoteur);
+    }
+}
+
+/**********************************************************************/
 /*! \brief SIMU_BoucleVitesse
  *
  *  \note   fonction periodique des asservissements de vitesse PI.
@@ -481,6 +580,9 @@ extern void ASSER_TRAJ_AfficheInfoFinAsser(void)
 /**********************************************************************/
 void SIMU_BoucleVitesse(void)
 {
+    float   t1_G, t2_G;
+    float   t1_D, t2_D;
+
     erreurVitesseMoteurG = SIMU_ErreurVitesseConsPWMVToVitMS(simu_consigneMoteurG, vitesseMoteurG, GAIN_STATIQUE_MOTEUR_G);
     erreurVitesseMoteurD = SIMU_ErreurVitesseConsPWMVToVitMS(simu_consigneMoteurD, vitesseMoteurD, GAIN_STATIQUE_MOTEUR_D);
 
@@ -523,17 +625,37 @@ void SIMU_BoucleVitesse(void)
     // 1:gain statique, 2:premiere constante de temps, 3: deuxieme constante de temps
     // moteur gauche [0.90848238070313447, 0.001532263578663721, 0.14712688461925522]
 
+#ifdef Actionneurs_Robot1
+    t1_G = 0.0612;
+    t2_G = 0.248;
+    t1_D = 0.0445;
+    t2_D = 0.243;
+#endif /* Actionneurs_Robot1 */
+
+#ifdef Actionneurs_Robot2
+    t1_G = 0.0539;
+    t2_G = 0.923;
+    t1_D = 0.0294;
+    t2_D = 0.961;
+    //t1_D = t1_G;
+    //t2_D = t2_G;
+#endif /* Actionneurs_Robot2 */
+
     SIMU_SimulationMoteurCC_ordre2((signed int)tensionPWM_G
                                    , tensionPWM_G_n
                                    , &vitesseMoteurG
                                    , &vitesseMoteurG_n2
-                                   , 0.1707
-                                   , 0.003
+                                   , t1_G
+                                   , t2_G
                                    , GAIN_STATIQUE_MOTEUR_G
                                    , 0 //20
                                    , SIMU_CR
                                    , TE_PI
                                    );
+    /* 2012 **/
+    // 0.1707
+    // 0.003
+    /*********/
 
     /*
     SIMU_SimulationMoteurCC_ordre2_complet((signed int)tensionPWM_G
@@ -561,13 +683,17 @@ void SIMU_BoucleVitesse(void)
                                    , tensionPWM_D_n
                                    , &vitesseMoteurD
                                    , &vitesseMoteurD_n2
-                                   , 0.001
-                                   , 0.1763
+                                   , t1_D
+                                   , t2_D
                                    , GAIN_STATIQUE_MOTEUR_D
                                    , 0 //20
                                    , SIMU_CR
                                    , TE_PI
                                    );
+    /* 2012 **/
+    // 0.001
+    // 0.1763
+    /*********/
 
     /*
     SIMU_SimulationMoteurCC_ordre2_complet((signed int)tensionPWM_D

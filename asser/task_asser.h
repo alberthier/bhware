@@ -27,7 +27,7 @@
 /* Define Asser */
 
 /** Taille de la Stack Asser */
-#define                 STACK_ASSER_SIZE            1024L
+#define                 STACK_ASSER_SIZE            2048L
 
 /** Variables globales asservissement */
 

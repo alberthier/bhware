@@ -112,7 +112,7 @@ typedef struct __attribute__ ((packed))
     float                   angle_final;
 } ParametresRotation;
 
-typedef struct __attribute__ ((packed))
+typedef struct /*__attribute__ ((packed))*/
 {
     float           ax;
     float           ay;
@@ -120,7 +120,7 @@ typedef struct __attribute__ ((packed))
     float           by;
 } ConfigSpline3;
 
-typedef struct __attribute__ ((packed))
+typedef struct /*__attribute__ ((packed))*/
 {
     float           x;
     float           y;
@@ -129,7 +129,7 @@ typedef struct __attribute__ ((packed))
 
 } ConfigSpline3R;
 
-typedef struct __attribute__ ((packed))
+typedef struct /*__attribute__ ((packed))*/
 {
     unsigned char   n;
     float           ax;
@@ -144,7 +144,7 @@ typedef struct __attribute__ ((packed))
 
 } ConfigSpline34;
 
-typedef struct __attribute__ ((packed))
+typedef struct /*__attribute__ ((packed))*/
 {
     float   xc;
     float   yc;
@@ -153,14 +153,14 @@ typedef struct __attribute__ ((packed))
     float   angle;
 } ConfigArc;
 
-typedef struct __attribute__ ((packed))
+typedef struct /*__attribute__ ((packed))*/
 {
     float                   distance;
     float                   theta_seg;
 
     union
     {
-        struct __attribute__ ((packed))
+        struct /*__attribute__ ((packed))*/
         {
             unsigned char SPLINE31_USED     : 1;
             unsigned char ARC1_USED         : 1;
@@ -185,7 +185,7 @@ typedef struct __attribute__ ((packed))
     ConfigArc               arc1;
     ConfigArc               arc2;
 
-    struct __attribute__ ((packed))
+    struct /*__attribute__ ((packed))*/
     {
         float                   ax;
         float                   ay;
@@ -198,7 +198,7 @@ typedef struct __attribute__ ((packed))
 
 typedef union
 {
-    struct __attribute__ ((packed))
+    struct /*__attribute__ ((packed))*/
     {
         unsigned char           use_angle;
         segmentTrajectoire      segmentTraj[NBRE_MAX_PTS_TRAJ];
@@ -211,7 +211,7 @@ typedef union
     ParametresRotation          rotation;
 } Trajectoire;
 
-typedef struct __attribute__ ((packed))
+typedef struct /*__attribute__ ((packed))*/
 {
     unsigned char           mouvement;
     Vecteur                 posArrivee;
@@ -296,6 +296,7 @@ extern void                 ASSER_TRAJ_ParcoursTrajectoire(Deplacement *traj, fl
 extern unsigned char        ASSER_TRAJ_isDeplacement(Deplacement *traj);
 extern float                ASSER_TRAJ_DiffThetaBSplinePerLenghtUnit(Trajectoire * traj, unsigned int iSegment, unsigned char iSubSegment, float t);
 extern float                ASSER_TRAJ_VitesseLimiteEnVirage(Deplacement *traj, float diffThetaTrajectoire);
+extern unsigned char        ASSER_TRAJ_Profil_S_Curve(float * Vconsigne, float Distance, float VStart, float VEnd, float Amax, float Dmax, float gASR, float Pr, float Vr, unsigned char fSatPI);
 
 #ifdef PIC32_BUILD
 extern void                 ASSER_TRAJ_LogAsserPIC(char * keyWord, float Val1, float * pVal2, float * pVal3, float * pVal4, float * pVal5);

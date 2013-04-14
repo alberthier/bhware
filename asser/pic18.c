@@ -47,12 +47,22 @@ float                           Vitesse_MG_Mesures[NbrMesuresMax]           =   
 float                           DonneeKpDroite                              =   3.0;
 float                           DonneeKiDroite                              =   11.0;
 float                           DonneeDRoueDroite                           =   40.0;   /* en mm */
-float                           DonneeVmaxDroite                            =   0.606;  /* en m/s */
+#ifdef Actionneurs_Robot1
+float                           DonneeVmaxDroite                            =   0.7;  /* en m/s */
+#endif /* Actionneurs_Robot1 */
+#ifdef Actionneurs_Robot2
+float                           DonneeVmaxDroite                            =   1.3;  /* en m/s */
+#endif /* Actionneurs_Robot2 */
 unsigned short                  DonneeNbrPasCdrDroite                       =   5000;
 float                           DonneeKpGauche                              =   3.0;
 float                           DonneeKiGauche                              =   8.0;
 float                           DonneeDRoueGauche                           =   40.0;   /* en mm */
-float                           DonneeVmaxGauche                            =   0.630;  /* en m/s */
+#ifdef Actionneurs_Robot1
+float                           DonneeVmaxGauche                            =   0.7;  /* en m/s */
+#endif /* Actionneurs_Robot1 */
+#ifdef Actionneurs_Robot2
+float                           DonneeVmaxGauche                            =   1.3;  /* en m/s */
+#endif /* Actionneurs_Robot2 */
 unsigned short                  DonneeNbrPasCdrGauche                       =   5000;
 
 /** Tensions des moteurs (consignes reelles PWM) */
