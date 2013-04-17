@@ -9,7 +9,7 @@ case "$1" in
   start)
 	echo "Starting network..."
 	/sbin/ifup -a
-    $CURRENT_DIR/start-wifi.sh
+	$CURRENT_DIR/start-wifi.sh &
 	;;
   stop)
 	echo -n "Stopping network..."

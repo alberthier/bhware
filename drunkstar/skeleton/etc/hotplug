@@ -1,15 +1,11 @@
 #!/bin/sh
 
-
 update_wlan()
 {
     if [ "$ACTION" = "add" -a "$SUBSYSTEM" = "net" -a "$INTERFACE" = "wlan0" ]; then
-        ifup wlan0
-    elif [ "$ACTION" = "remove" -a "$SUBSYSTEM" = "net" -a "$INTERFACE" = "wlan0" ]; then
-        ifdown wlan0
-        wpa_cli terminate
+        /etc/init.d/start-wifi.sh &
     fi
 }
 
-update_wlan & 
+update_wlan
 exec /sbin/mdev
