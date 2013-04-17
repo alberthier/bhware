@@ -30,7 +30,7 @@ void ASSER_GoTo(unsigned char Mouvement, Data_Goto * Data)
 int commandMsgTreatment(char *buffer, unsigned char *p_mouvement, char *p_marche, float *p_angle_rad, unsigned int *p_nbPts, PtTraj *p_chemin)
 {
     char cmd[25], strMvt[30], strMarche[30], strAngleRad[30], strNbPts[30], strValTemp[30];
-    int iVal, shiftChar = 0, msgSize = 0;
+    int iVal, msgSize = 0;
     float data[150], valTemp;
 
 //    printf("logStr_msgR: %s\n", buffer);
@@ -69,12 +69,12 @@ int commandMsgTreatment(char *buffer, unsigned char *p_mouvement, char *p_marche
 
 int depCommandMsgTreatment(char *buffer, unsigned char * p_mouvement, Data_Goto * Data)
 {
-    char msg_mvt[25], strMvt[30], strUseAngle[30], strMarche[30], strXCentre[30], strYCentre[30], strRayon[30], strAngleRad[30], strNbPts[30], strValTemp[30];
+    char msg_mvt[25], strUseAngle[30], strMarche[30], strXCentre[30], strYCentre[30], strRayon[30], strAngleRad[30], strNbPts[30], strValTemp[30];
     unsigned char use_angle;
     char marche;
     float angle_rad;
     unsigned int nbPts;
-    int iVal, iAngle, shiftChar = 0, msgSize = 0;
+    int iVal, iAngle, msgSize = 0;
     float data[150], valTemp;
     float xCentre, yCentre, rayon;
     PtTraj Centre;
@@ -212,9 +212,8 @@ int depCommandMsgTreatment(char *buffer, unsigned char * p_mouvement, Data_Goto 
 
 int parameterMsgTreatment(char *buffer, unsigned int *p_nbParam, Parameter *p_param, unsigned int nbMaxParam)
 {
-    char cmd[25], strNbParam[30], paramName[30], strValTemp[30];
-    int iVal, shiftChar = 0, msgSize;
-    float data[100], valTemp;
+    char cmd[25], strNbParam[30], strValTemp[30];
+    int iVal, shiftChar = 0;
 
     /* decryptage du message de l'entree standard */
     sscanf(buffer, "%s %u", cmd, p_nbParam);
@@ -237,15 +236,12 @@ int main(void)
     char buffer[10000], command[25]="";
     PtTraj ptTraj_RobotInitial;
     Pose poseInitiale;
-    PtTraj chemin[62];
-    unsigned char mouvement, mvtNull;
-    char marche, marcheNull;
+    unsigned char mouvement;
+    char marche;
     float angle_rad;
-    unsigned int nbrPtsChemin, nbrPtsNull, nbrParameters, iParam;
-    float angleArrivee;
+    unsigned int nbrPtsChemin, nbrParameters;
     Parameter paramPI[2], paramK[3], paramR[2], paramT[8], paramConfAsser[2], paramMotor[9];
     Data_Goto Data_deplacement;
-    short iPt, iAngle;
     clock_t temps_i, temps_f, temps_f2;
 
     printf("asserSimulator: Demarrage simulateur\n");

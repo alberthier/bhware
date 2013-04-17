@@ -207,7 +207,8 @@ extern void POS_SetGainStatiqueMoteur(float gain_G, float gain_D)
 /**********************************************************************/
 extern float POS_GetConsVitesseMax(void)
 {
-    return ((float)(Umax * GAIN_STATIQUE_MOTEUR));
+    //return ((float)(Umax * GAIN_STATIQUE_MOTEUR * 1.0));
+    return (1.0);
 }
 
 /**********************************************************************/
@@ -393,9 +394,9 @@ extern void POS_ConversionVitessesLongRotToConsignesPWMRouesRobotUnicycle(float 
     float           extra_vitRoueDroite             = - 1.0;
     unsigned short  vitRoueGpwm, vitRoueDpwm;
 
-    if (vitesseLongitudinale > MIN(DonneeVmaxGauche, DonneeVmaxDroite))
+    if (vitesseLongitudinale > POS_GetConsVitesseMax())
     {
-        vitesseLongitudinale = MIN(DonneeVmaxGauche, DonneeVmaxDroite);
+        vitesseLongitudinale = POS_GetConsVitesseMax();
     }
 
     vitRoueGauche = (m_sensMarcheMouvement * vitesseLongitudinale) - ((vitesseAngulaireRotation * ECART_ROUE_LIBRE) / 2.0);

@@ -359,6 +359,7 @@ void SIMU_InitialisationLogRobot(void)
     ASSER_TRAJ_LogAsserValPC("ConsigneMoteurGauche", 0.0);
     ASSER_TRAJ_LogAsserValPC("ConsigneMoteurDroit", 0.0);
     ASSER_TRAJ_LogAsserValPC("vitLongitudinale", 0.0);
+    ASSER_TRAJ_LogAsserValPC("vitRotation", 0.0);
     ASSER_TRAJ_LogAsserValPC("vitLongitudinaleEffective", 0.0);
     ASSER_TRAJ_LogAsserValPC("vitLongitudinaleTest", 0.0);
 
@@ -376,6 +377,7 @@ void SIMU_InitialisationLogRobot(void)
 //    ASSER_TRAJ_LogAsserValPC("vitesseD1ms", vitesseMoteurD);
 
     ASSER_TRAJ_LogAsserValPC("ConsigneMoteurDroit_MS", 0.0);
+    ASSER_TRAJ_LogAsserValPC("ConsigneMoteurGauche_MS", 0.0);
     ASSER_TRAJ_LogAsserValPC("VitesseProfil", 0.0);
     ASSER_TRAJ_LogAsserValPC("VgASR", 0.0);
     ASSER_TRAJ_LogAsserValPC("Phase", 0.0);
@@ -405,9 +407,10 @@ void SIMU_LogRobot(void)
     ASSER_TRAJ_LogAsserValPC("ConsigneMoteurGauche", (float)g_ConsigneMoteurG);
     ASSER_TRAJ_LogAsserValPC("ConsigneMoteurDroit", (float)g_ConsigneMoteurD);
     ASSER_TRAJ_LogAsserValPC("vitLongitudinale", vitessesConsignes.longitudinale);
-//    ASSER_TRAJ_LogAsserValPC("vitRotation", vitessesConsignes.rotation);
+    ASSER_TRAJ_LogAsserValPC("vitRotation", vitessesConsignes.rotation);
 
-    ASSER_TRAJ_LogAsserValPC("ConsigneMoteurDroit_MS", (((float)g_ConsigneMoteurD)-((float)OffsetPWM))*SIMU_gain());
+    ASSER_TRAJ_LogAsserValPC("ConsigneMoteurDroit_MS", (((float)g_ConsigneMoteurD)-((float)OffsetPWM))*GAIN_STATIQUE_MOTEUR_D);
+    ASSER_TRAJ_LogAsserValPC("ConsigneMoteurGauche_MS", (((float)g_ConsigneMoteurG)-((float)OffsetPWM))*GAIN_STATIQUE_MOTEUR_G);
 }
 
 /**********************************************************************/
@@ -523,9 +526,9 @@ void SIMU_AsserVitessePI(void)
 
     // acceleration
     vitesse_long = 0.0;
-    Amax_tPI = 1.5;
-    N = 3.0 / TE;
-    distanceTotale_Profil = 8.0;
+    Amax_tPI = 1.0;
+    N = 5.0 / TE;
+    distanceTotale_Profil = 2.0;
 
     ASSER_TRAJ_LogAsserValPC("config_testPI", Amax_tPI);
     ASSER_TRAJ_LogAsserValPC("config_testPI", N);

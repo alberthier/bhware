@@ -865,6 +865,9 @@ chemin = [[0.2, 1.0, 0.0]
         , [1.35, 0.8+E, 0.0]
         ]
         
+for i in range(len(chemin) - 2) :        
+    chemin[i+1][2] = atan2(chemin[i+2][1] - chemin[i][1], chemin[i+2][0] - chemin[i][0])
+        
 #~ chemin = [[0.2, 0.2, 0.0]
         #~ , [1.0, 0.5, 0.0]
         #~ ]
