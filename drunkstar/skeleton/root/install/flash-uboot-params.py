@@ -23,7 +23,7 @@ def setup():
     call(["fw_setenv", "arcNumber"          , "2998"])
     call(["fw_setenv", "mainlineLinux"      , "yes"])
     call(["fw_setenv", "console"            , "ttyS0,115200"])
-    call(["fw_setenv", "common_bootargs"    , "mtdparts=orion_nand:1M(u-boot),3M(uImage1),3M(uImage2),-(data) lpj=5955584 rtl8192cu.swenc=1"])
+    call(["fw_setenv", "common_bootargs"    , "mtdparts=orion_nand:1M(u-boot),3M(uImage1),3M(uImage2),-(data) lpj=5955584"])
     call(["fw_setenv", "mtdids"             , "nand0=orion_nand"])
     call(["fw_setenv", "partition"          , "nand0,4"])
     call(["fw_setenv", "usb_init"           , "usb start"])
