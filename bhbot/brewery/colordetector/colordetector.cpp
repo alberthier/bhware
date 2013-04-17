@@ -286,6 +286,7 @@ void ColorDetector::logImage()
 
     img << "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>" << std::endl;
     img << "<svg xmlns:xlink=\"http://www.w3.org/1999/xlink\" xmlns=\"http://www.w3.org/2000/svg\" height=\"" << m_bgrImage.rows << "\" width=\"" << m_bgrImage.cols << "\" id=\"svg2\" version=\"1.1\">" << std::endl;
+    img << "<g transform=\"rotate(180," << m_bgrImage.cols / 2 << ',' << m_bgrImage.rows / 2 << ")\">" << std::endl;
     img << "<image y=\"0.0\" x=\"0.0\" id=\"image\" xlink:href=\"" << imageName << "\" height=\"" << m_bgrImage.rows << "\" width=\"" << m_bgrImage.cols << "\" />" << std::endl;
     for (std::vector<Rect>::const_iterator it = m_calibrationZoneRects.begin(); it != m_calibrationZoneRects.end(); ++it) {
         img << "<rect style=\"fill:none;stroke:#cc0000;stroke-width:1\" width=\"" << it->width << "\" height=\"" << it->height << "\" x=\"" << it->x << "\" y=\"" << it->y << "\" />" << std::endl;
@@ -297,6 +298,7 @@ void ColorDetector::logImage()
         }
         img << "\" width=\"" << it->width << "\" height=\"" << it->height << "\" x=\"" << it->x << "\" y=\"" << it->y << "\" />" << std::endl;
     }
+    img << "</g>" << std::endl;
     img << "</svg>" << std::endl;
 
     img.close();
