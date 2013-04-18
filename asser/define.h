@@ -128,10 +128,10 @@
 #ifdef Actionneurs
 
 /** Active les actionneurs pour le robot 1 */
-//#define Actionneurs_Robot1
+#define Actionneurs_Robot1
 
 /** Active les actionneurs pour le robot 2 */
-#define Actionneurs_Robot2
+//#define Actionneurs_Robot2
 
 #endif /* Actionneurs */
 

@@ -230,29 +230,30 @@ def trajFunction(d_cfgTraj):
     #~ simulator_process.stdin.write(deplacement.cmdMsgGeneration())
 
     #test MOVE_CURVE
-    #~ send_init_pose(simulator_process, x=0.2, y=1.0, angle=0.0)
-    #~ deplacement = commandMsg("MSG_MOVE_CURVE 1 1 0.0")
-    #~ deplacement.addPose("0.9 1.0")
-    #~ deplacement.addPose("1.05 0.85")
-    #~ deplacement.addPose("1.2 1.0")
-    #~ deplacement.addPose("1.35 0.85")
+    send_init_pose(simulator_process, x=0.2, y=1.0, angle=0.0)
+    deplacement = commandMsg("MSG_MOVE_CURVE 1 1 0.0")
+    deplacement.addPose("0.9 1.0")
+    deplacement.addPose("1.05 0.85")
+    deplacement.addPose("1.2 1.0")
+    deplacement.addPose("1.35 0.85")
+    deplacement.addPose("1.5 0.85")
     
     #~ deplacement.addPose("0.5 1.0")
     #~ deplacement.addPose("1.0 1.0")
     #~ deplacement.addPose("1.5 1.0")
     #~ deplacement.addPose("2.0 1.0")
     
-    #~ simulator_process.stdin.write(deplacement.cmdMsgGeneration())
+    simulator_process.stdin.write(deplacement.cmdMsgGeneration())
     #~ print(MSG_init_pose(0.2, 0.2, 0.0))
     # INIT_POSE_ROBOT 0 0 0.0 1 0.2 0.2
     #~ print(deplacement.cmdMsgGeneration())
     # MSG_MOVE_CURVE 1 1 0.0 4 0.9 1.0 1.05 0.85 1.2 1.0 1.35 0.85
     
     #test MOVE_LINE
-    deplacement = commandMsg("MSG_MOVE_LINE 1")
-    deplacement.addPose("2.2 0.2")
+    #~ deplacement = commandMsg("MSG_MOVE_LINE 1")
+    #~ deplacement.addPose("2.2 0.2")
     #deplacement.addPose("1.3 0.2")
-    simulator_process.stdin.write(deplacement.cmdMsgGeneration())
+    #~ simulator_process.stdin.write(deplacement.cmdMsgGeneration())
     #~ print(deplacement.cmdMsgGeneration())
     # MSG_MOVE_LINE 1 1 1.0 0.2
     

@@ -207,8 +207,7 @@ extern void POS_SetGainStatiqueMoteur(float gain_G, float gain_D)
 /**********************************************************************/
 extern float POS_GetConsVitesseMax(void)
 {
-    //return ((float)(Umax * GAIN_STATIQUE_MOTEUR * 1.0));
-    return (1.0);
+    return ((float)(Umax * GAIN_STATIQUE_MOTEUR));
 }
 
 /**********************************************************************/

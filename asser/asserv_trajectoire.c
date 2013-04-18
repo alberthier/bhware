@@ -60,6 +60,7 @@
 #define                         ANGLE_STEP                              ((float) 0.02 * PI)
 #define                         R_INV                                   ((float)(1.0 / (ECART_ROUE_MOTRICE / 2.0)))
 #define                         AMAX_REDUCTION                          ((float) 0.4)
+#define                         VMAX_REDUCTION                          ((float) 0.6)
 
 /*----------------------------------------------------------------------------------------------*/
 
@@ -147,7 +148,7 @@ static unsigned char            ASRrunning                              = False;
 static float                    distanceParcourue_Profil                = 0.0;
 
 /** Constantes  profil de vitesse Scurve */
-static const float              EcartVitesseAcc                         = 0.03; //0.05->robot1; 0.03->robot2;
+static const float              EcartVitesseAcc                         = 0.05; //0.05->robot1; 0.03->robot2;
 
 /** Structure de configurationd de spline de type 3 */
 static ConfigSpline3            cfgSp3;
@@ -692,24 +693,24 @@ extern void ASSER_TRAJ_AsservissementMouvementRobot(Pose poseRobot, VitessesRobo
                 if ( (chemin.trajectoire.subTrajs.subSegmentCourant == SPLINE31) \
                         || (chemin.trajectoire.subTrajs.subSegmentCourant == SPLINE32) )
                 {
-                    if ( VitesseProfil > (chemin.profilVitesse.vmax / (1.0 + (ECART_ROUE_MOTRICE / 2.0) * R_INV)) )
+                    if ( VitesseProfil > ( (chemin.profilVitesse.vmax) / (1.0 + (ECART_ROUE_MOTRICE / 2.0) * R_INV)) )
                     {
-                        VitesseProfil = (chemin.profilVitesse.vmax / (1.0 + (ECART_ROUE_MOTRICE / 2.0) * R_INV));
+                        VitesseProfil = ( (chemin.profilVitesse.vmax) / (1.0 + (ECART_ROUE_MOTRICE / 2.0) * R_INV));
                     }
                 }
 
                 if (chemin.trajectoire.subTrajs.subSegmentCourant == ARC1)
                 {
-                    if ( VitesseProfil > (chemin.profilVitesse.vmax / (1.0 + (ECART_ROUE_MOTRICE / 2.0) * chemin.trajectoire.subTrajs.segmentTraj[chemin.trajectoire.subTrajs.segmentCourant].arc1.rayon_inverse)) )
+                    if ( VitesseProfil > ( (chemin.profilVitesse.vmax) / (1.0 + (ECART_ROUE_MOTRICE / 2.0) * chemin.trajectoire.subTrajs.segmentTraj[chemin.trajectoire.subTrajs.segmentCourant].arc1.rayon_inverse)) )
                     {
-                        VitesseProfil = (chemin.profilVitesse.vmax / (1.0 + (ECART_ROUE_MOTRICE / 2.0) * chemin.trajectoire.subTrajs.segmentTraj[chemin.trajectoire.subTrajs.segmentCourant].arc1.rayon_inverse));
+                        VitesseProfil = ( (chemin.profilVitesse.vmax) / (1.0 + (ECART_ROUE_MOTRICE / 2.0) * chemin.trajectoire.subTrajs.segmentTraj[chemin.trajectoire.subTrajs.segmentCourant].arc1.rayon_inverse));
                     }
                 }
                 if (chemin.trajectoire.subTrajs.subSegmentCourant == ARC2)
                 {
-                    if ( VitesseProfil > (chemin.profilVitesse.vmax / (1.0 + (ECART_ROUE_MOTRICE / 2.0) * chemin.trajectoire.subTrajs.segmentTraj[chemin.trajectoire.subTrajs.segmentCourant].arc2.rayon_inverse)) )
+                    if ( VitesseProfil > ( (chemin.profilVitesse.vmax) / (1.0 + (ECART_ROUE_MOTRICE / 2.0) * chemin.trajectoire.subTrajs.segmentTraj[chemin.trajectoire.subTrajs.segmentCourant].arc2.rayon_inverse)) )
                     {
-                        VitesseProfil = (chemin.profilVitesse.vmax / (1.0 + (ECART_ROUE_MOTRICE / 2.0) * chemin.trajectoire.subTrajs.segmentTraj[chemin.trajectoire.subTrajs.segmentCourant].arc2.rayon_inverse));
+                        VitesseProfil = ( (chemin.profilVitesse.vmax) / (1.0 + (ECART_ROUE_MOTRICE / 2.0) * chemin.trajectoire.subTrajs.segmentTraj[chemin.trajectoire.subTrajs.segmentCourant].arc2.rayon_inverse));
                     }
                 }
                 if (chemin.trajectoire.subTrajs.subSegmentCourant == SPLINE341)
@@ -1178,6 +1179,8 @@ extern void ASSER_TRAJ_InitialisationTrajectoire(Pose poseRobot, unsigned char M
             chemin.trajectoire.subTrajs.segmentCourant = 0;
             chemin.trajectoire.subTrajs.subSegmentCourant = chemin.trajectoire.subTrajs.segmentTraj[0].subSeg_firstUsed;
             chemin.trajectoire.subTrajs.paramPoseSubSegCourant = 0.0;
+
+            chemin.profilVitesse.vmax = chemin.profilVitesse.vmax * VMAX_REDUCTION;
 
             /* Determination des distances des segments de trajectoire, et de la distance totale */
 
