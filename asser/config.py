@@ -19,7 +19,7 @@ d_cfgTraj = {'Masse': 12.0
                 , 'Amax': 1.0
                 , 'Dmax': 1.0
                 , 'RatioAcc': 1.0
-                , 'RatioDecc': 1.2
+                , 'RatioDecc': 1.4
                 }
 
 #robot1 : Vmax=0.7 à 60%

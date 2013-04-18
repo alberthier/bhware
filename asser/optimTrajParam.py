@@ -238,11 +238,6 @@ def trajFunction(d_cfgTraj):
     deplacement.addPose("1.35 0.85")
     deplacement.addPose("1.5 0.85")
     
-    #~ deplacement.addPose("0.5 1.0")
-    #~ deplacement.addPose("1.0 1.0")
-    #~ deplacement.addPose("1.5 1.0")
-    #~ deplacement.addPose("2.0 1.0")
-    
     simulator_process.stdin.write(deplacement.cmdMsgGeneration())
     #~ print(MSG_init_pose(0.2, 0.2, 0.0))
     # INIT_POSE_ROBOT 0 0 0.0 1 0.2 0.2

@@ -59,7 +59,7 @@
 #define                         DISTANCE_SPLINE3                        ((float) 0.018)
 #define                         ANGLE_STEP                              ((float) 0.02 * PI)
 #define                         R_INV                                   ((float)(1.0 / (ECART_ROUE_MOTRICE / 2.0)))
-#define                         AMAX_REDUCTION                          ((float) 0.4)
+#define                         AMAX_REDUCTION                          ((float) 0.6)
 #define                         VMAX_REDUCTION                          ((float) 0.6)
 
 /*----------------------------------------------------------------------------------------------*/
@@ -648,8 +648,8 @@ extern void ASSER_TRAJ_AsservissementMouvementRobot(Pose poseRobot, VitessesRobo
 
                             delta_distance_Av = 0.02;
                             parametrePositionSegmentTrajectoireAv = 0.0;
-                            segmentCourantAv = chemin.trajectoire.subTrajs.segmentCourant + 1;
-                            subSegmentCourantAv = chemin.trajectoire.subTrajs.segmentTraj[segmentCourantAv].subSeg_firstUsed;
+                            segmentCourantAv = g_iSeg;
+                            subSegmentCourantAv = g_iSubSeg;
 
                             ASSER_TRAJ_ParcoursTrajectoire(&chemin \
                                                            , delta_distance_Av \
@@ -701,16 +701,16 @@ extern void ASSER_TRAJ_AsservissementMouvementRobot(Pose poseRobot, VitessesRobo
 
                 if (chemin.trajectoire.subTrajs.subSegmentCourant == ARC1)
                 {
-                    if ( VitesseProfil > ( (chemin.profilVitesse.vmax) / (1.0 + (ECART_ROUE_MOTRICE / 2.0) * chemin.trajectoire.subTrajs.segmentTraj[chemin.trajectoire.subTrajs.segmentCourant].arc1.rayon_inverse)) )
+                    if ( VitesseProfil > ( (chemin.profilVitesse.vmax / VMAX_REDUCTION) / (1.0 + (ECART_ROUE_MOTRICE / 2.0) * chemin.trajectoire.subTrajs.segmentTraj[chemin.trajectoire.subTrajs.segmentCourant].arc1.rayon_inverse)) )
                     {
-                        VitesseProfil = ( (chemin.profilVitesse.vmax) / (1.0 + (ECART_ROUE_MOTRICE / 2.0) * chemin.trajectoire.subTrajs.segmentTraj[chemin.trajectoire.subTrajs.segmentCourant].arc1.rayon_inverse));
+                        VitesseProfil = ( (chemin.profilVitesse.vmax / VMAX_REDUCTION) / (1.0 + (ECART_ROUE_MOTRICE / 2.0) * chemin.trajectoire.subTrajs.segmentTraj[chemin.trajectoire.subTrajs.segmentCourant].arc1.rayon_inverse));
                     }
                 }
                 if (chemin.trajectoire.subTrajs.subSegmentCourant == ARC2)
                 {
-                    if ( VitesseProfil > ( (chemin.profilVitesse.vmax) / (1.0 + (ECART_ROUE_MOTRICE / 2.0) * chemin.trajectoire.subTrajs.segmentTraj[chemin.trajectoire.subTrajs.segmentCourant].arc2.rayon_inverse)) )
+                    if ( VitesseProfil > ( (chemin.profilVitesse.vmax / VMAX_REDUCTION) / (1.0 + (ECART_ROUE_MOTRICE / 2.0) * chemin.trajectoire.subTrajs.segmentTraj[chemin.trajectoire.subTrajs.segmentCourant].arc2.rayon_inverse)) )
                     {
-                        VitesseProfil = ( (chemin.profilVitesse.vmax) / (1.0 + (ECART_ROUE_MOTRICE / 2.0) * chemin.trajectoire.subTrajs.segmentTraj[chemin.trajectoire.subTrajs.segmentCourant].arc2.rayon_inverse));
+                        VitesseProfil = ( (chemin.profilVitesse.vmax / VMAX_REDUCTION) / (1.0 + (ECART_ROUE_MOTRICE / 2.0) * chemin.trajectoire.subTrajs.segmentTraj[chemin.trajectoire.subTrajs.segmentCourant].arc2.rayon_inverse));
                     }
                 }
                 if (chemin.trajectoire.subTrajs.subSegmentCourant == SPLINE341)
