@@ -78,6 +78,7 @@ float                           Ratio_Acc                               =   1.0;
 float                           Ratio_Decc                              =   1.0;
 float                           Ratio_Acc_Rot                           =   0.5;
 float                           Ratio_Decc_Rot                          =   0.8;
+float                           Vmax_limit                              =   0.7;
 
 /** Vitesse minimum de mouvement de reference*/
 float                           VminMouvRef                             =   0.1; 
