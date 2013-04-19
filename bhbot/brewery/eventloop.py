@@ -10,6 +10,7 @@ import termios
 import ctypes
 import struct
 import time
+import collections
 
 import logger
 import packets
@@ -359,6 +360,8 @@ class EventLoop(object):
         self.timers = []
         self.last_ka_date = datetime.datetime.now()
         self.start_date = None
+        self.packet_queue = collections.deque()
+
         if IS_HOST_DEVICE_ARM and IS_MAIN_ROBOT:
             self.colordetector = colordetector.ColorDetector(self)
         else:
@@ -410,16 +413,12 @@ class EventLoop(object):
 
                         logger.log_packet(channel.packet, channel.origin)
 
-                        channel.packet.dispatch(self)
-                        channel.packet.dispatch(self.robot)
-                        channel.packet.dispatch(self.opponent_detector)
-                        channel.packet.dispatch(self.map)
-                        channel.packet.dispatch(self.interbot_manager)
-
-                        if self.fsm is not None:
-                            channel.packet.dispatch(self.fsm)
+                        self.enqueue_packet(channel.packet)
 
                         channel.packet = None
+
+                        self.process_packets_and_dispatch()
+
                 except Exception as e:
                     channel.packet = None
                     logger.log_exception(e)
@@ -530,6 +529,25 @@ class EventLoop(object):
                 if not self.timers[0].check_timeout():
                     break
 
+    def enqueue_packet(self, packet):
+        self.packet_queue.appendleft(packet)
+
+    def process_packets_and_dispatch(self):
+        # logger.log('process packets')
+        while self.packet_queue :
+            packet = self.packet_queue.pop()
+            self.dispatch(packet)
+
+    def dispatch(self, packet):
+        # logger.log('dispatch packet {}'.format(packet))
+        packet.dispatch(self)
+        packet.dispatch(self.robot)
+        packet.dispatch(self.opponent_detector)
+        packet.dispatch(self.map)
+        packet.dispatch(self.interbot_manager)
+
+        if self.fsm is not None:
+            packet.dispatch(self.fsm)
 
     def stop(self):
         logger.log("Stopping...")
