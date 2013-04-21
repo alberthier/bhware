@@ -59,6 +59,7 @@ private:
     void updateZones(std::vector<Rect>& zoneRects, std::vector<cv::Mat>& zones);
     std::string bgrCheck();
     void logImage();
+    void reset();
 
 private:
     int m_pollTimeout;
@@ -78,12 +79,10 @@ private:
 
 
 ColorDetector::ColorDetector(const std::string& configFile, int webcamId, const std::string& imageFile) :
-    m_pollTimeout(100),
-    m_thresholdHue(0),
-    m_thresholdSaturation(0),
-    m_thresholdTolerance(0),
     m_webcam(NULL)
 {
+    reset();
+
     if (imageFile.empty()) {
         m_webcam = new cv::VideoCapture(webcamId);
         m_webcam->read(m_bgrImage);
@@ -159,6 +158,8 @@ bool ColorDetector::processLine(std::istream& stream)
         addZone(sstr, m_calibrationZoneRects, m_calibrationZones);
     } else if (command == "add_detection_zone") {
         addZone(sstr, m_detectionZoneRects, m_detectionZones);
+    } else if (command == "reset") {
+        reset();
     } else if (!command.empty() && command[0] != '#') {
         output = "\"Unknown command '" + command + "'\"";
     }
@@ -302,6 +303,23 @@ void ColorDetector::logImage()
     img << "</svg>" << std::endl;
 
     img.close();
+}
+
+
+void ColorDetector::reset()
+{
+    m_pollTimeout = 100;
+    m_thresholdHue = 0;
+    m_thresholdSaturation = 0;
+    m_thresholdTolerance = 0;
+    m_logfile.clear();
+    m_detectionZoneRects.clear();
+    m_detectionZones.clear();
+    m_calibrationZoneRects.clear();
+    m_calibrationZones.clear();
+    m_bgrImage = cv::Mat();
+    m_hsvImage = cv::Mat();
+    m_binImage = cv::Mat();
 }
 
 
