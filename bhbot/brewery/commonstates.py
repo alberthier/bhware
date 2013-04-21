@@ -136,6 +136,30 @@ class SendPacketAndWait(statemachine.State):
             logger.log("Got expected packet, exiting state")
             yield None
 
+class SendPacketsAndWaitAnswer(statemachine.State):
+
+    def __init__(self, *packets):
+        super().__init__()
+        self.packets = set(packets)
+        """ :type self.packets: set of packets.BasePacket"""
+
+
+    def on_enter(self):
+        for p in self.packets :
+            logger.log("Sending packet {}".format(p))
+            self.send_packet(p)
+            logger.log('Waiting for packet type {}'.format(p.name))
+
+
+    def on_packet(self, packet):
+        for p in self.packets :
+            if type(p) == type(packet):
+                logger.log("Got expected packet {}".format(packet.name))
+                self.packets.remove(p)
+                break
+        if not self.packets :
+            logger.log('No more packets to wait, exiting state')
+            yield None
 
 
 
@@ -370,7 +394,10 @@ class MoveCurve(AbstractMove):
                 poses.append(pt)
         self.packet = packets.MoveCurve(direction = direction, angle = apose.angle, points = poses)
 
+class MoveCurveTo(MoveCurve):
 
+    def __init__(self, angle, pose, direction = DIRECTION_FORWARDS, chained = None):
+        MoveCurve.__init__(self, angle, [pose], direction, chained)
 
 
 class MoveLine(AbstractMove):
