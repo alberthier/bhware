@@ -676,92 +676,10 @@ class CalibratePosition(statemachine.State):
             yield LookAt(0.0, 1.5)
         yield None
 
+class DepositGlasses(statemachine.State):
+    def on_enter(self, can_continue=False):
+        self.send_packet(packets.InternalDropGlasses(can_continue=can_continue, done=False))
 
-
-
-class BarMan:
-
-    def __init__(self, state, side):
-        self.side = side
-        self.state = state
-        self.last_glass_detected = 0
-
-
-    def on_packet(self, packet):
-        logger.log("Got packet: " + type(packet).__name__)
-        if type(packet) is packets.GlassPresent:
-            logger.log("{}  lgd={}  gc={}".format(type(packet).__name__, self.last_glass_detected, self.state.robot.glasses_count[self.side]))
-            if self.last_glass_detected != self.state.robot.glasses_count[self.side]:
-                # filter multiple detections of the same glass
-                return
-            else:
-                self.last_glass_detected += 1
-        method = "glass{}_{}".format(self.state.robot.glasses_count[self.side] + 1, packet.HANDLER_METHOD)
-        try:
-            impl = getattr(self, method)
-        except AttributeError as e:
-            impl = None
-        if impl != None:
-            impl(packet)
-
-    # Glass 1
-
-    def glass1_on_glass_present(self, packet):
-        self.state.send_packet(packets.Gripper(side = self.side, move = MOVE_CLOSE))
-
-
-    def glass1_on_gripper(self, packet):
-        if packet.move == MOVE_CLOSE:
-            self.state.send_packet(packets.Lifter(side = self.side, move = LIFTER_MOVE_UP))
-        else:
-            self.state.send_packet(packets.Lifter(side = self.side, move = LIFTER_MOVE_DOWN))
-
-
-    def glass1_on_lifter(self, packet):
-        if packet.move == LIFTER_MOVE_UP:
-            self.state.send_packet(packets.TopHolder(side = self.side, move = MOVE_CLOSE))
-        else:
-            self.state.robot.glasses_count[self.side] += 1
-
-
-    def glass1_on_top_holder(self, packet):
-        self.state.send_packet(packets.Gripper(side = self.side, move = MOVE_OPEN))
-
-    # Glass 2
-
-    def glass2_on_glass_present(self, packet):
-        self.state.send_packet(packets.Gripper(side = self.side, move = MOVE_CLOSE))
-
-
-    def glass2_on_gripper(self, packet):
-        self.state.send_packet(packets.Lifter(side = self.side, move = LIFTER_MOVE_MIDDLE))
-
-
-    def glass2_on_lifter(self, packet):
-        self.state.robot.glasses_count[self.side] += 1
-
-    # Glass 3
-
-    def glass3_on_glass_present(self, packet):
-        self.state.send_packet(packets.BottomHolder(side = self.side, move = MOVE_CLOSE))
-
-
-    def glass3_on_bottom_holder(self, packet):
-        self.state.robot.glasses_count[self.side] += 1
-
-
-
-
-class GrabGlasses(statemachine.State):
-
-    def on_enter(self):
-        self.side_detection_handled = [ False, False ]
-        self.barmen = [ BarMan(self, SIDE_LEFT), BarMan(self, SIDE_RIGHT) ]
-        yield self.create_move()
-        yield None
-
-
-    def on_packet(self, packet):
-        if type(packet) in [ packets.GlassPresent, packets.Gripper, packets.Lifter, packets.TopHolder, packets.BottomHolder ]:
-            packet.dispatch(self.barmen[packet.side])
-
+    def on_internal_drop_glasses(self, packet):
+        if packet.done :
+            yield None

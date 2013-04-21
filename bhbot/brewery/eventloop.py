@@ -331,7 +331,8 @@ class RobotControlDeviceStarter(object):
                 logger.log("Unable to connect to the log socket {}:{} ({}), continuing without PIC logs".format(REMOTE_IP, REMOTE_LOG_PORT, e))
             self.timer.stop()
             self.eventloop.on_turret_boot(None)
-            self.eventloop.create_fsm()
+            self.eventloop.create_and_start_fsms()
+
         return connected
 
 
@@ -349,6 +350,7 @@ class EventLoop(object):
         self.robot = robot.Robot(self)
         self.main_state = None
         self.end_of_match_state = None
+        self.main_glass_states, self.main_end_of_match_glass_states = [], []
         self.fsm = None
         self.state_machine_name = state_machine_name
         self.webserver_port = webserver_port
@@ -360,6 +362,7 @@ class EventLoop(object):
         self.timers = []
         self.last_ka_date = datetime.datetime.now()
         self.start_date = None
+        self.glass_fsm = []
         self.packet_queue = collections.deque()
         self.interbot_enabled = interbot_enabled
 
@@ -478,9 +481,12 @@ class EventLoop(object):
             self.robot_control_channel.send(buffer)
         elif packet.TYPE < packets.SIMULATOR_RANGE_END:
             self.robot_control_channel.send(buffer)
-        elif packet.TYPE >= packets.INTERBOT_RANGE_START:
+        elif packet.TYPE < packets.INTERBOT_RANGE_END:
             if self.interbot_channel :
                 self.interbot_channel.send(buffer)
+        elif packet.TYPE < packets.INTERNAL_RANGE_END:
+            self.enqueue_packet(packet)
+            self.process_packets_and_dispatch()
 
 
     def inject_goto_finished(self):
@@ -496,15 +502,44 @@ class EventLoop(object):
         if self.fsm is not None:
             return self.fsm.current_state
 
+    def create_and_start_fsms(self):
+        if self.create_fsm() and self.create_fsm_barman():
+            self.start_fsms()
+        else :
+            self.stop()
 
     def create_fsm(self):
         (self.main_state, self.end_of_match_state) = statemachine.instantiate_state_machine(self.state_machine_name)
+
         if self.main_state is None or self.end_of_match_state is None:
             logger.log("One of 'Main' or 'EndOfMatch' state is missing")
-            self.stop()
+            return False
         else:
             self.fsm = statemachine.StateMachine(self, self.main_state)
-            self.send_packet(packets.ControllerReady())
+            return True
+
+    def create_fsm_barman(self):
+        sides = [ SIDE_RIGHT ]
+        if IS_MAIN_ROBOT :
+            sides.append(SIDE_LEFT)
+
+        for s in sides :
+
+            (main, end) = statemachine.instantiate_state_machine('barman')
+
+            self.main_glass_states.append(main)
+            self.main_end_of_match_glass_states.append(end)
+
+            if main is None or end is None:
+                logger.log("One of 'Main' or 'EndOfMatch' state is missing")
+                return False
+            else:
+                main.side = s
+                self.glass_fsm.append(statemachine.StateMachine(self, main))
+                return True
+
+    def start_fsms(self):
+        self.send_packet(packets.ControllerReady())
 
 
     def start(self):
@@ -550,6 +585,9 @@ class EventLoop(object):
 
         if self.fsm is not None:
             packet.dispatch(self.fsm)
+
+        for fsm in self.glass_fsm :
+            packet.dispatch(fsm)
 
     def stop(self):
         logger.log("Stopping...")

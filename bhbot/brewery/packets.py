@@ -317,7 +317,9 @@ PIC32_RANGE_END       = 150
 SIMULATOR_RANGE_START = PIC32_RANGE_END
 SIMULATOR_RANGE_END   = 200
 INTERBOT_RANGE_START  = SIMULATOR_RANGE_END
-INTERBOT_RANGE_END    = 256
+INTERBOT_RANGE_END    = 250
+INTERNAL_RANGE_START  = INTERBOT_RANGE_END
+INTERNAL_RANGE_END    = 256
 
 ################################################################################
 # Packet classes
@@ -826,6 +828,17 @@ class InterbotPosition(BasePacket):
         ('main_robot', Bool  (True, "Sender is main robot")),
     )
 
+# Internal
+
+class InternalDropGlasses(BasePacket):
+
+    TYPE = 250
+
+    LOGVIEW_COLOR = "#CC00BB"
+    DEFINITION = (
+        ('can_continue', Bool  (True, "We can continue to catch glasses")),
+        ('done', Bool  (True, "Deposit is done")),
+    )
 
 ################################################################################
 # Packets lookup setup
