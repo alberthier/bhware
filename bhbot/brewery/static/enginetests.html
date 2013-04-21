@@ -52,28 +52,45 @@ function left_engine_speed(data)
 {
     var canvas = document.getElementById("left-engine");
     var data_cell = document.getElementById("left-data");
-    draw_engine_speed(canvas, data_cell, data.speed);
+    var data_len_cell = document.getElementById("left-data-len");
+    draw_engine_values(canvas, data_cell, data_len_cell, data.speed);
 }
 
 function right_engine_speed(data)
 {
     var canvas = document.getElementById("right-engine");
     var data_cell = document.getElementById("right-data");
-    draw_engine_speed(canvas, data_cell, data.speed);
+    var data_len_cell = document.getElementById("right-data-len");
+    draw_engine_values(canvas, data_cell, data_len_cell, data.speed);
 }
 
-function draw_engine_speed(canvas, data_cell, speed)
+function left_engine_voltage(data)
 {
-    data_cell.innerText = speed.toString().split(",").join(", ");
+    var canvas = document.getElementById("left-engine");
+    var data_cell = document.getElementById("left-data");
+    var data_len_cell = document.getElementById("left-data-len");
+    draw_engine_values(canvas, data_cell, data_len_cell, data.pwm);
+}
+
+function right_engine_voltage(data)
+{
+    var canvas = document.getElementById("right-engine");
+    var data_cell = document.getElementById("right-data");
+    var data_len_cell = document.getElementById("right-data-len");
+    draw_engine_values(canvas, data_cell, data_len_cell, data.pwm);
+}
+
+function draw_engine_values(canvas, data_cell, data_len_cell, values)
+{
+    data_cell.innerHTML = values.toString().split(",").join(", ");
+    data_len_cell.innerHTML = "Number of values: " + values.length.toString();
     var size = window.innerWidth * 0.45;
     canvas.height = size;
     canvas.width = size;
 
     var labels = [];
-    var reference = [];
-    for (i in speed) {
+    for (i in values) {
         labels.push(i);
-        reference.push(600);
     }
     var graphData = {
         labels : labels,
@@ -83,14 +100,7 @@ function draw_engine_speed(canvas, data_cell, speed)
                 strokeColor : "rgba(151,187,205,1)",
                 pointColor : "rgba(151,187,205,1)",
                 pointStrokeColor : "#fff",
-                data : speed,
-            },
-            {
-                fillColor : "rgba(0,0,0,0)",
-                strokeColor : "rgba(220,71,47,1)",
-                pointColor : "rgba(220,71,47,1)",
-                pointStrokeColor : "#fff",
-                data : reference,
+                data : values,
             },
         ]
     };
@@ -101,8 +111,7 @@ function draw_engine_speed(canvas, data_cell, speed)
     var chart = new Chart(canvas.getContext("2d")).Line(graphData, options);
 }
 
-var data_to_fetch=[['', left_engine_speed ],
-                   ['', right_engine_speed]];
+var data_to_fetch=undefined;
 
 function fetch()
 {
@@ -124,22 +133,34 @@ function jsonpcb(data) {
 }
 
 var vars = document.location.search.substr(1).split("&");
+var type = undefined;
 for (var i = 0; i < vars.length; ++i) {
     v = vars[i].split("=");
     if (v[0] == "pic") {
         var pic = decodeURIComponent(v[1]);
-        data_to_fetch[0][0] = "http://" + pic + "/vmaxg.json"
-        data_to_fetch[1][0] = "http://" + pic + "/vmaxd.json"
-        fetch()
+    } else if (v[0] == "speeds") {
+        type = "speeds";
+    } else if (v[0] == "voltages") {
+        type = "voltages";
     }
+}
+if (type == "speeds") {
+    data_to_fetch = [["http://" + pic + "/vmaxg.json", left_engine_speed ],
+                     ["http://" + pic + "/vmaxd.json", right_engine_speed ]];
+    fetch()
+} else if (type == "voltages") {
+    data_to_fetch = [["http://" + pic + "/tensiong.json", left_engine_voltage ],
+                     ["http://" + pic + "/tensiond.json", right_engine_voltage ]];
+    fetch()
 }
 
             </script>
     </head>
     <body>
-        <form action="vmaxtest.html" method="get">
+        <form action="enginetests.html" method="get">
                 PIC address: <input type="text" name="pic">
-            <input type="submit" value="Fetch">
+            <input type="submit" name="speeds" value="Speeds">
+            <input type="submit" name="voltages" value="Voltages">
         </form>
         <table>
             <tr>
@@ -157,6 +178,10 @@ for (var i = 0; i < vars.length; ++i) {
                 <td>
                     <canvas id="right-engine"></canvas>
                 </td>
+            </tr>
+            <tr>
+                <td id="left-data-len"></td>
+                <td id="right-data-len"></td>
             </tr>
             <tr>
                 <td id="left-data"></td>
