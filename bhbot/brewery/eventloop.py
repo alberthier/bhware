@@ -339,7 +339,7 @@ class RobotControlDeviceStarter(object):
 
 class EventLoop(object):
 
-    def __init__(self, state_machine_name, webserver_port):
+    def __init__(self, state_machine_name, webserver_port, interbot_enabled = True):
         self.robot_control_channel = None
         self.robot_log_channel = None
         self.turret_channel = None
@@ -361,6 +361,7 @@ class EventLoop(object):
         self.last_ka_date = datetime.datetime.now()
         self.start_date = None
         self.packet_queue = collections.deque()
+        self.interbot_enabled = interbot_enabled
 
         if IS_HOST_DEVICE_ARM and IS_MAIN_ROBOT:
             self.colordetector = colordetector.ColorDetector(self)
@@ -507,10 +508,11 @@ class EventLoop(object):
 
 
     def start(self):
-        if IS_MAIN_ROBOT:
-            InterbotServer(self, "", MAIN_INTERBOT_PORT)
-        else:
-            InterbotClientStarter(self)
+        if self.interbot_enabled :
+            if IS_MAIN_ROBOT:
+                InterbotServer(self, "", MAIN_INTERBOT_PORT)
+            else:
+                InterbotClientStarter(self)
         logger.log("Starting internal web server on port {}".format(self.webserver_port))
         self.web_server = asyncwsgiserver.WsgiServer("", self.webserver_port, nanow.Application(webinterface.BHWeb(self)))
         if SERIAL_PORT_PATH is not None:

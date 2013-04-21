@@ -27,6 +27,7 @@ if __name__ == "__main__":
     parser.add_argument("--webserver-port", action = "store", type = int, default = definitions.WEB_SERVER_PORT, metavar = "PORT", help = "Internal web server port")
     parser.add_argument('statemachine', action="store", nargs='?', default = socket.gethostname())
     parser.add_argument("--pydev-debug", nargs=2)
+    parser.add_argument("--disable-interbot", action="store_true", default=False)
     args = parser.parse_args()
 
     if args.pydev_debug :
@@ -45,7 +46,7 @@ if __name__ == "__main__":
 
     logger.initialize()
 
-    loop = eventloop.EventLoop(args.statemachine, args.webserver_port)
+    loop = eventloop.EventLoop(args.statemachine, args.webserver_port, not args.disable_interbot)
     leds.initialize(loop)
     loop.start()
     logger.close()
