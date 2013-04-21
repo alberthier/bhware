@@ -48,7 +48,7 @@ float                           DonneeKpDroite                              =   
 float                           DonneeKiDroite                              =   11.0;
 float                           DonneeDRoueDroite                           =   40.0;   /* en mm */
 #ifdef Actionneurs_Robot1
-float                           DonneeVmaxDroite                            =   0.7;  /* en m/s */
+float                           DonneeVmaxDroite                            =   0.7*1.0;  /* en m/s */
 #endif /* Actionneurs_Robot1 */
 #ifdef Actionneurs_Robot2
 float                           DonneeVmaxDroite                            =   1.3;  /* en m/s */
@@ -58,7 +58,7 @@ float                           DonneeKpGauche                              =   
 float                           DonneeKiGauche                              =   8.0;
 float                           DonneeDRoueGauche                           =   40.0;   /* en mm */
 #ifdef Actionneurs_Robot1
-float                           DonneeVmaxGauche                            =   0.7;  /* en m/s */
+float                           DonneeVmaxGauche                            =   0.7*1.0;  /* en m/s */
 #endif /* Actionneurs_Robot1 */
 #ifdef Actionneurs_Robot2
 float                           DonneeVmaxGauche                            =   1.3;  /* en m/s */

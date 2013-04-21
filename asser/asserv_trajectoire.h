@@ -271,6 +271,7 @@ extern float                Ratio_Acc;
 extern float                Ratio_Decc;
 extern float                Ratio_Acc_Rot;            
 extern float                Ratio_Decc_Rot;
+extern float                Vmax_limit;
 
 extern float                A_MAX;
 extern float                D_MAX;
