@@ -254,6 +254,10 @@ class BasePacket(object):
                 else:
                     cls.HANDLER_METHOD += c
 
+    @property
+    def name(self):
+        return self.__class__.__name__
+
 
     def __init__(self, *args, **kwargs):
         for name, item in self.DEFINITION:
