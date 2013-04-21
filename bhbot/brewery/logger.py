@@ -90,8 +90,7 @@ def log(text, sender = "ARM"):
 def log_exception(exc):
     msg = ""
     for l in traceback.format_exception(type(exc), exc, None):
-        msg += l
-    log(msg)
+        log(l[:-1])
 
 
 def log_packet(packet, sender = "ARM"):
