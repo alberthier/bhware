@@ -29,6 +29,7 @@ class ColorDetector:
         if self.process is not None:
             self.process.stdin.write(b"quit\n")
             self.process.wait()
+            self.process = None
 
 
     def set_team(self, team):
@@ -59,10 +60,8 @@ class ColorDetector:
         ret = None
         if self.process:
             cmd = " ".join(args) + "\n"
-            logger.log("> " + cmd[:-1])
             self.process.stdin.write(cmd.encode("utf-8"))
             out = str(self.process.stdout.readline(), "utf-8")
-            logger.log("< " + out[:-1])
             ret = eval(out)
         return ret
 
