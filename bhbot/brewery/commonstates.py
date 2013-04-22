@@ -199,7 +199,7 @@ class DefinePosition(statemachine.State):
 
 
 
-class Antiblocking(statemachine.State):
+class AntiBlocking(statemachine.State):
 
     def __init__(self, desired_status):
         self.status = desired_status
@@ -633,7 +633,7 @@ class Navigate(statemachine.State):
             self.exit_reason = TRAJECTORY_DESTINATION_UNREACHABLE
             yield None
             return
-        yield Antiblocking(True)
+        yield AntiBlocking(True)
         move = None
         first_point = path[0]
         if self.direction == DIRECTION_FORWARDS:
@@ -645,7 +645,7 @@ class Navigate(statemachine.State):
                 move = yield LookAtOpposite(first_point.virt.x, first_point.virt.y, DIRECTION_FORWARDS, move)
         move = yield MoveCurve(self.destination.angle, path, self.direction, move)
         self.exit_reason = move.exit_reason
-        yield Antiblocking(False)
+        yield AntiBlocking(False)
         yield None
 
 
@@ -661,8 +661,12 @@ class GotoHome(Navigate):
 
 class CalibratePosition(statemachine.State):
 
+    def __init__(self, test):
+        self.test = test
+
+
     def on_enter(self):
-        if IS_HOST_DEVICE_PC:
+        if IS_HOST_DEVICE_PC or self.test:
             yield DefinePosition(BLUE_START_X, BLUE_START_Y, math.pi / 2.0)
         else:
             estimated_start_y = 1.0
