@@ -502,11 +502,13 @@ class EventLoop(object):
         if self.fsm is not None:
             return self.fsm.current_state
 
+
     def create_and_start_fsms(self):
         if self.create_fsm() and self.create_fsm_barman():
             self.start_fsms()
         else :
             self.stop()
+
 
     def create_fsm(self):
         (self.main_state, self.end_of_match_state) = statemachine.instantiate_state_machine(self.state_machine_name)
@@ -517,6 +519,7 @@ class EventLoop(object):
         else:
             self.fsm = statemachine.StateMachine(self, self.main_state)
             return True
+
 
     def create_fsm_barman(self):
         sides = [ SIDE_RIGHT ]
@@ -537,6 +540,7 @@ class EventLoop(object):
                 main.side = s
                 self.glass_fsm.append(statemachine.StateMachine(self, main))
                 return True
+
 
     def start_fsms(self):
         self.send_packet(packets.ControllerReady())
@@ -566,14 +570,17 @@ class EventLoop(object):
                 if not self.timers[0].check_timeout():
                     break
 
+
     def enqueue_packet(self, packet):
         self.packet_queue.appendleft(packet)
+
 
     def process_packets_and_dispatch(self):
         # logger.log('process packets')
         while self.packet_queue :
             packet = self.packet_queue.pop()
             self.dispatch(packet)
+
 
     def dispatch(self, packet):
         # logger.log('dispatch packet {}'.format(packet))
@@ -588,6 +595,7 @@ class EventLoop(object):
 
         for fsm in self.glass_fsm :
             packet.dispatch(fsm)
+
 
     def stop(self):
         logger.log("Stopping...")

@@ -3,6 +3,7 @@
 
 import datetime
 import math
+import functools
 from collections import deque
 
 import statemachine
@@ -14,12 +15,14 @@ import tools
 from definitions import *
 
 
-import functools
+
 
 class StateChain(statemachine.State):
+
     def __init__(self, *args):
         self.states = args
-        logger.log('StateChain : {}'.format(self.states))
+        logger.dbg('StateChain : {}'.format(self.states))
+
 
     def __getattr__(self, item):
         if item.startswith('on_'):
@@ -27,6 +30,7 @@ class StateChain(statemachine.State):
             setattr(self, item, method)
             return method
         raise AttributeError()
+
 
     def on_enter(self, *args, **kwargs):
         for s in self.states :
@@ -39,8 +43,9 @@ class StateChain(statemachine.State):
                 real_ret = ret
         return real_ret
 
+
     def handle_event(self, event_name, *args, **kwargs):
-        logger.log('StateChain.handle_event : {}'.format(event_name))
+        logger.dbg('StateChain.handle_event : {}'.format(event_name))
         for state in self.states :
             method = getattr(state, event_name, None)
             if method :
@@ -48,6 +53,7 @@ class StateChain(statemachine.State):
                 if ret :
                     return ret
         return None
+
 
 
 
@@ -126,15 +132,18 @@ class SendPacketAndWait(statemachine.State):
 
 
     def on_enter(self):
-        logger.log("Sending packet {}".format(self.packet_to_send))
+        logger.dbg("Sending packet {}".format(self.packet_to_send))
         self.send_packet(self.packet_to_send)
-        logger.log('Waiting for packet type {}'.format(self.packet_class_to_wait.__name__))
+        logger.dbg('Waiting for packet type {}'.format(self.packet_class_to_wait.__name__))
 
 
     def on_packet(self, packet):
         if isinstance(packet, self.packet_class_to_wait):
-            logger.log("Got expected packet, exiting state")
+            logger.dbg("Got expected packet, exiting state")
             yield None
+
+
+
 
 class SendPacketsAndWaitAnswer(statemachine.State):
 
@@ -146,20 +155,21 @@ class SendPacketsAndWaitAnswer(statemachine.State):
 
     def on_enter(self):
         for p in self.packets :
-            logger.log("Sending packet {}".format(p))
+            logger.dbg("Sending packet {}".format(p))
             self.send_packet(p)
-            logger.log('Waiting for packet type {}'.format(p.name))
+            logger.dbg('Waiting for packet type {}'.format(p.name))
 
 
     def on_packet(self, packet):
         for p in self.packets :
             if type(p) == type(packet):
-                logger.log("Got expected packet {}".format(packet.name))
+                logger.dbg("Got expected packet {}".format(packet.name))
                 self.packets.remove(p)
                 break
         if not self.packets :
-            logger.log('No more packets to wait, exiting state')
+            logger.dbg('No more packets to wait, exiting state')
             yield None
+
 
 
 
@@ -394,10 +404,15 @@ class MoveCurve(AbstractMove):
                 poses.append(pt)
         self.packet = packets.MoveCurve(direction = direction, angle = apose.angle, points = poses)
 
+
+
+
 class MoveCurveTo(MoveCurve):
 
     def __init__(self, angle, pose, direction = DIRECTION_FORWARDS, chained = None):
         MoveCurve.__init__(self, angle, [pose], direction, chained)
+
+
 
 
 class MoveLine(AbstractMove):
@@ -421,6 +436,8 @@ class MoveLineTo(MoveLine):
         MoveLine.__init__(self, [position.Pose(x, y, None, True)], direction, chained)
 
 
+
+
 class MoveRelative(statemachine.State):
 
     def __init__(self, distance, direction = DIRECTION_FORWARDS, chained = None):
@@ -436,6 +453,9 @@ class MoveRelative(statemachine.State):
         yield MoveLineTo(x, y, self.direction, self.chained)
         yield None
 
+
+
+
 class RotateRelative(AbstractMove):
 
     def __init__(self, relative_angle, chained = None):
@@ -449,6 +469,8 @@ class RotateRelative(AbstractMove):
         current_pose = self.robot.pose
         yield Rotate(current_pose.angle+self.relative_angle, chained=self.chained)
         yield None
+
+
 
 
 class MoveArc(AbstractMove):
@@ -633,19 +655,18 @@ class Navigate(statemachine.State):
             self.exit_reason = TRAJECTORY_DESTINATION_UNREACHABLE
             yield None
             return
-        yield AntiBlocking(True)
+        yield Antiblocking(True)
         move = None
         first_point = path[0]
         if self.direction == DIRECTION_FORWARDS:
             if not self.robot.is_looking_at(first_point):
-                logger.log("look at {}".format(first_point))
                 move = yield LookAt(first_point.virt.x, first_point.virt.y, DIRECTION_FORWARDS, move) 
         else:
             if not self.robot.is_looking_at_opposite(first_point):
                 move = yield LookAtOpposite(first_point.virt.x, first_point.virt.y, DIRECTION_FORWARDS, move)
         move = yield MoveCurve(self.destination.angle, path, self.direction, move)
         self.exit_reason = move.exit_reason
-        yield AntiBlocking(False)
+        yield Antiblocking(False)
         yield None
 
 
@@ -679,6 +700,9 @@ class CalibratePosition(statemachine.State):
         if IS_MAIN_ROBOT:
             yield LookAt(0.0, 1.5)
         yield None
+
+
+
 
 class DepositGlasses(statemachine.State):
     def on_enter(self, can_continue=False):

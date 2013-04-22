@@ -87,6 +87,11 @@ def log(text, sender = "ARM"):
     sys.stdout.flush()
 
 
+def dbg(text, sender = "ARM"):
+    pass
+    #log(text, sender)
+
+
 def log_exception(exc):
     msg = ""
     for l in traceback.format_exception(type(exc), exc, None):
