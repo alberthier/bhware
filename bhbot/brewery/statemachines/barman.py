@@ -6,32 +6,50 @@ import commonstates
 from definitions import *
 
 
+
+
 class GlassState(statemachine.State):
+
     def __init__(self, side):
         self.side = side
         self.glass_count = 0
 
+
     def on_internal_drop_glasses(self, packet):
         pass
 
+
+
+
 class Main(GlassState):
+
     def __init__(self, side = None):
         super().__init__(side)
 
+
     def on_enter(self):
         logger.log("Init barman : {}".format(self.side))
+
 
     def on_device_ready(self, packet):
         yield commonstates.Gripper(self.side, MOVE_OPEN)
         yield NoGlassPresent(self.side)
 
+
+
+
 class EndOfMatch(statemachine.State):
+
     def on_enter(self):
         logger.log('Barman {} : end of match'.format(self.side))
 
 
+
+
 class NoGlassPresent(GlassState):
+
     glass_count = 0
+
     def on_glass_present(self, packet):
         self.send_packet(packets.Gripper(side = self.side, move = MOVE_CLOSE))
 
@@ -50,12 +68,17 @@ class NoGlassPresent(GlassState):
             # self.robot.glasses_count[self.side] += 1
             yield OneGlassPresent(self.side)
 
+
     def on_top_holder(self, packet):
         self.send_packet(packets.Gripper(side = self.side, move = MOVE_OPEN))
 
 
+
+
 class OneGlassPresent(GlassState):
+
     glass_count = 1
+
     def on_glass_present(self, packet):
         self.send_packet(packets.Gripper(side = self.side, move = MOVE_CLOSE))
 
@@ -67,15 +90,20 @@ class OneGlassPresent(GlassState):
     def on_lifter(self, packet):
         yield TwoGlassesPresent(self.side)
 
+
     def on_internal_drop_glasses(self, packet):
         if not packet.done :
             yield UnloadOneGlass(self.side)
             self.send_packet(packets.InternalDropGlasses(can_continue=packet.can_continue, done=True))
             yield NoGlassPresent(self.side)
-        
-        
+
+
+
+
 class TwoGlassesPresent(GlassState):
+
     glass_count = 2
+
     def on_glass_present(self, packet):
         self.send_packet(packets.BottomHolder(side = self.side, move = MOVE_CLOSE))
 
@@ -83,13 +111,18 @@ class TwoGlassesPresent(GlassState):
     def on_bottom_holder(self, packet):
         yield ThreeGlassesPresent(self.side)
 
+
     def on_internal_drop_glasses(self, packet):
         if not packet.done :
             yield UnloadTwoGlasses(self.side)
             self.send_packet(packets.InternalDropGlasses(can_continue=packet.can_continue, done=True))
             yield NoGlassPresent(self.side)
 
+
+
+
 class ThreeGlassesPresent(GlassState):
+
     glass_count = 3
 
     def on_internal_drop_glasses(self, packet):
@@ -99,7 +132,10 @@ class ThreeGlassesPresent(GlassState):
             yield NoGlassPresent(self.side)
 
 
+
+
 class UnloadThreeGlasses(GlassState):
+
     def on_enter(self):
         yield commonstates.SendPacketsAndWaitAnswer(
             packets.TopHolder(side = self.side, move = MOVE_OPEN),
@@ -108,7 +144,11 @@ class UnloadThreeGlasses(GlassState):
             )
         yield None
 
+
+
+
 class UnloadTwoGlasses(GlassState):
+
     def on_enter(self):
         yield commonstates.SendPacketsAndWaitAnswer(
             packets.BottomHolder(side = self.side, move = MOVE_OPEN),
@@ -123,6 +163,8 @@ class UnloadTwoGlasses(GlassState):
         yield None
 
 
+
+
 class UnloadOneGlass(GlassState):
     def on_enter(self):
         # just drop the glass
@@ -131,5 +173,4 @@ class UnloadOneGlass(GlassState):
             self.send_packet(packets.TopHolder(side = self.side, move = MOVE_OPEN)),
         )
         yield None
-
 
