@@ -24,6 +24,7 @@ class Main(statemachine.State):
 
     def on_device_ready(self, packet):
         yield CalibratePosition()
+        yield AntiBlocking(True)
 
 
     def on_start(self, packet):
