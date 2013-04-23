@@ -7,43 +7,51 @@ import inspect
 import datetime
 
 
-#TODO : improve import mechanism by using this tutorial : http://www.doughellmann.com/PyMOTW/imp/
-# then when could remove sys.path manipulations
-
-
-def instantiate_state_machine(state_machine_name):
-    state_machines_dir = os.path.join(os.path.dirname(__file__), "statemachines")
-    state_machine_file = os.path.join(state_machines_dir, state_machine_name + ".py")
-    state_machine_module = imp.load_source(state_machine_name, state_machine_file)
-    main_state = None
-    end_of_match_state = None
-    for (item_name, item_type) in inspect.getmembers(state_machine_module):
-        if inspect.isclass(item_type) and issubclass(item_type, State):
-            if item_name == "Main":
-                main_state = item_type()
-                logger.log("Successfully instatiated state '{}' from file '{}'".format(item_name, state_machine_file))
-            elif item_name == "EndOfMatch":
-                end_of_match_state = item_type()
-                logger.log("Successfully instatiated state '{}' from file '{}'".format(item_name, state_machine_file))
-            if main_state != None and end_of_match_state != None:
-                break
-    if main_state == None:
-        logger.log("Error: no 'Main' state found in '{}'".format(state_machine_file))
-    if end_of_match_state == None:
-        logger.log("Error: no 'EndOfMatch' state found in '{}'".format(state_machine_file))
-    return (main_state, end_of_match_state)
-
-
 
 
 class StateMachine(object):
-    def __init__(self, event_loop, root_state):
+
+    def __init__(self, event_loop, state_machine_name, **kwargs):
         self.state_stack = []
         """:type: self.state_stack : list of State"""
         self.state_history = []
         """:type: self.state_history : list of State"""
         self.event_loop = event_loop
-        self.process(self.push_state(root_state))
+        for k, v in kwargs.items():
+            setattr(self, k, v)
+        (main_state, self.end_of_match_state) = self.instantiate_state_machine(state_machine_name)
+        if main_state is not None:
+            self.event_loop.fsms.append(self)
+            self.process(self.push_state(main_state))
+
+
+    def instantiate_state_machine(self, state_machine_name):
+        state_machines_dir = os.path.join(os.path.dirname(__file__), "statemachines")
+        state_machine_file = os.path.join(state_machines_dir, state_machine_name + ".py")
+        state_machine_module = imp.load_source(state_machine_name, state_machine_file)
+        main_state = None
+        end_of_match_state = None
+        for (item_name, item_type) in inspect.getmembers(state_machine_module):
+            if inspect.isclass(item_type) and issubclass(item_type, State):
+                if item_name == "Main":
+                    main_state = item_type()
+                    logger.log("Successfully instatiated state '{}' from file '{}'".format(item_name, state_machine_file))
+                elif item_name == "EndOfMatch":
+                    end_of_match_state = item_type()
+                    logger.log("Successfully instatiated state '{}' from file '{}'".format(item_name, state_machine_file))
+                if main_state != None and end_of_match_state != None:
+                    break
+        if main_state is None:
+            logger.log("Error: no 'Main' state found in '{}'".format(state_machine_file))
+        if end_of_match_state is None:
+            logger.log("Warning: no 'EndOfMatch' state found in '{}'".format(state_machine_file))
+        return (main_state, end_of_match_state)
+
+
+    def switch_to_end_of_match(self):
+        self.state_stack = []
+        if self.end_of_match_state is not None:
+            self.process(self.push_state(self.end_of_match_state))
 
 
     def init_state(self, s):
@@ -91,7 +99,7 @@ class StateMachine(object):
                                                                       old = self.current_state.name if self.current_state else "" ))
         self.init_state(state)
         self.state_stack.append(state)
-        self.state_history.append(state)
+        self.state_history.append(state.name)
         return state.on_enter()
 
 
