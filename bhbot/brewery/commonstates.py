@@ -499,6 +499,19 @@ class StopAll(statemachine.State):
 
 
 
+class WaitForGlass(statemachine.State):
+
+    def __init__(self, side):
+        self.side = side
+
+
+    def on_glass_present(self, packet):
+        if packet.side == self.side:
+            yield None
+
+
+
+
 class BottomHolder(statemachine.State):
 
     def __init__(self, side, move):
@@ -510,7 +523,8 @@ class BottomHolder(statemachine.State):
 
 
     def on_bottom_holder(self, packet):
-        yield None
+        if packet.side == self.packet.side:
+            yield None
 
 
 
@@ -526,7 +540,8 @@ class Lifter(statemachine.State):
 
 
     def on_lifter(self, packet):
-        yield None
+        if packet.side == self.packet.side:
+            yield None
 
 
 
@@ -542,7 +557,8 @@ class Gripper(statemachine.State):
 
 
     def on_gripper(self, packet):
-        yield None
+        if packet.side == self.packet.side:
+            yield None
 
 
 
@@ -558,7 +574,8 @@ class TopHolder(statemachine.State):
 
 
     def on_top_holder(self, packet):
-        yield None
+        if packet.side == self.packet.side:
+            yield None
 
 
 
@@ -574,7 +591,8 @@ class CandleKicker(statemachine.State):
 
 
     def on_candle_kicker(self, packet):
-        yield None
+        if packet.side == self.packet.side and packet.which == self.packet.which:
+            yield None
 
 
 
@@ -703,9 +721,12 @@ class CalibratePosition(statemachine.State):
 
 
 class DepositGlasses(statemachine.State):
+
     def on_enter(self, can_continue=False):
         self.send_packet(packets.InternalDropGlasses(can_continue=can_continue, done=False))
+
 
     def on_internal_drop_glasses(self, packet):
         if packet.done :
             yield None
+

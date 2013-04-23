@@ -19,6 +19,8 @@ from position import *
 class Main(statemachine.State):
 
     def on_enter(self):
+        statemachine.StateMachine(self.event_loop, "barman", side = SIDE_LEFT)
+        statemachine.StateMachine(self.event_loop, "barman", side = SIDE_RIGHT)
         self.fsm.cake = Cake()
 
 

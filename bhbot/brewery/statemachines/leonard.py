@@ -17,6 +17,10 @@ from position import *
 
 class Main(statemachine.State):
 
+    def on_enter(self):
+        statemachine.StateMachine(self.event_loop, "barman", side = SIDE_RIGHT)
+
+
     def on_device_ready(self, packet):
         yield CalibratePosition()
         yield AntiBlocking(True)
