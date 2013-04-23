@@ -43,9 +43,9 @@ class Main(statemachine.State):
 
 
 
-class GlassesSuperS(GrabGlasses):
+class GlassesSuperS(statemachine.State):
 
-    def create_move(self):
+    def on_enter(self):
         glasses = [(0.95, 0.90),
                    (1.20, 1.05),
                    (0.95, 1.20),
@@ -61,9 +61,8 @@ class GlassesSuperS(GrabGlasses):
                 x -= xoffset
             y -= 0.128
             path.append((x, y))
-        move = MoveCurve(math.pi /2.0, path)
-        move.on_packet = self.on_packet
-        return move
+        yield MoveCurve(math.pi /2.0, path)
+        yield None
 
 
 
