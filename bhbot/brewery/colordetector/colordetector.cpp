@@ -11,27 +11,24 @@
 
 
 #define BGR_IMAGE "BGR Image"
-#define BINARIZED_IMAGE "Binarized Image"
+#define HSV_IMAGE "HSV Image"
 
 
 //=================================================================================================
 
 
-class Rect
+class Rect : public cv::Rect
 {
 public:
     Rect(std::istream& stream);
 
     std::string id;
-    int x;
-    int y;
-    int width;
-    int height;
     bool match;
 };
 
 
 Rect::Rect(std::istream& stream) :
+    cv::Rect(),
     match(false)
 {
     stream >> id >> x >> y >> width >> height;
@@ -44,6 +41,12 @@ Rect::Rect(std::istream& stream) :
 class ColorDetector
 {
 public:
+    enum Mode {
+        ModeBgr,
+        ModeHsv
+    };
+
+public:
     ColorDetector(const std::string& configFile, int webcamId, const std::string& imageFile);
     virtual ~ColorDetector();
 
@@ -52,33 +55,31 @@ public:
 private:
     void readStream(std::istream& stream);
     bool processLine(std::istream& stream);
-    void addZone(std::istream& stream, std::vector<Rect>& zoneRects, std::vector<cv::Mat>& zones);
     bool wait();
     void initDisplay();
     void updateDisplay();
-    void updateZones(std::vector<Rect>& zoneRects, std::vector<cv::Mat>& zones);
-    std::string bgrCheck();
+    std::string createFetchResponse();
+    std::string bgrFetch();
+    std::string hsvFetch();
     void logImage();
     void reset();
 
 private:
+    Mode m_mode;
     int m_pollTimeout;
-    int m_thresholdHue;
-    int m_thresholdSaturation;
-    int m_thresholdTolerance;
+    float m_hsvHueTolerance;
+    float m_hsvSaturationTolerance;
+    float m_hsvValueTolerance;
     std::string m_logfile;
     std::vector<Rect> m_detectionZoneRects;
-    std::vector<cv::Mat> m_detectionZones;
     std::vector<Rect> m_calibrationZoneRects;
-    std::vector<cv::Mat> m_calibrationZones;
     cv::VideoCapture* m_webcam;
     cv::Mat m_bgrImage;
-    cv::Mat m_hsvImage;
-    cv::Mat m_binImage;
 };
 
 
 ColorDetector::ColorDetector(const std::string& configFile, int webcamId, const std::string& imageFile) :
+    m_mode(ModeBgr),
     m_webcam(NULL)
 {
     reset();
@@ -130,36 +131,53 @@ bool ColorDetector::processLine(std::istream& stream)
     bool again = true;
 
     std::string line;
-    getline(stream, line);
+    std::getline(stream, line);
     std::stringstream sstr(line);
     std::string command;
     std::string output("None");
 
     sstr >> command;
-    if (command == "quit") {
-        again = false;
+    if (command == "set_mode") {
+        std::string mode;
+        sstr >> mode;
+        if (mode == "BGR") {
+            m_mode = ModeBgr;
+        } else if (mode == "HSV") {
+            m_mode = ModeHsv;
+        } else {
+            output = "\"Unknown mode '" + mode + "'\"";
+        }
+    } else if (command == "set_poll_timeout") {
+        sstr >> m_pollTimeout;
+    } else if (command == "set_hsv_hue_tolerance") {
+        sstr >> m_hsvHueTolerance;
+    } else if (command == "set_hsv_saturation_tolerance") {
+        sstr >> m_hsvSaturationTolerance;
+    } else if (command == "set_hsv_value_tolerance") {
+        sstr >> m_hsvValueTolerance;
+    } else if (command == "set_log_file") {
+        sstr >> m_logfile;
+    } else if (command == "add_calibration_zone") {
+        m_calibrationZoneRects.push_back(Rect(sstr));
+    } else if (command == "add_detection_zone") {
+        m_detectionZoneRects.push_back(Rect(sstr));
     } else if (command == "fetch") {
-        output = bgrCheck();
+        switch (m_mode) {
+            case ModeBgr:
+                output = bgrFetch();
+                break;
+            case ModeHsv:
+                output = hsvFetch();
+                break;
+        }
         if (!m_logfile.empty()) {
             cv::imwrite(m_logfile.c_str(), m_bgrImage);
             logImage();
         }
-    } else if (command == "poll_timeout") {
-        sstr >> m_pollTimeout;
-    } else if (command == "threshold_hue") {
-        sstr >> m_thresholdHue;
-    } else if (command == "threshold_saturation") {
-        sstr >> m_thresholdSaturation;
-    } else if (command == "threshold_tolerance") {
-        sstr >> m_thresholdTolerance;
-    } else if (command == "set_log_file") {
-        sstr >> m_logfile;
-    } else if (command == "add_calibration_zone") {
-        addZone(sstr, m_calibrationZoneRects, m_calibrationZones);
-    } else if (command == "add_detection_zone") {
-        addZone(sstr, m_detectionZoneRects, m_detectionZones);
     } else if (command == "reset") {
         reset();
+    } else if (command == "quit") {
+        again = false;
     } else if (!command.empty() && command[0] != '#') {
         output = "\"Unknown command '" + command + "'\"";
     }
@@ -168,13 +186,6 @@ bool ColorDetector::processLine(std::istream& stream)
     std::cout.flush();
 
     return again;
-}
-
-
-void ColorDetector::addZone(std::istream& stream, std::vector<Rect>& zoneRects, std::vector<cv::Mat>& zones)
-{
-    zoneRects.push_back(Rect(stream));
-    updateZones(zoneRects, zones);
 }
 
 
@@ -196,9 +207,9 @@ void ColorDetector::initDisplay()
     cv::namedWindow(BGR_IMAGE, cv::WINDOW_NORMAL);
     cv::resizeWindow(BGR_IMAGE, 640, 480);
 
-    cv::namedWindow(BINARIZED_IMAGE, cv::WINDOW_NORMAL);
-    cv::resizeWindow(BINARIZED_IMAGE, 640, 480);
-    cv::moveWindow(BINARIZED_IMAGE, 710, 0);
+    cv::namedWindow(HSV_IMAGE, cv::WINDOW_NORMAL);
+    cv::resizeWindow(HSV_IMAGE, 640, 480);
+    cv::moveWindow(HSV_IMAGE, 710, 0);
 #endif // !__arm__
 }
 
@@ -214,54 +225,23 @@ void ColorDetector::updateDisplay()
         cv::rectangle(img, cv::Point(it->x, it->y), cv::Point(it->x + it->width, it->y + it->height), cv::Scalar(0, 200, 0));
     }
     cv::imshow(BGR_IMAGE, img);
-    if (!m_binImage.empty()) {
-        cv::imshow(BINARIZED_IMAGE, m_binImage);
-    }
+
+    cv::Mat hsvImage;
+    cv::cvtColor(m_bgrImage, hsvImage, CV_BGR2HSV);
+    cv::imshow(HSV_IMAGE, hsvImage);
+
     cv::waitKey(1);
 #endif // !__arm__
 }
 
 
-void ColorDetector::updateZones(std::vector<Rect>& zoneRects, std::vector<cv::Mat>& zones)
-{
-    for (size_t i = zones.size(); i < zoneRects.size(); ++i) {
-        const Rect& rect = zoneRects[i];
-        cv::Mat zone = m_bgrImage(cv::Range(rect.y, rect.y + rect.height), cv::Range(rect.x, rect.x + rect.width));
-        zones.push_back(zone);
-    }
-}
-
-
-std::string ColorDetector::bgrCheck()
+std::string ColorDetector::createFetchResponse()
 {
     std::stringstream output;
-    float calibBlue = 0.0;
-    float calibRed = 0.0;
-
-    for (std::vector<cv::Mat>::iterator it = m_calibrationZones.begin(); it != m_calibrationZones.end(); ++it) {
-        std::vector<cv::Mat> components;
-        cv::split(*it, components);
-
-        calibBlue += cv::mean(components[0])[0];
-        calibRed += cv::mean(components[2])[0];
-    }
-
-    bool isCalibRed = calibBlue < calibRed;
 
     output << '{';
-    for (size_t i = 0; i < m_detectionZones.size(); ++i) {
+    for (size_t i = 0; i < m_detectionZoneRects.size(); ++i) {
         Rect& rect = m_detectionZoneRects[i];
-        cv::Mat& image = m_detectionZones[i];
-        std::vector<cv::Mat> components;
-        cv::split(image, components);
-
-        float blue = cv::mean(components[0])[0];
-        float red = cv::mean(components[2])[0];
-        if (isCalibRed) {
-            rect.match = red > blue;
-        } else {
-            rect.match = blue > red;
-        }
 
         output << '\'' << rect.id << "':";
         if (rect.match) {
@@ -269,13 +249,96 @@ std::string ColorDetector::bgrCheck()
         } else {
             output << "False";
         }
-        if (i != m_detectionZones.size() - 1) {
+        if (i != m_detectionZoneRects.size() - 1) {
             output << ',';
         }
     }
     output << '}';
 
     return output.str();
+}
+
+
+std::string ColorDetector::bgrFetch()
+{
+    float calibBlue = 0.0;
+    float calibRed = 0.0;
+
+    for (std::vector<Rect>::iterator it = m_calibrationZoneRects.begin(); it != m_calibrationZoneRects.end(); ++it) {
+        cv::Mat image(m_bgrImage, *it);
+        std::vector<cv::Mat> components;
+        cv::split(image, components);
+
+        calibBlue += cv::mean(components[0])[0];
+        calibRed  += cv::mean(components[2])[0];
+    }
+
+    calibBlue /= (float) m_calibrationZoneRects.size();
+    calibRed  /= (float) m_calibrationZoneRects.size();
+
+    bool isCalibRed = calibBlue < calibRed;
+
+    for (std::vector<Rect>::iterator it = m_detectionZoneRects.begin(); it != m_detectionZoneRects.end(); ++it) {
+        cv::Mat image(m_bgrImage, *it);
+        std::vector<cv::Mat> components;
+        cv::split(image, components);
+
+        float blue = cv::mean(components[0])[0];
+        float red  = cv::mean(components[2])[0];
+        if (isCalibRed) {
+            it->match = red > blue;
+        } else {
+            it->match = blue > red;
+        }
+    }
+
+    return createFetchResponse();
+}
+
+
+std::string ColorDetector::hsvFetch()
+{
+    float calibHue = 0.0;
+    float calibSaturation = 0.0;
+    float calibValue = 0.0;
+
+    for (std::vector<Rect>::iterator it = m_calibrationZoneRects.begin(); it != m_calibrationZoneRects.end(); ++it) {
+        cv::Mat bgrZone(m_bgrImage, *it);
+        cv::Mat hsvZone;
+        cv::cvtColor(bgrZone, hsvZone, CV_BGR2HSV);
+        std::vector<cv::Mat> components;
+        cv::split(hsvZone, components);
+
+        calibHue        += cv::mean(components[0])[0];
+        calibSaturation += cv::mean(components[1])[0];
+        calibValue      += cv::mean(components[2])[0];
+    }
+
+    calibHue        /= (float) m_calibrationZoneRects.size();
+    calibSaturation /= (float) m_calibrationZoneRects.size();
+    calibValue      /= (float) m_calibrationZoneRects.size();
+
+    float minHue        = std::max(calibHue        - m_hsvHueTolerance,          0.0f);
+    float minSaturation = std::max(calibSaturation - m_hsvSaturationTolerance,   0.0f);
+    float minValue      = std::max(calibValue      - m_hsvValueTolerance,        0.0f);
+    float maxHue        = std::min(calibHue        + m_hsvHueTolerance,        255.0f);
+    float maxSaturation = std::min(calibSaturation + m_hsvSaturationTolerance, 255.0f);
+    float maxValue      = std::min(calibValue      + m_hsvValueTolerance,      255.0f);
+
+    for (std::vector<Rect>::iterator it = m_detectionZoneRects.begin(); it != m_detectionZoneRects.end(); ++it) {
+        cv::Mat bgrZone(m_bgrImage, *it);
+        cv::Mat hsvZone;
+        cv::cvtColor(bgrZone, hsvZone, CV_BGR2HSV);
+        cv::Mat inRange;
+
+        cv::Scalar avg = cv::mean(hsvZone);
+
+        it->match = minHue        <= avg[0] && avg[0] <= maxHue &&
+                    minSaturation <= avg[1] && avg[1] <= maxSaturation &&
+                    minValue      <= avg[2] && avg[2] <= maxValue;
+    }
+
+    return createFetchResponse();
 }
 
 
@@ -309,17 +372,13 @@ void ColorDetector::logImage()
 void ColorDetector::reset()
 {
     m_pollTimeout = 100;
-    m_thresholdHue = 0;
-    m_thresholdSaturation = 0;
-    m_thresholdTolerance = 0;
+    m_hsvHueTolerance = 255.0;
+    m_hsvSaturationTolerance = 255.0;
+    m_hsvValueTolerance = 255.0;
     m_logfile.clear();
     m_detectionZoneRects.clear();
-    m_detectionZones.clear();
     m_calibrationZoneRects.clear();
-    m_calibrationZones.clear();
     m_bgrImage = cv::Mat();
-    m_hsvImage = cv::Mat();
-    m_binImage = cv::Mat();
 }
 
 
