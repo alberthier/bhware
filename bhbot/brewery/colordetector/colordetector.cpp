@@ -79,7 +79,6 @@ private:
 
 
 ColorDetector::ColorDetector(const std::string& configFile, int webcamId, const std::string& imageFile) :
-    m_mode(ModeBgr),
     m_webcam(NULL)
 {
     reset();
@@ -371,6 +370,7 @@ void ColorDetector::logImage()
 
 void ColorDetector::reset()
 {
+    m_mode = ModeBgr;
     m_pollTimeout = 100;
     m_hsvHueTolerance = 255.0;
     m_hsvSaturationTolerance = 255.0;
