@@ -39,7 +39,7 @@ class Deposit(statemachine.State):
 class TakeGlasses(statemachine.State):
 
     def on_enter(self):
-        yield MoveLineTo(1.50,2.0)
+        yield MoveLineTo(BLUE_START_X, 2.0)
         yield None
 
 
