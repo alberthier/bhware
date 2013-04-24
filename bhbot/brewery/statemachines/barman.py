@@ -11,7 +11,9 @@ class Main(statemachine.State):
 
     def on_enter(self):
         self.fsm.glasses_count = 0
-        logger.log("Init barman : {}".format(self.fsm.side))
+
+        self.fsm.name += "[{}]".format(SIDE.lookup_by_value[self.fsm.side])
+        self.log("Init")
 
 
     def on_start(self, packet):
@@ -79,5 +81,5 @@ class UnloadGlasses(statemachine.State):
 class EndOfMatch(statemachine.State):
 
     def on_enter(self):
-        logger.log('Barman {} : end of match'.format(self.fsm.side))
+        self.log("End of match")
 

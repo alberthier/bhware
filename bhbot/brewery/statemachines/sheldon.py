@@ -31,7 +31,7 @@ class Main(statemachine.State):
 
     def on_start(self, packet):
         detector = yield FetchCandleColors()
-        logger.log("First candles detection: {}".format(detector.colors))
+        self.log("First candles detection: {}".format(detector.colors))
         self.fsm.cake.update_with_detection(detector.colors)
         yield GlassesSuperS()
         yield NavigateToCake(True)

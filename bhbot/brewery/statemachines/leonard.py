@@ -27,7 +27,7 @@ class Main(statemachine.State):
 
 
     def on_start(self, packet):
-        logger.log("Match started")
+        self.log("Match started")
         yield TakeGlasses()
         yield OpenGifts()
         yield Deposit()

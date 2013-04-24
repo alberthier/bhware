@@ -11,15 +11,16 @@ import datetime
 
 class StateMachine(object):
 
-    def __init__(self, event_loop, state_machine_name, **kwargs):
+    def __init__(self, event_loop, name, **kwargs):
         self.state_stack = []
         """:type: self.state_stack : list of State"""
         self.state_history = []
         """:type: self.state_history : list of State"""
         self.event_loop = event_loop
+        self.name = name
         for k, v in kwargs.items():
             setattr(self, k, v)
-        (main_state, self.end_of_match_state) = self.instantiate_state_machine(state_machine_name)
+        (main_state, self.end_of_match_state) = self.instantiate_state_machine(self.name)
         if main_state is not None:
             self.event_loop.fsms.append(self)
             self.process(self.push_state(main_state))
@@ -35,16 +36,16 @@ class StateMachine(object):
             if inspect.isclass(item_type) and issubclass(item_type, State):
                 if item_name == "Main":
                     main_state = item_type()
-                    logger.log("Successfully instatiated state '{}' from file '{}'".format(item_name, state_machine_file))
+                    self.log("Successfully instatiated state '{}' from file '{}'".format(item_name, state_machine_file))
                 elif item_name == "EndOfMatch":
                     end_of_match_state = item_type()
-                    logger.log("Successfully instatiated state '{}' from file '{}'".format(item_name, state_machine_file))
+                    self.log("Successfully instatiated state '{}' from file '{}'".format(item_name, state_machine_file))
                 if main_state != None and end_of_match_state != None:
                     break
         if main_state is None:
-            logger.log("Error: no 'Main' state found in '{}'".format(state_machine_file))
+            self.log("Error: no 'Main' state found in '{}'".format(state_machine_file))
         if end_of_match_state is None:
-            logger.log("Warning: no 'EndOfMatch' state found in '{}'".format(state_machine_file))
+            self.log("Warning: no 'EndOfMatch' state found in '{}'".format(state_machine_file))
         return (main_state, end_of_match_state)
 
 
@@ -68,6 +69,14 @@ class StateMachine(object):
         :rtype: State
         """
         return self.state_stack[-1] if self.state_stack else None
+
+
+    def log(self, msg):
+        logger.log(self.name + ": " + msg)
+
+
+    def dbg(self, msg):
+        logger.dbg(self.name + ": " + msg)
 
 
     def on_timer_tick(self):
@@ -95,7 +104,7 @@ class StateMachine(object):
 
 
     def push_state(self, state):
-        logger.log("Switching to state {new} ({old} -> {new})".format(new = state.name,
+        self.log("Switching to state {new} ({old} -> {new})".format(new = state.name,
                                                                       old = self.current_state.name if self.current_state else "" ))
         self.init_state(state)
         self.state_stack.append(state)
@@ -108,7 +117,7 @@ class StateMachine(object):
         previous_state.on_exit()
         self.state_stack.pop()
         new_state = self.current_state
-        logger.log("Exiting state {previous} ({previous} -> {current})".format(previous = previous_state.name,
+        self.log("Exiting state {previous} ({previous} -> {current})".format(previous = previous_state.name,
                                                                                current = new_state.name))
 
     def process(self, generator):
@@ -137,6 +146,14 @@ class State(object):
     @property
     def name(self):
         return self.__class__.__name__
+
+
+    def log(self, msg):
+        self.fsm.log(msg)
+
+
+    def dbg(self, msg):
+        self.fsm.dbg(msg)
 
 
     def send_packet(self, packet):

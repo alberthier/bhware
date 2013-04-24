@@ -21,7 +21,7 @@ class StateChain(statemachine.State):
 
     def __init__(self, *args):
         self.states = args
-        logger.dbg('StateChain : {}'.format(self.states))
+        self.dbg('StateChain : {}'.format(self.states))
 
 
     def __getattr__(self, item):
@@ -45,7 +45,7 @@ class StateChain(statemachine.State):
 
 
     def handle_event(self, event_name, *args, **kwargs):
-        logger.dbg('StateChain.handle_event : {}'.format(event_name))
+        self.dbg('StateChain.handle_event : {}'.format(event_name))
         for state in self.states :
             method = getattr(state, event_name, None)
             if method :
@@ -132,14 +132,14 @@ class SendPacketAndWait(statemachine.State):
 
 
     def on_enter(self):
-        logger.dbg("Sending packet {}".format(self.packet_to_send))
+        self.dbg("Sending packet {}".format(self.packet_to_send))
         self.send_packet(self.packet_to_send)
-        logger.dbg('Waiting for packet type {}'.format(self.packet_class_to_wait.__name__))
+        self.dbg('Waiting for packet type {}'.format(self.packet_class_to_wait.__name__))
 
 
     def on_packet(self, packet):
         if isinstance(packet, self.packet_class_to_wait):
-            logger.dbg("Got expected packet, exiting state")
+            self.dbg("Got expected packet, exiting state")
             yield None
 
 
@@ -155,19 +155,19 @@ class SendPacketsAndWaitAnswer(statemachine.State):
 
     def on_enter(self):
         for p in self.packets :
-            logger.dbg("Sending packet {}".format(p))
+            self.dbg("Sending packet {}".format(p))
             self.send_packet(p)
-            logger.dbg('Waiting for packet type {}'.format(p.name))
+            self.dbg('Waiting for packet type {}'.format(p.name))
 
 
     def on_packet(self, packet):
         for p in self.packets :
             if type(p) == type(packet):
-                logger.dbg("Got expected packet {}".format(packet.name))
+                self.dbg("Got expected packet {}".format(packet.name))
                 self.packets.remove(p)
                 break
         if not self.packets :
-            logger.dbg('No more packets to wait, exiting state')
+            self.dbg('No more packets to wait, exiting state')
             yield None
 
 
@@ -289,7 +289,7 @@ class WaitForOpponentLeave(Timer):
 
     def try_leave(self):
         if self.goto_finished and (self.timer_expired or self.opponent_disappeared):
-            logger.log("WaitForOpponentLeave : exit reason={}".format(self.exit_reason))
+            self.log("WaitForOpponentLeave : exit reason={}".format(self.exit_reason))
             yield None
 
 
@@ -313,7 +313,7 @@ class AbstractMove(statemachine.State):
 
     def on_opponent_detected(self, packet, opponent_direction, x, y):
         if not isinstance(self, Rotate) and self.packet.direction == opponent_direction and self.current_opponent is None:
-            logger.log("Opponent detected. direction = {}. Stop robot".format(opponent_direction))
+            self.log("Opponent detected. direction = {}. Stop robot".format(opponent_direction))
             self.send_packet(packets.Stop())
             self.current_opponent = packet.robot
 
@@ -668,7 +668,7 @@ class Navigate(statemachine.State):
 
     def on_enter(self):
         path = self.create_path()
-        logger.log(str(path))
+        self.log(str(path))
         if len(path) == 0:
             self.exit_reason = TRAJECTORY_DESTINATION_UNREACHABLE
             yield None
