@@ -6,6 +6,8 @@ export PATH=\
 /usr/sbin:\
 /usr/bin/X11:
 
+export PYTHONDONTWRITEBYTECODE=1
+
 # If running interactively, then:
 if [ "$PS1" ]; then
 
@@ -33,6 +35,7 @@ if [ "$PS1" ]; then
     alias halt='busybox halt; exit'
     alias reboot='busybox reboot; exit'
     alias kbrewery='killall brewery.py'
+    alias kpic='wget http://pic/Reset.html'
 
     if [ -d "/root/bhware/bhbot/brewery" ]; then
         cd /root/bhware/bhbot/brewery
