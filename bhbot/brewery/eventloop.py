@@ -70,8 +70,8 @@ class ClientSocketChannel(asyncore.dispatcher_with_send):
     def handle_close(self):
         self.close()
         if self.existing_socket is None:
-            logger.log("{}: *** WARNING *** Connection closed, reconnecting".format(self.origin))
-            self.show_reconnect_error_log= True
+            if self.show_reconnect_error_log:
+                logger.log("{}: *** WARNING *** Connection closed, reconnecting".format(self.origin))
             self.try_connect()
 
 
