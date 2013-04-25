@@ -1,5 +1,6 @@
 # encoding: utf-8
 
+import sys
 import asyncore
 import socket
 import errno
@@ -38,12 +39,92 @@ if IS_HOST_DEVICE_ARM :
 
 
 
+class ClientSocketChannel(asyncore.dispatcher_with_send):
+
+    def __init__(self, event_loop, origin, remote):
+        self.event_loop = event_loop
+        self.origin = origin
+        self.existing_socket = None
+        self.address = None
+        self.show_reconnect_error_log = True
+        if isinstance(remote, socket.socket):
+            self.existing_socket = remote
+        else:
+            self.address = remote
+        super().__init__(self.existing_socket)
+        if self.existing_socket is None:
+            self.try_connect()
+
+
+    def bytes_available(self):
+        available = ctypes.c_int()
+        fcntl.ioctl(self.socket.fileno(), termios.FIONREAD, available)
+        return available.value
+
+
+    def handle_connect(self):
+        self.show_reconnect_error_log = True
+        logger.log("{}: Connected".format(self.origin))
+
+
+    def handle_close(self):
+        self.close()
+        if self.existing_socket is None:
+            logger.log("{}: *** WARNING *** Connection closed, reconnecting".format(self.origin))
+            self.show_reconnect_error_log= True
+            self.try_connect()
+
+
+    def handle_error(self):
+        if self.existing_socket is None:
+            self.close()
+            next_try = 1000
+            ei = sys.exc_info()
+            if ei is not None:
+                err = str(ei[1])
+            else:
+                err = "No Exception"
+            if self.show_reconnect_error_log:
+                logger.log("{}: Unable to connect to {}:{} ({}), retrying every {}ms".format(self.origin, self.address[0], self.address[1], err, next_try))
+                self.show_reconnect_error_log = False
+            Timer(self.event_loop, next_try, self.try_connect).start()
+        else:
+            super().handle_error()
+
+
+    def try_connect(self):
+        if not self.connected and not self.connecting:
+            self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
+            self.socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
+            self.connect(self.address)
+
+
+
+
+class PacketClientSocketChannel(ClientSocketChannel):
+
+    def __init__(self, event_loop, origin, remote):
+        super().__init__(event_loop, origin, remote)
+        self.buffer = bytes()
+        self.packet = None
+
+
+    def handle_read(self):
+        if self.bytes_available() == 0:
+            # Socket is closing
+            self.recv(0)
+        else:
+            self.event_loop.handle_read(self)
+
+
+
+
 class TurretChannel(asyncore.file_dispatcher):
 
     def __init__(self, serial_port_path, serial_port_speed, eventloop):
         self.port = serial.PosixPollSerial(serial_port_path, serial_port_speed, timeout = 0)
         self.port.nonblocking()
-        asyncore.file_dispatcher.__init__(self, self.port)
+        super().__init__(self.port)
         self.eventloop = eventloop
         self.buffer = bytes()
         self.packet = None
@@ -58,7 +139,7 @@ class TurretChannel(asyncore.file_dispatcher):
 
     def initiate_send(self):
         num_sent = 0
-        num_sent = asyncore.file_dispatcher.send(self, self.out_buffer[:512])
+        num_sent = super().send(self.out_buffer[:512])
         self.out_buffer = self.out_buffer[num_sent:]
 
 
@@ -94,72 +175,41 @@ class TurretChannel(asyncore.file_dispatcher):
 
 
     def handle_close(self):
-        logger.log("handle_close")
+        logger.log("Closing Turret channel")
 
 
 
 
-class RobotControlDeviceChannel(asyncore.dispatcher_with_send):
+class PicControlChannel(PacketClientSocketChannel):
 
-    def __init__(self, eventloop, socket):
-        asyncore.dispatcher_with_send.__init__(self, socket)
-        self.eventloop = eventloop
+    def __init__(self, event_loop):
+        self.first_connection = True
+        super().__init__(event_loop, "PIC", (REMOTE_IP, REMOTE_PORT))
+
+
+    def handle_connect(self):
+        super().handle_connect()
+        if self.first_connection:
+            self.first_connection = False
+            self.event_loop.on_turret_boot(None)
+            statemachine.StateMachine(self.event_loop, self.event_loop.state_machine_name)
+            self.event_loop.send_packet(packets.ControllerReady())
+
+
+
+
+class PicLogChannel(ClientSocketChannel):
+
+    def __init__(self, event_loop):
+        super().__init__(event_loop, "PLG", (REMOTE_IP, REMOTE_LOG_PORT))
         self.buffer = bytes()
-        self.packet = None
-        self.origin = "PIC"
-
-
-    def bytes_available(self):
-        available = ctypes.c_int()
-        fcntl.ioctl(self.socket.fileno(), termios.FIONREAD, available)
-        return available.value
-
-
-    def handle_read(self):
-        self.eventloop.handle_read(self)
-
-
-    def handle_close(self):
-        connected = False
-        while not connected:
-            try:
-                logger.log("*** WARNING *** Reconnecting to {}:{}".format(REMOTE_IP, REMOTE_PORT))
-                control_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                control_socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
-                control_socket.connect((REMOTE_IP, REMOTE_PORT))
-                self.eventloop.robot_control_channel = RobotControlDeviceChannel(self.eventloop, control_socket)
-                leds.orange.off()
-                connected = True
-            except Exception as e:
-                logger.log("Unable to connect to {}:{} ({}), retrying".format(REMOTE_IP, REMOTE_PORT, e))
-                leds.orange.toggle()
-                time.sleep(0.5)
-
-
-
-
-class RobotLogDeviceChannel(asyncore.dispatcher):
-
-    def __init__(self, socket):
-        asyncore.dispatcher.__init__(self, socket)
-        self.buffer = bytes()
-
-
-    def bytes_available(self):
-        available = ctypes.c_int()
-        fcntl.ioctl(self.socket.fileno(), termios.FIONREAD, available)
-        return available.value
-
-
-    def writable(self):
-        return False
 
 
     def handle_read(self):
         try:
             self.buffer += self.recv(self.bytes_available())
             while True:
-                i = self.buffer.find("\n")
+                i = self.buffer.find(b"\n")
                 if i != -1:
                     logger.log(self.buffer[:i].rstrip().encode("string_escape"), "PIC")
                     self.buffer = self.buffer[i + 1:]
@@ -171,40 +221,15 @@ class RobotLogDeviceChannel(asyncore.dispatcher):
 
 
 
-class InterbotChannel(asyncore.dispatcher_with_send):
-
-    def __init__(self, event_loop, sock = None):
-        asyncore.dispatcher_with_send.__init__(self, sock)
-        self.event_loop = event_loop
-        sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
-        self.buffer = bytes()
-        self.packet = None
-        self.event_loop.interbot_channel = self
-        self.origin = "TMM"
-        logger.log("Interbot channel connected")
-
-
-    def bytes_available(self):
-        available = ctypes.c_int()
-        fcntl.ioctl(self.socket.fileno(), termios.FIONREAD, available)
-        return available.value
-
-
-    def handle_read(self):
-        self.event_loop.handle_read(self)
-
-
-
-
 class InterbotServer(asyncore.dispatcher):
 
-    def __init__(self, event_loop, host, port):
+    def __init__(self, event_loop):
         self.event_loop = event_loop
         try:
             asyncore.dispatcher.__init__ (self)
             self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
             self.set_reuse_addr()
-            self.bind((host, port))
+            self.bind(("", MAIN_INTERBOT_PORT))
             self.listen(5)
             self.event_loop.interbot_channel = self
             logger.log("Starting interbot server on port {}".format(MAIN_INTERBOT_PORT))
@@ -213,36 +238,7 @@ class InterbotServer(asyncore.dispatcher):
 
 
     def handle_accepted(self, sock, addr):
-        InterbotChannel(self.event_loop, sock)
-
-
-
-
-class InterbotClientStarter(object):
-
-    def __init__(self, event_loop):
-        logger.log("Interbot - Connecting to {}:{} ...".format(MAIN_INTERBOT_IP, MAIN_INTERBOT_PORT))
-        self.socket = None
-        self.event_loop = event_loop
-        self.timer = Timer(event_loop, 1000, self.try_connect, False)
-        if not self.try_connect():
-            self.timer.start()
-
-
-    def try_connect(self):
-        try:
-            if self.event_loop.is_match_started:
-                self.timer.stop()
-                return
-            # Connect to the main robot
-            self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            self.socket.connect((MAIN_INTERBOT_IP, MAIN_INTERBOT_PORT))
-            self.event_loop.robot_control_channel = InterbotChannel(self.event_loop, self.socket)
-            self.timer.stop()
-            return True
-        except Exception as e:
-            logger.log("Interbot - Unable to connect to {}:{} ({}), retrying".format(MAIN_INTERBOT_IP, MAIN_INTERBOT_PORT, e))
-        return False
+        PacketClientSocketChannel(self.event_loop, "TMM", sock)
 
 
 
@@ -295,62 +291,16 @@ class Timer(object):
 
 
 
-class RobotControlDeviceStarter(object):
-
-    def __init__(self, eventloop):
-        logger.log("Connecting to {}:{} ...".format(REMOTE_IP, REMOTE_PORT))
-        self.control_socket = None
-        self.log_socket = None
-        self.eventloop = eventloop
-        self.timer = Timer(eventloop, 1000, self.try_connect, False)
-        if not self.try_connect():
-            self.timer.start()
-
-
-    def try_connect(self):
-        connected = False
-        try:
-            self.control_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            self.control_socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
-            self.control_socket.connect((REMOTE_IP, REMOTE_PORT))
-            self.eventloop.robot_control_channel = RobotControlDeviceChannel(self.eventloop, self.control_socket)
-            leds.orange.off()
-            connected = True
-        except Exception as e:
-            logger.log("Unable to connect to {}:{} ({}), retrying".format(REMOTE_IP, REMOTE_PORT, e))
-            leds.orange.toggle()
-        if connected:
-            try:
-                self.log_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                self.log_socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
-                self.log_socket.connect((REMOTE_IP, REMOTE_LOG_PORT))
-                self.eventloop.robot_log_channel = RobotLogDeviceChannel(self.log_socket)
-                logger.log("Connected to the log socket {}:{}".format(REMOTE_IP, REMOTE_LOG_PORT))
-            except Exception as e:
-                # Log socket is not mandatory. If the connection fails, continue without it.
-                logger.log("Unable to connect to the log socket {}:{} ({}), continuing without PIC logs".format(REMOTE_IP, REMOTE_LOG_PORT, e))
-            self.timer.stop()
-            self.eventloop.on_turret_boot(None)
-            statemachine.StateMachine(self.eventloop, self.eventloop.state_machine_name)
-            self.eventloop.send_packet(packets.ControllerReady())
-
-        return connected
-
-
-
-
 class EventLoop(object):
 
     def __init__(self, state_machine_name, webserver_port, interbot_enabled = True):
-        self.robot_control_channel = None
-        self.robot_log_channel = None
+        self.pic_control_channel = None
+        self.pic_log_channel = None
         self.turret_channel = None
         self.interbot_channel = None
         self.interbot_server = None
         self.web_server = None
         self.robot = robot.Robot(self)
-        self.main_state = None
-        self.end_of_match_state = None
         self.fsms = []
         self.state_machine_name = state_machine_name
         self.webserver_port = webserver_port
@@ -413,13 +363,9 @@ class EventLoop(object):
                         # A complete packet has been received, notify the state machine
                         channel.packet.deserialize(channel.buffer)
                         channel.buffer = bytes()
-
                         logger.log_packet(channel.packet, channel.origin)
-
                         self.enqueue_packet(channel.packet)
-
                         channel.packet = None
-
                         self.process_packets_and_dispatch()
 
                 except Exception as e:
@@ -477,9 +423,9 @@ class EventLoop(object):
         if packet.TYPE < packets.TURRET_RANGE_END:
             self.turret_channel.send(buffer)
         elif packet.TYPE < packets.PIC32_RANGE_END:
-            self.robot_control_channel.send(buffer)
+            self.pic_control_channel.send(buffer)
         elif packet.TYPE < packets.SIMULATOR_RANGE_END:
-            self.robot_control_channel.send(buffer)
+            self.pic_control_channel.send(buffer)
         elif packet.TYPE < packets.INTERBOT_RANGE_END:
             if self.interbot_channel :
                 self.interbot_channel.send(buffer)
@@ -489,12 +435,13 @@ class EventLoop(object):
 
 
     def start(self):
+        leds.orange.off()
+        leds.green.on()
         if self.interbot_enabled :
             if IS_MAIN_ROBOT:
-                InterbotServer(self, "", MAIN_INTERBOT_PORT)
+                InterbotServer(self)
             else:
-                InterbotClientStarter(self)
-        logger.log("Starting internal web server on port {}".format(self.webserver_port))
+                self.interbot_channel = PacketClientSocketChannel(self, "TMM", (MAIN_INTERBOT_IP, MAIN_INTERBOT_PORT))
         self.web_server = asyncwsgiserver.WsgiServer("", self.webserver_port, nanow.Application(webinterface.BHWeb(self)))
         if SERIAL_PORT_PATH is not None:
             try:
@@ -503,7 +450,8 @@ class EventLoop(object):
                 logger.log("Unable to open serial port {}".format(SERIAL_PORT_PATH))
                 self.turret_channel = None
         logger.log("Starting brewery with state machine '{}'".format(self.state_machine_name))
-        RobotControlDeviceStarter(self)
+        self.pic_log_channel = PicLogChannel(self)
+        self.pic_control_channel = PicControlChannel(self)
         while not self.stopping:
             asyncore.loop(EVENT_LOOP_TICK_RESOLUTION_S, True, None, 1)
             for fsm in self.fsms:
@@ -518,14 +466,12 @@ class EventLoop(object):
 
 
     def process_packets_and_dispatch(self):
-        # logger.log('process packets')
         while self.packet_queue :
             packet = self.packet_queue.pop()
             self.dispatch(packet)
 
 
     def dispatch(self, packet):
-        # logger.log('dispatch packet {}'.format(packet))
         packet.dispatch(self)
         packet.dispatch(self.robot)
         packet.dispatch(self.opponent_detector)
@@ -541,10 +487,10 @@ class EventLoop(object):
         self.stopping = True
         if self.turret_channel is not None:
             self.turret_channel.close()
-        if self.robot_control_channel is not None:
-            self.robot_control_channel.close()
-        if self.robot_log_channel is not None:
-            self.robot_log_channel.close()
+        if self.pic_control_channel is not None:
+            self.pic_control_channel.close()
+        if self.pic_log_channel is not None:
+            self.pic_log_channel.close()
         if self.interbot_channel is not None:
             self.interbot_channel.close()
         if self.interbot_server is not None:

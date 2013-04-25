@@ -123,5 +123,5 @@ class SimulatorLed(BaseLed):
             self.packet.leds |= self.color
         else:
             self.packet.leds &= ~self.color
-        if self.event_loop.robot_control_channel is not None:
+        if self.event_loop.pic_control_channel is not None:
             self.event_loop.send_packet(self.packet)

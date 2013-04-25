@@ -14,17 +14,21 @@ import logger
 def is_port_open(ip,port):
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     try:
-     s.connect((ip, int(port)))
-     s.shutdown(2)
-     return True
+        s.connect((ip, int(port)))
+        s.shutdown(2)
+        return True
     except:
-     return False
+        return False
+
 
 def find_open_port(host, start, end):
     for p in range(start, end+1):
         if not is_port_open(host, p) :
             return p
     return None
+
+
+
 
 class WsgiRequestHandler(asynchat.async_chat):
 
@@ -135,7 +139,6 @@ class WsgiServer(asyncore.dispatcher):
         self.current_environ = {}
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
         self.set_reuse_addr()
-        logger.log("Finding available port for web server")
         bind_port = find_open_port(host, port, port+1001)
         logger.log("Webserver port is : {}".format(bind_port))
         self.bind((self.host, bind_port))
