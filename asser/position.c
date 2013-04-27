@@ -62,8 +62,14 @@ float                   GAIN_STATIQUE_MOTEUR_D;                                 
 float                   GAIN_STATIQUE_MOTEUR_G;                                     /* Gain statique du moteur CC gauche en (m/s) / unitePWM */
 float                   GAIN_STATIQUE_MOTEUR;
 
+#ifdef Actionneurs_Robot1
 float                   ECART_ROUE_LIBRE        = 0.166;                            /* Ecart entre les roues libres des codeurs incrementaux */
 float                   ECART_ROUE_MOTRICE      = 0.1;                          	/* Entraxe des roues motrices */
+#endif
+#ifdef Actionneurs_Robot2
+float                   ECART_ROUE_LIBRE        = 0.0202;                            /* Ecart entre les roues libres des codeurs incrementaux */
+float                   ECART_ROUE_MOTRICE      = 0.116;                          	/* Entraxe des roues motrices */
+#endif
 float                   COEFFICIENT_DE_GLISSEMENT_LATERAL = 0.0;
 
 /** Tolerances de la condition d'arret des asservissements */
@@ -406,7 +412,7 @@ extern void POS_ConversionVitessesLongRotToConsignesPWMRouesRobotUnicycle(float 
     }
     else
     {
-        extra_vitRoueGauche = -1.0;
+        extra_vitRoueGauche = - 1.0;
     }
         
     vitRoueDroite = (m_sensMarcheMouvement * vitesseLongitudinale) + ((vitesseAngulaireRotation * ECART_ROUE_LIBRE) / 2.0);
@@ -417,7 +423,7 @@ extern void POS_ConversionVitessesLongRotToConsignesPWMRouesRobotUnicycle(float 
     }
     else
     {
-        extra_vitRoueDroite = -1.0;
+        extra_vitRoueDroite = - 1.0;
     }
 
     if (vitesseLongitudinale < 0.0)
@@ -425,7 +431,7 @@ extern void POS_ConversionVitessesLongRotToConsignesPWMRouesRobotUnicycle(float 
         vitesseLongitudinale = 0.0;
 
 #ifdef PIC32_BUILD
-        TOOLS_LogFault(AsserPosErr, True, FLOAT, (int *)&vitesseLongitudinale, True, "Position: ConversionVitesses: vitLong a zero");
+        TOOLS_LogFault(AsserPosErr, True, FLOAT, (int *)&vitesseLongitudinale, True, "vitesseLongitudinale a zero");
 #else /* PIC32_BUILD */
         ASSER_TRAJ_LogAsserMsgPC("Position: ConversionVitesses: vitLong a zero", vitesseLongitudinale);
 #endif /* PIC32_BUILD */

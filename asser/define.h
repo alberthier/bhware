@@ -32,10 +32,10 @@
 #define MAIN_START                  (OS_FLAGS) 0x08
 #define MAIN_ASSER_STOP             (OS_FLAGS) 0x10
 #define MAIN_GOTO_WAYPOINT_REACHED  (OS_FLAGS) 0x20
+#define MAIN_STATUS                 (OS_FLAGS) 0x40
 
 /** Evitement */
 #define EVIT_EVENT                  (OS_FLAGS) 0x01
-#define EVIT_SENDSTART              (OS_FLAGS) 0x02
 
 /** Asservissement */
 #define ASSER_EVENT                 (OS_FLAGS) 0x01
@@ -128,10 +128,10 @@
 #ifdef Actionneurs
 
 /** Active les actionneurs pour le robot 1 */
-#define Actionneurs_Robot1
+//#define Actionneurs_Robot1
 
 /** Active les actionneurs pour le robot 2 */
-//#define Actionneurs_Robot2
+#define Actionneurs_Robot2
 
 #endif /* Actionneurs */
 

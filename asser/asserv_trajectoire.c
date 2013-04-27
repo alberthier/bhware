@@ -53,6 +53,29 @@
 /**************************** Parametres de l'asservissement de trajectoire ****************************/
 /***********************************************************************************************/
 
+/* MACROS */
+#define                         SQUARE(a)                               ((a)*(a))
+#define                         CUBE(a)                                 ((a)*(a)*(a))
+#define                         POWER4(a)                               ((a)*(a)*(a)*(a))
+#define                         POWER5(a)                               ((a)*(a)*(a)*(a)*(a))
+
+#define                         TEST_BIT(a, n)                          ((a & (1 << n)) >>  n)
+
+/* Pour t = t1 = 0.1 */
+#define                         SQUARE_t1                               ((float) 0.01)
+#define                         CUBE_t1                                 ((float) 0.001)
+#define                         POWER4_t1                               ((float) 0.0001)
+#define                         POWER5_t1                               ((float) 0.00001)
+#define                         POWER6_t1                               ((float) 0.000001)
+#define                         POWER7_t1                               ((float) 0.0000001)
+#define                         POWER8_t1                               ((float) 0.00000001)
+#define                         POWER9_t1                               ((float) 0.000000001)
+
+/* Pour t = t1/2.0 = 0.05 */
+#define                         SQUARE_t1_2                             ((float) 0.0025)
+#define                         CUBE_t1_2                               ((float) 0.000125)
+#define                         POWER4_t1_2                             ((float) 0.00000625)
+#define                         POWER5_t1_2                             ((float) 0.0000003125)
 /* Constantes */
 
 #define                         Vitesse_Gain_ASR                        ((float) 0.002)
@@ -98,6 +121,9 @@ Deplacement                     chemin;
 /* Vitesse minimum de mouvement et maximale d'arret */
 float                           VminMouv                                = 0.1;
 const float                     EcartVitesseDecc                        = 0.001;
+float                           EcartVitesseAcc                         = 0.050;
+
+unsigned char                   VmaxArrivedInAcc                        = False;
 
 /***********************************************************************************************/
 /**************************** Fin de la definition des parametres de l'asservissement de trajectoire *********/
@@ -148,8 +174,6 @@ static unsigned char            ASRrunning                              = False;
 
 static float                    distanceParcourue_Profil                = 0.0;
 
-/** Constantes  profil de vitesse Scurve */
-static const float              EcartVitesseAcc                         = 0.05; //0.05->robot1; 0.03->robot2;
 
 /** Structure de configurationd de spline de type 3 */
 static ConfigSpline3            cfgSp3;
@@ -180,6 +204,7 @@ static void                     ASSER_TRAJ_InitialSplineForCircle(ConfigSegment 
 static void                     ASSER_TRAJ_Rotation_config(ConfigSegment * cfgSeg, segmentTrajectoire  * segmentTraj, unsigned char subSeg, ConfigArc * arc);
 static float                    ASSER_TRAJ_Spline34(float t, float t1, unsigned char n, float q, float a, float b, float c, unsigned char deriv);
 static void                     ASSER_TRAJ_IdentificationPoly4(float y0, float dy0, float yi, float y1, float dy1, float * a, float * b, float * c, float * d, float * e);
+static unsigned char            ASSER_TRAJ_Profil_S_Curve(float * Vconsigne, float Distance, float VStart, float VEnd, float Amax, float Dmax, float gASR, float Pr, float Vr, unsigned char fSatPI);
 #ifdef PIC32_BUILD
 void                            ASSER_TRAJ_LogAsserPIC(char * keyWord, float Val1, float * pVal2, float * pVal3, float * pVal4, float * pVal5);
 #else /* PIC32_BUILD */
@@ -345,7 +370,7 @@ extern void ASSER_TRAJ_AsservissementMouvementRobot(Pose poseRobot, VitessesRobo
 #ifdef PIC32_BUILD      
                             if (Test_mode == (unsigned long)1)
                             {
-                                TOOLS_LogFault(AsserPosErr, True, FLOAT, (float *)&Vr, True, "Asser: Vr>VminMouv a l'arrivee");
+                                TOOLS_LogFault(AsserPosErr, True, FLOAT, (float *)&Vr, True, "Vr>VminMouv a l'arrivee");
                             }
 #else /* PIC32_BUILD */
                             ASSER_TRAJ_LogAsserMsgPC("Asser: Vr>VminMouv a l'arrivee", Vr);
@@ -379,7 +404,7 @@ extern void ASSER_TRAJ_AsservissementMouvementRobot(Pose poseRobot, VitessesRobo
 #ifdef PIC32_BUILD  
                       if (Test_mode == (unsigned long)1)
                       {
-                          TOOLS_LogFault(AsserPosErr, True, FLOAT, (float *)&Vr, True, "Asser: Vr>VminMouv a l'arrivee");
+                          TOOLS_LogFault(AsserPosErr, True, FLOAT, (float *)&Vr, True, "Vr>VminMouv a l'arrivee");
                       }
 #else /* PIC32_BUILD */
                       ASSER_TRAJ_LogAsserMsgPC("Asser: Vr>VminMouv a l'arrivee", Vr);
@@ -441,8 +466,9 @@ extern void ASSER_TRAJ_AsservissementMouvementRobot(Pose poseRobot, VitessesRobo
                 chemin.profilVitesse.distNormaliseeRestante -= (delta_distance / chemin.distance);
                 
                 memo_segmentCourant = chemin.trajectoire.subTrajs.segmentCourant;
-                memo_subSegmentCourant = chemin.trajectoire.subTrajs.subSegmentCourant;
-                
+#ifndef PIC32_BUILD           
+			    memo_subSegmentCourant = chemin.trajectoire.subTrajs.subSegmentCourant;
+#endif /* PIC32_BUILD */
                 ASSER_TRAJ_LogAsserValPC("segmentCourant", chemin.trajectoire.subTrajs.segmentCourant);
                 ASSER_TRAJ_LogAsserValPC("subSegmentCourant", chemin.trajectoire.subTrajs.subSegmentCourant);
                 ASSER_TRAJ_LogAsserValPC("paramPoseSubSegCourant", chemin.trajectoire.subTrajs.paramPoseSubSegCourant);
@@ -465,16 +491,18 @@ extern void ASSER_TRAJ_AsservissementMouvementRobot(Pose poseRobot, VitessesRobo
                     MAIN_event = OSFlagPost(MAIN_event_gpr, MAIN_GOTO_WAYPOINT_REACHED, OS_FLAG_SET, &OS_Status);
                     if(OS_Status != OS_ERR_NONE)
                     {                        
-                        TOOLS_LogFault(OS_Err, True, INTEGER, &OS_Status, True, "Asser: Set MAIN_GOTO_WAYPOINT_REACHED flag error");
+                        TOOLS_LogFault(OS_Err, True, INTEGER, &OS_Status, True, "Set MAIN_GOTO_WAYPOINT_REACHED flag error");
                     }
 #endif /* PIC32_BUILD */                    
                 }
+#ifndef PIC32_BUILD
                 if (memo_subSegmentCourant != chemin.trajectoire.subTrajs.subSegmentCourant)
                 {
                     ASSER_TRAJ_LogAsserValPC("periodeNewSubSeg", ASSER_compteurPeriode);
                     ASSER_TRAJ_LogAsserValPC("xNewSubSeg", poseRobot.x);
                     ASSER_TRAJ_LogAsserValPC("yNewSubSeg", poseRobot.y);
                 }
+#endif /* PIC32_BUILD */ 
             }
             else
             {
@@ -595,11 +623,11 @@ extern void ASSER_TRAJ_AsservissementMouvementRobot(Pose poseRobot, VitessesRobo
 
                                 default :
                                     AmaxTemp = chemin.profilVitesse.Amax;
-    #ifdef PIC32_BUILD
-                                    TOOLS_LogFault(AsserPosErr, True, INTEGER, (int *)&iSubSeg, True, "Asser: dist supp");
-    #else /* PIC32_BUILD */
+#ifdef PIC32_BUILD
+                                    TOOLS_LogFault(AsserPosErr, True, INTEGER, (int *)&iSubSeg, True, "dist supp");
+#else /* PIC32_BUILD */
                                     ASSER_TRAJ_LogAsserMsgPC("Asser: dist supp pour vitesse en courbe non gere", (float)iSubSeg);
-    #endif /* PIC32_BUILD */
+#endif /* PIC32_BUILD */
                                     return;
                             }
 
@@ -687,7 +715,7 @@ extern void ASSER_TRAJ_AsservissementMouvementRobot(Pose poseRobot, VitessesRobo
                 
                 ASSER_Running = ASSER_TRAJ_Profil_S_Curve(&VitesseProfil, distanceTotale_Profil, vitesse_debut_profil, vitesse_fin_profil, AmaxTemp, chemin.profilVitesse.Dmax, Vitesse_Gain_ASR, distanceParcourue_Profil, (((float)m_sensDeplacement) * POS_GetVitesseRelle()), (SaturationPIDflag | SaturationPIGflag));
 
-				/* Passage de la vitesse exterieure a la vitesse centrale si besoin */
+                /* Passage de la vitesse exterieure a la vitesse centrale si besoin */
                 VitesseProfil = VitesseProfil / (1.0 + (ECART_ROUE_MOTRICE / 2.0) * fabsf(ASSER_TRAJ_Rinv_courbure(&chemin.trajectoire.subTrajs.segmentTraj[chemin.trajectoire.subTrajs.segmentCourant] \
                                                                                                             , chemin.trajectoire.subTrajs.subSegmentCourant \
                                                                                                             , chemin.trajectoire.subTrajs.paramPoseSubSegCourant)));
@@ -936,6 +964,11 @@ extern void ASSER_TRAJ_InitialisationTrajectoire(Pose poseRobot, unsigned char M
                 m_sensDeplacement = MARCHE_AVANT;
             }
 
+            chemin.trajectoire.subTrajs.nbreSegments = 1.0;
+            chemin.trajectoire.subTrajs.segmentCourant = 0;
+            chemin.trajectoire.subTrajs.subSegmentCourant = 0.0;
+            chemin.trajectoire.subTrajs.paramPoseSubSegCourant = 0.0;
+
             break;
 
         case MOVE_CURVE :
@@ -991,10 +1024,10 @@ extern void ASSER_TRAJ_InitialisationTrajectoire(Pose poseRobot, unsigned char M
             {
                 ASSER_TRAJ_LogAsserValPC("segConfigured", iSegment);
 
-				if (iSegment >= (sizeof(chemin.trajectoire.subTrajs.segmentTraj) / sizeof(segmentTrajectoire)))
+                if (iSegment >= (sizeof(chemin.trajectoire.subTrajs.segmentTraj) / sizeof(segmentTrajectoire)))
                 {
 #ifdef PIC32_BUILD
-                    TOOLS_LogFault(AsserPosErr, True, INTEGER, (int *)&iSegment, True, "Asser: depassement du nombre de point possible");
+                    TOOLS_LogFault(AsserPosErr, True, INTEGER, (int *)&iSegment, True, "depassement nombre point");
 #else /* PIC32_BUILD */
                     ASSER_TRAJ_LogAsserMsgPC("Asser: depassement du nombre de point possible", (float)iSegment);
 #endif /* PIC32_BUILD */ 
@@ -1311,7 +1344,7 @@ extern void ASSER_TRAJ_InitialisationTrajectoire(Pose poseRobot, unsigned char M
         default :
 
 #ifdef PIC32_BUILD
-            TOOLS_LogFault(AsserPosErr, True, INTEGER, (int *)&Mouvement, True, "Asser: Mouvement non gere");
+            TOOLS_LogFault(AsserPosErr, True, INTEGER, (int *)&Mouvement, True, "Mouvement non gere");
 #else /* PIC32_BUILD */
             ASSER_TRAJ_LogAsserMsgPC("Asser: Mouvement non gere", (float)Mouvement);
 #endif /* PIC32_BUILD */  
@@ -1518,9 +1551,9 @@ static void ASSER_TRAJ_sds_ab(ConfigSegment * cfgSeg, segmentTrajectoire * segme
 
         default :
 #ifdef PIC32_BUILD
-            TOOLS_LogFault(AsserPosErr, True, INTEGER, (int *)&cfgSeg->sp1_type, True, "Asser: spline non gere");
+            TOOLS_LogFault(AsserPosErr, True, INTEGER, (int *)&cfgSeg->sp1_type, True, "spline non gere");
 #else /* PIC32_BUILD */
-            ASSER_TRAJ_LogAsserMsgPC("Asser: Asser: spline non gere", (float)cfgSeg->sp1_type);
+            ASSER_TRAJ_LogAsserMsgPC("spline non gere", (float)cfgSeg->sp1_type);
 #endif /* PIC32_BUILD */  
             return;
     }
@@ -1556,7 +1589,7 @@ static void ASSER_TRAJ_sds_ab(ConfigSegment * cfgSeg, segmentTrajectoire * segme
 
         default :
 #ifdef PIC32_BUILD
-            TOOLS_LogFault(AsserPosErr, True, INTEGER, (int *)&cfgSeg->sp2_type, True, "Asser: spline non gere");
+            TOOLS_LogFault(AsserPosErr, True, INTEGER, (int *)&cfgSeg->sp2_type, True, "spline non gere");
 #else /* PIC32_BUILD */
             ASSER_TRAJ_LogAsserMsgPC("Asser: spline non gere", (float)cfgSeg->sp2_type);
 #endif /* PIC32_BUILD */  
@@ -1908,7 +1941,7 @@ static void ASSER_TRAJ_Test_courbure(Deplacement *traj, ConfigSegment * cfgSeg, 
 
         default :
 #ifdef PIC32_BUILD
-            TOOLS_LogFault(AsserPosErr, True, INTEGER, (int *)&cfgSeg->sp1_type, True, "Asser: spline non gere");
+            TOOLS_LogFault(AsserPosErr, True, INTEGER, (int *)&cfgSeg->sp1_type, True, "spline non gere");
 #else /* PIC32_BUILD */
             ASSER_TRAJ_LogAsserMsgPC("Asser: spline non gere", (float)cfgSeg->sp1_type);
 #endif /* PIC32_BUILD */
@@ -1930,7 +1963,7 @@ static void ASSER_TRAJ_Test_courbure(Deplacement *traj, ConfigSegment * cfgSeg, 
 
         default :
 #ifdef PIC32_BUILD
-            TOOLS_LogFault(AsserPosErr, True, INTEGER, (int *)&cfgSeg->sp1_type, True, "Asser: spline non gere");
+            TOOLS_LogFault(AsserPosErr, True, INTEGER, (int *)&cfgSeg->sp1_type, True, "spline non gere");
 #else /* PIC32_BUILD */
             ASSER_TRAJ_LogAsserMsgPC("Asser: spline non gere", (float)cfgSeg->sp1_type);
 #endif /* PIC32_BUILD */
@@ -2158,7 +2191,7 @@ static void ASSER_TRAJ_InitialSplineForCircle(ConfigSegment * cfgSeg, segmentTra
     else
     {
 #ifdef PIC32_BUILD
-        TOOLS_LogFault(AsserPosErr, True, INTEGER, (int *)&subSeg, True, "Asser: segment non gere");
+        TOOLS_LogFault(AsserPosErr, True, INTEGER, (int *)&subSeg, True, "segment non gere");
 #else /* PIC32_BUILD */
         ASSER_TRAJ_LogAsserMsgPC("Asser: segment non gere", (float)subSeg);
 #endif /* PIC32_BUILD */
@@ -2274,7 +2307,7 @@ static void ASSER_TRAJ_Rotation_config(ConfigSegment * cfgSeg, segmentTrajectoir
 
             default :
 #ifdef PIC32_BUILD
-                TOOLS_LogFault(AsserPosErr, True, INTEGER, (int *)&subSeg, True, "Asser: arc non gere");
+                TOOLS_LogFault(AsserPosErr, True, INTEGER, (int *)&subSeg, True, "arc non gere");
 #else /* PIC32_BUILD */
                 ASSER_TRAJ_LogAsserMsgPC("Asser: arc non gere", (float)subSeg);
 #endif /* PIC32_BUILD */
@@ -2306,7 +2339,7 @@ static void ASSER_TRAJ_Rotation_config(ConfigSegment * cfgSeg, segmentTrajectoir
 
             default :
 #ifdef PIC32_BUILD
-                TOOLS_LogFault(AsserPosErr, True, INTEGER, (int *)&subSeg, True, "Asser: arc non gere");
+                TOOLS_LogFault(AsserPosErr, True, INTEGER, (int *)&subSeg, True, "arc non gere");
 #else /* PIC32_BUILD */
                 ASSER_TRAJ_LogAsserMsgPC("Asser: arc non gere", (float)subSeg);
 #endif /* PIC32_BUILD */
@@ -2371,7 +2404,7 @@ static void ASSER_TRAJ_Rotation_config(ConfigSegment * cfgSeg, segmentTrajectoir
 
         default :
 #ifdef PIC32_BUILD
-            TOOLS_LogFault(AsserPosErr, True, INTEGER, (int *)&subSeg, True, "Asser: arc non gere");
+            TOOLS_LogFault(AsserPosErr, True, INTEGER, (int *)&subSeg, True, "arc non gere");
 #else /* PIC32_BUILD */
             ASSER_TRAJ_LogAsserMsgPC("Asser: arc non gere", (float)subSeg);
 #endif /* PIC32_BUILD */
@@ -2506,7 +2539,7 @@ static float ASSER_TRAJ_Spline34(float t, float t1, unsigned char n, float q, fl
             
         default :
 #ifdef PIC32_BUILD
-            TOOLS_LogFault(AsserPosErr, True, INTEGER, (int *)&deriv, True, "Asser: deriv non gere");
+            TOOLS_LogFault(AsserPosErr, True, INTEGER, (int *)&deriv, True, "deriv non gere");
 #else /* PIC32_BUILD */
             ASSER_TRAJ_LogAsserMsgPC("Asser: deriv non gere", (float)deriv);
 #endif /* PIC32_BUILD */
@@ -2552,7 +2585,7 @@ static float ASSER_TRAJ_Spline3(float t, float t1, float a, float b, float c, un
             
         default :
 #ifdef PIC32_BUILD
-            TOOLS_LogFault(AsserPosErr, True, INTEGER, (int *)&deriv, True, "Asser: deriv non gere");
+            TOOLS_LogFault(AsserPosErr, True, INTEGER, (int *)&deriv, True, "deriv non gere");
 #else /* PIC32_BUILD */
             ASSER_TRAJ_LogAsserMsgPC("Asser: deriv non gere", (float)deriv);
 #endif /* PIC32_BUILD */
@@ -2636,7 +2669,7 @@ static void ASSER_TRAJ_Trajectoire_SubSegment(segmentTrajectoire * segmentTraj, 
 
         default :
 #ifdef PIC32_BUILD
-            TOOLS_LogFault(AsserPosErr, True, INTEGER, (int *)&subSeg, True, "Asser: subSeg non gere");
+            TOOLS_LogFault(AsserPosErr, True, INTEGER, (int *)&subSeg, True, "subSeg non gere");
 #else /* PIC32_BUILD */
             ASSER_TRAJ_LogAsserMsgPC("Asser: subSeg non gere", (float)subSeg);
 #endif /* PIC32_BUILD */
@@ -2678,7 +2711,7 @@ static void ASSER_TRAJ_Trajectoire_SubSegment(segmentTrajectoire * segmentTraj, 
 
                         default :
 #ifdef PIC32_BUILD
-                            TOOLS_LogFault(AsserPosErr, True, INTEGER, (int *)&deriv, True, "Asser: deriv non gere");
+                            TOOLS_LogFault(AsserPosErr, True, INTEGER, (int *)&deriv, True, "deriv non gere");
 #else /* PIC32_BUILD */
                             ASSER_TRAJ_LogAsserMsgPC("Asser: deriv non gere", (float)deriv);
 #endif /* PIC32_BUILD */
@@ -2688,7 +2721,7 @@ static void ASSER_TRAJ_Trajectoire_SubSegment(segmentTrajectoire * segmentTraj, 
                 else
                 {
 #ifdef PIC32_BUILD
-                    TOOLS_LogFault(AsserPosErr, False, INTEGER, NULL, True, "Asser: NULL pointer");
+                    TOOLS_LogFault(AsserPosErr, False, INTEGER, NULL, True, "NULL pointer");
 #else /* PIC32_BUILD */
                     ASSER_TRAJ_LogAsserMsgPC("Asser: NULL pointer", 0.0);
 #endif /* PIC32_BUILD */
@@ -2732,7 +2765,7 @@ static void ASSER_TRAJ_Trajectoire_SubSegment(segmentTrajectoire * segmentTraj, 
 
                         default :
 #ifdef PIC32_BUILD
-                            TOOLS_LogFault(AsserPosErr, True, INTEGER, (int *)&deriv, True, "Asser: deriv non gere");
+                            TOOLS_LogFault(AsserPosErr, True, INTEGER, (int *)&deriv, True, "deriv non gere");
 #else /* PIC32_BUILD */
                             ASSER_TRAJ_LogAsserMsgPC("Asser: deriv non gere", (float)deriv);
 #endif /* PIC32_BUILD */
@@ -2742,7 +2775,7 @@ static void ASSER_TRAJ_Trajectoire_SubSegment(segmentTrajectoire * segmentTraj, 
                 else
                 {
 #ifdef PIC32_BUILD
-                    TOOLS_LogFault(AsserPosErr, False, INTEGER, NULL, True, "Asser: NULL pointer");
+                    TOOLS_LogFault(AsserPosErr, False, INTEGER, NULL, True, "NULL pointer");
 #else /* PIC32_BUILD */
                     ASSER_TRAJ_LogAsserMsgPC("Asser: NULL pointer", 0.0);
 #endif /* PIC32_BUILD */
@@ -2766,13 +2799,13 @@ static void ASSER_TRAJ_Trajectoire_SubSegment(segmentTrajectoire * segmentTraj, 
                     switch(deriv)
                     {
                         case 0 :
-	                        poseTraj->x = arc->xc + (cosf(theta) / arc->rayon_inverse);
-	                        poseTraj->y = arc->yc + (sinf(theta) / arc->rayon_inverse);
+                            poseTraj->x = arc->xc + (cosf(theta) / arc->rayon_inverse);
+                            poseTraj->y = arc->yc + (sinf(theta) / arc->rayon_inverse);
                             break;
 
                         case 1 :
-	                        diff1Traj->x = (angle / ti) * (- sinf(theta) / arc->rayon_inverse);
-	                        diff1Traj->y = (angle / ti) * (cosf(theta) / arc->rayon_inverse);
+                            diff1Traj->x = (angle / ti) * (- sinf(theta) / arc->rayon_inverse);
+                            diff1Traj->y = (angle / ti) * (cosf(theta) / arc->rayon_inverse);
                             if (subSeg == ARC2)
                             {
                                 diff1Traj->x = - diff1Traj->x;
@@ -2781,13 +2814,13 @@ static void ASSER_TRAJ_Trajectoire_SubSegment(segmentTrajectoire * segmentTraj, 
                             break;
 
                         case 2 :
-	                        diff2Traj->x = SQUARE(angle / ti) * (- cosf(theta) / arc->rayon_inverse);
-	                        diff2Traj->y = SQUARE(angle / ti) * (- sinf(theta) / arc->rayon_inverse);
+                            diff2Traj->x = SQUARE(angle / ti) * (- cosf(theta) / arc->rayon_inverse);
+                            diff2Traj->y = SQUARE(angle / ti) * (- sinf(theta) / arc->rayon_inverse);
                             break;
 
                         default :
 #ifdef PIC32_BUILD
-                            TOOLS_LogFault(AsserPosErr, True, INTEGER, (int *)&deriv, True, "Asser: deriv non gere");
+                            TOOLS_LogFault(AsserPosErr, True, INTEGER, (int *)&deriv, True, "deriv non gere");
 #else /* PIC32_BUILD */
                             ASSER_TRAJ_LogAsserMsgPC("Asser: deriv non gere", (float)deriv);
 #endif /* PIC32_BUILD */
@@ -2798,7 +2831,7 @@ static void ASSER_TRAJ_Trajectoire_SubSegment(segmentTrajectoire * segmentTraj, 
             else
             {
 #ifdef PIC32_BUILD
-                TOOLS_LogFault(AsserPosErr, False, INTEGER, NULL, True, "Asser: NULL pointer arc");
+                TOOLS_LogFault(AsserPosErr, False, INTEGER, NULL, True, "NULL pointer arc");
 #else /* PIC32_BUILD */
                 ASSER_TRAJ_LogAsserMsgPC("Asser: Asser: NULL pointer arc", (float)0.0);
 #endif /* PIC32_BUILD */
@@ -2818,7 +2851,7 @@ static void ASSER_TRAJ_Trajectoire_SubSegment(segmentTrajectoire * segmentTraj, 
 
         default :
 #ifdef PIC32_BUILD
-            TOOLS_LogFault(AsserPosErr, True, INTEGER, (int *)&subSegClass, True, "Asser: subSegClass non gere");
+            TOOLS_LogFault(AsserPosErr, True, INTEGER, (int *)&subSegClass, True, "subSegClass non gere");
 #else /* PIC32_BUILD */
             ASSER_TRAJ_LogAsserMsgPC("Asser: subSegClass non gere", (float)subSegClass);
 #endif /* PIC32_BUILD */
@@ -3085,37 +3118,46 @@ extern void ASSER_TRAJ_ParcoursTrajectoire(Deplacement *traj, float delta_distan
 
         if (*paramPoseSegTraj > ti)
         {
-            /* Passage au sous-segment suivant */
-
-            /* Recherche du sous-segment suivant */
-            do
+            if (ASSER_TRAJ_isDeplacement(traj) == True)
             {
-                *subSegmentCourant = *subSegmentCourant + 1;
-                if (*subSegmentCourant > SPLINE32)
+                /* Passage au sous-segment suivant */
+
+                /* Recherche du sous-segment suivant */
+                do
                 {
-                    /* Passage au segment suivant */
-                    *segmentCourant = *segmentCourant + 1;
-                    if (*segmentCourant < traj->trajectoire.subTrajs.nbreSegments)
+                    *subSegmentCourant = *subSegmentCourant + 1;
+                    if (*subSegmentCourant > SPLINE32)
                     {
-                        *subSegmentCourant = traj->trajectoire.subTrajs.segmentTraj[*segmentCourant].subSeg_firstUsed;
+                        /* Passage au segment suivant */
+                        *segmentCourant = *segmentCourant + 1;
+                        if (*segmentCourant < traj->trajectoire.subTrajs.nbreSegments)
+                        {
+                            *subSegmentCourant = traj->trajectoire.subTrajs.segmentTraj[*segmentCourant].subSeg_firstUsed;
+                        }
                     }
+                } while ((TEST_BIT(traj->trajectoire.subTrajs.segmentTraj[*segmentCourant].subSeg_used.Info, *subSegmentCourant) == False) && (*segmentCourant < traj->trajectoire.subTrajs.nbreSegments));
+
+                if (*segmentCourant < traj->trajectoire.subTrajs.nbreSegments)
+                {
+                    /* part du deplacement du parametre du chemin au-dela du sous-segment courant */
+                    *paramPoseSegTraj = *paramPoseSegTraj - ti;
+
+                    /* part de la distance au-dela du sous-segment courant */
+                    delta_distance = *paramPoseSegTraj * facteurCorrectionT;
+
+                    *paramPoseSegTraj = 0.0;
                 }
-            } while ((TEST_BIT(traj->trajectoire.subTrajs.segmentTraj[*segmentCourant].subSeg_used.Info, *subSegmentCourant) == False) && (*segmentCourant < traj->trajectoire.subTrajs.nbreSegments));
-
-            if (*segmentCourant < traj->trajectoire.subTrajs.nbreSegments)
-            {
-                /* part du deplacement du parametre du chemin au-dela du sous-segment courant */
-                *paramPoseSegTraj = *paramPoseSegTraj - ti;
-
-                /* part de la distance au-dela du sous-segment courant */
-                delta_distance = *paramPoseSegTraj * facteurCorrectionT;
-
-                *paramPoseSegTraj = 0.0;
+                else
+                {
+                    *segmentCourant = (traj->trajectoire.subTrajs.nbreSegments - 1);
+                    *subSegmentCourant = traj->trajectoire.subTrajs.segmentTraj[*segmentCourant].subSeg_lastUsed;
+                    *paramPoseSegTraj = ti;
+                    flag_trajectoireTerminee = True;
+                }
             }
             else
             {
                 *segmentCourant = (traj->trajectoire.subTrajs.nbreSegments - 1);
-                *subSegmentCourant = traj->trajectoire.subTrajs.segmentTraj[*segmentCourant].subSeg_lastUsed;
                 *paramPoseSegTraj = ti;
                 flag_trajectoireTerminee = True;
             }
@@ -3435,7 +3477,7 @@ static void ASSER_TRAJ_DistanceTrajectoire(Trajectoire * traj, unsigned int iSeg
                     
                 default :
 #ifdef PIC32_BUILD
-                    TOOLS_LogFault(AsserPosErr, True, INTEGER, (int *)&iSubSeg, True, "Asser: Calcul distance sous-segment non gere");
+                    TOOLS_LogFault(AsserPosErr, True, INTEGER, (int *)&iSubSeg, True, "Calcul dist sous-seg non gere");
 #else /* PIC32_BUILD */
                     ASSER_TRAJ_LogAsserMsgPC("Asser: Calcul distance sous-segment non gere", (float)iSubSeg);
 #endif /* PIC32_BUILD */
@@ -3565,7 +3607,8 @@ extern unsigned char ASSER_TRAJ_Profil_S_Curve(float * Vconsigne, float Distance
     if (Phase == 0)
     {
         /* Phase 0 (Initialisation) */
-            
+        VmaxArrivedInAcc = False;
+        
         /* Forcage de la vitesse de deplacement minimum */
         if (VStart < (VminMouv / 2.0))
         {
@@ -3612,10 +3655,10 @@ extern unsigned char ASSER_TRAJ_Profil_S_Curve(float * Vconsigne, float Distance
 #ifdef PIC32_BUILD 
             if (Test_mode == (unsigned long)1)
             {
-                TOOLS_LogFault(AsserPosErr, False, INTEGER, 0, True, "Asser: Reajustement vitesse fin de profil! Vitesse fin impossible sur la distance");
+                TOOLS_LogFault(AsserPosErr, False, INTEGER, 0, True, "Reajustement vit fin profil");
             }
 #else /* PIC32_BUILD */
-            ASSER_TRAJ_LogAsserMsgPC("Asser: Reajustement vitesse fin de profil! Vitesse fin impossible sur la distance", VEnd);
+            ASSER_TRAJ_LogAsserMsgPC("Reajustement vitesse fin de profil! Vitesse fin impossible sur la distance", VEnd);
 #endif /* PIC32_BUILD */
         }
             
@@ -4207,15 +4250,19 @@ extern unsigned char ASSER_TRAJ_Profil_S_Curve(float * Vconsigne, float Distance
                 if (Test_mode == (unsigned long)1)
                 {
                     if ((Pr >= (((Vmax * Vmax) - (VStart * VStart))/Amax) + (VStart * TE))
-                    &&  (Vr < (Vmax - VminMouvRef)))
+                    &&  (Vr < (Vmax - EcartVitesseAcc)))
                     {                
 #ifdef PIC32_BUILD 
-                        TOOLS_LogFault(AsserPosErr, True, FLOAT, (float *)&Vr , True, "Asser: Amax>aux capacitees du robot,Vmax non atteinte");
+                        TOOLS_LogFault(AsserPosErr, True, FLOAT, (float *)&Vr , True, "Amax>aux capacitees,Vmax non atteinte");
 #else /* PIC32_BUILD */
                         ASSER_TRAJ_LogAsserMsgPC("Asser: Amax > aux capacitees du robot Vmax non atteinte", Vr);
 #endif /* PIC32_BUILD */                            
                     }
-                }               
+                    else
+                    {
+                        VmaxArrivedInAcc = True;
+                    }
+                }
                 
                 /* Initialisation des variables pour la phase 4 */
                 A = 0.0;
@@ -4249,7 +4296,7 @@ extern unsigned char ASSER_TRAJ_Profil_S_Curve(float * Vconsigne, float Distance
 #ifdef PIC32_BUILD           
                           if (Test_mode == (unsigned long)1)
                           {
-                              TOOLS_LogFault(AsserPosErr, True, FLOAT, (float *)&Vr, True, "Asser: Vr>VminMouv a l'arrivee");
+                              TOOLS_LogFault(AsserPosErr, True, FLOAT, (float *)&Vr, True, "Vr>VminMouv a l'arrivee");
                           }
 #else /* PIC32_BUILD */
                           ASSER_TRAJ_LogAsserMsgPC("Asser: Vr>VminMouv a l'arrivee", Vr);
@@ -4299,7 +4346,7 @@ extern unsigned char ASSER_TRAJ_Profil_S_Curve(float * Vconsigne, float Distance
         default:
 
 #ifdef PIC32_BUILD
-            TOOLS_LogFault(AsserPosErr, True, INTEGER, (int *)&Phase, True, "Asser: Phase de profil non gere");
+            TOOLS_LogFault(AsserPosErr, True, INTEGER, (int *)&Phase, True, "Phase profil non gere");
 #else /* PIC32_BUILD */
             ASSER_TRAJ_LogAsserMsgPC("Asser: Phase de profil non gere", (float)Phase);
 #endif /* PIC32_BUILD */  

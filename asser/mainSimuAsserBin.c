@@ -4,8 +4,6 @@
 #include <math.h>
 #include <time.h>
 
-//#define TEMPS_SIMULATION 60 /* secondes */
-
 #include "position.h"
 #include "asserv_trajectoire.h"
 #include "define.h"
@@ -240,7 +238,7 @@ int main(void)
     char marche;
     float angle_rad;
     unsigned int nbrPtsChemin, nbrParameters;
-    Parameter paramPI[2], paramK[3], paramR[2], paramT[8], paramConfAsser[2], paramMotor[9];
+    Parameter paramPI[2], paramK[3], paramR[2], paramT[8], paramConfAsser[4], paramMotor[9];
     Data_Goto Data_deplacement;
     clock_t temps_i, temps_f, temps_f2;
 
@@ -255,8 +253,6 @@ int main(void)
     gainDeplacement3 = 50.0;
     // param des gains asser rotation
     gainCentreRot = 20.0;
-    // param du profil de vitesse # 1:A_MAX, 2:D_MAX
-    SIMU_SetParamProfilVitesse(1.0, 1.0);
     // param du moteur de deplacement # 1:MASSE, 2:RAYON_ROUE, 3:FROTTEMENT_FLUIDE, 4:FORCE_RESISTANTE, 5:RESISTANCE_INDUIT, 6:INDUCTANCE_INDUIT, 7:CONSTANTE_COUPLE, 8:CONSTANTE_VITESSE, 9:RAPPORT_REDUCTION
     SIMU_SetParamMoteur(1.2, 0.03, 0.0000504, 0.4, 2.18, 0.00024, 0.0234, 0.02346, 20.0);
 
@@ -346,15 +342,15 @@ int main(void)
             parameterMsgTreatment(buffer, &nbrParameters, paramT, 2);
             if (nbrParameters == 2)
             {
-                SIMU_SetParamProfilVitesse(paramT[0].value, D_MAX = paramT[1].value);   
+                //SIMU_SetParamProfilVitesse(paramT[0].value, D_MAX = paramT[1].value);
             }
         }
         else if (strcmp(command, "CONFIG_ASSER") == 0)
         {
-            parameterMsgTreatment(buffer, &nbrParameters, paramConfAsser, 2);
-            if (nbrParameters == 2)
+            parameterMsgTreatment(buffer, &nbrParameters, paramConfAsser, 4);
+            if (nbrParameters == 4)
             {
-                SIMU_SetConfigGeneraleProfilVitesse(paramConfAsser[0].value, paramConfAsser[1].value);
+                SIMU_SetConfigProfilVitesse(paramConfAsser[0].value, paramConfAsser[1].value, paramConfAsser[2].value, paramConfAsser[3].value);
             }
         }
         else if (strcmp(command, "PARAMETERS_MOTOR") == 0)

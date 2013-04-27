@@ -121,18 +121,20 @@ def MSG_config_profilVitesse(Amax, Dmax) :
     parametersT.addPose("D_MAX" + " " + str(Dmax))
     return parametersT.cmdMsgGeneration()
 
-def MSG_configGenerale(Ratio_Acc, Ratio_Decc) :
+def MSG_configGeneraleAsser(Ratio_Acc, Ratio_Decc, Ratio_Acc_Rot, Ratio_Decc_Rot) :
     #generation d'un message de configuration des parametres haut niveau du profil de vitesse
     parametersT = commandMsg("CONFIG_ASSER")
     parametersT.addPose("RATIO_ACC" + " " + str(Ratio_Acc))
     parametersT.addPose("RATIO_DECC" + " " + str(Ratio_Decc))
+    parametersT.addPose("RATIO_ACC_ROT" + " " + str(Ratio_Acc_Rot))
+    parametersT.addPose("RATIO_DECC_ROT" + " " + str(Ratio_Decc_Rot))
     return parametersT.cmdMsgGeneration()
 
 def send_config_profilVitesse(process, Amax, Dmax) :
     process.stdin.write(MSG_config_profilVitesse(Amax, Dmax))
 
-def send_configGenerale(process, Ratio_Acc, Ratio_Decc) :
-    process.stdin.write(MSG_configGenerale(Ratio_Acc, Ratio_Decc))
+def send_configGeneraleAsser(process, Ratio_Acc, Ratio_Decc, Ratio_Acc_Rot, Ratio_Decc_Rot) :
+    process.stdin.write(MSG_configGeneraleAsser(Ratio_Acc, Ratio_Decc, Ratio_Acc_Rot, Ratio_Decc_Rot))
 
 def MSG_config_modeleMoteurCC(masse,
                                 rayon_roue,
@@ -188,22 +190,22 @@ def send_config_simulator(simulator_process, d_cfgTraj) :
     send_config_AsserRotation(simulator_process, d_cfgTraj['R1'])
 
     # envoie au simulateur de la configuration des parametres du profil de vitesse
-    send_config_profilVitesse(simulator_process, d_cfgTraj['Amax'], d_cfgTraj['Dmax'])
+    #~ send_config_profilVitesse(simulator_process, d_cfgTraj['Amax'], d_cfgTraj['Dmax'])
 
     # envoie au simulateur de la configuration des parametres haut niveau du profil de vitesse
-    send_configGenerale(simulator_process, d_cfgTraj['RatioAcc'], d_cfgTraj['RatioDecc'])
+    send_configGeneraleAsser(simulator_process, d_cfgTraj['RatioAcc'], d_cfgTraj['RatioDecc'], d_cfgTraj['RatioAccRot'], d_cfgTraj['RatioDeccRot'])
 
     # envoie au simulateur des parametres du modele des moteurs à courant continu de déplacement
-    send_config_modeleMoteurCC(simulator_process,
-                                d_cfgTraj['Masse'],
-                                d_cfgTraj['Rayon_roue'],
-                                d_cfgTraj['Frottement_fluide'],
-                                d_cfgTraj['Force_resistante'],
-                                d_cfgTraj['Resistance_induit'],
-                                d_cfgTraj['Inductance_induit'],
-                                d_cfgTraj['Constance_couple'],
-                                d_cfgTraj['Constante_vitesse'],
-                                d_cfgTraj['Rapport_reduction'])
+    #~ send_config_modeleMoteurCC(simulator_process,
+                                #~ d_cfgTraj['Masse'],
+                                #~ d_cfgTraj['Rayon_roue'],
+                                #~ d_cfgTraj['Frottement_fluide'],
+                                #~ d_cfgTraj['Force_resistante'],
+                                #~ d_cfgTraj['Resistance_induit'],
+                                #~ d_cfgTraj['Inductance_induit'],
+                                #~ d_cfgTraj['Constance_couple'],
+                                #~ d_cfgTraj['Constante_vitesse'],
+                                #~ d_cfgTraj['Rapport_reduction'])
 
 
 def trajFunction(d_cfgTraj):
@@ -225,32 +227,26 @@ def trajFunction(d_cfgTraj):
  
     ###############
     #test ROTATE
-    #~ send_init_pose(simulator_process, x=0.2, y=0.2, angle=math.pi/2.0) #4.71
-    #~ deplacement = commandMsg("MSG_ROTATE 0 -1.57")
-    #~ simulator_process.stdin.write(deplacement.cmdMsgGeneration())
+    send_init_pose(simulator_process, x=0.2, y=0.2, angle=math.pi/2.0) #4.71
+    deplacement = commandMsg("MSG_ROTATE 0 -1.57") #
+    simulator_process.stdin.write(deplacement.cmdMsgGeneration())
 
     #test MOVE_CURVE
-    send_init_pose(simulator_process, x=0.2, y=1.0, angle=0.0)
-    deplacement = commandMsg("MSG_MOVE_CURVE 1 1 0.0")
-    deplacement.addPose("0.9 1.0")
-    deplacement.addPose("1.05 0.85")
-    deplacement.addPose("1.2 1.0")
-    deplacement.addPose("1.35 0.85")
-    deplacement.addPose("1.5 0.85")
-    
-    simulator_process.stdin.write(deplacement.cmdMsgGeneration())
-    #~ print(MSG_init_pose(0.2, 0.2, 0.0))
-    # INIT_POSE_ROBOT 0 0 0.0 1 0.2 0.2
-    #~ print(deplacement.cmdMsgGeneration())
-    # MSG_MOVE_CURVE 1 1 0.0 4 0.9 1.0 1.05 0.85 1.2 1.0 1.35 0.85
+    #~ send_init_pose(simulator_process, x=0.2, y=1.0, angle=0.0)
+    #~ deplacement = commandMsg("MSG_MOVE_CURVE 1 1 0.0")
+    #~ deplacement.addPose("0.9 1.0")
+    #~ deplacement.addPose("1.05 0.85")
+    #~ deplacement.addPose("1.2 1.0")
+    #~ deplacement.addPose("1.35 0.85")
+    #~ deplacement.addPose("1.5 0.85")
+    #~ simulator_process.stdin.write(deplacement.cmdMsgGeneration())
+
     
     #test MOVE_LINE
     #~ deplacement = commandMsg("MSG_MOVE_LINE 1")
     #~ deplacement.addPose("2.2 0.2")
-    #deplacement.addPose("1.3 0.2")
     #~ simulator_process.stdin.write(deplacement.cmdMsgGeneration())
-    #~ print(deplacement.cmdMsgGeneration())
-    # MSG_MOVE_LINE 1 1 1.0 0.2
+
     
     #test MOVE_ARC
     #~ deplacement = commandMsg("MSG_MOVE_ARC 1 0.2 1.0 0.8")
@@ -262,6 +258,19 @@ def trajFunction(d_cfgTraj):
     
     #~ simulator_process.stdin.write(deplacement.cmdMsgGeneration())
     
+    ### Sequence de deplacement
+    #~ send_init_pose(simulator_process, x=0.2, y=0.2, angle=math.pi/2.0)
+    #~ 
+    #~ deplacement = commandMsg("MSG_MOVE_LINE 1")
+    #~ deplacement.addPose("0.2 1.2")
+    #~ simulator_process.stdin.write(deplacement.cmdMsgGeneration())
+    #~ 
+    #~ deplacement = commandMsg("MSG_ROTATE 0 0.0")
+    #~ simulator_process.stdin.write(deplacement.cmdMsgGeneration())
+    #~ 
+    #~ deplacement = commandMsg("MSG_MOVE_LINE 1")
+    #~ deplacement.addPose("1.2 1.2")
+    #~ simulator_process.stdin.write(deplacement.cmdMsgGeneration())
     
     #transmission de la commande de d'arret du simulateur
     (stdoutdata, stderrdata) = simulator_process.communicate("QUIT\n")
@@ -412,89 +421,39 @@ def PI2011_coutOptimParam(paramPI, d_cfgTraj_local) :
     sommeErreurVitesseCarre = 0.0
     tensionMax = 0.0
     # cout de la tension maximum
-    for tension in d_traj["tensionMesPI"]:
+    for tension in d_traj["tensionMesPI"] :
         if (tension > tensionMax) :
             tensionMax = tension
     coutTensionMax = ((1023-20) - tensionMax) / (1023-20)
+    coutTensionMax = coutTensionMax * 10.0
+    print(coutTensionMax)
     if (coutTensionMax < 0.0) :
-        coutTensionMax = -10.0*coutTensionMax
+        coutTensionMax = -50.0*coutTensionMax
 
     # cout de l'erreur de vitesse en regime permanent
-    indexMesureErrVitesse = len(d_traj["errVitMesPI"]) - 1
-    vitcons_p = d_traj["vitconsPI"][0]
-    for index_vitcons in range(len(d_traj["vitconsPI"][1:])) :
-        if ((d_traj["vitconsPI"][1 + index_vitcons] - vitcons_p) < 0.001) :
-            if (d_traj["vitconsPI"][1 + index_vitcons] > 0.05) :
-                indexMesureErrVitesse = int((1 + index_vitcons)*1.0) + 25
-                break
-        vitcons_p = d_traj["vitconsPI"][1 + index_vitcons]
+    #~ indexMesureErrVitesse = len(d_traj["errVitMesPI"]) - 1
+    #~ vitcons_p = d_traj["vitconsPI"][0]
+    #~ for index_vitcons in range(len(d_traj["vitconsPI"][1:])) :
+        #~ if ((d_traj["vitconsPI"][1 + index_vitcons] - vitcons_p) < 0.001) :
+            #~ if (d_traj["vitconsPI"][1 + index_vitcons] > 0.05) :
+                #~ indexMesureErrVitesse = int((1 + index_vitcons)*1.0) + 25
+                #~ break
+        #~ vitcons_p = d_traj["vitconsPI"][1 + index_vitcons]
+#~ 
+    #~ if (indexMesureErrVitesse > (len(d_traj["errVitMesPI"]) - 1) ) :
+        #~ indexMesureErrVitesse = len(d_traj["errVitMesPI"]) - 1
+        #~ 
+    #~ indexMesureErrVitesse = len(d_traj["errVitMesPI"]) - 1
 
-    if (indexMesureErrVitesse > (len(d_traj["errVitMesPI"]) - 1) ) :
-        indexMesureErrVitesse = len(d_traj["errVitMesPI"]) - 1
-        
-    indexMesureErrVitesse = len(d_traj["errVitMesPI"]) - 1
-
-    coutErreurVitesse = math.fabs(d_traj["errVitMesPI"][indexMesureErrVitesse] / d_traj["vitMesPI"][indexMesureErrVitesse])
+    indexMesureErrVitesse = -1
+    coutErreurVitesse = d_traj["errVitMesPI"][indexMesureErrVitesse] / d_traj["vitMesPI"][indexMesureErrVitesse]
+    coutErreurVitesse = coutErreurVitesse * 10.0
+    if (coutErreurVitesse < 0.0) :
+        coutErreurVitesse = -50.0 * coutErreurVitesse
 
     coutTotal = coutTensionMax + coutErreurVitesse
 
-    print([len(d_traj["errVitMesPI"]), tensionMax, coutErreurVitesse, indexMesureErrVitesse, d_cfgTraj_local['Kp'], d_cfgTraj_local['Ki']])
-    return coutTotal
-
-def coutOptim_TempsAcc(param, d_cfgTraj_local) :
-    d_cfgTraj_local['TempsAcc'] = param[0]
-    #~ gainPI = PI2011_optimParam(d_cfgTraj_local)
-    d_cfgTraj_local['Kp'] = param[1]
-    d_cfgTraj_local['Ki'] = param[2]
-    d_traj = testPI(d_cfgTraj_local)
-
-    sommeErreurVitesseCarre = 0.0
-    tensionMax = 0.0
-    # cout de la tension maximum
-    for tension in d_traj["tensionPWM_MoteurGauche"]:
-        if (tension > tensionMax) :
-            tensionMax = tension
-    coutTensionMax = ((1023-20) - tensionMax) / (1023-20)
-    if (coutTensionMax < 0.0) :
-        coutTensionMax = -10.0*coutTensionMax
-
-    # cout de l'erreur de vitesse en regime permanent
-    indexMesureErrVitesse = len(d_traj["erreurVitesseMoteurGauche"]) - 1
-    vitcons_p = d_traj["vitconsPI"][0]
-    for index_vitcons in range(len(d_traj["vitconsPI"][1:])) :
-        if ((d_traj["vitconsPI"][1 + index_vitcons] - vitcons_p) < 0.001) :
-            if (d_traj["vitconsPI"][1 + index_vitcons] > 0.05) :
-                indexMesureErrVitesse = int((1 + index_vitcons)*1.0) + 25
-                break
-        vitcons_p = d_traj["vitconsPI"][1 + index_vitcons]
-
-    if (indexMesureErrVitesse > (len(d_traj["erreurVitesseMoteurGauche"]) - 1) ) :
-        indexMesureErrVitesse = len(d_traj["erreurVitesseMoteurGauche"]) - 1
-
-    #~ coutErreurVitesse = 0.0
-    #~ for index_errVit in range(len(d_traj["erreurVitesseMoteurGauche"][indexMesureErrVitesse:])) :
-         #~ errRel = math.fabs(d_traj["erreurVitesseMoteurGauche"][indexMesureErrVitesse+index_errVit] / d_traj["vitesseMoteurGauche"][indexMesureErrVitesse+index_errVit])
-         #~ if (errRel < 0.0) :
-             #~ errRel = -1.0*errRel
-         #~ coutErreurVitesse = coutErreurVitesse + errRel
-    #~ coutErreurVitesse = coutErreurVitesse / len(d_traj["erreurVitesseMoteurGauche"][indexMesureErrVitesse:])
-
-    coutErreurVitesse = math.fabs(d_traj["erreurVitesseMoteurGauche"][indexMesureErrVitesse] / d_traj["vitesseMoteurGauche"][indexMesureErrVitesse])
-
-
-    # cout de l'erreur de vitesse en regime permanent
-    indexParcours = len(d_traj["distPI"]) - 1
-
-    for index_distPI in range(len(d_traj["distPI"])) :
-        if (d_traj["distPI"][index_distPI] > 1.0) :
-            indexParcours = index_distPI
-            break
-    tempsParcours = (indexParcours*d_traj["periode"][0])
-
-    coutTotal = coutTensionMax*2.0 + coutErreurVitesse + tempsParcours* 6.0
-
-    print([tensionMax, coutErreurVitesse, indexMesureErrVitesse*0.02, indexParcours, d_cfgTraj_local['TempsAcc'], d_cfgTraj_local['Kp'], d_cfgTraj_local['Ki']])
-
+    print([len(d_traj["errVitMesPI"]), tensionMax, coutTensionMax, coutErreurVitesse, d_cfgTraj_local['Kp'], d_cfgTraj_local['Ki']])
     return coutTotal
 
 def affichageTraj2011(d_traj):
@@ -523,7 +482,8 @@ def affichageTraj2011(d_traj):
     xCentre = [(d_traj["xRoueGauche"][index] + d_traj["xRoueDroite"][index])/2.0 for index in range(len(d_traj["xRoueDroite"]))]
     yCentre = [(d_traj["yRoueGauche"][index] + d_traj["yRoueDroite"][index])/2.0 for index in range(len(d_traj["yRoueDroite"]))]
     plot(xCentre, yCentre, '-m', label="Rcentre")
-    plot(d_traj["xNewSubSeg"], d_traj["yNewSubSeg"], 'om')
+    if "xNewSubSeg" in d_traj.keys() :
+        plot(d_traj["xNewSubSeg"], d_traj["yNewSubSeg"], 'om')
     print("errDistFinale : " + str(math.sqrt(math.pow(0.6 - xCentre[-1], 2.0) + math.pow(0.4 - yCentre[-1], 2.0))) + ", " + str(0.6 - xCentre[-1]))
     posIndex = 70
     print("angle_final: " + str(d_traj["angle"][-1]))
@@ -673,64 +633,6 @@ def affichageTraj2011(d_traj):
 
     show()
 
-def affichageTestAccDcecc(d_traj):
-    print("duree: " + str(d_traj["time"][0]) + "s")
-    periode = d_traj['periode'][0]
-
-    #nombre de variable loguer
-    print("Nombre de variable loguer: " + str(len(d_traj.keys())))
-    #~ print("CPTvitesseAnglePtArret: " + str(d_traj["CPTvitesseAnglePtArret"]))
-    #~ print("vitesseAnglePtArret: " + str(d_traj["vitesseAnglePtArret"]))
-    if (d_traj.keys().count('finAsser') == 1):
-        print("Test fin asser OK")
-        print(d_traj['finAsser'])
-    else : print("Test fin asser negatif")
-
-    print(len(d_traj["xRoueDroite"]))
-
-    temps = [index*periode for index in range(len(d_traj["vitesseMoteurGauche"]))]
-    figure(2)
-    subplot(2,1,1)
-    plot(temps, d_traj["vitesseMoteurGauche"], '-', label='mesure gauche')
-    hold(True)
-    plot(temps, d_traj["vitesseMoteurDroit"], label='mesure droit')
-
-
-    plot([index*periode for index in range(len(d_traj["val_tab_vit"]))], d_traj["val_tab_vit"], '-', label='vitesse profil')
-
-    #~ print("decc_tempsAcc_float: " + str(d_traj["decc_tempsAcc_float"]))
-    #~ print("decc_tempsAcc: " + str(d_traj["decc_tempsAcc"]))
-    #~ print("decc_vmax: " + str(d_traj["decc_vmax"]))
-
-    v = axis()
-    limits = []
-    for val in v:
-        limits.append(val)
-    limits[2] = -1.2
-    limits[3] = 1.2
-    axis(limits)
-    legend(loc="lower center")
-    grid(True)
-    title("vitesses")
-
-    #~ figure(3)
-    subplot(2,1,2)
-    plot(temps, d_traj["tensionPWM_MoteurGauche"], label='moteur gauche')
-    hold(True)
-    plot(temps, d_traj["tensionPWM_MoteurDroit"], label='moteur droit')
-    legend(loc='lower center')
-    grid(True)
-    title("tensions moteurs")
-
-    figure(5)
-    plot(d_traj["index_get_vitesseGabarit"])
-
-    legend()
-
-    #~ affichageGabaritVitesse(d_traj)
-
-    show()
-
 def affichageTestPI2012(d_traj):
 
     printLog(d_traj, "config_testPI")
@@ -771,169 +673,37 @@ def affichageTestPI2012(d_traj):
 
     show()
 
-def affichageGabaritVitesse_2012(d_traj):
-
-    figure(4)
-    # affichage avec un pas de 2cm
-    pas = d_traj["pas_ech"][0]
-    print("pas ech: " + str(pas))
-    plot([index * pas for index in range(len(d_traj["gabarit_vitesse"]))], d_traj["gabarit_vitesse"], '-o', label='vit')
-    plot([index * pas for index in range(len(d_traj["gabarit_acceleration"]))], d_traj["gabarit_acceleration"], '-o', label='acc')
-    if (d_traj.keys().count("gabarit_acceleration_new")) :
-        plot([index * pas for index in range(len(d_traj["gabarit_acceleration_new"]))], d_traj["gabarit_acceleration_new"], '-o', label='acc2')
-    if (d_traj.keys().count("gabarit_vitesse_new")) :
-        plot([index * pas for index in range(len(d_traj["gabarit_vitesse_new"]))], d_traj["gabarit_vitesse_new"], '-o', label='vit2')
-    
-    #~ plot([index * pas for index in range(len(d_traj["gabarit_delta_acceleration"]))], d_traj["gabarit_delta_acceleration"], '-om', label='delta')
-    #~ plot(d_traj["gabarit_acceleration_max"], [0 for index in range(len(d_traj["gabarit_acceleration_max"]))], '-or')
-    print("taille tab gabarit vitesse : " + str(len(d_traj["gabarit_vitesse"])))
-    #~ print("nb acc max : " + str(len(d_traj["gabarit_acceleration_max"])))
-    #~ print("init_gabarit:")
-    #~ for val in d_traj["init_gabarit"] :
-        #~ print(val)
-    grid()
-    title("Gabarit vitesse")
-    legend()
-
-    #~ print("test sum_acc:")
-    #~ for sum_acc in d_traj["gabarit_delta_acceleration"] :
-        #~ print(sum_acc)
-
-    #~ figure(6)
-    #~ plot([index * pas for index in range(len(d_traj["gabarit_delta_acceleration"]))], d_traj["gabarit_delta_acceleration"], 'o')
-    #~ grid()
-    
-def affichageGabaritVitesse_2013(d_traj):
-
-    figure(4)
-    
-    pas = d_traj["pas_ech"][0]
-    print("pas ech: " + str(pas))
-    
-    plot([index * pas for index in range(len(d_traj["gabarit_vitesse"]))], d_traj["gabarit_vitesse"], '-o', label='vitesse limite')
-    #~ plot([index * pas for index in range(len(d_traj["gabarit_acceleration"]))], d_traj["gabarit_acceleration"], '-o', label='acc')
-    
-    #~ if (d_traj.keys().count("gabarit_acceleration_new")) :
-        #~ plot([index * pas for index in range(len(d_traj["gabarit_acceleration_new"]))], d_traj["gabarit_acceleration_new"], '-o', label='acc2')
-    #~ if (d_traj.keys().count("gabarit_vitesse_new")) :
-        #~ plot([index * pas for index in range(len(d_traj["gabarit_vitesse_new"]))], d_traj["gabarit_vitesse_new"], '-o', label='vit2')
-        
-    print(len(traj["dist_parcourue"]))
-    print(len(d_traj["vitLongitudinaleEffective"]))
-    print(len(d_traj["VitesseReelleMesure"]))
-    print(len(traj["VitesseProfil"]))
-    print(len(traj["distanceParcourue_Profil"]))
-    plot(traj["dist_parcourue"], d_traj["vitLongitudinaleEffective"], '-o', label="consigne vit longitudinale effective")
-    plot(traj["dist_parcourue"], d_traj["VitesseReelleMesure"], '-o', label="mesure vit longitudinale")
-    plot(traj["dist_parcourue"], d_traj["VitesseProfil"], '-o', label='Vitesse Profil')
-    #~ plot(traj["dist_parcourue"], d_traj["distanceParcourue_Profil"], '-o', label='"distanceParcourue_Profil"')
-    
-    print("taille tab gabarit vitesse : " + str(len(d_traj["gabarit_vitesse"])))
-
-    grid()
-    title("Plafond de vitesse sur toute la trajectoire")
-    legend(loc="lower center")
-    xlabel("distance")
-    ylabel("vitesse max en multipoint")
-    
-    v = axis()
-    limits = []
-    for val in v:
-        limits.append(val)
-    limits[2] = 0.0
-    #~ limits[3] = 1.2
-    axis(limits)
-    
-    #~ figure(5)
-    #~ plot(traj["f_T"], 'o')
-    #~ lx = range(15)
-    #~ a = (0.03 - 0.1176) / 225
-    #~ b = -30*a
-    #~ c = 0.03
-    #~ plot(lx, [a*math.pow(x,2.0) + b*x +c for x in lx], '-')
-
-
-def optimRayonRoue(d_cfgTraj_local) :
-    l_simus = []
-    l_Distance = [1.0] #numpy.arange(0.4, 0.5, 0.2)
-    for Distance in l_Distance :
-        d_cfgTraj_local['Distance'] = Distance
-        l_R = numpy.arange(0.04, 0.12, 0.02)
-        l_duree = []
-        for R in l_R :
-            d_cfgTraj_local['Rayon_roue'] = R
-            #optimisation des gains PI
-            optimParam_TempsAcc(d_cfgTraj_local)
-            #simulation
-            traj = trajFunction(d_cfgTraj_local)
-
-            l_duree.append(traj["time"][0])
-        l_simus.append(l_duree)
-
-    print("fin simus")
-
-    figure(1)
-    for simu in l_simus :
-        plot(l_R, simu, '-o')
-    grid()
-    show()
-
 def PI2011_optimParam(d_cfgTraj_local) :
     #optimisation des gains PI
     p0 = [d_cfgTraj_local["Kp"], d_cfgTraj_local["Ki"]]
     solPI = fmin(PI2011_coutOptimParam, p0, args=[d_cfgTraj_local], xtol=0.01, ftol=0.01, maxiter=45, disp = True, retall = True)
     return(solPI[0])
 
-def optimParam_TempsAcc(d_cfgTraj_local) :
-    #optimisation du temps TempsAcc et des gains PI
-    p0 = [0.5, 1.0, 2.0] # [TempsAcc, Kp, Ki]
-    sol = fmin(coutOptim_TempsAcc, p0, args=[d_cfgTraj_local], xtol=0.01, ftol=0.001, maxiter=45, disp = True, retall = True)
-
-    d_cfgTraj_local["TempsAcc"] = sol[0][0]
-    d_cfgTraj_local["Kp"] = sol[0][1]
-    d_cfgTraj_local["Ki"] = sol[0][2]
-    #~ affichageTestPI2012(testPI(d_cfgTraj_local))
-
-    return(d_cfgTraj_local)
 
 def printLog(traj, logName) :
     if logName in traj.keys() :
         print(logName + " : " + str(traj[logName]))
         
-
+        
 #########################################################################
-#~ d_cfgTraj["Kp"] = 1.0
-#~ d_cfgTraj["Ki"] = 1.4
+### Test et reglage PI ##################################################
+#~ d_cfgTraj["Kp"] = 0.52
+#~ d_cfgTraj["Ki"] = 0.44
 #~ traj = testPI(d_cfgTraj)
 #~ affichageTestPI2012(traj)
 #~ sys.exit(2)
 
-#~ optimRayonRoue(d_cfgTraj)
-#~ sys.exit(2)
 
-#~ coutTA = coutOptim_TempsAcc(0.3, d_cfgTraj)
-#~ print(coutTA)
-#~ sys.exit(2)
-
-#~ optimParam_TempsAcc(d_cfgTraj)
-#~ sys.exit(2)
-
-#~ d_cfgTraj["Kp"] = 2.0
-#~ d_cfgTraj["Ki"] = 5.0
+#~ d_cfgTraj["Kp"] = 0.1
+#~ d_cfgTraj["Ki"] = 0.1
 #~ gainPI = PI2011_optimParam(d_cfgTraj)
 #~ print("Gains PI: " + str(gainPI))
 #~ sys.exit(2)
 
-#~ d_cfgTraj = optimParam_TempsAcc(d_cfgTraj)
+#########################################################################
+### Simu de deplacement #################################################
 traj = trajFunction(d_cfgTraj)
 print("Nb var log : " + str(len(traj.keys())))
-
-#~ traj = trajTest(d_cfgTraj)
-
-#~ affichageGabaritVitesse_2013(traj)
-#~ show()
-#~ sys.exit(2)
-#~ *********************************************************************
 
 #~ print(len(traj["def_xTraj"]))
 
@@ -1044,25 +814,7 @@ if "segConfigured" in traj.keys() :
 #~ printLog(traj, "data_sds_ab")
 printLog(traj, "angle_rad")
 
-#~ printLog(traj, "data_sds_ab_base")
 
-#~ NbV = 12
-#~ N = int(len(traj["data_sds_ab_base"]) / (NbV*1.0))
-#~ for n in range(N) :
-    #~ print("data_sds_ab_base : \n ax1: {0} \n bx1: {1} \n ay1: {2} \n by1: {3} \n qx1: {4} \n qy1: {5} \n ax2: {6} \n bx2: {7} \n ay2: {8} \n by2: {9} \n qx2: {10} \n qy2: {11}".format(traj["data_sds_ab_base"][n*NbV], traj["data_sds_ab_base"][n*NbV + 1], traj["data_sds_ab_base"][n*NbV + 2], traj["data_sds_ab_base"][n*NbV + 3], traj["data_sds_ab_base"][n*NbV + 4], traj["data_sds_ab_base"][n*NbV + 5], traj["data_sds_ab_base"][n*NbV + 6], traj["data_sds_ab_base"][n*NbV + 7], traj["data_sds_ab_base"][n*NbV + 8], traj["data_sds_ab_base"][n*NbV + 9], traj["data_sds_ab_base"][n*NbV + 10], traj["data_sds_ab_base"][n*NbV + 11]))
-
-
-#~ NbV = 4
-#~ N = int(len(traj["data_sds_ab"]) / (NbV*1.0))
-#~ for n in range(N) :
-    #~ print("data_sds_ab : \n qx1: {0} \n qy1: {1} \n qx2: {2} \n qy2: {3}".format(traj["data_sds_ab"][n*NbV], traj["data_sds_ab"][n*NbV + 1], traj["data_sds_ab"][n*NbV + 2], traj["data_sds_ab"][n*NbV + 3]))
-    #~ 
-#~ NbV = 3
-#~ N = int(len(traj["data_Rotation_config_arc1"]) / (NbV*1.0))
-#~ for n in range(N) :
-    #~ print("data_Rotation_config_arc1 : \n angle: {0} \n qx1: {1} \n qy1: {2}".format(traj["data_Rotation_config_arc1"][n*NbV], traj["data_Rotation_config_arc1"][n*NbV + 1], traj["data_Rotation_config_arc1"][n*NbV + 2]))
-
-#~ printLog(traj, "data_sds_ab_base_A")
 
 #~ print(traj["test_x"])
 printLog(traj, "test_x_init")
@@ -1102,6 +854,8 @@ printLog(traj, "angle_arc")
 printLog(traj, "distSupp")
 printLog(traj, "resetProfil")
 printLog(traj, "ASSER_Running_TvF")
+
+#~ printLog(traj, "SIMU_Mvt")
     
 matplotlib.rcParams.update({'font.size': 16})
 
@@ -1146,4 +900,3 @@ affichageTraj2011(traj)
 
 show()
 
-#~ sys.exit(2)

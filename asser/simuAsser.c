@@ -75,6 +75,7 @@ unsigned int             g_index_tab_gabarit_vitesse             = 0;
 unsigned int             g_index_tab_gabarit_acceleration        = 0;
 
 void SIMU_BoucleVitesse(void);
+static float ASSER_Acc_Parabolique(unsigned int k, unsigned int k1, float vmax);
 
 
 extern void SIMU_SetGainsPI(float kp, float ki)
@@ -100,16 +101,12 @@ extern void SIMU_SetParamMoteur(float m, float R, float f, float Fr, float r, fl
     RAPPORT_REDUCTION   = Rred;
 }
 
-extern void SIMU_SetParamProfilVitesse(float Amax, float Dmax)
-{
-    A_MAX = Amax;
-    D_MAX = Dmax;   
-}
-
-extern void SIMU_SetConfigGeneraleProfilVitesse(float ratioAcc, float ratioDecc)
+extern void SIMU_SetConfigProfilVitesse(float ratioAcc, float ratioDecc, float ratioAccRot, float ratioDeccRot)
 {
     Ratio_Acc = ratioAcc;
     Ratio_Decc = ratioDecc;
+    Ratio_Acc_Rot = ratioAccRot;
+    Ratio_Decc_Rot = ratioDeccRot;
 }
 
 /*
@@ -311,10 +308,10 @@ void SIMU_SimulationMoteurCC_ordre2_complet(signed int tensionPWM,
 
     //K = (R/Rred) * (kc / (kc*kv + f*r));
     K = SIMU_gain();
-    square_R = SQUARE(R);
+    square_R = pow(R, 2.0);
     S1 = (square_R*L*m) / (Rred *(f*r + kc*kv));
     S2 = ( ( (square_R*r*m) / Rred) + f*L ) / (f*r + kc*kv);
-    T1 = 0.5*(S2 + sqrt(SQUARE(S2) -4*S1));
+    T1 = 0.5*(S2 + sqrt(pow(S2, 2.0) -4*S1));
     T2 = S2 - T1;
     alpha1 = exp(-periode/T1);
     alpha2 = exp(-periode/T2);
@@ -488,15 +485,11 @@ void SIMU_AsserVitessePI(void)
 {
     int     cpt_periode = 0;
     int     p, N;
-    float   vitesse_long = 0.0;
-    float   vitesse_rotation = 0.0;
     float   vitesseMoteur = 0.0;
-    float   vit_max, Amax_tPI;
-    float   distanceTotale_Profil = 0.0;
-    float   distanceParcourue_Profil = 0.0;
     char    moteur;
+    float   TE_MESURE;
 
-    moteur = GAUCHE;
+    moteur = DROIT;
 
     POS_InitialisationConfigRobot();
 
@@ -514,37 +507,28 @@ void SIMU_AsserVitessePI(void)
     ASSER_TRAJ_LogAsserValPC("errVitMesPI", 0.0);
     ASSER_TRAJ_LogAsserValPC("tensionMesPI", 0.0);
 
-    if (moteur == GAUCHE)
+    N = 150;
+    TE_MESURE = 0.02; /*  seconde */
+
+    for (cpt_periode = 0; cpt_periode < (N * 2); cpt_periode++)
     {
-        vit_max = Umax * GAIN_STATIQUE_MOTEUR_G;
-    }
-    if (moteur == DROIT)
-    {
-        vit_max = Umax * GAIN_STATIQUE_MOTEUR_D;
-    }
-    vit_max = vit_max * 1.0;
+        if ((cpt_periode % 2) == 0)
+        {
+            /* Determination du profil de vitesse de consigne */
+            if ((g_ConsigneMoteurD + (unsigned short)((unsigned short)1023/ ((unsigned short)(N / 2.0)) )) <= (unsigned short)(0x03FF + (unsigned short)Umax))
+            {
+                g_ConsigneMoteurD = (unsigned short)0x03FF + (unsigned short)ASSER_Acc_Parabolique((unsigned int)floor(((float)cpt_periode) / (TE_MESURE / TE)), (unsigned int)(N / 2), (float)Umax);
+            }
+            else
+            {
+                g_ConsigneMoteurD = (unsigned short)(0x03FF + (unsigned short)Umax);
+            }
 
-    // acceleration
-    vitesse_long = 0.0;
-    Amax_tPI = 1.0;
-    N = 5.0 / TE;
-    distanceTotale_Profil = 2.0;
+            g_ConsigneMoteurG = g_ConsigneMoteurD;
+        }
 
-    ASSER_TRAJ_LogAsserValPC("config_testPI", Amax_tPI);
-    ASSER_TRAJ_LogAsserValPC("config_testPI", N);
-    ASSER_TRAJ_LogAsserValPC("config_testPI", vit_max);
-
-    for (cpt_periode = 0; cpt_periode < N; cpt_periode++)
-    {
-        /* Determination du profil de vitesse de consigne */
-        //vitesse_long = vitesse_long + Amax_tPI * TE - ( (Amax_tPI * TE) / vit_max) * vitesse_long;
-
-        distanceParcourue_Profil += vitesseMoteur * TE;
-        ASSER_Running = ASSER_TRAJ_Profil_S_Curve(&vitesse_long, distanceTotale_Profil, 0.0, vit_max, Amax_tPI, Amax_tPI, 0.0, distanceParcourue_Profil, vitesseMoteur, 0);
-
-        ASSER_TRAJ_LogAsserValPC("vitconsPI", vitesse_long);
-
-        POS_ConversionVitessesLongRotToConsignesPWMRouesRobotUnicycle(vitesse_long, vitesse_rotation, &g_ConsigneMoteurG, &g_ConsigneMoteurD);
+        ASSER_TRAJ_LogAsserValPC("vitconsPI", (g_ConsigneMoteurG - 0x03FF) * GAIN_STATIQUE_MOTEUR_G);
+        //POS_ConversionVitessesLongRotToConsignesPWMRouesRobotUnicycle(vitesse_long, vitesse_rotation, &g_ConsigneMoteurG, &g_ConsigneMoteurD);
 
         /* Envois des consignes des boucles de vitesse au PIC asser */
         SIMU_REDEF_ASSER_SendConsigne(g_ConsigneMoteurD, g_ConsigneMoteurG);
@@ -571,6 +555,11 @@ void SIMU_AsserVitessePI(void)
         }
         ASSER_TRAJ_LogAsserValPC("vitMesPI", vitesseMoteur);
     }
+}
+
+static float ASSER_Acc_Parabolique(unsigned int k, unsigned int k1, float vmax)
+{
+    return((-vmax /((float)(k1 * k1))) * ((float)(k * k)) + (2.0 * vmax/((float)k1)) * ((float)k));
 }
 
 /**********************************************************************/
@@ -766,6 +755,7 @@ int SIMU_Mouvement(void)
 #ifdef PLOTS_SIMU
         SIMU_LogRobot();
 #endif /* PLOTS_SIMU */
+
     }
 
     ASSER_TRAJ_LogAsserValPC("time", ASSER_compteurPeriode * TE);
