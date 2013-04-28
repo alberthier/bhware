@@ -4,7 +4,7 @@
 /.*\.bldh$
 /logs/
 /remote_logs/
-/bhbot/brewery/colordetector/colordetector
+bhbot/brewery/colordetector/colordetector
 drunkstar/host/
 drunkstar/dl/
 drunkstar/buildroot.*/
