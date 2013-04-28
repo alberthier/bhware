@@ -1,5 +1,6 @@
 #!/bin/sh
-if [ ! -f /cgi-bin/index.cgi ]; then
-    gcc -O2 -o /cgi-bin/index.cgi /cgi-bin/httpd_indexcgi.c
+WEB_ROOT=/root/bhware/bhbot/brewery
+if [ ! -f "$WEB_ROOT/index.cgi" ]; then
+    gcc -O2 -o "$WEB_ROOT/index.cgi" "$WEB_ROOT/httpd_indexcgi.c"
 fi
 /usr/sbin/httpd -c /etc/httpd.conf

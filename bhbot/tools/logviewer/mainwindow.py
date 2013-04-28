@@ -102,7 +102,7 @@ class MainWindowController(QObject):
     def download_remote_loglist(self):
         self.network_manager = QNetworkAccessManager()
         self.network_manager.finished.connect(self.display_log_chooser)
-        url = "http://{}:{}/root/bhware/bhbot/logs/".format(self.host, self.port)
+        url = "http://{}:{}/fsroot/root/bhware/bhbot/logs/".format(self.host, self.port)
         self.network_manager.get(QNetworkRequest(QUrl(url)))
 
 
