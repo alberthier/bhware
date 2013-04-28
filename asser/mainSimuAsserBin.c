@@ -208,6 +208,18 @@ int depCommandMsgTreatment(char *buffer, unsigned char * p_mouvement, Data_Goto 
     return msgSize;
 }
 
+void testPI_CommandMsgTreatment(char *buffer, int * p_moteur, int * p_profil, int * p_nb_pts_mesure)
+{
+    char msg_test[25], strMoteur[30];
+
+    /* decryptage du message de l'entree standard */
+    sscanf(buffer, "%s %s %d %d", msg_test, strMoteur, p_profil, p_nb_pts_mesure);
+    if (strMoteur[0] == '-')
+        *p_moteur = -1;
+    else
+        *p_moteur = 1;
+}
+
 int parameterMsgTreatment(char *buffer, unsigned int *p_nbParam, Parameter *p_param, unsigned int nbMaxParam)
 {
     char cmd[25], strNbParam[30], strValTemp[30];
@@ -238,15 +250,17 @@ int main(void)
     char marche;
     float angle_rad;
     unsigned int nbrPtsChemin, nbrParameters;
-    Parameter paramPI[2], paramK[3], paramR[2], paramT[8], paramConfAsser[4], paramMotor[9];
+    Parameter paramPI[4], paramK[3], paramR[2], paramT[8], paramConfAsser[4], paramMotor[9];
     Data_Goto Data_deplacement;
     clock_t temps_i, temps_f, temps_f2;
+    int moteur_testPI, profil_testPI, nb_pts_mesure_testPI;
 
     printf("asserSimulator: Demarrage simulateur\n");
 
     /* Config des parametres par défaut  */
     // param des PI # 1:Kp, 2:Ki
-    SIMU_SetGainsPI(2.0, 6.0);
+    POS_InitialisationConfigRobot();
+    SIMU_SetGainsPI(2.0, 6.0, 2.0, 6.0);
     // param des gains asser haut niveau
     gainDeplacement1 = 20.0;
     gainDeplacement2 = 50.0;
@@ -306,15 +320,16 @@ int main(void)
         }
         else if (strcmp(command, "MSG_TEST_PI") == 0)
         {
+            testPI_CommandMsgTreatment(buffer, &moteur_testPI, &profil_testPI, &nb_pts_mesure_testPI);
             SIMU_InitialisationLogRobot();
-            SIMU_AsserVitessePI();
+            SIMU_AsserVitessePI(moteur_testPI, profil_testPI, nb_pts_mesure_testPI);
         }
         else if (strcmp(command, "PARAMETERS_PI") == 0)
         {
-            parameterMsgTreatment(buffer, &nbrParameters, paramPI, 2);
-            if (nbrParameters == 2)
+            parameterMsgTreatment(buffer, &nbrParameters, paramPI, 4);
+            if (nbrParameters == 4)
             {
-                SIMU_SetGainsPI(paramPI[0].value, paramPI[1].value);
+                SIMU_SetGainsPI(paramPI[0].value, paramPI[1].value, paramPI[2].value, paramPI[3].value);
             }
 
         }

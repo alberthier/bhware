@@ -78,14 +78,12 @@ void SIMU_BoucleVitesse(void);
 static float ASSER_Acc_Parabolique(unsigned int k, unsigned int k1, float vmax);
 
 
-extern void SIMU_SetGainsPI(float kp, float ki)
+extern void SIMU_SetGainsPI(float KpG, float KiG, float KpD, float KiD)
 {
-    float KM;
-    KM = SIMU_gain();
-    KP_GAUCHE = kp / KM;
-    KP_DROIT = kp / KM;
-    KI_GAUCHE = ki / KM;
-    KI_DROIT = ki / KM;
+    KP_GAUCHE = KpG / GAIN_STATIQUE_MOTEUR_G;
+    KP_DROIT = KpD / GAIN_STATIQUE_MOTEUR_D;
+    KI_GAUCHE = KiG / GAIN_STATIQUE_MOTEUR_G;
+    KI_DROIT = KiD / GAIN_STATIQUE_MOTEUR_D;
 }
 
 extern void SIMU_SetParamMoteur(float m, float R, float f, float Fr, float r, float L, float kc, float kv, float Rred)
@@ -171,7 +169,7 @@ void SIMU_SimulationMoteurCC(signed int tensionPWM, float* vitesseMoteur, float 
 
 void SIMU_SimulationMoteurCC_ordre2(signed int tensionPWM, float *tensionPWM_n, float* vitesseMoteur, float *vitesseMoteur_n2, float constanteTemps1, float constanteTemps2, float gainStatique, unsigned int nbPeriodRetard, float coupleResistant, float periode)
 {
-    float cste_exp1, cste_exp2, cste_exp12, tensionPWM_eff;
+    float cste_exp1, cste_exp2, tensionPWM_eff;
     unsigned int i;
     unsigned int nbPeriodRetardEff;
     float vitesseMoteurTemp;
@@ -481,15 +479,12 @@ extern void ASSER_TRAJ_AfficheInfoFinAsser(void)
  *  \return None
  */
 /**********************************************************************/
-void SIMU_AsserVitessePI(void)
+void SIMU_AsserVitessePI(int moteur_testPI, int profil_testPI, int N)
 {
     int     cpt_periode = 0;
-    int     p, N;
+    int     p;
     float   vitesseMoteur = 0.0;
-    char    moteur;
     float   TE_MESURE;
-
-    moteur = DROIT;
 
     POS_InitialisationConfigRobot();
 
@@ -507,21 +502,37 @@ void SIMU_AsserVitessePI(void)
     ASSER_TRAJ_LogAsserValPC("errVitMesPI", 0.0);
     ASSER_TRAJ_LogAsserValPC("tensionMesPI", 0.0);
 
-    N = 150;
+    if (N < 150)
+    {
+        N = 150;
+    }
     TE_MESURE = 0.02; /*  seconde */
 
     for (cpt_periode = 0; cpt_periode < (N * 2); cpt_periode++)
     {
         if ((cpt_periode % 2) == 0)
         {
-            /* Determination du profil de vitesse de consigne */
-            if ((g_ConsigneMoteurD + (unsigned short)((unsigned short)1023/ ((unsigned short)(N / 2.0)) )) <= (unsigned short)(0x03FF + (unsigned short)Umax))
+            switch (profil_testPI)
             {
-                g_ConsigneMoteurD = (unsigned short)0x03FF + (unsigned short)ASSER_Acc_Parabolique((unsigned int)floor(((float)cpt_periode) / (TE_MESURE / TE)), (unsigned int)(N / 2), (float)Umax);
-            }
-            else
-            {
-                g_ConsigneMoteurD = (unsigned short)(0x03FF + (unsigned short)Umax);
+                case 1 : /* ECHELON */
+                    g_ConsigneMoteurD = (unsigned short)(0x03FF + (unsigned short)Umax);
+                    break;
+
+                case 2 : /* PARABOLE */
+                    /* Determination du profil de vitesse de consigne */
+                    if ((g_ConsigneMoteurD + (unsigned short)((unsigned short)1023/ ((unsigned short)(N / 2.0)) )) <= (unsigned short)(0x03FF + (unsigned short)Umax))
+                    {
+                        g_ConsigneMoteurD = (unsigned short)0x03FF + (unsigned short)ASSER_Acc_Parabolique((unsigned int)floor(((float)cpt_periode) / (TE_MESURE / TE)), (unsigned int)(N / 2), (float)Umax);
+                    }
+                    else
+                    {
+                        g_ConsigneMoteurD = (unsigned short)(0x03FF + (unsigned short)Umax);
+                    }
+                    break;
+
+                default :
+                    ASSER_TRAJ_LogAsserMsgPC("test PI : profil non gere", (float)profil_testPI);
+                    break;
             }
 
             g_ConsigneMoteurG = g_ConsigneMoteurD;
@@ -541,17 +552,23 @@ void SIMU_AsserVitessePI(void)
 
         SIMU_LogRobot();
 
-        if (moteur == GAUCHE)
+        switch (moteur_testPI)
         {
-            vitesseMoteur = vitesseMoteurG;
-            ASSER_TRAJ_LogAsserValPC("errVitMesPI", erreurVitesseMoteurG);
-            ASSER_TRAJ_LogAsserValPC("tensionMesPI", tensionPWM_G);
-        }
-        if (moteur == DROIT)
-        {
-            vitesseMoteur = vitesseMoteurD;
-            ASSER_TRAJ_LogAsserValPC("errVitMesPI", erreurVitesseMoteurD);
-            ASSER_TRAJ_LogAsserValPC("tensionMesPI", tensionPWM_D);
+            case GAUCHE :
+                vitesseMoteur = vitesseMoteurG;
+                ASSER_TRAJ_LogAsserValPC("errVitMesPI", erreurVitesseMoteurG);
+                ASSER_TRAJ_LogAsserValPC("tensionMesPI", tensionPWM_G);
+                break;
+
+            case DROIT :
+                vitesseMoteur = vitesseMoteurD;
+                ASSER_TRAJ_LogAsserValPC("errVitMesPI", erreurVitesseMoteurD);
+                ASSER_TRAJ_LogAsserValPC("tensionMesPI", tensionPWM_D);
+                break;
+
+            default :
+                ASSER_TRAJ_LogAsserMsgPC("test PI : moteur non gere", (float)moteur_testPI);
+                break;
         }
         ASSER_TRAJ_LogAsserValPC("vitMesPI", vitesseMoteur);
     }
@@ -640,7 +657,7 @@ void SIMU_BoucleVitesse(void)
                                    , t1_G
                                    , t2_G
                                    , GAIN_STATIQUE_MOTEUR_G
-                                   , 0 //20
+                                   , 30 //20
                                    , SIMU_CR
                                    , TE_PI
                                    );
@@ -678,7 +695,7 @@ void SIMU_BoucleVitesse(void)
                                    , t1_D
                                    , t2_D
                                    , GAIN_STATIQUE_MOTEUR_D
-                                   , 0 //20
+                                   , 30 //20
                                    , SIMU_CR
                                    , TE_PI
                                    );

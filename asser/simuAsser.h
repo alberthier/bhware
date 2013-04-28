@@ -38,10 +38,10 @@ void    SIMU_TabGabarit_AddAcceleration(float acceleration);
 void    SIMU_AfficheInfoFinAsser(void);
 void    SIMU_CalculPeriodique(void);
 int     SIMU_Mouvement(void);
-void    SIMU_AsserVitessePI(void);
+void    SIMU_AsserVitessePI(int moteur_testPI, int profil_testPI, int nb_pts_mesure_testPI);
 
 #ifndef PIC32_BUILD
-extern void             SIMU_SetGainsPI(float kp, float ki);
+extern void             SIMU_SetGainsPI(float KpG, float KiG, float KpD, float KiD);
 extern void             SIMU_SetParamMoteur(float m, float R, float f, float Fr, float r, float L, float kc, float kv, float Rred);
 extern void             SIMU_SetParamProfilVitesse(float Amax, float Dmax);
 extern void             SIMU_SetConfigProfilVitesse(float ratioAcc, float ratioDecc, float ratioAccRot, float ratioDeccRot);
