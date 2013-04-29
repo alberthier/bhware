@@ -1,0 +1,10 @@
+#!/usr/bin/env python3
+
+import socket
+
+if __name__ == "__main__":
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.connect(("pic", 80))
+    s.sendall(b"GET /Reset.html HTTP/1.0\r\n\r\n")
+    s.close()
+

@@ -34,8 +34,6 @@ if [ "$PS1" ]; then
     alias vi='vim'
     alias halt='busybox halt; exit'
     alias reboot='busybox reboot; exit'
-    alias kbrewery='killall brewery.py'
-    alias kpic='wget http://pic/Reset.html'
 
     if [ -d "/root/bhware/bhbot/brewery" ]; then
         cd /root/bhware/bhbot/brewery
