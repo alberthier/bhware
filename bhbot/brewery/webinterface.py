@@ -3,8 +3,9 @@
 
 import sys
 import os
-import nanow
+import math
 
+import nanow
 import packets
 import position
 import statemachine
@@ -12,24 +13,10 @@ import commonstates
 import binarizer
 
 from definitions import *
-
 from packets import *
 
-import math
 
 
-class WebState(statemachine.State):
-
-    def __init__(self, event_loop):
-        statemachine.State.__init__(self)
-        self.event_loop = event_loop
-        self.old_root_state = self.event_loop.root_state
-        self.event_loop.root_state = self
-
-
-    #noinspection PyUnusedLocal
-    def on_exit_substate(self, substate):
-        self.event_loop.root_state = self.old_root_state
 
 class CodeBuilder:
 
@@ -57,11 +44,11 @@ class CodeBuilder:
         return default_value or self.get_sample_value(type_)
 
 
+
+
 class BHWeb(object):
 
-
-    static = nanow.StaticDir(os.path.join(os.path.dirname(__file__), "static"))
-
+    web = nanow.StaticDir(os.path.join(os.path.dirname(__file__), "web"))
 
     def __init__(self, eventloop):
         """
@@ -70,45 +57,9 @@ class BHWeb(object):
         self.eventloop = eventloop
 
 
-    def execute_statemachine(self, state):
-        ws = WebState(self.eventloop)
-        ws.switch_to_substate(state)
-
-
-    def index(self, headers, vars):
-        host = headers["Host"].split(":")[0]
-        html = """<!DOCTYPE html>
-<html>
-<head>
-  <title>BH Team robot web interface</title>
-  <link rel="stylesheet" type="text/css" href="static/bhweb.css" />
-</head>
-<body>
-  <div class="header">
-    <h1>BH Team</h1>
-    <ul>
-      <li><a href="statemachine" target="linktarget">State Machine</a></li>
-      <li><a href="logs" target="linktarget">Logs</a></li>
-      <li><a href="packets" target="linktarget">Packets</a></li>
-      <li><a href="remote_control" target="linktarget">Remote Control</a></li>
-      <li><a href="packet_wizard_1" target="linktarget">Packet Wizard</a></li>
-      <li><a href="http://{}:42080" target="linktarget">PIC</a></li>
-    </ul>
-  </div>
-  <iframe src="statemachine" name="linktarget" />
-</body>
-</html>
-""".format(host)
-        return html
-
-
     def statemachine(self, headers, vars):
         html = """<!DOCTYPE html>
 <html>
-<head>
-  <title>Statemachine</title>
-  <link rel="stylesheet" type="text/css" href="static/bhweb.css" />
-</head>
 <body>
   <div>
     <h2>State stack:</h2>
@@ -143,10 +94,6 @@ class BHWeb(object):
     def logs(self, headers, vars):
         html = """<!DOCTYPE html>
 <html>
-<head>
-  <title>Logs</title>
-  <link rel="stylesheet" type="text/css" href="static/bhweb.css" />
-</head>
 <body>
   <div>
     <h2>Logs:</h2>
@@ -172,10 +119,6 @@ class BHWeb(object):
 
         html = """<!DOCTYPE html>
 <html>
-<head>
-  <title>Packet wizard</title>
-  <link rel="stylesheet" type="text/css" href="static/bhweb.css" />
-</head>
 <body>
   <div>
     <h2>Packet wizard</h2>
@@ -191,51 +134,9 @@ class BHWeb(object):
         return html.format(sample_code=code)
 
 
-    def logurls(self, headers, vars):
-        text = ""
-        files = os.listdir(LOG_DIR)
-        files.sort()
-        for f in reversed(files):
-            if f.endswith(".py"):
-                text += 'logs/{0}\n'.format(f)
-        return text
-
-
-    def packets(self, headers, vars):
-        html = """<!DOCTYPE html>
-<html>
-<head>
-  <title>Packets</title>
-  <link rel="stylesheet" type="text/css" href="static/bhweb.css" />
-</head>
-<body>
-  <div>
-    <h2>Packets:</h2><hr/>
-"""
-        for packet in packets.PACKETS_LIST:
-            html += """<h3>{} ({})</h3>""".format(packet.__name__, packet.TYPE)
-            html += """<form method="POST" action="send_packet">"""
-            html += """<table>"""
-            for name, item in packet.DEFINITION:
-                if not "simulator" in name.lower() :
-                    html += self.build_element_from_item(item, name)
-            html += """</table>"""
-            html += """<input type="hidden" name="packet" value="{}"/><br/>""".format(packet.__name__)
-            html += """<input type="submit" value="Send"/><br/>"""
-            html += """</form><hr/>"""
-        html += """</div>
-</body>
-</html>
-"""
-        return html
-
     def packet_wizard_1(self, headers, vars):
         html = """<!DOCTYPE html>
 <html>
-<head>
-  <title>Packets</title>
-  <link rel="stylesheet" type="text/css" href="static/bhweb.css" />
-</head>
 <body>
   <div>
     <h2>Packet wizard : choose packet type</h2><hr/>
@@ -326,10 +227,6 @@ class BHWeb(object):
     def remote_control(self, headers, vars):
         html = """<!DOCTYPE html>
 <html>
-<head>
-  <title>Remote Control</title>
-  <link rel="stylesheet" type="text/css" href="static/bhweb.css" />
-</head>
 <body>
     <form method="POST" action="process_remote_control">
         <input type="hidden" name="type" value="GotoStart"/>
@@ -353,34 +250,3 @@ class BHWeb(object):
 </html>
 """
         return html
-
-
-    def process_remote_control(self, headers, vars):
-        command = vars["type"]
-        if command == "GotoStart":
-            self.execute_statemachine(commonstates.GotoHome())
-        elif command == "Rotate":
-            angle = float(vars["angle"]) / 180.0 * math.pi
-            pose = position.Pose()
-            pose.x = self.eventloop.robot.pose.x
-            pose.y = self.eventloop.robot.pose.y
-            pose.angle = self.eventloop.robot.pose.angle + angle
-            packet = packets.Goto()
-            packet.movement = MOVEMENT_ROTATE
-            packet.direction = DIRECTION_FORWARDS
-            packet.points = [ pose ]
-            self.eventloop.send_packet(packet)
-        elif command == "Move":
-            distance = float(vars["distance"])
-            pose = position.Pose()
-            packet = packets.Goto()
-            if "forward" in vars:
-                packet.direction = DIRECTION_FORWARDS
-            else:
-                packet.direction = DIRECTION_BACKWARDS
-            pose.x = self.eventloop.robot.pose.x + packet.direction * math.cos(self.eventloop.robot.pose.angle) * distance
-            pose.y = self.eventloop.robot.pose.y + packet.direction * math.sin(self.eventloop.robot.pose.angle) * distance
-            packet.movement = MOVEMENT_MOVE
-            packet.points = [ pose ]
-            self.eventloop.send_packet(packet)
-        return self.remote_control()
