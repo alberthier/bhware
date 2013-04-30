@@ -101,7 +101,11 @@ float                           Ratio_Acc                               =   1.0;
 float                           Ratio_Decc                              =   1.0;
 float                           Ratio_Acc_Rot                           =   0.5;
 float                           Ratio_Decc_Rot                          =   0.8;
+#ifdef Actionneurs_Robot1
 float                           Vmax_limit                              =   0.7;
+#else
+float                           Vmax_limit                              =   1.3;
+#endif
 
 /** Vitesse minimum de mouvement de reference*/
 float                           VminMouvRef                             =   0.1; 
@@ -3283,11 +3287,14 @@ static Pose ASSER_TRAJ_ErreurPose(Pose poseRobot_P, Pose poseRef)
  *  \return           vitessesCons    Structure de vitesses avec les consignes de vitesse longitudinale (en m/s) et de vitesse de rotation (en rd/s)
  */
 /**********************************************************************/
+#ifdef Actionneurs_Robot1
 static VitessesRobotUnicycle ASSER_TRAJ_RetourDetatOrientation(Pose erreurPose, Pose diffPoseRef, float *gain)
 {
     VitessesRobotUnicycle   vitessesCons;
     float                   z, uref1, uref2, erreurAngle;
     float                   w[2];
+	float					tempw[2];
+	int						phasing = 0;
 
     erreurAngle = POS_ModuloAngle(erreurPose.angle);
     
@@ -3311,12 +3318,105 @@ static VitessesRobotUnicycle ASSER_TRAJ_RetourDetatOrientation(Pose erreurPose, 
 
     w[0] = - gain[0] * uref1 * fabsf(uref1) * (erreurPose.x + (erreurPose.y * z));
     w[1] = -(gain[1] * uref1 * erreurPose.y) - (gain[2] * fabsf(uref1) * z);
+	tempw[0] = -(gain[1] * uref1 * erreurPose.y); //uref1 au lieu de 0.7
+	
+	tempw[1] = - (gain[2] * fabs(uref1) * z);//fabs(uref1) au lieu de 0.7
+	w[1] = tempw[0] + tempw[1];
 
-    vitessesCons.longitudinale = (w[0] + uref1) / cosf(erreurAngle);
-    vitessesCons.rotation = (w[1] * SQUARE(cosf(erreurAngle))) + uref2;
+	vitessesCons.longitudinale = (w[0] + uref1) / cosf(erreurAngle);
+    vitessesCons.rotation = (w[1] * SQUARE(cosf(erreurAngle))) + uref2; // FOU cosf
 
     return vitessesCons;
 }
+#else
+static VitessesRobotUnicycle ASSER_TRAJ_RetourDetatOrientation(Pose erreurPose, Pose diffPoseRef, float *gain)
+{
+    VitessesRobotUnicycle   vitessesCons;
+    float                   z, uref1, uref2, erreurAngle;
+    float                   w[2];
+	float					tempw[2];
+	int						phasing = 0;
+	static float			erreurAngleMemo = 0.0, tempwMemo = 0.0;
+	
+    erreurAngle = POS_ModuloAngle(erreurPose.angle);
+	
+	ASSER_TRAJ_LogAsserValPC("errAngle", erreurAngle);
+    
+    if (fabsf(erreurAngle) > ((PI / 2.0) - 0.1))
+    {
+        if (erreurAngle > 0.0)
+        {
+            erreurAngle = (PI / 2.0) - 0.1;
+        }
+        else
+        {
+            erreurAngle = - ((PI / 2.0) - 0.1);
+        }
+    }
+
+	z = tanf(erreurAngle);
+	
+    uref1 = sqrtf(SQUARE(diffPoseRef.x) + SQUARE(diffPoseRef.y));
+
+    uref2 = diffPoseRef.angle;
+	
+	ASSER_TRAJ_LogAsserValPC("z", z);
+	ASSER_TRAJ_LogAsserValPC("uref1", uref1);
+	ASSER_TRAJ_LogAsserValPC("uref2", uref2);
+
+    w[0] = - gain[0] * uref1 * fabsf(uref1) * (erreurPose.x + (erreurPose.y * z));
+    vitessesCons.longitudinale = (w[0] + uref1) / cosf(erreurAngle);
+	
+	if((erreurPose.y > -0.003) && (erreurPose.y < 0.0))
+	{
+		tempw[0] = 0.1;
+	}
+	else if((erreurPose.y < 0.003)  && (erreurPose.y > 0.0))
+	{
+		tempw[0] = -0.1;
+	}
+	else if(erreurPose.y > 0.5)
+	{
+		tempw[0] = -80.0;
+	}
+	else if(erreurPose.y < -0.5)
+	{
+		tempw[0] = 80.0;
+	}
+	else
+	{
+		tempw[0] = -(((erreurPose.y - 0.003) / 0.5) * 80.0);
+		if(tempw[0] > 0.0)
+		{
+			tempw[0] += 0.1;
+		}
+		else
+		{
+			tempw[0] -= 0.1;
+		}
+	}
+	tempw[1] = tempwMemo;
+	tempw[1] = ((((erreurAngle - erreurAngleMemo) * 360.0) / (2.0 * PI * 0.01)) / gain[2]);
+	vitessesCons.rotation = (tempw[0] - (erreurAngle * 360.0 / (2.0 * PI)));
+	ASSER_TRAJ_LogAsserValPC("vrotaA", vitessesCons.rotation);
+	vitessesCons.rotation = (vitessesCons.rotation - tempw[1]);
+	ASSER_TRAJ_LogAsserValPC("vrotaB", vitessesCons.rotation);
+	vitessesCons.rotation = (((vitessesCons.rotation)/360.0)*gain[1])/* + uref2*/;
+	ASSER_TRAJ_LogAsserValPC("vrotaC", vitessesCons.rotation);
+	ASSER_TRAJ_LogAsserValPC("errAngle2", erreurAngle);
+	ASSER_TRAJ_LogAsserValPC("errAngleMemo", erreurAngleMemo);
+	ASSER_TRAJ_LogAsserValPC("vlongi", vitessesCons.longitudinale);
+	ASSER_TRAJ_LogAsserValPC("errY", erreurPose.y);
+	ASSER_TRAJ_LogAsserValPC("tempw0", tempw[0]);
+	ASSER_TRAJ_LogAsserValPC("tempw1", tempw[1]);
+	
+	/* Sauvegarde de l'erreur d'angle pour l'itération N+1 */
+	erreurAngleMemo = erreurAngle;
+	tempwMemo = tempw[1]; 
+
+    return vitessesCons;
+}
+#endif
 
 /**********************************************************************/
 /*! \brief ASSER_TRAJ_TestFinAsservissement

@@ -73,7 +73,11 @@ float                   ECART_ROUE_MOTRICE      = 0.116;                        
 float                   COEFFICIENT_DE_GLISSEMENT_LATERAL = 0.0;
 
 /** Tolerances de la condition d'arret des asservissements */
-float                   DIST_MIN                = 0.001;
+#ifdef Actionneurs_Robot1
+float                   DIST_MIN                = 0.002;
+#else
+float                   DIST_MIN                = 0.005;
+#endif
 float                   ANGLE_MIN               = 0.001;
 
 /** Coordonnees de la pose actuelle du robot */
@@ -480,7 +484,7 @@ extern void POS_ConversionVitessesLongRotToConsignesPWMRouesRobotUnicycle(float 
         }
     }
     
-    /* Consigne roue droite */
+    // /* Consigne roue droite */
     if (vitRoueDpwm < (unsigned short)BORNE_PWM_AR)
     {
         *consPWMRoueDroite = (unsigned short)BORNE_PWM_AR;
