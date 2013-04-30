@@ -383,6 +383,7 @@ void SIMU_InitialisationLogRobot(void)
     ASSER_TRAJ_LogAsserValPC("VposD", 0.0);        
 
     ASSER_TRAJ_LogAsserValPC("vitLongMvt", 0.0);
+    ASSER_TRAJ_LogAsserValPC("vitAngulaireRotation", 0.0);
 }
 
 void SIMU_LogRobot(void)
@@ -485,6 +486,7 @@ void SIMU_AsserVitessePI(int moteur_testPI, int profil_testPI, int N)
     int     p;
     float   vitesseMoteur = 0.0;
     float   TE_MESURE;
+    float   UMAX_REDUC = 1.0;
 
     POS_InitialisationConfigRobot();
 
@@ -502,9 +504,9 @@ void SIMU_AsserVitessePI(int moteur_testPI, int profil_testPI, int N)
     ASSER_TRAJ_LogAsserValPC("errVitMesPI", 0.0);
     ASSER_TRAJ_LogAsserValPC("tensionMesPI", 0.0);
 
-    if (N < 150)
+    if (N < 10)
     {
-        N = 150;
+        N = 10;
     }
     TE_MESURE = 0.02; /*  seconde */
 
@@ -515,18 +517,18 @@ void SIMU_AsserVitessePI(int moteur_testPI, int profil_testPI, int N)
             switch (profil_testPI)
             {
                 case 1 : /* ECHELON */
-                    g_ConsigneMoteurD = (unsigned short)(0x03FF + (unsigned short)Umax);
+                    g_ConsigneMoteurD = (unsigned short)(0x03FF + (unsigned short)(Umax*UMAX_REDUC));
                     break;
 
                 case 2 : /* PARABOLE */
                     /* Determination du profil de vitesse de consigne */
-                    if ((g_ConsigneMoteurD + (unsigned short)((unsigned short)1023/ ((unsigned short)(N / 2.0)) )) <= (unsigned short)(0x03FF + (unsigned short)Umax))
+                    if ((g_ConsigneMoteurD + (unsigned short)((unsigned short)1023/ ((unsigned short)(N / 2.0)) )) <= (unsigned short)(0x03FF + (unsigned short)(Umax*UMAX_REDUC)))
                     {
-                        g_ConsigneMoteurD = (unsigned short)0x03FF + (unsigned short)ASSER_Acc_Parabolique((unsigned int)floor(((float)cpt_periode) / (TE_MESURE / TE)), (unsigned int)(N / 2), (float)Umax);
+                        g_ConsigneMoteurD = (unsigned short)0x03FF + (unsigned short)ASSER_Acc_Parabolique((unsigned int)floor(((float)cpt_periode) / (TE_MESURE / TE)), (unsigned int)(N / 2), (float)(Umax*UMAX_REDUC));
                     }
                     else
                     {
-                        g_ConsigneMoteurD = (unsigned short)(0x03FF + (unsigned short)Umax);
+                        g_ConsigneMoteurD = (unsigned short)(0x03FF + (unsigned short)(Umax*UMAX_REDUC));
                     }
                     break;
 
@@ -657,7 +659,7 @@ void SIMU_BoucleVitesse(void)
                                    , t1_G
                                    , t2_G
                                    , GAIN_STATIQUE_MOTEUR_G
-                                   , 30 //20
+                                   , 20 //20
                                    , SIMU_CR
                                    , TE_PI
                                    );
@@ -695,7 +697,7 @@ void SIMU_BoucleVitesse(void)
                                    , t1_D
                                    , t2_D
                                    , GAIN_STATIQUE_MOTEUR_D
-                                   , 30 //20
+                                   , 20 //20
                                    , SIMU_CR
                                    , TE_PI
                                    );

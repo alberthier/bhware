@@ -250,7 +250,7 @@ int main(void)
     char marche;
     float angle_rad;
     unsigned int nbrPtsChemin, nbrParameters;
-    Parameter paramPI[4], paramK[3], paramR[2], paramT[8], paramConfAsser[4], paramMotor[9];
+    Parameter paramPI[4], paramK[3], paramR[1], paramT[8], paramConfAsser[4], paramMotor[9];
     Data_Goto Data_deplacement;
     clock_t temps_i, temps_f, temps_f2;
     int moteur_testPI, profil_testPI, nb_pts_mesure_testPI;
@@ -314,7 +314,7 @@ int main(void)
             temps_f = clock();
             ASSER_TRAJ_LogAsserValPC("temps_init", ((float)(temps_f - temps_i)) / CLOCKS_PER_SEC);
             // execution du deplacement
-            SIMU_Mouvement();  /* TOCHANGE */
+            SIMU_Mouvement();
             temps_f2 = clock();
             ASSER_TRAJ_LogAsserValPC("temps_init", ((float)(temps_f2 - temps_f)) / CLOCKS_PER_SEC);
         }
@@ -346,7 +346,7 @@ int main(void)
         }
         else if (strcmp(command, "PARAMETERS_GAIN_ROT") == 0)
         {
-            parameterMsgTreatment(buffer, &nbrParameters, paramR, 2);
+            parameterMsgTreatment(buffer, &nbrParameters, paramR, 1);
             if (nbrParameters == 1)
             {
                 gainCentreRot = paramR[0].value;

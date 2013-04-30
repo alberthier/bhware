@@ -233,6 +233,9 @@ extern void ASSER_TRAJ_InitialisationGenerale(void)
     /* Initialisation de la position du robot */
     POS_InitialisationConfigRobot();
 
+    /* Initialisation de la vitesse max du robot */
+    Vmax_limit = MIN(DonneeVmaxGauche, DonneeVmaxDroite);
+
     /* Initialisation de la spline 3 de transition entre une ligne droite et un arc de cercle */
     cfgSp3.bx = Db / ti;
     cfgSp3.by = 0.0;
@@ -456,66 +459,68 @@ extern void ASSER_TRAJ_AsservissementMouvementRobot(Pose poseRobot, VitessesRobo
             EVIT_ProcheFinAsser = False;
 #endif /* PIC32_BUILD */
 
-            /************************************************************/
-            /* Debut de la dermination de la nouvelle position a suivre                     */
-            /************************************************************/
-
-            if (chemin.profilVitesse.p > 0)
-            {
-                /* distance normalisee restant a parcourir */
-                chemin.profilVitesse.distNormaliseeRestante -= (delta_distance / chemin.distance);
-                
-                memo_segmentCourant = chemin.trajectoire.subTrajs.segmentCourant;
-#ifndef PIC32_BUILD           
-			    memo_subSegmentCourant = chemin.trajectoire.subTrajs.subSegmentCourant;
-#endif /* PIC32_BUILD */
-                ASSER_TRAJ_LogAsserValPC("segmentCourant", chemin.trajectoire.subTrajs.segmentCourant);
-                ASSER_TRAJ_LogAsserValPC("subSegmentCourant", chemin.trajectoire.subTrajs.subSegmentCourant);
-                ASSER_TRAJ_LogAsserValPC("paramPoseSubSegCourant", chemin.trajectoire.subTrajs.paramPoseSubSegCourant);
-
-                ASSER_TRAJ_ParcoursTrajectoire(&chemin \
-                                               , delta_distance \
-                                               , &chemin.trajectoire.subTrajs.segmentCourant \
-                                               , &chemin.trajectoire.subTrajs.subSegmentCourant \
-                                               , &chemin.trajectoire.subTrajs.paramPoseSubSegCourant \
-                                               , NULL);
-
-                if (memo_segmentCourant != chemin.trajectoire.subTrajs.segmentCourant)
-                {
-                    ASSER_TRAJ_LogAsserValPC("periodeNewSeg", ASSER_compteurPeriode);
-                    
-#ifdef PIC32_BUILD
-                    MAIN_Way_Point_Index = memo_segmentCourant;
-
-                    /* Arrivee au point intermediaire */
-                    MAIN_event = OSFlagPost(MAIN_event_gpr, MAIN_GOTO_WAYPOINT_REACHED, OS_FLAG_SET, &OS_Status);
-                    if(OS_Status != OS_ERR_NONE)
-                    {                        
-                        TOOLS_LogFault(OS_Err, True, INTEGER, &OS_Status, True, "Set MAIN_GOTO_WAYPOINT_REACHED flag error");
-                    }
-#endif /* PIC32_BUILD */                    
-                }
-#ifndef PIC32_BUILD
-                if (memo_subSegmentCourant != chemin.trajectoire.subTrajs.subSegmentCourant)
-                {
-                    ASSER_TRAJ_LogAsserValPC("periodeNewSubSeg", ASSER_compteurPeriode);
-                    ASSER_TRAJ_LogAsserValPC("xNewSubSeg", poseRobot.x);
-                    ASSER_TRAJ_LogAsserValPC("yNewSubSeg", poseRobot.y);
-                }
-#endif /* PIC32_BUILD */ 
-            }
-            else
-            {
-                /* Commande de vitesse nulle, le point d'arrivee de consigne est atteint */
-                chemin.trajectoire.subTrajs.paramPoseSubSegCourant = ti;
-            }
-            
-            /**********************************************************/
-            /* Fin de la dermination de la nouvelle position a suivre                      */
-            /**********************************************************/
 
             if (ASSER_TRAJ_isDeplacement(&chemin) == True)
             {
+                /************************************************************/
+                /* Debut de la dermination de la nouvelle position a suivre                     */
+                /************************************************************/
+
+                if (chemin.profilVitesse.p > 0)
+                {
+                    /* distance normalisee restant a parcourir */
+                    chemin.profilVitesse.distNormaliseeRestante -= (delta_distance / chemin.distance);
+
+                    memo_segmentCourant = chemin.trajectoire.subTrajs.segmentCourant;
+    #ifndef PIC32_BUILD
+                    memo_subSegmentCourant = chemin.trajectoire.subTrajs.subSegmentCourant;
+    #endif /* PIC32_BUILD */
+                    ASSER_TRAJ_LogAsserValPC("segmentCourant", chemin.trajectoire.subTrajs.segmentCourant);
+                    ASSER_TRAJ_LogAsserValPC("subSegmentCourant", chemin.trajectoire.subTrajs.subSegmentCourant);
+                    ASSER_TRAJ_LogAsserValPC("paramPoseSubSegCourant", chemin.trajectoire.subTrajs.paramPoseSubSegCourant);
+
+                    ASSER_TRAJ_ParcoursTrajectoire(&chemin \
+                                                   , delta_distance \
+                                                   , &chemin.trajectoire.subTrajs.segmentCourant \
+                                                   , &chemin.trajectoire.subTrajs.subSegmentCourant \
+                                                   , &chemin.trajectoire.subTrajs.paramPoseSubSegCourant \
+                                                   , NULL);
+
+                    if (memo_segmentCourant != chemin.trajectoire.subTrajs.segmentCourant)
+                    {
+                        ASSER_TRAJ_LogAsserValPC("periodeNewSeg", ASSER_compteurPeriode);
+
+    #ifdef PIC32_BUILD
+                        MAIN_Way_Point_Index = memo_segmentCourant;
+
+                        /* Arrivee au point intermediaire */
+                        MAIN_event = OSFlagPost(MAIN_event_gpr, MAIN_GOTO_WAYPOINT_REACHED, OS_FLAG_SET, &OS_Status);
+                        if(OS_Status != OS_ERR_NONE)
+                        {
+                            TOOLS_LogFault(OS_Err, True, INTEGER, &OS_Status, True, "Set MAIN_GOTO_WAYPOINT_REACHED flag error");
+                        }
+    #endif /* PIC32_BUILD */
+                    }
+    #ifndef PIC32_BUILD
+                    if (memo_subSegmentCourant != chemin.trajectoire.subTrajs.subSegmentCourant)
+                    {
+                        ASSER_TRAJ_LogAsserValPC("periodeNewSubSeg", ASSER_compteurPeriode);
+                        ASSER_TRAJ_LogAsserValPC("xNewSubSeg", poseRobot.x);
+                        ASSER_TRAJ_LogAsserValPC("yNewSubSeg", poseRobot.y);
+                    }
+    #endif /* PIC32_BUILD */
+                }
+                else
+                {
+                    /* Commande de vitesse nulle, le point d'arrivee de consigne est atteint */
+                    chemin.trajectoire.subTrajs.paramPoseSubSegCourant = ti;
+                }
+
+                /**********************************************************/
+                /* Fin de la dermination de la nouvelle position a suivre                      */
+                /**********************************************************/
+
+
                 ASSER_TRAJ_Trajectoire(&chemin.trajectoire \
                                        , chemin.trajectoire.subTrajs.segmentCourant \
                                        , chemin.trajectoire.subTrajs.subSegmentCourant \
@@ -836,16 +841,24 @@ extern void ASSER_TRAJ_AsservissementMouvementRobot(Pose poseRobot, VitessesRobo
         }
         else /* ROTATION */
         {
-            chemin.profilVitesse.distance_parcourue = fabsf(POS_ModuloAngle(poseRobot.angle - chemin.trajectoire.rotation.poseDepartRobot.angle)) * NORME_BARRE_SUIVI_TRAJ;
+            chemin.profilVitesse.distance_parcourue = fabsf(poseRobot.angle - chemin.trajectoire.rotation.poseDepartRobot.angle) * NORME_BARRE_SUIVI_TRAJ;
             ASSER_TRAJ_LogAsserValPC("dist_parcourue_rot",  chemin.profilVitesse.distance_parcourue);
             ASSER_Running = ASSER_TRAJ_Profil_S_Curve(&VitesseProfil, chemin.distance, 0.0, 0.0, chemin.profilVitesse.AmaxRot, chemin.profilVitesse.DmaxRot, Vitesse_Gain_ASR, chemin.profilVitesse.distance_parcourue, (((float)m_sensDeplacement) * POS_GetVitesseRotation() * (ECART_ROUE_MOTRICE / 2.0)), (SaturationPIDflag | SaturationPIGflag));
-            vitessesConsignes->rotation = VitesseProfil / NORME_BARRE_SUIVI_TRAJ;
+            if (chemin.trajectoire.rotation.angle > 0.0)
+            {
+                vitessesConsignes->rotation = VitesseProfil / NORME_BARRE_SUIVI_TRAJ;
+            }
+            else
+            {
+                vitessesConsignes->rotation = (-1.0) * VitesseProfil / NORME_BARRE_SUIVI_TRAJ;
+            }
 
             poseReference.x = chemin.trajectoire.rotation.poseDepartRobot.x;
             poseReference.y = chemin.trajectoire.rotation.poseDepartRobot.y;
             poseReference.angle = poseRobot.angle;
             erreur_P = ASSER_TRAJ_ErreurPose(poseRobot, poseReference);
             vitessesConsignes->longitudinale = - gainCentreRot * erreur_P.x;
+            ASSER_TRAJ_LogAsserValPC("gainCentreRot", gainCentreRot);
         } 
     }
     else
@@ -863,17 +876,21 @@ extern void ASSER_TRAJ_AsservissementMouvementRobot(Pose poseRobot, VitessesRobo
 
     /* Log de valeurs */
 #ifndef PIC32_BUILD
-    ASSER_TRAJ_Trajectoire(&chemin.trajectoire \
-                           , chemin.trajectoire.subTrajs.segmentCourant \
-                           , chemin.trajectoire.subTrajs.subSegmentCourant \
-                           , chemin.trajectoire.subTrajs.paramPoseSubSegCourant \
-                           , &poseTraj, &diff1Traj, &diff2Traj);
+    if (ASSER_TRAJ_isDeplacement(&chemin) == True)
+    {
+        ASSER_TRAJ_Trajectoire(&chemin.trajectoire \
+                               , chemin.trajectoire.subTrajs.segmentCourant \
+                               , chemin.trajectoire.subTrajs.subSegmentCourant \
+                               , chemin.trajectoire.subTrajs.paramPoseSubSegCourant \
+                               , &poseTraj, &diff1Traj, &diff2Traj);
+    }
 
     ASSER_TRAJ_LogAsserValPC("p", chemin.profilVitesse.p);
 #endif /* PIC32_BUILD */
 
 #ifdef PLOTS_SIMU
     ASSER_TRAJ_LogAsserValPC("vitLongMvt", vitessesConsignes->longitudinale);
+    ASSER_TRAJ_LogAsserValPC("vitAngulaireRotation", vitessesConsignes->rotation);
     ASSER_TRAJ_LogAsserValPC("xCCourant",  poseTraj.x);
     ASSER_TRAJ_LogAsserValPC("xPoseReferenceRobot",  poseReferenceRobot.x);
     ASSER_TRAJ_LogAsserValPC("yPoseReferenceRobot",  poseReferenceRobot.y);
@@ -935,6 +952,7 @@ extern void ASSER_TRAJ_InitialisationTrajectoire(Pose poseRobot, unsigned char M
             /* Position a atteindre (condition d'arret du test de fin d'asservissement) */
             angle_fin_rotation = POS_ModuloAngle(Data->rotate.Angle);
             chemin.trajectoire.rotation.angle_final = angle_fin_rotation;
+            ASSER_TRAJ_LogAsserValPC("angle_final_rot", chemin.trajectoire.rotation.angle_final/PI);
 
             chemin.posArrivee.x = poseRobot.x + (NORME_BARRE_SUIVI_TRAJ * cosf(angle_fin_rotation));
             chemin.posArrivee.y = poseRobot.y + (NORME_BARRE_SUIVI_TRAJ * sinf(angle_fin_rotation));
@@ -947,27 +965,13 @@ extern void ASSER_TRAJ_InitialisationTrajectoire(Pose poseRobot, unsigned char M
             chemin.trajectoire.rotation.poseDepartRobot = poseRobot;
             chemin.trajectoire.rotation.angle = POS_ModuloAngle(angle_fin_rotation - poseRobot.angle);
 
-            ASSER_TRAJ_LogAsserValPC("plageAngleRotation", chemin.trajectoire.rotation.angle);
+            ASSER_TRAJ_LogAsserValPC("plageAngleRotation", chemin.trajectoire.rotation.angle/PI);
 
             /* Calcul de la premiere pose de la trajectoire de consigne */
             poseReference = ASSER_TRAJ_TrajectoireRotation(&(chemin.trajectoire.rotation), 0.0);
 
             chemin.distance = fabsf(chemin.trajectoire.rotation.angle) * NORME_BARRE_SUIVI_TRAJ;
             ASSER_TRAJ_LogAsserValPC("distance_seg", chemin.distance);
-
-            if (chemin.trajectoire.rotation.angle < 0.0)
-            {
-                m_sensDeplacement = MARCHE_ARRIERE;
-            }
-            else
-            {
-                m_sensDeplacement = MARCHE_AVANT;
-            }
-
-            chemin.trajectoire.subTrajs.nbreSegments = 1.0;
-            chemin.trajectoire.subTrajs.segmentCourant = 0;
-            chemin.trajectoire.subTrajs.subSegmentCourant = 0.0;
-            chemin.trajectoire.subTrajs.paramPoseSubSegCourant = 0.0;
 
             break;
 
@@ -3359,7 +3363,7 @@ static unsigned char ASSER_TRAJ_TestFinAsservissement(Deplacement * traj, float 
     else
     {
         /* Test pour un mouvement de rotation */
-        if ((erAngle < tolAngle) && ((erAngle > - tolAngle) || ((erAngle * memo_erAngle) < 0.0)))
+        if ( ((erAngle < tolAngle) && (erAngle > - tolAngle)) || ((erAngle * memo_erAngle) < 0.0) )
         {
             ret = True;
         }

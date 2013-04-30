@@ -408,41 +408,48 @@ extern void POS_ConversionVitessesLongRotToConsignesPWMRouesRobotUnicycle(float 
     if (fabsf(vitRoueGauche) > DonneeVmaxGauche)
     {
         extra_vitRoueGauche = fabsf(vitRoueGauche) - DonneeVmaxGauche;
-        vitesseLongitudinale = vitesseLongitudinale - (extra_vitRoueGauche + 0.001);
-    }
-    else
-    {
-        extra_vitRoueGauche = - 1.0;
+        if (vitesseLongitudinale >  0.0)
+        {
+            vitesseLongitudinale = vitesseLongitudinale - (extra_vitRoueGauche + 0.001);
+            if (vitesseLongitudinale < 0.0)
+            {
+                vitesseLongitudinale = 0.0;
+#ifdef PIC32_BUILD
+                TOOLS_LogFault(AsserPosErr, True, FLOAT, (int *)&vitesseLongitudinale, True, "vitesseLongitudinale a zero");
+#else /* PIC32_BUILD */
+                ASSER_TRAJ_LogAsserMsgPC("Position: ConversionVitesses: vitLong a zero", vitesseLongitudinale);
+#endif /* PIC32_BUILD */
+        return;
+            }
+        }
     }
         
     vitRoueDroite = (m_sensMarcheMouvement * vitesseLongitudinale) + ((vitesseAngulaireRotation * ECART_ROUE_LIBRE) / 2.0);
     if (fabsf(vitRoueDroite) > DonneeVmaxDroite)
     {
         extra_vitRoueDroite = fabsf(vitRoueDroite) - DonneeVmaxDroite;
-        vitesseLongitudinale = vitesseLongitudinale - (extra_vitRoueDroite + 0.001);
-    }
-    else
-    {
-        extra_vitRoueDroite = - 1.0;
-    }
-
-    if (vitesseLongitudinale < 0.0)
-    {
-        vitesseLongitudinale = 0.0;
-
+        if (vitesseLongitudinale >  0.0)
+        {
+            vitesseLongitudinale = vitesseLongitudinale - (extra_vitRoueDroite + 0.001);
+            if (vitesseLongitudinale < 0.0)
+            {
+                vitesseLongitudinale = 0.0;
 #ifdef PIC32_BUILD
-        TOOLS_LogFault(AsserPosErr, True, FLOAT, (int *)&vitesseLongitudinale, True, "vitesseLongitudinale a zero");
+                TOOLS_LogFault(AsserPosErr, True, FLOAT, (int *)&vitesseLongitudinale, True, "vitesseLongitudinale a zero");
 #else /* PIC32_BUILD */
-        ASSER_TRAJ_LogAsserMsgPC("Position: ConversionVitesses: vitLong a zero", vitesseLongitudinale);
+                ASSER_TRAJ_LogAsserMsgPC("Position: ConversionVitesses: vitLong a zero", vitesseLongitudinale);
 #endif /* PIC32_BUILD */
         return;
+            }
+        }
     }
+
+
     vitRoueDroite = (m_sensMarcheMouvement * vitesseLongitudinale) + ((vitesseAngulaireRotation * ECART_ROUE_LIBRE) / 2.0);
     vitRoueGauche = (m_sensMarcheMouvement * vitesseLongitudinale) - ((vitesseAngulaireRotation * ECART_ROUE_LIBRE) / 2.0);
 
 
     ASSER_TRAJ_LogAsserValPC("fin_MVT", vitesseLongitudinale);
-
 
 
 #ifdef PLOTS_SIMU

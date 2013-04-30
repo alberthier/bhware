@@ -229,9 +229,9 @@ def trajFunction(d_cfgTraj):
  
     ###############
     #test ROTATE
-    #~ send_init_pose(simulator_process, x=0.2, y=0.2, angle=math.pi/2.0) #4.71
-    #~ deplacement = commandMsg("MSG_ROTATE 0 -1.57") #
-    #~ simulator_process.stdin.write(deplacement.cmdMsgGeneration())
+    send_init_pose(simulator_process, x=0.2, y=0.2, angle=(math.pi/2.0)*(1.0)) #4.71
+    deplacement = commandMsg("MSG_ROTATE 0 0.0") # 1.57
+    simulator_process.stdin.write(deplacement.cmdMsgGeneration())
 
     #test MOVE_CURVE
     #~ send_init_pose(simulator_process, x=0.2, y=1.0, angle=0.0)
@@ -261,18 +261,18 @@ def trajFunction(d_cfgTraj):
     #~ simulator_process.stdin.write(deplacement.cmdMsgGeneration())
     
     ### Sequence de deplacement
-    send_init_pose(simulator_process, x=0.2, y=0.2, angle=math.pi/2.0)
-    
-    deplacement = commandMsg("MSG_MOVE_LINE 1")
-    deplacement.addPose("0.2 1.2")
-    simulator_process.stdin.write(deplacement.cmdMsgGeneration())
-    
-    deplacement = commandMsg("MSG_ROTATE 0 0.0")
-    simulator_process.stdin.write(deplacement.cmdMsgGeneration())
-    
-    deplacement = commandMsg("MSG_MOVE_LINE 1")
-    deplacement.addPose("1.2 1.2")
-    simulator_process.stdin.write(deplacement.cmdMsgGeneration())
+    #~ send_init_pose(simulator_process, x=0.2, y=0.2, angle=math.pi/2.0)
+    #~ 
+    #~ deplacement = commandMsg("MSG_MOVE_LINE 1")
+    #~ deplacement.addPose("0.2 1.2")
+    #~ simulator_process.stdin.write(deplacement.cmdMsgGeneration())
+    #~ 
+    #~ deplacement = commandMsg("MSG_ROTATE 0 0.0")
+    #~ simulator_process.stdin.write(deplacement.cmdMsgGeneration())
+    #~ 
+    #~ deplacement = commandMsg("MSG_MOVE_LINE 1")
+    #~ deplacement.addPose("1.2 1.2")
+    #~ simulator_process.stdin.write(deplacement.cmdMsgGeneration())
     
     #transmission de la commande de d'arret du simulateur
     (stdoutdata, stderrdata) = simulator_process.communicate("QUIT\n")
@@ -436,7 +436,7 @@ def testPI(d_cfgTraj, d_cfgTestPI) :
 
     return d_traj
 
-def PI2011_coutOptimParam(paramPI, d_cfgTraj_local, moteur, cfgTestPI) :
+def PI2011_coutOptimParam(paramPI, d_cfgTraj_local, d_cfgTestPI) :
     if (d_cfgTestPI['moteur'] == "GAUCHE") :
         d_cfgTraj_local['KpG'] = paramPI[0]
         d_cfgTraj_local['KiG'] = paramPI[1]
@@ -461,7 +461,7 @@ def PI2011_coutOptimParam(paramPI, d_cfgTraj_local, moteur, cfgTestPI) :
     if (coutTensionMax < 0.0) :
         coutTensionMax = -50.0*coutTensionMax
 
-    indexMesureErrVitesse = -1
+    indexMesureErrVitesse = int(len(d_traj["errVitMesPI"]) * 0.7)
     coutErreurVitesse = d_traj["errVitMesPI"][indexMesureErrVitesse] / d_traj["vitMesPI"][indexMesureErrVitesse]
     coutErreurVitesse = coutErreurVitesse * 10.0
     if (coutErreurVitesse < 0.0) :
@@ -533,6 +533,7 @@ def affichageTraj2011(d_traj):
     plot(temps, d_traj["fFin"], label='flag Fin')
     plot(temps, d_traj["vitLongitudinale"], '--', label='consigne vit long')
     #~ plot(temps, d_traj["vitLongMvt"], '-', label='consigne vit long Mvt')
+    plot(temps, d_traj["vitAngulaireRotation"], '-', label='consigne vit angulaire')
     
     plot(temps[:len(d_traj["vitLongitudinaleEffective"])], d_traj["vitLongitudinaleEffective"], '--', label='consigne vit long effec')
     plot(temps, d_traj["ConsigneMoteurGauche_MS"], 'k', label='consigne gauche')
@@ -710,25 +711,34 @@ def printLog(traj, logName) :
         
 #########################################################################
 #~ ### Test et reglage PI ##################################################
-#~ d_cfgTraj["KpG"] = 7.0
-#~ d_cfgTraj["KiG"] = 0.0
-#~ d_cfgTraj["KpD"] = 0.2
-#~ d_cfgTraj["KiD"] = 0.0
+#~ d_cfgTraj["KpG"] = 3.0
+#~ d_cfgTraj["KiG"] = 11.0
+#~ d_cfgTraj["KpD"] = 3.0
+#~ d_cfgTraj["KiD"] = 11.0
+#~ d_cfgTraj["KpG"] = 6.36
+#~ d_cfgTraj["KiG"] = 37.27
+#~ d_cfgTraj["KpD"] = 6.36
+#~ d_cfgTraj["KiD"] = 37.27
+#~ d_cfgTraj["KpG"] = 1.6
+#~ d_cfgTraj["KiG"] = 3.2
+#~ d_cfgTraj["KpD"] = 1.6
+#~ d_cfgTraj["KiD"] = 3.2
 #~ d_cfgTestPI = {'moteur' : "GAUCHE" # "GAUCHE ou "DROIT"
-                #~ , 'profil' : "ECHELON" # "ECHELON" ou "PARABOLE"
-                #~ , 'nb_pts_mesure' : 300
+                #~ , 'profil' : "PARABOLE" # "ECHELON" ou "PARABOLE"
+                #~ , 'nb_pts_mesure' : 60
                 #~ }
 #~ traj = testPI(d_cfgTraj, d_cfgTestPI)
 #~ affichageTestPI2012(traj)
 #~ sys.exit(2)
 
 
-#~ d_cfgTraj["KpG"] = 0.1
-#~ d_cfgTraj["KiG"] = 0.1
-#~ d_cfgTraj["KpD"] = 0.1
-#~ d_cfgTraj["KiD"] = 0.1
+#~ d_cfgTraj["KpG"] = 1.0
+#~ d_cfgTraj["KiG"] = 1.0
+#~ d_cfgTraj["KpD"] = 1.0
+#~ d_cfgTraj["KiD"] = 1.0
 #~ d_cfgTestPI = {'moteur' : "GAUCHE" # "GAUCHE ou "DROIT"
                 #~ , 'profil' : "PARABOLE" # "ECHELON" ou "PARABOLE"
+                #~ , 'nb_pts_mesure' : 100
                 #~ }
 #~ gainPI = PI2011_optimParam(d_cfgTraj, d_cfgTestPI)
 #~ print("Gains PI: " + str(gainPI))
@@ -738,6 +748,8 @@ def printLog(traj, logName) :
 ### Simu de deplacement #################################################
 traj = trajFunction(d_cfgTraj)
 print("Nb var log : " + str(len(traj.keys())))
+
+
 
 #~ print(len(traj["def_xTraj"]))
 
@@ -888,6 +900,11 @@ printLog(traj, "angle_arc")
 printLog(traj, "distSupp")
 printLog(traj, "resetProfil")
 printLog(traj, "ASSER_Running_TvF")
+
+printLog(traj, "angle_final_rot")
+printLog(traj, "angleFinRotation")
+printLog(traj, "plageAngleRotation")
+print("gainCentreRot (" + str(len(traj["gainCentreRot"])) + ") : " + str(traj["gainCentreRot"][0]))
 
 #~ printLog(traj, "SIMU_Mvt")
     
