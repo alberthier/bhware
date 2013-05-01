@@ -25,9 +25,9 @@ d_cfgTraj = {'KpG': 3.0
                , 'K2': 320.0#380.0	# 52.0 avec ecart_roues_libres a 0.12
                , 'K3': 7.2
                , 'R1': 5.0
-               , 'RatioAcc': 0.6
-               , 'RatioDecc': 1.9
-               , 'RatioAccRot': 0.3
-               , 'RatioDeccRot': 1.0
+               , 'RatioAcc': 0.8
+               , 'RatioDecc': 0.7
+               , 'RatioAccRot': 4.8
+               , 'RatioDeccRot': 2.0
                }
 
