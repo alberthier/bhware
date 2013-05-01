@@ -79,10 +79,10 @@ static float ASSER_Acc_Parabolique(unsigned int k, unsigned int k1, float vmax);
 
 extern void SIMU_InitAsser(void)
 {
-	vitesseMoteurG = 0.0;
-	vitesseMoteurG_n2 = 0.0;
-	vitesseMoteurD = 0.0;
-	vitesseMoteurD_n2 = 0.0;
+    vitesseMoteurG = 0.0;
+    vitesseMoteurG_n2 = 0.0;
+    vitesseMoteurD = 0.0;
+    vitesseMoteurD_n2 = 0.0;
 }
 
 extern void SIMU_SetGainsPI(float KpG, float KiG, float KpD, float KiD)
@@ -644,10 +644,18 @@ void SIMU_BoucleVitesse(void)
     // moteur gauche [0.90848238070313447, 0.001532263578663721, 0.14712688461925522]
 
 #ifdef Actionneurs_Robot1
+/*  courroie rapport 1.0
     t1_G = 0.0612;
     t2_G = 0.248;
     t1_D = 0.0445;
     t2_D = 0.243;
+    */
+    
+    // courroie rapport 1.2
+    t1_G = 0.091;
+    t2_G = 0.239;
+    t1_D = 0.066;
+    t2_D = 0.278;
 #endif /* Actionneurs_Robot1 */
 
 #ifdef Actionneurs_Robot2
@@ -749,7 +757,7 @@ void SIMU_CalculPeriodique(void)
         ASSER_TRAJ_LogAsserValPC("FinPeriode", ASSER_compteurPeriode);
 
         //if (ASSER_Running == True)
-        //{        		        
+        //{                        
             POS_ConversionVitessesLongRotToConsignesPWMRouesRobotUnicycle(vitessesConsignes.longitudinale, vitessesConsignes.rotation, &g_ConsigneMoteurG, &g_ConsigneMoteurD);
 
             /* NOLOG */
