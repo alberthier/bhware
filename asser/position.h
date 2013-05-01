@@ -146,7 +146,6 @@ extern Pose             m_poseRobot;
 extern signed char      m_sensMarcheMouvement;
 
 /** Prototypes de function globales asserv_position */
-extern void 			SIMU_InitPos(void);
 extern void             POS_InitialisationConfigRobot(void);
 extern void             POS_InitialisationPoseRobot(Pose poseRobot);
 extern void             POS_InitialisationSensMarche(signed char marche);
