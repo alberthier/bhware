@@ -851,7 +851,14 @@ extern void ASSER_TRAJ_AsservissementMouvementRobot(Pose poseRobot, VitessesRobo
         }
         else /* ROTATION */
         {
-            chemin.profilVitesse.distance_parcourue = fabsf(poseRobot.angle - chemin.trajectoire.rotation.poseDepartRobot.angle) * NORME_BARRE_SUIVI_TRAJ;
+			if(fabsf(poseRobot.angle - chemin.trajectoire.rotation.poseDepartRobot.angle) > PI)
+			{
+				chemin.profilVitesse.distance_parcourue = fabsf(fabsf(poseRobot.angle - chemin.trajectoire.rotation.poseDepartRobot.angle) - (2.0 * PI)) * NORME_BARRE_SUIVI_TRAJ;
+			}
+			else
+            {
+				chemin.profilVitesse.distance_parcourue = fabsf(poseRobot.angle - chemin.trajectoire.rotation.poseDepartRobot.angle) * NORME_BARRE_SUIVI_TRAJ;
+			}
             ASSER_TRAJ_LogAsserValPC("dist_parcourue_rot",  chemin.profilVitesse.distance_parcourue);
             ASSER_Running = ASSER_TRAJ_Profil_S_Curve(&VitesseProfil, chemin.distance, 0.0, 0.0, chemin.profilVitesse.AmaxRot, chemin.profilVitesse.DmaxRot, Vitesse_Gain_ASR, chemin.profilVitesse.distance_parcourue, (((float)m_sensDeplacement) * POS_GetVitesseRotation() * (ECART_ROUE_MOTRICE / 2.0)), (SaturationPIDflag | SaturationPIGflag));
             if (chemin.trajectoire.rotation.angle > 0.0)
