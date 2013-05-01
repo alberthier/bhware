@@ -69,7 +69,7 @@ float                   ECART_ROUE_MOTRICE      = 0.1;                          
 #ifdef Actionneurs_Robot2
 float                   ECART_ROUE_LIBRE        = 0.0202;                            /* Ecart entre les roues libres des codeurs incrementaux */
 float                   ECART_ROUE_MOTRICE      = 0.116;                          	/* Entraxe des roues motrices */
-#endif
+#endif /* Actionneurs_Robot2 */
 float                   COEFFICIENT_DE_GLISSEMENT_LATERAL = 0.0;
 
 /** Tolerances de la condition d'arret des asservissements */
@@ -97,6 +97,7 @@ static float            VitesseRotationMesure   =   0.0;
 /**********************************************************************
  * Definition dedicated to the local functions.
  **********************************************************************/
+
 /**********************************************************************/
 /*! \brief POS_InitialisationConfigRobot
  *
@@ -483,7 +484,7 @@ extern void POS_ConversionVitessesLongRotToConsignesPWMRouesRobotUnicycle(float 
         }
     }
     
-    // /* Consigne roue droite */
+    /* Consigne roue droite */
     if (vitRoueDpwm < (unsigned short)BORNE_PWM_AR)
     {
         *consPWMRoueDroite = (unsigned short)BORNE_PWM_AR;

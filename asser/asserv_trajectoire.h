@@ -117,7 +117,6 @@ typedef struct __attribute__ ((aligned (4)))
     float           qy;
     float           theta_seg;    
     unsigned char   n;
-
 } ConfigSpline34;
 
 typedef struct __attribute__ ((aligned (4)))
