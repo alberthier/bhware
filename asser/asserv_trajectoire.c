@@ -178,6 +178,9 @@ static unsigned char            ASRrunning                              = False;
 
 static float                    distanceParcourue_Profil                = 0.0;
 
+static float					erreurAngleMemo 						= 0.0;
+static float					tempwMemo 								= 0.0;
+
 
 /** Structure de configurationd de spline de type 3 */
 static ConfigSpline3            cfgSp3;
@@ -228,6 +231,8 @@ void                            ASSER_TRAJ_LogAsserMsgPC(char * message, float V
 /**********************************************************************/
 extern void ASSER_TRAJ_InitialisationGenerale(void)
 {
+	erreurAngleMemo = 0.0;
+	tempwMemo = 0.0;
     /* Initialisation du profil de vitesse */
     chemin.profilVitesse.p = 0;
 

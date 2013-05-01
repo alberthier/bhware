@@ -41,6 +41,7 @@ int     SIMU_Mouvement(void);
 void    SIMU_AsserVitessePI(int moteur_testPI, int profil_testPI, int nb_pts_mesure_testPI);
 
 #ifndef PIC32_BUILD
+extern void 			SIMU_InitAsser(void);
 extern void             SIMU_SetGainsPI(float KpG, float KiG, float KpD, float KiD);
 extern void             SIMU_SetParamMoteur(float m, float R, float f, float Fr, float r, float L, float kc, float kv, float Rred);
 extern void             SIMU_SetParamProfilVitesse(float Amax, float Dmax);

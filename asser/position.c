@@ -97,6 +97,11 @@ static float            VitesseRotationMesure   =   0.0;
 /**********************************************************************
  * Definition dedicated to the local functions.
  **********************************************************************/
+extern void SIMU_InitPos(void)
+{
+	VitesseReelleMesure     =   0.0;
+	VitesseRotationMesure   =   0.0;
+}
 
 /**********************************************************************/
 /*! \brief POS_InitialisationConfigRobot

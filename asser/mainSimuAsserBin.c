@@ -301,6 +301,8 @@ int main(void)
                  | (strcmp(command, "MSG_MOVE_LINE") == 0)
                  | (strcmp(command, "MSG_MOVE_ARC") == 0) )
         {
+			SIMU_InitAsser();							// FOU
+			
             depCommandMsgTreatment(buffer, &mouvement, &Data_deplacement);
 
 #ifdef PLOTS_SIMU

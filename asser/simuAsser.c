@@ -77,6 +77,13 @@ unsigned int             g_index_tab_gabarit_acceleration        = 0;
 void SIMU_BoucleVitesse(void);
 static float ASSER_Acc_Parabolique(unsigned int k, unsigned int k1, float vmax);
 
+extern void SIMU_InitAsser(void)
+{
+	vitesseMoteurG = 0.0;
+	vitesseMoteurG_n2 = 0.0;
+	vitesseMoteurD = 0.0;
+	vitesseMoteurD_n2 = 0.0;
+}
 
 extern void SIMU_SetGainsPI(float KpG, float KiG, float KpD, float KiD)
 {
