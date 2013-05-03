@@ -86,10 +86,10 @@ REMOTE_PORT                            = 7001
 REMOTE_LOG_PORT                        = 23
 
 if IS_HOST_DEVICE_ARM:
-    MAIN_INTERBOT_IP = "192.168.1.1"
+    MAIN_INTERBOT_IP                   = "192.168.1.1"
 else:
-    MAIN_INTERBOT_IP = "127.0.0.1"
-MAIN_INTERBOT_PORT = 7002
+    MAIN_INTERBOT_IP                   = "127.0.0.1"
+MAIN_INTERBOT_PORT                     = 7002
 
 # Serial port
 if IS_HOST_DEVICE_ARM:
@@ -107,7 +107,7 @@ else:
     GREEN_LED_DEVICE_PATH              = None
 
 # Log directory
-LOG_DIR                            = os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file__))), "logs")
+LOG_DIR                                = os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file__))), "logs")
 
 # Brewery's web sever
 WEB_SERVER_PORT                        = 8080
