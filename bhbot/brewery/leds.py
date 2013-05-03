@@ -33,7 +33,7 @@ class LedDriver:
     MODE_HEARTBEAT_ALTERNATE = 2
 
     def __init__(self, mode = 1):
-        self.mode = mode
+        self.mode = None
         self.green_generator = None
         self.orange_generator = None
         self.set_mode(mode)
