@@ -3,11 +3,12 @@
 import packets
 
 from definitions import *
-
+import itertools
 
 
 green = None
 orange = None
+driver = None
 
 
 
@@ -22,8 +23,39 @@ def initialize(event_loop):
         green = SimulatorLed(event_loop, SimulatorLed.COLOR_GREEN)
         orange = SimulatorLed(event_loop, SimulatorLed.COLOR_ORANGE)
 
+sequence_heartbeat = [True, False, True, False, False, False]
+sequence_heartbeat_1 = [True, False, False, False, False, False]
+sequence_heartbeat_2 = [False, False, True, False, False, False]
+sequence_off = [False]
 
+class LedDriver:
+    MODE_HEARTBEAT_GREEN = 1
+    MODE_HEARTBEAT_ALTERNATE = 2
 
+    def __init__(self, mode = 1):
+        self.mode = mode
+        self.green_generator = None
+        self.orange_generator = None
+        self.set_mode(mode)
+
+    def set_mode(self, mode):
+        if self.mode != mode :
+            sg,so = self.get_sequences(mode)
+            self.green_generator = itertools.cycle(sg)
+            self.orange_generator = itertools.cycle(so)
+            self.mode = mode
+
+    def get_sequences(self, mode):
+        if mode == self.MODE_HEARTBEAT_GREEN :
+            return [sequence_heartbeat, sequence_off]
+        elif mode == self.MODE_HEARTBEAT_ALTERNATE :
+            return [sequence_heartbeat_1, sequence_heartbeat_2]
+
+    def heartbeat_tick(self):
+        orange.set(next(self.orange_generator))
+        green.set(next(self.green_generator))
+
+driver = LedDriver()
 
 class BaseLed(object):
 
