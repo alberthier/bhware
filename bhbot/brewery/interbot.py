@@ -27,9 +27,11 @@ class InterBotManager :
 
     def on_interbot_position(self, packet):
         if packet.main_robot :
-            logger.log("Got interbot position from main")
+            pass
+            # logger.log("Got interbot position from main")
         else :
-            logger.log("Got interbot position from secondary")
+            pass
+            # logger.log("Got interbot position from secondary")
 
     def on_interbot_hello(self, packet):
         logger.log('Received "Hello" from other robot')
