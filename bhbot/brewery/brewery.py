@@ -28,6 +28,7 @@ if __name__ == "__main__":
     parser.add_argument('statemachine', action="store", nargs='?', default = socket.gethostname())
     parser.add_argument("--pydev-debug", nargs=2)
     parser.add_argument("--disable-interbot", action="store_true", default=False)
+    parser.add_argument("--hostname", action = "store", default = socket.gethostname())
     args = parser.parse_args()
 
     if args.pydev_debug :
@@ -38,7 +39,7 @@ if __name__ == "__main__":
             pydevd.settrace(args.pydev_debug[0], port=int(args.pydev_debug[1]), stdoutToServer=True,
                                                           stderrToServer=True)
 
-    definitions.setup_definitions(args.statemachine == "sheldon")
+    definitions.setup_definitions(args.hostname == "sheldon")
 
     import eventloop
     import logger

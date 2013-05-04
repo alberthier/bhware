@@ -95,8 +95,12 @@ class RobotController(object):
             self.process.readyRead.connect(self.read_output)
             args = []
             if self.is_main:
+                args.append("--hostname")
+                args.append("sheldon")
                 args.append("sheldon")
             else:
+                args.append("--hostname")
+                args.append("leonard")
                 args.append("leonard")
 
             if debug_host :
