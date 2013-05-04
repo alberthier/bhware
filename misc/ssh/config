@@ -1,0 +1,17 @@
+Host sheldon
+   StrictHostKeyChecking no
+   UserKnownHostsFile=/dev/null
+
+Host leonard
+   StrictHostKeyChecking no
+   UserKnownHostsFile=/dev/null
+
+Host drunkstar
+   StrictHostKeyChecking no
+   UserKnownHostsFile=/dev/null
+
+Host robot_filaire
+   StrictHostKeyChecking no
+   UserKnownHostsFile=/dev/null
+
+

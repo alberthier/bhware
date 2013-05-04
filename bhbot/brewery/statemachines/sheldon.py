@@ -33,7 +33,8 @@ class Main(statemachine.State):
         detector = yield FetchCandleColors()
         self.log("First candles detection: {}".format(detector.colors))
         self.fsm.cake.update_with_detection(detector.colors)
-        yield GlassesSuperS()
+        # yield GlassesSuperS()
+        yield GlassesAlternate()
         yield NavigateToCake(True)
         yield BlowCandlesOut()
 
@@ -65,6 +66,85 @@ class GlassesSuperS(statemachine.State):
             y -= 0.128
             path.append((x, y))
         yield MoveCurve(math.pi /2.0, path)
+        yield None
+
+##################################################
+# Alternate way of picking glasses
+
+
+
+
+class GlassesAlternate(statemachine.State):
+
+    def on_enter(self):
+        #deplacement = commandMsg("MSG_MOVE_CURVE 1 1 1.3")
+        # deplacement.addPose("0.85 0.85")
+        # deplacement.addPose("1.15 0.75")
+        # deplacement.addPose("1.65 0.85")
+        # deplacement.addPose("1.83 1.05")
+        # simulator_process.stdin.write(deplacement.cmdMsgGeneration())
+        path = [
+            (0.85, 0.85),
+            (0.75, 1.15),
+            (0.85, 1.65),
+            (1.05, 1.83),
+         ]
+        # path = [
+        #     (0.85, 0.85),
+        #     (1.15, 0.75),
+        #     (1.65, 0.85),
+        #     (1.83, 1.05),
+        # ]
+        yield MoveCurve(1.3, path)
+
+        # deplacement = commandMsg("MSG_ROTATE 0 1.57")
+        # simulator_process.stdin.write(deplacement.cmdMsgGeneration())
+        yield Rotate(math.pi/2)
+
+        # deplacement = commandMsg("MSG_MOVE_LINE 1")
+        # deplacement.addPose("1.83 1.2")
+        # simulator_process.stdin.write(deplacement.cmdMsgGeneration())
+        yield MoveLineTo( 1.2, 1.83)
+
+        # deplacement = commandMsg("MSG_ROTATE 0 -2.9")
+        # simulator_process.stdin.write(deplacement.cmdMsgGeneration())
+        yield Rotate(-2.9)
+
+        # deplacement = commandMsg("MSG_MOVE_LINE 1")
+        # deplacement.addPose("0.8 1.0")
+        # simulator_process.stdin.write(deplacement.cmdMsgGeneration())
+        yield MoveLineTo(1.0, 0.8)
+
+        # deplacement = commandMsg("MSG_ROTATE 0 1.37")
+        # simulator_process.stdin.write(deplacement.cmdMsgGeneration())
+        yield Rotate(1.37)
+
+        # deplacement = commandMsg("MSG_MOVE_LINE 1")
+        # deplacement.addPose("0.9 1.85")
+        # simulator_process.stdin.write(deplacement.cmdMsgGeneration())
+        yield MoveLineTo(1.85, 0.9)
+
+        # deplacement = commandMsg("MSG_ROTATE 0 -1.17")
+        # simulator_process.stdin.write(deplacement.cmdMsgGeneration())
+        yield Rotate(-1.17)
+
+        # deplacement = commandMsg("MSG_MOVE_ARC 1 1.5 2.0 0.6")
+        # deplacement.addPose(str(- (4.0 * math.pi) / 8.0))
+        # deplacement.addPose(str(- (0.6 * math.pi) / 8.0))
+        # simulator_process.stdin.write(deplacement.cmdMsgGeneration())
+
+        # deplacement = commandMsg("MSG_ROTATE 0 -1.57")
+        # simulator_process.stdin.write(deplacement.cmdMsgGeneration())
+
+        # deplacement = commandMsg("MSG_MOVE_ARC 1 1.2 2.0 0.9")
+        # deplacement.addPose(str(- (2.0 * math.pi) / 8.0))
+        # deplacement.addPose(str(- (4.0 * math.pi) / 8.0))
+        # simulator_process.stdin.write(deplacement.cmdMsgGeneration())
+
+        # deplacement = commandMsg("MSG_MOVE_LINE 1")
+        # deplacement.addPose("0.2 1.1")
+        # simulator_process.stdin.write(deplacement.cmdMsgGeneration())
+
         yield None
 
 
