@@ -229,9 +229,9 @@ def trajFunction(d_cfgTraj):
  
     ###############
     #test ROTATE
-    send_init_pose(simulator_process, x=0.2, y=0.2, angle=(math.pi/2.0)*(1.0)) #4.71
-    deplacement = commandMsg("MSG_ROTATE 0 -1.57") # 1.57
-    simulator_process.stdin.write(deplacement.cmdMsgGeneration())
+    #~ send_init_pose(simulator_process, x=0.2, y=0.2, angle=(math.pi/2.0)*(1.0)) #4.71
+    #~ deplacement = commandMsg("MSG_ROTATE 0 -1.57") # 1.57
+    #~ simulator_process.stdin.write(deplacement.cmdMsgGeneration())
 
     #test MOVE_CURVE
     #~ send_init_pose(simulator_process, x=0.2, y=1.0, angle=0.0)
@@ -261,35 +261,35 @@ def trajFunction(d_cfgTraj):
     #~ simulator_process.stdin.write(deplacement.cmdMsgGeneration())
     
     ### Sequence de deplacement : carre
-    #~ send_init_pose(simulator_process, x=0.2, y=0.2, angle=math.pi/2.0)
-    #~ 
-    #~ deplacement = commandMsg("MSG_MOVE_LINE 1")
-    #~ deplacement.addPose("0.2 1.2")
-    #~ simulator_process.stdin.write(deplacement.cmdMsgGeneration())
-    #~ 
-    #~ deplacement = commandMsg("MSG_ROTATE 0 0.0")
-    #~ simulator_process.stdin.write(deplacement.cmdMsgGeneration())
-    #~ 
-    #~ deplacement = commandMsg("MSG_MOVE_LINE 1")
-    #~ deplacement.addPose("1.2 1.2")
-    #~ simulator_process.stdin.write(deplacement.cmdMsgGeneration())
-    #~ 
-    #~ deplacement = commandMsg("MSG_ROTATE 0 -1.57")
-    #~ simulator_process.stdin.write(deplacement.cmdMsgGeneration())
-    #~ 
-    #~ deplacement = commandMsg("MSG_MOVE_LINE 1")
-    #~ deplacement.addPose("1.2 0.2")
-    #~ simulator_process.stdin.write(deplacement.cmdMsgGeneration())
-    #~ 
-    #~ deplacement = commandMsg("MSG_ROTATE 0 3.14")
-    #~ simulator_process.stdin.write(deplacement.cmdMsgGeneration())
-    #~ 
-    #~ deplacement = commandMsg("MSG_MOVE_LINE 1")
-    #~ deplacement.addPose("0.2 0.2")
-    #~ simulator_process.stdin.write(deplacement.cmdMsgGeneration())
-    #~ 
-    #~ deplacement = commandMsg("MSG_ROTATE 0 1.57")
-    #~ simulator_process.stdin.write(deplacement.cmdMsgGeneration())
+    send_init_pose(simulator_process, x=0.2, y=0.2, angle=math.pi/2.0)
+    
+    deplacement = commandMsg("MSG_MOVE_LINE 1")
+    deplacement.addPose("0.2 1.2")
+    simulator_process.stdin.write(deplacement.cmdMsgGeneration())
+    
+    deplacement = commandMsg("MSG_ROTATE 0 0.0")
+    simulator_process.stdin.write(deplacement.cmdMsgGeneration())
+    
+    deplacement = commandMsg("MSG_MOVE_LINE 1")
+    deplacement.addPose("1.2 1.2")
+    simulator_process.stdin.write(deplacement.cmdMsgGeneration())
+    
+    deplacement = commandMsg("MSG_ROTATE 0 -1.57")
+    simulator_process.stdin.write(deplacement.cmdMsgGeneration())
+    
+    deplacement = commandMsg("MSG_MOVE_LINE 1")
+    deplacement.addPose("1.2 0.2")
+    simulator_process.stdin.write(deplacement.cmdMsgGeneration())
+    
+    deplacement = commandMsg("MSG_ROTATE 0 3.14")
+    simulator_process.stdin.write(deplacement.cmdMsgGeneration())
+    
+    deplacement = commandMsg("MSG_MOVE_LINE 1")
+    deplacement.addPose("0.2 0.2")
+    simulator_process.stdin.write(deplacement.cmdMsgGeneration())
+    
+    deplacement = commandMsg("MSG_ROTATE 0 1.57")
+    simulator_process.stdin.write(deplacement.cmdMsgGeneration())
     
     #transmission de la commande de d'arret du simulateur
     (stdoutdata, stderrdata) = simulator_process.communicate("QUIT\n")
@@ -589,7 +589,7 @@ def affichageTraj2011(d_traj):
     # print("decc_vmax: " + str(d_traj["decc_vmax"]))
 
     ylim(-1.2, 1.2)
-    legend(loc="lower center")
+    #~ legend(loc="lower center")
     grid(True)
     title("vitesses")
 #~ 
