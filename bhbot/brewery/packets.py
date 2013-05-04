@@ -549,8 +549,11 @@ class PositionControlConfig(BasePacket):
     TYPE = 65
     LOGVIEW_COLOR = "#556b2f"
     DEFINITION = (
-        ('t_acc'   , Float(0.0)),
-        ('f_va_max', Float(0.0)),
+        ('ratio_acc'     , Float(0.0)),
+        ('ratio_decc'    , Float(0.0)),
+        ('ratio_acc_rot' , Float(0.0)),
+        ('ratio_decc_rot', Float(0.0)),
+        ('vmax_limit'    , Float(0.0)),
     )
 
 
