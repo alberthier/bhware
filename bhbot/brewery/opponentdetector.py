@@ -22,7 +22,7 @@ class Opponent(object):
         self.opponent_direction = None
         self.x = None
         self.y = None
-        self.timer = eventloop.Timer(self.detector.event_loop, OPPONENT_DETECTION_DISAPEARING_MS, self.opponent_disapear_timout)
+        self.timer = eventloop.Timer(self.detector.event_loop, OPPONENT_DETECTION_DISAPEARING_MS, self.opponent_disappeared)
         self.enabled = True
 
 
@@ -33,7 +33,10 @@ class Opponent(object):
             return
         if packet.distance == 1:
             distance = TURRET_LONG_DISTANCE_DETECTION_RANGE
-            return
+            if self.opponent_direction is None:
+                self.opponent_disappeared()
+                # We didn't see the opponent before and he is far away. Ignore it
+                return
         else:
             distance = TURRET_SHORT_DISTANCE_DETECTION_RANGE
 
@@ -44,10 +47,13 @@ class Opponent(object):
         self.y = robot_pose.y + distance * math.sin(real_angle)
 
         previous_direction = self.opponent_direction
-        if packet.angle in self.IN_FRONT_ANGLES:
-            self.opponent_direction = DIRECTION_FORWARDS
-        elif packet.angle in self.IN_BACK_ANGLES:
-            self.opponent_direction = DIRECTION_BACKWARDS
+        if packet.distance == 0:
+            if packet.angle in self.IN_FRONT_ANGLES:
+                self.opponent_direction = DIRECTION_FORWARDS
+            elif packet.angle in self.IN_BACK_ANGLES:
+                self.opponent_direction = DIRECTION_BACKWARDS
+            else:
+                self.opponent_direction = None
         else:
             self.opponent_direction = None
 
@@ -62,16 +68,19 @@ class Opponent(object):
 
         self.detector.event_loop.map.on_opponent_detected(packet, self.opponent_direction, self.x, self.y)
 
-        for fsm in self.detector.event_loop.fsms:
-            if self.opponent_direction is None:
-                fsm.on_opponent_disappeared(self.opponent_type, previous_direction)
-            else:
-                fsm.on_opponent_detected(packet, self.opponent_direction, self.x, self.y)
+        if self.opponent_direction is not None:
+            if previous_direction is None:
+                logger.log("Opponent detected")
+                for fsm in self.detector.event_loop.fsms:
+                    fsm.on_opponent_detected(packet, self.opponent_direction, self.x, self.y)
+            self.timer.restart()
+        elif self.opponent_direction is None and previous_direction is not None:
+            self.opponent_disappeared()
 
-        self.timer.restart()
 
-
-    def opponent_disapear_timout(self):
+    def opponent_disappeared(self):
+        logger.log("Opponent disapeared")
+        self.timer.stop()
         previous_direction = self.opponent_direction
         self.opponent_direction = None
         self.detector.event_loop.map.on_opponent_disappeared(self.opponent_type, previous_direction)
