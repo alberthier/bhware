@@ -1,0 +1,217 @@
+#!/usr/bin/env python3
+
+import logging
+import subprocess
+import sys
+import time
+
+import locale
+
+encoding = locale.getdefaultlocale()[1]
+if encoding is None :
+    encoding = 'ascii'
+
+
+BLACK, RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, WHITE = range(8)
+
+#The background is set with 40 plus the number of the color, and the foreground with 30
+
+#These are the sequences need to get colored ouput
+RESET_SEQ = "\033[0m"
+COLOR_SEQ = "\033[1;%dm"
+BOLD_SEQ = "\033[1m"
+
+def formatter_message(message, use_color = True):
+    if use_color:
+        message = message.replace("$RESET", RESET_SEQ).replace("$BOLD", BOLD_SEQ)
+    else:
+        message = message.replace("$RESET", "").replace("$BOLD", "")
+    return message
+
+COLORS = {
+    'WARNING': YELLOW,
+    'INFO': WHITE,
+    'DEBUG': BLUE,
+    'CRITICAL': YELLOW,
+    'ERROR': RED
+}
+
+class ColoredFormatter(logging.Formatter):
+    def __init__(self, msg, use_color = True):
+        logging.Formatter.__init__(self, msg)
+        self.use_color = use_color
+
+    def format(self, record):
+        levelname = record.levelname
+        if self.use_color and levelname in COLORS:
+            levelname_color = COLOR_SEQ % (30 + COLORS[levelname]) + levelname + RESET_SEQ
+            record.levelname = levelname_color
+        return logging.Formatter.format(self, record)
+
+FORMAT = "[%(asctime)s][%(levelname)-18s]  %(message)s"
+COLOR_FORMAT = formatter_message(FORMAT, True)
+
+color_formatter = ColoredFormatter(COLOR_FORMAT)
+
+
+
+SLEEP_TIME = 0.5
+
+ROBOT_NETWORK="BHInterbot"
+FREQUENCY=2412
+
+console = logging.StreamHandler()
+console.setFormatter(color_formatter)
+
+logging.basicConfig(level=logging.DEBUG,
+                    format='%(asctime)s %(message)s',
+                    handlers=[logging.FileHandler("/tmp/wifi.log"),
+                              console])
+
+class Result:
+    def __init__(self):
+        self.retval = None
+        self.output = None
+        self.errput = None
+
+    def __bool__(self):
+        return self.as_bool()
+
+    def __eq__(self, other):
+        return self.output == other or self.output.strip() == other.strip()
+
+    def as_bool(self):
+        return self.retval == 0
+
+
+def run_cmd(cmd, **kwargs):
+    retval, output, errput = None, None, None
+    kwargs["shell"]=True
+    kwargs["stdout"]=subprocess.PIPE
+    kwargs["stderr"]=subprocess.PIPE
+    logging.debug("Run command : {}".format( cmd, kwargs))
+
+    proc = subprocess.Popen(cmd, **kwargs)
+    proc.wait()
+    output, errput = proc.communicate()
+    retval = proc.returncode
+
+    if retval == 0 :
+        logging.debug('Return value = {}'.format(retval))
+    else :
+        logging.error('Return value = {}'.format(retval))
+
+    if output :
+        logging.debug('Output={}'.format(output))
+    if errput :
+        logging.debug('Errput={}'.format(errput))
+
+    ret = Result()
+    ret.retval = retval
+    ret.output = output.decode(encoding)
+    ret.errput = errput.decode(encoding)
+
+    return ret
+
+logging.info('Starting {}'.format(__file__))
+
+# while True:
+#     # HAS_WIFI=`iwconfig wlan0 | grep "No such device"`
+#     has_wifi = "No such device" not in run_cmd('iwconfig wlan0').output
+#     logging.info('Wifi detected : {}'.format(has_wifi))
+#     # if [ !$HAS_WIFI ]; then
+#     if has_wifi:
+#         logging.info('Shutting down wireless')
+#         run_cmd('ifconfig wlan0 down')
+#         run_cmd('iwconfig wlan0 down')
+#         ret = run_cmd('iwlist wlan0 scan')
+#
+#         if ROBOT_NETWORK in ret.output :
+#             logging.debug('Network detected, connecting')
+#             run_cmd('iw wlan0 connect BHInterbot')
+#         else :
+#             logging.debug('Network not detected, creating')
+#             run_cmd('iwconfig wlan0 mode ad-hoc essid BHInterbot key off')
+#
+#
+#         # iwconfig wlan0 mode ad-hoc essid BHInterbot key off
+#
+#         hostname = run_cmd('hostname').output
+#
+#         logging.debug('Configuring network interfaces, hostname = {}'.format(hostname))
+#
+#         if hostname == "sheldon" :
+#             run_cmd('ifconfig wlan0 192.168.3.10 netmask 255.255.255.0 up')
+#         elif hostname == "leonard" :
+#             run_cmd('ifconfig wlan0 192.168.3.11 netmask 255.255.255.0 up')
+#         else :
+#             run_cmd('ifconfig wlan0 192.168.3.12 netmask 255.255.255.0 up')
+#
+#         break
+#     else :
+#         logging.info('Sleeping for {}s'.format(SLEEP_TIME))
+#         time.sleep(SLEEP_TIME)
+
+def shutdown(vint):
+    pass
+
+def bringup(vint):
+    pass
+
+def is_active(vint):
+    pass
+
+while True:
+    # HAS_WIFI=`iwconfig wlan0 | grep "No such device"`
+
+    phy_name = run_cmd('iw list | grep Wiphy | cut -d" " -f2').output.strip()
+
+    has_wifi = len(phy_name) > 0
+
+    logging.info('Wifi detected : {}, phy_name : {}'.format(has_wifi, phy_name))
+
+    if has_wifi:
+        logging.info('Shutting down wireless')
+        run_cmd('ifconfig wlan0 down')
+        # run_cmd('ifconfig wlan0 up')
+        # logging.info('Leaving wifi network')
+
+        run_cmd('iw dev wlan0 del')
+        run_cmd('iw phy {phy} interface add wlan0 type ibss'.format(phy=phy_name))
+        run_cmd('ifconfig wlan0 up')
+        # run_cmd('iw wlan0 ibss leave')
+        while not run_cmd('iw dev wlan0 ibss join {} {}'.format(ROBOT_NETWORK, FREQUENCY)) :
+            time.sleep(SLEEP_TIME)
+
+        # ret = run_cmd('iw dev wlan0 scan dump')
+
+        # if ROBOT_NETWORK in ret.output :
+        #     logging.debug('Network detected, connecting')
+        #     run_cmd('iw wlan0 connect BHInterbot')
+        # else :
+        #     logging.debug('Network not detected, creating')
+        #     run_cmd('iwconfig wlan0 mode ad-hoc essid BHInterbot key off')
+
+        # run_cmd('iw wlan0 set type ibss')
+        # run_cmd('iw wlan0 ibss join '+ROBOT_NETWORK)
+
+
+        # iwconfig wlan0 mode ad-hoc essid BHInterbot key off
+
+        hostname = run_cmd('hostname').output
+
+        logging.debug('Configuring network interfaces, hostname = {}'.format(hostname))
+
+        if hostname == "sheldon" :
+            run_cmd('ifconfig wlan0 192.168.3.10 netmask 255.255.255.0 up')
+        elif hostname == "leonard" :
+            run_cmd('ifconfig wlan0 192.168.3.11 netmask 255.255.255.0 up')
+        else :
+            run_cmd('ifconfig wlan0 192.168.3.12 netmask 255.255.255.0 up')
+
+        break
+    else :
+        logging.info('Sleeping for {}s'.format(SLEEP_TIME))
+        time.sleep(SLEEP_TIME)
+
+logging.info('End {}'.format(__file__))
