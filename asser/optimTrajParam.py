@@ -229,38 +229,38 @@ def trajFunction(d_cfgTraj):
  
     ###############
     #test ROTATE
-    # send_init_pose(simulator_process, x=0.2, y=0.2, angle=(math.pi/2.0)*(1.0)) #4.71
-    # deplacement = commandMsg("MSG_ROTATE 0 0.0") # 1.57
-    # simulator_process.stdin.write(deplacement.cmdMsgGeneration())
+    #~ send_init_pose(simulator_process, x=0.2, y=0.2, angle=(math.pi/2.0)*(1.0)) #4.71
+    #~ deplacement = commandMsg("MSG_ROTATE 0 -1.57") # 1.57
+    #~ simulator_process.stdin.write(deplacement.cmdMsgGeneration())
 
     #test MOVE_CURVE
-    # send_init_pose(simulator_process, x=0.2, y=1.0, angle=0.0)
-    # deplacement = commandMsg("MSG_MOVE_CURVE 1 1 0.0")
-    # deplacement.addPose("0.9 1.0")
-    # deplacement.addPose("1.05 0.85")
-    # deplacement.addPose("1.2 1.0")
-    # deplacement.addPose("1.35 0.85")
-    # deplacement.addPose("1.5 0.85")
-    # simulator_process.stdin.write(deplacement.cmdMsgGeneration())
+    #~ send_init_pose(simulator_process, x=0.2, y=1.0, angle=0.0)
+    #~ deplacement = commandMsg("MSG_MOVE_CURVE 1 1 0.0")
+    #~ deplacement.addPose("0.9 1.0")
+    #~ deplacement.addPose("1.05 0.85")
+    #~ deplacement.addPose("1.2 1.0")
+    #~ deplacement.addPose("1.35 0.85")
+    #~ deplacement.addPose("1.5 0.85")
+    #~ simulator_process.stdin.write(deplacement.cmdMsgGeneration())
 
     
     #test MOVE_LINE
-    # deplacement = commandMsg("MSG_MOVE_LINE 1")
-    # deplacement.addPose("2.2 0.2")
-    # simulator_process.stdin.write(deplacement.cmdMsgGeneration())
+    #~ deplacement = commandMsg("MSG_MOVE_LINE 1")
+    #~ deplacement.addPose("2.2 0.2")
+    #~ simulator_process.stdin.write(deplacement.cmdMsgGeneration())
 
     
     #test MOVE_ARC
-    # deplacement = commandMsg("MSG_MOVE_ARC 1 0.2 1.0 0.8")
-    # deplacement.addPose(str(- (2.0 * math.pi) / 8.0))
-    # deplacement.addPose(str(- (0.0 * math.pi) / 8.0))
+    #~ deplacement = commandMsg("MSG_MOVE_ARC 1 0.2 1.0 0.8")
+    #~ deplacement.addPose(str(- (2.0 * math.pi) / 8.0))
+    #~ deplacement.addPose(str(- (0.0 * math.pi) / 8.0))
     
     #~ deplacement.addPose(str(- (6.0 * math.pi) / 8.0))
     #~ deplacement.addPose(str(- (8.0 * math.pi) / 8.0))
     
-    # simulator_process.stdin.write(deplacement.cmdMsgGeneration())
+    #~ simulator_process.stdin.write(deplacement.cmdMsgGeneration())
     
-    ### Sequence de deplacement
+    ### Sequence de deplacement : carre
     send_init_pose(simulator_process, x=0.2, y=0.2, angle=math.pi/2.0)
     
     deplacement = commandMsg("MSG_MOVE_LINE 1")
@@ -280,15 +280,17 @@ def trajFunction(d_cfgTraj):
     deplacement = commandMsg("MSG_MOVE_LINE 1")
     deplacement.addPose("1.2 0.2")
     simulator_process.stdin.write(deplacement.cmdMsgGeneration())
-     
+    
     deplacement = commandMsg("MSG_ROTATE 0 3.14")
     simulator_process.stdin.write(deplacement.cmdMsgGeneration())
     
     deplacement = commandMsg("MSG_MOVE_LINE 1")
     deplacement.addPose("0.2 0.2")
     simulator_process.stdin.write(deplacement.cmdMsgGeneration())
-	
-	
+    
+    deplacement = commandMsg("MSG_ROTATE 0 1.57")
+    simulator_process.stdin.write(deplacement.cmdMsgGeneration())
+    
     #transmission de la commande de d'arret du simulateur
     (stdoutdata, stderrdata) = simulator_process.communicate("QUIT\n")
 
@@ -657,7 +659,7 @@ def affichageTraj2011(d_traj):
     if "dist_parcourue_rot" in d_traj.keys() :
         figure()
         plot([d_traj["distance"] for d in d_traj["dist_parcourue_rot"]], label="distTotRot")
-        plot(d_traj["dist_parcourue_rot"], label="distParcRot")
+        plot(d_traj["dist_parcourue_rot"], 'o', label="distParcRot")
         grid(True)
         legend(loc="center right")
 
@@ -919,7 +921,11 @@ printLog(traj, "ASSER_Running_TvF")
 printLog(traj, "angle_final_rot")
 printLog(traj, "angleFinRotation")
 printLog(traj, "plageAngleRotation")
-# print("gainCentreRot (" + str(len(traj["gainCentreRot"])) + ") : " + str(traj["gainCentreRot"][0]))
+
+#~ if "Vend_0" in traj.keys() :
+    #~ print("Vend_0 OK")
+#~ else :
+    #~ print("Vend_0 None")
 
 #~ printLog(traj, "SIMU_Mvt")
     
