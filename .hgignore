@@ -5,6 +5,7 @@
 /logs/
 /remote_logs/
 bhbot/brewery/colordetector/colordetector
+bhbot/brewery/web/cgi-bin/index.cgi
 drunkstar/host/
 drunkstar/dl/
 drunkstar/buildroot.*/
