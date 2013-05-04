@@ -47,7 +47,7 @@ class CollectGlasses(statemachine.State):
 
         # Third glass
         yield wait
-        yield BottomHolder(self.fsm.side, MOVE_CLOSE)
+        yield BottomHolder(self.fsm.side, MOVE_OPEN)
         self.fsm.glasses_count += 1
 
 
