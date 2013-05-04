@@ -851,7 +851,7 @@ extern void ASSER_TRAJ_AsservissementMouvementRobot(Pose poseRobot, VitessesRobo
         }
         else /* ROTATION */
         {
-			if(fabsf(poseRobot.angle - chemin.trajectoire.rotation.poseDepartRobot.angle) > PI)
+			if(fabsf(poseRobot.angle - chemin.trajectoire.rotation.poseDepartRobot.angle) > (PI + ANGLE_STEP))
 			{
 				chemin.profilVitesse.distance_parcourue = fabsf(fabsf(poseRobot.angle - chemin.trajectoire.rotation.poseDepartRobot.angle) - (2.0 * PI)) * NORME_BARRE_SUIVI_TRAJ;
 			}
