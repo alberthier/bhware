@@ -161,7 +161,10 @@ class TurretChannel(asyncore.file_dispatcher):
             while self.bytes_available():
                 data = self.recv(1)
                 (packet_type,) = struct.unpack("<B", data)
-                if packet_type < packets.TURRET_RANGE_END:
+                if packet_type in [ packets.TurretDetect.TYPE,
+                                    packets.TurretInit.TYPE,
+                                    packets.TurretDistances.TYPE,
+                                    packets.TurretBoot.TYPE ]:
                     self.synchronized = True
                     self.buffer += data
                     self.packet = packets.create_packet(self.buffer)

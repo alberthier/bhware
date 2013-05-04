@@ -62,11 +62,11 @@ class Opponent(object):
 
         self.detector.event_loop.map.on_opponent_detected(packet, self.opponent_direction, self.x, self.y)
 
-        if self.detector.event_loop.fsm is not None:
+        for fsm in self.detector.event_loop.fsms:
             if self.opponent_direction is None:
-                self.detector.event_loop.fsm.on_opponent_disappeared(self.opponent_type, previous_direction)
+                fsm.on_opponent_disappeared(self.opponent_type, previous_direction)
             else:
-                self.detector.event_loop.fsm.on_opponent_detected(packet, self.opponent_direction, self.x, self.y)
+                fsm.on_opponent_detected(packet, self.opponent_direction, self.x, self.y)
 
         self.timer.restart()
 
@@ -78,8 +78,8 @@ class Opponent(object):
         if IS_HOST_DEVICE_PC:
             sim_packet = packets.SimulatorOpponentsPositions(robot = self.opponent_type, present = False)
             self.detector.event_loop.send_packet(sim_packet)
-        if self.detector.event_loop.fsm is not None:
-            self.detector.event_loop.fsm.on_opponent_disappeared(self.opponent_type, previous_direction)
+        for fsm in self.detector.event_loop.fsms:
+            fsm.on_opponent_disappeared(self.opponent_type, previous_direction)
 
 
 
