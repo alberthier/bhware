@@ -11,7 +11,7 @@
 #include "task_asser.h"
 
 #ifndef TEMPS_SIMULATION
-#define TEMPS_SIMULATION 12 //15 /* secondes */
+#define TEMPS_SIMULATION 15 /* secondes */
 #endif
 
 #define     SIMU_CR     0

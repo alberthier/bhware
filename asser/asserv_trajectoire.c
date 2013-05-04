@@ -234,6 +234,7 @@ extern void ASSER_TRAJ_InitialisationGenerale(void)
 {
 	erreurAngleMemo = 0.0;
 	tempwMemo = 0.0;
+	
     /* Initialisation du profil de vitesse */
     chemin.profilVitesse.p = 0;
 
@@ -329,10 +330,10 @@ extern void ASSER_TRAJ_AsservissementMouvementRobot(Pose poseRobot, VitessesRobo
     
     /* Log de valeurs */
 #ifdef PLOTS_SIMU
-    ASSER_TRAJ_LogAsserValPC("xRoueGauche", m_poseRobot.x + (ECART_ROUE_MOTRICE / 2.0) * cosf(m_poseRobot.angle + (PI / 2)));
-    ASSER_TRAJ_LogAsserValPC("yRoueGauche", m_poseRobot.y + (ECART_ROUE_MOTRICE / 2.0) * sinf(m_poseRobot.angle + (PI / 2)));
-    ASSER_TRAJ_LogAsserValPC("xRoueDroite", m_poseRobot.x + (ECART_ROUE_MOTRICE / 2.0) * cosf(m_poseRobot.angle - (PI / 2)));
-    ASSER_TRAJ_LogAsserValPC("yRoueDroite", m_poseRobot.y + (ECART_ROUE_MOTRICE / 2.0) * sinf(m_poseRobot.angle - (PI / 2)));
+    ASSER_TRAJ_LogAsserValPC("xRoueGauche", m_poseRobot.x + NORME_BARRE_SUIVI_TRAJ * cosf(m_poseRobot.angle + (PI / 2)));
+    ASSER_TRAJ_LogAsserValPC("yRoueGauche", m_poseRobot.y + NORME_BARRE_SUIVI_TRAJ * sinf(m_poseRobot.angle + (PI / 2)));
+    ASSER_TRAJ_LogAsserValPC("xRoueDroite", m_poseRobot.x + NORME_BARRE_SUIVI_TRAJ * cosf(m_poseRobot.angle - (PI / 2)));
+    ASSER_TRAJ_LogAsserValPC("yRoueDroite", m_poseRobot.y + NORME_BARRE_SUIVI_TRAJ * sinf(m_poseRobot.angle - (PI / 2)));
     ASSER_TRAJ_LogAsserValPC("angle", m_poseRobot.angle);
 #endif /* PLOTS_SIMU */
 
@@ -465,11 +466,6 @@ extern void ASSER_TRAJ_AsservissementMouvementRobot(Pose poseRobot, VitessesRobo
         /* Generation de la pose de trajectoire de consigne suivante */
         if ( (chemin.profilVitesse.p > 0) || (chemin.profilVitesse.etat == 1) )
         {
-#ifdef PIC32_BUILD
-            EVIT_ProcheFinAsser = False;
-#endif /* PIC32_BUILD */
-
-
             if (ASSER_TRAJ_isDeplacement(&chemin) == True)
             {
                 /************************************************************/
@@ -622,12 +618,12 @@ extern void ASSER_TRAJ_AsservissementMouvementRobot(Pose poseRobot, VitessesRobo
                                     break;
 
                                 case ARC1 :
-                                    distanceTotale_Profil += ( (ECART_ROUE_MOTRICE / 2.0) + (1.0 / chemin.trajectoire.subTrajs.segmentTraj[g_iSeg].arc1.rayon_inverse) ) * fabs(chemin.trajectoire.subTrajs.segmentTraj[chemin.trajectoire.subTrajs.segmentCourant].arc1.angle);
+                                    distanceTotale_Profil += (NORME_BARRE_SUIVI_TRAJ + (1.0 / chemin.trajectoire.subTrajs.segmentTraj[g_iSeg].arc1.rayon_inverse) ) * fabs(chemin.trajectoire.subTrajs.segmentTraj[chemin.trajectoire.subTrajs.segmentCourant].arc1.angle);
                                     AmaxTemp = chemin.profilVitesse.Amax * AMAX_REDUCTION;
                                     break;
 
                                 case ARC2 :
-                                    distanceTotale_Profil += ( (ECART_ROUE_MOTRICE / 2.0) + (1.0 / chemin.trajectoire.subTrajs.segmentTraj[g_iSeg].arc2.rayon_inverse) ) * fabs(chemin.trajectoire.subTrajs.segmentTraj[chemin.trajectoire.subTrajs.segmentCourant].arc2.angle);
+                                    distanceTotale_Profil += (NORME_BARRE_SUIVI_TRAJ + (1.0 / chemin.trajectoire.subTrajs.segmentTraj[g_iSeg].arc2.rayon_inverse) ) * fabs(chemin.trajectoire.subTrajs.segmentTraj[chemin.trajectoire.subTrajs.segmentCourant].arc2.angle);
                                     AmaxTemp = chemin.profilVitesse.Amax * AMAX_REDUCTION;
                                     break;
 
@@ -721,7 +717,7 @@ extern void ASSER_TRAJ_AsservissementMouvementRobot(Pose poseRobot, VitessesRobo
                 } /* Fin d'init du nouveau profil de vitesse */
 
                 /* Ajout de distance pour obtenir la distance parcourue par la roue (pas toujours la même) a l'exterieur des virages */
-                distanceParcourue_Profil += delta_distance * (1.0 + (ECART_ROUE_MOTRICE / 2.0) * ASSER_TRAJ_Rinv_courbure(&chemin.trajectoire.subTrajs.segmentTraj[chemin.trajectoire.subTrajs.segmentCourant] \
+                distanceParcourue_Profil += delta_distance * (1.0 + NORME_BARRE_SUIVI_TRAJ * ASSER_TRAJ_Rinv_courbure(&chemin.trajectoire.subTrajs.segmentTraj[chemin.trajectoire.subTrajs.segmentCourant] \
                                                                                                                        , chemin.trajectoire.subTrajs.subSegmentCourant \
                                                                                                                         , chemin.trajectoire.subTrajs.paramPoseSubSegCourant));
 
@@ -730,34 +726,39 @@ extern void ASSER_TRAJ_AsservissementMouvementRobot(Pose poseRobot, VitessesRobo
                 
                 ASSER_Running = ASSER_TRAJ_Profil_S_Curve(&VitesseProfil, distanceTotale_Profil, vitesse_debut_profil, vitesse_fin_profil, AmaxTemp, chemin.profilVitesse.Dmax, Vitesse_Gain_ASR, distanceParcourue_Profil, (((float)m_sensDeplacement) * POS_GetVitesseRelle()), (SaturationPIDflag | SaturationPIGflag));
 
+                if (chemin.trajectoire.subTrajs.segmentCourant < (chemin.trajectoire.subTrajs.nbreSegments - 1))
+                {
+                    ASSER_Running = True;
+                }
+
                 /* Passage de la vitesse exterieure a la vitesse centrale si besoin */
-                VitesseProfil = VitesseProfil / (1.0 + (ECART_ROUE_MOTRICE / 2.0) * fabsf(ASSER_TRAJ_Rinv_courbure(&chemin.trajectoire.subTrajs.segmentTraj[chemin.trajectoire.subTrajs.segmentCourant] \
+                VitesseProfil = VitesseProfil / (1.0 + NORME_BARRE_SUIVI_TRAJ * fabsf(ASSER_TRAJ_Rinv_courbure(&chemin.trajectoire.subTrajs.segmentTraj[chemin.trajectoire.subTrajs.segmentCourant] \
                                                                                                             , chemin.trajectoire.subTrajs.subSegmentCourant \
                                                                                                             , chemin.trajectoire.subTrajs.paramPoseSubSegCourant)));
                 if ((chemin.trajectoire.subTrajs.subSegmentCourant == SPLINE31) 
                 ||  (chemin.trajectoire.subTrajs.subSegmentCourant == SPLINE32))
                 {
-                    if ( VitesseProfil > ( (chemin.profilVitesse.vmax) / (1.0 + (ECART_ROUE_MOTRICE / 2.0) * R_INV)) )
+                    if (VitesseProfil > (chemin.profilVitesse.vmax / (1.0 + (NORME_BARRE_SUIVI_TRAJ * R_INV))))
                     {
-                        VitesseProfil = ( (chemin.profilVitesse.vmax) / (1.0 + (ECART_ROUE_MOTRICE / 2.0) * R_INV));
+                        VitesseProfil = (chemin.profilVitesse.vmax / (1.0 + (NORME_BARRE_SUIVI_TRAJ * R_INV)));
                     }
                 }
 
-                if (chemin.trajectoire.subTrajs.subSegmentCourant == ARC1)
+                else if (chemin.trajectoire.subTrajs.subSegmentCourant == ARC1)
                 {
-                    if ( VitesseProfil > ( (chemin.profilVitesse.vmax / VMAX_REDUCTION) / (1.0 + (ECART_ROUE_MOTRICE / 2.0) * chemin.trajectoire.subTrajs.segmentTraj[chemin.trajectoire.subTrajs.segmentCourant].arc1.rayon_inverse)) )
+                    if ( VitesseProfil > ((chemin.profilVitesse.vmax / VMAX_REDUCTION) / (1.0 + (NORME_BARRE_SUIVI_TRAJ * chemin.trajectoire.subTrajs.segmentTraj[chemin.trajectoire.subTrajs.segmentCourant].arc1.rayon_inverse))))
                     {
-                        VitesseProfil = ( (chemin.profilVitesse.vmax / VMAX_REDUCTION) / (1.0 + (ECART_ROUE_MOTRICE / 2.0) * chemin.trajectoire.subTrajs.segmentTraj[chemin.trajectoire.subTrajs.segmentCourant].arc1.rayon_inverse));
+                        VitesseProfil = ((chemin.profilVitesse.vmax / VMAX_REDUCTION) / (1.0 + (NORME_BARRE_SUIVI_TRAJ * chemin.trajectoire.subTrajs.segmentTraj[chemin.trajectoire.subTrajs.segmentCourant].arc1.rayon_inverse)));
                     }
                 }
-                if (chemin.trajectoire.subTrajs.subSegmentCourant == ARC2)
+                else if (chemin.trajectoire.subTrajs.subSegmentCourant == ARC2)
                 {
-                    if ( VitesseProfil > ( (chemin.profilVitesse.vmax / VMAX_REDUCTION) / (1.0 + (ECART_ROUE_MOTRICE / 2.0) * chemin.trajectoire.subTrajs.segmentTraj[chemin.trajectoire.subTrajs.segmentCourant].arc2.rayon_inverse)) )
+                    if (VitesseProfil > ((chemin.profilVitesse.vmax / VMAX_REDUCTION) / (1.0 + (NORME_BARRE_SUIVI_TRAJ * chemin.trajectoire.subTrajs.segmentTraj[chemin.trajectoire.subTrajs.segmentCourant].arc2.rayon_inverse))))
                     {
-                        VitesseProfil = ( (chemin.profilVitesse.vmax / VMAX_REDUCTION) / (1.0 + (ECART_ROUE_MOTRICE / 2.0) * chemin.trajectoire.subTrajs.segmentTraj[chemin.trajectoire.subTrajs.segmentCourant].arc2.rayon_inverse));
+                        VitesseProfil = ((chemin.profilVitesse.vmax / VMAX_REDUCTION) / (1.0 + (NORME_BARRE_SUIVI_TRAJ * chemin.trajectoire.subTrajs.segmentTraj[chemin.trajectoire.subTrajs.segmentCourant].arc2.rayon_inverse)));
                     }
                 }
-                if (chemin.trajectoire.subTrajs.subSegmentCourant == SPLINE341)
+                else if (chemin.trajectoire.subTrajs.subSegmentCourant == SPLINE341)
                 {
                     diffThetaTrajectoire = ASSER_TRAJ_DiffThetaBSplinePerLenghtUnit(&chemin.trajectoire \
                                                                                     , chemin.trajectoire.subTrajs.segmentCourant \
@@ -769,7 +770,7 @@ extern void ASSER_TRAJ_AsservissementMouvementRobot(Pose poseRobot, VitessesRobo
                         VitesseProfil = vitesse_fin_profil_0;
                     }
                 }
-                if (chemin.trajectoire.subTrajs.subSegmentCourant == SPLINE342)
+                else if (chemin.trajectoire.subTrajs.subSegmentCourant == SPLINE342)
                 {
                     diffThetaTrajectoire = ASSER_TRAJ_DiffThetaBSplinePerLenghtUnit(&chemin.trajectoire \
                                                                                     , chemin.trajectoire.subTrajs.segmentCourant \
@@ -790,11 +791,6 @@ extern void ASSER_TRAJ_AsservissementMouvementRobot(Pose poseRobot, VitessesRobo
                 ASSER_TRAJ_LogAsserValPC("distanceTotale_Profil", distanceTotale_Profil);
                 ASSER_TRAJ_LogAsserValPC("cfgAsser",  chemin.profilVitesse.Amax);
                 ASSER_TRAJ_LogAsserValPC("cfgAsser",  chemin.profilVitesse.Dmax);
-
-                if (chemin.trajectoire.subTrajs.segmentCourant < chemin.trajectoire.subTrajs.nbreSegments)
-                {
-                    ASSER_Running = True;
-                }
 
                 delta_distance_Av = VitesseProfil * TE;
 
@@ -824,10 +820,6 @@ extern void ASSER_TRAJ_AsservissementMouvementRobot(Pose poseRobot, VitessesRobo
         {
             vitesse_profil_consigne = 0.0;
 
-#ifdef PIC32_BUILD
-            /* Desactivation test antiblockage avant de chercher precisement le point d'arrivee pour eviter de passser en evitement */
-            EVIT_ProcheFinAsser = True;
-#endif /* PIC32_BUILD */
 
             Phase = 0;
         }
@@ -3305,7 +3297,6 @@ static VitessesRobotUnicycle ASSER_TRAJ_RetourDetatOrientation(Pose erreurPose, 
     float                   z, uref1, uref2, erreurAngle;
     float                   w[2];
 	float					tempw[2];
-	int						phasing = 0;
 
     erreurAngle = POS_ModuloAngle(erreurPose.angle);
     
@@ -3346,7 +3337,6 @@ static VitessesRobotUnicycle ASSER_TRAJ_RetourDetatOrientation(Pose erreurPose, 
     float                   z, uref1, uref2, erreurAngle;
     float                   w[2];
 	float					tempw[2];
-	int						phasing = 0;
 	static float			erreurAngleMemo = 0.0, tempwMemo = 0.0;
 	
     erreurAngle = POS_ModuloAngle(erreurPose.angle);
@@ -4367,8 +4357,7 @@ extern unsigned char ASSER_TRAJ_Profil_S_Curve(float * Vconsigne, float Distance
                 if (Test_mode == (unsigned long)1)
 #endif /* PIC32_BUILD */
                 {
-                    if ((Pr >= (((Vmax * Vmax) - (VStart * VStart))/Amax) + (VStart * TE))
-                    &&  (Vr < (Vmax - EcartVitesseAcc)))
+                    if (Vr < (Vmax - (VminMouvRef/ 2)))
                     {                
 #ifdef PIC32_BUILD 
                         TOOLS_LogFault(AsserPosErr, True, FLOAT, (float *)&Vr , True, "Amax>aux capacitees,Vmax non atteinte");
