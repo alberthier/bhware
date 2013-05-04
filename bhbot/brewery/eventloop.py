@@ -196,8 +196,6 @@ class PicControlChannel(PacketClientSocketChannel):
             self.event_loop.send_packet(packets.ControllerReady())
 
 
-
-
 class PicLogChannel(ClientSocketChannel):
 
     def __init__(self, event_loop):
@@ -238,8 +236,21 @@ class InterbotServer(asyncore.dispatcher):
 
 
     def handle_accepted(self, sock, addr):
-        PacketClientSocketChannel(self.event_loop, "TMM", sock)
+        self.event_loop.interbot_manager.on_connect()
+        self.event_loop.interbot_channel = InterbotControlChannel(self.event_loop, "TMM", sock)
 
+
+
+class InterbotControlChannel(PacketClientSocketChannel):
+
+    def handle_connect(self):
+        super().handle_connect()
+        self.event_loop.interbot_manager.on_connect()
+
+
+    def handle_close(self):
+        super().handle_close()
+        self.event_loop.interbot_manager.on_disconnect()
 
 
 
@@ -384,7 +395,7 @@ class EventLoop(object):
         if (now - self.last_ka_date).total_seconds() > KEEP_ALIVE_MINIMUM_AGE_S:
             self.last_ka_date = now
             self.send_packet(packet)
-            leds.green.heartbeat_tick()
+            leds.driver.heartbeat_tick()
 
 
     def on_start(self, packet):
@@ -441,7 +452,7 @@ class EventLoop(object):
             if IS_MAIN_ROBOT:
                 InterbotServer(self)
             else:
-                self.interbot_channel = PacketClientSocketChannel(self, "TMM", (MAIN_INTERBOT_IP, MAIN_INTERBOT_PORT))
+                self.interbot_channel = InterbotControlChannel(self, "TMM", (MAIN_INTERBOT_IP, MAIN_INTERBOT_PORT))
         self.web_server = asyncwsgiserver.WsgiServer("", self.webserver_port, nanow.Application(webinterface.BHWeb(self)))
         if SERIAL_PORT_PATH is not None:
             try:

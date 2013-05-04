@@ -167,7 +167,8 @@ class Map:
         teammate.x = x
         teammate.y = y
         if abs(dx)<0.01 and abs(dy)<0.01:
-            logger.log("Movement too small, not updating zone (dx={} dy={})".format(dx,dy))
+            # logger.log("Movement too small, not updating zone (dx={} dy={})".format(dx,dy))
+            pass
         else :
-            logger.log("Move team mate zone dx={} dy={}".format(dx,dy))
+            # logger.log("Move team mate zone dx={} dy={}".format(dx,dy))
             self.pathfinder.move_zone(teammate.id, dx, dy)

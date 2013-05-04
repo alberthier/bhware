@@ -698,23 +698,21 @@ class GotoHome(Navigate):
 
 class CalibratePosition(statemachine.State):
 
-    def __init__(self, test = False):
+    def __init__(self, x = BLUE_START_X, test = False):
+        self.x = x
         self.test = test
 
 
     def on_enter(self):
         if IS_HOST_DEVICE_PC or self.test:
-            yield DefinePosition(BLUE_START_X, BLUE_START_Y, math.pi / 2.0)
+            yield DefinePosition(self.x, BLUE_START_Y, math.pi / 2.0)
         else:
             estimated_start_y = 1.0
             yield DefinePosition(ROBOT_CENTER_X, estimated_start_y, 0.0)
-            yield MoveLineTo(BLUE_START_X, estimated_start_y)
+            yield MoveLineTo(self.x, estimated_start_y)
             yield Rotate(math.pi / 2.0)
             yield MoveLineTo(BLUE_START_X, 0.0, DIRECTION_BACKWARDS)
             yield DefinePosition(None, ROBOT_CENTER_X, math.pi / 2.0)
-            yield MoveLineTo(BLUE_START_X, BLUE_START_Y)
-        if IS_MAIN_ROBOT:
-            yield LookAt(0.0, 1.5)
         yield None
 
 

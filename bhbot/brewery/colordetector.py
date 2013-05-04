@@ -20,7 +20,7 @@ class ColorDetector:
         self.team_name = None
         self.process = None
         self.folder = os.path.join(os.path.dirname(__file__), "colordetector")
-        cmds = ["g++", "-Wall", "-O2", "-o", "colordetector", "-l", "opencv_core", "-l", "opencv_highgui", "colordetector.cpp"]
+        cmds = ["g++", "-Wall", "-O2", "-o", "colordetector", "-l", "opencv_core", "-l", "opencv_highgui", "-l", "opencv_imgproc", "colordetector.cpp"]
         bld = builder.Builder("colordetector.cpp", "colordetector", cmds, self.folder)
         bld.build()
 
