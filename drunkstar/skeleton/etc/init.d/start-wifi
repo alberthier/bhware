@@ -129,7 +129,14 @@ while True:
         run_cmd('iw phy {phy} interface add wlan0 type ibss'.format(phy=phy_name))
         run_cmd('ifconfig wlan0 up')
 
-        cmd = 'iw dev wlan0 ibss join {} {}'.format(NETWORK_NAME, NETWORK_FREQUENCY, NETWORK_KEY)
+        # run_cmd('iw dev wlan0 set power_save off')
+        # does not work in IBSS mode
+
+        cmd = 'iw dev wlan0 ibss join {netname} {netfreq} beacon-interval {interval}'.format(
+                netname=NETWORK_NAME,
+                netfreq=NETWORK_FREQUENCY,
+                interval=10,
+                )
 
         if NETWORK_KEY :
             cmd+= " key d:0:{}".format(NETWORK_KEY)
