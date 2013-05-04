@@ -2,10 +2,16 @@
 
 import logging
 import subprocess
-import sys
 import time
-
 import locale
+
+SLEEP_TIME = 0.5
+
+NETWORK_NAME="BHInterbot"
+NETWORK_FREQUENCY=2412
+# NETWORK_KEY=3141592420
+NETWORK_KEY=None
+
 
 encoding = locale.getdefaultlocale()[1]
 if encoding is None :
@@ -52,13 +58,6 @@ FORMAT = "[%(asctime)s][%(levelname)-18s]  %(message)s"
 COLOR_FORMAT = formatter_message(FORMAT, True)
 
 color_formatter = ColoredFormatter(COLOR_FORMAT)
-
-
-
-SLEEP_TIME = 0.5
-
-ROBOT_NETWORK="BHInterbot"
-FREQUENCY=2412
 
 console = logging.StreamHandler()
 console.setFormatter(color_formatter)
@@ -115,55 +114,7 @@ def run_cmd(cmd, **kwargs):
 
 logging.info('Starting {}'.format(__file__))
 
-# while True:
-#     # HAS_WIFI=`iwconfig wlan0 | grep "No such device"`
-#     has_wifi = "No such device" not in run_cmd('iwconfig wlan0').output
-#     logging.info('Wifi detected : {}'.format(has_wifi))
-#     # if [ !$HAS_WIFI ]; then
-#     if has_wifi:
-#         logging.info('Shutting down wireless')
-#         run_cmd('ifconfig wlan0 down')
-#         run_cmd('iwconfig wlan0 down')
-#         ret = run_cmd('iwlist wlan0 scan')
-#
-#         if ROBOT_NETWORK in ret.output :
-#             logging.debug('Network detected, connecting')
-#             run_cmd('iw wlan0 connect BHInterbot')
-#         else :
-#             logging.debug('Network not detected, creating')
-#             run_cmd('iwconfig wlan0 mode ad-hoc essid BHInterbot key off')
-#
-#
-#         # iwconfig wlan0 mode ad-hoc essid BHInterbot key off
-#
-#         hostname = run_cmd('hostname').output
-#
-#         logging.debug('Configuring network interfaces, hostname = {}'.format(hostname))
-#
-#         if hostname == "sheldon" :
-#             run_cmd('ifconfig wlan0 192.168.3.10 netmask 255.255.255.0 up')
-#         elif hostname == "leonard" :
-#             run_cmd('ifconfig wlan0 192.168.3.11 netmask 255.255.255.0 up')
-#         else :
-#             run_cmd('ifconfig wlan0 192.168.3.12 netmask 255.255.255.0 up')
-#
-#         break
-#     else :
-#         logging.info('Sleeping for {}s'.format(SLEEP_TIME))
-#         time.sleep(SLEEP_TIME)
-
-def shutdown(vint):
-    pass
-
-def bringup(vint):
-    pass
-
-def is_active(vint):
-    pass
-
 while True:
-    # HAS_WIFI=`iwconfig wlan0 | grep "No such device"`
-
     phy_name = run_cmd('iw list | grep Wiphy | cut -d" " -f2').output.strip()
 
     has_wifi = len(phy_name) > 0
@@ -173,30 +124,18 @@ while True:
     if has_wifi:
         logging.info('Shutting down wireless')
         run_cmd('ifconfig wlan0 down')
-        # run_cmd('ifconfig wlan0 up')
-        # logging.info('Leaving wifi network')
 
         run_cmd('iw dev wlan0 del')
         run_cmd('iw phy {phy} interface add wlan0 type ibss'.format(phy=phy_name))
         run_cmd('ifconfig wlan0 up')
-        # run_cmd('iw wlan0 ibss leave')
-        while not run_cmd('iw dev wlan0 ibss join {} {}'.format(ROBOT_NETWORK, FREQUENCY)) :
+
+        cmd = 'iw dev wlan0 ibss join {} {}'.format(NETWORK_NAME, NETWORK_FREQUENCY, NETWORK_KEY)
+
+        if NETWORK_KEY :
+            cmd+= " key d:0:{}".format(NETWORK_KEY)
+
+        while not run_cmd(cmd) :
             time.sleep(SLEEP_TIME)
-
-        # ret = run_cmd('iw dev wlan0 scan dump')
-
-        # if ROBOT_NETWORK in ret.output :
-        #     logging.debug('Network detected, connecting')
-        #     run_cmd('iw wlan0 connect BHInterbot')
-        # else :
-        #     logging.debug('Network not detected, creating')
-        #     run_cmd('iwconfig wlan0 mode ad-hoc essid BHInterbot key off')
-
-        # run_cmd('iw wlan0 set type ibss')
-        # run_cmd('iw wlan0 ibss join '+ROBOT_NETWORK)
-
-
-        # iwconfig wlan0 mode ad-hoc essid BHInterbot key off
 
         hostname = run_cmd('hostname').output
 
