@@ -79,13 +79,24 @@ class ClientSocketChannel(asyncore.dispatcher_with_send):
         if self.existing_socket is None:
             self.close()
             next_try = 1000
-            ei = sys.exc_info()
-            if ei is not None:
-                err = str(ei[1])
+            exc_info = sys.exc_info()
+            etype, evalue = None, None
+            if exc_info is not None:
+                etype, evalue = sys.exc_info()[0:2]
+                if etype in [SyntaxError,]:
+                    err = evalue
+                err = str(evalue)
             else:
                 err = "No Exception"
             if self.show_reconnect_error_log:
-                logger.log("{}: Unable to connect to {}:{} ({}), retrying every {}ms".format(self.origin, self.address[0], self.address[1], err, next_try))
+                logger.log("{}: Unable to connect to {}:{} ({}: {}), retrying every {}ms".format(
+                    self.origin,
+                    self.address[0],
+                    self.address[1],
+                    etype.__name__,
+                    err,
+                    next_try)
+                )
                 self.show_reconnect_error_log = False
             Timer(self.event_loop, next_try, self.try_connect).start()
         else:

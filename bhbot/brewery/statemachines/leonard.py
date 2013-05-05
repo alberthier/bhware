@@ -13,6 +13,11 @@ from definitions import *
 from commonstates import *
 from position import *
 
+X_OPEN_GIFTS_START = 1.83
+Y_OPEN_GIFTS_START = 2.38
+
+X_START = BLUE_START_X
+Y_START = BLUE_START_Y
 
 
 class Main(statemachine.State):
@@ -22,13 +27,14 @@ class Main(statemachine.State):
 
 
     def on_device_ready(self, packet):
-        yield CalibratePosition()
+        yield CalibratePosition(X_START)
         yield AntiBlocking(True)
 
 
     def on_start(self, packet):
-        self.log("Match started")
         yield TakeGlasses()
+        yield LookAt(X_OPEN_GIFTS_START, Y_OPEN_GIFTS_START)
+
         yield OpenGifts()
         yield Deposit()
         yield EndOfMatch()
@@ -39,7 +45,8 @@ class Main(statemachine.State):
 class Deposit(statemachine.State):
 
     def on_enter(self):
-        yield MoveCurveTo(-1.77, (1.66, 0.38))
+        yield LookAt(1.66, 0.38)
+        yield MoveLineTo(1.66, 0.38)
         yield DepositGlasses()
         yield None
 
@@ -49,26 +56,39 @@ class Deposit(statemachine.State):
 class TakeGlasses(statemachine.State):
 
     def on_enter(self):
-        yield MoveLineTo(BLUE_START_X, 2.0)
+        yield MoveLineTo(BLUE_START_X, Y_OPEN_GIFTS_START)
         yield None
 
 
 
+class GotoGiftOpenStart(statemachine.State):
+
+    def on_enter(self):
+        yield MoveLineTo(X_OPEN_GIFTS_START, Y_OPEN_GIFTS_START)
+        yield None
 
 class OpenGifts(statemachine.State):
 
-    X_VALUE = 1.83
-    Y_VALUES = [1.7, 1.1, 0.5]
+    X_VALUE = X_OPEN_GIFTS_START
+    Y_VALUES = [Y_OPEN_GIFTS_START, 1.79, 1.2, 0.62]
 
     def on_enter(self):
-        self.gift_opener_side = GIFT_OPENER_POSITION_LEFT if self.robot.team == TEAM_BLUE else \
-            GIFT_OPENER_POSITION_RIGHT
-        yield MoveCurve(-math.pi/2, [(self.X_VALUE,2.3)])
+        self.gift_opener_side = GIFT_OPENER_POSITION_RIGHT \
+            if self.robot.team == TEAM_BLUE else GIFT_OPENER_POSITION_LEFT
+
+        yield Rotate(0.0)
+        yield GotoGiftOpenStart()
+        yield Rotate(math.pi/2)
+        # yield GiftOpener(self.gift_opener_side)
+        # yield GiftOpener(GIFT_OPENER_POSITION_IDLE)
+
         points = [ (self.X_VALUE, y) for y in self.Y_VALUES ]
-        move = MoveLine(points)
+        move = MoveLine(points, direction=DIRECTION_BACKWARDS)
         move.on_waypoint_reached = self.on_waypoint_reached
         move.on_gift_opener = self.on_gift_opener
         yield move
+        yield GiftOpener(self.gift_opener_side)
+        yield GiftOpener(GIFT_OPENER_POSITION_IDLE)
         yield None
 
 

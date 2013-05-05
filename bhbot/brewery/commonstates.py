@@ -238,13 +238,19 @@ class WaitForOpponentLeave(Timer):
     TIMEOUT       = 0
     OPPONENT_LEFT = 1
 
-    def __init__(self, opponent, miliseconds, move_direction):
+    def __init__(self, opponent, miliseconds, move_direction, retries):
+        if miliseconds is None :
+            miliseconds = DEFAULT_OPPONENT_WAIT_MS
         Timer.__init__(self, miliseconds)
         self.opponent = opponent
         self.move_direction = move_direction
+        self.retries = retries
+        if not self.retries :
+            self.retries = DEFAULT_OPPONENT_DISAPPEAR_RETRIES
 
 
     def on_enter(self):
+        logger.log('WaitForOpponentLeave : time={}, retries={}'.format(self.miliseconds, self.retries))
         Timer.on_enter(self)
         self.goto_finished = False
         self.opponent_disappeared = False
@@ -289,18 +295,37 @@ class WaitForOpponentLeave(Timer):
 
     def try_leave(self):
         if self.goto_finished and (self.timer_expired or self.opponent_disappeared):
-            self.log("WaitForOpponentLeave : exit reason={}".format(self.exit_reason))
             yield None
+        if self.retries >= 0 :
+            if self.timer_expired :
+                self.retries-=1
+                if self.retries < 0 :
+                    logger.log('WaitForOpponentLeave : retries exceeded')
+                    self.exit_reason = TRAJECTORY_BLOCKED
+                    yield None
+                else :
+                    logger.log('WaitForOpponentLeave : retries remaining = {}'.format(self.retries))
+
+    def on_exit(self):
+        self.log("WaitForOpponentLeave : exit reason={}".format(TRAJECTORY.lookup_by_value[self.exit_reason]))
 
 
+class OpponentHandlingConfig:
+    def __init__(self, backout, retries: int or None=None, wait_delay: float or None=None):
+        self.backout = backout
+        self.retries_count = retries
+        self.wait_delay = wait_delay
+
+NO_OPPONENT_HANDLING = OpponentHandlingConfig(False, 0, 0)
+OPPONENT_HANDLING = OpponentHandlingConfig(True, None, None)
 
 
 class AbstractMove(statemachine.State):
 
-    def __init__(self, chained, wait_opponent_leave):
+    def __init__(self, chained, opponent_leave_config: OpponentHandlingConfig):
         self.current_opponent = None
         self.chained = chained
-        self.wait_opponent_leave = wait_opponent_leave
+        self.opponent_leave_config = opponent_leave_config
 
 
     def on_enter(self):
@@ -326,8 +351,12 @@ class AbstractMove(statemachine.State):
             self.exit_reason = TRAJECTORY_BLOCKED
             yield None
         elif self.current_opponent is not None:
-            if self.wait_opponent_leave:
-                reason = (yield WaitForOpponentLeave(self.current_opponent, 2000, self.packet.direction)).exit_reason
+            config = self.opponent_leave_config
+            if config.backout:
+                leave_state = yield WaitForOpponentLeave(self.current_opponent, config.wait_delay,
+                                                     self.packet.direction, config.retries_count)
+                reason = leave_state.exit_reason
+                self.current_opponent = None
                 if reason == WaitForOpponentLeave.TIMEOUT:
                     self.exit_reason = TRAJECTORY_OPPONENT_DETECTED
                     yield None
@@ -346,7 +375,7 @@ class AbstractMove(statemachine.State):
 class Rotate(AbstractMove):
 
     def __init__(self, angle, direction = DIRECTION_FORWARDS, chained = None):
-        AbstractMove.__init__(self, chained, False)
+        AbstractMove.__init__(self, chained, NO_OPPONENT_HANDLING)
         pose = position.Pose(0.0, 0.0, angle, True)
         self.packet = packets.Rotate(direction = direction, angle = pose.angle)
 
@@ -356,7 +385,7 @@ class Rotate(AbstractMove):
 class LookAt(AbstractMove):
 
     def __init__(self, x, y, direction = DIRECTION_FORWARDS, chained = None):
-        AbstractMove.__init__(self, chained, False)
+        AbstractMove.__init__(self, chained, NO_OPPONENT_HANDLING)
         self.pose = position.Pose(x, y, None, True)
         self.direction = direction
 
@@ -375,7 +404,7 @@ class LookAt(AbstractMove):
 class LookAtOpposite(AbstractMove):
 
     def __init__(self, x, y, direction = DIRECTION_FORWARDS, chained = None):
-        AbstractMove.__init__(self, chained, False)
+        AbstractMove.__init__(self, chained, NO_OPPONENT_HANDLING)
         self.pose = position.Pose(x, y, None, True)
         self.direction = direction
 
@@ -394,7 +423,7 @@ class LookAtOpposite(AbstractMove):
 class MoveCurve(AbstractMove):
 
     def __init__(self, angle, points, direction = DIRECTION_FORWARDS, chained = None):
-        AbstractMove.__init__(self, chained, True)
+        AbstractMove.__init__(self, chained, OPPONENT_HANDLING)
         apose = position.Pose(0.0, 0.0, angle, True)
         poses = []
         for pt in points:
@@ -417,8 +446,8 @@ class MoveCurveTo(MoveCurve):
 
 class MoveLine(AbstractMove):
 
-    def __init__(self, points, direction = DIRECTION_FORWARDS, chained = None):
-        AbstractMove.__init__(self, chained, True)
+    def __init__(self, points, direction = DIRECTION_FORWARDS, chained = None, opponent_handling = OPPONENT_HANDLING):
+        AbstractMove.__init__(self, chained, opponent_handling)
         poses = []
         for pt in points:
             if type(pt) == tuple:
@@ -432,8 +461,8 @@ class MoveLine(AbstractMove):
 
 class MoveLineTo(MoveLine):
 
-    def __init__(self, x, y, direction = DIRECTION_FORWARDS, chained = None):
-        MoveLine.__init__(self, [position.Pose(x, y, None, True)], direction, chained)
+    def __init__(self, x, y, direction = DIRECTION_FORWARDS, chained = None, opponent_handling = OPPONENT_HANDLING):
+        MoveLine.__init__(self, [position.Pose(x, y, None, True)], direction, chained, opponent_handling)
 
 
 
@@ -460,7 +489,7 @@ class RotateRelative(AbstractMove):
 
     def __init__(self, relative_angle, chained = None):
 
-        AbstractMove.__init__(self, chained, False)
+        AbstractMove.__init__(self, chained, NO_OPPONENT_HANDLING)
 
         self.relative_angle = relative_angle
         self.chained = chained
@@ -476,7 +505,7 @@ class RotateRelative(AbstractMove):
 class MoveArc(AbstractMove):
 
     def __init__(self, center_x, center_y, radius, points, direction = DIRECTION_FORWARDS, chained = None):
-        AbstractMove.__init__(self, chained, True)
+        AbstractMove.__init__(self, chained, OPPONENT_HANDLING)
         cpose = position.Pose(center_x, center_y, None, True)
         angles = []
         for a in points:
