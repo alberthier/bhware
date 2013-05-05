@@ -81,6 +81,7 @@ class Map:
         delta = datetime.datetime.now() - start_date
         if len(path) == 0:
             logger.log("No route found.")
+            return (None, [])
         else:
             logger.log("Route computed. Cost: {}. compuation time: {}".format(cost, delta.total_seconds()))
         pose_path = []
