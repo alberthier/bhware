@@ -1,5 +1,6 @@
 brewery:
 - Quel est la valeur du cost d'un pathfinding qui échoue
+- Tourelle : pb de réception paquet mal formé. (while read(1) create_packet())
 
 sheldon:
 - Retry de gâteau
