@@ -32,11 +32,7 @@ class Opponent(object):
         if packet.robot != self.opponent_type:
             return
         if packet.distance == 1:
-            distance = TURRET_LONG_DISTANCE_DETECTION_RANGE
-            if self.opponent_direction is None:
-                self.opponent_disappeared()
-                # We didn't see the opponent before and he is far away. Ignore it
-                return
+            return
         else:
             distance = TURRET_SHORT_DISTANCE_DETECTION_RANGE
 

@@ -328,6 +328,7 @@ class AbstractMove(statemachine.State):
         elif self.current_opponent is not None:
             if self.wait_opponent_leave:
                 reason = (yield WaitForOpponentLeave(self.current_opponent, 2000, self.packet.direction)).exit_reason
+                self.current_opponent = None
                 if reason == WaitForOpponentLeave.TIMEOUT:
                     self.exit_reason = TRAJECTORY_OPPONENT_DETECTED
                     yield None
