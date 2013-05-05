@@ -122,7 +122,7 @@ class BHWeb(object):
 <body>
   <div>
     <h2>Packet wizard</h2>
-    <form action="/packet_wizard_3">
+    <form action="packet_wizard_3">
     <textarea rows="4" cols="50" name="code">{sample_code}</textarea>
     <button action="submit">go !</button>
     </form>
@@ -141,7 +141,7 @@ class BHWeb(object):
   <div>
     <h2>Packet wizard : choose packet type</h2><hr/>
 """
-        html += """<form action="/packet_wizard_2">"""
+        html += """<form action="packet_wizard_2">"""
         html += """<select name=packet_type>"""
         for packet in sorted(packets.PACKETS_LIST, key=lambda x : x.__name__):
                 html += "<option value='{}'>{}</option>".format(packet.TYPE, packet.__name__)
@@ -191,12 +191,12 @@ class BHWeb(object):
             packet = eval(code)
             self.eventloop.send_packet(packet)
             ret = "OK<br>"
-            ret+="<a href=/packet_wizard_2?packet_type={}>Send packet of same type</a>".format(packet.TYPE)
+            ret+="<a href=packet_wizard_2?packet_type={}>Send packet of same type</a>".format(packet.TYPE)
         except Exception as e :
             ret = str(e)
 
         html = "Return : <br>"+ret+"<br>"
-        html+="<a href=/packet_wizard_1>Send another packet</a>".format(packet.TYPE)
+        html+="<a href=packet_wizard_1>Send another packet</a>".format(packet.TYPE)
         return html
 
 
