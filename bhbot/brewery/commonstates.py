@@ -527,7 +527,7 @@ class FollowPath(statemachine.State):
 
     def on_enter(self):
         move = None
-        for pose in path:
+        for pose in self.path:
             if self.direction == DIRECTION_FORWARDS:
                 if not self.robot.is_looking_at(pose):
                     move = yield LookAt(pose.virt.x, pose.virt.y, DIRECTION_FORWARDS, move) 
