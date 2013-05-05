@@ -487,6 +487,31 @@ class MoveArc(AbstractMove):
 
 
 
+class FollowPath(statemachine.State):
+
+    def __init__(self, path, direction = DIRECTION_FORWARDS):
+        super().__init__()
+        self.path = path
+        self.direction = direction
+        self.exit_reason = None
+
+
+    def on_enter(self):
+        move = None
+        for pose in path:
+            if self.direction == DIRECTION_FORWARDS:
+                if not self.robot.is_looking_at(pose):
+                    move = yield LookAt(pose.virt.x, pose.virt.y, DIRECTION_FORWARDS, move) 
+            else:
+                if not self.robot.is_looking_at_opposite(pose):
+                    move = yield LookAtOpposite(pose.virt.x, pose.virt.y, DIRECTION_FORWARDS, move)
+            move = yield MoveLine([pose], self.direction, move)
+        self.exit_reason = move.exit_reason
+        yield None
+
+
+
+
 class StopAll(statemachine.State):
 
     def on_enter(self):
@@ -673,17 +698,9 @@ class Navigate(statemachine.State):
             self.exit_reason = TRAJECTORY_DESTINATION_UNREACHABLE
             yield None
             return
-        move = None
-        first_point = path[0]
-        if self.direction == DIRECTION_FORWARDS:
-            if not self.robot.is_looking_at(first_point):
-                move = yield LookAt(first_point.virt.x, first_point.virt.y, DIRECTION_FORWARDS, move) 
-        else:
-            if not self.robot.is_looking_at_opposite(first_point):
-                move = yield LookAtOpposite(first_point.virt.x, first_point.virt.y, DIRECTION_FORWARDS, move)
-        move = yield MoveCurve(self.destination.angle, path, self.direction, move)
-        self.exit_reason = move.exit_reason
+        yield FollowPath(path, self.direction)
         yield None
+
 
 
 
@@ -705,7 +722,7 @@ class CalibratePosition(statemachine.State):
 
     def on_enter(self):
         if IS_HOST_DEVICE_PC or self.test:
-            yield DefinePosition(self.x, BLUE_START_Y, math.pi / 2.0)
+            yield DefinePosition(self.x, ROBOT_CENTER_X, math.pi / 2.0)
         else:
             estimated_start_y = 1.0
             yield DefinePosition(ROBOT_CENTER_X, estimated_start_y, 0.0)
