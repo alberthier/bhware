@@ -18,6 +18,8 @@ from position import *
 
 class Main(statemachine.State):
 
+    CAKE_ARC_RADIUS = 0.5 + ROBOT_GYRATION_RADIUS
+
     def on_enter(self):
         statemachine.StateMachine(self.event_loop, "barman", side = SIDE_LEFT)
         statemachine.StateMachine(self.event_loop, "barman", side = SIDE_RIGHT)
@@ -25,17 +27,27 @@ class Main(statemachine.State):
 
 
     def on_device_ready(self, packet):
-        yield CalibratePosition()
         yield AntiBlocking(True)
+        yield CalibratePosition()
 
 
     def on_start(self, packet):
         detector = yield FetchCandleColors()
         self.log("First candles detection: {}".format(detector.colors))
         self.fsm.cake.update_with_detection(detector.colors)
-        yield GlassesSuperS()
-        yield NavigateToCake(True)
-        yield BlowCandlesOut()
+        #yield GlassesSuperS()
+        while True:
+            candles = self.fsm.cake.get_sorted_candles()
+            if len(candles) == 0 or self.event_loop.get_elapsed_match_time() < 70.0:
+                break
+            else:
+                side = SIDE_LEFT if self.robot.team == TEAM_BLUE else SIDE_RIGHT
+                nav = yield NavigateToCake(candles, CAKE_ARC_RADIUS)
+                yield BlowCandlesOut(candles, CAKE_ARC_RADIUS)
+                yield MoveRelative(0.1, -nav.direction)
+                yield CandleKicker(side, CANDLE_KICKER_UPPER, CANDLE_KICKER_POSITION_UP)
+                yield CandleKicker(side, CANDLE_KICKER_LOWER, CANDLE_KICKER_POSITION_UP)
+                break
 
 
 
@@ -114,40 +126,83 @@ class Cake:
     def get_sorted_candles(self):
         ordered = list(self.candles.values())
         ordered.sort(key = lambda candle: candle.angle)
+        while len(ordered) != 0 and not ordered[0].to_blow:
+            del ordered[0]
+        while len(ordered) != 0 and not ordered[-1].to_blow:
+            del ordered[-1]
         return ordered
 
 
 
 
-class NavigateToCake(Navigate):
+class NavigateToCake(statemachine.State):
 
-    def __init__(self, team_side):
-        x = 0.35
-        if team_side:
-            y = 1.0 - ROBOT_GYRATION_RADIUS + 0.05
-            angle = 0.0
+    APPROACH_DISTANCE = 0.3
+
+    def __init__(self, candles, cake_arc_radius):
+        self.candles = candles
+        self.cake_arc_radius = cake_arc_radius
+
+
+    def on_enter(self):
+        (my_approach, my_start) = self.compute_candle_pose(candles[0])
+        (opponent_approach, opponent_start) = self.compute_candle_pose(candles[-1])
+        (my_cost, my_path) = self.event_loop.map.route(self.robot.pose, team_approach)
+        (opponent_cost, opponent_path) = self.event_loop.map.route(self.robot.pose, team_approach)
+        if my_cost is None:
+            cost = opponent_cost
+            path = opponent_path
+            start = opponent_start
+            direction = DIRECTION_FORWARDS
+        elif opponent_cost is None:
+            cost = my_cost
+            path = my_path
+            start = my_start
+            direction = DIRECTION_BACKWARDS
+        elif my_cost < opponent_cost:
+            cost = my_cost
+            path = my_path
+            start = my_start
             direction = DIRECTION_BACKWARDS
         else:
-            y = 2.0 + ROBOT_GYRATION_RADIUS - 0.05
-            angle = math.pi
+            cost = opponent_cost
+            path = opponent_path
+            start = opponent_start
             direction = DIRECTION_FORWARDS
-        Navigate.__init__(self, x, y, angle, direction)
+        if cost is None:
+            yield None
+            return
+        yield FollowPath(path, direction)
+        yield CandleKicker(side, CANDLE_KICKER_UPPER, CANDLE_KICKER_POSITION_UP)
+        yield CandleKicker(side, CANDLE_KICKER_LOWER, CANDLE_KICKER_POSITION_UP)
+        if direction == DIRECTION_FORWARDS:
+            yield LookAt(start.x, start.y)
+        else:
+            yield LookAtOpposite(start.x, start.y)
+        yield MoveLineTo([start], direction)
+        yield None
 
 
-    def create_path(self):
-        path = Navigate.create_path(self)
-        if len(path) != 0:
-            path.append(Pose(ROBOT_CENTER_X, path[-1].y))
-        return path
+    def compute_candle_pose(self, candle):
+        start = Pose(self.cake_arc_radius * math.cos(candle.angle),
+                     1.5 - self.cake_arc_radius * math.sin(candle.angle))
+        approach = Pose(start.x + APPROACH_DISTANCE * math.sin(candle.angle),
+                        start.y + APPROACH_DISTANCE * math.cos(candle.angle))
+        return (approach, start)
 
 
 
 
 class BlowCandlesOut(statemachine.State):
 
+
+    def __init__(self, candles, cake_arc_radius):
+        self.candles = candles
+        self.cake_arc_radius = cake_arc_radius
+
+
     def on_enter(self):
         self.current = 0
-        self.candles = self.fsm.cake.get_sorted_candles()
         if self.robot.pose.virt.y > FIELD_Y_SIZE / 2.0:
             # the robot is on the opposite site.
             reordered = [ candle for candle in reversed(self.candles) ]
@@ -156,16 +211,13 @@ class BlowCandlesOut(statemachine.State):
         else:
             direction = DIRECTION_FORWARDS
         self.side = SIDE_LEFT if self.robot.team == TEAM_BLUE else SIDE_RIGHT
+
         angles = [ candle.angle for candle in self.candles ]
-        move = MoveArc(0.0, 1.5, 0.5 + ROBOT_GYRATION_RADIUS, angles, direction)
+        move = MoveArc(0.0, 1.5, self.cake_arc_radius, angles, direction)
         move.on_waypoint_reached = self.on_waypoint_reached
         move.on_candle_kicker = self.on_candle_kicker
         yield move
         self.exit_reason = move.exit_reason == TRAJECTORY_DESTINATION_REACHED
-        if self.exit_reason:
-            yield MoveLineTo(0.5, self.robot.pose.virt.y, DIRECTION_BACKWARDS)
-            self.send_packet(packets.CandleKicker(side = self.side, which = CANDLE_KICKER_UPPER, position = CANDLE_KICKER_POSITION_IDLE))
-            self.send_packet(packets.CandleKicker(side = self.side, which = CANDLE_KICKER_LOWER, position = CANDLE_KICKER_POSITION_IDLE))
         yield None
 
 
