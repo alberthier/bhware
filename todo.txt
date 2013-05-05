@@ -1,0 +1,15 @@
+brewery:
+- Quel est la valeur du cost d'un pathfinding qui échoue
+
+sheldon:
+- Retry de gâteau
+- dépose des verres à 80s
+- synchro tourelle
+- colordetector: kill -9 de toute autre instance lors du démarrage de brewery
+- colordetector: try-except pass autour de eval()
+
+leonard:
+- 
+
+drunkstar:
+- Configurer hostapd (penny)
