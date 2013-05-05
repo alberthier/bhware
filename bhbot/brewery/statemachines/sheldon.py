@@ -14,6 +14,17 @@ from commonstates import *
 from position import *
 
 
+FIRST_LINE_X = 0.94
+SECOND_LINE_X = 1.19
+THIRD_LINE_X = 1.45
+
+FIRST_LINE_END_Y = 1.68
+SECOND_LINE_END_Y = 1.5
+
+TAKE_GLASS_DELTA_X = 0.08
+
+START_X = FIRST_LINE_X + TAKE_GLASS_DELTA_X
+
 
 
 class Main(statemachine.State):
@@ -25,8 +36,8 @@ class Main(statemachine.State):
 
 
     def on_device_ready(self, packet):
-        yield CalibratePosition()
         yield AntiBlocking(True)
+        yield CalibratePosition(START_X)
 
 
     def on_start(self, packet):
@@ -34,7 +45,7 @@ class Main(statemachine.State):
         self.log("First candles detection: {}".format(detector.colors))
         self.fsm.cake.update_with_detection(detector.colors)
         # yield GlassesSuperS()
-        yield GlassesAlternate()
+        yield GlassesDirect()
         yield NavigateToCake(True)
         yield BlowCandlesOut()
 
@@ -74,7 +85,7 @@ class GlassesSuperS(statemachine.State):
 
 
 
-class GlassesAlternate(statemachine.State):
+class GlassesAlternateFrancois(statemachine.State):
 
     def on_enter(self):
         #deplacement = commandMsg("MSG_MOVE_CURVE 1 1 1.3")
@@ -148,6 +159,39 @@ class GlassesAlternate(statemachine.State):
         yield None
 
 
+class GlassesDirect(statemachine.State):
+
+    def on_enter(self):
+        ohc = OpponentHandlingConfig(
+            True,
+            retries = 1
+        )
+
+        move = yield MoveLineTo( START_X, FIRST_LINE_END_Y, opponent_handling = ohc)
+        move = yield Rotate(1.72, chained = move)
+
+        #if we're in position, take a picture
+        if move.exit_reason == REASON_DESTINATION_REACHED :
+            detector = yield FetchCandleColors()
+            self.log("Second candles detection: {}".format(detector.colors))
+            self.fsm.cake.update_with_detection(detector.colors)
+
+            yield Rotate(1.27)
+            yield MoveLineTo( 0.97, 1.52, direction = DIRECTION_BACKWARDS)
+            yield Rotate(0.84)
+            yield MoveLineTo( 1.26, 1.81)
+
+        else:
+            x = SECOND_LINE_X + TAKE_GLASS_DELTA_X
+            y = self.robot.virt.y
+            yield LookAt(x,y)
+            yield MoveLineTo(x,y)
+
+        yield Rotate(-math.pi/2)
+        yield MoveLineTo( 1.27, 1.16)
+
+
+        yield None
 
 
 ##################################################
