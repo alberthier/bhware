@@ -8,6 +8,7 @@ sheldon:
 - synchro tourelle
 - colordetector: kill -9 de toute autre instance lors du démarrage de brewery
 - colordetector: try-except pass autour de eval()
+- changer les angles de détection
 
 leonard:
 - 
