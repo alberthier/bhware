@@ -80,7 +80,7 @@ class Map:
         (cost, path) = self.pathfinder.find_path(start.x, start.y, end.x, end.y)
         delta = datetime.datetime.now() - start_date
         if len(path) == 0:
-            logger.log("No route found.")
+            logger.log("No route found. Cost: {}. compuation time: {}".format(cost, delta.total_seconds()))
             return (None, [])
         else:
             logger.log("Route computed. Cost: {}. compuation time: {}".format(cost, delta.total_seconds()))
