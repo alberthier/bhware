@@ -27,7 +27,14 @@ START_X = FIRST_LINE_X + TAKE_GLASS_DELTA_X
 
 CAKE_ARC_RADIUS = 0.65
 
+GIFT_Y_POS = [ 0.5, 1.1, 1.7, 2.3 ]
+GIFT_X_POS = 1.77
 
+GIFT_Y_DELTA = 0.05
+GIFT_Y_POS = [ y + GIFT_Y_DELTA for y in GIFT_Y_POS ]
+
+
+gm  = None
 
 class Main(statemachine.State):
 
@@ -37,6 +44,20 @@ class Main(statemachine.State):
         statemachine.StateMachine(self.event_loop, "barman", side = SIDE_LEFT)
         statemachine.StateMachine(self.event_loop, "barman", side = SIDE_RIGHT)
         self.fsm.cake = Cake()
+        global gm
+
+        gm  = goalmanager.GoalManager(self.fsm.event_loop)
+
+        # we may also handle each gift on its own
+
+        # for i, x in enumerate(GIFT_Y_POS) :
+        #     g = goalmanager.Goal(i, 1.0, x, 1.95, DIRECTION_FORWARDS, None)
+        #     gm.harvesting_goals.append(g)
+
+        gm.harvesting_goals.append(goalmanager.Goal("KICK_GIFTS", 1.0, GIFT_X_POS, 0.6, DIRECTION_FORWARDS,
+                                                    KickGifts))
+        gm.harvesting_goals.append(goalmanager.Goal("KICK_GIFTS", 1.0, GIFT_X_POS, GIFT_Y_POS[-1], DIRECTION_FORWARDS,
+                                                    KickGifts))
 
 
     def on_device_ready(self, packet):
@@ -67,6 +88,70 @@ class Main(statemachine.State):
         yield CandleKicker(side, CANDLE_KICKER_UPPER, CANDLE_KICKER_POSITION_IDLE)
         yield CandleKicker(side, CANDLE_KICKER_LOWER, CANDLE_KICKER_POSITION_IDLE)
         yield RingTheBell()
+        yield FindNextGoal()
+
+
+##################################################
+# GOAL MANAGEMENT
+##################################################
+
+
+
+class FindNextGoal(statemachine.State):
+    def on_enter(self):
+        global gm
+        goal = gm.get_best_goal(gm.harvesting_goals)
+
+        if goal :
+            state = goal.get_state()
+            yield state
+
+
+##################################################
+# GIFTS KICKING
+##################################################
+
+
+class KickGifts(statemachine.State):
+    def __init__(self, goal):
+        self.goal = goal
+
+    def on_enter(self):
+
+        side = SIDE_LEFT if self.robot.team == TEAM_RED else SIDE_RIGHT
+
+        yield LookAt(self.goal.x, self.goal.y)
+        yield MoveLineTo(self.goal.x, self.goal.y)
+
+        yield Rotate(math.pi/2)
+
+        if self.robot.pose.virt.y < 1.5 :
+            for y in GIFT_Y_POS:
+                # y+=0.05
+                direction = DIRECTION_BACKWARDS if y < self.robot.pose.virt.y else DIRECTION_FORWARDS
+                yield MoveLineTo(GIFT_X_POS, y, direction)
+                yield KickIt(side)
+        else:
+            for y in reversed(GIFT_Y_POS):
+                # y+=0.05
+                direction = DIRECTION_BACKWARDS if y < self.robot.pose.virt.y else DIRECTION_FORWARDS
+                yield MoveLineTo(GIFT_X_POS, y, direction)
+                yield KickIt(side)
+            yield MoveRelative(0.05) # disengage
+
+        gm.goal_done(self.goal)
+
+        yield None
+
+
+class KickIt(statemachine.State):
+    def __init__(self, side):
+        self.side = side
+
+    def on_enter(self):
+        yield CandleKicker(self.side, CANDLE_KICKER_UPPER, CANDLE_KICKER_POSITION_UP)
+        yield CandleKicker(self.side, CANDLE_KICKER_UPPER, CANDLE_KICKER_POSITION_IDLE)
+        yield None
 
 
 
