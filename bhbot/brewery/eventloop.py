@@ -466,6 +466,7 @@ class EventLoop(object):
     def start(self):
         leds.orange.off()
         leds.green.on()
+
         if self.interbot_enabled :
             if IS_MAIN_ROBOT:
                 InterbotServer(self)
@@ -481,6 +482,10 @@ class EventLoop(object):
         logger.log("Starting brewery with state machine '{}'".format(self.state_machine_name))
         self.pic_log_channel = PicLogChannel(self)
         self.pic_control_channel = PicControlChannel(self)
+
+        if self.colordetector :
+            self.colordetector.on_startup()
+
         while not self.stopping:
             asyncore.loop(EVENT_LOOP_TICK_RESOLUTION_S, True, None, 1)
             for fsm in self.fsms:

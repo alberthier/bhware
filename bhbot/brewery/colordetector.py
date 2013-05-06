@@ -10,9 +10,11 @@ import logger
 from definitions import *
 
 
-
-
 class ColorDetector:
+
+    def kill_process(self):
+        logger.log('Killing existing colordetector processes')
+        subprocess.call("killall -9 colordetector")
 
     def __init__(self, event_loop):
         self.event_loop = event_loop
@@ -20,10 +22,15 @@ class ColorDetector:
         self.team_name = None
         self.process = None
         self.folder = os.path.join(os.path.dirname(__file__), "colordetector")
+
+    def on_startup(self):
+        self.kill_process()
+        self.build()
+
+    def build(self):
         cmds = ["g++", "-Wall", "-O2", "-o", "colordetector", "-l", "opencv_core", "-l", "opencv_highgui", "-l", "opencv_imgproc", "colordetector.cpp"]
         bld = builder.Builder("colordetector.cpp", "colordetector", cmds, self.folder)
         bld.build()
-
 
     def quit(self):
         if self.process is not None:
@@ -69,4 +76,3 @@ class ColorDetector:
             except Exception as e :
                 logger.log('Exception while invoking colordetector : {}'.format(e))
         return ret
-
