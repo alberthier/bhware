@@ -21,7 +21,7 @@ THIRD_LINE_X = 1.45
 FIRST_LINE_END_Y = 1.68
 SECOND_LINE_END_Y = 1.5
 
-TAKE_GLASS_DELTA_X = 0.08
+TAKE_GLASS_DELTA_X = 0.04
 
 START_X = FIRST_LINE_X + TAKE_GLASS_DELTA_X
 
@@ -29,7 +29,7 @@ START_X = FIRST_LINE_X + TAKE_GLASS_DELTA_X
 
 class Main(statemachine.State):
 
-    CAKE_ARC_RADIUS = 0.5 + ROBOT_GYRATION_RADIUS
+    CAKE_ARC_RADIUS = 0.350 + MAIN_ROBOT_UPPER_CANDLE_KICKER_DIST
 
     def on_enter(self):
         statemachine.StateMachine(self.event_loop, "barman", side = SIDE_LEFT)
@@ -251,10 +251,10 @@ class Cake:
     def get_sorted_candles(self):
         ordered = list(self.candles.values())
         ordered.sort(key = lambda candle: candle.angle)
-        while len(ordered) != 0 and not ordered[0].to_blow:
-            del ordered[0]
-        while len(ordered) != 0 and not ordered[-1].to_blow:
-            del ordered[-1]
+        #while len(ordered) != 0 and not ordered[0].to_blow:
+            #del ordered[0]
+        #while len(ordered) != 0 and not ordered[-1].to_blow:
+            #del ordered[-1]
         return ordered
 
 
@@ -272,7 +272,6 @@ class NavigateToCake(statemachine.State):
     def on_enter(self):
         (my_approach, my_start) = self.compute_candle_pose(self.candles[0])
         (opponent_approach, opponent_start) = self.compute_candle_pose(self.candles[-1])
-        self.log("=========    ca={} app={} st={}".format(self.candles[0].angle, my_approach, my_start))
         (my_cost, my_path) = self.event_loop.map.route(self.robot.pose, my_approach)
         (opponent_cost, opponent_path) = self.event_loop.map.route(self.robot.pose, opponent_approach)
         if my_cost is None:
@@ -321,7 +320,6 @@ class NavigateToCake(statemachine.State):
 
 
 class BlowCandlesOut(statemachine.State):
-
 
     def __init__(self, candles, cake_arc_radius):
         self.candles = candles

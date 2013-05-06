@@ -27,6 +27,8 @@ MAIN_ROBOT_Y_SIZE                      = 0.252
 MAIN_ROBOT_CENTER_X                    = 0.126
 MAIN_ROBOT_CENTER_Y                    = 0.126
 MAIN_ROBOT_GYRATION_RADIUS             = 0.174
+MAIN_ROBOT_UPPER_CANDLE_KICKER_DIST    = 0.334
+MAIN_ROBOT_LOWER_CANDLE_KICKER_DIST    = 0.224
 
 # Secondary robot
 SECONDARY_ROBOT_X_SIZE                 = 0.172
