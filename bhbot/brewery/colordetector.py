@@ -34,8 +34,11 @@ class ColorDetector:
 
     def quit(self):
         if self.process is not None:
-            self.process.stdin.write(b"quit\n")
-            self.process.wait()
+            try:
+                self.process.stdin.write(b"quit\n")
+                self.process.wait()
+            except:
+                pass
             self.process = None
 
 
