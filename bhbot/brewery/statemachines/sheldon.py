@@ -287,7 +287,7 @@ class GlassesDirect(statemachine.State):
 
         else:
             x = SECOND_LINE_X + TAKE_GLASS_DELTA_X
-            y = self.robot.virt.y
+            y = self.robot.pose.virt.y
             yield LookAt(x,y)
             yield MoveLineTo(x,y)
 
