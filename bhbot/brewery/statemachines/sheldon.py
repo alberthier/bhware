@@ -25,6 +25,8 @@ TAKE_GLASS_DELTA_X = 0.04
 
 START_X = FIRST_LINE_X + TAKE_GLASS_DELTA_X
 
+CAKE_ARC_RADIUS = 0.65
+
 
 
 class Main(statemachine.State):
@@ -270,43 +272,60 @@ class NavigateToCake(statemachine.State):
 
 
     def on_enter(self):
-        (my_approach, my_start) = self.compute_candle_pose(self.candles[0])
-        (opponent_approach, opponent_start) = self.compute_candle_pose(self.candles[-1])
-        (my_cost, my_path) = self.event_loop.map.route(self.robot.pose, my_approach)
-        (opponent_cost, opponent_path) = self.event_loop.map.route(self.robot.pose, opponent_approach)
-        if my_cost is None:
-            cost = opponent_cost
-            path = opponent_path
-            start = opponent_start
-            self.direction = DIRECTION_BACKWARDS
-        elif opponent_cost is None:
-            cost = my_cost
-            path = my_path
-            start = my_start
-            self.direction = DIRECTION_FORWARDS
-        elif my_cost < opponent_cost:
-            cost = my_cost
-            path = my_path
-            start = my_start
-            self.direction = DIRECTION_FORWARDS
-        else:
-            cost = opponent_cost
-            path = opponent_path
-            start = opponent_start
-            self.direction = DIRECTION_BACKWARDS
-        if cost is None:
-            yield None
-            return
-        yield FollowPath(path, self.direction)
         side = SIDE_LEFT if self.robot.team == TEAM_BLUE else SIDE_RIGHT
+        yield Navigate(ROBOT_CENTER_X + 0.3, 1.5 - self.cake_arc_radius, DIRECTION_BACKWARDS)
         yield CandleKicker(side, CANDLE_KICKER_UPPER, CANDLE_KICKER_POSITION_UP)
         yield CandleKicker(side, CANDLE_KICKER_LOWER, CANDLE_KICKER_POSITION_UP)
-        if self.direction == DIRECTION_FORWARDS:
-            yield LookAt(start.x, start.y)
-        else:
-            yield LookAtOpposite(start.x, start.y)
-        yield MoveLine([start], self.direction)
-        yield None
+        yield Rotate(0.0)
+        yield MoveLineTo(ROBOT_CENTER_X, 1.5 - self.cake_arc_radius, DIRECTION_BACKWARDS)
+        yield CandleKicker(side, CANDLE_KICKER_UPPER, CANDLE_KICKER_POSITION_KICK)
+        yield CandleKicker(side, CANDLE_KICKER_LOWER, CANDLE_KICKER_POSITION_KICK)
+        yield CandleKicker(side, CANDLE_KICKER_UPPER, CANDLE_KICKER_POSITION_UP)
+        yield CandleKicker(side, CANDLE_KICKER_LOWER, CANDLE_KICKER_POSITION_UP)
+        remaining_candles = []
+        for candle in self.candles:
+            if candle.name not in ["top1", "bottom1", "top8", "bottom12"]:
+                remaining_candles.append(candle)
+        yield BlowCandlesOut(remaining_candles, CAKE_ARC_RADIUS)
+
+    #def on_enter(self):
+        #(my_approach, my_start) = self.compute_candle_pose(self.candles[0])
+        #(opponent_approach, opponent_start) = self.compute_candle_pose(self.candles[-1])
+        #(my_cost, my_path) = self.event_loop.map.route(self.robot.pose, my_approach)
+        #(opponent_cost, opponent_path) = self.event_loop.map.route(self.robot.pose, opponent_approach)
+        #if my_cost is None:
+            #cost = opponent_cost
+            #path = opponent_path
+            #start = opponent_start
+            #self.direction = DIRECTION_BACKWARDS
+        #elif opponent_cost is None:
+            #cost = my_cost
+            #path = my_path
+            #start = my_start
+            #self.direction = DIRECTION_FORWARDS
+        #elif my_cost < opponent_cost:
+            #cost = my_cost
+            #path = my_path
+            #start = my_start
+            #self.direction = DIRECTION_FORWARDS
+        #else:
+            #cost = opponent_cost
+            #path = opponent_path
+            #start = opponent_start
+            #self.direction = DIRECTION_BACKWARDS
+        #if cost is None:
+            #yield None
+            #return
+        #yield FollowPath(path, self.direction)
+        #side = SIDE_LEFT if self.robot.team == TEAM_BLUE else SIDE_RIGHT
+        #yield CandleKicker(side, CANDLE_KICKER_UPPER, CANDLE_KICKER_POSITION_UP)
+        #yield CandleKicker(side, CANDLE_KICKER_LOWER, CANDLE_KICKER_POSITION_UP)
+        #if self.direction == DIRECTION_FORWARDS:
+            #yield LookAt(start.x, start.y)
+        #else:
+            #yield LookAtOpposite(start.x, start.y)
+        #yield MoveLine([start], self.direction)
+        #yield None
 
 
     def compute_candle_pose(self, candle):
@@ -337,7 +356,10 @@ class BlowCandlesOut(statemachine.State):
             direction = DIRECTION_FORWARDS
         self.side = SIDE_LEFT if self.robot.team == TEAM_BLUE else SIDE_RIGHT
 
-        angles = [ candle.angle for candle in self.candles ]
+        angles = []
+        for candle in self.candles:
+            # 3.5 degrees is the difference between the candle kickers and the robot center.
+            angles.append(candle.angle + math.radians(3.5))
         move = MoveArc(0.0, 1.5, self.cake_arc_radius, angles, direction)
         move.on_waypoint_reached = self.on_waypoint_reached
         move.on_candle_kicker = self.on_candle_kicker
