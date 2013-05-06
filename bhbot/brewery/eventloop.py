@@ -177,10 +177,14 @@ class TurretChannel(asyncore.file_dispatcher):
                                     packets.TurretDistances.TYPE,
                                     packets.TurretBoot.TYPE ]:
                     self.synchronized = True
-                    self.buffer += data
+                    self.buffer = data
                     self.packet = packets.create_packet(self.buffer)
                     break
-        self.eventloop.handle_read(self)
+        try:
+            self.eventloop.handle_read(self)
+        except KeyError as e:
+            logger.log("Turret channel is desynchronized. Resynchronizing. Unknown packet type: {}".format(e.args[0]))
+            self.synchronized = False
 
 
     def close(self):
