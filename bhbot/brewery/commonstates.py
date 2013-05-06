@@ -86,13 +86,15 @@ class Timer(statemachine.State):
 
 
 
-class SetupPositionControl(statemachine.State):
+class SpeedControl(statemachine.State):
 
-    def __init__(self, t_acc = 0.0, f_va_max = 0.0):
+    def __init__(self, speed = None):
         statemachine.State.__init__(self)
         self.packet = packets.PositionControlConfig()
-        self.packet.t_acc = t_acc
-        self.packet.f_va_max = f_va_max
+        if speed is not None:
+            self.packet.vmax_limit = speed
+        else:
+            self.packet.vmax_limit = 88.0
 
 
     def on_enter(self):
@@ -310,14 +312,20 @@ class WaitForOpponentLeave(Timer):
         self.log("WaitForOpponentLeave : exit reason={}".format(TRAJECTORY.lookup_by_value[self.exit_reason]))
 
 
+
+
+
 class OpponentHandlingConfig:
     def __init__(self, backout, retries: int or None=None, wait_delay: float or None=None):
         self.backout = backout
         self.retries_count = retries
         self.wait_delay = wait_delay
 
+
 NO_OPPONENT_HANDLING = OpponentHandlingConfig(False, 0, 0)
 OPPONENT_HANDLING = OpponentHandlingConfig(True, None, None)
+
+
 
 
 class AbstractMove(statemachine.State):
@@ -757,7 +765,9 @@ class CalibratePosition(statemachine.State):
             yield DefinePosition(ROBOT_CENTER_X, estimated_start_y, 0.0)
             yield MoveLineTo(self.x, estimated_start_y)
             yield Rotate(math.pi / 2.0)
+            yield SpeedControl(0.3)
             yield MoveLineTo(self.x, 0.0, DIRECTION_BACKWARDS)
+            yield SpeedControl()
             yield DefinePosition(None, ROBOT_CENTER_X, math.pi / 2.0)
         yield None
 
