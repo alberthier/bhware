@@ -8,9 +8,9 @@ iface eth0 inet static
     netmask 255.255.255.0
 
 # Wireless through a router
-#auto wlan0
-#iface wlan0 inet static
-#    pre-up wpa_supplicant -B -Dwext -iwlan0 -c/etc/wpa_supplicant/wpa_supplicant.conf
+auto wlan0
+iface wlan0 inet static
+    pre-up wpa_supplicant -B -Dwext -iwlan0 -c/etc/wpa_supplicant/wpa_supplicant.conf
 #    wireless-power off
-#    address 192.168.1.42
-#    netmask 255.255.255.0
+    address 192.168.3.12
+    netmask 255.255.255.0

@@ -3,12 +3,12 @@
 #Uncomment the following line to get a log of hotplug events
 #env >> /tmp/hotplug.log
 
-update_wlan()
-{
-    if [ "$ACTION" = "add" -a "$SUBSYSTEM" = "ieee80211" ]; then
-        nohup /etc/init.d/start-wifi >/dev/null &
-    fi
-}
+#update_wlan()
+#{
+    #if [ "$ACTION" = "add" -a "$SUBSYSTEM" = "ieee80211" ]; then
+        #nohup /etc/init.d/start-wifi >/dev/null &
+    #fi
+#}
 
-update_wlan
+#update_wlan
 exec /sbin/mdev

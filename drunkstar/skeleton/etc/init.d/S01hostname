@@ -13,6 +13,9 @@ case "$1" in
     elif [ $MAC_ADDRESS = "00:10:75:1A:86:F3" ]; then
         hostname leonard
         echo "OK"
+    elif [ $MAC_ADDRESS = "00:10:75:1A:87:59" ]; then
+        hostname penny
+        echo "OK"
     else
         echo "Unchanged"
     fi
