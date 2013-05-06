@@ -59,10 +59,14 @@ class Main(statemachine.State):
                 side = SIDE_LEFT if self.robot.team == TEAM_BLUE else SIDE_RIGHT
                 nav = yield NavigateToCake(candles, self.CAKE_ARC_RADIUS)
                 yield BlowCandlesOut(candles, self.CAKE_ARC_RADIUS)
-                yield MoveRelative(0.1, -nav.direction)
+                # yield MoveRelative(0.1, -nav.direction) # TODO : nav.direction is undefined
                 yield CandleKicker(side, CANDLE_KICKER_UPPER, CANDLE_KICKER_POSITION_UP)
                 yield CandleKicker(side, CANDLE_KICKER_LOWER, CANDLE_KICKER_POSITION_UP)
                 break
+        yield MoveRelative(0.4)
+        yield CandleKicker(side, CANDLE_KICKER_UPPER, CANDLE_KICKER_POSITION_IDLE)
+        yield CandleKicker(side, CANDLE_KICKER_LOWER, CANDLE_KICKER_POSITION_IDLE)
+        yield RingTheBell()
 
 
 
@@ -209,6 +213,32 @@ class GlassesDirect(statemachine.State):
         yield None
 
 
+class RingTheBell(statemachine.State):
+    MIN_X = 0.27
+    MIN_X_MIDDLE = 0.63
+    MAX_X = 1.71
+
+
+    def on_enter(self):
+        x = self.robot.pose.virt.x
+        y = self.robot.pose.virt.y
+
+        if y >= 1.5 :
+            x = max(x, self.MIN_X_MIDDLE)
+
+        x = max(x, self.MIN_X)
+        y = min(x, self.MAX_X)
+
+        yield LookAt(x, y)
+        yield MoveLineTo(x, y)
+        yield DepositGlasses()
+        yield None
+
+
+
+
+
+
 ##################################################
 # Blow candles out
 
@@ -287,6 +317,7 @@ class NavigateToCake(statemachine.State):
             if candle.name not in ["top1", "bottom1", "top8", "bottom12"]:
                 remaining_candles.append(candle)
         yield BlowCandlesOut(remaining_candles, CAKE_ARC_RADIUS)
+        yield None
 
     #def on_enter(self):
         #(my_approach, my_start) = self.compute_candle_pose(self.candles[0])
