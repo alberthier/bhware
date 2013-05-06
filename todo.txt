@@ -1,13 +1,11 @@
 brewery:
 - Quel est la valeur du cost d'un pathfinding qui échoue
-- Tourelle : pb de réception paquet mal formé. (while read(1) create_packet())
 
 sheldon:
 - Retry de gâteau
 - dépose des verres à 80s
 - synchro tourelle
 - colordetector: kill -9 de toute autre instance lors du démarrage de brewery
-- colordetector: try-except pass autour de eval()
 - changer les angles de détection
 
 leonard:
