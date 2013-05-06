@@ -46,14 +46,14 @@ class ColorDetector:
         self.invoke("reset")
         cfg_file = "{}{}.cfg".format(self.team_name, str(self.count))
         cfg_path = os.path.join(self.folder, cfg_file)
-        logger.log("Initialization #{} of the color detector. config: {}".format(self.count, cfg_file))
+        log = "{}-{}.jpg".format(os.path.splitext(logger.filepath)[0], self.count)
+        logger.log("Initialization #{} of the color detector. config: {} log: {}".format(self.count, cfg_file, log))
         if os.path.exists(cfg_path):
             cfg = open(cfg_path)
             for line in cfg:
                 line = line.strip()
                 if len(line) != 0 and not line.startswith("#"):
                     self.invoke(line)
-        log = "{}-{}.jpg".format(os.path.splitext(logger.filepath)[0], self.count)
         self.invoke("set_log_file", log)
         self.count += 1
 
