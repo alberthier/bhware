@@ -716,9 +716,9 @@ class FetchCandleColors(statemachine.State):
 
 class Navigate(statemachine.State):
 
-    def __init__(self, x, y, angle, direction = DIRECTION_FORWARDS):
+    def __init__(self, x, y, direction = DIRECTION_FORWARDS):
         statemachine.State.__init__(self)
-        self.destination = position.Pose(x, y, angle, True)
+        self.destination = position.Pose(x, y, None, True)
         self.direction = direction
         self.exit_reason = TRAJECTORY_DESTINATION_REACHED
 
