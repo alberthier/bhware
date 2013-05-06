@@ -3,10 +3,9 @@ brewery:
 
 sheldon:
 - Retry de gâteau
-- dépose des verres à 80s
-- synchro tourelle
-- colordetector: kill -9 de toute autre instance lors du démarrage de brewery
+- les bougies sont "trop" soufflées : j'ai l'impression qu'il repasse dessus
 - changer les angles de détection
+- prendre les cadeaux
 
 leonard:
 - 
