@@ -64,6 +64,9 @@ class ColorDetector:
             cmd = " ".join(args) + "\n"
             self.process.stdin.write(cmd.encode("utf-8"))
             out = str(self.process.stdout.readline(), "utf-8")
-            ret = eval(out)
+            try :
+                ret = eval(out)
+            except Exception as e :
+                logger.log('Exception while invoking colordetector : {}'.format(e))
         return ret
 
