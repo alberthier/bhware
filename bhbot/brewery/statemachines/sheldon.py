@@ -31,8 +31,6 @@ CAKE_ARC_RADIUS = 0.65
 
 class Main(statemachine.State):
 
-    CAKE_ARC_RADIUS = 0.350 + MAIN_ROBOT_UPPER_CANDLE_KICKER_DIST
-
     def on_enter(self):
         statemachine.StateMachine(self.event_loop, "barman", side = SIDE_LEFT)
         statemachine.StateMachine(self.event_loop, "barman", side = SIDE_RIGHT)
@@ -57,8 +55,8 @@ class Main(statemachine.State):
                 break
             else:
                 side = SIDE_LEFT if self.robot.team == TEAM_BLUE else SIDE_RIGHT
-                nav = yield NavigateToCake(candles, self.CAKE_ARC_RADIUS)
-                yield BlowCandlesOut(candles, self.CAKE_ARC_RADIUS)
+                nav = yield NavigateToCake(candles, CAKE_ARC_RADIUS)
+                yield BlowCandlesOut(candles, CAKE_ARC_RADIUS)
                 yield MoveRelative(0.1, -nav.direction)
                 yield CandleKicker(side, CANDLE_KICKER_UPPER, CANDLE_KICKER_POSITION_UP)
                 yield CandleKicker(side, CANDLE_KICKER_LOWER, CANDLE_KICKER_POSITION_UP)
