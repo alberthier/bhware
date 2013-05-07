@@ -358,7 +358,9 @@ class BlowCandlesOut(statemachine.State):
         for candle in self.candles:
             # 3.5 degrees is the difference between the candle kickers and the robot center.
             angles.append(candle.angle + math.radians(3.5))
+        yield SpeedControl(0.1)
         move = MoveArc(0.0, 1.5, self.cake_arc_radius, angles, direction)
+        yield SpeedControl()
         move.on_waypoint_reached = self.on_waypoint_reached
         move.on_candle_kicker = self.on_candle_kicker
         yield move
