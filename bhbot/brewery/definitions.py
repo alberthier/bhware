@@ -116,7 +116,7 @@ LOG_DIR                                = os.path.join(os.path.dirname(os.path.di
 WEB_SERVER_PORT                        = 8080
 
 # Use pathfinding algorithm to evaluate the best goal
-GOAL_EVALUATION_USES_PATHFINDING       = True
+GOAL_EVALUATION_USES_PATHFINDING       = False
 
 # Router map resolution
 ROUTING_MAP_RESOLUTION                 = 0.02

@@ -4,6 +4,7 @@ import sys
 import position
 import logger
 import tools
+import statemachine
 
 from definitions import *
 
@@ -23,6 +24,15 @@ class Goal(object):
         self.ctor_parameters = ctor_parameters
         self.score = 0.0
         self.penality = 0.0
+
+    def get_state(self):
+        if isinstance(self.handler_state, statemachine.State):
+            return self.handler_state
+        else :
+            if self.ctor_parameters :
+                return self.handler_state(self, *self.ctor_parameters)
+            else:
+                return self.handler_state(self)
 
 
 
