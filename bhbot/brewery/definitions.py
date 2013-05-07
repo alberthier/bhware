@@ -71,6 +71,7 @@ def setup_definitions(is_main_robot):
 MATCH_DURATION_MS                      = 90000
 FUNNY_ACTION_DURATION_MS               = 10000
 FULL_DURATION_MS                       = MATCH_DURATION_MS + FUNNY_ACTION_DURATION_MS
+BREWERY_LIFETIME_MS                    = FULL_DURATION_MS + 5000
 TEAM_COLOR_RED                         = "#a1011d"
 TEAM_COLOR_BLUE                        = "#004c90"
 
