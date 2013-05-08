@@ -390,7 +390,7 @@ class NavigateToCake(statemachine.State):
         for candle in self.candles:
             if candle.name not in ["top1", "bottom1", "top8", "bottom12"]:
                 remaining_candles.append(candle)
-        yield BlowCandlesOut(remaining_candles, CAKE_ARC_RADIUS)
+        yield BlowCandlesOut(remaining_candles, self.cake_arc_radius)
         yield None
 
 
