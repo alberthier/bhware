@@ -107,7 +107,10 @@ class ClientSocketChannel(asyncore.dispatcher_with_send):
         if not self.connected and not self.connecting:
             self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
             self.socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
-            self.connect(self.address)
+            try :
+                self.connect(self.address)
+            except :
+                self.handle_error()
 
 
 

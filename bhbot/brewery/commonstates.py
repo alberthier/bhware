@@ -795,6 +795,10 @@ class FindNextGoal(statemachine.State):
         goal = gm.get_best_goal(gm.harvesting_goals)
 
         if goal :
+            logger.log('Next goal is {}'.format(goal.identifier))
+
+            yield Navigate(goal.x, goal.y, goal.direction)
+
             state = goal.get_state()
             gm.goal_doing(goal)
             yield state
