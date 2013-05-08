@@ -5,13 +5,13 @@ brewery:
 sheldon:
 - Retry de gâteau
 - les bougies sont "trop" soufflées : j'ai l'impression qu'il repasse dessus
-- changer les angles de détection
+-
 
 leonard:
 - 
 
 drunkstar:
-- Configurer hostapd (penny)
+-
 
 Stratégie dépose :
 
@@ -28,3 +28,7 @@ Communication des goals entre robots :
 - Envoyé à l'autre robot
 - un GOAL_DOING ne peut pas être next goal
 - un GOAL_DOING peut redevenir GOAL_AVAILABLE
+
+Gérer cadeaux un a un
+
+Dépose des verres dans la zone de départ de chaque robot
