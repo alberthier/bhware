@@ -25,6 +25,15 @@ class Main(statemachine.State):
     def on_enter(self):
         statemachine.StateMachine(self.event_loop, "barman", side = SIDE_RIGHT)
 
+        gm  = goalmanager.GoalManager(self.fsm.event_loop)
+        self.robot.goal_manager = gm
+
+        # we may also handle each gift on its own
+
+        gm.harvesting_goals.append(goalmanager.Goal("KICK_GIFTS", 1.0, X_OPEN_GIFTS_START, Y_OPEN_GIFTS_START, DIRECTION_FORWARDS,
+                                                    OpenGifts))
+
+
 
     def on_device_ready(self, packet):
         yield CalibratePosition(X_START)
@@ -32,10 +41,10 @@ class Main(statemachine.State):
 
 
     def on_start(self, packet):
+        gm = self.robot.goal_manager
         yield TakeGlasses()
         yield LookAt(X_OPEN_GIFTS_START, Y_OPEN_GIFTS_START)
-
-        yield OpenGifts()
+        yield FindNextGoal()
         yield Deposit()
         yield EndOfMatch()
 
@@ -72,7 +81,13 @@ class OpenGifts(statemachine.State):
     X_VALUE = X_OPEN_GIFTS_START
     Y_VALUES = [Y_OPEN_GIFTS_START, 1.79, 1.2, 0.62]
 
+    def __init__(self, goal):
+        self.goal = goal
+        self.exit_reason = GOAL_FAILED
+
     def on_enter(self):
+        gm = self.robot.goal_manager
+
         self.gift_opener_side = GIFT_OPENER_POSITION_RIGHT \
             if self.robot.team == TEAM_BLUE else GIFT_OPENER_POSITION_LEFT
 
@@ -86,7 +101,12 @@ class OpenGifts(statemachine.State):
         move = MoveLine(points, direction=DIRECTION_BACKWARDS)
         move.on_waypoint_reached = self.on_waypoint_reached
         move.on_gift_opener = self.on_gift_opener
+
         yield move
+
+        if move.exit_reason == TRAJECTORY_DESTINATION_REACHED:
+            self.exit_reason = GOAL_DONE
+
         yield GiftOpener(self.gift_opener_side)
         yield GiftOpener(GIFT_OPENER_POSITION_IDLE)
         yield None

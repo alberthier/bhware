@@ -21,6 +21,7 @@ class Robot(object):
         self.event_loop = event_loop
         self.moving = False
         self.glasses_count = [0, 0]
+        self.goal_manager = None
 
 
     def is_looking_at(self, pose):

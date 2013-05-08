@@ -784,3 +784,23 @@ class DepositGlasses(statemachine.State):
         if packet.done :
             yield None
 
+##################################################
+# GOAL MANAGEMENT
+##################################################
+
+
+class FindNextGoal(statemachine.State):
+    def on_enter(self):
+        gm = self.robot.goal_manager
+        goal = gm.get_best_goal(gm.harvesting_goals)
+
+        if goal :
+            state = goal.get_state()
+            gm.goal_doing(goal)
+            yield state
+            if state.exit_reason == GOAL_DONE :
+                gm.goal_done(goal)
+            else :
+                gm.goal_available(goal)
+
+        yield None

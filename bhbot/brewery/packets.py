@@ -821,6 +821,7 @@ class InterbotHello(BasePacket):
 
     TYPE = 200
 
+
 class InterbotPosition(BasePacket):
 
     TYPE = 201
@@ -829,6 +830,18 @@ class InterbotPosition(BasePacket):
     DEFINITION = (
         ('current_pose'       , Pose  ("Other robot pose")),
         ('main_robot', Bool  (True, "Sender is main robot")),
+    )
+
+
+class InterbotGoalStatus(BasePacket):
+
+    TYPE = 202
+
+    LOGVIEW_COLOR = "#BB00CD"
+    DEFINITION = (
+        ('main_robot', Bool  (True, "Sender is main robot")),
+        ('goal_identifier', String (32, "", "Goal identifier")),
+        ('goal_status', UInt8 (0, "Goal status")),
     )
 
 # Internal
