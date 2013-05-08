@@ -348,3 +348,17 @@ class List(AbstractItem):
             l.append(self.element_type.from_dump(next(it)))
         return l
 
+
+
+class String(AbstractItem):
+
+    DESCRIPTION = "String of specified length"
+
+    def __init__(self, length, default_value = "", description = None):
+        AbstractItem.__init__(self, default_value, description)
+        self.length = length
+        self.C_TYPE = "{}s".format(length)
+        self.DESCRIPTION = "String of length {}".format(self.length)
+
+    def serialize(self, value, buf):
+        buf.append(bytes(value,'utf-8','ignore'))
