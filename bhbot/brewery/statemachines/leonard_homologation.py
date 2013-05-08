@@ -23,7 +23,8 @@ Y_START = BLUE_START_Y
 class Main(statemachine.State):
 
     def on_device_ready(self, packet):
-        yield CalibratePosition(X_START)
+        #yield CalibratePosition(X_START)
+        yield DefinePosition(X_START, ROBOT_CENTER_X, math.pi/2)
         yield AntiBlocking(True)
 
 
@@ -33,7 +34,7 @@ class Main(statemachine.State):
         yield TakeGlasses()
         yield Gripper(SIDE_RIGHT, MOVE_CLOSE)
         yield LookAt(X_START, Y_START)
-        yield MoveLineTo(X_START, 0.18)
+        yield MoveLineTo(X_START, 0.3)
         yield Gripper(SIDE_RIGHT, MOVE_OPEN)
         yield MoveRelative(-0.2, direction=DIRECTION_BACKWARDS)
         yield EndOfMatch()
@@ -43,7 +44,7 @@ class Main(statemachine.State):
 class TakeGlasses(statemachine.State):
 
     def on_enter(self):
-        yield MoveLineTo(BLUE_START_X, Y_OPEN_GIFTS_START)
+        yield MoveLineTo(BLUE_START_X, 2.0)
         yield None
 
 
