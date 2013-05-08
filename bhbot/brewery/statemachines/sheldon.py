@@ -103,13 +103,8 @@ class KickGifts(statemachine.State):
         self.exit_reason = GOAL_FAILED
 
     def on_enter(self):
-        gm = self.robot.goal_manager
         side = SIDE_LEFT if self.robot.team == TEAM_RED else SIDE_RIGHT
 
-        yield LookAt(self.goal.x, self.goal.y)
-        yield MoveLineTo(self.goal.x, self.goal.y)
-
-        #TODO : handle being blocked on trajectory
 
         yield Rotate(math.pi/2)
 
