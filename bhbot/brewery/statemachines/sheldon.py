@@ -24,6 +24,7 @@ SECOND_LINE_END_Y = 1.5
 TAKE_GLASS_DELTA_X = 0.04
 
 START_X = FIRST_LINE_X + TAKE_GLASS_DELTA_X
+SECOND_SHOT_ANGLE = math.radians(150.0)
 
 CAKE_ARC_RADIUS = 0.65
 
@@ -255,7 +256,7 @@ class GlassesDirect(statemachine.State):
         )
 
         move = yield MoveLineTo( START_X, FIRST_LINE_END_Y, opponent_handling = ohc)
-        move = yield Rotate(1.72, chained = move)
+        move = yield Rotate(SECOND_SHOT_ANGLE, chained = move)
 
         #if we're in position, take a picture
         if move.exit_reason == REASON_DESTINATION_REACHED :

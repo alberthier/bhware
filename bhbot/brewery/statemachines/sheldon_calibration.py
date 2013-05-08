@@ -25,18 +25,18 @@ class Main(statemachine.State):
 
     def on_start(self, packet):
         for i in range(10):
-            yield CalibratePosition()
+            yield CalibratePosition(START_X)
             detector = yield FetchCandleColors()
             self.log("#{}[1] candles detection: {}".format(i, detector.colors))
-            yield GlassesSuperS()
-            yield LookAt(0.0, 1.5)
+            yield MoveLineTo( START_X, FIRST_LINE_END_Y)
+            yield Rotate(SECOND_SHOT_ANGLE)
             detector = yield FetchCandleColors()
             self.log("#{}[2] candles detection: {}".format(i, detector.colors))
             yield Rotate(-math.pi / 2.0)
-            yield MoveLineTo(BLUE_START_X, 0.5)
+            yield MoveLineTo(START_X, 0.75)
             yield Rotate(0.0)
-            yield MoveLineTo(0.0, 0.5)
-            yield Timer(5000)
+            yield MoveLineTo(0.0, 0.75)
+            yield Timer(3000)
 
 
 
