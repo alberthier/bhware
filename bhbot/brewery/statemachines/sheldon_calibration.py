@@ -24,7 +24,8 @@ class Main(statemachine.State):
 
 
     def on_start(self, packet):
-        for i in range(10):
+        for i in range(3):
+            self.event_loop.colordetector.count = 1
             yield CalibratePosition(START_X)
             detector = yield FetchCandleColors()
             self.log("#{}[1] candles detection: {}".format(i, detector.colors))
