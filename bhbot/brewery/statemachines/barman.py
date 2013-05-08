@@ -38,17 +38,20 @@ class CollectGlasses(statemachine.State):
         yield Gripper(self.fsm.side, MOVE_OPEN)
         yield Lifter(self.fsm.side, LIFTER_MOVE_DOWN)
         self.fsm.glasses_count += 1
+        logger.log('{} glasses count {}'.format(SIDE.lookup_by_value[self.fsm.side], self.fsm.glasses_count))
 
         # Second glass
         yield wait
         yield Gripper(self.fsm.side, MOVE_CLOSE)
         yield Lifter(self.fsm.side, LIFTER_MOVE_MIDDLE)
         self.fsm.glasses_count += 1
+        logger.log('{} glasses count {}'.format(SIDE.lookup_by_value[self.fsm.side], self.fsm.glasses_count))
 
         # Third glass
         yield wait
         yield BottomHolder(self.fsm.side, MOVE_OPEN)
         self.fsm.glasses_count += 1
+        logger.log('{} glasses count {}'.format(SIDE.lookup_by_value[self.fsm.side], self.fsm.glasses_count))
 
 
     def on_internal_drop_glasses(self, packet):
@@ -73,6 +76,10 @@ class UnloadGlasses(statemachine.State):
             yield TopHolder(self.fsm.side, MOVE_OPEN)
             yield Gripper(self.fsm.side, MOVE_OPEN)
             yield BottomHolder(self.fsm.side, MOVE_CLOSE)
+
+        self.fsm.glasses_count = 0
+        logger.log('{} glasses count {}'.format(SIDE.lookup_by_value[self.fsm.side], self.fsm.glasses_count))
+
         yield None
 
 
