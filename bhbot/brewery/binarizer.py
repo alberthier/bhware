@@ -362,3 +362,11 @@ class String(AbstractItem):
 
     def serialize(self, value, buf):
         buf.append(bytes(value,'utf-8','ignore'))
+
+    def deserialize(self, iterator):
+        val = super().deserialize(iterator)
+        val = val.decode('utf-8')
+        ind = val.find('\0')
+        if ind != -1 :
+            val = val[:ind]
+        return val
