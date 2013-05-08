@@ -21,6 +21,8 @@ if __name__ == "__main__":
 
     parser = ArgumentParser()
     parser.add_argument("--pydev-debug", nargs=2)
+    parser.add_argument("--main-fsm", default = None)
+    parser.add_argument("--secondary-fsm", default = None)
 
     args = parser.parse_args()
 
@@ -41,7 +43,11 @@ if __name__ == "__main__":
     else:
         piece_config = ""
 
-    mw = MainWindow(piece_config, debug_host = debug_host, debug_port =  debug_port)
+    main_fsm = args.main_fsm
+    secondary_fsm = args.secondary_fsm
+
+    mw = MainWindow(piece_config, debug_host = debug_host, debug_port =  debug_port, main_fsm = main_fsm,
+                    secondary_fsm = secondary_fsm)
     mw.show()
 
     sys.exit(app.exec_())

@@ -27,6 +27,7 @@ class RobotController(object):
         self.team_name = "?"
         self.team_color = "#555753"
         self.is_main = None
+        self.fsm_name = None
 
         self.layers = []
         self.robot_layer = simulatorfieldview.RobotLayer(main_window.field_view_controller, self)
@@ -64,13 +65,14 @@ class RobotController(object):
             layer.hide()
 
 
-    def setup(self, team, is_main, debug_host = None, debug_port=0):
+    def setup(self, team, is_main, debug_host = None, debug_port=0, fsm_name=None):
         if self.process == None:
             self.incoming_packet_buffer = ""
             self.incoming_packet = None
             self.resettle_count = 0
             self.team = team
             self.is_main = is_main
+            self.fsm_name = fsm_name
 
             if team == TEAM_BLUE:
                 self.team_name = "blue"
@@ -94,19 +96,32 @@ class RobotController(object):
             self.process.setReadChannelMode(QProcess.MergedChannels)
             self.process.readyRead.connect(self.read_output)
             args = []
+
+
+
             if self.is_main:
                 args.append("--hostname")
                 args.append("sheldon")
-                args.append("sheldon")
+
             else:
                 args.append("--hostname")
                 args.append("leonard")
-                args.append("leonard")
+
 
             if debug_host :
                 args.append("--pydev-debug")
                 args.append(debug_host)
                 args.append(str(debug_port))
+
+            if self.fsm_name :
+                args.append(self.fsm_name)
+            else :
+                if is_main :
+                    args.append('sheldon')
+                else :
+                    args.append('leonard')
+
+
 
             self.process.start(brewery, args)
 
