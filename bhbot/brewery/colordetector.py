@@ -14,7 +14,7 @@ class ColorDetector:
 
     def kill_process(self):
         logger.log('Killing existing colordetector processes')
-        subprocess.call("killall -9 colordetector")
+        subprocess.call(["killall", "-9", "colordetector"])
 
     def __init__(self, event_loop):
         self.event_loop = event_loop
@@ -34,8 +34,11 @@ class ColorDetector:
 
     def quit(self):
         if self.process is not None:
-            self.process.stdin.write(b"quit\n")
-            self.process.wait()
+            try:
+                self.process.stdin.write(b"quit\n")
+                self.process.wait()
+            except:
+                pass
             self.process = None
 
 

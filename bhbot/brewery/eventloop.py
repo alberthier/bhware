@@ -420,6 +420,7 @@ class EventLoop(object):
         self.is_match_started = True
         self.start_date = datetime.datetime.now()
         Timer(self, MATCH_DURATION_MS, self.on_end_of_match).start()
+        Timer(self, BREWERY_LIFETIME_MS, self.stop).start()
 
 
     def on_turret_boot(self, packet):

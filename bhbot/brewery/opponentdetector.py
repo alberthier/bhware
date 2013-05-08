@@ -36,7 +36,7 @@ class Opponent(object):
         else:
             distance = TURRET_SHORT_DISTANCE_DETECTION_RANGE
 
-        angle = (packet.angle + OpponentDetector.OFFSET) % 18
+        angle = (-(packet.angle + OpponentDetector.OFFSET)) % 18
 
         robot_pose = self.detector.event_loop.robot.pose
         real_angle = (angle * 20.0 / 180.0) * math.pi
@@ -97,7 +97,7 @@ class OpponentDetector(object):
 
     def __init__(self, event_loop):
         if IS_MAIN_ROBOT:
-            OpponentDetector.OFFSET = 4
+            OpponentDetector.OFFSET = 2
         self.event_loop = event_loop
         self.main_opponent = Opponent(self, OPPONENT_ROBOT_MAIN)
         self.secondary_opponent = Opponent(self, OPPONENT_ROBOT_SECONDARY)

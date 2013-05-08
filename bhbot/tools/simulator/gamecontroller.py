@@ -131,6 +131,3 @@ class GameController(object):
         if self.started:
             self.time += KEEP_ALIVE_DELAY_MS
             self.main_bar.chronograph.setText(str(round(self.time/1000.0, 1)))
-        if self.time == FULL_DURATION_MS + 5000:
-            self.stop()
-
