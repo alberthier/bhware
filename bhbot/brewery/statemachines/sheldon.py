@@ -39,8 +39,8 @@ DEPOSIT_Y = 0.45
 class Main(statemachine.State):
 
     def on_enter(self):
-        statemachine.StateMachine(self.event_loop, "barman", side = SIDE_LEFT)
-        statemachine.StateMachine(self.event_loop, "barman", side = SIDE_RIGHT)
+        lb = statemachine.StateMachine(self.event_loop, "barman", side = SIDE_LEFT)
+        rb = statemachine.StateMachine(self.event_loop, "barman", side = SIDE_RIGHT)
         self.fsm.cake = Cake()
 
         gm  = goalmanager.GoalManager(self.fsm.event_loop)
@@ -56,6 +56,13 @@ class Main(statemachine.State):
                                                     KickGifts))
         gm.harvesting_goals.append(goalmanager.Goal("KICK_GIFTS", 1.0, GIFT_X_POS, GIFT_Y_POS[-1], DIRECTION_FORWARDS,
                                                     KickGifts))
+
+        deposit_glasses_goal = goalmanager.GlassDepositGoal('GLASSES_DEPOSIT', 0.5, 1.0, 0.5,
+                                                            DIRECTION_FORWARDS, RingTheBell, shared = False)
+
+        deposit_glasses_goal.barmen = [lb, rb]
+
+        gm.harvesting_goals.append(deposit_glasses_goal)
 
 
     def on_device_ready(self, packet):
@@ -86,7 +93,6 @@ class Main(statemachine.State):
             yield CandleKicker(side, CANDLE_KICKER_UPPER, CANDLE_KICKER_POSITION_IDLE)
 
         yield FindNextGoal()
-        yield RingTheBell()
 
 
 
@@ -286,24 +292,19 @@ class RingTheBell(statemachine.State):
     MIN_X_MIDDLE = 0.66
     MAX_X = 1.71
 
+    def __init__(self, goal):
+        self.goal = goal
+        self.exit_reason = GOAL_FAILED
+
 
     def on_enter(self):
-        x = self.robot.pose.virt.x
-        y = self.robot.pose.virt.y
-
-        if y >= 1.5 :
-            x = max(x, self.MIN_X_MIDDLE)
-
-        x = max(x, self.MIN_X)
-        x = min(x, self.MAX_X)
-
-        y = DEPOSIT_Y
-
-        yield LookAt(x, y)
-        # yield MoveLineTo(x, y)
-        yield Navigate(x,y, DIRECTION_FORWARDS)
+        yield Rotate(-math.pi/2)
+        yield MoveRelative(0.05)
         yield DepositGlasses()
-        yield None
+        yield MoveRelative(-0.2, DIRECTION_BACKWARDS)
+
+        self.exit_reason = GOAL_DONE
+
 
 
 

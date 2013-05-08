@@ -14,7 +14,7 @@ import itertools
 
 class Goal(object):
 
-    def __init__(self, identifier, weight, x, y, direction, handler_state, ctor_parameters = None):
+    def __init__(self, identifier, weight, x, y, direction, handler_state, ctor_parameters = None, shared = True):
         self.identifier = identifier
         self.weight = weight
         self.x = x
@@ -26,6 +26,7 @@ class Goal(object):
         self.score = 0.0
         self.penality = 0.0
         self.status = GOAL_AVAILABLE
+        self.shared = shared
 
     def get_state(self):
         if isinstance(self.handler_state, statemachine.State):
@@ -45,7 +46,18 @@ class Goal(object):
     def done(self):
         self.status = GOAL_DONE
 
+    def is_available(self):
+        return self.status == GOAL_AVAILABLE
 
+
+class GlassDepositGoal(Goal):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.barmen = []
+
+    def is_available(self):
+        # logger.log('barmen : {} {}'.format(self.barmen, [b.glasses_count for b in self.barmen]))
+        return any(b.glasses_count > 0 for b in self.barmen)
 
 
 class GoalManager(object):
@@ -69,15 +81,21 @@ class GoalManager(object):
             return self.get_best_goal(self.harvesting_goals)
 
     def is_goal_available(self, identifier):
-        return any((g.status == GOAL_AVAILABLE for g in self.all_goals if g.identifier == identifier))
+        return any((g.is_available() for g in self.all_goals if g.identifier == identifier))
 
 
     def get_best_goal(self, goals):
+        """
+
+        :type goals:  list of Goal
+        """
         self.count += 1
         if self.count == 2:
             self.event_loop.opponent_detector.enable()
             
-        available_goals = [ g for g in goals if g.status == GOAL_AVAILABLE ]
+        available_goals = [ g for g in goals if g.is_available() ]
+
+        logger.log('available goals : {}'.format([g.identifier for g in available_goals]))
 
         if not available_goals :
             return None
