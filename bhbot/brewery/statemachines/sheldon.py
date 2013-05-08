@@ -70,6 +70,8 @@ class Main(statemachine.State):
         #yield GlassesSuperS()
         yield GlassesDirect()
 
+        yield MoveRelative(.4)
+
         candles = self.fsm.cake.get_sorted_candles()
         self.log("Has {} candles to kick".format(len(candles)))
         if len(candles) == 0 or self.event_loop.get_elapsed_match_time() > 70.0:
@@ -80,8 +82,8 @@ class Main(statemachine.State):
 
             yield MoveRelative(-0.4, direction = DIRECTION_BACKWARDS)
 
-            yield CandleKicker(side, CANDLE_KICKER_UPPER, CANDLE_KICKER_POSITION_IDLE)
             yield CandleKicker(side, CANDLE_KICKER_LOWER, CANDLE_KICKER_POSITION_IDLE)
+            yield CandleKicker(side, CANDLE_KICKER_UPPER, CANDLE_KICKER_POSITION_IDLE)
 
         yield FindNextGoal()
         yield RingTheBell()
@@ -428,12 +430,13 @@ class BlowCandlesOut(statemachine.State):
         for candle in self.candles:
             # 3.5 degrees is the difference between the candle kickers and the robot center.
             angles.append(candle.angle + math.radians(3.5))
-        yield SpeedControl(0.1)
+
         move = MoveArc(0.0, 1.5, self.cake_arc_radius, angles, direction)
-        yield SpeedControl()
         move.on_waypoint_reached = self.on_waypoint_reached
         move.on_candle_kicker = self.on_candle_kicker
+        yield SpeedControl(0.4)
         yield move
+        yield SpeedControl()
         self.exit_reason = move.exit_reason == TRAJECTORY_DESTINATION_REACHED
         yield None
 
