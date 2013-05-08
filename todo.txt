@@ -5,7 +5,10 @@ brewery:
 sheldon:
 - Retry de gâteau
 - les bougies sont "trop" soufflées : j'ai l'impression qu'il repasse dessus
--
+- calibration webcam
+- tests barman
+- tests depose
+- integration gateau dans goal manager
 
 leonard:
 - 
