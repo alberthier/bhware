@@ -34,4 +34,4 @@ class Main(statemachine.State):
         yield Rotate(0.0)
         yield MoveLineTo(0.95, 2.0)
         yield Rotate(-math.pi/2.0)
-        yield MoveLineTo(0.95, 0.5)
+        yield MoveLineTo(0.95, 0.48)

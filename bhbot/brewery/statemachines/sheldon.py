@@ -69,22 +69,20 @@ class Main(statemachine.State):
         self.fsm.cake.update_with_detection(detector.colors)
         #yield GlassesSuperS()
         yield GlassesDirect()
-        while True:
-            candles = self.fsm.cake.get_sorted_candles()
-            self.log("Has {} candles to kick".format(len(candles)))
-            if len(candles) == 0 or self.event_loop.get_elapsed_match_time() > 70.0:
-                break
-            else:
-                side = SIDE_LEFT if self.robot.team == TEAM_BLUE else SIDE_RIGHT
-                nav = yield NavigateToCake(candles, CAKE_ARC_RADIUS)
-                yield BlowCandlesOut(candles, CAKE_ARC_RADIUS)
-                yield MoveRelative(0.1, -nav.direction)
-                yield CandleKicker(side, CANDLE_KICKER_UPPER, CANDLE_KICKER_POSITION_UP)
-                yield CandleKicker(side, CANDLE_KICKER_LOWER, CANDLE_KICKER_POSITION_UP)
-                break
-        yield MoveRelative(0.4)
-        yield CandleKicker(side, CANDLE_KICKER_UPPER, CANDLE_KICKER_POSITION_IDLE)
-        yield CandleKicker(side, CANDLE_KICKER_LOWER, CANDLE_KICKER_POSITION_IDLE)
+
+        candles = self.fsm.cake.get_sorted_candles()
+        self.log("Has {} candles to kick".format(len(candles)))
+        if len(candles) == 0 or self.event_loop.get_elapsed_match_time() > 70.0:
+            pass
+        else:
+            side = SIDE_LEFT if self.robot.team == TEAM_BLUE else SIDE_RIGHT
+            nav = yield NavigateToCake(candles, CAKE_ARC_RADIUS)
+
+            yield MoveRelative(-0.4, direction = DIRECTION_BACKWARDS)
+
+            yield CandleKicker(side, CANDLE_KICKER_UPPER, CANDLE_KICKER_POSITION_IDLE)
+            yield CandleKicker(side, CANDLE_KICKER_LOWER, CANDLE_KICKER_POSITION_IDLE)
+
         yield FindNextGoal()
         yield RingTheBell()
 
@@ -288,7 +286,7 @@ class GlassesDirect(statemachine.State):
 
 class RingTheBell(statemachine.State):
     MIN_X = 0.27
-    MIN_X_MIDDLE = 0.63
+    MIN_X_MIDDLE = 0.66
     MAX_X = 1.71
 
 
@@ -305,7 +303,8 @@ class RingTheBell(statemachine.State):
         y = DEPOSIT_Y
 
         yield LookAt(x, y)
-        yield MoveLineTo(x, y)
+        # yield MoveLineTo(x, y)
+        yield Navigate(x,y, DIRECTION_FORWARDS)
         yield DepositGlasses()
         yield None
 
@@ -394,44 +393,7 @@ class NavigateToCake(statemachine.State):
         yield BlowCandlesOut(remaining_candles, CAKE_ARC_RADIUS)
         yield None
 
-    #def on_enter(self):
-        #(my_approach, my_start) = self.compute_candle_pose(self.candles[0])
-        #(opponent_approach, opponent_start) = self.compute_candle_pose(self.candles[-1])
-        #(my_cost, my_path) = self.event_loop.map.route(self.robot.pose, my_approach)
-        #(opponent_cost, opponent_path) = self.event_loop.map.route(self.robot.pose, opponent_approach)
-        #if my_cost is None:
-            #cost = opponent_cost
-            #path = opponent_path
-            #start = opponent_start
-            #self.direction = DIRECTION_BACKWARDS
-        #elif opponent_cost is None:
-            #cost = my_cost
-            #path = my_path
-            #start = my_start
-            #self.direction = DIRECTION_FORWARDS
-        #elif my_cost < opponent_cost:
-            #cost = my_cost
-            #path = my_path
-            #start = my_start
-            #self.direction = DIRECTION_FORWARDS
-        #else:
-            #cost = opponent_cost
-            #path = opponent_path
-            #start = opponent_start
-            #self.direction = DIRECTION_BACKWARDS
-        #if cost is None:
-            #yield None
-            #return
-        #yield FollowPath(path, self.direction)
-        #side = SIDE_LEFT if self.robot.team == TEAM_BLUE else SIDE_RIGHT
-        #yield CandleKicker(side, CANDLE_KICKER_UPPER, CANDLE_KICKER_POSITION_UP)
-        #yield CandleKicker(side, CANDLE_KICKER_LOWER, CANDLE_KICKER_POSITION_UP)
-        #if self.direction == DIRECTION_FORWARDS:
-            #yield LookAt(start.x, start.y)
-        #else:
-            #yield LookAtOpposite(start.x, start.y)
-        #yield MoveLine([start], self.direction)
-        #yield None
+
 
 
     def compute_candle_pose(self, candle):
