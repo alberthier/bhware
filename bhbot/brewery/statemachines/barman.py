@@ -11,7 +11,6 @@ class Main(statemachine.State):
 
     def on_enter(self):
         self.fsm.glasses_count = 0
-
         self.fsm.name += "[{}]".format(SIDE.lookup_by_value[self.fsm.side])
         self.log("Init")
 
@@ -38,17 +37,20 @@ class CollectGlasses(statemachine.State):
         yield Gripper(self.fsm.side, MOVE_OPEN)
         yield Lifter(self.fsm.side, LIFTER_MOVE_DOWN)
         self.fsm.glasses_count += 1
+        logger.log("Loaded first glass")
 
         # Second glass
         yield wait
         yield Gripper(self.fsm.side, MOVE_CLOSE)
         yield Lifter(self.fsm.side, LIFTER_MOVE_MIDDLE)
         self.fsm.glasses_count += 1
+        logger.log("Loaded second glass")
 
         # Third glass
         yield wait
         yield BottomHolder(self.fsm.side, MOVE_OPEN)
         self.fsm.glasses_count += 1
+        logger.log("Loaded third glass")
 
 
     def on_internal_drop_glasses(self, packet):
