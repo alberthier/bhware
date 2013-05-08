@@ -30,7 +30,7 @@ CAKE_ARC_RADIUS = 0.65
 GIFT_Y_POS = [ 0.5, 1.1, 1.7, 2.3 ]
 GIFT_X_POS = 1.77
 
-GIFT_Y_DELTA = 0.05
+GIFT_Y_DELTA = 0.0575
 GIFT_Y_POS = [ y + GIFT_Y_DELTA for y in GIFT_Y_POS ]
 
 DEPOSIT_Y = 0.45
@@ -302,6 +302,7 @@ class RingTheBell(statemachine.State):
         yield LookAt(x, y)
         # yield MoveLineTo(x, y)
         yield Navigate(x,y, DIRECTION_FORWARDS)
+        yield Rotate(-math.pi/2.0)
         yield DepositGlasses()
         yield None
 
