@@ -5,10 +5,30 @@ brewery:
 sheldon:
 - Retry de gâteau
 - les bougies sont "trop" soufflées : j'ai l'impression qu'il repasse dessus
-- changer les angles de détection
+-
 
 leonard:
 - 
 
 drunkstar:
-- Configurer hostapd (penny)
+-
+
+Stratégie dépose :
+
+Poser des goals de dépose dans notre camp. Les marquer comme utilisés.
+
+Stratégie fauche : poser des goals dans le camp adverse et aller les moissonner.
+Si on a pris qqch, aller direct le déposer. Ne pas faire de retry sur chaque goal.
+
+Autre possibilité, moissonner dans le sens du goal, 2 alternatives, par le nord ou par le sud
+
+Communication des goals entre robots :
+- Ajout d'un statut GOAL_DOING
+- Défini par FindNextGoal au début d'un goal
+- Envoyé à l'autre robot
+- un GOAL_DOING ne peut pas être next goal
+- un GOAL_DOING peut redevenir GOAL_AVAILABLE
+
+Gérer cadeaux un a un
+
+Dépose des verres dans la zone de départ de chaque robot

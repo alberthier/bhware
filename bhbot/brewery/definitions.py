@@ -258,3 +258,10 @@ TURRET_INIT_MODE = Enum("Turret initialization read/write mode",
     TURRET_INIT_MODE_READ  = 0,
     TURRET_INIT_MODE_WRITE = 1,
 )
+
+GOAL_STATUS = Enum("Goal status",
+    GOAL_AVAILABLE  = 0,
+    GOAL_DOING      = 1,
+    GOAL_DONE       = 2,
+    GOAL_FAILED     = 3,
+)

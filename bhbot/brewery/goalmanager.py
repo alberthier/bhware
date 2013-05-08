@@ -5,10 +5,11 @@ import position
 import logger
 import tools
 import statemachine
+import signals
 
 from definitions import *
 
-
+import itertools
 
 
 class Goal(object):
@@ -24,6 +25,7 @@ class Goal(object):
         self.ctor_parameters = ctor_parameters
         self.score = 0.0
         self.penality = 0.0
+        self.status = GOAL_AVAILABLE
 
     def get_state(self):
         if isinstance(self.handler_state, statemachine.State):
@@ -33,6 +35,15 @@ class Goal(object):
                 return self.handler_state(self, *self.ctor_parameters)
             else:
                 return self.handler_state(self)
+
+    def available(self):
+        self.status = GOAL_AVAILABLE
+
+    def doing(self):
+        self.status = GOAL_DOING
+
+    def done(self):
+        self.status = GOAL_DONE
 
 
 
@@ -44,6 +55,12 @@ class GoalManager(object):
         self.harvesting_goals = []
         self.emptying_goals = []
         self.count = 0
+        self.on_goal_state_change = signals.SafeSignal()
+
+
+    @property
+    def all_goals(self):
+        return itertools.chain(self.harvesting_goals, self.emptying_goals)
 
     def next_goal(self):
         if self.event_loop.robot.tank_full:
@@ -51,16 +68,21 @@ class GoalManager(object):
         else:
             return self.get_best_goal(self.harvesting_goals)
 
+    def is_goal_available(self, identifier):
+        return any((g.status == GOAL_AVAILABLE for g in self.all_goals if g.identifier == identifier))
+
 
     def get_best_goal(self, goals):
         self.count += 1
         if self.count == 2:
             self.event_loop.opponent_detector.enable()
+            
+        available_goals = [ g for g in goals if g.status == GOAL_AVAILABLE ]
 
-        if not goals :
+        if not available_goals :
             return None
 
-        for goal in goals:
+        for goal in available_goals:
             pose = position.Pose(goal.x, goal.y, virtual=True)
             logger.log("Evaluate goal {}".format(goal.identifier))
             if GOAL_EVALUATION_USES_PATHFINDING:
@@ -70,16 +92,16 @@ class GoalManager(object):
             goal.score = goal.penality
             goal.penality = 0.0
 
-        for order, goal in enumerate(sorted(goals, key=lambda x:x.navigation_cost)):
+        for order, goal in enumerate(sorted(available_goals, key=lambda x:x.navigation_cost)):
             logger.log("Goal {} nav cost = {}".format(goal.identifier, goal.navigation_cost))
             goal.score += order * 2
 
-        for order, goal in enumerate(sorted(goals, key=lambda x:x.weight, reverse=True)):
+        for order, goal in enumerate(sorted(available_goals, key=lambda x:x.weight, reverse=True)):
             goal.score += order
 
-        logger.log("Goals by score : {}".format( ["{}:{}".format(g.identifier, g.score) for g in goals ] ))
+        logger.log("available_goals by score : {}".format( ["{}:{}".format(g.identifier, g.score) for g in available_goals ] ))
 
-        best_goal = min(goals, key=lambda g : g.score)
+        best_goal = min(available_goals, key=lambda g : g.score)
 
         logger.log("Best goal is {} with score {}".format(best_goal.identifier, best_goal.score))
 
@@ -91,8 +113,25 @@ class GoalManager(object):
             if g.identifier == goal.identifier:
                 g.penality = 100.0
 
-
     def goal_done(self, goal):
-        logger.log("Goal done : "+goal.identifier)
-        self.harvesting_goals = [ g for g in self.harvesting_goals if g.identifier != goal.identifier ]
-        self.emptying_goals = [ g for g in self.emptying_goals if g.identifier != goal.identifier ]
+        self.update_goals_status(goal, "done", GOAL_DONE)
+
+    def goal_doing(self, goal):
+        self.update_goals_status(goal, "doing", GOAL_DOING)
+
+    def goal_available(self, goal):
+        self.update_goals_status(goal, "available", GOAL_AVAILABLE)
+
+    def update_goals_status(self, goal, status_string, new_status):
+        logger.log("Goal {} : {}".format(status_string, goal.identifier))
+
+        self.internal_goal_update(goal.identifier, new_status)
+
+        self.on_goal_state_change.send(goal)
+
+    def internal_goal_update(self, identifier, status):
+        for g in self.all_goals:
+            if g.identifier == identifier:
+                old = g.status
+                g.status = status
+                logger.log('updated goal {} status : {} -> {}'.format(identifier, old, status))

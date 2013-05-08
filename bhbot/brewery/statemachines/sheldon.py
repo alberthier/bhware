@@ -33,8 +33,8 @@ GIFT_X_POS = 1.77
 GIFT_Y_DELTA = 0.05
 GIFT_Y_POS = [ y + GIFT_Y_DELTA for y in GIFT_Y_POS ]
 
+DEPOSIT_Y = 0.45
 
-gm  = None
 
 class Main(statemachine.State):
 
@@ -42,9 +42,9 @@ class Main(statemachine.State):
         statemachine.StateMachine(self.event_loop, "barman", side = SIDE_LEFT)
         statemachine.StateMachine(self.event_loop, "barman", side = SIDE_RIGHT)
         self.fsm.cake = Cake()
-        global gm
 
         gm  = goalmanager.GoalManager(self.fsm.event_loop)
+        self.robot.goal_manager = gm
 
         # we may also handle each gift on its own
 
@@ -85,24 +85,11 @@ class Main(statemachine.State):
         yield MoveRelative(0.4)
         yield CandleKicker(side, CANDLE_KICKER_UPPER, CANDLE_KICKER_POSITION_IDLE)
         yield CandleKicker(side, CANDLE_KICKER_LOWER, CANDLE_KICKER_POSITION_IDLE)
-        yield RingTheBell()
         yield FindNextGoal()
-
-
-##################################################
-# GOAL MANAGEMENT
-##################################################
+        yield RingTheBell()
 
 
 
-class FindNextGoal(statemachine.State):
-    def on_enter(self):
-        global gm
-        goal = gm.get_best_goal(gm.harvesting_goals)
-
-        if goal :
-            state = goal.get_state()
-            yield state
 
 
 ##################################################
@@ -113,13 +100,16 @@ class FindNextGoal(statemachine.State):
 class KickGifts(statemachine.State):
     def __init__(self, goal):
         self.goal = goal
+        self.exit_reason = GOAL_FAILED
 
     def on_enter(self):
-
+        gm = self.robot.goal_manager
         side = SIDE_LEFT if self.robot.team == TEAM_RED else SIDE_RIGHT
 
         yield LookAt(self.goal.x, self.goal.y)
         yield MoveLineTo(self.goal.x, self.goal.y)
+
+        #TODO : handle being blocked on trajectory
 
         yield Rotate(math.pi/2)
 
@@ -137,7 +127,7 @@ class KickGifts(statemachine.State):
                 yield KickIt(side)
             yield MoveRelative(0.05) # disengage
 
-        gm.goal_done(self.goal)
+        self.exit_reason = GOAL_DONE
 
         yield None
 
@@ -310,7 +300,9 @@ class RingTheBell(statemachine.State):
             x = max(x, self.MIN_X_MIDDLE)
 
         x = max(x, self.MIN_X)
-        y = min(x, self.MAX_X)
+        x = min(x, self.MAX_X)
+
+        y = DEPOSIT_Y
 
         yield LookAt(x, y)
         yield MoveLineTo(x, y)
