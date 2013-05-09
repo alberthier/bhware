@@ -365,7 +365,7 @@ class AbstractMove(statemachine.State):
                                                      self.packet.direction, config.retries_count)
                 reason = leave_state.exit_reason
                 self.current_opponent = None
-                if reason == WaitForOpponentLeave.TIMEOUT:
+                if reason in (WaitForOpponentLeave.TIMEOUT, TRAJECTORY_BLOCKED) :
                     self.exit_reason = TRAJECTORY_OPPONENT_DETECTED
                     yield None
                 else:
@@ -801,15 +801,25 @@ class FindNextGoal(statemachine.State):
             if goal :
                 logger.log('Next goal is {}'.format(goal.identifier))
 
+                gm.goal_doing(goal)
+
                 if goal.navigate :
-                    yield Navigate(goal.x, goal.y, goal.direction)
+                    move = yield Navigate(goal.x, goal.y, goal.direction)
+
+                    if move.exit_reason != REASON_DESTINATION_REACHED :
+                        logger.log('Cannot navigate to goal -> picking another')
+                        goal.increment_trials()
+                        gm.goal_available(goal)
+                        break
 
                 state = goal.get_state()
-                gm.goal_doing(goal)
+
                 yield state
+
                 if state.exit_reason == GOAL_DONE :
                     gm.goal_done(goal)
                 else :
+                    goal.increment_trials()
                     gm.goal_available(goal)
             else :
                 break

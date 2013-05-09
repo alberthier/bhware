@@ -29,6 +29,10 @@ class Goal(object):
         self.status = GOAL_AVAILABLE
         self.shared = shared
         self.navigate = navigate
+        self.trial_count = 0
+
+    def increment_trials(self):
+        self.trial_count+=1
 
     def get_state(self):
         if isinstance(self.handler_state, statemachine.State):
@@ -117,6 +121,9 @@ class GoalManager(object):
             goal.score += order * 2
 
         for order, goal in enumerate(sorted(available_goals, key=lambda x:x.weight, reverse=True)):
+            goal.score += order
+
+        for order, goal in enumerate(sorted(available_goals, key=lambda x:x.trial_count, reverse=True)):
             goal.score += order
 
         logger.log("available_goals by score : {}".format( ["{}:{}".format(g.identifier, g.score) for g in available_goals ] ))

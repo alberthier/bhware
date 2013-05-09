@@ -18,7 +18,7 @@ FIRST_LINE_X = 0.94
 SECOND_LINE_X = 1.19
 THIRD_LINE_X = 1.45
 
-FIRST_LINE_END_Y = 1.68
+FIRST_LINE_END_Y = 1.95
 SECOND_LINE_END_Y = 1.5
 
 TAKE_GLASS_DELTA_X = 0.04
@@ -112,24 +112,34 @@ class KickGifts(statemachine.State):
     def on_enter(self):
         side = SIDE_LEFT if self.robot.team == TEAM_RED else SIDE_RIGHT
 
+        ohc = OpponentHandlingConfig(
+            True,
+            retries = 2
+        )
 
-        yield Rotate(math.pi/2)
+
+        move = yield Rotate(math.pi/2)
 
         if self.robot.pose.virt.y < 1.5 :
             for y in GIFT_Y_POS:
                 # y+=0.05
                 direction = DIRECTION_BACKWARDS if y < self.robot.pose.virt.y else DIRECTION_FORWARDS
-                yield MoveLineTo(GIFT_X_POS, y, direction)
+                move = yield MoveLineTo(GIFT_X_POS, y, direction, chained = move, opponent_handling = ohc )
+                if move.exit_reason != REASON_DESTINATION_REACHED :
+                    break
                 yield KickIt(side)
         else:
             for y in reversed(GIFT_Y_POS):
                 # y+=0.05
                 direction = DIRECTION_BACKWARDS if y < self.robot.pose.virt.y else DIRECTION_FORWARDS
-                yield MoveLineTo(GIFT_X_POS, y, direction)
+                move = yield MoveLineTo(GIFT_X_POS, y, direction, chained = move, opponent_handling = ohc)
+                if move.exit_reason != REASON_DESTINATION_REACHED :
+                    break
                 yield KickIt(side)
-            yield MoveRelative(0.05) # disengage
+            yield MoveRelative(0.05, chained = move, opponent_handling = ohc) # disengage
 
-        self.exit_reason = GOAL_DONE
+        if move.exit_reason == REASON_DESTINATION_REACHED :
+            self.exit_reason = GOAL_DONE
 
         yield None
 
@@ -262,20 +272,12 @@ class GlassesDirect(statemachine.State):
         )
 
         move = yield MoveLineTo( START_X, FIRST_LINE_END_Y, opponent_handling = ohc)
-        move = yield Rotate(SECOND_SHOT_ANGLE, chained = move)
+        # move = yield Rotate(0.84, chained = move)
+        move = yield LookAt( 1.26, 1.81, chained = move)
+        move = yield MoveLineTo( 1.26, 1.81, chained = move)
 
         #if we're in position, take a picture
-        if move.exit_reason == REASON_DESTINATION_REACHED :
-            detector = yield FetchCandleColors()
-            self.log("Second candles detection: {}".format(detector.colors))
-            self.fsm.cake.update_with_detection(detector.colors)
-
-            yield Rotate(1.27)
-            yield MoveLineTo( 0.97, 1.52, direction = DIRECTION_BACKWARDS)
-            yield Rotate(0.84)
-            yield MoveLineTo( 1.26, 1.81)
-
-        else:
+        if move.exit_reason != REASON_DESTINATION_REACHED :
             x = SECOND_LINE_X + TAKE_GLASS_DELTA_X
             y = self.robot.pose.virt.y
             yield LookAt(x,y)
