@@ -2,7 +2,7 @@
 # encoding: utf-8
 
 from packets import *
-from trajectory import *
+# from trajectory import *
 
 log = []
 
@@ -688,17 +688,17 @@ l(['88.21','ARM',InterbotPosition,"(('current_pose', (('x', 1.4500), ('y', 2.950
 l(['90.46','ARM',InterbotPosition,"(('current_pose', (('x', 1.4500), ('y', 2.9500), ('angle', -1.5708))), ('main_robot', False))"])
 l(['92.71','ARM',InterbotPosition,"(('current_pose', (('x', 1.4500), ('y', 2.9500), ('angle', -1.5708))), ('main_robot', False))"])
 l(['92.73','ARM','LOG','# Traceback (most recent call last):'])
-l(['92.73','ARM','LOG','#   File "/root/bhware/bhbot/brewery/eventloop.py", line 401, in do_read
+l(['92.73','ARM','LOG','#   File "/root/bhware/bhbot/brewery/eventloop.py", line 401, in do_read \
     self.process_packets_and_dispatch()'])
-l(['92.73','ARM','LOG','#   File "/root/bhware/bhbot/brewery/eventloop.py", line 509, in process_packets_and_dispatch
+l(['92.73','ARM','LOG','#   File "/root/bhware/bhbot/brewery/eventloop.py", line 509, in process_packets_and_dispatch \
     self.dispatch(packet)'])
-l(['92.73','ARM','LOG','#   File "/root/bhware/bhbot/brewery/eventloop.py", line 517, in dispatch
+l(['92.73','ARM','LOG','#   File "/root/bhware/bhbot/brewery/eventloop.py", line 517, in dispatch \
     packet.dispatch(self.interbot_manager)'])
-l(['92.73','ARM','LOG','#   File "/root/bhware/bhbot/brewery/packets.py", line 301, in dispatch
+l(['92.73','ARM','LOG','#   File "/root/bhware/bhbot/brewery/packets.py", line 301, in dispatch \
     return getattr(obj, self.HANDLER_METHOD)(self)'])
-l(['92.73','ARM','LOG','#   File "/root/bhware/bhbot/brewery/interbot.py", line 36, in on_keep_alive
+l(['92.73','ARM','LOG','#   File "/root/bhware/bhbot/brewery/interbot.py", line 36, in on_keep_alive \
     self.eventloop.send_packet(packet_to_send)'])
-l(['92.73','ARM','LOG','#   File "/root/bhware/bhbot/brewery/eventloop.py", line 464, in send_packet
+l(['92.73','ARM','LOG','#   File "/root/bhware/bhbot/brewery/eventloop.py", line 464, in send_packet \
     self.interbot_channel.send(buffer)'])
 l(['92.73','ARM','LOG','#   File "/usr/lib/python3.3/asyncore.py", line 548, in send'])
 l(['92.73','ARM','LOG','#   File "/usr/lib/python3.3/asyncore.py", line 535, in initiate_send'])
