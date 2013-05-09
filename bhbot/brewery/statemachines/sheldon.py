@@ -276,6 +276,8 @@ class GlassesDirect(statemachine.State):
             retries = 1
         )
 
+        yield SpeedControl(0.4)
+
         move = yield MoveLineTo( START_X, FIRST_LINE_END_Y, opponent_handling = ohc)
         # move = yield Rotate(0.84, chained = move)
         move = yield LookAt( 1.26, 1.81, chained = move)
@@ -291,6 +293,7 @@ class GlassesDirect(statemachine.State):
         yield Rotate(-math.pi/2)
         yield MoveLineTo( 1.27, 1.16)
 
+        yield SpeedControl()
 
         yield None
 
@@ -307,7 +310,7 @@ class RingTheBell(statemachine.State):
 
     def on_enter(self):
         yield Rotate(-math.pi/2)
-        yield MoveRelative(0.05)
+        yield MoveRelative(0.1)
         yield DepositGlasses()
         yield MoveRelative(-0.2, DIRECTION_BACKWARDS)
 
