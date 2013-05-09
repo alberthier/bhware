@@ -14,7 +14,8 @@ import itertools
 
 class Goal(object):
 
-    def __init__(self, identifier, weight, x, y, direction, handler_state, ctor_parameters = None, shared = True):
+    def __init__(self, identifier, weight, x, y, direction, handler_state, ctor_parameters = None, shared = True,
+                 navigate = True):
         self.identifier = identifier
         self.weight = weight
         self.x = x
@@ -27,6 +28,7 @@ class Goal(object):
         self.penality = 0.0
         self.status = GOAL_AVAILABLE
         self.shared = shared
+        self.navigate = navigate
 
     def get_state(self):
         if isinstance(self.handler_state, statemachine.State):
