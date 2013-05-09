@@ -26,7 +26,7 @@ TAKE_GLASS_DELTA_X = 0.04
 START_X = FIRST_LINE_X + TAKE_GLASS_DELTA_X
 SECOND_SHOT_ANGLE = math.radians(150.0)
 
-CAKE_ARC_RADIUS = 0.65
+CAKE_ARC_RADIUS = 0.665
 
 GIFT_Y_POS = [ 0.5, 1.1, 1.7, 2.3 ]
 GIFT_X_POS = 1.77
@@ -374,28 +374,28 @@ class Cake:
             Candle(self, "bottom12" , math.radians(-90.0 + 7.5 + 11.0 * 15.0 + 7.0), CANDLE_KICKER_LOWER, False)
         else:
             # RED Top candles
-            Candle(self, "top1", math.radians(-90.0 + 11.25 + 0.0 * 22.5 - 5.0), CANDLE_KICKER_UPPER, True)
-            Candle(self, "top2", math.radians(-90.0 + 11.25 + 1.0 * 22.5 - 5.0), CANDLE_KICKER_UPPER, False)
-            Candle(self, "top3", math.radians(-90.0 + 11.25 + 2.0 * 22.5 - 5.0), CANDLE_KICKER_UPPER, False)
-            Candle(self, "top4", math.radians(-90.0 + 11.25 + 3.0 * 22.5 - 5.0), CANDLE_KICKER_UPPER, False)
-            Candle(self, "top5", math.radians(-90.0 + 11.25 + 4.0 * 22.5 - 7.0), CANDLE_KICKER_UPPER, False)
-            Candle(self, "top6", math.radians(-90.0 + 11.25 + 5.0 * 22.5 - 8.0), CANDLE_KICKER_UPPER, False)
-            Candle(self, "top7", math.radians(-90.0 + 11.25 + 6.0 * 22.5 - 9.0), CANDLE_KICKER_UPPER, False)
-            Candle(self, "top8", math.radians(-90.0 + 11.25 + 7.0 * 22.5 - 9.0), CANDLE_KICKER_UPPER, False)
+            Candle(self, "top1", math.radians(-90.0 + 11.25 + 0.0 * 22.5 + 5.0), CANDLE_KICKER_UPPER, True)
+            Candle(self, "top2", math.radians(-90.0 + 11.25 + 1.0 * 22.5 + 5.0), CANDLE_KICKER_UPPER, False)
+            Candle(self, "top3", math.radians(-90.0 + 11.25 + 2.0 * 22.5 + 5.0), CANDLE_KICKER_UPPER, False)
+            Candle(self, "top4", math.radians(-90.0 + 11.25 + 3.0 * 22.5 + 5.0), CANDLE_KICKER_UPPER, False)
+            Candle(self, "top5", math.radians(-90.0 + 11.25 + 4.0 * 22.5 + 5.0), CANDLE_KICKER_UPPER, False)
+            Candle(self, "top6", math.radians(-90.0 + 11.25 + 5.0 * 22.5 + 5.0), CANDLE_KICKER_UPPER, False)
+            Candle(self, "top7", math.radians(-90.0 + 11.25 + 6.0 * 22.5 + 6.0), CANDLE_KICKER_UPPER, False)
+            Candle(self, "top8", math.radians(-90.0 + 11.25 + 7.0 * 22.5 + 6.0), CANDLE_KICKER_UPPER, False)
 
             # RED Bottom candles
-            Candle(self, "bottom1"  , math.radians(-90.0 + 7.5 +  0.0 * 15.0 - 5.0), CANDLE_KICKER_LOWER, True)
-            Candle(self, "bottom2"  , math.radians(-90.0 + 7.5 +  1.0 * 15.0 - 5.0), CANDLE_KICKER_LOWER, False)
-            Candle(self, "bottom3"  , math.radians(-90.0 + 7.5 +  2.0 * 15.0 - 5.0), CANDLE_KICKER_LOWER, False)
-            Candle(self, "bottom4"  , math.radians(-90.0 + 7.5 +  3.0 * 15.0 - 5.0), CANDLE_KICKER_LOWER, False)
-            Candle(self, "bottom5"  , math.radians(-90.0 + 7.5 +  4.0 * 15.0 - 5.0), CANDLE_KICKER_LOWER, True)
-            Candle(self, "bottom6"  , math.radians(-90.0 + 7.5 +  5.0 * 15.0 - 5.0), CANDLE_KICKER_LOWER, True)
-            Candle(self, "bottom7"  , math.radians(-90.0 + 7.5 +  6.0 * 15.0 - 7.0), CANDLE_KICKER_LOWER, True)
-            Candle(self, "bottom8"  , math.radians(-90.0 + 7.5 +  7.0 * 15.0 - 7.0), CANDLE_KICKER_LOWER, True)
-            Candle(self, "bottom9"  , math.radians(-90.0 + 7.5 +  8.0 * 15.0 - 7.0), CANDLE_KICKER_LOWER, False)
-            Candle(self, "bottom10" , math.radians(-90.0 + 7.5 +  9.0 * 15.0 - 7.0), CANDLE_KICKER_LOWER, False)
-            Candle(self, "bottom11" , math.radians(-90.0 + 7.5 + 10.0 * 15.0 - 7.0), CANDLE_KICKER_LOWER, False)
-            Candle(self, "bottom12" , math.radians(-90.0 + 7.5 + 11.0 * 15.0 - 7.0), CANDLE_KICKER_LOWER, False)
+            Candle(self, "bottom1"  , math.radians(-90.0 + 7.5 +  0.0 * 15.0 + 5.0), CANDLE_KICKER_LOWER, True)
+            Candle(self, "bottom2"  , math.radians(-90.0 + 7.5 +  1.0 * 15.0 + 5.0), CANDLE_KICKER_LOWER, False)
+            Candle(self, "bottom3"  , math.radians(-90.0 + 7.5 +  2.0 * 15.0 + 5.0), CANDLE_KICKER_LOWER, False)
+            Candle(self, "bottom4"  , math.radians(-90.0 + 7.5 +  3.0 * 15.0 + 5.0), CANDLE_KICKER_LOWER, False)
+            Candle(self, "bottom5"  , math.radians(-90.0 + 7.5 +  4.0 * 15.0 + 5.0), CANDLE_KICKER_LOWER, True)
+            Candle(self, "bottom6"  , math.radians(-90.0 + 7.5 +  5.0 * 15.0 + 5.0), CANDLE_KICKER_LOWER, True)
+            Candle(self, "bottom7"  , math.radians(-90.0 + 7.5 +  6.0 * 15.0 + 5.0), CANDLE_KICKER_LOWER, True)
+            Candle(self, "bottom8"  , math.radians(-90.0 + 7.5 +  7.0 * 15.0 + 3.0), CANDLE_KICKER_LOWER, True)
+            Candle(self, "bottom9"  , math.radians(-90.0 + 7.5 +  8.0 * 15.0 + 3.0), CANDLE_KICKER_LOWER, False)
+            Candle(self, "bottom10" , math.radians(-90.0 + 7.5 +  9.0 * 15.0 + 3.0), CANDLE_KICKER_LOWER, False)
+            Candle(self, "bottom11" , math.radians(-90.0 + 7.5 + 10.0 * 15.0 + 2.0), CANDLE_KICKER_LOWER, False)
+            Candle(self, "bottom12" , math.radians(-90.0 + 7.5 + 11.0 * 15.0 + 2.0), CANDLE_KICKER_LOWER, False)
 
 
     def update_with_detection(self, detections):
@@ -404,12 +404,14 @@ class Cake:
                 symetric_name = self.symetry[name]
             else:
                 symetric_name = ""
-            for n in [name, symetric_name]:
-                if n in self.candles:
-                    candle = self.candles[n]
-                    if not candle.to_blow:
-                        candle.to_blow = to_blow
-
+            if name in self.candles:
+                candle = self.candles[name]
+                if not candle.to_blow:
+                    candle.to_blow = to_blow
+            if symetric_name in self.candles:
+                candle = self.candles[symetric_name]
+                if not candle.to_blow:
+                    candle.to_blow = not to_blow
 
 
     def get_sorted_candles(self):
