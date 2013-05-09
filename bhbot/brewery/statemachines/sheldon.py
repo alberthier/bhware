@@ -332,6 +332,18 @@ class Cake:
 
     def __init__(self, team):
         self.candles = {}
+        self.symetry = {
+                "top1"   : "top8",
+                "top2"   : "top7",
+                "top3"   : "top6",
+                "top4"   : "top5",
+                "bottom1": "bottom12",
+                "bottom2": "bottom11",
+                "bottom3": "bottom10",
+                "bottom4": "bottom9",
+                "bottom5": "bottom8",
+                "bottom6": "bottom7",
+        }
 
         if team == TEAM_BLUE:
             # BLUE Top candles
@@ -385,10 +397,16 @@ class Cake:
 
     def update_with_detection(self, detections):
         for name, to_blow in detections.items():
-            if name in self.candles:
-                candle = self.candles[name]
-                if not candle.to_blow:
-                    candle.to_blow = to_blow
+            if name in self.symetry:
+                symetric_name = self.symetry[name]
+            else:
+                symetric_name = ""
+            for n in [name, symetric_name]:
+                if n in self.candles:
+                    candle = self.candles[n]
+                    if not candle.to_blow:
+                        candle.to_blow = to_blow
+
 
 
     def get_sorted_candles(self):
