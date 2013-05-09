@@ -431,7 +431,7 @@ class BlowCandlesOut(statemachine.State):
         move = MoveArc(0.0, 1.5, self.cake_arc_radius, angles, direction)
         move.on_waypoint_reached = self.on_waypoint_reached
         move.on_candle_kicker = self.on_candle_kicker
-        yield SpeedControl(0.4)
+        yield SpeedControl(0.1)
         yield move
         yield SpeedControl()
         self.exit_reason = move.exit_reason == TRAJECTORY_DESTINATION_REACHED
@@ -463,6 +463,6 @@ class EndOfMatch(statemachine.State):
     def on_enter(self):
         yield StopAll();
         yield Pump(PUMP_ON)
-        yield Timer(9000)
+        yield Timer(5000)
         yield Pump(PUMP_OFF)
 
