@@ -124,11 +124,14 @@ class PacketClientSocketChannel(ClientSocketChannel):
 
 
     def handle_read(self):
-        if self.bytes_available() == 0:
-            # Socket is closing
-            self.recv(0)
-        else:
-            self.event_loop.handle_read(self)
+        try :
+            if self.bytes_available() == 0:
+                # Socket is closing
+                self.recv(0)
+            else:
+                self.event_loop.read_packet(self)
+        except Exception as e :
+            logger.log_exception(e)
 
 
 
@@ -184,8 +187,8 @@ class TurretChannel(asyncore.file_dispatcher):
                     self.packet = packets.create_packet(self.buffer)
                     break
         try:
-            self.eventloop.handle_read(self)
-        except KeyError as e:
+            self.eventloop.read_packet(self)
+        except Exception as e:
             logger.log("Turret channel is desynchronized. Resynchronizing. Unknown packet type: {}".format(e.args[0]))
             self.synchronized = False
 
@@ -353,14 +356,7 @@ class EventLoop(object):
             self.colordetector = None
 
 
-    def handle_read(self, channel):
-        try :
-            return self.do_read(channel)
-        except Exception as e :
-            logger.log_exception(e)
-
-
-    def do_read(self, channel):
+    def read_packet(self, channel):
         while True :
             if channel.packet is None:
                 try:
