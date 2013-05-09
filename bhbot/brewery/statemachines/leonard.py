@@ -30,23 +30,26 @@ class Main(statemachine.State):
 
         # we may also handle each gift on its own
 
-        gm.harvesting_goals.append(goalmanager.Goal("KICK_GIFTS", 1.0, X_OPEN_GIFTS_START, Y_OPEN_GIFTS_START, DIRECTION_FORWARDS,
-                                                    OpenGifts))
+        gm.harvesting_goals.append(goalmanager.Goal("KICK_GIFTS", 1.0, X_OPEN_GIFTS_START, Y_OPEN_GIFTS_START,
+                                                    DIRECTION_BACKWARDS,OpenGifts))
 
 
 
     def on_device_ready(self, packet):
-        yield CalibratePosition(X_START)
+        # yield CalibratePosition(X_START)
+        yield DefinePosition(X_START, 0.05, math.pi/2)
         yield AntiBlocking(True)
 
 
     def on_start(self, packet):
         gm = self.robot.goal_manager
+        # yield SpeedControl(0.5)
         yield TakeGlasses()
-        yield LookAt(X_OPEN_GIFTS_START, Y_OPEN_GIFTS_START)
-        yield FindNextGoal()
+        # yield SpeedControl()
+        # yield LookAtOpposite(X_OPEN_GIFTS_START, Y_OPEN_GIFTS_START)
+        # yield FindNextGoal()
         yield Deposit()
-        yield EndOfMatch()
+        # yield EndOfMatch()
 
 
 
@@ -54,9 +57,13 @@ class Main(statemachine.State):
 class Deposit(statemachine.State):
 
     def on_enter(self):
-        yield LookAt(1.66, 0.38)
-        yield MoveLineTo(1.66, 0.38)
+        yield AntiBlocking(False)
+        yield LookAt(BLUE_START_X, BLUE_START_Y)
+        yield AntiBlocking(True)
+        yield MoveLineTo(BLUE_START_X, BLUE_START_Y + 0.15)
+        # yield MoveLineTo(1.66, 0.38)
         yield DepositGlasses()
+        yield MoveRelative(-0.1, DIRECTION_BACKWARDS)
         yield None
 
 
@@ -65,7 +72,11 @@ class Deposit(statemachine.State):
 class TakeGlasses(statemachine.State):
 
     def on_enter(self):
-        yield MoveLineTo(BLUE_START_X, Y_OPEN_GIFTS_START)
+        # yield MoveLineTo(BLUE_START_X, Y_OPEN_GIFTS_START)
+        yield MoveLineTo(BLUE_START_X, 1.0)
+        yield Timer(1000.0)
+        yield MoveLineTo(BLUE_START_X, 1.93)
+        yield Timer(1000.0)
         yield None
 
 

@@ -58,7 +58,9 @@ class CollectGlasses(statemachine.State):
         if not packet.done:
             yield UnloadGlasses()
             self.send_packet(packets.InternalDropGlasses(can_continue=packet.can_continue, done=True))
-        yield None
+            yield Timer(2000.0)
+            yield Lifter(self.fsm.side, LIFTER_MOVE_DOWN)
+            yield None
 
 
 
