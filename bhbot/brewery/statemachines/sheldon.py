@@ -125,7 +125,7 @@ class KickGifts(statemachine.State):
                 # y+=0.05
                 direction = DIRECTION_BACKWARDS if y < self.robot.pose.virt.y else DIRECTION_FORWARDS
                 move = yield MoveLineTo(GIFT_X_POS, y, direction, chained = move, opponent_handling = ohc )
-                if move.exit_reason != REASON_DESTINATION_REACHED :
+                if move.exit_reason != TRAJECTORY_DESTINATION_REACHED :
                     break
                 yield KickIt(side)
         else:
@@ -133,13 +133,14 @@ class KickGifts(statemachine.State):
                 # y+=0.05
                 direction = DIRECTION_BACKWARDS if y < self.robot.pose.virt.y else DIRECTION_FORWARDS
                 move = yield MoveLineTo(GIFT_X_POS, y, direction, chained = move, opponent_handling = ohc)
-                if move.exit_reason != REASON_DESTINATION_REACHED :
+                if move.exit_reason != TRAJECTORY_DESTINATION_REACHED :
                     break
                 yield KickIt(side)
-            yield MoveRelative(0.05, chained = move, opponent_handling = ohc) # disengage
+            yield MoveRelative(0.05, chained = move) # disengage
 
-        if move.exit_reason == REASON_DESTINATION_REACHED :
-            self.exit_reason = GOAL_DONE
+        # for the moment, there's no distinct handling for each gift
+
+        self.exit_reason = GOAL_DONE
 
         yield None
 
@@ -277,7 +278,7 @@ class GlassesDirect(statemachine.State):
         move = yield MoveLineTo( 1.26, 1.81, chained = move)
 
         #if we're in position, take a picture
-        if move.exit_reason != REASON_DESTINATION_REACHED :
+        if move.exit_reason != TRAJECTORY_DESTINATION_REACHED :
             x = SECOND_LINE_X + TAKE_GLASS_DELTA_X
             y = self.robot.pose.virt.y
             yield LookAt(x,y)

@@ -736,7 +736,8 @@ class Navigate(statemachine.State):
             self.exit_reason = TRAJECTORY_DESTINATION_UNREACHABLE
             yield None
             return
-        yield FollowPath(path, self.direction)
+        move = yield FollowPath(path, self.direction)
+        self.exit_reason = move.exit_reason
         yield None
 
 
@@ -804,17 +805,23 @@ class FindNextGoal(statemachine.State):
                 gm.goal_doing(goal)
 
                 if goal.navigate :
+                    logger.log('Navigating to goal')
                     move = yield Navigate(goal.x, goal.y, goal.direction)
+                    logger.log('End of navigation : {}'.format(TRAJECTORY.lookup_by_value[move.exit_reason]))
 
-                    if move.exit_reason != REASON_DESTINATION_REACHED :
+                    if move.exit_reason != TRAJECTORY_DESTINATION_REACHED :
                         logger.log('Cannot navigate to goal -> picking another')
                         goal.increment_trials()
                         gm.goal_available(goal)
-                        break
+                        continue
+
+                    logger.log('Navigation was successful')
 
                 state = goal.get_state()
 
                 yield state
+
+                logger.log('State exit reason : {}'.format(GOAL_STATUS.lookup_by_value[state.exit_reason]))
 
                 if state.exit_reason == GOAL_DONE :
                     gm.goal_done(goal)
