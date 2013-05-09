@@ -1,5 +1,7 @@
 import logger
 import sys
+import traceback
+
 
 class Signal:
     def __init__(self, name=None):
