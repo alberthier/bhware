@@ -33,6 +33,7 @@ class Goal(object):
 
     def increment_trials(self):
         self.trial_count+=1
+        logger.log('Goal {} : increment trials : {}'.format(self.identifier, self.trial_count))
 
     def get_state(self):
         if isinstance(self.handler_state, statemachine.State):
