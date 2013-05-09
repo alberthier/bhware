@@ -568,6 +568,7 @@ class WaitForGlass(statemachine.State):
 
 
     def on_glass_present(self, packet):
+        self.log('A glass was detected')
         if packet.side == self.side:
             yield None
 
@@ -792,19 +793,27 @@ class DepositGlasses(statemachine.State):
 class FindNextGoal(statemachine.State):
     def on_enter(self):
         gm = self.robot.goal_manager
-        goal = gm.get_best_goal(gm.harvesting_goals)
 
-        if goal :
-            logger.log('Next goal is {}'.format(goal.identifier))
+        while True:
 
-            yield Navigate(goal.x, goal.y, goal.direction)
+            goal = gm.get_best_goal(gm.harvesting_goals)
 
-            state = goal.get_state()
-            gm.goal_doing(goal)
-            yield state
-            if state.exit_reason == GOAL_DONE :
-                gm.goal_done(goal)
+            if goal :
+                logger.log('Next goal is {}'.format(goal.identifier))
+
+                yield Navigate(goal.x, goal.y, goal.direction)
+
+                state = goal.get_state()
+                gm.goal_doing(goal)
+                yield state
+                if state.exit_reason == GOAL_DONE :
+                    gm.goal_done(goal)
+                else :
+                    gm.goal_available(goal)
             else :
-                gm.goal_available(goal)
+                break
+
+        self.log('No more goals available')
+        self.log(str({ g.identifier : g.is_available() for g in gm.all_goals}))
 
         yield None

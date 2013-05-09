@@ -1,4 +1,5 @@
 import logger
+import sys
 
 class Signal:
     def __init__(self, name=None):

@@ -14,12 +14,13 @@ class InterBotManager :
         leds.driver.set_mode(leds.driver.MODE_HEARTBEAT_GREEN)
 
     def goal_state_change(self, goal):
-        logger.log('A goal status changed, notifying my buddy : {} -> {}'.format(goal.identifier, goal.status))
-        packet = InterbotGoalStatus()
-        packet.main_robot = IS_MAIN_ROBOT
-        packet.goal_identifier = goal.identifier
-        packet.goal_status = goal.status
-        self.eventloop.send_packet(packet)
+        if goal.shared :
+            logger.log('A shared goal status changed, notifying my buddy : {} -> {}'.format(goal.identifier, goal.status))
+            packet = InterbotGoalStatus()
+            packet.main_robot = IS_MAIN_ROBOT
+            packet.goal_identifier = goal.identifier
+            packet.goal_status = goal.status
+            self.eventloop.send_packet(packet)
 
 
     def on_connect(self):
