@@ -334,34 +334,36 @@ class Cake:
         self.candles = {}
 
         # Top candles
-        Candle(self, "top1", math.radians(-90.0 + 11.25 + 1.0 * 22.5), CANDLE_KICKER_UPPER, True)
-        Candle(self, "top2", math.radians(-90.0 + 11.25 + 2.0 * 22.5), CANDLE_KICKER_UPPER, False)
-        Candle(self, "top3", math.radians(-90.0 + 11.25 + 3.0 * 22.5), CANDLE_KICKER_UPPER, False)
-        Candle(self, "top4", math.radians(-90.0 + 11.25 + 4.0 * 22.5), CANDLE_KICKER_UPPER, False)
-        Candle(self, "top5", math.radians(-90.0 + 11.25 + 5.0 * 22.5), CANDLE_KICKER_UPPER, False)
-        Candle(self, "top6", math.radians(-90.0 + 11.25 + 6.0 * 22.5), CANDLE_KICKER_UPPER, False)
-        Candle(self, "top7", math.radians(-90.0 + 11.25 + 7.0 * 22.5), CANDLE_KICKER_UPPER, False)
-        Candle(self, "top8", math.radians(-90.0 + 11.25 + 8.0 * 22.5), CANDLE_KICKER_UPPER, False)
+        Candle(self, "top1", math.radians(-90.0 + 11.25 + 0.0 * 22.5 + 5.0), CANDLE_KICKER_UPPER, True)
+        Candle(self, "top2", math.radians(-90.0 + 11.25 + 1.0 * 22.5 + 5.0), CANDLE_KICKER_UPPER, False)
+        Candle(self, "top3", math.radians(-90.0 + 11.25 + 2.0 * 22.5 + 5.0), CANDLE_KICKER_UPPER, False)
+        Candle(self, "top4", math.radians(-90.0 + 11.25 + 3.0 * 22.5 + 5.0), CANDLE_KICKER_UPPER, False)
+        Candle(self, "top5", math.radians(-90.0 + 11.25 + 4.0 * 22.5 + 7.0), CANDLE_KICKER_UPPER, False)
+        Candle(self, "top6", math.radians(-90.0 + 11.25 + 5.0 * 22.5 + 8.0), CANDLE_KICKER_UPPER, True)
+        Candle(self, "top7", math.radians(-90.0 + 11.25 + 6.0 * 22.5 + 9.0), CANDLE_KICKER_UPPER, True)
+        Candle(self, "top8", math.radians(-90.0 + 11.25 + 7.0 * 22.5 + 9.0), CANDLE_KICKER_UPPER, True)
 
         # Bottom candles
-        Candle(self, "bottom1"  , math.radians(-90.0 + 7.5 +  1.0 * 15.0), CANDLE_KICKER_LOWER, True)
-        Candle(self, "bottom2"  , math.radians(-90.0 + 7.5 +  2.0 * 15.0), CANDLE_KICKER_LOWER, False)
-        Candle(self, "bottom3"  , math.radians(-90.0 + 7.5 +  3.0 * 15.0), CANDLE_KICKER_LOWER, False)
-        Candle(self, "bottom4"  , math.radians(-90.0 + 7.5 +  4.0 * 15.0), CANDLE_KICKER_LOWER, False)
-        Candle(self, "bottom5"  , math.radians(-90.0 + 7.5 +  5.0 * 15.0), CANDLE_KICKER_LOWER, True)
-        Candle(self, "bottom6"  , math.radians(-90.0 + 7.5 +  6.0 * 15.0), CANDLE_KICKER_LOWER, True)
-        Candle(self, "bottom7"  , math.radians(-90.0 + 7.5 +  7.0 * 15.0), CANDLE_KICKER_LOWER, True)
-        Candle(self, "bottom8"  , math.radians(-90.0 + 7.5 +  8.0 * 15.0), CANDLE_KICKER_LOWER, True)
-        Candle(self, "bottom9"  , math.radians(-90.0 + 7.5 +  9.0 * 15.0), CANDLE_KICKER_LOWER, False)
-        Candle(self, "bottom10" , math.radians(-90.0 + 7.5 + 10.0 * 15.0), CANDLE_KICKER_LOWER, False)
-        Candle(self, "bottom11" , math.radians(-90.0 + 7.5 + 11.0 * 15.0), CANDLE_KICKER_LOWER, False)
-        Candle(self, "bottom12" , math.radians(-90.0 + 7.5 + 12.0 * 15.0), CANDLE_KICKER_LOWER, False)
+        Candle(self, "bottom1"  , math.radians(-90.0 + 7.5 +  0.0 * 15.0 + 5.0), CANDLE_KICKER_LOWER, True)
+        Candle(self, "bottom2"  , math.radians(-90.0 + 7.5 +  1.0 * 15.0 + 5.0), CANDLE_KICKER_LOWER, False)
+        Candle(self, "bottom3"  , math.radians(-90.0 + 7.5 +  2.0 * 15.0 + 5.0), CANDLE_KICKER_LOWER, False)
+        Candle(self, "bottom4"  , math.radians(-90.0 + 7.5 +  3.0 * 15.0 + 5.0), CANDLE_KICKER_LOWER, False)
+        Candle(self, "bottom5"  , math.radians(-90.0 + 7.5 +  4.0 * 15.0 + 5.0), CANDLE_KICKER_LOWER, True)
+        Candle(self, "bottom6"  , math.radians(-90.0 + 7.5 +  5.0 * 15.0 + 5.0), CANDLE_KICKER_LOWER, True)
+        Candle(self, "bottom7"  , math.radians(-90.0 + 7.5 +  6.0 * 15.0 + 7.0), CANDLE_KICKER_LOWER, True)
+        Candle(self, "bottom8"  , math.radians(-90.0 + 7.5 +  7.0 * 15.0 + 7.0), CANDLE_KICKER_LOWER, True)
+        Candle(self, "bottom9"  , math.radians(-90.0 + 7.5 +  8.0 * 15.0 + 7.0), CANDLE_KICKER_LOWER, True)
+        Candle(self, "bottom10" , math.radians(-90.0 + 7.5 +  9.0 * 15.0 + 7.0), CANDLE_KICKER_LOWER, True)
+        Candle(self, "bottom11" , math.radians(-90.0 + 7.5 + 10.0 * 15.0 + 7.0), CANDLE_KICKER_LOWER, True)
+        Candle(self, "bottom12" , math.radians(-90.0 + 7.5 + 11.0 * 15.0 + 7.0), CANDLE_KICKER_LOWER, True)
 
 
     def update_with_detection(self, detections):
         for name, to_blow in detections.items():
             if name in self.candles:
-                self.candles[name].to_blow |= to_blow
+                candle = self.candles[name]
+                if not candle.to_blow:
+                    candle.to_blow = to_blow
 
 
     def get_sorted_candles(self):
@@ -400,7 +402,8 @@ class NavigateToCake(statemachine.State):
         for candle in self.candles:
             if candle.name not in ["top1", "bottom1", "top8", "bottom12"]:
                 remaining_candles.append(candle)
-        yield BlowCandlesOut(remaining_candles, self.cake_arc_radius)
+        if len(remaining_candles) != 0:
+            yield BlowCandlesOut(remaining_candles, self.cake_arc_radius)
         yield None
 
 
@@ -424,6 +427,7 @@ class BlowCandlesOut(statemachine.State):
 
 
     def on_enter(self):
+        #self.kicks = {CANDLE_KICKER_UPPER: 0, CANDLE_KICKER_LOWER: 0}
         self.current = 0
         if self.robot.pose.virt.y > FIELD_Y_SIZE / 2.0:
             # the robot is on the opposite site.
@@ -442,9 +446,12 @@ class BlowCandlesOut(statemachine.State):
         move = MoveArc(0.0, 1.5, self.cake_arc_radius, angles, direction)
         move.on_waypoint_reached = self.on_waypoint_reached
         move.on_candle_kicker = self.on_candle_kicker
-        yield SpeedControl(0.1)
+        yield SpeedControl(0.25)
         yield move
         yield SpeedControl()
+        if self.candles[-1].to_blow:
+            yield CandleKicker(self.side, self.candles[-1].which, CANDLE_KICKER_POSITION_KICK)
+            yield CandleKicker(self.side, self.candles[-1].which, CANDLE_KICKER_POSITION_UP)
         self.exit_reason = move.exit_reason == TRAJECTORY_DESTINATION_REACHED
         yield None
 
@@ -459,6 +466,11 @@ class BlowCandlesOut(statemachine.State):
     def on_candle_kicker(self, packet):
         if packet.position == CANDLE_KICKER_POSITION_KICK:
             self.send_packet(packets.CandleKicker(side = self.side, which = packet.which, position = CANDLE_KICKER_POSITION_UP))
+            if self.kicks[packet.which] == 0:
+                self.kicks[packet.which] = 1
+                self.send_packet(packets.CandleKicker(side = self.side, which = packet.which, position = CANDLE_KICKER_POSITION_KICK))
+            else:
+                self.kicks[packet.which] = 0
 
 
 
