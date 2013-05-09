@@ -26,7 +26,7 @@ TAKE_GLASS_DELTA_X = 0.04
 START_X = FIRST_LINE_X + TAKE_GLASS_DELTA_X
 SECOND_SHOT_ANGLE = math.radians(150.0)
 
-CAKE_ARC_RADIUS = 0.665
+CAKE_ARC_RADIUS = 0.65
 
 GIFT_Y_POS = [ 0.5, 1.1, 1.7, 2.3 ]
 GIFT_X_POS = 1.77
@@ -86,7 +86,11 @@ class Main(statemachine.State):
             pass
         else:
             side = SIDE_LEFT if self.robot.team == TEAM_BLUE else SIDE_RIGHT
-            nav = yield NavigateToCake(candles, CAKE_ARC_RADIUS)
+            if packet.team == TEAM_RED:
+                radius = CAKE_ARC_RADIUS + 0.015
+            else:
+                radius = CAKE_ARC_RADIUS
+            nav = yield NavigateToCake(candles, radius)
 
             yield MoveRelative(-0.4, direction = DIRECTION_BACKWARDS)
 
