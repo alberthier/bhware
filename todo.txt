@@ -11,7 +11,7 @@ sheldon:
 - integration gateau dans goal manager
 
 leonard:
-- 
+- n'arrive pas à se connecter à sheldon
 
 drunkstar:
 -
@@ -25,12 +25,6 @@ Si on a pris qqch, aller direct le déposer. Ne pas faire de retry sur chaque go
 
 Autre possibilité, moissonner dans le sens du goal, 2 alternatives, par le nord ou par le sud
 
-Communication des goals entre robots :
-- Ajout d'un statut GOAL_DOING
-- Défini par FindNextGoal au début d'un goal
-- Envoyé à l'autre robot
-- un GOAL_DOING ne peut pas être next goal
-- un GOAL_DOING peut redevenir GOAL_AVAILABLE
 
 Gérer cadeaux un a un
 
