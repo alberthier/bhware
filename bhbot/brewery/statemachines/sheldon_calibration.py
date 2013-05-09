@@ -21,22 +21,36 @@ class Main(statemachine.State):
 
     def on_device_ready(self, packet):
         yield AntiBlocking(True)
+        yield CalibratePosition(START_X)
+        yield Timer(500)
+        detector = yield FetchCandleColors()
+
+        # 1 photo
+        yield MoveLineTo( START_X, 0.75)
+        yield Rotate(0.0)
 
 
-    def on_start(self, packet):
-        for i in range(10):
-            yield CalibratePosition()
-            detector = yield FetchCandleColors()
-            self.log("#{}[1] candles detection: {}".format(i, detector.colors))
-            yield GlassesSuperS()
-            yield LookAt(0.0, 1.5)
-            detector = yield FetchCandleColors()
-            self.log("#{}[2] candles detection: {}".format(i, detector.colors))
-            yield Rotate(-math.pi / 2.0)
-            yield MoveLineTo(BLUE_START_X, 0.5)
-            yield Rotate(0.0)
-            yield MoveLineTo(0.0, 0.5)
-            yield Timer(5000)
+        # 2 photos
+        #yield MoveLineTo( START_X, FIRST_LINE_END_Y)
+
+        # Ajout
+
+        #yield Rotate(math.pi)
+        #shot_x = 2.0 - 0.51
+        #yield MoveLineTo(shot_x, FIRST_LINE_END_Y, DIRECTION_BACKWARDS)
+        #yield Rotate(math.radians(150))
+
+        #######
+
+        #yield Timer(200)
+        #detector = yield FetchCandleColors()
+        #yield Rotate(-math.pi / 2.0)
+        #yield MoveLineTo(shot_x, 0.75)
+        #yield Rotate(0.0)
+        yield MoveLineTo(0.2, 0.75, DIRECTION_BACKWARDS)
+        yield SpeedControl(0.2)
+        yield MoveLineTo(0.0, 0.75, DIRECTION_BACKWARDS)
+        yield SpeedControl(88.0)
 
 
 

@@ -11,7 +11,6 @@ class Main(statemachine.State):
 
     def on_enter(self):
         self.fsm.glasses_count = 0
-
         self.fsm.name += "[{}]".format(SIDE.lookup_by_value[self.fsm.side])
         self.log("Init")
 

@@ -24,13 +24,14 @@ SECOND_LINE_END_Y = 1.5
 TAKE_GLASS_DELTA_X = 0.04
 
 START_X = FIRST_LINE_X + TAKE_GLASS_DELTA_X
+SECOND_SHOT_ANGLE = math.radians(150.0)
 
 CAKE_ARC_RADIUS = 0.65
 
 GIFT_Y_POS = [ 0.5, 1.1, 1.7, 2.3 ]
 GIFT_X_POS = 1.77
 
-GIFT_Y_DELTA = 0.05
+GIFT_Y_DELTA = 0.0575
 GIFT_Y_POS = [ y + GIFT_Y_DELTA for y in GIFT_Y_POS ]
 
 DEPOSIT_Y = 0.45
@@ -261,7 +262,7 @@ class GlassesDirect(statemachine.State):
         )
 
         move = yield MoveLineTo( START_X, FIRST_LINE_END_Y, opponent_handling = ohc)
-        move = yield Rotate(1.72, chained = move)
+        move = yield Rotate(SECOND_SHOT_ANGLE, chained = move)
 
         #if we're in position, take a picture
         if move.exit_reason == REASON_DESTINATION_REACHED :
@@ -309,8 +310,6 @@ class RingTheBell(statemachine.State):
 
 
 
-
-
 ##################################################
 # Blow candles out
 
@@ -319,7 +318,8 @@ class RingTheBell(statemachine.State):
 
 class Candle:
 
-    def __init__(self, name, angle, which, to_blow):
+    def __init__(self, cake, name, angle, which, to_blow):
+        cake.candles[name] = self
         self.name = name
         self.angle = angle
         self.which = which
@@ -332,18 +332,30 @@ class Cake:
 
     def __init__(self):
         self.candles = {}
-        for i in range(8):
-            angle = math.radians(-90.0 + 11.25 + i * 22.5)
-            name = "top" + str(i + 1)
-            self.candles[name] = Candle(name, angle, CANDLE_KICKER_UPPER, i == 0)
-        for i in range(12):
-            angle = math.radians(-90.0 + 7.5 + i * 15.0)
-            name = "bottom" + str(i + 1)
-            candle = Candle(name, angle, CANDLE_KICKER_LOWER, i == 0)
-            # White candles. Disable these two lines for final phases
-            if i > 3 and i < 8:
-                candle.to_blow = True
-            self.candles[name] = candle
+
+        # Top candles
+        Candle(self, "top1", math.radians(-90.0 + 11.25 + 1.0 * 22.5), CANDLE_KICKER_UPPER, True)
+        Candle(self, "top2", math.radians(-90.0 + 11.25 + 2.0 * 22.5), CANDLE_KICKER_UPPER, False)
+        Candle(self, "top3", math.radians(-90.0 + 11.25 + 3.0 * 22.5), CANDLE_KICKER_UPPER, False)
+        Candle(self, "top4", math.radians(-90.0 + 11.25 + 4.0 * 22.5), CANDLE_KICKER_UPPER, False)
+        Candle(self, "top5", math.radians(-90.0 + 11.25 + 5.0 * 22.5), CANDLE_KICKER_UPPER, False)
+        Candle(self, "top6", math.radians(-90.0 + 11.25 + 6.0 * 22.5), CANDLE_KICKER_UPPER, False)
+        Candle(self, "top7", math.radians(-90.0 + 11.25 + 7.0 * 22.5), CANDLE_KICKER_UPPER, False)
+        Candle(self, "top8", math.radians(-90.0 + 11.25 + 8.0 * 22.5), CANDLE_KICKER_UPPER, False)
+
+        # Bottom candles
+        Candle(self, "bottom1"  , math.radians(-90.0 + 7.5 +  1.0 * 15.0), CANDLE_KICKER_LOWER, True)
+        Candle(self, "bottom2"  , math.radians(-90.0 + 7.5 +  2.0 * 15.0), CANDLE_KICKER_LOWER, False)
+        Candle(self, "bottom3"  , math.radians(-90.0 + 7.5 +  3.0 * 15.0), CANDLE_KICKER_LOWER, False)
+        Candle(self, "bottom4"  , math.radians(-90.0 + 7.5 +  4.0 * 15.0), CANDLE_KICKER_LOWER, False)
+        Candle(self, "bottom5"  , math.radians(-90.0 + 7.5 +  5.0 * 15.0), CANDLE_KICKER_LOWER, True)
+        Candle(self, "bottom6"  , math.radians(-90.0 + 7.5 +  6.0 * 15.0), CANDLE_KICKER_LOWER, True)
+        Candle(self, "bottom7"  , math.radians(-90.0 + 7.5 +  7.0 * 15.0), CANDLE_KICKER_LOWER, True)
+        Candle(self, "bottom8"  , math.radians(-90.0 + 7.5 +  8.0 * 15.0), CANDLE_KICKER_LOWER, True)
+        Candle(self, "bottom9"  , math.radians(-90.0 + 7.5 +  9.0 * 15.0), CANDLE_KICKER_LOWER, False)
+        Candle(self, "bottom10" , math.radians(-90.0 + 7.5 + 10.0 * 15.0), CANDLE_KICKER_LOWER, False)
+        Candle(self, "bottom11" , math.radians(-90.0 + 7.5 + 11.0 * 15.0), CANDLE_KICKER_LOWER, False)
+        Candle(self, "bottom12" , math.radians(-90.0 + 7.5 + 12.0 * 15.0), CANDLE_KICKER_LOWER, False)
 
 
     def update_with_detection(self, detections):
@@ -388,7 +400,7 @@ class NavigateToCake(statemachine.State):
         for candle in self.candles:
             if candle.name not in ["top1", "bottom1", "top8", "bottom12"]:
                 remaining_candles.append(candle)
-        yield BlowCandlesOut(remaining_candles, CAKE_ARC_RADIUS)
+        yield BlowCandlesOut(remaining_candles, self.cake_arc_radius)
         yield None
 
 
@@ -430,7 +442,7 @@ class BlowCandlesOut(statemachine.State):
         move = MoveArc(0.0, 1.5, self.cake_arc_radius, angles, direction)
         move.on_waypoint_reached = self.on_waypoint_reached
         move.on_candle_kicker = self.on_candle_kicker
-        yield SpeedControl(0.4)
+        yield SpeedControl(0.1)
         yield move
         yield SpeedControl()
         self.exit_reason = move.exit_reason == TRAJECTORY_DESTINATION_REACHED
@@ -462,6 +474,6 @@ class EndOfMatch(statemachine.State):
     def on_enter(self):
         yield StopAll();
         yield Pump(PUMP_ON)
-        yield Timer(9000)
+        yield Timer(5000)
         yield Pump(PUMP_OFF)
 
