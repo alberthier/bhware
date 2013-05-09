@@ -320,7 +320,8 @@ class RingTheBell(statemachine.State):
 
 class Candle:
 
-    def __init__(self, name, angle, which, to_blow):
+    def __init__(self, cake, name, angle, which, to_blow):
+        cake.candles[name] = self
         self.name = name
         self.angle = angle
         self.which = which
@@ -333,18 +334,30 @@ class Cake:
 
     def __init__(self):
         self.candles = {}
-        for i in range(8):
-            angle = math.radians(-90.0 + 11.25 + i * 22.5)
-            name = "top" + str(i + 1)
-            self.candles[name] = Candle(name, angle, CANDLE_KICKER_UPPER, i == 0)
-        for i in range(12):
-            angle = math.radians(-90.0 + 7.5 + i * 15.0)
-            name = "bottom" + str(i + 1)
-            candle = Candle(name, angle, CANDLE_KICKER_LOWER, i == 0)
-            # White candles. Disable these two lines for final phases
-            if i > 3 and i < 8:
-                candle.to_blow = True
-            self.candles[name] = candle
+
+        # Top candles
+        Candle(self, "top1", math.radians(-90.0 + 11.25 + 1.0 * 22.5), CANDLE_KICKER_UPPER, True)
+        Candle(self, "top2", math.radians(-90.0 + 11.25 + 2.0 * 22.5), CANDLE_KICKER_UPPER, False)
+        Candle(self, "top3", math.radians(-90.0 + 11.25 + 3.0 * 22.5), CANDLE_KICKER_UPPER, False)
+        Candle(self, "top4", math.radians(-90.0 + 11.25 + 4.0 * 22.5), CANDLE_KICKER_UPPER, False)
+        Candle(self, "top5", math.radians(-90.0 + 11.25 + 5.0 * 22.5), CANDLE_KICKER_UPPER, False)
+        Candle(self, "top6", math.radians(-90.0 + 11.25 + 6.0 * 22.5), CANDLE_KICKER_UPPER, False)
+        Candle(self, "top7", math.radians(-90.0 + 11.25 + 7.0 * 22.5), CANDLE_KICKER_UPPER, False)
+        Candle(self, "top8", math.radians(-90.0 + 11.25 + 8.0 * 22.5), CANDLE_KICKER_UPPER, False)
+
+        # Bottom candles
+        Candle(self, "bottom1"  , math.radians(-90.0 + 7.5 +  1.0 * 15.0), CANDLE_KICKER_LOWER, True)
+        Candle(self, "bottom2"  , math.radians(-90.0 + 7.5 +  2.0 * 15.0), CANDLE_KICKER_LOWER, False)
+        Candle(self, "bottom3"  , math.radians(-90.0 + 7.5 +  3.0 * 15.0), CANDLE_KICKER_LOWER, False)
+        Candle(self, "bottom4"  , math.radians(-90.0 + 7.5 +  4.0 * 15.0), CANDLE_KICKER_LOWER, False)
+        Candle(self, "bottom5"  , math.radians(-90.0 + 7.5 +  5.0 * 15.0), CANDLE_KICKER_LOWER, True)
+        Candle(self, "bottom6"  , math.radians(-90.0 + 7.5 +  6.0 * 15.0), CANDLE_KICKER_LOWER, True)
+        Candle(self, "bottom7"  , math.radians(-90.0 + 7.5 +  7.0 * 15.0), CANDLE_KICKER_LOWER, True)
+        Candle(self, "bottom8"  , math.radians(-90.0 + 7.5 +  8.0 * 15.0), CANDLE_KICKER_LOWER, True)
+        Candle(self, "bottom9"  , math.radians(-90.0 + 7.5 +  9.0 * 15.0), CANDLE_KICKER_LOWER, False)
+        Candle(self, "bottom10" , math.radians(-90.0 + 7.5 + 10.0 * 15.0), CANDLE_KICKER_LOWER, False)
+        Candle(self, "bottom11" , math.radians(-90.0 + 7.5 + 11.0 * 15.0), CANDLE_KICKER_LOWER, False)
+        Candle(self, "bottom12" , math.radians(-90.0 + 7.5 + 12.0 * 15.0), CANDLE_KICKER_LOWER, False)
 
 
     def update_with_detection(self, detections):
