@@ -365,7 +365,7 @@ class AbstractMove(statemachine.State):
                                                      self.packet.direction, config.retries_count)
                 reason = leave_state.exit_reason
                 self.current_opponent = None
-                if reason == WaitForOpponentLeave.TIMEOUT:
+                if reason in (WaitForOpponentLeave.TIMEOUT, TRAJECTORY_BLOCKED) :
                     self.exit_reason = TRAJECTORY_OPPONENT_DETECTED
                     yield None
                 else:
@@ -736,7 +736,8 @@ class Navigate(statemachine.State):
             self.exit_reason = TRAJECTORY_DESTINATION_UNREACHABLE
             yield None
             return
-        yield FollowPath(path, self.direction)
+        move = yield FollowPath(path, self.direction)
+        self.exit_reason = move.exit_reason
         yield None
 
 
@@ -801,14 +802,31 @@ class FindNextGoal(statemachine.State):
             if goal :
                 logger.log('Next goal is {}'.format(goal.identifier))
 
-                yield Navigate(goal.x, goal.y, goal.direction)
+                gm.goal_doing(goal)
+
+                if goal.navigate :
+                    logger.log('Navigating to goal')
+                    move = yield Navigate(goal.x, goal.y, goal.direction)
+                    logger.log('End of navigation : {}'.format(TRAJECTORY.lookup_by_value[move.exit_reason]))
+
+                    if move.exit_reason != TRAJECTORY_DESTINATION_REACHED :
+                        logger.log('Cannot navigate to goal -> picking another')
+                        goal.increment_trials()
+                        gm.goal_available(goal)
+                        continue
+
+                    logger.log('Navigation was successful')
 
                 state = goal.get_state()
-                gm.goal_doing(goal)
+
                 yield state
+
+                logger.log('State exit reason : {}'.format(GOAL_STATUS.lookup_by_value[state.exit_reason]))
+
                 if state.exit_reason == GOAL_DONE :
                     gm.goal_done(goal)
                 else :
+                    goal.increment_trials()
                     gm.goal_available(goal)
             else :
                 break

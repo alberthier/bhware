@@ -14,7 +14,8 @@ import itertools
 
 class Goal(object):
 
-    def __init__(self, identifier, weight, x, y, direction, handler_state, ctor_parameters = None, shared = True):
+    def __init__(self, identifier, weight, x, y, direction, handler_state, ctor_parameters = None, shared = True,
+                 navigate = True):
         self.identifier = identifier
         self.weight = weight
         self.x = x
@@ -27,6 +28,12 @@ class Goal(object):
         self.penality = 0.0
         self.status = GOAL_AVAILABLE
         self.shared = shared
+        self.navigate = navigate
+        self.trial_count = 0
+
+    def increment_trials(self):
+        self.trial_count+=1
+        logger.log('Goal {} : increment trials : {}'.format(self.identifier, self.trial_count))
 
     def get_state(self):
         if isinstance(self.handler_state, statemachine.State):
@@ -115,6 +122,9 @@ class GoalManager(object):
             goal.score += order * 2
 
         for order, goal in enumerate(sorted(available_goals, key=lambda x:x.weight, reverse=True)):
+            goal.score += order
+
+        for order, goal in enumerate(sorted(available_goals, key=lambda x:x.trial_count, reverse=True)):
             goal.score += order
 
         logger.log("available_goals by score : {}".format( ["{}:{}".format(g.identifier, g.score) for g in available_goals ] ))
