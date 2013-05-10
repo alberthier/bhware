@@ -340,6 +340,9 @@ class AbstractMove(statemachine.State):
         if self.chained is not None and self.chained.exit_reason != REASON_DESTINATION_REACHED:
             self.exit_reason = self.chained.exit_reason
             yield None
+        elif self.event_loop.opponent_detector.main_opponent.detected or self.event_loop.opponent_detector.secondary_opponent.detected:
+            self.exit_reason = TRAJECTORY_OPPONENT_DETECTED
+            yield None
         else:
             self.send_packet(self.packet)
 
