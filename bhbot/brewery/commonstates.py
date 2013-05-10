@@ -568,8 +568,8 @@ class WaitForGlass(statemachine.State):
 
 
     def on_glass_present(self, packet):
-        self.log('A glass was detected')
         if packet.side == self.side:
+            self.log('A glass was detected --> exiting')
             yield None
 
 
