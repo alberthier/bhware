@@ -78,8 +78,6 @@ class Main(statemachine.State):
         #yield GlassesSuperS()
         yield GlassesDirect()
 
-        yield MoveRelative(.4)
-
         candles = self.fsm.cake.get_sorted_candles()
         self.log("Has {} candles to kick".format(len(candles)))
         if len(candles) == 0 or self.event_loop.get_elapsed_match_time() > 70.0:
@@ -276,24 +274,17 @@ class GlassesDirect(statemachine.State):
             retries = 1
         )
 
-        yield SpeedControl(0.4)
+        points = [ (START_X, ROBOT_CENTER_Y + 0.1), (1.19, 1.12), (1.23, 1.3), (1.17, 1.65),
+                                        (0.95, 1.83) ]
+    
 
-        move = yield MoveLineTo( START_X, FIRST_LINE_END_Y, opponent_handling = ohc)
-        # move = yield Rotate(0.84, chained = move)
-        move = yield LookAt( 1.26, 1.81, chained = move)
-        move = yield MoveLineTo( 1.26, 1.81, chained = move)
+        move = yield MoveCurve( 2.87, points, opponent_handling = ohc)
+        move = yield Rotate(math.pi, chained = move)
+        move = yield MoveLineTo(0.8, 1.83, chained = move, opponent_handling =  ohc)
+        move = yield Rotate(-1.33, chained = move)
+        move = yield MoveLineTo(1.0, 0.8, chained = move, opponent_handling = ohc)
 
-        #if we're in position, take a picture
-        if move.exit_reason != TRAJECTORY_DESTINATION_REACHED :
-            x = SECOND_LINE_X + TAKE_GLASS_DELTA_X
-            y = self.robot.pose.virt.y
-            yield LookAt(x,y)
-            yield MoveLineTo(x,y)
-
-        yield Rotate(-math.pi/2)
-        yield MoveLineTo( 1.27, 1.16)
-
-        yield SpeedControl()
+        yield move
 
         yield None
 
