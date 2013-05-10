@@ -37,6 +37,28 @@ GIFT_Y_POS = [ y + GIFT_Y_DELTA for y in GIFT_Y_POS ]
 DEPOSIT_Y = 0.45
 
 
+
+
+class GiftGoal(goalmanager.Goal):
+
+    def __init__(self, forward):
+        super().__init__("KICK_GIFTS", 1.0, GIFT_X_POS, 0.0, DIRECTION_FORWARDS, KickGifts)
+        self.forward = True
+        self.update()
+
+
+    def update(self):
+        if len(GIFT_Y_POS) != 0:
+            if self.forward:
+                self.y = GIFT_Y_POS[0]
+                logger.log("Update forward Gift Y to {}".format(self.y))
+            else:
+                self.y = GIFT_Y_POS[-1]
+                logger.log("Update backward Gift Y to {}".format(self.y))
+
+
+
+
 class Main(statemachine.State):
 
     def on_enter(self):
@@ -52,10 +74,10 @@ class Main(statemachine.State):
         #     g = goalmanager.Goal(i, 1.0, x, 1.95, DIRECTION_FORWARDS, None)
         #     gm.harvesting_goals.append(g)
 
-        gm.harvesting_goals.append(goalmanager.Goal("KICK_GIFTS", 1.0, GIFT_X_POS, 0.6, DIRECTION_FORWARDS,
-                                                    KickGifts))
-        gm.harvesting_goals.append(goalmanager.Goal("KICK_GIFTS", 1.0, GIFT_X_POS, GIFT_Y_POS[-1], DIRECTION_FORWARDS,
-                                                    KickGifts))
+        self.fsm.forward_way_gifts = GiftGoal(True)
+        gm.harvesting_goals.append(self.fsm.forward_way_gifts)
+        self.fsm.backward_way_gifts = GiftGoal(False)
+        gm.harvesting_goals.append(self.fsm.backward_way_gifts)
         gm.harvesting_goals.append(goalmanager.Goal("CAKE", 1.1, ROBOT_CENTER_X + 0.3, 1.5 - CAKE_ARC_RADIUS, DIRECTION_BACKWARDS,
                                                     PrepareCakeMove))
 
@@ -106,26 +128,35 @@ class KickGifts(statemachine.State):
         move = yield Rotate(math.pi/2)
 
         if self.robot.pose.virt.y < 1.5 :
-            for y in GIFT_Y_POS:
+            while len(GIFT_Y_POS) != 0:
+                y = GIFT_Y_POS[0]
                 # y+=0.05
                 direction = DIRECTION_BACKWARDS if y < self.robot.pose.virt.y else DIRECTION_FORWARDS
                 move = yield MoveLineTo(GIFT_X_POS, y, direction, chained = move, opponent_handling = ohc )
                 if move.exit_reason != TRAJECTORY_DESTINATION_REACHED :
                     break
                 yield KickIt(side)
+                del GIFT_Y_POS[0]
+
         else:
-            for y in reversed(GIFT_Y_POS):
+            while len(GIFT_Y_POS) != 0:
+                y = GIFT_Y_POS[-1]
                 # y+=0.05
                 direction = DIRECTION_BACKWARDS if y < self.robot.pose.virt.y else DIRECTION_FORWARDS
                 move = yield MoveLineTo(GIFT_X_POS, y, direction, chained = move, opponent_handling = ohc)
                 if move.exit_reason != TRAJECTORY_DESTINATION_REACHED :
                     break
                 yield KickIt(side)
+                del GIFT_Y_POS[-1]
             yield MoveRelative(0.05, chained = move) # disengage
 
         # for the moment, there's no distinct handling for each gift
 
-        self.exit_reason = GOAL_DONE
+        if len(GIFT_Y_POS) == 0:
+            self.exit_reason = GOAL_DONE
+        else:
+            self.fsm.forward_way_gifts.update()
+            self.fsm.backward_way_gifts.update()
 
         yield None
 
