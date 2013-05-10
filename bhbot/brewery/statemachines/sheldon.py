@@ -105,7 +105,7 @@ class Main(statemachine.State):
         yield GlassesDirect()
         yield FindNextGoal()
         yield Navigate(ROBOT_CENTER_X + 0.3, 1.5 - CAKE_ARC_RADIUS)
-        yield PrepareCakeMove(None)
+        yield PrepareCakeMove(None, 0.03)
 
 
 
@@ -323,8 +323,8 @@ class Cake:
             Candle(self, "bottom3"  , math.radians(-90.0 + 7.5 +  2.0 * 15.0 + 5.0), CANDLE_KICKER_LOWER, False)
             Candle(self, "bottom4"  , math.radians(-90.0 + 7.5 +  3.0 * 15.0 + 5.0), CANDLE_KICKER_LOWER, False)
             Candle(self, "bottom5"  , math.radians(-90.0 + 7.5 +  4.0 * 15.0 + 5.0), CANDLE_KICKER_LOWER, True)
-            Candle(self, "bottom6"  , math.radians(-90.0 + 7.5 +  5.0 * 15.0 + 5.0), CANDLE_KICKER_LOWER, True)
-            Candle(self, "bottom7"  , math.radians(-90.0 + 7.5 +  6.0 * 15.0 + 5.0), CANDLE_KICKER_LOWER, True)
+            Candle(self, "bottom6"  , math.radians(-90.0 + 7.5 +  5.0 * 15.0 + 4.0), CANDLE_KICKER_LOWER, True)
+            Candle(self, "bottom7"  , math.radians(-90.0 + 7.5 +  6.0 * 15.0 + 4.0), CANDLE_KICKER_LOWER, True)
             Candle(self, "bottom8"  , math.radians(-90.0 + 7.5 +  7.0 * 15.0 + 3.0), CANDLE_KICKER_LOWER, True)
             Candle(self, "bottom9"  , math.radians(-90.0 + 7.5 +  8.0 * 15.0 + 3.0), CANDLE_KICKER_LOWER, False)
             Candle(self, "bottom10" , math.radians(-90.0 + 7.5 +  9.0 * 15.0 + 3.0), CANDLE_KICKER_LOWER, False)
@@ -358,8 +358,9 @@ class Cake:
 
 class PrepareCakeMove(statemachine.State):
 
-    def __init__(self, goal):
+    def __init__(self, goal, y_offset = 0.0):
         self.goal = goal
+        self.y_offset = y_offset
         self.exit_reason = GOAL_FAILED
 
 
@@ -380,7 +381,7 @@ class PrepareCakeMove(statemachine.State):
         yield Rotate(0.0)
         yield CandleKicker(side, CANDLE_KICKER_UPPER, CANDLE_KICKER_POSITION_UP)
         self.send_packet(packets.CandleKicker(side = side, which = CANDLE_KICKER_LOWER, position = CANDLE_KICKER_POSITION_UP))
-        yield MoveLineTo(ROBOT_CENTER_X, 1.5 - CAKE_ARC_RADIUS, DIRECTION_BACKWARDS)
+        yield MoveLineTo(ROBOT_CENTER_X, 1.5 - CAKE_ARC_RADIUS + self.y_offset, DIRECTION_BACKWARDS)
         yield CandleKicker(side, CANDLE_KICKER_UPPER, CANDLE_KICKER_POSITION_KICK)
         yield CandleKicker(side, CANDLE_KICKER_LOWER, CANDLE_KICKER_POSITION_KICK)
         yield CandleKicker(side, CANDLE_KICKER_UPPER, CANDLE_KICKER_POSITION_UP)
@@ -390,7 +391,7 @@ class PrepareCakeMove(statemachine.State):
             if candle.name not in ["top1", "bottom1", "top8", "bottom12"]:
                 remaining_candles.append(candle)
         if len(remaining_candles) != 0:
-            bco = yield BlowCandlesOut(remaining_candles, radius)
+            bco = yield BlowCandlesOut(remaining_candles, radius, self.y_offset)
             self.exit_reason = bco.exit_reason
         else:
             self.exit_reason = GOAL_DONE
@@ -403,8 +404,9 @@ class PrepareCakeMove(statemachine.State):
 
 class BlowCandlesOut(statemachine.State):
 
-    def __init__(self, candles, cake_arc_radius):
+    def __init__(self, candles, cake_arc_radius, y_offset):
         self.candles = candles
+        self.y_offset = y_offset
         self.cake_arc_radius = cake_arc_radius
         self.exit_reason = GOAL_FAILED
 
@@ -425,16 +427,17 @@ class BlowCandlesOut(statemachine.State):
             # 3.5 degrees is the difference between the candle kickers and the robot center.
             angles.append(candle.angle + math.radians(3.5))
 
-        move = MoveArc(0.0, 1.5, self.cake_arc_radius, angles, direction)
+        move = MoveArc(0.0, 1.5 + self.y_offset, self.cake_arc_radius, angles, direction)
         move.on_waypoint_reached = self.on_waypoint_reached
         move.on_candle_kicker = self.on_candle_kicker
         yield SpeedControl(0.25)
         yield move
         yield SpeedControl()
-        yield MoveRelative(-0.3, DIRECTION_BACKWARDS)
         if move.exit_reason != TRAJECTORY_DESTINATION_REACHED:
+            yield MoveRelative(-0.3, DIRECTION_BACKWARDS)
             yield None
             return
+        yield MoveRelative(-0.3, DIRECTION_BACKWARDS)
         if self.candles[-1].to_blow:
             yield CandleKicker(self.side, self.candles[-1].which, CANDLE_KICKER_POSITION_KICK)
             yield CandleKicker(self.side, self.candles[-1].which, CANDLE_KICKER_POSITION_UP)
