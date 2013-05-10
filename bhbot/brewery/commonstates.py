@@ -831,8 +831,8 @@ class FindNextGoal(statemachine.State):
                         gm.goal_available(goal)
                         navigation_failure = True
                         continue
-                    else :
-                        navigation_failure = False
+                    # else :
+                    #     navigation_failure = False
 
                     logger.log('Navigation was successful')
 
