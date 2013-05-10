@@ -806,9 +806,14 @@ class FindNextGoal(statemachine.State):
     def on_enter(self):
         gm = self.robot.goal_manager
 
+        navigation_failure = False
+
         while True:
 
-            goal = gm.get_best_goal(gm.harvesting_goals)
+            if not navigation_failure :
+                goal = gm.get_best_goal(gm.harvesting_goals)
+            else :
+                goal = gm.get_least_recent_tried_goal()
 
             if goal :
                 logger.log('Next goal is {}'.format(goal.identifier))
@@ -820,11 +825,14 @@ class FindNextGoal(statemachine.State):
                     move = yield Navigate(goal.x, goal.y, goal.direction)
                     logger.log('End of navigation : {}'.format(TRAJECTORY.lookup_by_value[move.exit_reason]))
 
-                    if move.exit_reason != TRAJECTORY_DESTINATION_REACHED :
+                    if  move.exit_reason != TRAJECTORY_DESTINATION_REACHED :
                         logger.log('Cannot navigate to goal -> picking another')
                         goal.increment_trials()
                         gm.goal_available(goal)
+                        navigation_failure = True
                         continue
+                    else :
+                        navigation_failure = False
 
                     logger.log('Navigation was successful')
 

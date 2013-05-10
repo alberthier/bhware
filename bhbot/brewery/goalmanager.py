@@ -6,10 +6,12 @@ import logger
 import tools
 import statemachine
 import signals
+import datetime
 
 from definitions import *
 
 import itertools
+import random
 
 
 class Goal(object):
@@ -30,6 +32,7 @@ class Goal(object):
         self.shared = shared
         self.navigate = navigate
         self.trial_count = 0
+        self.last_try = None
 
     def increment_trials(self):
         self.trial_count+=1
@@ -49,6 +52,7 @@ class Goal(object):
 
     def doing(self):
         self.status = GOAL_DOING
+        self.last_try = datetime.datetime.now()
 
     def done(self):
         self.status = GOAL_DONE
@@ -89,6 +93,29 @@ class GoalManager(object):
 
     def is_goal_available(self, identifier):
         return any((g.is_available() for g in self.all_goals if g.identifier == identifier))
+
+    def get_least_recent_tried_goal(self):
+        available_goals = [ g for g in self.all_goals if g.is_available() ]
+
+        if not available_goals :
+            return None
+
+        goals = None
+
+        never_tried = [ g for g in available_goals if g.last_try is None ]
+
+        if never_tried :
+            goals = never_tried
+
+        else :
+            max_date = max([g.last_try for g in available_goals if g.last_try])
+
+            goals = [ g for g in available_goals if g.last_try == max_date ]
+
+        if len(goals) == 1 :
+            return  goals[0]
+        else :
+            return random.choice(goals)
 
 
     def get_best_goal(self, goals):
