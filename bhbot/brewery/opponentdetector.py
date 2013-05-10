@@ -24,6 +24,7 @@ class Opponent(object):
         self.y = None
         self.timer = eventloop.Timer(self.detector.event_loop, OPPONENT_DETECTION_DISAPEARING_MS, self.opponent_disappeared)
         self.enabled = True
+        self.detected = False
 
 
     def on_turret_detect(self, packet):
@@ -36,7 +37,8 @@ class Opponent(object):
         else:
             distance = TURRET_SHORT_DISTANCE_DETECTION_RANGE
 
-        angle = (-(packet.angle + OpponentDetector.OFFSET)) % 18
+        angle = (18 - packet.angle) % 18
+        angle = (angle - OpponentDetector.OFFSET) % 18
 
         robot_pose = self.detector.event_loop.robot.pose
         real_angle = (angle * 20.0 / 180.0) * math.pi
@@ -69,6 +71,7 @@ class Opponent(object):
         if self.opponent_direction is not None:
             if previous_direction is None:
                 logger.log("Opponent detected")
+                self.detected = True
                 for fsm in self.detector.event_loop.fsms:
                     fsm.on_opponent_detected(packet, self.opponent_direction, self.x, self.y)
             self.timer.restart()
@@ -78,6 +81,7 @@ class Opponent(object):
 
     def opponent_disappeared(self):
         logger.log("Opponent disapeared")
+        self.detected = False
         self.timer.stop()
         previous_direction = self.opponent_direction
         self.opponent_direction = None
