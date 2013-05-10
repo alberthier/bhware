@@ -74,9 +74,10 @@ class UnloadGlasses(statemachine.State):
             yield Lifter(self.fsm.side, LIFTER_MOVE_DOWN)
             yield Gripper(self.fsm.side, MOVE_OPEN)
         elif self.fsm.glasses_count == 3:
+            yield BottomHolder(self.fsm.side, MOVE_CLOSE)
             yield TopHolder(self.fsm.side, MOVE_OPEN)
             yield Gripper(self.fsm.side, MOVE_OPEN)
-            yield BottomHolder(self.fsm.side, MOVE_CLOSE)
+
 
         self.fsm.glasses_count = 0
         logger.log('{} glasses count {}'.format(SIDE.lookup_by_value[self.fsm.side], self.fsm.glasses_count))
