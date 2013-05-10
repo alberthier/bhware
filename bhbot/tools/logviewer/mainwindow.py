@@ -74,7 +74,11 @@ class MainWindowController(QObject):
             content = log_line[logger.LOG_LINE_CONTENT]
             packet_type = log_line[logger.LOG_LINE_PACKET]
             if type(packet_type) != str:
-                log_line[logger.LOG_LINE_CONTENT] = eval(content)
+                try :
+                    log_line[logger.LOG_LINE_CONTENT] = eval(content)
+                except Exception as e :
+                    print(e)
+
             log_line.append(content)
             for view in self.views:
                 if packet_type is packets.KeepAlive:
