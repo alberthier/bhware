@@ -344,7 +344,6 @@ class AbstractMove(statemachine.State):
             config = self.opponent_leave_config
             leave_state = yield WaitForOpponentLeave(self.current_opponent, config.wait_delay,
                                                      self.packet.direction, config.retries_count)
-            config = self.opponent_leave_config
             reason = leave_state.exit_reason
             self.current_opponent = None
             if reason in (WaitForOpponentLeave.TIMEOUT, TRAJECTORY_BLOCKED) :
