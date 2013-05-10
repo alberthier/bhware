@@ -80,7 +80,7 @@ class Main(statemachine.State):
         gm.harvesting_goals.append(goalmanager.Goal("CAKE", 1.1, ROBOT_CENTER_X + 0.3, 1.5 - CAKE_ARC_RADIUS, DIRECTION_BACKWARDS,
                                                     PrepareCakeMove))
 
-        deposit_glasses_x_list = [ (0.32, 0.5), (0.6, 0.5), (1.0, 0.55)]
+        deposit_glasses_x_list = [ (0.32, 2.45), (0.6, 2.5), (1.0, 2.55)]
 
         for x, priority in deposit_glasses_x_list :
 
@@ -220,6 +220,8 @@ class RingTheBell(statemachine.State):
         yield MoveRelative(0.1)
         yield DepositGlasses()
         yield MoveRelative(-0.2, DIRECTION_BACKWARDS)
+
+        self.goal.used = True
 
         self.exit_reason = GOAL_DONE
         yield None

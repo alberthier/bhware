@@ -65,10 +65,12 @@ class GlassDepositGoal(Goal):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.barmen = []
+        self.used = False
 
     def is_available(self):
         # logger.log('barmen : {} {}'.format(self.barmen, [b.glasses_count for b in self.barmen]))
-        return any(b.glasses_count > 0 for b in self.barmen)
+        return not self.used and any(b.glasses_count > 0 for b in self.barmen)
+
 
 
 class GoalManager(object):
