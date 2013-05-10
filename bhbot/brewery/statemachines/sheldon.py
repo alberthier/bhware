@@ -159,13 +159,15 @@ class KickGifts(statemachine.State):
 
         # for the moment, there's no distinct handling for each gift
 
-        # degagement
+        # degagement - match 4
 
-        if self.robot.pose.virt.y > 1.5 :
-            new_pos_x = self.robot.pose.virt.x
-            new_pos_y = 1.5
+        #if self.robot.pose.virt.y > 1.5 :
+            #new_pos_x = self.robot.pose.virt.x
+            #new_pos_y = 1.5
 
-            yield MoveLineTo(new_pos_x, new_pos_y, DIRECTION_BACKWARDS)
+            #yield MoveLineTo(new_pos_x, new_pos_y, DIRECTION_BACKWARDS)
+
+        # degagement - vers le haut
 
         # yield Rotate(math.pi)
         # yield MoveRelative(0.5)
