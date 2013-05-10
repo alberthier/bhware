@@ -430,8 +430,8 @@ class LookAtOpposite(AbstractMove):
 
 class MoveCurve(AbstractMove):
 
-    def __init__(self, angle, points, direction = DIRECTION_FORWARDS, chained = None):
-        AbstractMove.__init__(self, chained, OPPONENT_HANDLING)
+    def __init__(self, angle, points, direction = DIRECTION_FORWARDS, chained = None, opponent_handling =  OPPONENT_HANDLING):
+        AbstractMove.__init__(self, chained = chained, opponent_leave_config = opponent_handling)
         apose = position.Pose(0.0, 0.0, angle, True)
         poses = []
         for pt in points:
