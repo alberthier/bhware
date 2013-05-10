@@ -47,7 +47,7 @@ class Main(statemachine.State):
     def on_start(self, packet):
         gm = self.robot.goal_manager
         # yield SpeedControl(0.5)
-        yield Timer(2000) # 10s
+        yield Timer(70000) # 10s
         yield TakeGlasses()
         # yield SpeedControl()
         # yield LookAtOpposite(X_OPEN_GIFTS_START, Y_OPEN_GIFTS_START)
