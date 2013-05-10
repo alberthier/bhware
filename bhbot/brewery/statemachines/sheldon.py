@@ -56,6 +56,8 @@ class Main(statemachine.State):
                                                     KickGifts))
         gm.harvesting_goals.append(goalmanager.Goal("KICK_GIFTS", 1.0, GIFT_X_POS, GIFT_Y_POS[-1], DIRECTION_FORWARDS,
                                                     KickGifts))
+        gm.harvesting_goals.append(goalmanager.Goal("CAKE", 1.1, ROBOT_CENTER_X + 0.3, 1.5 - CAKE_ARC_RADIUS, DIRECTION_BACKWARDS,
+                                                    PrepareCakeMove))
 
         deposit_glasses_goal = goalmanager.GlassDepositGoal('GLASSES_DEPOSIT', 0.5, 1.0, 0.5,
                                                             DIRECTION_FORWARDS, RingTheBell, shared = False)
@@ -75,26 +77,7 @@ class Main(statemachine.State):
         detector = yield FetchCandleColors()
         self.log("First candles detection: {}".format(detector.colors))
         self.fsm.cake.update_with_detection(detector.colors)
-        #yield GlassesSuperS()
         yield GlassesDirect()
-
-        candles = self.fsm.cake.get_sorted_candles()
-        self.log("Has {} candles to kick".format(len(candles)))
-        if len(candles) == 0 or self.event_loop.get_elapsed_match_time() > 70.0:
-            pass
-        else:
-            side = SIDE_LEFT if self.robot.team == TEAM_BLUE else SIDE_RIGHT
-            if packet.team == TEAM_RED:
-                radius = CAKE_ARC_RADIUS + 0.015
-            else:
-                radius = CAKE_ARC_RADIUS
-            nav = yield NavigateToCake(candles, radius)
-
-            yield MoveRelative(-0.4, direction = DIRECTION_BACKWARDS)
-
-            yield CandleKicker(side, CANDLE_KICKER_LOWER, CANDLE_KICKER_POSITION_IDLE)
-            yield CandleKicker(side, CANDLE_KICKER_UPPER, CANDLE_KICKER_POSITION_IDLE)
-
         yield FindNextGoal()
 
 
@@ -147,6 +130,8 @@ class KickGifts(statemachine.State):
         yield None
 
 
+
+
 class KickIt(statemachine.State):
     def __init__(self, side):
         self.side = side
@@ -159,113 +144,6 @@ class KickIt(statemachine.State):
 
 
 
-##################################################
-# S curve to pick up the glasses
-
-
-
-
-class GlassesSuperS(statemachine.State):
-
-    def on_enter(self):
-        glasses = [(0.95, 0.90),
-                   (1.20, 1.05),
-                   (0.95, 1.20),
-                   (1.20, 1.35),
-                   (1.20, 1.65),
-                   (0.95, 1.80)]
-        path = []
-        for x, y in glasses:
-            xoffset = 0.05
-            if x < 1.0:
-                x += xoffset
-            else:
-                x -= xoffset
-            y -= 0.128
-            path.append((x, y))
-        yield MoveCurve(math.pi /2.0, path)
-        yield None
-
-##################################################
-# Alternate way of picking glasses
-
-
-
-
-class GlassesAlternateFrancois(statemachine.State):
-
-    def on_enter(self):
-        #deplacement = commandMsg("MSG_MOVE_CURVE 1 1 1.3")
-        # deplacement.addPose("0.85 0.85")
-        # deplacement.addPose("1.15 0.75")
-        # deplacement.addPose("1.65 0.85")
-        # deplacement.addPose("1.83 1.05")
-        # simulator_process.stdin.write(deplacement.cmdMsgGeneration())
-        path = [
-            (0.85, 0.85),
-            (0.75, 1.15),
-            (0.85, 1.65),
-            (1.05, 1.83),
-         ]
-        # path = [
-        #     (0.85, 0.85),
-        #     (1.15, 0.75),
-        #     (1.65, 0.85),
-        #     (1.83, 1.05),
-        # ]
-        yield MoveCurve(1.3, path)
-
-        # deplacement = commandMsg("MSG_ROTATE 0 1.57")
-        # simulator_process.stdin.write(deplacement.cmdMsgGeneration())
-        yield Rotate(math.pi/2)
-
-        # deplacement = commandMsg("MSG_MOVE_LINE 1")
-        # deplacement.addPose("1.83 1.2")
-        # simulator_process.stdin.write(deplacement.cmdMsgGeneration())
-        yield MoveLineTo( 1.2, 1.83)
-
-        # deplacement = commandMsg("MSG_ROTATE 0 -2.9")
-        # simulator_process.stdin.write(deplacement.cmdMsgGeneration())
-        yield Rotate(-2.9)
-
-        # deplacement = commandMsg("MSG_MOVE_LINE 1")
-        # deplacement.addPose("0.8 1.0")
-        # simulator_process.stdin.write(deplacement.cmdMsgGeneration())
-        yield MoveLineTo(1.0, 0.8)
-
-        # deplacement = commandMsg("MSG_ROTATE 0 1.37")
-        # simulator_process.stdin.write(deplacement.cmdMsgGeneration())
-        yield Rotate(1.37)
-
-        # deplacement = commandMsg("MSG_MOVE_LINE 1")
-        # deplacement.addPose("0.9 1.85")
-        # simulator_process.stdin.write(deplacement.cmdMsgGeneration())
-        yield MoveLineTo(1.85, 0.9)
-
-        # deplacement = commandMsg("MSG_ROTATE 0 -1.17")
-        # simulator_process.stdin.write(deplacement.cmdMsgGeneration())
-        yield Rotate(-1.17)
-
-        # deplacement = commandMsg("MSG_MOVE_ARC 1 1.5 2.0 0.6")
-        # deplacement.addPose(str(- (4.0 * math.pi) / 8.0))
-        # deplacement.addPose(str(- (0.6 * math.pi) / 8.0))
-        # simulator_process.stdin.write(deplacement.cmdMsgGeneration())
-
-        # deplacement = commandMsg("MSG_ROTATE 0 -1.57")
-        # simulator_process.stdin.write(deplacement.cmdMsgGeneration())
-
-        # deplacement = commandMsg("MSG_MOVE_ARC 1 1.2 2.0 0.9")
-        # deplacement.addPose(str(- (2.0 * math.pi) / 8.0))
-        # deplacement.addPose(str(- (4.0 * math.pi) / 8.0))
-        # simulator_process.stdin.write(deplacement.cmdMsgGeneration())
-
-        # deplacement = commandMsg("MSG_MOVE_LINE 1")
-        # deplacement.addPose("0.2 1.1")
-        # simulator_process.stdin.write(deplacement.cmdMsgGeneration())
-
-        yield None
-
-
 class GlassesDirect(statemachine.State):
 
     def on_enter(self):
@@ -276,7 +154,7 @@ class GlassesDirect(statemachine.State):
 
         points = [ (START_X, ROBOT_CENTER_Y + 0.1), (1.19, 1.12), (1.23, 1.3), (1.17, 1.65),
                                         (0.95, 1.83) ]
-    
+
 
         move = yield MoveCurve( 2.87, points, opponent_handling = ohc)
         move = yield Rotate(math.pi, chained = move)
@@ -306,6 +184,7 @@ class RingTheBell(statemachine.State):
         yield MoveRelative(-0.2, DIRECTION_BACKWARDS)
 
         self.exit_reason = GOAL_DONE
+        yield None
 
 
 
@@ -415,52 +294,52 @@ class Cake:
     def get_sorted_candles(self):
         ordered = list(self.candles.values())
         ordered.sort(key = lambda candle: candle.angle)
-        #while len(ordered) != 0 and not ordered[0].to_blow:
-            #del ordered[0]
-        #while len(ordered) != 0 and not ordered[-1].to_blow:
-            #del ordered[-1]
         return ordered
 
 
 
 
-class NavigateToCake(statemachine.State):
+class PrepareCakeMove(statemachine.State):
 
-    APPROACH_DISTANCE = 0.3
-
-    def __init__(self, candles, cake_arc_radius):
-        self.candles = candles
-        self.cake_arc_radius = cake_arc_radius
+    def __init__(self, goal):
+        self.goal = goal
+        self.exit_reason = GOAL_FAILED
 
 
     def on_enter(self):
+
+        candles = self.fsm.cake.get_sorted_candles()
+        self.log("Has {} candles to kick".format(len(candles)))
+        if len(candles) == 0:
+            yield None
+            return
+
         side = SIDE_LEFT if self.robot.team == TEAM_BLUE else SIDE_RIGHT
-        yield Navigate(ROBOT_CENTER_X + 0.3, 1.5 - self.cake_arc_radius, DIRECTION_BACKWARDS)
-        yield CandleKicker(side, CANDLE_KICKER_UPPER, CANDLE_KICKER_POSITION_UP)
-        yield CandleKicker(side, CANDLE_KICKER_LOWER, CANDLE_KICKER_POSITION_UP)
+        if self.robot.team == TEAM_RED:
+            radius = CAKE_ARC_RADIUS + 0.015
+        else:
+            radius = CAKE_ARC_RADIUS
+
         yield Rotate(0.0)
-        yield MoveLineTo(ROBOT_CENTER_X, 1.5 - self.cake_arc_radius, DIRECTION_BACKWARDS)
+        yield CandleKicker(side, CANDLE_KICKER_UPPER, CANDLE_KICKER_POSITION_UP)
+        self.send_packet(packets.CandleKicker(side = side, which = CANDLE_KICKER_LOWER, position = CANDLE_KICKER_POSITION_UP))
+        yield MoveLineTo(ROBOT_CENTER_X, 1.5 - CAKE_ARC_RADIUS, DIRECTION_BACKWARDS)
         yield CandleKicker(side, CANDLE_KICKER_UPPER, CANDLE_KICKER_POSITION_KICK)
         yield CandleKicker(side, CANDLE_KICKER_LOWER, CANDLE_KICKER_POSITION_KICK)
         yield CandleKicker(side, CANDLE_KICKER_UPPER, CANDLE_KICKER_POSITION_UP)
         yield CandleKicker(side, CANDLE_KICKER_LOWER, CANDLE_KICKER_POSITION_UP)
         remaining_candles = []
-        for candle in self.candles:
+        for candle in candles:
             if candle.name not in ["top1", "bottom1", "top8", "bottom12"]:
                 remaining_candles.append(candle)
         if len(remaining_candles) != 0:
-            yield BlowCandlesOut(remaining_candles, self.cake_arc_radius)
+            bco = yield BlowCandlesOut(remaining_candles, radius)
+            self.exit_reason = bco.exit_reason
+        else:
+            self.exit_reason = GOAL_DONE
+        self.send_packet(packets.CandleKicker(side = side, which = CANDLE_KICKER_LOWER, position = CANDLE_KICKER_POSITION_IDLE))
+        self.send_packet(packets.CandleKicker(side = side, which = CANDLE_KICKER_UPPER, position = CANDLE_KICKER_POSITION_IDLE))
         yield None
-
-
-
-
-    def compute_candle_pose(self, candle):
-        start = Pose(self.cake_arc_radius * math.cos(candle.angle),
-                     1.5 - self.cake_arc_radius * math.sin(candle.angle))
-        approach = Pose(start.x + self.APPROACH_DISTANCE * math.sin(candle.angle),
-                        start.y + self.APPROACH_DISTANCE * math.cos(candle.angle))
-        return (approach, start)
 
 
 
@@ -470,10 +349,10 @@ class BlowCandlesOut(statemachine.State):
     def __init__(self, candles, cake_arc_radius):
         self.candles = candles
         self.cake_arc_radius = cake_arc_radius
+        self.exit_reason = GOAL_FAILED
 
 
     def on_enter(self):
-        #self.kicks = {CANDLE_KICKER_UPPER: 0, CANDLE_KICKER_LOWER: 0}
         self.current = 0
         if self.robot.pose.virt.y > FIELD_Y_SIZE / 2.0:
             # the robot is on the opposite site.
@@ -495,10 +374,14 @@ class BlowCandlesOut(statemachine.State):
         yield SpeedControl(0.25)
         yield move
         yield SpeedControl()
+        yield MoveRelative(-0.3, DIRECTION_BACKWARDS)
+        if move.exit_reason != TRAJECTORY_DESTINATION_REACHED:
+            yield None
+            return
         if self.candles[-1].to_blow:
             yield CandleKicker(self.side, self.candles[-1].which, CANDLE_KICKER_POSITION_KICK)
             yield CandleKicker(self.side, self.candles[-1].which, CANDLE_KICKER_POSITION_UP)
-        self.exit_reason = move.exit_reason == TRAJECTORY_DESTINATION_REACHED
+        self.exit_reason = GOAL_DONE
         yield None
 
 
@@ -512,11 +395,6 @@ class BlowCandlesOut(statemachine.State):
     def on_candle_kicker(self, packet):
         if packet.position == CANDLE_KICKER_POSITION_KICK:
             self.send_packet(packets.CandleKicker(side = self.side, which = packet.which, position = CANDLE_KICKER_POSITION_UP))
-            #if self.kicks[packet.which] == 0:
-                #self.kicks[packet.which] = 1
-                #self.send_packet(packets.CandleKicker(side = self.side, which = packet.which, position = CANDLE_KICKER_POSITION_KICK))
-            #else:
-                #self.kicks[packet.which] = 0
 
 
 
