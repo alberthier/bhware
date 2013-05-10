@@ -28,7 +28,7 @@ SECOND_SHOT_ANGLE = math.radians(150.0)
 
 CAKE_ARC_RADIUS = 0.65
 
-GIFT_Y_POS = [ 0.5, 1.1, 1.7, 2.3 ]
+GIFT_Y_POS = [ 0.6, 1.1, 1.7, 2.3 ]
 GIFT_X_POS = 1.77
 
 GIFT_Y_DELTA = 0.08
@@ -41,7 +41,7 @@ DEPOSIT_Y = 0.45
 class GiftGoal(goalmanager.Goal):
 
     def __init__(self, forward):
-        super().__init__("KICK_GIFTS", 1.0, GIFT_X_POS, 0.0, DIRECTION_FORWARDS, KickGifts)
+        super().__init__("KICK_GIFTS", 1.0, GIFT_X_POS, 0.0, DIRECTION_BACKWARDS, KickGifts)
         self.forward = True
         self.update()
 
@@ -133,9 +133,13 @@ class KickGifts(statemachine.State):
         if self.robot.pose.virt.y < 1.5 :
             while len(GIFT_Y_POS) != 0:
                 y = GIFT_Y_POS[0]
-                # y+=0.05
+
+                if y < 0.7 :
+                    y = 0.5
+
                 direction = DIRECTION_BACKWARDS if y < self.robot.pose.virt.y else DIRECTION_FORWARDS
                 move = yield MoveLineTo(GIFT_X_POS, y + GIFT_Y_DELTA, direction, chained = move, opponent_handling = ohc )
+
                 if move.exit_reason != TRAJECTORY_DESTINATION_REACHED :
                     break
                 yield KickIt(side)
@@ -154,8 +158,17 @@ class KickGifts(statemachine.State):
             yield MoveRelative(0.05, chained = move) # disengage
 
         # for the moment, there's no distinct handling for each gift
-        yield Rotate(math.pi)
-        yield MoveRelative(0.5)
+
+        # degagement
+
+        if self.robot.pose.virt.y > 1.5 :
+            new_pos_x = self.robot.pose.virt.x
+            new_pos_y = 1.5
+
+            yield MoveLineTo(new_pos_x, new_pos_y, DIRECTION_BACKWARDS)
+
+        # yield Rotate(math.pi)
+        # yield MoveRelative(0.5)
 
         if len(GIFT_Y_POS) == 0:
             self.exit_reason = GOAL_DONE
