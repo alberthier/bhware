@@ -31,8 +31,7 @@ CAKE_ARC_RADIUS = 0.65
 GIFT_Y_POS = [ 0.5, 1.1, 1.7, 2.3 ]
 GIFT_X_POS = 1.77
 
-GIFT_Y_DELTA = 0.0575
-GIFT_Y_POS = [ y + GIFT_Y_DELTA for y in GIFT_Y_POS ]
+GIFT_Y_DELTA = 0.08
 
 DEPOSIT_Y = 0.45
 
@@ -136,7 +135,7 @@ class KickGifts(statemachine.State):
                 y = GIFT_Y_POS[0]
                 # y+=0.05
                 direction = DIRECTION_BACKWARDS if y < self.robot.pose.virt.y else DIRECTION_FORWARDS
-                move = yield MoveLineTo(GIFT_X_POS, y, direction, chained = move, opponent_handling = ohc )
+                move = yield MoveLineTo(GIFT_X_POS, y + GIFT_Y_DELTA, direction, chained = move, opponent_handling = ohc )
                 if move.exit_reason != TRAJECTORY_DESTINATION_REACHED :
                     break
                 yield KickIt(side)
@@ -147,7 +146,7 @@ class KickGifts(statemachine.State):
                 y = GIFT_Y_POS[-1]
                 # y+=0.05
                 direction = DIRECTION_BACKWARDS if y < self.robot.pose.virt.y else DIRECTION_FORWARDS
-                move = yield MoveLineTo(GIFT_X_POS, y, direction, chained = move, opponent_handling = ohc)
+                move = yield MoveLineTo(GIFT_X_POS, y - GIFT_Y_DELTA, direction, chained = move, opponent_handling = ohc)
                 if move.exit_reason != TRAJECTORY_DESTINATION_REACHED :
                     break
                 yield KickIt(side)
@@ -155,6 +154,8 @@ class KickGifts(statemachine.State):
             yield MoveRelative(0.05, chained = move) # disengage
 
         # for the moment, there's no distinct handling for each gift
+        yield Rotate(math.pi)
+        yield MoveRelative(0.5)
 
         if len(GIFT_Y_POS) == 0:
             self.exit_reason = GOAL_DONE
@@ -191,7 +192,9 @@ class GlassesDirect(statemachine.State):
                                         (0.95, 1.83) ]
 
 
+        yield SpeedControl(0.5)
         move = yield MoveCurve( 2.87, points, opponent_handling = ohc)
+        yield SpeedControl()
         move = yield Rotate(math.pi, chained = move)
         move = yield MoveLineTo(0.8, 1.83, chained = move, opponent_handling =  ohc)
         move = yield Rotate(-1.33, chained = move)
