@@ -260,10 +260,10 @@ class WaitForOpponentLeave(Timer):
         self.exit_reason = None
         if self.move_direction == DIRECTION_FORWARDS:
             direction = DIRECTION_BACKWARDS
-            distance = -0.100
+            distance = -0.150
         else:
             direction = DIRECTION_FORWARDS
-            distance = 0.100
+            distance = 0.150
 
         current_pose = self.robot.pose
         x = current_pose.virt.x + math.cos(current_pose.virt.angle) * distance
