@@ -104,6 +104,8 @@ class Main(statemachine.State):
         self.fsm.cake.update_with_detection(detector.colors)
         yield GlassesDirect()
         yield FindNextGoal()
+        yield Navigate(ROBOT_CENTER_X + 0.3, 1.5 - CAKE_ARC_RADIUS)
+        yield PrepareCakeMove(None)
 
 
 
