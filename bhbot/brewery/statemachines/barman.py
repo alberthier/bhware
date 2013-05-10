@@ -28,9 +28,15 @@ class CollectGlasses(statemachine.State):
     def on_enter(self):
         wait = WaitForGlass(self.fsm.side)
         wait.on_internal_drop_glasses = self.on_internal_drop_glasses
+        self.fsm.glasses_count = 0
+        self.dropping = False
 
         # First glass
         yield wait
+
+        if self.dropping :
+            yield None
+
         yield Gripper(self.fsm.side, MOVE_CLOSE)
         yield Lifter(self.fsm.side, LIFTER_MOVE_UP)
         yield TopHolder(self.fsm.side, MOVE_CLOSE)
@@ -41,6 +47,10 @@ class CollectGlasses(statemachine.State):
 
         # Second glass
         yield wait
+
+        if self.dropping :
+            yield None
+
         yield Gripper(self.fsm.side, MOVE_CLOSE)
         yield Lifter(self.fsm.side, LIFTER_MOVE_MIDDLE)
         self.fsm.glasses_count += 1
@@ -48,6 +58,10 @@ class CollectGlasses(statemachine.State):
 
         # Third glass
         yield wait
+
+        if self.dropping :
+            yield None
+
         yield BottomHolder(self.fsm.side, MOVE_OPEN)
         self.fsm.glasses_count += 1
         logger.log('{} glasses count {}'.format(SIDE.lookup_by_value[self.fsm.side], self.fsm.glasses_count))
@@ -55,6 +69,7 @@ class CollectGlasses(statemachine.State):
 
     def on_internal_drop_glasses(self, packet):
         if not packet.done:
+            self.dropping = True
             yield UnloadGlasses()
             self.send_packet(packets.InternalDropGlasses(can_continue=packet.can_continue, done=True))
             yield Timer(2000.0)
