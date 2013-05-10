@@ -29,3 +29,5 @@ Autre possibilité, moissonner dans le sens du goal, 2 alternatives, par le nord
 Gérer cadeaux un a un
 
 Dépose des verres dans la zone de départ de chaque robot
+
+Priorité entre dépose et cadeaux
