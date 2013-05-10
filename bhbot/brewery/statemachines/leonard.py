@@ -47,7 +47,7 @@ class Main(statemachine.State):
     def on_start(self, packet):
         gm = self.robot.goal_manager
         # yield SpeedControl(0.5)
-        yield Timer(70000) # 10s
+        yield Timer(2000) # 10s
         yield TakeGlasses()
         # yield SpeedControl()
         # yield LookAtOpposite(X_OPEN_GIFTS_START, Y_OPEN_GIFTS_START)
@@ -65,7 +65,10 @@ class Deposit(statemachine.State):
         yield AntiBlocking(False)
         yield LookAt(BLUE_START_X, BLUE_START_Y)
         yield AntiBlocking(True)
-        yield MoveLineTo(BLUE_START_X, BLUE_START_Y + 0.15)
+        while True :
+            move = yield MoveLineTo(BLUE_START_X, BLUE_START_Y + 0.15)
+            if move.exit_reason == TRAJECTORY_DESTINATION_REACHED :
+                break
         # yield MoveLineTo(1.66, 0.38)
         yield DepositGlasses()
         yield MoveRelative(-0.3, DIRECTION_BACKWARDS)
