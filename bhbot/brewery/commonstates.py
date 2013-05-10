@@ -341,6 +341,7 @@ class AbstractMove(statemachine.State):
             self.exit_reason = self.chained.exit_reason
             yield None
         elif self.event_loop.opponent_detector.main_opponent.detected or self.event_loop.opponent_detector.secondary_opponent.detected:
+            config = self.opponent_leave_config
             leave_state = yield WaitForOpponentLeave(self.current_opponent, config.wait_delay,
                                                      self.packet.direction, config.retries_count)
             config = self.opponent_leave_config
