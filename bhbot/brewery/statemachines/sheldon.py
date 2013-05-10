@@ -56,6 +56,8 @@ class Main(statemachine.State):
                                                     KickGifts))
         gm.harvesting_goals.append(goalmanager.Goal("KICK_GIFTS", 1.0, GIFT_X_POS, GIFT_Y_POS[-1], DIRECTION_FORWARDS,
                                                     KickGifts))
+        gm.harvesting_goals.append(goalmanager.Goal("CAKE", 1.1, ROBOT_CENTER_X + 0.3, 1.5 - CAKE_ARC_RADIUS, DIRECTION_BACKWARDS,
+                                                    PrepareCakeMove))
 
         deposit_glasses_goal = goalmanager.GlassDepositGoal('GLASSES_DEPOSIT', 0.5, 1.0, 0.5,
                                                             DIRECTION_FORWARDS, RingTheBell, shared = False)
@@ -75,26 +77,7 @@ class Main(statemachine.State):
         detector = yield FetchCandleColors()
         self.log("First candles detection: {}".format(detector.colors))
         self.fsm.cake.update_with_detection(detector.colors)
-        #yield GlassesSuperS()
         yield GlassesDirect()
-
-        candles = self.fsm.cake.get_sorted_candles()
-        self.log("Has {} candles to kick".format(len(candles)))
-        if len(candles) == 0 or self.event_loop.get_elapsed_match_time() > 70.0:
-            pass
-        else:
-            side = SIDE_LEFT if self.robot.team == TEAM_BLUE else SIDE_RIGHT
-            if packet.team == TEAM_RED:
-                radius = CAKE_ARC_RADIUS + 0.015
-            else:
-                radius = CAKE_ARC_RADIUS
-            nav = yield NavigateToCake(candles, radius)
-
-            yield MoveRelative(-0.4, direction = DIRECTION_BACKWARDS)
-
-            yield CandleKicker(side, CANDLE_KICKER_LOWER, CANDLE_KICKER_POSITION_IDLE)
-            yield CandleKicker(side, CANDLE_KICKER_UPPER, CANDLE_KICKER_POSITION_IDLE)
-
         yield FindNextGoal()
 
 
@@ -315,43 +298,47 @@ class Cake:
 
 
 
-class NavigateToCake(statemachine.State):
+class PrepareCakeMove(statemachine.State):
 
-    APPROACH_DISTANCE = 0.3
-
-    def __init__(self, candles, cake_arc_radius):
-        self.candles = candles
-        self.cake_arc_radius = cake_arc_radius
+    def __init__(self, goal):
+        self.goal = goal
+        self.exit_reason = GOAL_FAILED
 
 
     def on_enter(self):
+
+        candles = self.fsm.cake.get_sorted_candles()
+        self.log("Has {} candles to kick".format(len(candles)))
+        if len(candles) == 0:
+            yield None
+            return
+
         side = SIDE_LEFT if self.robot.team == TEAM_BLUE else SIDE_RIGHT
-        yield Navigate(ROBOT_CENTER_X + 0.3, 1.5 - self.cake_arc_radius, DIRECTION_BACKWARDS)
-        yield CandleKicker(side, CANDLE_KICKER_UPPER, CANDLE_KICKER_POSITION_UP)
-        yield CandleKicker(side, CANDLE_KICKER_LOWER, CANDLE_KICKER_POSITION_UP)
+        if self.robot.team == TEAM_RED:
+            radius = CAKE_ARC_RADIUS + 0.015
+        else:
+            radius = CAKE_ARC_RADIUS
+
         yield Rotate(0.0)
-        yield MoveLineTo(ROBOT_CENTER_X, 1.5 - self.cake_arc_radius, DIRECTION_BACKWARDS)
+        yield CandleKicker(side, CANDLE_KICKER_UPPER, CANDLE_KICKER_POSITION_UP)
+        self.send_packet(packets.CandleKicker(side = side, which = CANDLE_KICKER_LOWER, position = CANDLE_KICKER_POSITION_UP))
+        yield MoveLineTo(ROBOT_CENTER_X, 1.5 - CAKE_ARC_RADIUS, DIRECTION_BACKWARDS)
         yield CandleKicker(side, CANDLE_KICKER_UPPER, CANDLE_KICKER_POSITION_KICK)
         yield CandleKicker(side, CANDLE_KICKER_LOWER, CANDLE_KICKER_POSITION_KICK)
         yield CandleKicker(side, CANDLE_KICKER_UPPER, CANDLE_KICKER_POSITION_UP)
         yield CandleKicker(side, CANDLE_KICKER_LOWER, CANDLE_KICKER_POSITION_UP)
         remaining_candles = []
-        for candle in self.candles:
+        for candle in candles:
             if candle.name not in ["top1", "bottom1", "top8", "bottom12"]:
                 remaining_candles.append(candle)
         if len(remaining_candles) != 0:
-            yield BlowCandlesOut(remaining_candles, self.cake_arc_radius)
+            bco = yield BlowCandlesOut(remaining_candles, radius)
+            self.exit_reason = bco.exit_reason
+        else:
+            self.exit_reason = GOAL_DONE
+        self.send_packet(packets.CandleKicker(side = side, which = CANDLE_KICKER_LOWER, position = CANDLE_KICKER_POSITION_IDLE))
+        self.send_packet(packets.CandleKicker(side = side, which = CANDLE_KICKER_UPPER, position = CANDLE_KICKER_POSITION_IDLE))
         yield None
-
-
-
-
-    def compute_candle_pose(self, candle):
-        start = Pose(self.cake_arc_radius * math.cos(candle.angle),
-                     1.5 - self.cake_arc_radius * math.sin(candle.angle))
-        approach = Pose(start.x + self.APPROACH_DISTANCE * math.sin(candle.angle),
-                        start.y + self.APPROACH_DISTANCE * math.cos(candle.angle))
-        return (approach, start)
 
 
 
@@ -361,6 +348,7 @@ class BlowCandlesOut(statemachine.State):
     def __init__(self, candles, cake_arc_radius):
         self.candles = candles
         self.cake_arc_radius = cake_arc_radius
+        self.exit_reason = GOAL_FAILED
 
 
     def on_enter(self):
@@ -385,10 +373,14 @@ class BlowCandlesOut(statemachine.State):
         yield SpeedControl(0.25)
         yield move
         yield SpeedControl()
+        yield MoveRelative(-0.3, DIRECTION_BACKWARDS)
+        if move.exit_reason != TRAJECTORY_DESTINATION_REACHED:
+            yield None
+            return
         if self.candles[-1].to_blow:
             yield CandleKicker(self.side, self.candles[-1].which, CANDLE_KICKER_POSITION_KICK)
             yield CandleKicker(self.side, self.candles[-1].which, CANDLE_KICKER_POSITION_UP)
-        self.exit_reason = move.exit_reason == TRAJECTORY_DESTINATION_REACHED
+        self.exit_reason = GOAL_DONE
         yield None
 
 
