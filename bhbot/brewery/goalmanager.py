@@ -73,8 +73,8 @@ class GoalManager(object):
         self.event_loop = event_loop
         self.harvesting_goals = []
         self.emptying_goals = []
-        self.count = 0
         self.on_goal_state_change = signals.SafeSignal()
+        self.last_goal = None
 
 
     @property
@@ -96,11 +96,11 @@ class GoalManager(object):
 
         :type goals:  list of Goal
         """
-        self.count += 1
-        if self.count == 2:
-            self.event_loop.opponent_detector.enable()
-            
+
         available_goals = [ g for g in goals if g.is_available() ]
+
+        if len(available_goals) > 1 and self.last_goal in available_goals:
+            available_goals.remove(self.last_goal)
 
         logger.log('available goals : {}'.format([g.identifier for g in available_goals]))
 
@@ -132,6 +132,8 @@ class GoalManager(object):
         best_goal = min(available_goals, key=lambda g : g.score)
 
         logger.log("Best goal is {} with score {}".format(best_goal.identifier, best_goal.score))
+
+        self.last_goal = best_goal
 
         return best_goal
 

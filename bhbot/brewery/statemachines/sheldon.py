@@ -184,6 +184,7 @@ class RingTheBell(statemachine.State):
         yield MoveRelative(-0.2, DIRECTION_BACKWARDS)
 
         self.exit_reason = GOAL_DONE
+        yield None
 
 
 
