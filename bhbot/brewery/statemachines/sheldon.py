@@ -207,7 +207,7 @@ class GlassesDirect(statemachine.State):
                                         (0.95, 1.83) ]
 
 
-        yield SpeedControl(0.5)
+        yield SpeedControl(0.4)
         move = yield MoveCurve( 2.87, points, opponent_handling = ohc)
         yield SpeedControl()
         move = yield Rotate(math.pi, chained = move)
