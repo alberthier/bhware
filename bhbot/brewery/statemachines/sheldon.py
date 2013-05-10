@@ -147,6 +147,8 @@ class KickGifts(statemachine.State):
         yield None
 
 
+
+
 class KickIt(statemachine.State):
     def __init__(self, side):
         self.side = side
@@ -159,113 +161,6 @@ class KickIt(statemachine.State):
 
 
 
-##################################################
-# S curve to pick up the glasses
-
-
-
-
-class GlassesSuperS(statemachine.State):
-
-    def on_enter(self):
-        glasses = [(0.95, 0.90),
-                   (1.20, 1.05),
-                   (0.95, 1.20),
-                   (1.20, 1.35),
-                   (1.20, 1.65),
-                   (0.95, 1.80)]
-        path = []
-        for x, y in glasses:
-            xoffset = 0.05
-            if x < 1.0:
-                x += xoffset
-            else:
-                x -= xoffset
-            y -= 0.128
-            path.append((x, y))
-        yield MoveCurve(math.pi /2.0, path)
-        yield None
-
-##################################################
-# Alternate way of picking glasses
-
-
-
-
-class GlassesAlternateFrancois(statemachine.State):
-
-    def on_enter(self):
-        #deplacement = commandMsg("MSG_MOVE_CURVE 1 1 1.3")
-        # deplacement.addPose("0.85 0.85")
-        # deplacement.addPose("1.15 0.75")
-        # deplacement.addPose("1.65 0.85")
-        # deplacement.addPose("1.83 1.05")
-        # simulator_process.stdin.write(deplacement.cmdMsgGeneration())
-        path = [
-            (0.85, 0.85),
-            (0.75, 1.15),
-            (0.85, 1.65),
-            (1.05, 1.83),
-         ]
-        # path = [
-        #     (0.85, 0.85),
-        #     (1.15, 0.75),
-        #     (1.65, 0.85),
-        #     (1.83, 1.05),
-        # ]
-        yield MoveCurve(1.3, path)
-
-        # deplacement = commandMsg("MSG_ROTATE 0 1.57")
-        # simulator_process.stdin.write(deplacement.cmdMsgGeneration())
-        yield Rotate(math.pi/2)
-
-        # deplacement = commandMsg("MSG_MOVE_LINE 1")
-        # deplacement.addPose("1.83 1.2")
-        # simulator_process.stdin.write(deplacement.cmdMsgGeneration())
-        yield MoveLineTo( 1.2, 1.83)
-
-        # deplacement = commandMsg("MSG_ROTATE 0 -2.9")
-        # simulator_process.stdin.write(deplacement.cmdMsgGeneration())
-        yield Rotate(-2.9)
-
-        # deplacement = commandMsg("MSG_MOVE_LINE 1")
-        # deplacement.addPose("0.8 1.0")
-        # simulator_process.stdin.write(deplacement.cmdMsgGeneration())
-        yield MoveLineTo(1.0, 0.8)
-
-        # deplacement = commandMsg("MSG_ROTATE 0 1.37")
-        # simulator_process.stdin.write(deplacement.cmdMsgGeneration())
-        yield Rotate(1.37)
-
-        # deplacement = commandMsg("MSG_MOVE_LINE 1")
-        # deplacement.addPose("0.9 1.85")
-        # simulator_process.stdin.write(deplacement.cmdMsgGeneration())
-        yield MoveLineTo(1.85, 0.9)
-
-        # deplacement = commandMsg("MSG_ROTATE 0 -1.17")
-        # simulator_process.stdin.write(deplacement.cmdMsgGeneration())
-        yield Rotate(-1.17)
-
-        # deplacement = commandMsg("MSG_MOVE_ARC 1 1.5 2.0 0.6")
-        # deplacement.addPose(str(- (4.0 * math.pi) / 8.0))
-        # deplacement.addPose(str(- (0.6 * math.pi) / 8.0))
-        # simulator_process.stdin.write(deplacement.cmdMsgGeneration())
-
-        # deplacement = commandMsg("MSG_ROTATE 0 -1.57")
-        # simulator_process.stdin.write(deplacement.cmdMsgGeneration())
-
-        # deplacement = commandMsg("MSG_MOVE_ARC 1 1.2 2.0 0.9")
-        # deplacement.addPose(str(- (2.0 * math.pi) / 8.0))
-        # deplacement.addPose(str(- (4.0 * math.pi) / 8.0))
-        # simulator_process.stdin.write(deplacement.cmdMsgGeneration())
-
-        # deplacement = commandMsg("MSG_MOVE_LINE 1")
-        # deplacement.addPose("0.2 1.1")
-        # simulator_process.stdin.write(deplacement.cmdMsgGeneration())
-
-        yield None
-
-
 class GlassesDirect(statemachine.State):
 
     def on_enter(self):
@@ -276,7 +171,7 @@ class GlassesDirect(statemachine.State):
 
         points = [ (START_X, ROBOT_CENTER_Y + 0.1), (1.19, 1.12), (1.23, 1.3), (1.17, 1.65),
                                         (0.95, 1.83) ]
-    
+
 
         move = yield MoveCurve( 2.87, points, opponent_handling = ohc)
         move = yield Rotate(math.pi, chained = move)
@@ -415,10 +310,6 @@ class Cake:
     def get_sorted_candles(self):
         ordered = list(self.candles.values())
         ordered.sort(key = lambda candle: candle.angle)
-        #while len(ordered) != 0 and not ordered[0].to_blow:
-            #del ordered[0]
-        #while len(ordered) != 0 and not ordered[-1].to_blow:
-            #del ordered[-1]
         return ordered
 
 
@@ -473,7 +364,6 @@ class BlowCandlesOut(statemachine.State):
 
 
     def on_enter(self):
-        #self.kicks = {CANDLE_KICKER_UPPER: 0, CANDLE_KICKER_LOWER: 0}
         self.current = 0
         if self.robot.pose.virt.y > FIELD_Y_SIZE / 2.0:
             # the robot is on the opposite site.
@@ -512,11 +402,6 @@ class BlowCandlesOut(statemachine.State):
     def on_candle_kicker(self, packet):
         if packet.position == CANDLE_KICKER_POSITION_KICK:
             self.send_packet(packets.CandleKicker(side = self.side, which = packet.which, position = CANDLE_KICKER_POSITION_UP))
-            #if self.kicks[packet.which] == 0:
-                #self.kicks[packet.which] = 1
-                #self.send_packet(packets.CandleKicker(side = self.side, which = packet.which, position = CANDLE_KICKER_POSITION_KICK))
-            #else:
-                #self.kicks[packet.which] = 0
 
 
 
