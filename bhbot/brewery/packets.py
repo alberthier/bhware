@@ -852,6 +852,7 @@ class InternalDropGlasses(BasePacket):
 
     LOGVIEW_COLOR = "#CC00BB"
     DEFINITION = (
+        ('side'    , UEnum8(SIDE                  , SIDE_LEFT)),
         ('can_continue', Bool  (True, "We can continue to catch glasses")),
         ('done', Bool  (True, "Deposit is done")),
     )

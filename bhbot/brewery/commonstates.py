@@ -789,13 +789,22 @@ class CalibratePosition(statemachine.State):
 
 class DepositGlasses(statemachine.State):
 
+    def __init__(self):
+        self.received_left = False
+        self.received_right = False
+
     def on_enter(self, can_continue=False):
         self.send_packet(packets.InternalDropGlasses(can_continue=can_continue, done=False))
 
 
     def on_internal_drop_glasses(self, packet):
         if packet.done :
-            yield None
+            if packet.side == SIDE_LEFT :
+                self.received_left = True
+            if packet.side == SIDE_RIGHT :
+                self.received_right = True
+            if self.received_left and self.received_right :
+                yield None
 
 ##################################################
 # GOAL MANAGEMENT
