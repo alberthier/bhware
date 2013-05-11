@@ -197,7 +197,7 @@ class DefinePosition(statemachine.State):
             self.robot.pose.x = self.pose.x
             self.robot.pose.angle = self.pose.angle
 
-        if self.has_y is not None:
+        if self.has_y:
             packet = packets.Resettle()
             packet.axis = AXIS_Y
             packet.position = self.pose.y
