@@ -104,8 +104,8 @@ class Main(statemachine.State):
         self.fsm.cake.update_with_detection(detector.colors)
         yield GlassesDirect()
         yield FindNextGoal()
-        yield Navigate(ROBOT_CENTER_X + 0.3, 1.5 - CAKE_ARC_RADIUS)
-        yield PrepareCakeMove(None, 0.03)
+        yield Navigate(ROBOT_CENTER_X + 0.3, 1.5 - CAKE_ARC_RADIUS + 0.03)
+        yield PrepareCakeMove(None, 0.03, True)
 
 
 
@@ -358,9 +358,10 @@ class Cake:
 
 class PrepareCakeMove(statemachine.State):
 
-    def __init__(self, goal, y_offset = 0.0):
+    def __init__(self, goal, y_offset = 0.0, do_resettle = False):
         self.goal = goal
         self.y_offset = y_offset
+        self.do_resettle = do_resettle
         self.exit_reason = GOAL_FAILED
 
 
@@ -381,7 +382,8 @@ class PrepareCakeMove(statemachine.State):
         yield Rotate(0.0)
         yield CandleKicker(side, CANDLE_KICKER_UPPER, CANDLE_KICKER_POSITION_UP)
         self.send_packet(packets.CandleKicker(side = side, which = CANDLE_KICKER_LOWER, position = CANDLE_KICKER_POSITION_UP))
-        yield MoveLineTo(ROBOT_CENTER_X, 1.5 - CAKE_ARC_RADIUS + self.y_offset, DIRECTION_BACKWARDS)
+        yield MoveLineTo(ROBOT_CENTER_X - 0.05, 1.5 - CAKE_ARC_RADIUS + self.y_offset, DIRECTION_BACKWARDS)
+        yield DefinePosition(ROBOT_CENTER_X, None, 0.0)
         yield CandleKicker(side, CANDLE_KICKER_UPPER, CANDLE_KICKER_POSITION_KICK)
         yield CandleKicker(side, CANDLE_KICKER_LOWER, CANDLE_KICKER_POSITION_KICK)
         yield CandleKicker(side, CANDLE_KICKER_UPPER, CANDLE_KICKER_POSITION_UP)
