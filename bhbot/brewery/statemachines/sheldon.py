@@ -439,10 +439,10 @@ class BlowCandlesOut(statemachine.State):
             yield MoveRelative(-0.3, DIRECTION_BACKWARDS)
             yield None
             return
-        yield MoveRelative(-0.3, DIRECTION_BACKWARDS)
         if self.candles[-1].to_blow:
             yield CandleKicker(self.side, self.candles[-1].which, CANDLE_KICKER_POSITION_KICK)
             yield CandleKicker(self.side, self.candles[-1].which, CANDLE_KICKER_POSITION_UP)
+        yield MoveRelative(-0.3, DIRECTION_BACKWARDS)
         self.exit_reason = GOAL_DONE
         yield None
 
