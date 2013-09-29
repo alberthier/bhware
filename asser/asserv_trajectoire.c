@@ -203,11 +203,11 @@ static float                    ASSER_TRAJ_DiffThetaBSpline(Vecteur diff1BS, Vec
 static Pose                     ASSER_TRAJ_TrajectoireRemorqueBS(Trajectoire * traj, unsigned int iSegment, unsigned char iSubSegment, float t, Pose * poseTrajRobot);
 static float                    ASSER_TRAJ_CalculTheta1(unsigned int iSegment, unsigned int nbrePts, PtTraj* point, float angle_rad, float prec_x, float prec_y);
 static float                    ASSER_TRAJ_Rinv_courbure(segmentTrajectoire * segmentTraj, unsigned char subSeg, float t);
-static void                     ASSER_TRAJ_sds_ab(ConfigSegment * cfgSeg, segmentTrajectoire * segmentTraj);
+static int                      ASSER_TRAJ_sds_ab(ConfigSegment * cfgSeg, segmentTrajectoire * segmentTraj);
 static void                     ASSER_TRAJ_Rotation_coord(float theta, float x, float y, float * x_n, float * y_n);
-static void                     ASSER_TRAJ_sds_ab_base(float x1, float y1, float theta1, float x2, float theta2, float t1, unsigned char n1, unsigned char n2, float qx1_0, float qy1_0, float qx2_0, float qy2_0, float bx1, ConfigSpline34 * cfgSp1, ConfigSpline34 * cfgSp2);
+static int                      ASSER_TRAJ_sds_ab_base(float x1, float y1, float theta1, float x2, float theta2, float t1, unsigned char n1, unsigned char n2, float qx1_0, float qy1_0, float qx2_0, float qy2_0, float bx1, ConfigSpline34 * cfgSp1, ConfigSpline34 * cfgSp2);
 static void                     ASSER_TRAJ_Test_courbure(Deplacement *traj, ConfigSegment * cfgSeg, segmentTrajectoire  * segmentTraj);
-static void                     ASSER_TRAJ_Generation_curvatureForced(ConfigSegment * cfgSeg, segmentTrajectoire  * segmentTraj);
+static int                      ASSER_TRAJ_Generation_curvatureForced(ConfigSegment * cfgSeg, segmentTrajectoire  * segmentTraj);
 static void                     ASSER_TRAJ_InitialSplineForCircle(ConfigSegment * cfgSeg, segmentTrajectoire  * segmentTraj, unsigned char subSeg);
 static void                     ASSER_TRAJ_Rotation_config(ConfigSegment * cfgSeg, segmentTrajectoire  * segmentTraj, unsigned char subSeg, ConfigArc * arc);
 static float                    ASSER_TRAJ_Spline34(float t, float t1, unsigned char n, float q, float a, float b, float c, unsigned char deriv);
@@ -943,11 +943,13 @@ extern void ASSER_TRAJ_InitialisationTrajectoire(Pose poseRobot, unsigned char M
     Pose                    poseTraj;
     Vecteur                 diff1BS, diff2BS;
     unsigned int            iSubSeg, iSegment;
+    float                   segCourant_x1, segCourant_y1, segCourant_theta1;
     float                   angle_fin_rotation, theta_seg, theta_seg_next;
     ConfigSegment           cfgSeg;
     unsigned char           curvature_forced_2_prec;
     unsigned char           curve2_prec                 = False;
     float                   angle_rad                   = 0.0;
+    int                     traj_sds = TRAJ_OK, traj_sds_prev = TRAJ_OK;
 #ifndef PIC32_BUILD
     Pose                    poseTest;
     Vecteur                 diffTest, diff2Test;
@@ -1033,9 +1035,12 @@ extern void ASSER_TRAJ_InitialisationTrajectoire(Pose poseRobot, unsigned char M
             cfgSeg.Rinv_ref = 1.0 / (ECART_ROUE_MOTRICE / 2.0);
             cfgSeg.v_Rinv_ref =  ASSER_TRAJ_VitesseLimiteEnVirage(&chemin, cfgSeg.Rinv_ref);
 
-            cfgSeg.x1 = poseRobot.x;
-            cfgSeg.y1 = poseRobot.y;
-            cfgSeg.theta1 = poseRobot.angle;
+            segCourant_x1 = poseRobot.x;
+            segCourant_y1 = poseRobot.y;
+            segCourant_theta1 = poseRobot.angle;
+            cfgSeg.x1 = segCourant_x1;
+            cfgSeg.y1 = segCourant_y1;
+            cfgSeg.theta1 = segCourant_theta1;
 
             curvature_forced_2_prec = False;
             ASSER_TRAJ_LogAsserValPC("angle_rad", angle_rad);
@@ -1054,153 +1059,169 @@ extern void ASSER_TRAJ_InitialisationTrajectoire(Pose poseRobot, unsigned char M
                     return;
                 }  
 
-                chemin.trajectoire.subTrajs.segmentTraj[iSegment].subSeg_used.Flags.SPLINE31_USED = False;
-                chemin.trajectoire.subTrajs.segmentTraj[iSegment].subSeg_used.Flags.ARC1_USED = False;
-                chemin.trajectoire.subTrajs.segmentTraj[iSegment].subSeg_used.Flags.SPLINE341_USED = False;
-                chemin.trajectoire.subTrajs.segmentTraj[iSegment].subSeg_used.Flags.LINE_USED = True;
-                chemin.trajectoire.subTrajs.segmentTraj[iSegment].subSeg_used.Flags.SPLINE342_USED = False;
-                chemin.trajectoire.subTrajs.segmentTraj[iSegment].subSeg_used.Flags.ARC2_USED = False;
-                chemin.trajectoire.subTrajs.segmentTraj[iSegment].subSeg_used.Flags.SPLINE32_USED = False;
-
-                /* Init des arcs de cercle */
-                chemin.trajectoire.subTrajs.segmentTraj[iSegment].arc1.angle = 0.0;
-                chemin.trajectoire.subTrajs.segmentTraj[iSegment].arc2.angle = 0.0;
-
-                cfgSeg.x1_n = cfgSeg.x1;
-                cfgSeg.y1_n = cfgSeg.y1;
-                cfgSeg.theta1_n = cfgSeg.theta1;
-                cfgSeg.qx1 = 0.0;
-                cfgSeg.qy1 = 0.0;
-
-                cfgSeg.x2 = CONVERT_DISTANCE(Data->curve.Chemin[iSegment].x);
-                cfgSeg.y2 = CONVERT_DISTANCE(Data->curve.Chemin[iSegment].y);
-                cfgSeg.theta2 = ASSER_TRAJ_CalculTheta1(iSegment, Data->curve.NbrePtsChemin, Data->curve.Chemin, angle_rad, cfgSeg.x1, cfgSeg.y1);
-                cfgSeg.x2_n = cfgSeg.x2;
-                cfgSeg.y2_n = cfgSeg.y2;
-                cfgSeg.theta2_n = cfgSeg.theta2;
-                cfgSeg.qx2 = 0.0;
-                cfgSeg.qy2 = 0.0;
-
-                theta_seg = atan2f((cfgSeg.y2 - cfgSeg.y1), (cfgSeg.x2 - cfgSeg.x1));
-
-                /* Workarround library math */
-                if ((cfgSeg.y2 - cfgSeg.y1) < 0.0)
+                do
                 {
-                    if (theta_seg > 0.0)
-                    {
-                        theta_seg = - theta_seg;
-                    }
-                }
-                else
-                {
-                    if (theta_seg < 0.0)
-                    {
-                        theta_seg = - theta_seg;
-                    }
-                }
+                    chemin.trajectoire.subTrajs.segmentTraj[iSegment].subSeg_used.Flags.SPLINE31_USED = False;
+                    chemin.trajectoire.subTrajs.segmentTraj[iSegment].subSeg_used.Flags.ARC1_USED = False;
+                    chemin.trajectoire.subTrajs.segmentTraj[iSegment].subSeg_used.Flags.SPLINE341_USED = False;
+                    chemin.trajectoire.subTrajs.segmentTraj[iSegment].subSeg_used.Flags.LINE_USED = True;
+                    chemin.trajectoire.subTrajs.segmentTraj[iSegment].subSeg_used.Flags.SPLINE342_USED = False;
+                    chemin.trajectoire.subTrajs.segmentTraj[iSegment].subSeg_used.Flags.ARC2_USED = False;
+                    chemin.trajectoire.subTrajs.segmentTraj[iSegment].subSeg_used.Flags.SPLINE32_USED = False;
 
-                chemin.trajectoire.subTrajs.segmentTraj[iSegment].theta_seg = theta_seg;
+                    /* Init des arcs de cercle */
+                    chemin.trajectoire.subTrajs.segmentTraj[iSegment].arc1.angle = 0.0;
+                    chemin.trajectoire.subTrajs.segmentTraj[iSegment].arc2.angle = 0.0;
 
-                if (iSegment < (chemin.trajectoire.subTrajs.nbreSegments - 1))
-                {
-                    theta_seg_next = atan2f((CONVERT_DISTANCE(Data->curve.Chemin[(iSegment + 1)].y) - cfgSeg.y2), (CONVERT_DISTANCE(Data->curve.Chemin[(iSegment + 1)].x) - cfgSeg.x2));
+                    cfgSeg.x1 = segCourant_x1;
+                    cfgSeg.y1 = segCourant_y1;
+                    cfgSeg.theta1 = segCourant_theta1;
+
+                    cfgSeg.x1_n = cfgSeg.x1;
+                    cfgSeg.y1_n = cfgSeg.y1;
+                    cfgSeg.theta1_n = cfgSeg.theta1;
+                    cfgSeg.qx1 = 0.0;
+                    cfgSeg.qy1 = 0.0;
+
+                    cfgSeg.x2 = CONVERT_DISTANCE(Data->curve.Chemin[iSegment].x);
+                    cfgSeg.y2 = CONVERT_DISTANCE(Data->curve.Chemin[iSegment].y);
+                    cfgSeg.theta2 = ASSER_TRAJ_CalculTheta1(iSegment, Data->curve.NbrePtsChemin, Data->curve.Chemin, angle_rad, cfgSeg.x1, cfgSeg.y1);
+                    cfgSeg.x2_n = cfgSeg.x2;
+                    cfgSeg.y2_n = cfgSeg.y2;
+                    cfgSeg.theta2_n = cfgSeg.theta2;
+                    cfgSeg.qx2 = 0.0;
+                    cfgSeg.qy2 = 0.0;
+
+                    theta_seg = atan2f((cfgSeg.y2 - cfgSeg.y1), (cfgSeg.x2 - cfgSeg.x1));
 
                     /* Workarround library math */
-                    if ((CONVERT_DISTANCE(Data->curve.Chemin[(iSegment + 1)].y) - cfgSeg.y2) < 0.0)
+                    if ((cfgSeg.y2 - cfgSeg.y1) < 0.0)
                     {
-                        if (theta_seg_next > 0.0)
+                        if (theta_seg > 0.0)
                         {
-                            theta_seg_next = - theta_seg_next;
+                            theta_seg = - theta_seg;
                         }
                     }
                     else
                     {
-                        if (theta_seg_next < 0.0)
+                        if (theta_seg < 0.0)
                         {
-                            theta_seg_next = - theta_seg_next;
+                            theta_seg = - theta_seg;
                         }
                     }
 
-                    if (((cfgSeg.theta2 - theta_seg) * (theta_seg_next - cfgSeg.theta2)) < 0.0)
-                    {
-                        cfgSeg.inflexion_point = True;
-                    }
-                }
+                    chemin.trajectoire.subTrajs.segmentTraj[iSegment].theta_seg = theta_seg;
 
-                if (chemin.trajectoire.subTrajs.nbreSegments == 1)
-                {
-                    cfgSeg.curve1 = False;
-                    cfgSeg.curve2 = False;
-                    cfgSeg.sp1_type = SPLINE4;
-                    cfgSeg.sp2_type = SPLINE4;
-                }
-                else /* (chemin.trajectoire.subTrajs.nbreSegments > 1) */
-                {
-                    if (iSegment == 0)
+                    if (iSegment < (chemin.trajectoire.subTrajs.nbreSegments - 1))
+                    {
+                        theta_seg_next = atan2f((CONVERT_DISTANCE(Data->curve.Chemin[(iSegment + 1)].y) - cfgSeg.y2), (CONVERT_DISTANCE(Data->curve.Chemin[(iSegment + 1)].x) - cfgSeg.x2));
+
+                        /* Workarround library math */
+                        if ((CONVERT_DISTANCE(Data->curve.Chemin[(iSegment + 1)].y) - cfgSeg.y2) < 0.0)
+                        {
+                            if (theta_seg_next > 0.0)
+                            {
+                                theta_seg_next = - theta_seg_next;
+                            }
+                        }
+                        else
+                        {
+                            if (theta_seg_next < 0.0)
+                            {
+                                theta_seg_next = - theta_seg_next;
+                            }
+                        }
+
+                        if (((cfgSeg.theta2 - theta_seg) * (theta_seg_next - cfgSeg.theta2)) < 0.0)
+                        {
+                            cfgSeg.inflexion_point = True;
+                        }
+                    }
+
+                    if (chemin.trajectoire.subTrajs.nbreSegments == 1)
                     {
                         cfgSeg.curve1 = False;
-                        cfgSeg.curve2 = True;
-                        cfgSeg.sp1_type = SPLINE4;
-                        cfgSeg.sp2_type = SPLINE3;
-                    }
-                    else
-                    {
-                        /* Initialiser la courbure induite par la fin du segment precedent */
-                        cfgSeg.qx1 = cfgSeg.qx0;
-                        cfgSeg.qy1 = cfgSeg.qy0;
-
-                        ASSER_TRAJ_LogAsserValPC("curvature_forced_2_prec", ((float)curvature_forced_2_prec));
-
-                        if (curvature_forced_2_prec == True)
-                        {
-                            cfgSeg.Rb_prec = - 1.0;
-                            cfgSeg.spline4rot = False;
-                        }
-                        else
-                        {
-                            cfgSeg.spline4rot = True;
-                        }
-
-                        /* Dernier segment */
-                        if (iSegment == (chemin.trajectoire.subTrajs.nbreSegments - 1))
-                        {
-                            cfgSeg.curve1 = True;
-                            cfgSeg.curve2 = False;
-                            cfgSeg.sp1_type = SPLINE4_n;
-                            cfgSeg.sp2_type = SPLINE4;
-                        }
-                        else
-                        {
-                            cfgSeg.curve1 = True;
-                            cfgSeg.curve2 = True;
-                            cfgSeg.sp1_type = SPLINE4_n;
-                            cfgSeg.sp2_type = SPLINE3;
-                        }
-
-                        if (curve2_prec == False)
-                        {
-                            cfgSeg.curve1 = False;
-                        }
-                    }
-
-                    ASSER_TRAJ_LogAsserValPC("inflexion_point", ((float)cfgSeg.inflexion_point));
-                    if (cfgSeg.inflexion_point == True)
-                    {
                         cfgSeg.curve2 = False;
+                        cfgSeg.sp1_type = SPLINE4;
                         cfgSeg.sp2_type = SPLINE4;
                     }
-                }
+                    else /* (chemin.trajectoire.subTrajs.nbreSegments > 1) */
+                    {
+                        if (iSegment == 0)
+                        {
+                            cfgSeg.curve1 = False;
+                            cfgSeg.curve2 = True;
+                            cfgSeg.sp1_type = SPLINE4;
+                            cfgSeg.sp2_type = SPLINE3;
+                        }
+                        else
+                        {
+                            /* Initialiser la courbure induite par la fin du segment precedent */
+                            cfgSeg.qx1 = cfgSeg.qx0;
+                            cfgSeg.qy1 = cfgSeg.qy0;
 
-                ASSER_TRAJ_sds_ab(&cfgSeg, &chemin.trajectoire.subTrajs.segmentTraj[iSegment]);
-                ASSER_TRAJ_Test_courbure(&chemin, &cfgSeg, &chemin.trajectoire.subTrajs.segmentTraj[iSegment]);
-                if (cfgSeg.curvature_forced == True)
-                {
-                    ASSER_TRAJ_Generation_curvatureForced(&cfgSeg, &chemin.trajectoire.subTrajs.segmentTraj[iSegment]);
-                }
+                            ASSER_TRAJ_LogAsserValPC("curvature_forced_2_prec", ((float)curvature_forced_2_prec));
 
-                cfgSeg.x1 = cfgSeg.x2;
-                cfgSeg.y1 = cfgSeg.y2;
-                cfgSeg.theta1 = cfgSeg.theta2;
+                            if (curvature_forced_2_prec == True)
+                            {
+                                cfgSeg.Rb_prec = - 1.0;
+                                cfgSeg.spline4rot = False;
+                            }
+                            else
+                            {
+                                cfgSeg.spline4rot = True;
+                            }
+
+                            /* Dernier segment */
+                            if (iSegment == (chemin.trajectoire.subTrajs.nbreSegments - 1))
+                            {
+                                cfgSeg.curve1 = True;
+                                cfgSeg.curve2 = False;
+                                cfgSeg.sp1_type = SPLINE4_n;
+                                cfgSeg.sp2_type = SPLINE4;
+                            }
+                            else
+                            {
+                                cfgSeg.curve1 = True;
+                                cfgSeg.curve2 = True;
+                                cfgSeg.sp1_type = SPLINE4_n;
+                                cfgSeg.sp2_type = SPLINE3;
+                            }
+
+                            if (curve2_prec == False)
+                            {
+                                cfgSeg.curve1 = False;
+                            }
+                        }
+
+                        ASSER_TRAJ_LogAsserValPC("inflexion_point", ((float)cfgSeg.inflexion_point));
+                        if (cfgSeg.inflexion_point == True)
+                        {
+                            cfgSeg.curve2 = False;
+                            cfgSeg.sp2_type = SPLINE4;
+                        }
+                    }
+
+                    traj_sds = ASSER_TRAJ_sds_ab(&cfgSeg, &chemin.trajectoire.subTrajs.segmentTraj[iSegment]);
+                    ASSER_TRAJ_LogAsserValPC("traj_sds_0", traj_sds);
+
+                    if (traj_sds_prev == TRAJ_OK)
+                    {
+                        ASSER_TRAJ_Test_courbure(&chemin, &cfgSeg, &chemin.trajectoire.subTrajs.segmentTraj[iSegment]);
+                        if (cfgSeg.curvature_forced == True)
+                        {
+                            traj_sds = ASSER_TRAJ_Generation_curvatureForced(&cfgSeg, &chemin.trajectoire.subTrajs.segmentTraj[iSegment]);
+                        }
+                    }
+                    traj_sds_prev = traj_sds;
+                }while (traj_sds == TRAJ_ARCNOK);
+
+                segCourant_x1 = cfgSeg.x2;
+                segCourant_y1 = cfgSeg.y2;
+                segCourant_theta1 = cfgSeg.theta2;
+                cfgSeg.x1 = segCourant_x1;
+                cfgSeg.y1 = segCourant_y1;
+                cfgSeg.theta1 = segCourant_theta1;
 
                 curvature_forced_2_prec = cfgSeg.curvature_forced_2;
 
@@ -1521,8 +1542,9 @@ extern void ASSER_TRAJ_InitialisationTrajectoire(Pose poseRobot, unsigned char M
  *  \return
  */
 /**********************************************************************/
-static void ASSER_TRAJ_sds_ab(ConfigSegment * cfgSeg, segmentTrajectoire * segmentTraj)
+static int ASSER_TRAJ_sds_ab(ConfigSegment * cfgSeg, segmentTrajectoire * segmentTraj)
 {
+    int     trajok = TRAJ_OK;
     float   x1, y1, theta1, x2, y2, theta2;
     float   dl_dt, d2l_dt2;
     unsigned char n1, n2;
@@ -1654,45 +1676,51 @@ static void ASSER_TRAJ_sds_ab(ConfigSegment * cfgSeg, segmentTrajectoire * segme
 
     bx1 = cfgSeg->Rb_prec * cosf(theta1_base);
 
-    ASSER_TRAJ_sds_ab_base(x1, y1, theta1_base, x2_base, theta2_base, ti, n1, n2, qx1_base, qy1_base, qx2_base, qy2_base, bx1, &segmentTraj->spline41, &segmentTraj->spline42);
-    segmentTraj->subSeg_used.Flags.SPLINE341_USED = True;
-    segmentTraj->subSeg_used.Flags.SPLINE342_USED = True;
+    trajok = ASSER_TRAJ_sds_ab_base(x1, y1, theta1_base, x2_base, theta2_base, ti, n1, n2, qx1_base, qy1_base, qx2_base, qy2_base, bx1, &segmentTraj->spline41, &segmentTraj->spline42);
 
-    cfgSeg->theta_seg = theta_seg;
-
-    cfgSeg->Rb_prec = segmentTraj->spline42.bx / cosf(theta2_base); /* To be used for the next segment */
-
-    if ((theta1 - theta_seg) > 0.0)
+    if (trajok == TRAJ_OK)
     {
-        cfgSeg->s_Rinv_1 = - 1.0;
-    }
-    else
-    {
-        cfgSeg->s_Rinv_1 = 1.0;
+        segmentTraj->subSeg_used.Flags.SPLINE341_USED = True;
+        segmentTraj->subSeg_used.Flags.SPLINE342_USED = True;
+
+        cfgSeg->theta_seg = theta_seg;
+
+        cfgSeg->Rb_prec = segmentTraj->spline42.bx / cosf(theta2_base); /* To be used for the next segment */
+
+        if ((theta1 - theta_seg) > 0.0)
+        {
+            cfgSeg->s_Rinv_1 = - 1.0;
+        }
+        else
+        {
+            cfgSeg->s_Rinv_1 = 1.0;
+        }
+
+        if ((theta2 - theta_seg) > 0.0)
+        {
+            cfgSeg->s_Rinv_2 = - 1.0;
+        }
+        else
+        {
+            cfgSeg->s_Rinv_2 = 1.0;
+        }
+
+        ASSER_TRAJ_Trajectoire_SubSegment(segmentTraj, SPLINE342, ti, &poseTraj, &diff1Traj, &diff2Traj);
+        dl_dt = sqrtf(SQUARE(diff1Traj.x) + SQUARE(diff1Traj.y));
+        d2l_dt2 = sqrtf(SQUARE(diff2Traj.x) + SQUARE(diff2Traj.y));
+        cfgSeg->qx0 = ((diff2Traj.x * dl_dt) - (diff1Traj.x * d2l_dt2)) / SQUARE(dl_dt);
+        cfgSeg->qy0 = ((diff2Traj.y * dl_dt) - (diff1Traj.y * d2l_dt2)) / SQUARE(dl_dt);
+
+        /* Configuration de la ligne droite joignant les deux splines */
+        ASSER_TRAJ_Trajectoire_SubSegment(segmentTraj, SPLINE341, ti, &poseTraj, &diff1Traj, &diff2Traj);
+        segmentTraj->line.bx = poseTraj.x;
+        segmentTraj->line.by = poseTraj.y;
+        ASSER_TRAJ_Trajectoire_SubSegment(segmentTraj, SPLINE342, 0.0, &poseTraj, &diff1Traj, &diff2Traj);
+        segmentTraj->line.ax = (poseTraj.x - segmentTraj->line.bx) / ti;
+        segmentTraj->line.ay = (poseTraj.y - segmentTraj->line.by) / ti;
     }
 
-    if ((theta2 - theta_seg) > 0.0)
-    {
-        cfgSeg->s_Rinv_2 = - 1.0;
-    }
-    else
-    {
-        cfgSeg->s_Rinv_2 = 1.0;
-    }
-
-    ASSER_TRAJ_Trajectoire_SubSegment(segmentTraj, SPLINE342, ti, &poseTraj, &diff1Traj, &diff2Traj);
-    dl_dt = sqrtf(SQUARE(diff1Traj.x) + SQUARE(diff1Traj.y));
-    d2l_dt2 = sqrtf(SQUARE(diff2Traj.x) + SQUARE(diff2Traj.y));
-    cfgSeg->qx0 = ((diff2Traj.x * dl_dt) - (diff1Traj.x * d2l_dt2)) / SQUARE(dl_dt);
-    cfgSeg->qy0 = ((diff2Traj.y * dl_dt) - (diff1Traj.y * d2l_dt2)) / SQUARE(dl_dt);
-
-    /* Configuration de la ligne droite joignant les deux splines */
-    ASSER_TRAJ_Trajectoire_SubSegment(segmentTraj, SPLINE341, ti, &poseTraj, &diff1Traj, &diff2Traj);
-    segmentTraj->line.bx = poseTraj.x;
-    segmentTraj->line.by = poseTraj.y;
-    ASSER_TRAJ_Trajectoire_SubSegment(segmentTraj, SPLINE342, 0.0, &poseTraj, &diff1Traj, &diff2Traj);
-    segmentTraj->line.ax = (poseTraj.x - segmentTraj->line.bx) / ti;
-    segmentTraj->line.ay = (poseTraj.y - segmentTraj->line.by) / ti;
+    return trajok;
 }
 
 /**********************************************************************/
@@ -1736,10 +1764,10 @@ static void ASSER_TRAJ_Rotation_coord(float theta, float x, float y, float * x_n
  *  \param [in]     cfgSp1  Pointeur vers une structure des parametres de la spline 1
  *  \param [in]     cfgSp2  Pointeur vers une structure des parametres de la spline 2
  *
- *  \return
+ *  \return                 Etat de validite du parametrage de trajectoire [1 : ok; -1 : non valide]
  */
 /**********************************************************************/
-static void ASSER_TRAJ_sds_ab_base(float x1, float y1, float theta1, float x2, float theta2, float t1, unsigned char n1, unsigned char n2, float qx1_0, float qy1_0, float qx2_0, float qy2_0, float bx1, ConfigSpline34 * cfgSp1, ConfigSpline34 * cfgSp2)
+static int ASSER_TRAJ_sds_ab_base(float x1, float y1, float theta1, float x2, float theta2, float t1, unsigned char n1, unsigned char n2, float qx1_0, float qy1_0, float qx2_0, float qy2_0, float bx1, ConfigSpline34 * cfgSp1, ConfigSpline34 * cfgSp2)
 {
     float   y2, D, C, Cmax, Cmin, CoefC;
     float   qx1, qy1, qx2, qy2;
@@ -1750,6 +1778,7 @@ static void ASSER_TRAJ_sds_ab_base(float x1, float y1, float theta1, float x2, f
     static float   A20, A21, A22, A23, A24, A25, A26, A27, A28, A29;
     static float   A30, A50, A51, A52, A53, A54, A55, A56, A57, A58, A59, A60;
     static float   delta_k, k, k1, k2;
+    static int     trajok = TRAJ_OK;
 
     /* TODO => trop de float alloué dans la stack => refactoring */
 
@@ -1777,13 +1806,6 @@ static void ASSER_TRAJ_sds_ab_base(float x1, float y1, float theta1, float x2, f
     qy1 = qy1_0 * CoefC;
     qx2 = qx2_0 * CoefC;
     qy2 = qy2_0 * CoefC;
-
-    cfgSp1->n = n1;
-    cfgSp2->n = n2;
-    cfgSp1->qx = qx1;
-    cfgSp1->qy = qy1;
-    cfgSp2->qx = qx2;
-    cfgSp2->qy = qy2;
 
     S1 = 1.0;
     if (theta1 < 0.0)
@@ -1863,32 +1885,50 @@ static void ASSER_TRAJ_sds_ab_base(float x1, float y1, float theta1, float x2, f
         {
             k = k2;
         }
+    }
+    ASSER_TRAJ_LogAsserValPC("data_sds_ab_base_k", k);
 
+    if (k < 0.0)
+    {
+        trajok = TRAJ_NOK;
+    }
+    else
+    {
+        trajok = TRAJ_OK;
         cfgSp1->bx = - (A56 + (k * A57)) / (A54 + (k * A55));
+
+        cfgSp1->n = n1;
+        cfgSp2->n = n2;
+        cfgSp1->qx = qx1;
+        cfgSp1->qy = qy1;
+        cfgSp2->qx = qx2;
+        cfgSp2->qy = qy2;
+
+        cfgSp2->ay = A29 * cfgSp1->bx + A30;
+        cfgSp2->ax = A25 * cfgSp1->bx + A26;
+        cfgSp2->bx = A23 * cfgSp1->bx + A24;
+        cfgSp1->ay = A27 * cfgSp1->bx + A28;
+        cfgSp1->ax = A15 * cfgSp1->bx - A16;
+
+        cfgSp1->by = cfgSp1->bx * tanf(theta1);
+        cfgSp2->by = cfgSp2->bx * tanf(theta2);
+
+        //ax1, bx1, ay1, by1, qx1, qy1, ax2, bx2, ay2, by2, qx2, qy2
+        ASSER_TRAJ_LogAsserValPC("data_sds_ab_base", cfgSp1->ax);
+        ASSER_TRAJ_LogAsserValPC("data_sds_ab_base", cfgSp1->bx);
+        ASSER_TRAJ_LogAsserValPC("data_sds_ab_base", cfgSp1->ay);
+        ASSER_TRAJ_LogAsserValPC("data_sds_ab_base", cfgSp1->by);
+        ASSER_TRAJ_LogAsserValPC("data_sds_ab_base", cfgSp1->qx);
+        ASSER_TRAJ_LogAsserValPC("data_sds_ab_base", cfgSp1->qy);
+        ASSER_TRAJ_LogAsserValPC("data_sds_ab_base", cfgSp2->ax);
+        ASSER_TRAJ_LogAsserValPC("data_sds_ab_base", cfgSp2->bx);
+        ASSER_TRAJ_LogAsserValPC("data_sds_ab_base", cfgSp2->ay);
+        ASSER_TRAJ_LogAsserValPC("data_sds_ab_base", cfgSp2->by);
+        ASSER_TRAJ_LogAsserValPC("data_sds_ab_base", cfgSp2->qx);
+        ASSER_TRAJ_LogAsserValPC("data_sds_ab_base", cfgSp2->qy);
     }
 
-    cfgSp2->ay = A29 * cfgSp1->bx + A30;
-    cfgSp2->ax = A25 * cfgSp1->bx + A26;
-    cfgSp2->bx = A23 * cfgSp1->bx + A24;
-    cfgSp1->ay = A27 * cfgSp1->bx + A28;
-    cfgSp1->ax = A15 * cfgSp1->bx - A16;
-
-    cfgSp1->by = cfgSp1->bx * tanf(theta1);
-    cfgSp2->by = cfgSp2->bx * tanf(theta2);
-
-    //ax1, bx1, ay1, by1, qx1, qy1, ax2, bx2, ay2, by2, qx2, qy2
-    ASSER_TRAJ_LogAsserValPC("data_sds_ab_base", cfgSp1->ax);
-    ASSER_TRAJ_LogAsserValPC("data_sds_ab_base", cfgSp1->bx);
-    ASSER_TRAJ_LogAsserValPC("data_sds_ab_base", cfgSp1->ay);
-    ASSER_TRAJ_LogAsserValPC("data_sds_ab_base", cfgSp1->by);
-    ASSER_TRAJ_LogAsserValPC("data_sds_ab_base", cfgSp1->qx);
-    ASSER_TRAJ_LogAsserValPC("data_sds_ab_base", cfgSp1->qy);
-    ASSER_TRAJ_LogAsserValPC("data_sds_ab_base", cfgSp2->ax);
-    ASSER_TRAJ_LogAsserValPC("data_sds_ab_base", cfgSp2->bx);
-    ASSER_TRAJ_LogAsserValPC("data_sds_ab_base", cfgSp2->ay);
-    ASSER_TRAJ_LogAsserValPC("data_sds_ab_base", cfgSp2->by);
-    ASSER_TRAJ_LogAsserValPC("data_sds_ab_base", cfgSp2->qx);
-    ASSER_TRAJ_LogAsserValPC("data_sds_ab_base", cfgSp2->qy);
+    return (trajok);
 }
 
 /**********************************************************************/
@@ -2031,13 +2071,14 @@ static void ASSER_TRAJ_Test_courbure(Deplacement *traj, ConfigSegment * cfgSeg, 
  *  \return
  */
 /**********************************************************************/
-static void ASSER_TRAJ_Generation_curvatureForced(ConfigSegment * cfgSeg, segmentTrajectoire * segmentTraj)
+static int ASSER_TRAJ_Generation_curvatureForced(ConfigSegment * cfgSeg, segmentTrajectoire * segmentTraj)
 {
     unsigned char   flag_rotation_angle_value_1;
     unsigned char   flag_rotation_angle_value_2;
     unsigned char   cpt;
     float           Rinv_sp4_1_n_0, Rinv_sp4_1_n_1, dRinv_sp4_1_n;
     float           Rinv_sp4_2_n_0, Rinv_sp4_2_n_1, dRinv_sp4_2_n;
+    int             traj_sds = TRAJ_OK;
 
     /* Initialisation */
     if (cfgSeg->curvature_forced_1 == True)
@@ -2092,7 +2133,7 @@ static void ASSER_TRAJ_Generation_curvatureForced(ConfigSegment * cfgSeg, segmen
     /* TODO refactoring => mal codé! */
     /* Determination des angles de rotation */
     cpt = 0;
-    while ( ((flag_rotation_angle_value_1 == False) || (flag_rotation_angle_value_2 == False)) && (cpt < 10)) /* TODO */
+    while ( ((flag_rotation_angle_value_1 == False) || (flag_rotation_angle_value_2 == False)) && (cpt < 10) && (traj_sds == TRAJ_OK)) /* TODO */
     {
         if (flag_rotation_angle_value_1 == False)
         {
@@ -2107,7 +2148,11 @@ static void ASSER_TRAJ_Generation_curvatureForced(ConfigSegment * cfgSeg, segmen
         }
 
         /* nouvelle s4s4 */
-        ASSER_TRAJ_sds_ab(cfgSeg, segmentTraj);
+        traj_sds = ASSER_TRAJ_sds_ab(cfgSeg, segmentTraj);
+        if (traj_sds != TRAJ_OK)
+        {
+            traj_sds = TRAJ_ARCNOK;
+        }
 
         if (flag_rotation_angle_value_1 == False)
         {
@@ -2147,6 +2192,8 @@ static void ASSER_TRAJ_Generation_curvatureForced(ConfigSegment * cfgSeg, segmen
 
         cpt = cpt + 1;
     }
+
+    return traj_sds;
 }
 
 /**********************************************************************/

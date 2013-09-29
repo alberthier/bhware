@@ -30,6 +30,10 @@
 #define CONVERT_DISTANCE(d)             (((float)d)/10000.0)
 #define CONVERT_FLOAT2SHORT_DISTANCE(d) ((unsigned short)((d) * 10000.0))
 
+#define TRAJ_OK  ((int)1)
+#define TRAJ_NOK ((int)(-1))
+#define TRAJ_ARCNOK ((int)(-2))
+
 #ifndef PIC32_BUILD
 #define PLOTS_SIMU
 #endif /* PIC32_BUILD */
