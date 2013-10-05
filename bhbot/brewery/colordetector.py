@@ -46,7 +46,7 @@ class ColorDetector:
         if team == TEAM_RED:
             self.team_name = "red"
         else:
-            self.team_name = "blue"
+            self.team_name = "yellow"
         exe = os.path.join(self.folder, "colordetector")
         self.process = subprocess.Popen([exe], stdin = subprocess.PIPE, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
         self.reinit()

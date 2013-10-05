@@ -499,22 +499,22 @@ class RobotLayer(fieldview.Layer):
             key = event.text()
             team = self.robot_controller.team
 
-            if team == TEAM_BLUE and key == 'q' or team == TEAM_RED and key == 's':
+            if team == TEAM_YELLOW and key == 'q' or team == TEAM_RED and key == 's':
                 # Main opponent - short distance
                 packet.distance = 0
                 packet.robot = OPPONENT_ROBOT_MAIN
                 self.robot_controller.send_packet(packet)
-            elif team == TEAM_BLUE and key == 'Q' or team == TEAM_RED and key == 'S':
+            elif team == TEAM_YELLOW and key == 'Q' or team == TEAM_RED and key == 'S':
                 # Main opponent - long distance
                 packet.distance = 1
                 packet.robot = OPPONENT_ROBOT_MAIN
                 self.robot_controller.send_packet(packet)
-            elif team == TEAM_BLUE and key == 'w' or team == TEAM_RED and key == 'x':
+            elif team == TEAM_YELLOW and key == 'w' or team == TEAM_RED and key == 'x':
                 # Secondary opponent - short distance
                 packet.distance = 0
                 packet.robot = OPPONENT_ROBOT_SECONDARY
                 self.robot_controller.send_packet(packet)
-            elif team == TEAM_BLUE and key == 'W' or team == TEAM_RED and key == 'X':
+            elif team == TEAM_YELLOW and key == 'W' or team == TEAM_RED and key == 'X':
                 # Secondary opponent - long distance
                 packet.distance = 1
                 packet.robot = OPPONENT_ROBOT_SECONDARY
@@ -804,10 +804,10 @@ class GameElementsLayer(fieldview.Layer):
 
         self.gifts = []
         for x in [600, 1200, 1800, 2400]:
-            self.gifts.append(Gift(x - 93.5, 2020, TEAM_COLOR_BLUE, self))
+            self.gifts.append(Gift(x - 93.5, 2020, TEAM_COLOR_YELLOW, self))
             self.gifts.append(Gift(x + 93.5, 2020, TEAM_COLOR_RED, self))
 
-        candle_colors = [TEAM_COLOR_BLUE for x in range(10)]
+        candle_colors = [TEAM_COLOR_YELLOW for x in range(10)]
         candle_colors += [TEAM_COLOR_RED for x in range(10)]
         random.shuffle(candle_colors)
         color_iter = iter(candle_colors)

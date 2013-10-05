@@ -758,14 +758,14 @@ class Navigate(statemachine.State):
 class GotoHome(Navigate):
 
     def __init__(self):
-        Navigate.__init__(self, BLUE_START_X, BLUE_START_Y)
+        Navigate.__init__(self, YELLOW_START_X, YELLOW_START_Y)
 
 
 
 
 class CalibratePosition(statemachine.State):
 
-    def __init__(self, x = BLUE_START_X, test = False):
+    def __init__(self, x = YELLOW_START_X, test = False):
         self.x = x
         self.test = test
 

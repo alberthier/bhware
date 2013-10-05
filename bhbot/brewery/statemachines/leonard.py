@@ -16,8 +16,8 @@ from position import *
 X_OPEN_GIFTS_START = 1.83
 Y_OPEN_GIFTS_START = 2.3
 
-X_START = BLUE_START_X
-Y_START = BLUE_START_Y
+X_START = YELLOW_START_X
+Y_START = YELLOW_START_Y
 
 
 class Main(statemachine.State):
@@ -63,10 +63,10 @@ class Deposit(statemachine.State):
 
     def on_enter(self):
         yield AntiBlocking(False)
-        yield LookAt(BLUE_START_X, BLUE_START_Y)
+        yield LookAt(YELLOW_START_X, YELLOW_START_Y)
         yield AntiBlocking(True)
         while True :
-            move = yield MoveLineTo(BLUE_START_X, BLUE_START_Y + 0.15)
+            move = yield MoveLineTo(YELLOW_START_X, YELLOW_START_Y + 0.15)
             if move.exit_reason == TRAJECTORY_DESTINATION_REACHED :
                 break
         # yield MoveLineTo(1.66, 0.38)
@@ -80,10 +80,10 @@ class Deposit(statemachine.State):
 class TakeGlasses(statemachine.State):
 
     def on_enter(self):
-        # yield MoveLineTo(BLUE_START_X, Y_OPEN_GIFTS_START)
-        yield MoveLineTo(BLUE_START_X, 1.0)
+        # yield MoveLineTo(YELLOW_START_X, Y_OPEN_GIFTS_START)
+        yield MoveLineTo(YELLOW_START_X, 1.0)
         yield Timer(1000.0)
-        yield MoveLineTo(BLUE_START_X, 1.93)
+        yield MoveLineTo(YELLOW_START_X, 1.93)
         yield Timer(1000.0)
         yield None
 
@@ -108,7 +108,7 @@ class OpenGifts(statemachine.State):
         gm = self.robot.goal_manager
 
         self.gift_opener_side = GIFT_OPENER_POSITION_RIGHT \
-            if self.robot.team == TEAM_BLUE else GIFT_OPENER_POSITION_LEFT
+            if self.robot.team == TEAM_YELLOW else GIFT_OPENER_POSITION_LEFT
 
         yield Rotate(0.0)
         yield GotoGiftOpenStart()
@@ -152,7 +152,7 @@ class OpenGiftsLeft(statemachine.State):
         gm = self.robot.goal_manager
 
         self.gift_opener_side = GIFT_OPENER_POSITION_RIGHT \
-            if self.robot.team == TEAM_BLUE else GIFT_OPENER_POSITION_LEFT
+            if self.robot.team == TEAM_YELLOW else GIFT_OPENER_POSITION_LEFT
 
         yield AntiBlocking(False)
         yield Rotate(math.pi)

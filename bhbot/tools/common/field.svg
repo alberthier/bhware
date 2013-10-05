@@ -78,7 +78,7 @@
 
         <!-- Start Zones -->
         <path
-            style="fill:#bfc1ab;stroke:none;"
+            style="fill:#bfc1ab;stroke:none"
             id="yellow_start_zone"
             d="M 0 0 h 390 v 300 a 390 390 0 0 1 -390 390 z" />
         <path
@@ -86,13 +86,13 @@
             id="yellow_start_zone_border"
             d="M 390 0 v 300 a 390 390 0 0 1 -390 390" />
         <circle
-            style="fill:#ffb901;stroke:none;"
+            style="fill:#ffb901;stroke:none"
             id="yellow_hand"
             cx="180"
             cy="300"
             r="50" />
         <path
-            style="fill:#bfc1ab;stroke:none;"
+            style="fill:#bfc1ab;stroke:none"
             id="red_start_zone"
             d="M 3000 0 v 690 a 390 390 0 0 1 -390 -390 v -300 z" />
         <path
@@ -100,7 +100,7 @@
             id="red_start_zone_border"
             d="M 3000 690 a 390 390 0 0 1 -390 -390 v -300" />
         <circle
-            style="fill:#e91009;stroke:none;"
+            style="fill:#e91009;stroke:none"
             id="red_hand"
             cx="2820"
             cy="300"
@@ -166,17 +166,17 @@
 
         <!-- Fireplaces -->
         <path
-            style="fill:#7c382d;stroke:none;"
+            style="fill:#7c382d;stroke:none"
             id="yellow_fireplace"
             d="M 0 2000 h 250 a 250 250 0 0 0 -250 -250 z" />
         <path
-            style="fill:#7c382d;stroke:none;"
+            style="fill:#7c382d;stroke:none"
             id="red_fireplace"
             d="M 3000 2000 v -250 a 250 250 0 0 0 -250 250 z" />
 
         <!-- Hill -->
         <circle
-            style="fill:#7c382d;stroke:none;"
+            style="fill:#7c382d;stroke:none"
             id="hill"
             cx="1500"
             cy="1000"
@@ -184,49 +184,49 @@
 
         <!-- Trees -->
         <circle
-            style="fill:#54261f;stroke:none;"
+            style="fill:#54261f;stroke:none"
             id="yellow_tree_trunk_1"
             cx="0"
             cy="1300"
             r="25" />
         <circle
-            style="fill:#3c822a;stroke:none;fill-opacity:0.5"
+            style="fill:#3c822a;stroke:none"
             id="yellow_tree_1"
             cx="0"
             cy="1300"
             r="150" />
         <circle
-            style="fill:#54261f;stroke:none;"
+            style="fill:#54261f;stroke:none"
             id="yellow_tree_trunk_2"
             cx="700"
             cy="2000"
             r="25" />
         <circle
-            style="fill:#3c822a;stroke:none;fill-opacity:0.5"
+            style="fill:#3c822a;stroke:none"
             id="yellow_tree_2"
             cx="700"
             cy="2000"
             r="150" />
         <circle
-            style="fill:#54261f;stroke:none;"
+            style="fill:#54261f;stroke:none"
             id="red_tree_trunk_1"
             cx="3000"
             cy="1300"
             r="25" />
         <circle
-            style="fill:#3c822a;stroke:none;fill-opacity:0.5"
+            style="fill:#3c822a;stroke:none"
             id="red_tree_1"
             cx="3000"
             cy="1300"
             r="150" />
         <circle
-            style="fill:#54261f;stroke:none;"
+            style="fill:#54261f;stroke:none"
             id="red_tree_trunk_2"
             cx="2300"
             cy="2000"
             r="25" />
         <circle
-            style="fill:#3c822a;stroke:none;fill-opacity:0.5"
+            style="fill:#3c822a;stroke:none"
             id="red_tree_2"
             cx="2300"
             cy="2000"

@@ -26,10 +26,10 @@ class TestPoseBase(unittest.TestCase):
 
 
 
-class TestPoseBlue(unittest.TestCase):
+class TestPoseYellow(unittest.TestCase):
 
     def setUp(self):
-        position.Pose.match_team = TEAM_BLUE
+        position.Pose.match_team = TEAM_YELLOW
         self.pose = position.Pose(1.0,1.0,math.pi)
 
 
@@ -47,10 +47,10 @@ class TestPoseBlue(unittest.TestCase):
 
 
 
-class TestPoseBlue(unittest.TestCase):
+class TestPoseYellow(unittest.TestCase):
 
     def setUp(self):
-        position.Pose.match_team = TEAM_BLUE
+        position.Pose.match_team = TEAM_YELLOW
         self.pose = position.Pose(1.0,1.0,math.pi)
 
 
@@ -88,21 +88,21 @@ class TestMap(unittest.TestCase):
 
 
     def test_strait_route(self):
-        route = self.map.route(position.Pose(BLUE_START_X, BLUE_START_Y), position.Pose(BLUE_START_X, 1.5))
+        route = self.map.route(position.Pose(YELLOW_START_X, YELLOW_START_Y), position.Pose(YELLOW_START_X, 1.5))
         self.assertEquals(len(route), 1)
         self.assertTrue(len(route[0]) > 0)
         p = route[0][0]
-        self.assertEquals(p.x, BLUE_START_X)
+        self.assertEquals(p.x, YELLOW_START_X)
         self.assertEquals(p.y, 1.5)
 
 
     def test_unroutable(self):
-        route = self.map.route(position.Pose(BLUE_START_X, BLUE_START_Y), position.Pose(1.99, 2.99))
+        route = self.map.route(position.Pose(YELLOW_START_X, YELLOW_START_Y), position.Pose(1.99, 2.99))
         self.assertEquals(len(route), 0)
 
 
     def test_escape_from_forbidden_zone(self):
-        route = self.map.route(position.Pose(BLUE_START_X + MAP_WALLS_DISTANCE, BLUE_START_Y), position.Pose(1.6, 2.0))
+        route = self.map.route(position.Pose(YELLOW_START_X + MAP_WALLS_DISTANCE, YELLOW_START_Y), position.Pose(1.6, 2.0))
         self.assertNotEquals(len(route), 0)
 
 

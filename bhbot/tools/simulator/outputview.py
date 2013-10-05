@@ -56,8 +56,8 @@ class OutputView(QWidget, OutputView_Ui):
         if team is not None:
             if team == TEAM_RED:
                 self.color = QColor(TEAM_COLOR_RED)
-            elif team == TEAM_BLUE:
-                self.color = QColor(TEAM_COLOR_BLUE)
+            elif team == TEAM_YELLOW:
+                self.color = QColor(TEAM_COLOR_YELLOW)
             color = self.color
             if not is_main:
                 color = color.lighter()

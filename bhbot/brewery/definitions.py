@@ -38,19 +38,19 @@ SECONDARY_ROBOT_CENTER_Y               = 0.0635
 SECONDARY_ROBOT_GYRATION_RADIUS        = 0.161
 
 # Main start positons (the robot starts 90 degrees rotated that's why *_START_Y use ROBOT_X_SIZE and ROBOT_CENTER_X)
-MAIN_BLUE_START_Y                      = MAIN_ROBOT_CENTER_X
-MAIN_BLUE_START_X                      = 1.0
-MAIN_BLUE_START_ANGLE                  = math.pi / 2.0
-MAIN_RED_START_X                       = MAIN_BLUE_START_X
-MAIN_RED_START_Y                       = FIELD_Y_SIZE - MAIN_BLUE_START_Y
+MAIN_YELLOW_START_Y                    = MAIN_ROBOT_CENTER_X
+MAIN_YELLOW_START_X                    = 1.0
+MAIN_YELLOW_START_ANGLE                = math.pi / 2.0
+MAIN_RED_START_X                       = MAIN_YELLOW_START_X
+MAIN_RED_START_Y                       = FIELD_Y_SIZE - MAIN_YELLOW_START_Y
 MAIN_RED_START_ANGLE                   = -math.pi / 2.0
 
 # Secondary start positons (the robot starts 90 degrees rotated that's why *_START_Y use ROBOT_X_SIZE and ROBOT_CENTER_X)
-SECONDARY_BLUE_START_Y                 = SECONDARY_ROBOT_CENTER_X
-SECONDARY_BLUE_START_X                 = 1.450
-SECONDARY_BLUE_START_ANGLE             = math.pi / 2.0
-SECONDARY_RED_START_X                  = SECONDARY_BLUE_START_X
-SECONDARY_RED_START_Y                  = FIELD_Y_SIZE - SECONDARY_BLUE_START_Y
+SECONDARY_YELLOW_START_Y               = SECONDARY_ROBOT_CENTER_X
+SECONDARY_YELLOW_START_X               = 1.450
+SECONDARY_YELLOW_START_ANGLE           = math.pi / 2.0
+SECONDARY_RED_START_X                  = SECONDARY_YELLOW_START_X
+SECONDARY_RED_START_Y                  = FIELD_Y_SIZE - SECONDARY_YELLOW_START_Y
 SECONDARY_RED_START_ANGLE              = -math.pi / 2.0
 
 def setup_definitions(is_main_robot):
@@ -60,9 +60,9 @@ def setup_definitions(is_main_robot):
     globals()["ROBOT_CENTER_X"]        = MAIN_ROBOT_CENTER_X        if IS_MAIN_ROBOT else SECONDARY_ROBOT_CENTER_X
     globals()["ROBOT_CENTER_Y"]        = MAIN_ROBOT_CENTER_Y        if IS_MAIN_ROBOT else SECONDARY_ROBOT_CENTER_Y
     globals()["ROBOT_GYRATION_RADIUS"] = MAIN_ROBOT_GYRATION_RADIUS if IS_MAIN_ROBOT else SECONDARY_ROBOT_GYRATION_RADIUS
-    globals()["BLUE_START_Y"]          = MAIN_BLUE_START_Y          if IS_MAIN_ROBOT else SECONDARY_BLUE_START_Y
-    globals()["BLUE_START_X"]          = MAIN_BLUE_START_X          if IS_MAIN_ROBOT else SECONDARY_BLUE_START_X
-    globals()["BLUE_START_ANGLE"]      = MAIN_BLUE_START_ANGLE      if IS_MAIN_ROBOT else SECONDARY_BLUE_START_ANGLE
+    globals()["YELLOW_START_Y"]        = MAIN_YELLOW_START_Y        if IS_MAIN_ROBOT else SECONDARY_YELLOW_START_Y
+    globals()["YELLOW_START_X"]        = MAIN_YELLOW_START_X        if IS_MAIN_ROBOT else SECONDARY_YELLOW_START_X
+    globals()["YELLOW_START_ANGLE"]    = MAIN_YELLOW_START_ANGLE    if IS_MAIN_ROBOT else SECONDARY_YELLOW_START_ANGLE
     globals()["RED_START_Y"]           = MAIN_RED_START_Y           if IS_MAIN_ROBOT else SECONDARY_RED_START_Y
     globals()["RED_START_X"]           = MAIN_RED_START_X           if IS_MAIN_ROBOT else SECONDARY_RED_START_X
     globals()["RED_START_ANGLE"]       = MAIN_RED_START_ANGLE       if IS_MAIN_ROBOT else SECONDARY_RED_START_ANGLE
@@ -72,8 +72,8 @@ MATCH_DURATION_MS                      = 90000
 FUNNY_ACTION_DURATION_MS               = 10000
 FULL_DURATION_MS                       = MATCH_DURATION_MS + FUNNY_ACTION_DURATION_MS
 BREWERY_LIFETIME_MS                    = FULL_DURATION_MS + 5000
-TEAM_COLOR_RED                         = "#a1011d"
-TEAM_COLOR_BLUE                        = "#004c90"
+TEAM_COLOR_RED                         = "#e91009"
+TEAM_COLOR_YELLOW                      = "#ffb901"
 
 # Timing
 KEEP_ALIVE_DELAY_MS                    = 250
@@ -175,7 +175,7 @@ REMOTE_DEVICE = Enum("Remote hardware type",
 )
 
 TEAM = Enum("Team color",
-    TEAM_BLUE    = 0,
+    TEAM_YELLOW  = 0,
     TEAM_RED     = 1,
     TEAM_UNKNOWN = 2,
 )

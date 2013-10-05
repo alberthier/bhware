@@ -23,13 +23,13 @@ class MainBar(QWidget, MainBar_Ui):
         self.set_icon(self.reload, "refresh")
         self.set_icon(self.start_pause, "start")
         self.set_icon(self.stop, "stop")
-        self.set_color_icon(self.main_blue_robot, TEAM_COLOR_BLUE)
-        self.set_color_icon(self.secondary_blue_robot, TEAM_COLOR_BLUE)
+        self.set_color_icon(self.main_yellow_robot, TEAM_COLOR_YELLOW)
+        self.set_color_icon(self.secondary_yellow_robot, TEAM_COLOR_YELLOW)
         self.set_color_icon(self.main_red_robot, TEAM_COLOR_RED)
         self.set_color_icon(self.secondary_red_robot, TEAM_COLOR_RED)
 
-        self.main_blue_robot.toggled.connect(self.main_blue_toggled)
-        self.secondary_blue_robot.toggled.connect(self.secondary_blue_toggled)
+        self.main_yellow_robot.toggled.connect(self.main_yellow_toggled)
+        self.secondary_yellow_robot.toggled.connect(self.secondary_yellow_toggled)
         self.main_red_robot.toggled.connect(self.main_red_toggled)
         self.secondary_red_robot.toggled.connect(self.secondary_red_toggled)
 
@@ -45,12 +45,12 @@ class MainBar(QWidget, MainBar_Ui):
         button.setIcon(QIcon(pixmap))
 
 
-    def main_blue_toggled(self):
-        self.button_toggled(self.main_blue_robot)
+    def main_yellow_toggled(self):
+        self.button_toggled(self.main_yellow_robot)
 
 
-    def secondary_blue_toggled(self):
-        self.button_toggled(self.secondary_blue_robot)
+    def secondary_yellow_toggled(self):
+        self.button_toggled(self.secondary_yellow_robot)
 
 
     def main_red_toggled(self):
@@ -62,7 +62,7 @@ class MainBar(QWidget, MainBar_Ui):
 
 
     def button_toggled(self, toggled):
-        buttons = [ self.main_blue_robot, self.secondary_blue_robot, self.main_red_robot, self.secondary_red_robot ]
+        buttons = [ self.main_yellow_robot, self.secondary_yellow_robot, self.main_red_robot, self.secondary_red_robot ]
         cpt = 0
         for button in buttons:
             if button.isChecked():
@@ -78,8 +78,8 @@ class MainBar(QWidget, MainBar_Ui):
 
     def get_expected_robots(self):
         expected = []
-        buttons = [ self.main_blue_robot, self.secondary_blue_robot, self.main_red_robot, self.secondary_red_robot ]
-        teams = [ TEAM_BLUE, TEAM_BLUE, TEAM_RED, TEAM_RED ]
+        buttons = [ self.main_yellow_robot, self.secondary_yellow_robot, self.main_red_robot, self.secondary_red_robot ]
+        teams = [ TEAM_YELLOW, TEAM_YELLOW, TEAM_RED, TEAM_RED ]
         robot_type = [ True, False, True, False ]
 
         for button, team, is_main in zip(buttons, teams, robot_type):

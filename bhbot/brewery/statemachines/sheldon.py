@@ -282,8 +282,8 @@ class Cake:
                 "bottom6": "bottom7",
         }
 
-        if team == TEAM_BLUE:
-            # BLUE Top candles
+        if team == TEAM_YELLOW:
+            # YELLOW Top candles
             Candle(self, "top1", math.radians(-90.0 + 11.25 + 0.0 * 22.5 + 5.0), CANDLE_KICKER_UPPER, True)
             Candle(self, "top2", math.radians(-90.0 + 11.25 + 1.0 * 22.5 + 5.0), CANDLE_KICKER_UPPER, False)
             Candle(self, "top3", math.radians(-90.0 + 11.25 + 2.0 * 22.5 + 5.0), CANDLE_KICKER_UPPER, False)
@@ -293,7 +293,7 @@ class Cake:
             Candle(self, "top7", math.radians(-90.0 + 11.25 + 6.0 * 22.5 + 9.0), CANDLE_KICKER_UPPER, False)
             Candle(self, "top8", math.radians(-90.0 + 11.25 + 7.0 * 22.5 + 9.0), CANDLE_KICKER_UPPER, False)
 
-            # BLUE Bottom candles
+            # YELLOW Bottom candles
             Candle(self, "bottom1"  , math.radians(-90.0 + 7.5 +  0.0 * 15.0 + 5.0), CANDLE_KICKER_LOWER, True)
             Candle(self, "bottom2"  , math.radians(-90.0 + 7.5 +  1.0 * 15.0 + 5.0), CANDLE_KICKER_LOWER, False)
             Candle(self, "bottom3"  , math.radians(-90.0 + 7.5 +  2.0 * 15.0 + 5.0), CANDLE_KICKER_LOWER, False)
@@ -373,7 +373,7 @@ class PrepareCakeMove(statemachine.State):
             yield None
             return
 
-        side = SIDE_LEFT if self.robot.team == TEAM_BLUE else SIDE_RIGHT
+        side = SIDE_LEFT if self.robot.team == TEAM_YELLOW else SIDE_RIGHT
         if self.robot.team == TEAM_RED:
             radius = CAKE_ARC_RADIUS + 0.015
         else:
@@ -422,7 +422,7 @@ class BlowCandlesOut(statemachine.State):
             direction = DIRECTION_BACKWARDS
         else:
             direction = DIRECTION_FORWARDS
-        self.side = SIDE_LEFT if self.robot.team == TEAM_BLUE else SIDE_RIGHT
+        self.side = SIDE_LEFT if self.robot.team == TEAM_YELLOW else SIDE_RIGHT
 
         angles = []
         for candle in self.candles:

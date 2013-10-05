@@ -74,9 +74,9 @@ class RobotController(object):
             self.is_main = is_main
             self.fsm_name = fsm_name
 
-            if team == TEAM_BLUE:
-                self.team_name = "blue"
-                self.team_color = TEAM_COLOR_BLUE
+            if team == TEAM_YELLOW:
+                self.team_name = "yellow"
+                self.team_color = TEAM_COLOR_YELLOW
             else:
                 self.team_name = "red"
                 self.team_color = TEAM_COLOR_RED
@@ -225,7 +225,7 @@ class RobotController(object):
 
     def on_simulator_fetch_colors(self, packet):
         detect = []
-        if self.team == TEAM_BLUE:
+        if self.team == TEAM_YELLOW:
             upper = self.game_controller.game_elements_layer.upper_candles
             lower = self.game_controller.game_elements_layer.lower_candles
         else:
