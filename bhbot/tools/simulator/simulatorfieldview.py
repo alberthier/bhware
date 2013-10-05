@@ -755,38 +755,6 @@ class Glass(QGraphicsEllipseItem):
 
 
 
-class Gift(QGraphicsRectItem):
-
-    def __init__(self, x, y, color, parent):
-        QGraphicsRectItem.__init__(self, x - 75, y - 60, 150, 120, parent)
-        self.setPen(QPen(0))
-        self.setBrush(QColor(color))
-
-
-    def setup(self):
-        self.show()
-
-
-
-
-class Candle(QGraphicsEllipseItem):
-
-    def __init__(self, x, y, color, parent):
-        QGraphicsEllipseItem.__init__(self, x - 38.5, y - 38.5, 75, 75, parent)
-        self.color = color
-        self.setPen(QPen(QColor(color), 10))
-
-
-    def blow(self):
-        self.setBrush(QColor("#d3d7cf"))
-
-
-    def setup(self):
-        self.setBrush(QColor("#fce94f"))
-
-
-
-
 class GameElementsLayer(fieldview.Layer):
 
     def __init__(self, field_view_controller):
@@ -802,29 +770,7 @@ class GameElementsLayer(fieldview.Layer):
                 self.glasses.append(Glass(3000 - (x + offset), y, self))
                 y += 250
 
-        self.gifts = []
-        for x in [600, 1200, 1800, 2400]:
-            self.gifts.append(Gift(x - 93.5, 2020, TEAM_COLOR_YELLOW, self))
-            self.gifts.append(Gift(x + 93.5, 2020, TEAM_COLOR_RED, self))
-
-        candle_colors = [TEAM_COLOR_YELLOW for x in range(10)]
-        candle_colors += [TEAM_COLOR_RED for x in range(10)]
-        random.shuffle(candle_colors)
-        color_iter = iter(candle_colors)
-        self.upper_candles = []
-        self.lower_candles = []
-        for i in range(12):
-            angle = math.radians(7.5 + i * 15.0)
-            dx = math.cos(angle) * 450.0
-            dy = math.sin(angle) * 450.0
-            self.lower_candles.append(Candle(1500 - dx, dy, next(color_iter), self))
-        for i in range(8):
-            angle = math.radians(11.25 + i * 22.5)
-            dx = math.cos(angle) * 350.0
-            dy = math.sin(angle) * 350.0
-            self.upper_candles.append(Candle(1500 - dx, dy, next(color_iter), self))
-
-        self.elements = self.glasses + self.gifts + self.upper_candles + self.lower_candles
+        self.elements = self.glasses
 
         for piece in self.elements:
             self.addToGroup(piece)
@@ -875,15 +821,6 @@ class GameElementsLayer(fieldview.Layer):
         for glass in self.glasses:
             robot_a.hits_glass(glass)
             robot_b.hits_glass(glass)
-        for gift in self.gifts:
-            if robot_a.hits_gift(gift) or robot_b.hits_gift(gift):
-                gift.hide()
-        for candle in self.upper_candles:
-            if robot_a.hits_upper_candle(candle) or robot_b.hits_upper_candle(candle):
-                candle.blow()
-        for candle in self.lower_candles:
-            if robot_a.hits_lower_candle(candle) or robot_b.hits_lower_candle(candle):
-                candle.blow()
 
         if self.main_bar.opponent_detection.isChecked():
             if robot_a.item and robot_b.item :
