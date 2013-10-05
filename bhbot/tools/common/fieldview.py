@@ -20,7 +20,7 @@ class FieldScene(QGraphicsScene):
         self.addItem(self.root)
         field = QGraphicsSvgItem(os.path.join(os.path.dirname(__file__), "field.svg"))
         self.root.addToGroup(field)
-        field.setPos(-100.0, -135.0)
+        field.setPos(-150.0, -100.0)
 
         pen = QPen(QColor("#2e3436"), 10)
         pen.setCapStyle(Qt.RoundCap)
