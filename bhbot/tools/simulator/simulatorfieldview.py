@@ -75,11 +75,10 @@ class GraphicsRobotArmObject(QObject):
 
 
 
-class GlassDetector(QGraphicsLineItem):
+class FireDetector(QGraphicsLineItem):
 
-    def __init__(self, x, y, side):
-        QGraphicsLineItem.__init__(self, x, y, x, y + 100)
-        self.side = side
+    def __init__(self, x, y, length):
+        QGraphicsLineItem.__init__(self, x, y, x, y + length)
         self.setPen(QPen(QBrush(), 1.0, Qt.NoPen))
 
 
@@ -95,8 +94,8 @@ class GraphicsRobotObject(QObject):
 
         self.item = None
         self.robot_item = None
+        self.structure = None
 
-        self.glass_detectors = []
         self.carried_elements = []
         self.current_goto_packet = None
         self.current_point_index = 0
@@ -111,7 +110,6 @@ class GraphicsRobotObject(QObject):
 
             self.layer.field_view_controller.field_scene.removeItem(self.item)
             del self.item
-            self.glass_detectors = []
 
         self.item = QGraphicsItemGroup(self.layer)
 
@@ -131,16 +129,8 @@ class GraphicsRobotObject(QObject):
 
         if self.layer.robot_controller.is_main:
             (self.structure, self.robot_item, self.gyration_item) = helpers.create_main_robot_base_item(QColor("#838383"), QColor("#e9eaff"), QColor(self.layer.color).darker(150))
-            lgd = GlassDetector(140, -110, SIDE_LEFT)
-            rgd = GlassDetector(140, 10, SIDE_RIGHT)
-            self.glass_detectors = [lgd, rgd]
-            self.item.addToGroup(lgd)
-            self.item.addToGroup(rgd)
         else:
             (self.structure, self.robot_item, self.gyration_item) = helpers.create_secondary_robot_base_item(QColor("#838383"), QColor("#e9eaff"), QColor(self.layer.color).darker(150))
-            gd = GlassDetector(130, -50, SIDE_LEFT)
-            self.glass_detectors = [gd]
-            self.item.addToGroup(gd)
         self.item.addToGroup(self.structure)
 
         tower = QGraphicsRectItem(-40.0, -40.0, 80.0, 80.0)
@@ -437,25 +427,22 @@ class GraphicsRobotObject(QObject):
         return False
 
 
-    def hits_glass(self, glass):
-        if glass not in self.carried_elements:
-            for detector in self.glass_detectors:
-                if detector.collidesWithItem(glass):
-                    self.layer.robot_controller.send_packet(packets.GlassPresent(side = detector.side))
-                    break
+    def hits_fire(self, fire):
+        if fire not in self.carried_elements:
+            if self.structure is not None and self.structure.collidesWithItem(fire):
+                fire.lay()
 
 
     def grab_glass(self, side):
         game_elements_layer = self.layer.field_view_controller.game_elements_layer
-        for glass in game_elements_layer.fires:
-            if glass not in self.carried_elements:
-                for detector in self.glass_detectors:
-                    if detector.collidesWithItem(glass):
-                        glass.setParentItem(self.item)
-                        self.item.addToGroup(glass)
-                        self.carried_elements.append(glass)
-                        glass.setPos(detector.line().x1() - 38.5, detector.line().y1() + 50 - 38.5)
-                        break
+        for fire in game_elements_layer.fires:
+            if fire not in self.carried_elements:
+                if self.structure is not None and self.structure.collidesWithItem(fire):
+                    fire.setParentItem(self.item)
+                    self.item.addToGroup(fire)
+                    self.carried_elements.append(fire)
+                    fire.setPos(detector.line().x1() - 38.5, detector.line().y1() + 50 - 38.5)
+                    break
 
 
 
@@ -853,8 +840,8 @@ class GameElementsLayer(fieldview.Layer):
                     dy = sign * math.sin(angle) * dist
                     elt.setPos(elt.pos().x() + dx, elt.pos().y() + dy)
         for fire in self.fires:
-            robot_a.hits_glass(fire)
-            robot_b.hits_glass(fire)
+            robot_a.hits_fire(fire)
+            robot_b.hits_fire(fire)
 
         if self.main_bar.opponent_detection.isChecked():
             if robot_a.item and robot_b.item :
