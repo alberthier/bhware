@@ -735,8 +735,6 @@ class Fire(QGraphicsPathItem):
         self.horizontal = horizontal
         self.color = color
 
-        self.setPen(QPen(Qt.NoPen))
-
         self.standing_path = QPainterPath()
         self.standing_path.moveTo(-70, -15)
         self.standing_path.lineTo(70, -15)
@@ -765,13 +763,18 @@ class Fire(QGraphicsPathItem):
 
 
     def stand(self):
+        self.setPen(QPen(Qt.NoPen))
         self.setPath(self.standing_path)
         self.setBrush(QBrush(QColor("#010204"), Qt.SolidPattern))
 
 
     def lay(self):
+        pen = QPen(QBrush(Qt.SolidPattern), 1)
+        c = QColor(self.color)
+        pen.setColor(c.darker())
+        self.setPen(pen)
         self.setPath(self.laying_path)
-        self.setBrush(QBrush(QColor(self.color), Qt.SolidPattern))
+        self.setBrush(QBrush(c, Qt.SolidPattern))
 
 
 
