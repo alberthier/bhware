@@ -447,7 +447,7 @@ class GraphicsRobotObject(QObject):
 
     def grab_glass(self, side):
         game_elements_layer = self.layer.field_view_controller.game_elements_layer
-        for glass in game_elements_layer.glasses:
+        for glass in game_elements_layer.fires:
             if glass not in self.carried_elements:
                 for detector in self.glass_detectors:
                     if detector.collidesWithItem(glass):
@@ -737,20 +737,55 @@ class GraphRoutingLayer(fieldview.Layer):
 
 
 
-class Glass(QGraphicsEllipseItem):
+class Fire(QGraphicsPathItem):
 
-    def __init__(self, x, y, game_elements_layer):
-        QGraphicsEllipseItem.__init__(self, 0, 0, 75, 75, game_elements_layer)
+    def __init__(self, x, y, game_elements_layer, standing, horizontal, color):
+        QGraphicsPathItem.__init__(self)
         self.game_elements_layer = game_elements_layer
-        self.x = x - 38.5
-        self.y = y - 38.5
-        self.setPen(QPen(QColor("#888a85"), 10))
-        self.setBrush(QColor("#eeeeec"))
+        self.x = x
+        self.y = y
+        self.standing = standing
+        self.horizontal = horizontal
+        self.color = color
+
+        self.setPen(QPen(Qt.NoPen))
+
+        self.standing_path = QPainterPath()
+        self.standing_path.moveTo(-70, -15)
+        self.standing_path.lineTo(70, -15)
+        self.standing_path.lineTo(70, 15)
+        self.standing_path.lineTo(-70, 15)
+        self.standing_path.closeSubpath()
+
+        self.laying_path = QPainterPath()
+        self.laying_path.moveTo(-70, 36)
+        self.laying_path.lineTo(0, -74)
+        self.laying_path.lineTo(70, 36)
+        self.laying_path.closeSubpath()
 
 
     def setup(self):
+        if self.standing:
+            self.stand()
+        else:
+            self.lay()
+        if self.horizontal:
+            self.setRotation(0)
+        else:
+            self.setRotation(90)
         self.setParentItem(self.game_elements_layer)
         self.setPos(self.x, self.y)
+
+
+    def stand(self):
+        self.setPath(self.standing_path)
+        self.setBrush(QBrush(QColor("#010204"), Qt.SolidPattern))
+
+
+    def lay(self):
+        self.setPath(self.laying_path)
+        self.setBrush(QBrush(QColor(self.color), Qt.SolidPattern))
+
 
 
 
@@ -762,15 +797,14 @@ class GameElementsLayer(fieldview.Layer):
         self.main_bar = field_view_controller.ui.main_bar
         self.scene().changed.connect(self.scene_changed)
 
-        self.glasses = []
-        for offset in [0, 300]:
-            y = 950
-            for x in [900, 1050, 900]:
-                self.glasses.append(Glass(x + offset, y, self))
-                self.glasses.append(Glass(3000 - (x + offset), y, self))
-                y += 250
+        self.fires = []
+        for x, y, horizontal in [(15, 800, False), (900, 600, False), (400, 1100, True), (900, 1600, False), (1300, 1985, True)]:
+            self.fires.append(Fire(x, y, self, True, horizontal, TEAM_COLOR_YELLOW))
+            self.fires.append(Fire(3000 - x, y, self, True, horizontal, TEAM_COLOR_RED))
+        self.fires.append(Fire(900, 1100, self, False, horizontal, TEAM_COLOR_YELLOW))
+        self.fires.append(Fire(2100, 1100, self, False, horizontal, TEAM_COLOR_RED))
 
-        self.elements = self.glasses
+        self.elements = self.fires
 
         for piece in self.elements:
             self.addToGroup(piece)
@@ -787,7 +821,7 @@ class GameElementsLayer(fieldview.Layer):
     def scene_changed(self):
         robot_a = self.field_view_controller.ui.game_controller.robot_a.robot_layer.robot
         robot_b = self.field_view_controller.ui.game_controller.robot_b.robot_layer.robot
-        for elt in self.glasses:
+        for elt in self.fires:
             if not elt in robot_a.carried_elements and not elt in robot_b.carried_elements:
                 robot = None
                 if elt.collidesWithItem(robot_a.robot_item):
@@ -818,9 +852,9 @@ class GameElementsLayer(fieldview.Layer):
                     dx = sign * math.cos(angle) * dist
                     dy = sign * math.sin(angle) * dist
                     elt.setPos(elt.pos().x() + dx, elt.pos().y() + dy)
-        for glass in self.glasses:
-            robot_a.hits_glass(glass)
-            robot_b.hits_glass(glass)
+        for fire in self.fires:
+            robot_a.hits_glass(fire)
+            robot_b.hits_glass(fire)
 
         if self.main_bar.opponent_detection.isChecked():
             if robot_a.item and robot_b.item :

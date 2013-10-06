@@ -120,7 +120,7 @@
             width="22"
             height="22"
             x="0"
-            y="825" />
+            y="847" />
         <rect
             style="fill:#65665b;stroke:none"
             id="yellow_torch_21"
@@ -133,7 +133,7 @@
             id="yellow_torch_22"
             width="22"
             height="22"
-            x="1325"
+            x="1347"
             y="1978" />
         <rect
             style="fill:#65665b;stroke:none"
@@ -148,7 +148,7 @@
             width="22"
             height="22"
             x="2978"
-            y="825" />
+            y="847" />
         <rect
             style="fill:#65665b;stroke:none"
             id="yellow_torch_21"
@@ -161,7 +161,7 @@
             id="yellow_torch_22"
             width="22"
             height="22"
-            x="1725"
+            x="1747"
             y="1978" />
 
         <!-- Fireplaces -->
