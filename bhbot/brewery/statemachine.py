@@ -23,6 +23,7 @@ class StateMachine(object):
         (main_state, self.end_of_match_state) = self.instantiate_state_machine(self.name)
         if main_state is not None:
             self.event_loop.fsms.append(self)
+            self.event_loop.event_bus.append(self)
             self.process(self.push_state(main_state))
 
 

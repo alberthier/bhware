@@ -1,35 +1,36 @@
 # encoding: utf-8
 
-import sys
 import asyncore
-import socket
-import errno
-import datetime
 import bisect
-import fcntl
-import termios
-import ctypes
-import struct
-import time
 import collections
+import ctypes
+import datetime
+import errno
+import fcntl
+import socket
+import struct
+import subprocess
+import sys
+import termios
+import time
 
-import logger
-import packets
-import statemachine
 import asyncwsgiserver
-import nanow
-import leds
-import robot
-import opponentdetector
-import trajectory
-import graphmap
+import colordetector
 import commonstates
 import geometry
 import goalmanager
-import tools
-import webinterface
-import colordetector
+import graphmap
 import interbot
+import leds
+import logger
+import nanow
+import opponentdetector
+import packets
+import robot
+import statemachine
+import tools
+import trajectory
+import webinterface
 
 from definitions import *
 
@@ -115,12 +116,64 @@ class ClientSocketChannel(asyncore.dispatcher_with_send):
 
 
 
-class PacketClientSocketChannel(ClientSocketChannel):
+class BinaryPacketReader:
 
-    def __init__(self, event_loop, origin, remote):
-        super().__init__(event_loop, origin, remote)
+    def __init__(self):
         self.buffer = bytes()
         self.packet = None
+
+
+    def read_packet(self):
+        while True :
+            if self.packet is None:
+                try:
+                    b = self.bytes_available()
+                    if b == 0:
+                        return
+                    received_data = self.recv(1)
+                    if len(received_data) == 0:
+                        return
+                    self.buffer += received_data
+                    self.packet = packets.create_packet(self.buffer)
+                except socket.error as err:
+                    if err.errno in [errno.EAGAIN, errno.EINTR]:
+                        return
+                    logger.log_exception(err)
+                    return
+            else:
+                try:
+                    try:
+                        if self.bytes_available() < self.packet.MAX_SIZE - 1:
+                            return
+                        received_data = self.recv(self.packet.MAX_SIZE - len(self.buffer))
+                        if len(received_data) == 0:
+                            return
+                        self.buffer += received_data
+                    except socket.error as err:
+                        if err.errno in [errno.EAGAIN, errno.EINTR]:
+                            return
+                        logger.log_exception(err)
+                        return
+                    if len(self.buffer) == self.packet.MAX_SIZE:
+                        # A complete packet has been received, notify the state machine
+                        self.packet.deserialize(self.buffer)
+                        logger.log_packet(self.packet, self.origin)
+                        self.packet.dispatch(self.event_loop)
+                        self.buffer = bytes()
+                        self.packet = None
+                except Exception as e:
+                    self.packet = None
+                    self.buffer = bytes()
+                    logger.log_exception(e)
+
+
+
+
+class PacketClientSocketChannel(ClientSocketChannel, BinaryPacketReader):
+
+    def __init__(self, event_loop, origin, remote):
+        ClientSocketChannel.__init__(self, event_loop, origin, remote)
+        BinaryPacketReader.__init__(self)
 
 
     def handle_read(self):
@@ -129,34 +182,32 @@ class PacketClientSocketChannel(ClientSocketChannel):
                 # Socket is closing
                 self.recv(0)
             else:
-                self.event_loop.read_packet(self)
+                self.read_packet()
         except Exception as e :
             logger.log_exception(e)
 
 
 
 
-class TurretChannel(asyncore.file_dispatcher):
+class FileDispatcherWithSend(asyncore.file_dispatcher):
 
-    def __init__(self, serial_port_path, serial_port_speed, eventloop):
-        self.port = serial.PosixPollSerial(serial_port_path, serial_port_speed, timeout = 0)
-        self.port.nonblocking()
-        super().__init__(self.port)
-        self.eventloop = eventloop
-        self.buffer = bytes()
-        self.packet = None
-        self.synchronized = False
+    def __init__(self, fd, map = None):
+        super().__init__(fd, map)
         self.out_buffer = bytes()
-        self.origin = "TUR"
 
 
     def bytes_available(self):
-        return self.port.inWaiting()
+        available = ctypes.c_int()
+        fcntl.ioctl(self.socket.fileno(), termios.FIONREAD, available)
+        return available.value
+
+
+    def writable(self):
+        return self.connected and len(self.out_buffer) != 0
 
 
     def initiate_send(self):
-        num_sent = 0
-        num_sent = super().send(self.out_buffer[:512])
+        num_sent = super().send(self.out_buffer[:4096])
         self.out_buffer = self.out_buffer[num_sent:]
 
 
@@ -165,12 +216,26 @@ class TurretChannel(asyncore.file_dispatcher):
 
 
     def send(self, data):
-        self.out_buffer = self.out_buffer + data
+        self.out_buffer += data
         self.initiate_send()
 
 
-    def writable(self):
-        return self.connected and len(self.out_buffer) != 0
+
+
+class TurretChannel(FileDispatcherWithSend, BinaryPacketReader):
+
+    def __init__(self, serial_port_path, serial_port_speed, eventloop):
+        self.port = serial.PosixPollSerial(serial_port_path, serial_port_speed, timeout = 0)
+        self.port.nonblocking()
+        FileDispatcherWithSend.__init__(self, self.port)
+        BinaryPacketReader.__init__(self)
+        self.eventloop = eventloop
+        self.synchronized = False
+        self.origin = "TUR"
+
+
+    def bytes_available(self):
+        return self.port.inWaiting()
 
 
     def handle_read(self):
@@ -187,7 +252,7 @@ class TurretChannel(asyncore.file_dispatcher):
                     self.packet = packets.create_packet(self.buffer)
                     break
         try:
-            self.eventloop.read_packet(self)
+            self.read_packet()
         except Exception as e:
             logger.log("Turret channel is desynchronized. Resynchronizing. Unknown packet type: {}".format(e.args[0]))
             self.synchronized = False
@@ -195,11 +260,68 @@ class TurretChannel(asyncore.file_dispatcher):
 
     def close(self):
         self.port.close()
-        asyncore.file_dispatcher.close(self)
+        super().close(self)
 
 
     def handle_close(self):
         logger.log("Closing Turret channel")
+
+
+
+
+class ProcessChannel:
+
+    def __init__(self, cmd, event_loop):
+        self.process = subprocess.Popen(cmd, bufsize = 0, stdin = subprocess.PIPE, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+        self.event_loop = event_loop
+        self.stdin = FileDispatcherWithSend(self.process.stdin)
+        self.stdout = asyncore.file_dispatcher(self.process.stdout)
+        self.stdout.handle_read = self.handle_read_stdout
+        self.stdout.writable = lambda: False
+        self.stderr = asyncore.file_dispatcher(self.process.stderr)
+        self.stderr.handle_read = self.handle_read_stderr
+        self.stderr.writable = lambda: False
+        self.stdout_buffer = bytes()
+        self.stderr_buffer = bytes()
+
+
+    def send(self, data):
+        self.stdin.send(bytes(data + "\n", "utf-8"))
+
+
+    def handle_read_stdout(self):
+        result = []
+        self.stdout_buffer = self.handle_read_channel(self.stdout_buffer, self.stdout, result)
+        for code in result:
+            try:
+                packet = eval(code)
+                packet.dispatch(self.event_loop)
+            except Exception as e:
+                logger.log("Unable to evaluate the process answer: '{}'".format(code))
+
+
+    def handle_read_stderr(self):
+        result = []
+        self.stderr_buffer = self.handle_read_channel(self.stderr_buffer, self.stderr, result)
+        for log in result:
+            logger.log(log)
+
+
+    def handle_read_channel(self, buffer, channel, result):
+        chunk = channel.recv(4096)
+        buffer += chunk
+        while True:
+            i = buffer.find(b'\n')
+            if i == -1:
+                break
+            else:
+                result.append(str(buffer[:i], "utf-8"))
+                buffer = buffer[i + 1:]
+        return buffer
+
+
+    def close(self):
+        self.process.kill()
 
 
 
@@ -218,6 +340,8 @@ class PicControlChannel(PacketClientSocketChannel):
             self.event_loop.on_turret_boot(None)
             statemachine.StateMachine(self.event_loop, self.event_loop.state_machine_name)
             self.event_loop.send_packet(packets.ControllerReady())
+
+
 
 
 class PicLogChannel(ClientSocketChannel):
@@ -261,7 +385,8 @@ class InterbotServer(asyncore.dispatcher):
 
     def handle_accepted(self, sock, addr):
         self.event_loop.interbot_manager.on_connect()
-        self.event_loop.interbot_channel = InterbotControlChannel(self.event_loop, "TMM", sock)
+        self.event_loop.interbot_channel = InterbotControlChannel(self.event_loop, "TMT", sock)
+
 
 
 
@@ -275,6 +400,7 @@ class InterbotControlChannel(PacketClientSocketChannel):
     def handle_close(self):
         super().handle_close()
         self.event_loop.interbot_manager.on_disconnect()
+
 
 
 
@@ -335,15 +461,20 @@ class EventLoop(object):
         self.interbot_channel = None
         self.interbot_server = None
         self.web_server = None
+        self.event_bus = []
         self.robot = robot.Robot(self)
+        self.event_bus.append(self.robot)
         self.fsms = []
         self.state_machine_name = state_machine_name
         self.webserver_port = webserver_port
         self.opponent_detector = opponentdetector.OpponentDetector(self)
+        self.event_bus.append(self.opponent_detector)
         self.interbot_manager = interbot.InterBotManager(self)
+        self.event_bus.append(self.interbot_manager)
         self.stopping = False
         self.is_match_started = False
         self.map = graphmap.Map(self)
+        self.event_bus.append(self.map)
         self.timers = []
         self.last_ka_date = datetime.datetime.now()
         self.start_date = None
@@ -354,57 +485,6 @@ class EventLoop(object):
             self.colordetector = colordetector.ColorDetector(self)
         else:
             self.colordetector = None
-
-
-    def read_packet(self, channel):
-        while True :
-            if channel.packet is None:
-                try:
-                    b = channel.bytes_available()
-                    if b == 0:
-                        return
-                    received_data = channel.recv(1)
-                    if len(received_data) == 0:
-                        return
-                    channel.buffer += received_data
-                    channel.packet = packets.create_packet(channel.buffer)
-                except socket.error as err:
-                    if err.errno in [errno.EAGAIN, errno.EINTR]:
-                        return
-                    logger.log_exception(err)
-                    return
-            else:
-                try:
-                    try:
-                        if channel.bytes_available() < channel.packet.MAX_SIZE - 1:
-                            return
-                        received_data = channel.recv(channel.packet.MAX_SIZE - len(channel.buffer))
-                        if len(received_data) == 0:
-                            return
-                        channel.buffer += received_data
-                    except socket.error as err:
-                        if err.errno in [errno.EAGAIN, errno.EINTR]:
-                            return
-                        logger.log_exception(err)
-                        return
-                    if len(channel.buffer) == channel.packet.MAX_SIZE:
-                        # A complete packet has been received, notify the state machine
-                        channel.packet.deserialize(channel.buffer)
-                        channel.buffer = bytes()
-                        logger.log_packet(channel.packet, channel.origin)
-                        self.enqueue_packet(channel.packet)
-                        channel.packet = None
-                        self.process_packets_and_dispatch()
-
-                except Exception as e:
-                    channel.packet = None
-                    logger.log_exception(e)
-
-
-    def on_device_ready(self, packet):
-        logger.set_team(packet.team)
-        if self.colordetector is not None:
-            self.colordetector.set_team(packet.team)
 
 
     def on_keep_alive(self, packet):
@@ -433,6 +513,18 @@ class EventLoop(object):
             self.turret_channel.send(buffer)
 
 
+    def on_packet(self, packet):
+        self.packet_queue.appendleft(packet)
+        self.process_packets_and_dispatch()
+
+
+    def process_packets_and_dispatch(self):
+        while self.packet_queue:
+            packet = self.packet_queue.pop()
+            for subscriber in self.event_bus:
+                packet.dispatch(subscriber)
+
+
     def on_end_of_match(self):
         logger.log("End of match. Starting the funny action")
         for fsm in self.fsms:
@@ -459,8 +551,8 @@ class EventLoop(object):
             if self.interbot_channel :
                 self.interbot_channel.send(buffer)
         elif packet.TYPE < packets.INTERNAL_RANGE_END:
-            self.enqueue_packet(packet)
-            self.process_packets_and_dispatch()
+            self.packet_queue.appendleft(packet)
+            Timer(self, 0, self.process_packets_and_dispatch).start()
 
 
     def start(self):
@@ -471,7 +563,7 @@ class EventLoop(object):
             if IS_MAIN_ROBOT:
                 InterbotServer(self)
             else:
-                self.interbot_channel = InterbotControlChannel(self, "TMM", (MAIN_INTERBOT_IP, MAIN_INTERBOT_PORT))
+                self.interbot_channel = InterbotControlChannel(self, "TMT", (MAIN_INTERBOT_IP, MAIN_INTERBOT_PORT))
         self.web_server = asyncwsgiserver.WsgiServer("", self.webserver_port, nanow.Application(webinterface.BHWeb(self)))
         if SERIAL_PORT_PATH is not None:
             try:
@@ -493,27 +585,6 @@ class EventLoop(object):
             while len(self.timers) != 0:
                 if not self.timers[0].check_timeout():
                     break
-
-
-    def enqueue_packet(self, packet):
-        self.packet_queue.appendleft(packet)
-
-
-    def process_packets_and_dispatch(self):
-        while self.packet_queue :
-            packet = self.packet_queue.pop()
-            self.dispatch(packet)
-
-
-    def dispatch(self, packet):
-        packet.dispatch(self)
-        packet.dispatch(self.robot)
-        packet.dispatch(self.opponent_detector)
-        packet.dispatch(self.map)
-        packet.dispatch(self.interbot_manager)
-
-        for fsm in self.fsms:
-            packet.dispatch(fsm)
 
 
     def stop(self):
