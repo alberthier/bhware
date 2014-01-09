@@ -101,11 +101,11 @@ class RobotController(object):
 
             if self.is_main:
                 args.append("--hostname")
-                args.append("sheldon")
+                args.append("doc")
 
             else:
                 args.append("--hostname")
-                args.append("leonard")
+                args.append("marty")
 
 
             if debug_host :
@@ -117,9 +117,9 @@ class RobotController(object):
                 args.append(self.fsm_name)
             else :
                 if is_main :
-                    args.append('sheldon')
+                    args.append('doc')
                 else :
-                    args.append('leonard')
+                    args.append('marty')
 
 
 
