@@ -549,7 +549,7 @@ class FollowPath(statemachine.State):
         for pose in self.path:
             if self.direction == DIRECTION_FORWARDS:
                 if not self.robot.is_looking_at(pose):
-                    move = yield LookAt(pose.virt.x, pose.virt.y, DIRECTION_FORWARDS, move) 
+                    move = yield LookAt(pose.virt.x, pose.virt.y, DIRECTION_FORWARDS, move)
             else:
                 if not self.robot.is_looking_at_opposite(pose):
                     move = yield LookAtOpposite(pose.virt.x, pose.virt.y, DIRECTION_FORWARDS, move)
@@ -698,29 +698,6 @@ class Pump(statemachine.State):
 
 
     def on_pump(self, packet):
-        yield None
-
-
-
-
-class FetchCandleColors(statemachine.State):
-
-    def on_enter(self):
-        if IS_HOST_DEVICE_ARM:
-            self.colors = self.event_loop.colordetector.invoke("fetch")
-            #self.event_loop.colordetector.reinit()
-            yield None
-        else:
-            self.send_packet(packets.SimulatorFetchColors())
-
-
-    def on_simulator_fetch_colors(self, packet):
-        self.colors = {}
-        for s in packet.colors:
-            if s.index >= 100:
-                self.colors["top" + str(s.index - 100)] = s.detect
-            else:
-                self.colors["bottom" + str(s.index)] = s.detect
         yield None
 
 

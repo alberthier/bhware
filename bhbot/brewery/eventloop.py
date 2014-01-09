@@ -15,6 +15,7 @@ import termios
 import time
 
 import asyncwsgiserver
+import builder
 import colordetector
 import commonstates
 import geometry
@@ -224,7 +225,7 @@ class FileDispatcherWithSend(asyncore.file_dispatcher):
 
 class TurretChannel(FileDispatcherWithSend, BinaryPacketReader):
 
-    def __init__(self, serial_port_path, serial_port_speed, eventloop):
+    def __init__(self, event_loop, serial_port_path, serial_port_speed):
         self.port = serial.PosixPollSerial(serial_port_path, serial_port_speed, timeout = 0)
         self.port.nonblocking()
         FileDispatcherWithSend.__init__(self, self.port)
@@ -271,7 +272,7 @@ class TurretChannel(FileDispatcherWithSend, BinaryPacketReader):
 
 class ProcessChannel:
 
-    def __init__(self, cmd, event_loop):
+    def __init__(self, event_loop, cmd):
         self.process = subprocess.Popen(cmd, bufsize = 0, stdin = subprocess.PIPE, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
         self.event_loop = event_loop
         self.stdin = FileDispatcherWithSend(self.process.stdin)
@@ -482,7 +483,10 @@ class EventLoop(object):
         self.interbot_enabled = interbot_enabled
 
         if IS_HOST_DEVICE_ARM and IS_MAIN_ROBOT:
-            self.colordetector = colordetector.ColorDetector(self)
+            folder = os.path.join(os.path.dirname(__file__), "colordetector")
+            cmds = ["g++", "-Wall", "-O2", "-o", "colordetector", "-l", "opencv_core", "-l", "opencv_highgui", "-l", "opencv_imgproc", "colordetector.cpp"]
+            builder.Builder("colordetector.cpp", "colordetector", cmds, folder).build()
+            self.colordetector = ProcessChannel(self, os.path.join(folder, "colordetector"))
         else:
             self.colordetector = None
 
@@ -567,16 +571,13 @@ class EventLoop(object):
         self.web_server = asyncwsgiserver.WsgiServer("", self.webserver_port, nanow.Application(webinterface.BHWeb(self)))
         if SERIAL_PORT_PATH is not None:
             try:
-                self.turret_channel = TurretChannel(SERIAL_PORT_PATH, SERIAL_PORT_SPEED, self)
+                self.turret_channel = TurretChannel(self, SERIAL_PORT_PATH, SERIAL_PORT_SPEED)
             except serial.SerialException:
                 logger.log("Unable to open serial port {}".format(SERIAL_PORT_PATH))
                 self.turret_channel = None
         logger.log("Starting brewery with state machine '{}'".format(self.state_machine_name))
         self.pic_log_channel = PicLogChannel(self)
         self.pic_control_channel = PicControlChannel(self)
-
-        if self.colordetector :
-            self.colordetector.on_startup()
 
         while not self.stopping:
             asyncore.loop(EVENT_LOOP_TICK_RESOLUTION_S, True, None, 1)
@@ -601,5 +602,5 @@ class EventLoop(object):
         if self.interbot_server is not None:
             self.interbot_server.close()
         if self.colordetector is not None:
-            self.colordetector.quit()
+            self.colordetector.close()
 
