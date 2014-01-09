@@ -159,7 +159,7 @@ class BinaryPacketReader:
                         # A complete packet has been received, notify the state machine
                         self.packet.deserialize(self.buffer)
                         logger.log_packet(self.packet, self.origin)
-                        self.packet.dispatch(self.event_loop)
+                        self.event_loop.process(self.packet)
                         self.buffer = bytes()
                         self.packet = None
                 except Exception as e:
@@ -296,7 +296,7 @@ class ProcessChannel:
         for code in result:
             try:
                 packet = eval(code)
-                packet.dispatch(self.event_loop)
+                self.event_loop.process(self.packet)
             except Exception as e:
                 logger.log("Unable to evaluate the process answer: '{}'".format(code))
 
@@ -517,7 +517,8 @@ class EventLoop(object):
             self.turret_channel.send(buffer)
 
 
-    def on_packet(self, packet):
+    def process(self, packet):
+        packet.dispatch(self)
         self.packet_queue.appendleft(packet)
         self.process_packets_and_dispatch()
 
