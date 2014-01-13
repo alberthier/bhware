@@ -2,16 +2,16 @@
 
 
 import datetime
-import math
 import functools
-from collections import deque
+import math
 
-import statemachine
+import eventloop
+import logger
 import packets
 import position
-import logger
-import eventloop
+import statemachine
 import tools
+
 from definitions import *
 
 
@@ -81,27 +81,6 @@ class Timer(statemachine.State):
 
 
     def on_timeout(self):
-        yield None
-
-
-
-
-class SpeedControl(statemachine.State):
-
-    def __init__(self, speed = None):
-        statemachine.State.__init__(self)
-        self.packet = packets.PositionControlConfig()
-        if speed is not None:
-            self.packet.vmax_limit = speed
-        else:
-            self.packet.vmax_limit = 88.0
-
-
-    def on_enter(self):
-        self.send_packet(self.packet)
-
-
-    def on_position_control_config(self, packet):
         yield None
 
 
@@ -235,6 +214,27 @@ class AntiBlocking(statemachine.State):
 
 
 
+class SpeedControl(statemachine.State):
+
+    def __init__(self, speed = None):
+        statemachine.State.__init__(self)
+        self.packet = packets.PositionControlConfig()
+        if speed is not None:
+            self.packet.vmax_limit = speed
+        else:
+            self.packet.vmax_limit = 88.0
+
+
+    def on_enter(self):
+        self.send_packet(self.packet)
+
+
+    def on_position_control_config(self, packet):
+        yield None
+
+
+
+
 class WaitForOpponentLeave(Timer):
 
     TIMEOUT       = 0
@@ -310,7 +310,6 @@ class WaitForOpponentLeave(Timer):
 
     def on_exit(self):
         self.log("WaitForOpponentLeave : exit reason={}".format(TRAJECTORY.lookup_by_value[self.exit_reason]))
-
 
 
 
@@ -633,24 +632,85 @@ class CalibratePosition(statemachine.State):
 
 
 
-class DepositGlasses(statemachine.State):
+class ServoControl(statemachine.State):
 
-    def __init__(self):
-        self.received_left = False
-        self.received_right = False
+    def __init__(self, *args):
+        """
+            args can be 3 arguments: type, id, angle for a single servo control or
+            a list of tuples (type, id, angle) for multiple servos control
+        """
+        if len(args) > 0:
+            if type(args[0]) == tuple:
+                self.servo_commands = list(args)
+            elif len(args) == 3:
+                self.servo_commands = [ args ]
 
-    def on_enter(self, can_continue=False):
-        self.send_packet(packets.InternalDropGlasses(can_continue=can_continue, done=False))
+
+    def on_enter(self):
+        for type, id, angle in self.servo_commands:
+            self.send_packet(packets.ServoControl(type, id, angle))
 
 
-    def on_internal_drop_glasses(self, packet):
-        if packet.done :
-            if packet.side == SIDE_LEFT :
-                self.received_left = True
-            if packet.side == SIDE_RIGHT :
-                self.received_right = True
-            if self.received_left and self.received_right :
-                yield None
+    def on_servo_control(self, packet):
+        i = 0
+        for type, id, angle in self.servo_commands:
+            if packet.type == type and packet.id == id:
+                break
+            i += 1
+        if i < len(self.servo_commands):
+            del self.servo_commands[i]
+        if len(self.servo_commands) == 0:
+            yield None
+
+
+
+
+class ElectromagnetControl(statemachine.State):
+
+    def __init__(self, *args):
+        """
+            args can be 2 arguments: id, action for a single electromagnet control or
+            a list of tuples (id, action) for multiple electromagnet control
+        """
+        if len(args) > 0:
+            if type(args[0]) == tuple:
+                self.magnet_commands = list(args)
+            elif len(args) == 3:
+                self.magnet_commands = [ args ]
+
+
+    def on_enter(self):
+        for id, action in self.magnet_commands:
+            self.send_packet(packets.ElectromagnetControl(id, action))
+
+
+    def on_electromagnet_control(self, packet):
+        i = 0
+        for id, action in self.magnet_commands:
+            if packet.id == id:
+                break
+            i += 1
+        if i < len(self.magnet_commands):
+            del self.magnet_commands[i]
+        if len(self.magnet_commands) == 0:
+            yield None
+
+
+
+
+class SuctionPump(statemachine.State):
+
+    def __init__(self, action):
+        self.action = action
+
+
+    def on_enter(self):
+        self.send_packet(packets.SuctionPump(action))
+
+
+    def on_suction_pump(self, packet):
+        yield None
+
 
 ##################################################
 # GOAL MANAGEMENT

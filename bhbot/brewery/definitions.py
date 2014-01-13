@@ -12,11 +12,6 @@ import platform
 IS_HOST_DEVICE_ARM                     = platform.machine() == "armv5tel"
 IS_HOST_DEVICE_PC                      = not IS_HOST_DEVICE_ARM
 
-#Teammate collaboration
-#Time between two position information
-#sent to teammate
-TEAMMATE_INFO_DELAY                    = 1.0
-
 # Field
 FIELD_Y_SIZE                           = 3.0
 FIELD_X_SIZE                           = 2.0
@@ -79,6 +74,9 @@ TEAM_COLOR_YELLOW                      = "#ffb901"
 KEEP_ALIVE_DELAY_MS                    = 250
 KEEP_ALIVE_MINIMUM_AGE_S               = (KEEP_ALIVE_DELAY_MS * 4.0 / 5.0) / 1000.0
 EVENT_LOOP_TICK_RESOLUTION_S           = 0.05
+
+#Teammate collaboration
+TEAMMATE_INFO_DELAY_S                  = 1.0 #Time between two position information sent to teammate
 
 # Remote device connection
 if IS_HOST_DEVICE_ARM:
@@ -204,42 +202,14 @@ AXIS = Enum("Axis",
     AXIS_Y = 1,
 )
 
-SIDE = Enum("Side",
-    SIDE_LEFT  = 0,
-    SIDE_RIGHT = 1,
+SERVO_TYPE = Enum("Servo type",
+    SERVO_TYPE_AX = 0,
+    SERVO_TYPE_RX = 1,
 )
 
-MOVE = Enum("Move",
-    MOVE_CLOSE = 0,
-    MOVE_OPEN  = 1,
-)
-
-LIFTER_MOVE = Enum("Lifter move",
-    LIFTER_MOVE_DOWN   = 0,
-    LIFTER_MOVE_MIDDLE = 1,
-    LIFTER_MOVE_UP     = 2,
-)
-
-CANDLE_KICKER = Enum("Candle kicker",
-    CANDLE_KICKER_LOWER = 0,
-    CANDLE_KICKER_UPPER = 1,
-)
-
-CANDLE_KICKER_POSITION = Enum("Candle kicker position",
-    CANDLE_KICKER_POSITION_IDLE = 0,
-    CANDLE_KICKER_POSITION_UP   = 1,
-    CANDLE_KICKER_POSITION_KICK = 2,
-)
-
-GIFT_OPENER_POSITION = Enum("Gift Opener",
-    GIFT_OPENER_POSITION_IDLE  = 0,
-    GIFT_OPENER_POSITION_LEFT  = 1,
-    GIFT_OPENER_POSITION_RIGHT = 2,
-)
-
-PUMP = Enum("Pump",
-    PUMP_OFF = 0,
-    PUMP_ON  = 1,
+ACTION = Enum("Action",
+    ACTION_OFF = 0,
+    ACTION_ON  = 1,
 )
 
 TRAJECTORY = Enum("Trajectory walk or navigation result",

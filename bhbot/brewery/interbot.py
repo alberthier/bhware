@@ -29,7 +29,7 @@ class InterBotManager :
 
     def on_keep_alive(self, packet):
         if not self.last_pos_sent_time or (datetime.datetime.now() - self.last_pos_sent_time).seconds > \
-                TEAMMATE_INFO_DELAY :
+                TEAMMATE_INFO_DELAY_S :
             packet_to_send = InterbotPosition()
             packet_to_send.current_pose = packet.current_pose
             packet_to_send.main_robot = IS_MAIN_ROBOT

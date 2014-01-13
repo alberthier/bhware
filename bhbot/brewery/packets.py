@@ -586,6 +586,41 @@ class StopAll(BasePacket):
     LOGVIEW_COLOR = "#ff1493"
 
 
+
+
+class ServoControl(BasePacket):
+
+    TYPE = 69
+    LOGVIEW_COLOR = "#000000"
+    DEFINITION = (
+        ('type',  UEnum8(SERVO_TYPE, SERVO_TYPE_AX)),
+        ('id',    UInt8 (0, "Servo identifier")),
+        ('angle', UInt16(0, "Destination angle")),
+    )
+
+
+
+
+class ElectromagnetControl(BasePacket):
+
+    TYPE = 70
+    LOGVIEW_COLOR = "#000000"
+    DEFINITION = (
+        ('id',     UInt8 (0, "Servo identifier")),
+        ('action', UEnum8(ACTION, ACTION_OFF)),
+    )
+
+
+
+class SuctionPump(BasePacket):
+
+    TYPE = 71
+    LOGVIEW_COLOR = "#000000"
+    DEFINITION = (
+        ('action', UEnum8(ACTION, ACTION_OFF)),
+    )
+
+
 # Simulator
 
 
@@ -758,18 +793,6 @@ class InterbotGoalStatus(BasePacket):
         ('goal_status', UInt8 (0, "Goal status")),
     )
 
-# Internal
-
-class InternalDropGlasses(BasePacket):
-
-    TYPE = 250
-
-    LOGVIEW_COLOR = "#CC00BB"
-    DEFINITION = (
-        ('side'    , UEnum8(SIDE                  , SIDE_LEFT)),
-        ('can_continue', Bool  (True, "We can continue to catch glasses")),
-        ('done', Bool  (True, "Deposit is done")),
-    )
 
 ################################################################################
 # Packets lookup setup

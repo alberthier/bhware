@@ -18,7 +18,6 @@ import asyncwsgiserver
 import builder
 import colordetector
 import commonstates
-import geometry
 import goalmanager
 import graphmap
 import interbot
