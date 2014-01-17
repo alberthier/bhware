@@ -459,20 +459,15 @@ class EventLoop(object):
         self.interbot_channel = None
         self.interbot_server = None
         self.web_server = None
-        self.event_bus = []
         self.robot = robot.Robot(self)
-        self.event_bus.append(self.robot)
         self.fsms = []
         self.state_machine_name = state_machine_name
         self.webserver_port = webserver_port
         self.opponent_detector = opponentdetector.OpponentDetector(self)
-        self.event_bus.append(self.opponent_detector)
         self.interbot_manager = interbot.InterBotManager(self)
-        self.event_bus.append(self.interbot_manager)
         self.stopping = False
         self.is_match_started = False
         self.map = graphmap.Map(self)
-        self.event_bus.append(self.map)
         self.timers = []
         self.last_ka_date = datetime.datetime.now()
         self.start_date = None
@@ -522,8 +517,12 @@ class EventLoop(object):
     def process_packets_and_dispatch(self):
         while self.packet_queue:
             packet = self.packet_queue.pop()
-            for subscriber in self.event_bus:
-                packet.dispatch(subscriber)
+            packet.dispatch(self.robot)
+            packet.dispatch(self.opponent_detector)
+            packet.dispatch(self.interbot_manager)
+            packet.dispatch(self.map)
+            for fsm in self.fsms:
+                packet.dispatch(fsm)
 
 
     def on_end_of_match(self):
