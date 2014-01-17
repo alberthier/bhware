@@ -317,7 +317,7 @@ PIC32_RANGE_END       = 150
 SIMULATOR_RANGE_START = PIC32_RANGE_END
 SIMULATOR_RANGE_END   = 200
 INTERBOT_RANGE_START  = SIMULATOR_RANGE_END
-INTERBOT_RANGE_END    = 250
+INTERBOT_RANGE_END    = 230
 INTERNAL_RANGE_START  = INTERBOT_RANGE_END
 INTERNAL_RANGE_END    = 256
 
@@ -777,8 +777,8 @@ class InterbotPosition(BasePacket):
 
     LOGVIEW_COLOR = "#BB00CC"
     DEFINITION = (
-        ('current_pose'       , Pose  ("Other robot pose")),
-        ('main_robot', Bool  (True, "Sender is main robot")),
+        ('current_pose', Pose("Other robot pose")),
+        ('main_robot'  , Bool(True, "Sender is main robot")),
     )
 
 
@@ -788,9 +788,52 @@ class InterbotGoalStatus(BasePacket):
 
     LOGVIEW_COLOR = "#BB00CD"
     DEFINITION = (
-        ('main_robot', Bool  (True, "Sender is main robot")),
-        ('goal_identifier', String (32, "", "Goal identifier")),
-        ('goal_status', UInt8 (0, "Goal status")),
+        ('main_robot'     , Bool  (True, "Sender is main robot")),
+        ('goal_identifier', String(32, "", "Goal identifier")),
+        ('goal_status'    , UInt8 (0, "Goal status")),
+    )
+
+
+# Internal
+
+
+class OpponentPosition(BasePacket):
+
+    TYPE = 230
+
+    LOGVIEW_COLOR = "#000000"
+    DEFINITION = (
+        ('robot'    , UEnum8(OPPONENT_ROBOT, OPPONENT_ROBOT_MAIN)),
+        ('x'        , Float(0.0, "Opponent estimated X coordinate")),
+        ('y'        , Float(0.0, "Opponent estimated Y coordinate")),
+    )
+
+
+
+
+class OpponentDetected(BasePacket):
+
+    TYPE = 231
+
+    LOGVIEW_COLOR = "#000000"
+    DEFINITION = (
+        ('robot'    , UEnum8(OPPONENT_ROBOT, OPPONENT_ROBOT_MAIN)),
+        ('direction', UEnum8(DIRECTION, DIRECTION_FORWARDS)),
+        ('x'        , Float(0.0, "Opponent estimated X coordinate")),
+        ('y'        , Float(0.0, "Opponent estimated Y coordinate")),
+    )
+
+
+
+
+class OpponentDisappeared(BasePacket):
+
+    TYPE = 232
+
+    LOGVIEW_COLOR = "#000000"
+    DEFINITION = (
+        ('robot'    , UEnum8(OPPONENT_ROBOT, OPPONENT_ROBOT_MAIN)),
+        ('direction', UEnum8(DIRECTION, DIRECTION_FORWARDS)),
     )
 
 

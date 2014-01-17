@@ -86,18 +86,6 @@ class StateMachine(object):
             self.process(generator)
 
 
-    def on_opponent_detected(self, packet, opponent_direction, x, y):
-        if self.current_state is not None:
-            generator = self.current_state.on_opponent_detected(packet, opponent_direction, x, y)
-            self.process(generator)
-
-
-    def on_opponent_disappeared(self, opponent, opponent_direction):
-        if self.current_state is not None:
-            generator = self.current_state.on_opponent_disappeared(opponent, opponent_direction)
-            self.process(generator)
-
-
     def on_packet(self, packet):
         if self.current_state is not None:
             generator = packet.dispatch(self.current_state)
@@ -174,12 +162,4 @@ class State(object):
 
 
     def on_timer_tick(self):
-        pass
-
-
-    def on_opponent_detected(self, packet, opponent_direction, x, y):
-        pass
-
-
-    def on_opponent_disappeared(self, opponent, opponent_direction):
         pass

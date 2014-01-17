@@ -156,8 +156,7 @@ class BinaryPacketReader:
                     if len(self.buffer) == self.packet.MAX_SIZE:
                         # A complete packet has been received, notify the state machine
                         self.packet.deserialize(self.buffer)
-                        logger.log_packet(self.packet, self.origin)
-                        self.event_loop.process(self.packet)
+                        self.event_loop.process(self, self.packet)
                         self.buffer = bytes()
                         self.packet = None
                 except Exception as e:
@@ -294,7 +293,7 @@ class ProcessChannel:
         for code in result:
             try:
                 packet = eval(code)
-                self.event_loop.process(self.packet)
+                self.event_loop.process(self, self.packet)
             except Exception as e:
                 logger.log("Unable to evaluate the process answer: '{}'".format(code))
 
@@ -510,12 +509,11 @@ class EventLoop(object):
             packet.mode = TURRET_INIT_MODE_WRITE
             packet.short_distance = TURRET_SHORT_DISTANCE_DETECTION_ID
             packet.long_distance = TURRET_LONG_DISTANCE_DETECTION_ID
-            buffer = packet.serialize()
-            logger.log_packet(packet, "ARM")
-            self.turret_channel.send(buffer)
+            self.send_packet(packet)
 
 
-    def process(self, packet):
+    def process(self, channel, packet):
+        logger.log_packet(packet, channel.origin)
         packet.dispatch(self)
         self.packet_queue.appendleft(packet)
         self.process_packets_and_dispatch()
@@ -543,7 +541,8 @@ class EventLoop(object):
 
     def send_packet(self, packet):
         logger.log_packet(packet, "ARM")
-        buffer = packet.serialize()
+        if packet.TYPE < packets.INTERNAL_RANGE_START:
+            buffer = packet.serialize()
         if packet.TYPE < packets.TURRET_RANGE_END:
             self.turret_channel.send(buffer)
         elif packet.TYPE < packets.PIC32_RANGE_END:
