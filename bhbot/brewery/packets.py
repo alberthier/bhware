@@ -807,7 +807,9 @@ for (item_name, item_type) in inspect.getmembers(sys.modules[__name__]):
     if inspect.isclass(item_type) and issubclass(item_type, BasePacket) and item_type != BasePacket:
         # Create a packet instance a first time to finish the setup
         item_type.static_init()
+        assert item_name not in PACKETS_BY_NAME
         PACKETS_BY_NAME[item_name] = item_type
+        assert item_type.TYPE not in PACKETS_BY_TYPE
         PACKETS_BY_TYPE[item_type.TYPE] = item_type
     PACKETS_LIST = list(PACKETS_BY_TYPE.values())
 
