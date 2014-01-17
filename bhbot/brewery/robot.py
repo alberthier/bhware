@@ -20,7 +20,6 @@ class Robot(object):
         self._team = TEAM_UNKNOWN
         self.event_loop = event_loop
         self.moving = False
-        self.glasses_count = [0, 0]
         self.goal_manager = None
 
 

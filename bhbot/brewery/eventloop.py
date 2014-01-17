@@ -29,7 +29,6 @@ import packets
 import robot
 import statemachine
 import tools
-import trajectory
 import webinterface
 
 from definitions import *
