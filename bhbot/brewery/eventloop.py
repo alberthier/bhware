@@ -337,6 +337,10 @@ class PicControlChannel(PacketClientSocketChannel):
             self.first_connection = False
             self.event_loop.on_turret_boot(None)
             statemachine.StateMachine(self.event_loop, self.event_loop.state_machine_name)
+            Timer(self.event_loop, 0, self.send_controller_ready).start()
+
+
+    def send_controller_ready(self):
             self.event_loop.send_packet(packets.ControllerReady())
 
 
@@ -539,21 +543,29 @@ class EventLoop(object):
 
 
     def send_packet(self, packet):
-        logger.log_packet(packet, "ARM")
-        if packet.TYPE < packets.INTERNAL_RANGE_START:
-            buffer = packet.serialize()
-        if packet.TYPE < packets.TURRET_RANGE_END:
-            self.turret_channel.send(buffer)
-        elif packet.TYPE < packets.PIC32_RANGE_END:
-            self.pic_control_channel.send(buffer)
-        elif packet.TYPE < packets.SIMULATOR_RANGE_END:
-            self.pic_control_channel.send(buffer)
-        elif packet.TYPE < packets.INTERBOT_RANGE_END:
-            if self.interbot_channel :
-                self.interbot_channel.send(buffer)
+        if self.do_send_packet(packet, packets.TURRET_RANGE_END, self.turret_channel):
+            return
+        elif self.do_send_packet(packet, packets.PIC32_RANGE_END, self.pic_control_channel):
+            return
+        elif self.do_send_packet(packet, packets.SIMULATOR_RANGE_END, self.pic_control_channel):
+            return
+        elif self.do_send_packet(packet, packets.INTERBOT_RANGE_END, self.interbot_channel):
+            return
         elif packet.TYPE < packets.INTERNAL_RANGE_END:
+            logger.log_packet(packet, "ARM")
             self.packet_queue.appendleft(packet)
             Timer(self, 0, self.process_packets_and_dispatch).start()
+
+
+    def do_send_packet(self, packet, packet_range_end, channel):
+        if packet.TYPE < packet_range_end:
+            if channel is not None and channel.connected:
+                logger.log_packet(packet, "ARM")
+                channel.send(packet.serialize())
+            else:
+                logger.log("Channel for packet {} doesn't exist or isn't connected".format(packet.name))
+            return True
+        return False
 
 
     def start(self):
