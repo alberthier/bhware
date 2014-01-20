@@ -28,9 +28,12 @@ if __name__ == "__main__":
     parser.add_argument("--pydev-debug", nargs=2)
     parser.add_argument("--disable-interbot", action="store_true", default=False)
     parser.add_argument("--hostname", action = "store", default = socket.gethostname())
-    parser.add_argument('statemachine', action="store", nargs='?', default = socket.gethostname())
+    parser.add_argument('statemachine', action="store", nargs='?', default = None)
 
     args = parser.parse_args()
+
+    if args.statemachine is None:
+        args.statemachine = args.hostname
 
     if args.pydev_debug :
         import sys
