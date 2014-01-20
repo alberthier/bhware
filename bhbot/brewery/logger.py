@@ -92,9 +92,8 @@ def dbg(text, sender = "ARM"):
 
 
 def log_exception(exc):
-    msg = ""
     for l in traceback.format_exception(type(exc), exc, None):
-        log(l[:-1])
+        log(l.rstrip())
 
 
 def log_packet(packet, sender = "ARM"):
