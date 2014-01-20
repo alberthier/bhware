@@ -336,12 +336,12 @@ class PicControlChannel(PacketClientSocketChannel):
         if self.first_connection:
             self.first_connection = False
             self.event_loop.on_turret_boot(None)
-            statemachine.StateMachine(self.event_loop, self.event_loop.state_machine_name)
-            Timer(self.event_loop, 0, self.send_controller_ready).start()
+            Timer(self.event_loop, 0, self.ready).start()
 
 
-    def send_controller_ready(self):
-            self.event_loop.send_packet(packets.ControllerReady())
+    def ready(self):
+        statemachine.StateMachine(self.event_loop, self.event_loop.state_machine_name)
+        self.event_loop.send_packet(packets.ControllerReady())
 
 
 
