@@ -106,10 +106,13 @@ class WaitPackets(statemachine.State):
 
 class SendPacketAndWait(statemachine.State):
 
-    def __init__(self, packet_to_send, packet_class_to_wait):
+    def __init__(self, packet_to_send, packet_class_to_wait = None):
         super().__init__()
         self.packet_to_send = packet_to_send
-        self.packet_class_to_wait = packet_class_to_wait
+        if packet_class_to_wait is None:
+            self.packet_class_to_wait = type(packet_to_send)
+        else:
+            self.packet_class_to_wait = packet_class_to_wait
 
 
     def on_enter(self):
