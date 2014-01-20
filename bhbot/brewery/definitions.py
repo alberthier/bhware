@@ -87,7 +87,7 @@ REMOTE_PORT                            = 7001
 REMOTE_LOG_PORT                        = 23
 
 if IS_HOST_DEVICE_ARM:
-    MAIN_INTERBOT_IP                   = "sheldon"
+    MAIN_INTERBOT_IP                   = "doc"
 else:
     MAIN_INTERBOT_IP                   = "127.0.0.1"
 MAIN_INTERBOT_PORT                     = 7002

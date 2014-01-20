@@ -5,7 +5,7 @@
 
 case "$1" in
   start)
-    if [ `hostname` = "penny" ]; then
+    if [ `hostname` = "jennifer" ]; then
         echo "Starting hostapd..."
         /usr/sbin/hostapd /etc/hostapd.conf
     fi

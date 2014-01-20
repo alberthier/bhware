@@ -1,6 +1,6 @@
 #/bin/sh
 
-if [ `hostname` != "penny" ]; then
+if [ `hostname` != "jennifer" ]; then
   source /root/.profile
   /root/bhware/bhbot/brewery/brewery.py &
 fi

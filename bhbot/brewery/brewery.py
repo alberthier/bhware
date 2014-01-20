@@ -43,7 +43,7 @@ if __name__ == "__main__":
             pydevd.settrace(args.pydev_debug[0], port=int(args.pydev_debug[1]), stdoutToServer=True,
                                                           stderrToServer=True)
 
-    definitions.setup_definitions(args.hostname == "sheldon")
+    definitions.setup_definitions(args.hostname == "doc")
 
     import eventloop
     import logger
