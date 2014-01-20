@@ -15,6 +15,7 @@ import termios
 import time
 
 import asyncwsgiserver
+import bottle
 import builder
 import colordetector
 import commonstates
@@ -23,7 +24,6 @@ import graphmap
 import interbot
 import leds
 import logger
-import nanow
 import opponentdetector
 import packets
 import robot
@@ -577,7 +577,8 @@ class EventLoop(object):
                 InterbotServer(self)
             else:
                 self.interbot_channel = InterbotControlChannel(self, "TMT", (MAIN_INTERBOT_IP, MAIN_INTERBOT_PORT))
-        self.web_server = asyncwsgiserver.WsgiServer("", self.webserver_port, nanow.Application(webinterface.BHWeb(self)))
+        webinterface.event_loop = self
+        self.web_server = asyncwsgiserver.WsgiServer("", self.webserver_port, webinterface.app)
         if SERIAL_PORT_PATH is not None:
             try:
                 self.turret_channel = TurretChannel(self, SERIAL_PORT_PATH, SERIAL_PORT_SPEED)
