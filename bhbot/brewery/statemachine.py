@@ -5,6 +5,7 @@ import imp
 import inspect
 import logger
 import os
+import traceback
 
 import eventloop
 
@@ -64,8 +65,25 @@ class StateMachine(object):
         return self.state_stack[-1] if self.state_stack else None
 
 
+    @property
+    def current_state_name(self):
+        state = self.current_state
+        if state != None:
+            return state.name
+        else:
+            return "(None)"
+
+
     def log(self, msg):
-        logger.log(self.name + ": " + msg)
+        logger.log(self.name + ": " + str(msg))
+
+
+    def log_exception(self, exc):
+        self.log("")
+        for l in traceback.format_exception(type(exc), exc, None):
+            for ll in l.splitlines():
+                logger.log(self.name + ": " + ll, "ARM", True)
+        self.log("")
 
 
     def dbg(self, msg):
@@ -85,8 +103,7 @@ class StateMachine(object):
 
 
     def push_state(self, state):
-        self.log("Switching to state {new} ({old} -> {new})".format(new = state.name,
-                                                                      old = self.current_state.name if self.current_state else "(None)" ))
+        self.log("Switching to state {new} ({old} -> {new})".format(old = self.current_state_name, new = state.name))
         self.init_state(state)
         self.state_stack.append(state)
         return state.on_enter()
@@ -96,33 +113,34 @@ class StateMachine(object):
         previous_state = self.current_state
         previous_state.on_exit()
         self.state_stack.pop()
+        self.log("Exiting state {old} ({old} -> {new})".format(old = previous_state.name, new = self.current_state_name))
         if self.current_state is not None:
-            new_state = self.current_state.name
+            return (previous_state, self.current_state.fsm_current_method)
         else:
-            new_state = "(None)"
-        self.log("Exiting state {previous} ({previous} -> {current})".format(previous = previous_state.name,
-                                                                               current = new_state))
+            return (previous_state, None)
 
     def process(self, generator):
-        previous_value = None
+        previous_state = None
         while generator:
             try:
-                new_state = generator.send(previous_value)
+                new_state = generator.send(previous_state)
                 if isinstance(new_state, State):
-                    previous_value = None
+                    previous_state = None
                     # on_enter can yield a generator
                     self.current_state.fsm_current_method = generator
                     generator = self.push_state(new_state)
                 elif new_state is None:
                     # yield None means exit current State
-                    previous_value = self.current_state
-                    self.pop_state()
-                    if self.current_state is not None:
-                        generator = self.current_state.fsm_current_method
-                    else:
-                        generator = None
+                    previous_state, generator = self.pop_state()
             except StopIteration:
                 generator = None
+            except Exception as e:
+                # On any other Exception, we dump the current generator and pop the state.
+                # We will try to continue in this degraded state, hoping we dont break anything
+                self.log("An exception occured while in state '{}':".format(self.current_state_name))
+                self.log_exception(e)
+                self.log("Trying to continue after having popped the state")
+                previous_state, generator = self.pop_state()
         if self.current_state is None and len(self.pending_states) == 0:
             logger.log("State machine '{}' has no current state or pending states, exiting".format(self.name))
             self.event_loop.fsms.remove(self)
@@ -155,6 +173,10 @@ class State:
 
     def log(self, msg):
         self.fsm.log(msg)
+
+
+    def log_exception(self, exc):
+        self.fsm.log_exception(exc)
 
 
     def dbg(self, msg):
