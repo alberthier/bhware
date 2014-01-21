@@ -498,7 +498,6 @@ class EventLoop(object):
     def on_start(self, packet):
         self.is_match_started = True
         self.start_date = datetime.datetime.now()
-        Timer(self, MATCH_DURATION_MS, self.on_end_of_match).start()
         Timer(self, BREWERY_LIFETIME_MS, self.stop).start()
 
 
@@ -527,12 +526,6 @@ class EventLoop(object):
             packet.dispatch(self.map)
             for fsm in self.fsms:
                 packet.dispatch(fsm)
-
-
-    def on_end_of_match(self):
-        logger.log("End of match. Starting the funny action")
-        for fsm in self.fsms:
-            fsm.switch_to_end_of_match()
 
 
     def get_elapsed_match_time(self):

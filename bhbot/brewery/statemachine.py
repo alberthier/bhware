@@ -1,10 +1,12 @@
 # encoding: utf-8
 
-import logger
-import os
+import datetime
 import imp
 import inspect
-import datetime
+import logger
+import os
+
+import eventloop
 
 
 
@@ -14,13 +16,12 @@ class StateMachine(object):
     def __init__(self, event_loop, name, **kwargs):
         self.state_stack = []
         """:type: self.state_stack : list of State"""
-        self.state_history = []
-        """:type: self.state_history : list of State"""
+        self.pending_states = []
         self.event_loop = event_loop
         self.name = name
         for k, v in kwargs.items():
             setattr(self, k, v)
-        (main_state, self.end_of_match_state) = self.instantiate_state_machine(self.name)
+        main_state = self.instantiate_state_machine(self.name)
         if main_state is not None:
             self.event_loop.fsms.append(self)
             self.process(self.push_state(main_state))
@@ -31,28 +32,20 @@ class StateMachine(object):
         state_machine_file = os.path.join(state_machines_dir, state_machine_name + ".py")
         state_machine_module = imp.load_source(state_machine_name, state_machine_file)
         main_state = None
-        end_of_match_state = None
         for (item_name, item_type) in inspect.getmembers(state_machine_module):
             if inspect.isclass(item_type) and issubclass(item_type, State):
                 if item_name == "Main":
                     main_state = item_type()
                     self.log("Successfully instatiated state '{}' from file '{}'".format(item_name, state_machine_file))
-                elif item_name == "EndOfMatch":
-                    end_of_match_state = item_type()
-                    self.log("Successfully instatiated state '{}' from file '{}'".format(item_name, state_machine_file))
-                if main_state != None and end_of_match_state != None:
                     break
         if main_state is None:
             self.log("Error: no 'Main' state found in '{}'".format(state_machine_file))
-        if end_of_match_state is None:
-            self.log("Warning: no 'EndOfMatch' state found in '{}'".format(state_machine_file))
-        return (main_state, end_of_match_state)
+        return main_state
 
 
-    def switch_to_end_of_match(self):
+    def preempt_with_state(self, state):
         self.state_stack = []
-        if self.end_of_match_state is not None:
-            self.process(self.push_state(self.end_of_match_state))
+        self.process(self.push_state(state))
 
 
     def init_state(self, s):
@@ -93,10 +86,9 @@ class StateMachine(object):
 
     def push_state(self, state):
         self.log("Switching to state {new} ({old} -> {new})".format(new = state.name,
-                                                                      old = self.current_state.name if self.current_state else "" ))
+                                                                      old = self.current_state.name if self.current_state else "(None)" ))
         self.init_state(state)
         self.state_stack.append(state)
-        self.state_history.append(state.name)
         return state.on_enter()
 
 
@@ -104,9 +96,12 @@ class StateMachine(object):
         previous_state = self.current_state
         previous_state.on_exit()
         self.state_stack.pop()
-        new_state = self.current_state
+        if self.current_state is not None:
+            new_state = self.current_state.name
+        else:
+            new_state = "(None)"
         self.log("Exiting state {previous} ({previous} -> {current})".format(previous = previous_state.name,
-                                                                               current = new_state.name))
+                                                                               current = new_state))
 
     def process(self, generator):
         previous_value = None
@@ -122,14 +117,36 @@ class StateMachine(object):
                     # yield None means exit current State
                     previous_value = self.current_state
                     self.pop_state()
-                    generator = self.current_state.fsm_current_method
+                    if self.current_state is not None:
+                        generator = self.current_state.fsm_current_method
+                    else:
+                        generator = None
             except StopIteration:
                 generator = None
+        if self.current_state is None and len(self.pending_states) == 0:
+            logger.log("State machine '{}' has no current state or pending states, exiting".format(self.name))
+            self.event_loop.fsms.remove(self)
 
 
 
 
-class State(object):
+class Delayed:
+
+    def __init__(self, event_loop, timeout_ms, fsm, state):
+        eventloop.Timer(event_loop, timeout_ms, self.on_timeout).start()
+        self.fsm = fsm
+        self.state = state
+        self.fsm.pending_states.append(self)
+
+
+    def on_timeout(self):
+        self.fsm.pending_states.remove(self)
+        self.fsm.preempt_with_state(self.state)
+
+
+
+
+class State:
 
     @property
     def name(self):
@@ -148,15 +165,15 @@ class State(object):
         self.event_loop.send_packet(packet)
 
 
+    def yield_at(self, timeout_ms, state):
+        Delayed(self.event_loop, timeout_ms, self.fsm, state)
+
+
     def on_enter(self):
         pass
 
 
     def on_exit(self):
-        pass
-
-
-    def on_exit_substate(self, substate):
         pass
 
 
