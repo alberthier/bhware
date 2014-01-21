@@ -31,7 +31,7 @@ class Robot(object):
         return abs(current_angle - angle) < (math.pi / 32.0)
 
 
-    def is_looking_at_opposite(self, pose, reference_team = TEAM_UNKNOWN):
+    def is_looking_at_opposite(self, pose):
         dx = pose.x - self.pose.x
         dy = pose.y - self.pose.y
         angle = (math.atan2(dy, dx) + math.pi) % (2.0 * math.pi)
@@ -58,10 +58,6 @@ class Robot(object):
 
     def on_keep_alive(self, packet):
         self.pose = packet.current_pose
-
-
-    def on_empty_tank_control(self, packet):
-        self.tank_full = False
 
 
     def set_team(self, team):

@@ -24,10 +24,6 @@ class Pose(object):
             self.virt.angle = angle
 
 
-    def look_at(self, pose):
-        return math.atan2(pose.y - self.y, pose.x - self.x)
-
-
     def __repr__(self):
         return "Pose({}, {}, {})".format(self.x, self.y, self.angle)
 
