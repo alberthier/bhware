@@ -132,33 +132,36 @@ function jsonpcb(data) {
     fetch();
 }
 
-var vars = document.location.search.substr(1).split("&");
-var type = undefined;
-for (var i = 0; i < vars.length; ++i) {
-    v = vars[i].split("=");
-    if (v[0] == "pic") {
-        var pic = decodeURIComponent(v[1]);
-    } else if (v[0] == "speeds") {
-        type = "speeds";
-    } else if (v[0] == "voltages") {
-        type = "voltages";
+function setup() {
+    var vars = document.location.search.substr(1).split("&");
+    var type = undefined;
+    for (var i = 0; i < vars.length; ++i) {
+        v = vars[i].split("=");
+        if (v[0] == "pic") {
+            var pic = decodeURIComponent(v[1]);
+            document.getElementById("picaddr").value = pic;
+        } else if (v[0] == "speeds") {
+            type = "speeds";
+        } else if (v[0] == "voltages") {
+            type = "voltages";
+        }
     }
-}
-if (type == "speeds") {
-    data_to_fetch = [["http://" + pic + "/vmaxg.json", left_engine_speed ],
-                     ["http://" + pic + "/vmaxd.json", right_engine_speed ]];
-    fetch()
-} else if (type == "voltages") {
-    data_to_fetch = [["http://" + pic + "/tensiong.json", left_engine_voltage ],
-                     ["http://" + pic + "/tensiond.json", right_engine_voltage ]];
-    fetch()
+    if (type == "speeds") {
+        data_to_fetch = [["http://" + pic + "/vmaxg.json", left_engine_speed ],
+                        ["http://" + pic + "/vmaxd.json", right_engine_speed ]];
+        fetch()
+    } else if (type == "voltages") {
+        data_to_fetch = [["http://" + pic + "/tensiong.json", left_engine_voltage ],
+                        ["http://" + pic + "/tensiond.json", right_engine_voltage ]];
+        fetch()
+    }
 }
 
             </script>
     </head>
-    <body>
+    <body onload="setup()">
         <form action="enginetests.html" method="get">
-                PIC address: <input type="text" name="pic">
+                PIC address: <input id="picaddr" type="text" name="pic">
             <input type="submit" name="speeds" value="Speeds">
             <input type="submit" name="voltages" value="Voltages">
         </form>
