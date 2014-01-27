@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>State Machines</title>
+    <style type="text/css">
+ul, li {
+    font-family: "Monospace";
+}
+    </style>
+    <script type="text/javascript">
+
+STATE_MACHINES = "/brewery/statemachines";
+
+function fetchstatemachines() {
+    var req = new XMLHttpRequest();
+    req.open("GET", STATE_MACHINES, true);
+    req.onreadystatechange = function(e) {
+        if (req.readyState == 4) {
+            if(req.status == 200) {
+                var main = document.getElementById("main");
+                var fsms = JSON.parse(req.responseText);
+                Object.keys(fsms).forEach(function(fsm) {
+                    var h3 = document.createElement("h3");
+                    main.appendChild(h3);
+                    h3.textContent = fsm;
+                    var parent = main;
+                    fsms[fsm].forEach(function(state) {
+                        var ul = document.createElement("ul");
+                        parent.appendChild(ul)
+                        var li = document.createElement("li");
+                        ul.appendChild(li);
+                        li.textContent = state;
+                        parent = li;
+                    });
+                });
+            }
+        }
+    };
+    req.send();
+}
+    </script>
+</head>
+<body id="main" onload="fetchstatemachines()">
+</body>
+</html>

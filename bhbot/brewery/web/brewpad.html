@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Remote Control</title>
+    <style type="text/css">
+html, body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    display: flex;
+    flex-align: stretch;
+    flex-direction: column;
+}
+
+#code {
+    flex-grow: 1;
+}
+
+#log {
+    height: 20em;
+}
+    </style>
+    <script type="text/javascript">
+
+EVAL = "/brewery/eval";
+
+function send() {
+    var code = document.getElementById("code").value;
+    var req = new XMLHttpRequest();
+    req.open("POST", EVAL, true);
+    req.setRequestHeader("Content-Length", code.length);
+    req.onreadystatechange = function(e) {
+        if (req.readyState == 4) {
+            var log = document.getElementById("log");
+            if(req.status == 200) {
+                // Success
+                log.value += req. responseText + "\n";
+            } else if (req.status == 500) {
+                // Failure
+                log.value += req. responseText + "\n";
+            }
+            log.scrollTop = log.scrollHeight;
+        }
+    }
+    req.send(code);
+}
+
+function setup() {
+    var code = document.getElementById("code");
+    code.addEventListener("keydown", function(event) {
+        var keyCode = event.keyCode || event.which;
+
+        if (keyCode == 9) { // Tab
+            event.preventDefault();
+            var start = code.selectionStart;
+            var end = code.selectionEnd;
+
+            // set textarea value to: text before caret + tab + text after caret
+            code.value = code.value.substring(0, start) + "    " + code.value.substring(end);
+
+            // put caret at right position again
+            code.selectionStart = code.selectionEnd = start + 4;
+        }
+        if (event.ctrlKey && event.keyCode == 13) { // Ctrl+Enter
+            send();
+        }
+    }, false);
+}
+
+function clearoutput()
+{
+    var log = document.getElementById("log");
+    log.value = "";
+}
+    </script>
+</head>
+<body onload="setup()">
+</body>
+    <textarea id="code" resize="none" spellcheck="false"></textarea>
+    <div>
+        <input id="send" type="submit" value="Send (Ctrl+Enter)" onclick="send()">
+    </div>
+    <textarea id="log" resize="none" readonly spellcheck="false"></textarea>
+    <div>
+        <input id="clearoutput" type="submit" value="Clear output" onclick="clearoutput()">
+    </div>
+</html>

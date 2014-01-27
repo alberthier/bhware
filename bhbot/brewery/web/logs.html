@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Logs</title>
+    <script type="text/javascript">
+
+LOGS_ROOT = "/bhware/bhbot/logs";
+
+function extractlogs(elt, logs) {
+    var t = elt.textContent;
+    if (t.indexOf("brewerylog_") == 0 && t.indexOf(".py") == t.length - 3) {
+        if (logs.indexOf(t) == -1) {
+            logs.push(t);
+        }
+    }
+    for (var i = 0; i < elt.children.length; ++i) {
+        extractlogs(elt.children[i], logs);
+    }
+}
+
+function fetchlogs() {
+    document.getElementById("rawlink").href = LOGS_ROOT;
+    var req = new XMLHttpRequest();
+    req.open("GET", LOGS_ROOT, true);
+    req.onreadystatechange = function(e) {
+        if (req.readyState == 4) {
+            if(req.status == 200) {
+                var ul = document.getElementById("list");
+                var parser = new DOMParser();
+                var logs = [];
+                extractlogs(parser.parseFromString(req.responseText, "text/html").documentElement, logs);
+                logs.sort(function (a, b) {
+                    if (a > b) {
+                        return -1;
+                    } else {
+                        return 1;
+                    }
+                });
+                for (var i = 0; i < logs.length; ++i) {
+                    var li = document.createElement("li");
+                    ul.appendChild(li);
+                    var a = document.createElement("a");
+                    li.appendChild(a);
+                    a.href = LOGS_ROOT + "/" + logs[i];
+                    a.textContent = logs[i];
+                }
+            }
+        }
+    };
+    req.send();
+}
+    </script>
+</head>
+<body onload="fetchlogs()">
+    <a id="rawlink">Direct folder access</a>
+    <ul id="list">
+    </ul>
+</body>
+</html>

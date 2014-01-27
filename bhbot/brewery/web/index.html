@@ -1,29 +1,111 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>BH Team robot web interface</title>
-  <link rel="stylesheet" type="text/css" href="bhweb.css" />
+    <title id="title">BH Team robot web interface</title>
+    <style type="text/css">
+html, body {
+    height: 100%;
+    width: 100%;
+    font-size: 10pt;
+}
+
+#main {
+    display: flex;
+    flex-align: stretch;
+    border: 0;
+    margin: 0;
+    padding: 0;
+}
+
+#toolbar {
+    width: 15em;
+    height: 100%;
+    background-color: #d3d7cf;
+    color: #2e3436;
+    border-color: #888a85;
+    border-style: solid;
+    border-width: 0 1px 0 0;
+}
+
+#toolbar h1 {
+    text-align: center;
+    text-shadow: 2px 2px 0px #2e3436;
+    margin: 0;
+    padding: 0.5em 0 0.5em 0;
+    color: #eeeeec;
+    background-color: #555753;
+    text-transform: capitalize;
+}
+
+#toolbar ul {
+    padding: 0;
+}
+
+#toolbar li {
+    width: 100%;
+    height: 100%;
+    list-style: none;
+    border-style: solid;
+    border-color: #babdb6;
+    border-width: 1px 0 0 0;
+}
+
+#toolbar li:last-child {
+    border-bottom-width: 1px;
+}
+
+#toolbar li:hover {
+    background-color: #0099cc;
+}
+
+#toolbar a {
+    padding: 0.5em 0 0.5em 2.5em;
+    display: block;
+    color: #2e3436;
+    text-decoration: none;
+}
+
+#content {
+    border: 0;
+    width: 100%;
+    height: 100%;
+}
+    </style>
+    <script type="text/javascript">
+
+function fetchhostname() {
+    var req = new XMLHttpRequest();
+    req.open("GET", "/brewery/hostname", true);
+    req.onreadystatechange = function(e) {
+        if (req.readyState == 4) {
+            if(req.status == 200) {
+                var h1 = document.getElementById("name");
+                h1.textContent = req.responseText;
+                var title = document.getElementById("title");
+                title.textContent = req.responseText + "'s web interface";
+            }
+        }
+    };
+    req.send();
+}
+
+    </script>
 </head>
-<body>
-    <div id="layout">
-        <div id="toolbar">
-            <h1>BH Team</h1>
-            <ul>
-                <li><a href="statemachine" target="linktarget">State Machine</a></li>
-                <li><a href="logs" target="linktarget">Logs</a></li>
-                <li><a href="packet_wizard_1" target="linktarget">Packet Wizard</a></li>
-                <li><a href="packets.html" target="linktarget">Packet Links</a></li>
-                <li><a href="pic/" target="linktarget">PIC</a></li>
-                <li><a href="fsroot/" target="linktarget">/root/</a></li>
-                <li><a href="fsroot/root/bhware" target="linktarget">/root/bhware/</a></li>
-                <li><a href="enginetests.html?pic=pic&speeds=Speeds" target="linktarget">Engine tests - Speed</a></li>
-                <li><a href="enginetests.html?pic=pic&voltages=Voltages" target="linktarget">Engine tests - Voltage</a></li>
-            </ul>
-        </div>
-        <div id="content-wrapper">
-            <iframe id="content" name="linktarget" border="0"></iframe>
-        </div>
+<body id="main" onload="fetchhostname()">
+    <div id="toolbar">
+        <h1 id="name">BH Team</h1>
+        <ul>
+            <li><a href="logs.html" target="linktarget">Logs</a></li>
+            <li><a href="remotecontrol.html" target="linktarget">Remote Control</a></li>
+            <li><a href="brewpad.html" target="linktarget">Brewpad</a></li>
+            <li><a href="statemachines.html" target="linktarget">State Machines</a></li>
+            <li><a href="pic/" target="linktarget">PIC</a></li>
+            <li><a href="fsroot/" target="linktarget">Root Dir</a></li>
+            <li><a href="bhware/" target="linktarget">Bhware Dir</a></li>
+            <li><a href="enginetests.html?pic=pic&speeds=Speeds" target="linktarget">Engines Speeds</a></li>
+            <li><a href="enginetests.html?pic=pic&voltages=Voltages" target="linktarget">Engines Voltages</a></li>
+        </ul>
     </div>
+    <iframe id="content" name="linktarget" border="0" src="logs.html"></iframe>
 </body>
 </html>
-

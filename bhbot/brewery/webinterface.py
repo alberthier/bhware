@@ -3,7 +3,11 @@
 
 import sys
 import os
+import json
 import math
+import traceback
+import urllib
+import socket
 
 import bottle
 import packets
@@ -14,6 +18,80 @@ import binarizer
 
 from definitions import *
 from packets import *
+
+
+event_loop = None
+app = bottle.Bottle()
+
+
+@app.route('/<filename>')
+def serve_static(filename):
+    return bottle.static_file(filename, root = os.path.join(os.path.dirname(__file__), "web"))
+
+
+@app.route('/hostname')
+def hostname():
+    return socket.gethostname()
+
+
+@app.route('/statemachines')
+def hostname():
+    result = {}
+    for fsm in event_loop.fsms:
+        states = []
+        result[fsm.name] = states
+        for state in fsm.state_stack:
+            states.append(state.name)
+    return json.dumps(result)
+
+
+@app.route('/remotecontrol')
+def remotecontrol():
+    result = {}
+    packets = []
+    packets.append("self.send_packet(EnableAntiBlocking(1))")
+    packets.append("self.send_packet(EnableAntiBlocking(2))")
+    packets.append("self.send_packet(EnableAntiBlocking(3))")
+    packets.append("self.send_packet(EnableAntiBlocking(4))")
+    packets.append("self.send_packet(EnableAntiBlocking(5))")
+    packets.append("self.send_packet(EnableAntiBlocking(6))")
+    result["Packets"] = packets
+    states = []
+    states.append("self.send_packet(EnableAntiBlocking(7))")
+    states.append("self.send_packet(EnableAntiBlocking(8))")
+    states.append("self.send_packet(EnableAntiBlocking(9))")
+    states.append("self.send_packet(EnableAntiBlocking(10))")
+    states.append("self.send_packet(EnableAntiBlocking(11))")
+    states.append("self.send_packet(EnableAntiBlocking(12))")
+    result["States"] = states
+    return json.dumps(result)
+
+
+@app.post("/eval")
+def eval():
+    encoding = "iso-8859-1"
+    if "Content-Type" in bottle.request.headers:
+        for key, value in urllib.parse.parse_qsl(bottle.request.headers["Content-Type"]):
+            if key == "charset":
+                encoding = value
+                break
+    fsm = statemachine.StateMachine(event_loop, "eval", code = str(bottle.request.body.read(), encoding))
+    text = ""
+    if fsm.error is not None:
+        bottle.response.status = 500
+        for l in traceback.format_exception(type(fsm.error), fsm.error, None):
+            text += l
+    else:
+        text = "OK"
+    return text
+
+
+
+
+
+
+
+
 
 
 
@@ -43,47 +121,7 @@ class CodeBuilder:
     def build_value(self, type_, default_value):
         return default_value or self.get_sample_value(type_)
 
-event_loop = None
 
-app = bottle.Bottle()
-
-@app.route('/<filename>')
-def serve_static(filename):
-    return bottle.static_file(filename, root = os.path.join(os.path.dirname(__file__), "web"))
-
-@app.route()
-def statemachine():
-    html = """<!DOCTYPE html>
-<html>
-<body>
-<div>
-<h2>State stack:</h2>
-<ul>
-"""
-    state = event_loop.get_current_state()
-    while state != event_loop.root_state:
-        html += "<li>{}</li>\n".format(type(state).__name__)
-        state = state.parent_state
-    html += """</ul>
-</div>
-<div>
-<h2>State history:</h2>
-<ul>
-"""
-    previous = None
-    for state in event_loop.state_history:
-        if state.parent_state == previous :
-            html+="<ul>"
-        elif previous and previous.parent_state == state :
-            html+="</ul>"
-        html += "<li>{}</li>\n".format(type(state).__name__)
-        previous = state
-    html += """</ul>
-</div>
-</body>
-</html>
-"""
-    return html
 
 
 @app.route()
