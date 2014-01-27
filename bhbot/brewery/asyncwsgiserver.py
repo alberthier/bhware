@@ -1,12 +1,13 @@
 # encoding: utf-8
 
 
-import sys
-import asyncore
 import asynchat
-import socket
-import wsgiref.handlers
+import asyncore
 import io
+import socket
+import sys
+import urllib
+import wsgiref.handlers
 
 import logger
 
@@ -43,7 +44,7 @@ class WsgiRequestHandler(asynchat.async_chat):
         self.server = server
         self.ibuffer = bytes()
         self.environ = {}
-        self.post_data = io.StringIO()
+        self.post_data = io.BytesIO()
         self.set_terminator(b"\r\n\r\n")
         self.state = WsgiRequestHandler.READING_HTTP_HEADER
 
