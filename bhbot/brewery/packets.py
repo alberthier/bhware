@@ -751,18 +751,6 @@ class SimulatorGraphMapRoute(BasePacket):
     )
 
 
-
-
-class SimulatorFetchColors(BasePacket):
-
-    TYPE = 161
-    LOGVIEW_DEFAULT_ENABLED = False
-    LOGVIEW_COLOR = "#ba55d3"
-    DEFINITION = (
-        ('colors', List(20, Struct(StructInstance, "", ('index', UInt8(0)), ('detect', Bool(False))), [], "Detections")),
-    )
-
-
 # Interbot
 
 

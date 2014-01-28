@@ -80,16 +80,16 @@ TEAMMATE_INFO_DELAY_S                  = 1.0 #Time between two position informat
 
 # Remote device connection
 if IS_HOST_DEVICE_ARM:
-    REMOTE_IP                          = "192.168.2.200"
+    REMOTE_IP                          = "pic"
 else:
-    REMOTE_IP                          = "127.0.0.1"
+    REMOTE_IP                          = "localhost"
 REMOTE_PORT                            = 7001
 REMOTE_LOG_PORT                        = 23
 
 if IS_HOST_DEVICE_ARM:
     MAIN_INTERBOT_IP                   = "doc"
 else:
-    MAIN_INTERBOT_IP                   = "127.0.0.1"
+    MAIN_INTERBOT_IP                   = "localhost"
 MAIN_INTERBOT_PORT                     = 7002
 
 # Serial port
@@ -116,18 +116,9 @@ WEB_SERVER_PORT                        = 8080
 # Use pathfinding algorithm to evaluate the best goal
 GOAL_EVALUATION_USES_PATHFINDING       = False
 
-# Router map resolution
-ROUTING_MAP_RESOLUTION                 = 0.02
-EVALUATOR_MAP_RESOLUTION               = 0.04
-MAP_WALLS_DISTANCE                     = 0.127
-ASTAR_EFFECTIVE_VS_HEURISTIC_TRADEOFF  = 1.5
-ROUTE_SPLIT_ANGLE                      = 2.0 * math.pi
+# Pathfinding
 MAIN_OPPONENT_AVOIDANCE_RANGE          = 0.5
 SECONDARY_OPPONENT_AVOIDANCE_RANGE     = 0.4
-
-# Blocked zone
-BLOCKED_ZONE_SIZE                      = 0.08
-BLOCKED_ZONE_DISAPEARING_MS            = 1000
 
 # Opponent detection
 OPPONENT_DETECTION_DISAPEARING_MS      = 800
@@ -135,7 +126,6 @@ OPPONENT_DETECTION_DISAPEARING_MS      = 800
 # Blocking opponent handling
 DEFAULT_OPPONENT_WAIT_MS               = 2000
 DEFAULT_OPPONENT_DISAPPEAR_RETRIES     = -1
-
 
 # Turret detection ranges
 TURRET_SHORT_DISTANCE_DETECTION_RANGE  = 0.55
@@ -178,14 +168,8 @@ TEAM = Enum("Team color",
     TEAM_UNKNOWN = 2,
 )
 
-MOVEMENT = Enum("Movement",
-    MOVEMENT_ROTATE = 0,
-    MOVEMENT_MOVE   = 1,
-    MOVEMENT_LINE   = 2,
-)
-
 DIRECTION = Enum("Direction",
-    DIRECTION_AUTO     =  0,
+    DIRECTION_AUTO      =  0,
     DIRECTION_FORWARDS  =  1,
     DIRECTION_BACKWARDS = -1,
 )
@@ -212,7 +196,7 @@ ACTION = Enum("Action",
     ACTION_ON  = 1,
 )
 
-TRAJECTORY = Enum("Trajectory walk or navigation result",
+TRAJECTORY = Enum("Navigation result",
     TRAJECTORY_DESTINATION_REACHED     = 0,
     TRAJECTORY_BLOCKED                 = 1,
     TRAJECTORY_OPPONENT_DETECTED       = 2,

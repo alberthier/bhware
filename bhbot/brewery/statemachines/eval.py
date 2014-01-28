@@ -41,5 +41,5 @@ class WebCodeState(statemachine.State):
                 exec(compile("del WebCodeState", "<webcode>", "exec"))
         except Exception as e:
             self.fsm.error = e
-            logger.log_exception(e)
+            self.log_exception(e)
         yield None

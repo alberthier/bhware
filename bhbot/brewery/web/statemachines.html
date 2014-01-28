@@ -26,7 +26,7 @@ function fetchstatemachines() {
                     var parent = main;
                     fsms[fsm].forEach(function(state) {
                         var ul = document.createElement("ul");
-                        parent.appendChild(ul)
+                        parent.appendChild(ul);
                         var li = document.createElement("li");
                         ul.appendChild(li);
                         li.textContent = state;

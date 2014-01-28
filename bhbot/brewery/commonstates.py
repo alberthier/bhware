@@ -602,7 +602,6 @@ class Navigate(statemachine.State):
 
 
 
-
 class GotoHome(Navigate):
 
     def __init__(self):
@@ -641,6 +640,9 @@ class ServoControl(statemachine.State):
         """
             args can be 3 arguments: type, id, angle for a single servo control or
             a list of tuples (type, id, angle) for multiple servos control
+            ex:
+                ServoControl(SERVO_TYPE_AX, 0, 126)
+                ServoControl((SERVO_TYPE_AX, 0, 126), (SERVO_TYPE_RX, 1, 56), (SERVO_TYPE_AX, 2, 87))
         """
         if len(args) > 0:
             if type(args[0]) == tuple:
@@ -674,6 +676,9 @@ class ElectromagnetControl(statemachine.State):
         """
             args can be 2 arguments: id, action for a single electromagnet control or
             a list of tuples (id, action) for multiple electromagnet control
+            ex:
+                ElectromagnetControl(0, ACTION_ON)
+                ElectromagnetControl((0, ACTION_ON), (1, ACTION_OFF), (2, ACTION_ON))
         """
         if len(args) > 0:
             if type(args[0]) == tuple:

@@ -2,11 +2,12 @@
 
 import math
 
-from definitions import *
 import logging
 import logger
 import packets
 import eventloop
+
+from definitions import *
 
 
 

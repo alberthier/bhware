@@ -32,7 +32,6 @@ function send() {
     var code = document.getElementById("code").value;
     var req = new XMLHttpRequest();
     req.open("POST", EVAL, true);
-    req.setRequestHeader("Content-Length", code.length);
     req.onreadystatechange = function(e) {
         if (req.readyState == 4) {
             var log = document.getElementById("log");
