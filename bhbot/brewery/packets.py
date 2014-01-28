@@ -12,80 +12,23 @@ import position
 
 
 
-# Mozilla Colors (http://colors.bravo9.com/mozilla/)
-# Used  Color   Name                        Used  Color   Name
-#      #f0f8ff aliceblue                         #ffa07a lightsalmon
-#      #faebd7 antiquewhite                   X  #20b2aa lightseagreen
-#      #00ffff aqua                              #87cefa lightskyblue
-#   X  #7fffd4 aquamarine                        #778899 lightslategray
-#      #f0ffff azure                             #778899 lightslategrey
-#      #f5f5dc beige                             #ffffe0 lightyellow
-#      #ffe4c4 bisque                            #00ff00 lime
-#      #000000 black                          X  #32cd32 limegreen
-#      #0000ff blue                              #faf0e6 linen
-#      #8a2be2 blueviolet                     X  #ff00ff magenta
-#   X  #a52a2a brown                             #800000 maroon
-#      #deb887 burlywood                         #66cdaa mediumaquamarine
-#   X  #5f9ea0 cadetblue                         #0000cd mediumblue
-#   X  #7fff00 chartreuse                        #ba55d3 mediumorchid
-#   X  #d2691e chocolate                         #9370db mediumpurple
-#   X  #ff7f50 coral                             #3cb371 mediumseagreen
-#      #6495ed cornflowerblue                    #7b68ee mediumslateblue
-#      #fff8dc cornsilk                          #00fa9a mediumspringgreen
-#      #dc143c crimson                           #48d1cc mediumturquoise
-#   X  #00ffff cyan                              #c71585 mediumvioletred
-#   X  #00008b darkblue                       X  #191970 midnightblue
-#      #008b8b darkcyan                          #f5fffa mintcream
-#      #b8860b darkgoldenrod                     #ffe4e1 mistyrose
-#      #a9a9a9 darkgray                          #ffe4b5 moccasin
-#      #006400 darkgreen                         #ffdead navajowhite
-#      #a9a9a9 darkgrey                          #000080 navy
-#      #bdb76b darkkhaki                         #fdf5e6 oldlace
-#   X  #8b008b darkmagenta                       #808000 olive
-#   X  #556b2f darkolivegreen                    #6b8e23 olivedrab
-#      #ff8c00 darkorange                     X  #ffa500 orange
-#      #9932cc darkorchid                     X  #ff4500 orangered
-#      #8b0000 darkred                           #da70d6 orchid
-#      #e9967a darksalmon                        #eee8aa palegoldenrod
-#      #8fbc8f darkseagreen                   X  #98fb98 palegreen
-#      #483d8b darkslateblue                     #afeeee paleturquoise
-#      #2f4f4f darkslategray                  X  #db7093 palevioletred
-#      #2f4f4f darkslategrey                     #ffefd5 papayawhip
-#      #9400d3 darkviolet                        #ffdab9 peachpuff
-#   X  #ff1493 deeppink                          #cd853f peru
-#      #00bfff deepskyblue                       #ffc0cb pink
-#      #696969 dimgray                           #dda0dd plum
-#      #696969 dimgrey                           #b0e0e6 powderblue
-#      #1e90ff dodgerblue                        #800080 purple
-#   X  #b22222 firebrick                         #ff0000 red
-#      #fffaf0 floralwhite                       #bc8f8f rosybrown
-#      #228b22 forestgreen                    X  #4169e1 royalblue
-#      #ff00ff fuchsia                        X  #8b4513 saddlebrown
-#      #dcdcdc gainsboro                         #fa8072 salmon
-#      #f8f8ff ghostwhite                        #f4a460 sandybrown
-#   X  #ffd700 gold                              #2e8b57 seagreen
-#      #daa520 goldenrod                         #fff5ee seashell
-#      #808080 gray                              #a0522d sienna
-#      #008000 green                             #c0c0c0 silver
-#      #adff2f greenyellow                       #87ceeb skyblue
-#      #808080 grey                           X  #6a5acd slateblue
-#      #f0fff0 honeydew                          #708090 slategray
-#      #ff69b4 hotpink                           #708090 slategrey
-#      #cd5c5c indianred                         #fffafa snow
-#      #4b0082 indigo                            #00ff7f springgreen
-#      #fffff0 ivory                          X  #4682b4 steelblue
-#      #f0e68c khaki                             #d2b48c tan
-#      #e6e6fa lavender                          #008080 teal
-#      #fff0f5 lavenderblush                  X  #d8bfd8 thistle
-#      #7cfc00 lawngreen                      X  #ff6347 tomato
-#      #fffacd lemonchiffon                   X  #40e0d0 turquoise
-#      #add8e6 lightblue                         #ee82ee violet
-#      #f08080 lightcoral                        #f5deb3 wheat
-#      #e0ffff lightcyan                         #ffffff white
-#      #fafad2 lightgoldenrodyellow              #f5f5f5 whitesmoke
-#      #90ee90 lightgreen                        #ffff00 yellow
-#      #d3d3d3 lightgrey                      X  #9acd32 yellowgreen
-#      #ffb6c1 lightpink
+# Atari 256 color palette
+COLORS = ["#000000", "#412000", "#451904", "#5d1f0c", "#4a1700", "#490036", "#48036c", "#051e81", "#0b0779", "#1d295a", "#004b59", "#004800", "#164000", "#2c3500", "#463a09", "#401a02",
+          "#252525", "#542800", "#721e11", "#7a240d", "#721f00", "#66004b", "#5c0488", "#0626a5", "#201c8e", "#1d3876", "#005d6e", "#005400", "#1c5300", "#384400", "#4d3f09", "#581f05",
+          "#343434", "#763700", "#9f241e", "#982c0e", "#a81300", "#80035f", "#650d90", "#082fca", "#3531a3", "#1d4892", "#006f84", "#036b03", "#236600", "#445200", "#544509", "#702408",
+          "#4e4e4e", "#9a5000", "#b33a20", "#b02f0f", "#c8210a", "#950f74", "#7b23a7", "#263dd4", "#4642b4", "#1d5cac", "#00849c", "#0e760e", "#287800", "#495600", "#6c5809", "#8d3a13",
+          "#686868", "#c36806", "#c85120", "#bf3624", "#df2512", "#aa2288", "#933bbf", "#444cde", "#5753c5", "#1d71c6", "#0099bf", "#188018", "#2e8c00", "#607100", "#907609", "#ab511f",
+          "#757575", "#e47b07", "#e36920", "#d34e2a", "#ec3b24", "#ba3d99", "#9d45c9", "#4f5aec", "#615dcf", "#3286cf", "#00abca", "#279227", "#3a980c", "#6c7f00", "#ab8b0a", "#b56427",
+          "#8e8e8e", "#ff911a", "#fc8120", "#e7623e", "#fa5236", "#ca4da9", "#a74fd3", "#5a68ff", "#6d69db", "#489bd9", "#00bcde", "#36a436", "#47a519", "#798d0a", "#c1a120", "#bf7730",
+          "#a4a4a4", "#ffab1d", "#fd8c25", "#f36e4a", "#fc6148", "#d75ab6", "#b25ade", "#6575ff", "#7b77e9", "#4ea8ec", "#00d0f5", "#4eb94e", "#51af23", "#8b9f1c", "#d0b02f", "#d0853a",
+          "#b8b8b8", "#ffc51f", "#fe982c", "#fd7854", "#ff705f", "#e467c3", "#bd65e9", "#7183ff", "#8985f7", "#55b6ff", "#10dcff", "#51cd51", "#5cba2e", "#9eb22f", "#debe3d", "#e19344",
+          "#c5c5c5", "#ffd03b", "#ffae38", "#ff8a6a", "#ff7e7e", "#ef72ce", "#c56df1", "#8091ff", "#918dff", "#69caff", "#3ee1ff", "#72da72", "#71cf43", "#abbf3c", "#e6c645", "#eda04e",
+          "#d0d0d0", "#ffd84c", "#ffb946", "#ff987c", "#ff8f8f", "#fb7eda", "#ce76fa", "#90a0ff", "#9c98ff", "#74cbff", "#64e7ff", "#7ce47c", "#85e357", "#b8cc49", "#edcd4c", "#f9ad58",
+          "#d7d7d7", "#ffe651", "#ffbf51", "#ffa48b", "#ff9d9e", "#ff8de1", "#d583ff", "#97a9ff", "#a7a4ff", "#82d3ff", "#76eaff", "#85ed85", "#8deb5f", "#c2d653", "#f5d862", "#fcb75c",
+          "#e1e1e1", "#fff456", "#ffc66d", "#ffb39e", "#ffabad", "#ff9de5", "#da90ff", "#9fb2ff", "#b2afff", "#8ddaff", "#8bedff", "#99f299", "#97f569", "#cde153", "#fbe276", "#ffc160",
+          "#eaeaea", "#fff970", "#ffd587", "#ffc2b2", "#ffb9bd", "#ffa5e7", "#de9cff", "#afbeff", "#bbb8ff", "#9fd4ff", "#9aefff", "#b3f7b3", "#a0fe72", "#dbef6c", "#fcee98", "#ffca69",
+          "#f4f4f4", "#ffff90", "#ffe498", "#ffd0c3", "#ffc7ce", "#ffafea", "#e2a9ff", "#c0cbff", "#c3c1ff", "#b4e2ff", "#b1f3ff", "#c3f9c3", "#b1ff8a", "#e8fc79", "#fdf3a9", "#ffcf7e",
+          "#ffffff", "#ffffaa", "#ffe6ab", "#ffdad0", "#ffcade", "#ffb8ec", "#e6b6ff", "#cdd3ff", "#d3d1ff", "#c0ebff", "#c7f6ff", "#cdfccd", "#bcff9a", "#f2ffab", "#fdf3be", "#ffda96"]
 
 
 
@@ -229,7 +172,6 @@ class BasePacket(object):
     MAX_SIZE = 256
     DEFINITION = ()
     DESCRIPTION = ""
-    LOGVIEW_COLOR = "#000000"
     LOGVIEW_DEFAULT_ENABLED = True
     STRUCT = None
     BIN_STRUCT = None
@@ -331,7 +273,6 @@ class TurretDetect(BasePacket):
 
     MAX_SIZE = 4
     TYPE = 32
-    LOGVIEW_COLOR = "#9acd32"
     DEFINITION = (
         ('distance', UInt8 (0, "Detection distance")),
         ('angle'   , UInt8 (0, "Detection angle index (0 <= angle <= 17; 20 deg resolution)")),
@@ -345,7 +286,6 @@ class TurretInit(BasePacket):
 
     MAX_SIZE = 4
     TYPE = 33
-    LOGVIEW_COLOR = "#7fffd4"
     DEFINITION = (
         ('mode'          , UEnum8(TURRET_INIT_MODE, TURRET_INIT_MODE_READ)),
         ('short_distance', UInt8 (0, "Short distance detection range")),
@@ -359,7 +299,6 @@ class TurretDistances(BasePacket):
 
     MAX_SIZE = 3
     TYPE = 34
-    LOGVIEW_COLOR = "#191970"
     DEFINITION = (
         ('short_distance', UInt8 (0, "Short distance detection range")),
         ('long_distance' , UInt8 (0, "Long distance detection range")),
@@ -372,7 +311,6 @@ class TurretBoot(BasePacket):
 
     MAX_SIZE = 1
     TYPE = 35
-    LOGVIEW_COLOR = "#20b2aa"
 
 
 # PIC 32 packets
@@ -381,7 +319,6 @@ class TurretBoot(BasePacket):
 class Reinitialize(BasePacket):
 
     TYPE = 50
-    LOGVIEW_COLOR = "#db7093"
 
 
 
@@ -390,7 +327,6 @@ class ControllerReady(BasePacket):
 
     TYPE = 51
     LOGVIEW_DEFAULT_ENABLED = True
-    LOGVIEW_COLOR = "#a52a2a"
 
 
 
@@ -398,7 +334,6 @@ class ControllerReady(BasePacket):
 class DeviceBusy(BasePacket):
 
     TYPE = 52
-    LOGVIEW_COLOR = "#5f9ea0"
     DEFINITION = (
         ('remote_device', UEnum8(REMOTE_DEVICE, REMOTE_DEVICE_PIC)),
     )
@@ -409,7 +344,6 @@ class DeviceBusy(BasePacket):
 class DeviceReady(BasePacket):
 
     TYPE = 53
-    LOGVIEW_COLOR = "#7fff00"
     DEFINITION = (
         ('team',          UEnum8(TEAM         , TEAM_UNKNOWN     )),
         ('remote_device', UEnum8(REMOTE_DEVICE, REMOTE_DEVICE_PIC)),
@@ -421,7 +355,6 @@ class DeviceReady(BasePacket):
 class Start(BasePacket):
 
     TYPE = 54
-    LOGVIEW_COLOR = "#d2691e"
     DEFINITION = (
         ('team', UEnum8(TEAM, TEAM_UNKNOWN)),
     )
@@ -432,7 +365,6 @@ class Start(BasePacket):
 class Rotate(BasePacket):
 
     TYPE = 55
-    LOGVIEW_COLOR = "#ff7f50"
     DEFINITION = (
         ('direction', Enum8(DIRECTION, DIRECTION_AUTO)),
         ('angle'    , Float(0.0, "Destination angle")),
@@ -444,7 +376,6 @@ class Rotate(BasePacket):
 class MoveCurve(BasePacket):
 
     TYPE = 56
-    LOGVIEW_COLOR = "#ff7f50"
     DEFINITION = (
         ('direction', Enum8        (DIRECTION, DIRECTION_FORWARDS)),
         ('angle'    , OptionalAngle(None, "Destination angle")),
@@ -457,7 +388,6 @@ class MoveCurve(BasePacket):
 class MoveLine(BasePacket):
 
     TYPE = 57
-    LOGVIEW_COLOR = "#ff7f50"
     DEFINITION = (
         ('direction', Enum8(DIRECTION, DIRECTION_FORWARDS)),
         ('points'   , List (63, Point(), [], "List of points to follow")),
@@ -469,7 +399,6 @@ class MoveLine(BasePacket):
 class MoveArc(BasePacket):
 
     TYPE = 58
-    LOGVIEW_COLOR = "#ff7f50"
     DEFINITION = (
         ('direction', Enum8(DIRECTION, DIRECTION_FORWARDS)),
         ('center'   , Point()),
@@ -483,7 +412,6 @@ class MoveArc(BasePacket):
 class GotoStarted(BasePacket):
 
     TYPE = 59
-    LOGVIEW_COLOR = "#6495ed"
 
 
 
@@ -491,7 +419,6 @@ class GotoStarted(BasePacket):
 class WaypointReached(BasePacket):
 
     TYPE = 60
-    LOGVIEW_COLOR = "#6495ed"
 
     DEFINITION = (
         ('current_point_index', UInt8(0, "Reached waypoint index")),
@@ -504,7 +431,6 @@ class WaypointReached(BasePacket):
 class GotoFinished(BasePacket):
 
     TYPE = 61
-    LOGVIEW_COLOR = "#daa520"
     DEFINITION = (
         ('reason'             , UEnum8(REASON, REASON_DESTINATION_REACHED)),
         ('current_pose'       , Pose  ("Robot pose at the end of the movement")),
@@ -517,7 +443,6 @@ class GotoFinished(BasePacket):
 class EnableAntiBlocking(BasePacket):
 
     TYPE = 62
-    LOGVIEW_COLOR = "#00ffff"
 
 
 
@@ -525,7 +450,6 @@ class EnableAntiBlocking(BasePacket):
 class DisableAntiBlocking(BasePacket):
 
     TYPE = 63
-    LOGVIEW_COLOR = "#00008b"
 
 
 
@@ -533,7 +457,6 @@ class DisableAntiBlocking(BasePacket):
 class KeepAlive(BasePacket):
 
     TYPE = 64
-    LOGVIEW_COLOR = "#8b008b"
     LOGVIEW_DEFAULT_ENABLED = False
     DEFINITION = (
         ('current_pose' , Pose  ("Current robot pose")),
@@ -547,7 +470,6 @@ class KeepAlive(BasePacket):
 class PositionControlConfig(BasePacket):
 
     TYPE = 65
-    LOGVIEW_COLOR = "#556b2f"
     DEFINITION = (
         ('ratio_acc'     , Float(0.0)),
         ('ratio_decc'    , Float(0.0)),
@@ -562,7 +484,6 @@ class PositionControlConfig(BasePacket):
 class Stop(BasePacket):
 
     TYPE = 66
-    LOGVIEW_COLOR = "#b22222"
 
 
 
@@ -570,7 +491,6 @@ class Stop(BasePacket):
 class Resettle(BasePacket):
 
     TYPE = 67
-    LOGVIEW_COLOR = "#ff1493"
     DEFINITION = (
         ('axis'    , UEnum8     (AXIS, AXIS_X)),
         ('position', Float      (0.0, "Robot position on the given axis")),
@@ -583,7 +503,6 @@ class Resettle(BasePacket):
 class StopAll(BasePacket):
 
     TYPE = 68
-    LOGVIEW_COLOR = "#ff1493"
 
 
 
@@ -591,7 +510,6 @@ class StopAll(BasePacket):
 class ServoControl(BasePacket):
 
     TYPE = 69
-    LOGVIEW_COLOR = "#000000"
     DEFINITION = (
         ('type',  UEnum8(SERVO_TYPE, SERVO_TYPE_AX)),
         ('id',    UInt8 (0, "Servo identifier")),
@@ -604,7 +522,6 @@ class ServoControl(BasePacket):
 class ElectromagnetControl(BasePacket):
 
     TYPE = 70
-    LOGVIEW_COLOR = "#000000"
     DEFINITION = (
         ('id',     UInt8 (0, "Servo identifier")),
         ('action', UEnum8(ACTION, ACTION_OFF)),
@@ -615,7 +532,6 @@ class ElectromagnetControl(BasePacket):
 class SuctionPump(BasePacket):
 
     TYPE = 71
-    LOGVIEW_COLOR = "#000000"
     DEFINITION = (
         ('action', UEnum8(ACTION, ACTION_OFF)),
     )
@@ -628,7 +544,6 @@ class SimulatorData(BasePacket):
 
     TYPE = 150
     LOGVIEW_DEFAULT_ENABLED = False
-    LOGVIEW_COLOR = "#4169e1"
     DEFINITION = (
         ('leds', UInt8(0, "Dockstar leds status")),
     )
@@ -640,7 +555,6 @@ class SimulatorResetRoutePath(BasePacket):
 
     TYPE = 151
     LOGVIEW_DEFAULT_ENABLED = False
-    LOGVIEW_COLOR = "#ff00ff"
 
 
 
@@ -649,7 +563,6 @@ class SimulatorRoutePath(BasePacket):
 
     TYPE = 152
     LOGVIEW_DEFAULT_ENABLED = False
-    LOGVIEW_COLOR = "#8b4513"
     DEFINITION = (
         ('points', List(84, SimulatorPoint(), [], "Route path points")),
     )
@@ -661,7 +574,6 @@ class SimulatorSimplifiedRoutePath(BasePacket):
 
     TYPE = 153
     LOGVIEW_DEFAULT_ENABLED = False
-    LOGVIEW_COLOR = "#8b4513"
     DEFINITION = (
         ('points', List(84, SimulatorPoint(), [], "Route path points")),
     )
@@ -673,7 +585,6 @@ class SimulatorRouteResetZones(BasePacket):
 
     TYPE = 154
     LOGVIEW_DEFAULT_ENABLED = False
-    LOGVIEW_COLOR = "#40e0d0"
 
 
 
@@ -682,7 +593,6 @@ class SimulatorRouteRects(BasePacket):
 
     TYPE = 155
     LOGVIEW_DEFAULT_ENABLED = False
-    LOGVIEW_COLOR = "#d8bfd8"
     DEFINITION = (
         ('is_forbidden_zone', Bool(True, "Represents forbidden zones or not")),
         ('shapes',            List(42, SimulatorRect(), [], "Route rects")),
@@ -695,7 +605,6 @@ class SimulatorRouteCircles(BasePacket):
 
     TYPE = 156
     LOGVIEW_DEFAULT_ENABLED = False
-    LOGVIEW_COLOR = "#ff6347"
     DEFINITION = (
         ('is_forbidden_zone', Bool(True, "Represents forbidden zones or not")),
         ('shapes',            List(63, SimulatorCircle(), [], "Route circles")),
@@ -708,7 +617,6 @@ class SimulatorOpponentsPositions(BasePacket):
 
     TYPE = 157
     LOGVIEW_DEFAULT_ENABLED = False
-    LOGVIEW_COLOR = "#ba55d3"
     DEFINITION = (
         ('robot'   , UEnum8(OPPONENT_ROBOT, OPPONENT_ROBOT_MAIN)),
         ('present' , Bool  (True, "Opponent present")),
@@ -724,7 +632,6 @@ class SimulatorClearGraphMapEdges(BasePacket):
 
     TYPE = 158
     LOGVIEW_DEFAULT_ENABLED = False
-    LOGVIEW_COLOR = "#ba55d3"
 
 
 
@@ -733,7 +640,6 @@ class SimulatorGraphMapEdges(BasePacket):
 
     TYPE = 159
     LOGVIEW_DEFAULT_ENABLED = False
-    LOGVIEW_COLOR = "#ba55d3"
     DEFINITION = (
         ('points', List(63, Float(0.0), [], "Route circles")),
     )
@@ -745,7 +651,6 @@ class SimulatorGraphMapRoute(BasePacket):
 
     TYPE = 160
     LOGVIEW_DEFAULT_ENABLED = False
-    LOGVIEW_COLOR = "#ba55d3"
     DEFINITION = (
         ('points', List(63, Float(0.0), [], "Edges")),
     )
@@ -763,7 +668,6 @@ class InterbotPosition(BasePacket):
 
     TYPE = 201
 
-    LOGVIEW_COLOR = "#BB00CC"
     DEFINITION = (
         ('current_pose', Pose("Other robot pose")),
         ('main_robot'  , Bool(True, "Sender is main robot")),
@@ -774,7 +678,6 @@ class InterbotGoalStatus(BasePacket):
 
     TYPE = 202
 
-    LOGVIEW_COLOR = "#BB00CD"
     DEFINITION = (
         ('main_robot'     , Bool  (True, "Sender is main robot")),
         ('goal_identifier', String(32, "", "Goal identifier")),
@@ -789,7 +692,6 @@ class OpponentPosition(BasePacket):
 
     TYPE = 230
 
-    LOGVIEW_COLOR = "#000000"
     DEFINITION = (
         ('robot'    , UEnum8(OPPONENT_ROBOT, OPPONENT_ROBOT_MAIN)),
         ('x'        , Float(0.0, "Opponent estimated X coordinate")),
@@ -803,7 +705,6 @@ class OpponentDetected(BasePacket):
 
     TYPE = 231
 
-    LOGVIEW_COLOR = "#000000"
     DEFINITION = (
         ('robot'    , UEnum8(OPPONENT_ROBOT, OPPONENT_ROBOT_MAIN)),
         ('direction', UEnum8(DIRECTION, DIRECTION_FORWARDS)),
@@ -818,7 +719,6 @@ class OpponentDisappeared(BasePacket):
 
     TYPE = 232
 
-    LOGVIEW_COLOR = "#000000"
     DEFINITION = (
         ('robot'    , UEnum8(OPPONENT_ROBOT, OPPONENT_ROBOT_MAIN)),
         ('direction', UEnum8(DIRECTION, DIRECTION_FORWARDS)),
