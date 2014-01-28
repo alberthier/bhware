@@ -17,20 +17,18 @@ FIELD_Y_SIZE                           = 3.0
 FIELD_X_SIZE                           = 2.0
 
 # Main robot
-MAIN_ROBOT_X_SIZE                      = 0.254
-MAIN_ROBOT_Y_SIZE                      = 0.252
-MAIN_ROBOT_CENTER_X                    = 0.126
-MAIN_ROBOT_CENTER_Y                    = 0.126
-MAIN_ROBOT_GYRATION_RADIUS             = 0.174
-MAIN_ROBOT_UPPER_CANDLE_KICKER_DIST    = 0.334
-MAIN_ROBOT_LOWER_CANDLE_KICKER_DIST    = 0.224
+MAIN_ROBOT_X_SIZE                      = 0.295
+MAIN_ROBOT_Y_SIZE                      = 0.300
+MAIN_ROBOT_CENTER_X                    = 0.1475
+MAIN_ROBOT_CENTER_Y                    = 0.150
+MAIN_ROBOT_GYRATION_RADIUS             = 0.218
 
 # Secondary robot
-SECONDARY_ROBOT_X_SIZE                 = 0.172
-SECONDARY_ROBOT_Y_SIZE                 = 0.127
-SECONDARY_ROBOT_CENTER_X               = 0.0530
-SECONDARY_ROBOT_CENTER_Y               = 0.0635
-SECONDARY_ROBOT_GYRATION_RADIUS        = 0.161
+SECONDARY_ROBOT_X_SIZE                 = 0.155
+SECONDARY_ROBOT_Y_SIZE                 = 0.165
+SECONDARY_ROBOT_CENTER_X               = 0.0775
+SECONDARY_ROBOT_CENTER_Y               = 0.0825
+SECONDARY_ROBOT_GYRATION_RADIUS        = 0.100535
 
 # Main start positons (the robot starts 90 degrees rotated that's why *_START_Y use ROBOT_X_SIZE and ROBOT_CENTER_X)
 MAIN_YELLOW_START_Y                    = MAIN_ROBOT_CENTER_X
@@ -64,7 +62,7 @@ def setup_definitions(is_main_robot):
 
 # Rule specific
 MATCH_DURATION_MS                      = 90000
-FUNNY_ACTION_DURATION_MS               = 10000
+FUNNY_ACTION_DURATION_MS               = 5000
 FULL_DURATION_MS                       = MATCH_DURATION_MS + FUNNY_ACTION_DURATION_MS
 BREWERY_LIFETIME_MS                    = FULL_DURATION_MS + 5000
 TEAM_COLOR_RED                         = "#e91009"
