@@ -119,48 +119,6 @@ class OptionalAngle(AbstractItem):
 
 
 
-class SimulatorPoint(Struct):
-
-    DESCRIPTION = "Route point"
-
-    def __init__(self, description = None):
-        Struct.__init__(self, StructInstance, description,
-            ('x', UInt8 (0, "X coordinate")),
-            ('y', UInt16(0, "Y coordinate")),
-        )
-
-
-
-
-class SimulatorRect(Struct):
-
-    DESCRIPTION = "Route rectangle"
-
-    def __init__(self, description = None):
-        Struct.__init__(self, StructInstance, description,
-            ('x1', UInt8 (0, "X1 coordinate")),
-            ('y1', UInt16(0, "Y1 coordinate")),
-            ('x2', UInt8 (0, "X2 coordinate")),
-            ('y2', UInt16(0, "Y2 coordinate")),
-        )
-
-
-
-
-class SimulatorCircle(Struct):
-
-    DESCRIPTION = "Route circle"
-
-    def __init__(self, description = None):
-        Struct.__init__(self, StructInstance, description,
-            ('x',      UInt8 (0, "Circle center X coordinate")),
-            ('y',      UInt16(0, "Circle center Y coordinate")),
-            ('radius', UInt8 (0, "Circle radius")),
-        )
-
-
-
-
 ################################################################################
 # Base packet class
 
@@ -551,7 +509,7 @@ class SimulatorData(BasePacket):
 
 
 
-class SimulatorResetRoutePath(BasePacket):
+class SimulatorOpponentsPositions(BasePacket):
 
     TYPE = 151
     LOGVIEW_DEFAULT_ENABLED = False
@@ -559,78 +517,9 @@ class SimulatorResetRoutePath(BasePacket):
 
 
 
-class SimulatorRoutePath(BasePacket):
-
-    TYPE = 152
-    LOGVIEW_DEFAULT_ENABLED = False
-    DEFINITION = (
-        ('points', List(84, SimulatorPoint(), [], "Route path points")),
-    )
-
-
-
-
-class SimulatorSimplifiedRoutePath(BasePacket):
-
-    TYPE = 153
-    LOGVIEW_DEFAULT_ENABLED = False
-    DEFINITION = (
-        ('points', List(84, SimulatorPoint(), [], "Route path points")),
-    )
-
-
-
-
-class SimulatorRouteResetZones(BasePacket):
-
-    TYPE = 154
-    LOGVIEW_DEFAULT_ENABLED = False
-
-
-
-
-class SimulatorRouteRects(BasePacket):
-
-    TYPE = 155
-    LOGVIEW_DEFAULT_ENABLED = False
-    DEFINITION = (
-        ('is_forbidden_zone', Bool(True, "Represents forbidden zones or not")),
-        ('shapes',            List(42, SimulatorRect(), [], "Route rects")),
-    )
-
-
-
-
-class SimulatorRouteCircles(BasePacket):
-
-    TYPE = 156
-    LOGVIEW_DEFAULT_ENABLED = False
-    DEFINITION = (
-        ('is_forbidden_zone', Bool(True, "Represents forbidden zones or not")),
-        ('shapes',            List(63, SimulatorCircle(), [], "Route circles")),
-    )
-
-
-
-
-class SimulatorOpponentsPositions(BasePacket):
-
-    TYPE = 157
-    LOGVIEW_DEFAULT_ENABLED = False
-    DEFINITION = (
-        ('robot'   , UEnum8(OPPONENT_ROBOT, OPPONENT_ROBOT_MAIN)),
-        ('present' , Bool  (True, "Opponent present")),
-        ('x'       , Float (-1.0, "Opponent X coordinate")),
-        ('y'       , Float (-1.0, "Opponent Y coordinate")),
-        ('distance', Float (-1.0, "Estimated distannce")),
-    )
-
-
-
-
 class SimulatorClearGraphMapEdges(BasePacket):
 
-    TYPE = 158
+    TYPE = 152
     LOGVIEW_DEFAULT_ENABLED = False
 
 
@@ -638,10 +527,10 @@ class SimulatorClearGraphMapEdges(BasePacket):
 
 class SimulatorGraphMapEdges(BasePacket):
 
-    TYPE = 159
+    TYPE = 153
     LOGVIEW_DEFAULT_ENABLED = False
     DEFINITION = (
-        ('points', List(63, Float(0.0), [], "Route circles")),
+        ('points', List(63, Float(0.0), [], "Edges")),
     )
 
 
@@ -649,7 +538,7 @@ class SimulatorGraphMapEdges(BasePacket):
 
 class SimulatorGraphMapRoute(BasePacket):
 
-    TYPE = 160
+    TYPE = 154
     LOGVIEW_DEFAULT_ENABLED = False
     DEFINITION = (
         ('points', List(63, Float(0.0), [], "Edges")),

@@ -51,13 +51,32 @@ def get_last_logfile():
 def create_main_robot_base_item(pen, brush, gyration_pen):
     robot = QGraphicsItemGroup()
 
-    base = QGraphicsRectItem(-126.0, -126.0, 254.0, 252.0)
+    path = QPainterPath()
+    path.moveTo(-147.5, 150.0)
+    path.lineTo(127.5, 150.0)
+    path.arcTo(107.5, 110.0, 40.0, 40.0, -90.0, 90.0)
+    path.arcTo(130.0, 20.88, 130.0, 130.0, -150, -70)
+    path.lineTo(147.5, -130.0)
+    path.arcTo(107.5, -150.0, 40.0, 40.0, 0.0, 90.0)
+    path.lineTo(-147.5, -150.0)
+    path.closeSubpath()
+    base = QGraphicsPathItem(path)
     base.setPen(pen)
     base.setBrush(brush)
     robot.addToGroup(base)
-
-    robot.addToGroup(create_arrow(pen, -100.0, -100.0, 40.0, 200.0))
-    robot.addToGroup(create_arrow(pen, 60.0, -100.0, 40.0, 200.0))
+    path = QPainterPath()
+    path.moveTo(37.5, 150.0)
+    path.arcTo(37.5, 70.0, 80.0, 80.0, -90.0, 90.0)
+    path.lineTo(117.5, -150.0)
+    item = QGraphicsPathItem(path)
+    item.setPen(pen)
+    robot.addToGroup(item)
+    item = QGraphicsLineItem(-147.5, -110.0, 117.5, -110.0)
+    item.setPen(pen)
+    robot.addToGroup(item)
+    item = QGraphicsRectItem(-147.5, 100.0, 152.0, 30.0)
+    item.setPen(pen)
+    robot.addToGroup(item)
 
     gyration_radius = MAIN_ROBOT_GYRATION_RADIUS * 1000.0
     gyration = QGraphicsEllipseItem(-gyration_radius, -gyration_radius, 2.0 * gyration_radius, 2.0 * gyration_radius)
@@ -75,12 +94,22 @@ def create_main_robot_base_item(pen, brush, gyration_pen):
 def create_secondary_robot_base_item(pen, brush, gyration_pen):
     robot = QGraphicsItemGroup()
 
-    base = QGraphicsRectItem(-53.0, -63.5, 172.0, 127.0)
+    path = QPainterPath()
+    path.moveTo(-77.5, -64.04)
+    path.lineTo(-77.5, 64.04)
+    path.lineTo(-64.04, 77.5)
+    path.lineTo(64.04, 77.5)
+    path.lineTo(77.5, 64.04)
+    path.lineTo(77.5, -64.04)
+    path.lineTo(64.04, -77.5)
+    path.lineTo(-64.04, -77.5)
+    path.closeSubpath()
+    base = QGraphicsPathItem(path)
     base.setPen(pen)
     base.setBrush(brush)
     robot.addToGroup(base)
 
-    robot.addToGroup(create_arrow(pen, -20.0, -45.0, 40.0, 160.0))
+    robot.addToGroup(create_arrow(pen, -20.0, -60.0, 40.0, 135.0))
 
     gyration_radius = SECONDARY_ROBOT_GYRATION_RADIUS * 1000.0
     gyration = QGraphicsEllipseItem(-gyration_radius, -gyration_radius, 2.0 * gyration_radius, 2.0 * gyration_radius)

@@ -32,23 +32,6 @@ class Map:
         import graphpathfinding
         self.pathfinder = graphpathfinding.PathFinder(ROBOT_GYRATION_RADIUS, ROBOT_GYRATION_RADIUS, 2.0 - ROBOT_GYRATION_RADIUS, 3.0 - ROBOT_GYRATION_RADIUS)
 
-        # Half cake
-        coords = []
-        radius = 0.5 + ROBOT_GYRATION_RADIUS
-        npoints = 6
-        angles = []
-        angles.append(-math.pi / 2.0)
-        angles.append(-13 * math.pi / 32.0)
-        for i in range(npoints - 2):
-            angles.append(-math.pi / 2.0 + float(i + 1) * math.pi / float(npoints - 1))
-        angles.append(13 * math.pi / 32.0)
-        angles.append(math.pi / 2.0)
-        for a in angles:
-            x = math.cos(a) * radius
-            y = 1.5 + math.sin(a) * radius
-            coords.append((x, y))
-        self.pathfinder.add_zone(coords)
-
         self.main_opponent_zone = self.add_circular_zone(0.130 + ROBOT_GYRATION_RADIUS)
         self.secondary_opponent_zone = self.add_circular_zone(0.080 + ROBOT_GYRATION_RADIUS)
         if IS_MAIN_ROBOT:

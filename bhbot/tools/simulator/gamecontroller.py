@@ -13,7 +13,8 @@ from robotcontroller import *
 
 class GameController(object):
 
-    def __init__(self, main_window, debug_host, debug_port, main_fsm = None, secondary_fsm = None):
+    def __init__(self, main_window, args):
+        self.args = args
         self.server = QTcpServer()
         self.server.newConnection.connect(self.brewery_connected)
         self.server.listen(QHostAddress.Any, REMOTE_PORT)
@@ -33,10 +34,6 @@ class GameController(object):
         self.keep_alive_timer = QTimer()
         self.keep_alive_timer.setInterval(KEEP_ALIVE_DELAY_MS)
         self.keep_alive_timer.timeout.connect(self.timer_tick)
-        self.debug_host = debug_host
-        self.debug_port = debug_port
-        self.main_fsm = main_fsm
-        self.secondary_fsm = secondary_fsm
 
 
     def setup(self):
@@ -45,17 +42,16 @@ class GameController(object):
         if not self.robot_a.is_process_started() and not self.robot_b.is_process_started():
             self.game_elements_layer.setup()
             self.time = 0
-            self.main_bar.chronograph.setText(str(round(self.time/1000.0, 1)))
+            self.main_bar.chronograph.setText(str(round(self.time / 1000.0, 1)))
             self.setting_up = True
             self.robot_a.hide_all()
             self.robot_b.hide_all()
             self.expected_robots = self.main_bar.get_expected_robots()
         if not self.robot_a.is_process_started() and len(self.expected_robots) >= 1:
-            self.robot_a.setup(*self.expected_robots[0], debug_host = self.debug_host, debug_port = self.debug_port,
-                               fsm_name = self.main_fsm)
+            self.robot_a.setup(*self.expected_robots[0])
         elif not self.robot_b.is_process_started() and len(self.expected_robots) >= 2:
             del self.expected_robots[0]
-            self.robot_b.setup(*self.expected_robots[0], fsm_name = self.secondary_fsm)
+            self.robot_b.setup(*self.expected_robots[0])
         else:
             self.expected_robots = []
             self.setting_up = False
@@ -130,4 +126,4 @@ class GameController(object):
         self.robot_a.send_keep_alive()
         if self.started:
             self.time += KEEP_ALIVE_DELAY_MS
-            self.main_bar.chronograph.setText(str(round(self.time/1000.0, 1)))
+            self.main_bar.chronograph.setText(str(round(self.time / 1000.0, 1)))

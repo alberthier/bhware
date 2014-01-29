@@ -26,28 +26,10 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    debug_host = None
-    debug_port = 0
-
-    if args.pydev_debug :
-        debug_host, debug_port = args.pydev_debug
-        debug_port = int(debug_port)
-
-    random.seed()
-
     app = QApplication(sys.argv)
     app.setWindowIcon(QIcon("simulator/icons/main.png"))
 
-    if len(sys.argv) > 1:
-        piece_config = sys.argv[1]
-    else:
-        piece_config = ""
-
-    main_fsm = args.main_fsm
-    secondary_fsm = args.secondary_fsm
-
-    mw = MainWindow(piece_config, debug_host = debug_host, debug_port =  debug_port, main_fsm = main_fsm,
-                    secondary_fsm = secondary_fsm)
+    mw = MainWindow(args)
     mw.show()
 
     sys.exit(app.exec_())

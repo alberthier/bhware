@@ -28,6 +28,10 @@ class MainBar(QWidget, MainBar_Ui):
         self.set_color_icon(self.main_red_robot, TEAM_COLOR_RED)
         self.set_color_icon(self.secondary_red_robot, TEAM_COLOR_RED)
 
+        self.main_yellow_robot.setChecked(True)
+        self.main_red_robot.setChecked(True)
+        self.oldest_pressed = self.main_yellow_robot
+
         self.main_yellow_robot.toggled.connect(self.main_yellow_toggled)
         self.secondary_yellow_robot.toggled.connect(self.secondary_yellow_toggled)
         self.main_red_robot.toggled.connect(self.main_red_toggled)
@@ -67,13 +71,14 @@ class MainBar(QWidget, MainBar_Ui):
         for button in buttons:
             if button.isChecked():
                 cpt += 1
-        if cpt == 0:
-            button.setChecked(True)
         if cpt > 2:
-            for button in reversed(buttons):
-                if button.isChecked():
-                    button.setChecked(False)
-                    break
+            self.oldest_pressed.setChecked(False)
+        for button in buttons:
+            if button != toggled and button.isChecked():
+                self.oldest_pressed = button
+                break
+        if self.oldest_pressed is None:
+            self.oldest_pressed = toggled
 
 
     def get_expected_robots(self):

@@ -22,67 +22,6 @@ import helpers
 
 
 
-class GraphicsRobotArmObject(QObject):
-
-    def __init__(self, x, size0, size1, size2, robot_object):
-        QObject.__init__(self)
-        self.robot_object = robot_object
-
-        self.x = x
-        self.size0 = size0
-        self.size1 = size1
-        self.size2 = size2
-        self.is_down = False
-        self.item = QGraphicsLineItem(robot_object.item)
-        self.item.setPen(QPen(QColor("#111111"), 15))
-
-        self.arm_animation = QPropertyAnimation()
-        self.arm_animation.setDuration(100.0)
-        self.arm_animation.setTargetObject(self)
-        self.arm_animation.setPropertyName("position")
-        self.arm_animation.finished.connect(self.movement_finished)
-        self.current_packet = None
-
-
-    def setup(self):
-        self.set_position(self.size0)
-
-
-    def get_position(self):
-        return self.item.line().y2()
-
-
-    def set_position(self, p):
-        self.item.setLine(self.x, 0.0, self.x, p)
-
-
-    #declare 'arm_position' to Qt's property system
-    position = pyqtProperty('qreal', get_position, set_position)
-
-
-    def process(self, packet):
-        self.current_packet = packet
-        size = [self.size0, self.size1, self.size2][packet.position]
-        self.is_down = packet.position == 2
-        self.arm_animation.setStartValue(self.get_position())
-        self.arm_animation.setEndValue(size)
-        self.arm_animation.start()
-
-
-    def movement_finished(self):
-        self.robot_object.layer.robot_controller.send_packet(self.current_packet)
-
-
-
-
-class FireDetector(QGraphicsLineItem):
-
-    def __init__(self, x, y, length):
-        QGraphicsLineItem.__init__(self, x, y, x, y + length)
-        self.setPen(QPen(QBrush(), 1.0, Qt.NoPen))
-
-
-
 class GraphicsRobotObject(QObject):
 
     def __init__(self, layer):
@@ -113,29 +52,18 @@ class GraphicsRobotObject(QObject):
 
         self.item = QGraphicsItemGroup(self.layer)
 
-        arm_idle = 110 if self.layer.robot_controller.is_main else 0
-
-        self.arms = []
-        self.left_upper_arm = GraphicsRobotArmObject(-57, -arm_idle, -250, -334, self)
-        self.arms.append(self.left_upper_arm)
-        self.left_lower_arm = GraphicsRobotArmObject(-47, -arm_idle, -170, -224, self)
-        self.arms.append(self.left_lower_arm)
-        self.right_upper_arm = GraphicsRobotArmObject(-57, arm_idle, 250, 334, self)
-        self.arms.append(self.right_upper_arm)
-        self.right_lower_arm = GraphicsRobotArmObject(-47, arm_idle, 170, 224, self)
-        self.arms.append(self.right_lower_arm)
-        self.gift_arm = GraphicsRobotArmObject(-54, 0, -190, 190, self)
-        self.arms.append(self.gift_arm)
+        dark_metal = QColor("#838383")
+        light_metal = QColor("#e9eaff")
 
         if self.layer.robot_controller.is_main:
-            (self.structure, self.robot_item, self.gyration_item) = helpers.create_main_robot_base_item(QColor("#838383"), QColor("#e9eaff"), QColor(self.layer.color).darker(150))
+            (self.structure, self.robot_item, self.gyration_item) = helpers.create_main_robot_base_item(dark_metal, light_metal, QColor(self.layer.color).darker(150))
         else:
-            (self.structure, self.robot_item, self.gyration_item) = helpers.create_secondary_robot_base_item(QColor("#838383"), QColor("#e9eaff"), QColor(self.layer.color).darker(150))
+            (self.structure, self.robot_item, self.gyration_item) = helpers.create_secondary_robot_base_item(dark_metal, light_metal, QColor(self.layer.color).darker(150))
         self.item.addToGroup(self.structure)
 
         tower = QGraphicsRectItem(-40.0, -40.0, 80.0, 80.0)
         tower.setPen(QPen(0))
-        tower.setBrush(QColor("#838383"))
+        tower.setBrush(dark_metal)
         self.item.addToGroup(tower)
 
         self.team_indicator = QGraphicsEllipseItem(-25.0, -25.0, 50.0, 50.0)
@@ -156,9 +84,6 @@ class GraphicsRobotObject(QObject):
         self.item.setVisible(False)
         self.item.setPos(0.0, 0.0)
         self.set_rotation(0.0)
-
-        for arm in self.arms:
-            arm.setup()
 
 
     def get_position(self):
@@ -392,57 +317,10 @@ class GraphicsRobotObject(QObject):
         self.set_rotation(angle_deg)
 
 
-    def on_candle_kicker(self, packet):
-        if packet.side == SIDE_LEFT:
-            if packet.which == CANDLE_KICKER_LOWER:
-                self.left_lower_arm.process(packet)
-            else:
-                self.left_upper_arm.process(packet)
-        else:
-            if packet.which == CANDLE_KICKER_LOWER:
-                self.right_lower_arm.process(packet)
-            else:
-                self.right_upper_arm.process(packet)
-
-
-    def on_gift_opener(self, packet):
-        self.gift_arm.process(packet)
-
-
-    def hits_gift(self, gift):
-        return self.item is not None and gift.collidesWithItem(self.gift_arm.item)
-
-
-    def hits_upper_candle(self, candle):
-        if self.item is not None:
-            return self.left_upper_arm.is_down and self.left_upper_arm.item.collidesWithItem(candle) or \
-                   self.right_upper_arm.is_down and self.right_upper_arm.item.collidesWithItem(candle)
-        return False
-
-
-    def hits_lower_candle(self, candle):
-        if self.item is not None:
-            return self.left_lower_arm.is_down and self.left_lower_arm.item.collidesWithItem(candle) or \
-                   self.right_lower_arm.is_down and self.right_lower_arm.item.collidesWithItem(candle)
-        return False
-
-
     def hits_fire(self, fire):
         if fire not in self.carried_elements:
             if self.structure is not None and self.structure.collidesWithItem(fire):
                 fire.lay()
-
-
-    def grab_glass(self, side):
-        game_elements_layer = self.layer.field_view_controller.game_elements_layer
-        for fire in game_elements_layer.fires:
-            if fire not in self.carried_elements:
-                if self.structure is not None and self.structure.collidesWithItem(fire):
-                    fire.setParentItem(self.item)
-                    self.item.addToGroup(fire)
-                    self.carried_elements.append(fire)
-                    fire.setPos(detector.line().x1() - 38.5, detector.line().y1() + 50 - 38.5)
-                    break
 
 
 
@@ -474,11 +352,11 @@ class RobotLayer(fieldview.Layer):
 
     def key_press_event(self, pos, event):
         if self.robot.item:
-            dx = pos.x() - self.robot.item.x()
-            dy = pos.y() - self.robot.item.y()
+            dy = pos.x() - self.robot.item.x()
+            dx = pos.y() - self.robot.item.y()
             angle = (self.robot.item.rotation() / 180.0 * math.pi) - math.atan2(dy, dx)
             angle %= 2.0 * math.pi
-            angle = int(angle / (2.0 * math.pi) * 18.0)
+            angle = int(round(angle / (2.0 * math.pi) * 18.0))
 
             packet = packets.TurretDetect()
             packet.angle = angle
@@ -510,64 +388,18 @@ class RobotLayer(fieldview.Layer):
 
 
 
-class RobotTrajectoryLayer(fieldview.Layer):
+class GraphRoutingLayer(fieldview.Layer):
 
     def __init__(self, field_view_controller, robot_controller):
         fieldview.Layer.__init__(self,
                                  field_view_controller,
-                                 robot_controller.team_name + " robot trajectory",
+                                 robot_controller.team_name + " robot graph routing",
                                  robot_controller.team_color)
         self.robot_controller = robot_controller
-        self.item = QGraphicsPathItem()
-        self.addToGroup(self.item)
-
-
-    def setup(self):
-        self.update_title(self.robot_controller.team_name + " robot trajectory", self.robot_controller.team_color)
-        self.item.setPen(QPen(QColor(self.color), 8.0))
-        self.item.setPath(QPainterPath())
-
-
-    def on_resettle(self, packet):
-        path = self.item.path()
-        current = path.currentPosition()
-        if packet.axis == AXIS_X:
-            path.moveTo(current.x(), packet.position * 1000.0)
-        else:
-            path.moveTo(packet.position * 1000.0, current.y())
-        self.item.setPath(path)
-
-
-    def set_points(self, points):
-        path = self.item.path()
-        for point in points:
-            pose = point[2]
-            path.lineTo(pose.y * 1000.0, pose.x * 1000.0)
-        self.item.setPath(path)
-
-
-
-
-class GridRoutingLayer(fieldview.Layer):
-
-    def __init__(self, field_view_controller, robot_controller):
-        fieldview.Layer.__init__(self,
-                                 field_view_controller,
-                                 robot_controller.team_name + " robot grid routing",
-                                 robot_controller.team_color)
-        self.robot_controller = robot_controller
-        self.path_blocks = []
-        self.zones = []
-        #self.setVisible(False)
-
+        self.edges = []
+        self.robot = robot_controller.robot_layer.robot
         self.main_opponent_zone = self.create_opponent_zone(MAIN_OPPONENT_AVOIDANCE_RANGE * 2.0 * 1000.0)
         self.secondary_opponent_zone = self.create_opponent_zone(SECONDARY_OPPONENT_AVOIDANCE_RANGE * 2.0 * 1000.0)
-
-
-    def setup(self):
-        self.update_title(self.robot_controller.team_name + " robot grid routing", self.robot_controller.team_color)
-        self.main_opponent_zone.hide()
-        self.secondary_opponent_zone.hide()
 
 
     def create_opponent_zone(self, distance):
@@ -587,96 +419,6 @@ class GridRoutingLayer(fieldview.Layer):
         self.addToGroup(group)
         group.hide()
         return group
-
-
-    def on_simulator_reset_route_path(self, packet):
-        for item in self.path_blocks:
-            self.scene().removeItem(item)
-        self.path_blocks = []
-
-
-    def on_simulator_route_path(self, packet):
-        self.display_path_blocks(packet, QColor(self.color).lighter(120))
-
-
-    def on_simulator_simplified_route_path(self, packet):
-        self.display_path_blocks(packet, QColor(self.color).darker(150))
-
-
-    def display_path_blocks(self, packet, color):
-        cell_size = ROUTING_MAP_RESOLUTION * 1000.0
-        brush = QBrush(color)
-        pen = QPen(QBrush(), 0)
-        for point in packet.points:
-            item = QGraphicsRectItem(point.y * cell_size, point.x * cell_size, cell_size, cell_size)
-            item.setBrush(brush)
-            item.setPen(pen)
-            self.addToGroup(item)
-            self.path_blocks.append(item)
-
-
-    def on_simulator_route_reset_zones(self, packet):
-        for zone in self.zones:
-            self.scene().removeItem(zone)
-        self.zones = []
-
-
-    def on_simulator_route_rects(self, packet):
-        self.add_zone(packet, True)
-
-
-    def on_simulator_route_circles(self, packet):
-        self.add_zone(packet, False)
-
-
-    def add_zone(self, packet, is_rect):
-        cell_size = ROUTING_MAP_RESOLUTION * 1000.0
-        if packet.is_forbidden_zone:
-            brushColor = QColor(QColor("#ab471d"))
-        else:
-            brushColor = QColor(QColor("#73ab1d"))
-        brushColor.setAlpha(50)
-        brush = QBrush(brushColor)
-        pen = QPen(QBrush(), 0)
-
-        for shape in packet.shapes:
-            if is_rect:
-                item = QGraphicsRectItem(shape.y1 * cell_size, shape.x1 * cell_size, abs(shape.y2 - shape.y1) * cell_size,  abs(shape.x2 - shape.x1) * cell_size)
-            else:
-                item = QGraphicsEllipseItem((shape.y - shape.radius) * cell_size, (shape.x - shape.radius) * cell_size, shape.radius * 2.0 * cell_size, shape.radius * 2.0 * cell_size)
-            item.setBrush(brush)
-            item.setPen(pen)
-            self.addToGroup(item)
-            self.zones.append(item)
-
-
-    def on_simulator_opponents_positions(self, packet):
-        if packet.present:
-            if packet.robot == OPPONENT_ROBOT_MAIN:
-                zone = self.main_opponent_zone
-            else:
-                zone = self.secondary_opponent_zone
-            zone.setPos(packet.y * 1000.0, packet.x * 1000.0)
-            zone.show()
-        else:
-            if packet.robot == OPPONENT_ROBOT_MAIN:
-                self.main_opponent_zone.hide()
-            else:
-                self.secondary_opponent_zone.hide()
-
-
-
-
-class GraphRoutingLayer(fieldview.Layer):
-
-    def __init__(self, field_view_controller, robot_controller):
-        fieldview.Layer.__init__(self,
-                                 field_view_controller,
-                                 robot_controller.team_name + " robot graph routing",
-                                 robot_controller.team_color)
-        self.robot_controller = robot_controller
-        self.edges = []
-        self.robot = robot_controller.robot_layer.robot
 
 
     def setup(self):
@@ -720,6 +462,21 @@ class GraphRoutingLayer(fieldview.Layer):
             self.addToGroup(item)
             prev_x = x
             prev_y = y
+
+
+    def on_simulator_opponents_positions(self, packet):
+        if packet.present:
+            if packet.robot == OPPONENT_ROBOT_MAIN:
+                zone = self.main_opponent_zone
+            else:
+                zone = self.secondary_opponent_zone
+            zone.setPos(packet.y * 1000.0, packet.x * 1000.0)
+            zone.show()
+        else:
+            if packet.robot == OPPONENT_ROBOT_MAIN:
+                self.main_opponent_zone.hide()
+            else:
+                self.secondary_opponent_zone.hide()
 
 
 

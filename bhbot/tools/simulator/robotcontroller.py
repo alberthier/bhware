@@ -27,15 +27,10 @@ class RobotController(object):
         self.team_name = "?"
         self.team_color = "#555753"
         self.is_main = None
-        self.fsm_name = None
 
         self.layers = []
         self.robot_layer = simulatorfieldview.RobotLayer(main_window.field_view_controller, self)
         self.layers.append(self.robot_layer)
-        self.trajectory_layer = simulatorfieldview.RobotTrajectoryLayer(main_window.field_view_controller, self)
-        self.layers.append(self.trajectory_layer)
-        self.grid_routing_layer = simulatorfieldview.GridRoutingLayer(main_window.field_view_controller, self)
-        self.layers.append(self.grid_routing_layer)
         self.graph_routing_layer = simulatorfieldview.GraphRoutingLayer(main_window.field_view_controller, self)
         self.layers.append(self.graph_routing_layer)
 
@@ -65,14 +60,13 @@ class RobotController(object):
             layer.hide()
 
 
-    def setup(self, team, is_main, debug_host = None, debug_port=0, fsm_name=None):
+    def setup(self, team, is_main):
         if self.process == None:
             self.incoming_packet_buffer = ""
             self.incoming_packet = None
             self.resettle_count = 0
             self.team = team
             self.is_main = is_main
-            self.fsm_name = fsm_name
 
             if team == TEAM_YELLOW:
                 self.team_name = "yellow"
@@ -97,31 +91,27 @@ class RobotController(object):
             self.process.readyRead.connect(self.read_output)
             args = []
 
-
-
             if self.is_main:
                 args.append("--hostname")
                 args.append("doc")
-
             else:
                 args.append("--hostname")
                 args.append("marty")
 
-
-            if debug_host :
+            if self.offset == 0 and self.game_controller.args.pydev_debug is not None:
                 args.append("--pydev-debug")
-                args.append(debug_host)
-                args.append(str(debug_port))
+                args.append(args.pydev_debug)
 
-            if self.fsm_name :
-                args.append(self.fsm_name)
+            if is_main:
+                if self.game_controller.args.main_fsm is not None:
+                    args.append(self.game_controller.args.main_fsm)
+                else:
+                    args.append("doc")
             else :
-                if is_main :
-                    args.append('doc')
-                else :
-                    args.append('marty')
-
-
+                if self.game_controller.args.secondary_fsm is not None:
+                    args.append(self.game_controller.args.secondary_fsm)
+                else:
+                    args.append("marty")
 
             self.process.start(brewery, args)
 
@@ -162,8 +152,6 @@ class RobotController(object):
                     packet.deserialize(buf)
                     packet.dispatch(self)
                     packet.dispatch(self.robot_layer)
-                    packet.dispatch(self.trajectory_layer)
-                    packet.dispatch(self.grid_routing_layer)
                     packet.dispatch(self.graph_routing_layer)
 
 
@@ -195,41 +183,25 @@ class RobotController(object):
             self.game_controller.try_start()
 
 
-    def on_bottom_holder(self, packet):
-        self.send_packet(packet)
-
-
-    def on_lifter(self, packet):
-        self.send_packet(packet)
-
-
-    def on_gripper(self, packet):
-        self.send_packet(packet)
-
-
-    def on_top_holder(self, packet):
-        self.send_packet(packet)
-
-
-    def on_pump(self, packet):
-        self.send_packet(packet)
-
-
     def on_stop_all(self, packet):
+        self.stop()
+        self.send_packet(packet)
+
+
+    def on_servo_control(self, packet):
+        self.send_packet(packet)
+
+
+    def on_electromagnet_control(self, packet):
+        self.send_packet(packet)
+
+
+    def on_suction_pump(self, packet):
         self.send_packet(packet)
 
 
     def on_simulator_data(self, packet):
         self.output_view.handle_led(packet.leds)
-
-
-    def on_simulator_fetch_colors(self, packet):
-        detect = []
-        for i, candle in enumerate(range(8)):
-            detect.append(binarizer.StructInstance(index = i + 101, detect = True))
-        for i, candle in enumerate(range(12)):
-            detect.append(binarizer.StructInstance(index = i + 1, detect = True))
-        self.send_packet(packets.SimulatorFetchColors(colors = detect))
 
 
     def send_packet(self, packet):
