@@ -1,6 +1,7 @@
 # encoding: utf-8
 
 import sys
+import itertools
 
 import packets
 import builder
@@ -32,6 +33,10 @@ class Map:
         import graphpathfinding
         self.pathfinder = graphpathfinding.PathFinder(ROBOT_GYRATION_RADIUS, ROBOT_GYRATION_RADIUS, 2.0 - ROBOT_GYRATION_RADIUS, 3.0 - ROBOT_GYRATION_RADIUS)
 
+
+    def on_device_ready(self, packet):
+        self.event_loop.send_packet(packets.SimulatorClearGraphMapZones())
+
         self.main_opponent_zone = self.add_circular_zone(0.130 + ROBOT_GYRATION_RADIUS)
         self.secondary_opponent_zone = self.add_circular_zone(0.080 + ROBOT_GYRATION_RADIUS)
         if IS_MAIN_ROBOT:
@@ -41,9 +46,9 @@ class Map:
 
         self.pathfinder.field_config_done()
 
-        self.pathfinder.enable_zone(self.main_opponent_zone.id, False)
-        self.pathfinder.enable_zone(self.secondary_opponent_zone.id, False)
-        self.pathfinder.enable_zone(self.teammate_zone.id, False)
+        self.enable_zone(self.main_opponent_zone.id, False)
+        self.enable_zone(self.secondary_opponent_zone.id, False)
+        self.enable_zone(self.teammate_zone.id, False)
 
 
     def add_circular_zone(self, radius):
@@ -54,7 +59,27 @@ class Map:
             x = math.cos(a) * radius
             y = math.sin(a) * radius
             coords.append((x, y))
-        return ZoneData(self.pathfinder.add_zone(coords))
+        return self.add_zone(coords)
+
+
+    def add_zone(self, coords):
+        id = self.pathfinder.add_zone(coords)
+        if IS_HOST_DEVICE_PC:
+            flattened_coords = list(itertools.chain.from_iterable(coords))
+            self.event_loop.send_packet(packets.SimulatorAddGraphMapZone(id = id, points = flattened_coords))
+        return ZoneData(id)
+
+
+    def enable_zone(self, id, enabled):
+        if IS_HOST_DEVICE_PC:
+            self.event_loop.send_packet(packets.SimulatorEnableGraphMapZone(id = id, enabled = enabled))
+        self.pathfinder.enable_zone(id, enabled)
+
+
+    def move_zone(self, id, dx, dy):
+        if IS_HOST_DEVICE_PC:
+            self.event_loop.send_packet(packets.SimulatorMoveGraphMapZone(id = id, dx = dx, dy = dy))
+        self.pathfinder.move_zone(id, dx, dy)
 
 
     def route(self, start, end):
@@ -76,7 +101,6 @@ class Map:
 
 
     def send_to_simulator(self, path):
-        logger.log("sending ...")
         if IS_HOST_DEVICE_PC:
             self.event_loop.send_packet(packets.SimulatorClearGraphMapEdges())
             packet = packets.SimulatorGraphMapEdges()
@@ -102,14 +126,14 @@ class Map:
         else:
             zone = self.secondary_opponent_zone
         if packet.x is not None and packet.y is not None:
-            self.pathfinder.enable_zone(zone.id, True)
+            self.enable_zone(zone.id, True)
             dx = packet.x - zone.x
             dy = packet.y - zone.y
             zone.x = packet.x
             zone.y = packet.y
-            self.pathfinder.move_zone(zone.id, dx, dy)
+            self.move_zone(zone.id, dx, dy)
         else:
-            self.pathfinder.enable_zone(zone.id, False)
+            self.enable_zone(zone.id, False)
 
 
     def build_module(self):
@@ -140,7 +164,7 @@ class Map:
         teammate = self.teammate_zone
         x = packet.current_pose.x
         y = packet.current_pose.y
-        self.pathfinder.enable_zone(teammate.id, True)
+        self.enable_zone(teammate.id, True)
         dx = x - teammate.x
         dy = y - teammate.y
         teammate.x = x
@@ -150,4 +174,4 @@ class Map:
             pass
         else :
             # logger.log("Move team mate zone dx={} dy={}".format(dx,dy))
-            self.pathfinder.move_zone(teammate.id, dx, dy)
+            self.move_zone(teammate.id, dx, dy)

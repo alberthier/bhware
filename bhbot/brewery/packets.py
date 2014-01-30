@@ -509,7 +509,7 @@ class SimulatorData(BasePacket):
 
 
 
-class SimulatorOpponentsPositions(BasePacket):
+class SimulatorClearGraphMapZones(BasePacket):
 
     TYPE = 151
     LOGVIEW_DEFAULT_ENABLED = False
@@ -517,9 +517,45 @@ class SimulatorOpponentsPositions(BasePacket):
 
 
 
-class SimulatorClearGraphMapEdges(BasePacket):
+class SimulatorAddGraphMapZone(BasePacket):
 
     TYPE = 152
+    LOGVIEW_DEFAULT_ENABLED = False
+    DEFINITION = (
+        ('id'    , UInt8(0, "Zone id")),
+        ('points', List (63, Float(0.0), [], "Points")),
+    )
+
+
+
+
+class SimulatorEnableGraphMapZone(BasePacket):
+
+    TYPE = 153
+    LOGVIEW_DEFAULT_ENABLED = False
+    DEFINITION = (
+        ('id'     , UInt8(0, "Zone id")),
+        ('enabled', Bool (True, "Zone status")),
+    )
+
+
+
+class SimulatorMoveGraphMapZone(BasePacket):
+
+    TYPE = 154
+    LOGVIEW_DEFAULT_ENABLED = False
+    DEFINITION = (
+        ('id'     , UInt8(0, "Zone id")),
+        ('dx'     , Float(0.0, "X coordinate")),
+        ('dy'     , Float(0.0, "Y coordinate")),
+    )
+
+
+
+
+class SimulatorClearGraphMapEdges(BasePacket):
+
+    TYPE = 155
     LOGVIEW_DEFAULT_ENABLED = False
 
 
@@ -527,7 +563,7 @@ class SimulatorClearGraphMapEdges(BasePacket):
 
 class SimulatorGraphMapEdges(BasePacket):
 
-    TYPE = 153
+    TYPE = 156
     LOGVIEW_DEFAULT_ENABLED = False
     DEFINITION = (
         ('points', List(63, Float(0.0), [], "Edges")),
@@ -538,7 +574,7 @@ class SimulatorGraphMapEdges(BasePacket):
 
 class SimulatorGraphMapRoute(BasePacket):
 
-    TYPE = 154
+    TYPE = 157
     LOGVIEW_DEFAULT_ENABLED = False
     DEFINITION = (
         ('points', List(63, Float(0.0), [], "Edges")),
@@ -553,6 +589,8 @@ class InterbotHello(BasePacket):
     TYPE = 200
 
 
+
+
 class InterbotPosition(BasePacket):
 
     TYPE = 201
@@ -561,6 +599,8 @@ class InterbotPosition(BasePacket):
         ('current_pose', Pose("Other robot pose")),
         ('main_robot'  , Bool(True, "Sender is main robot")),
     )
+
+
 
 
 class InterbotGoalStatus(BasePacket):

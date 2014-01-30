@@ -58,15 +58,6 @@ class Opponent(object):
         else:
             self.opponent_direction = None
 
-        if IS_HOST_DEVICE_PC:
-            sim_packet = packets.SimulatorOpponentsPositions()
-            sim_packet.robot = packet.robot
-            sim_packet.present = True
-            sim_packet.x = self.x
-            sim_packet.y = self.y
-            sim_packet.distance = distance
-            self.detector.event_loop.send_packet(sim_packet)
-
         self.detector.event_loop.send_packet(packets.OpponentPosition(robot = self.opponent_type, x = self.x, y = self.y))
 
         if self.opponent_direction is not None:
@@ -86,9 +77,6 @@ class Opponent(object):
         previous_direction = self.opponent_direction
         self.opponent_direction = None
         self.detector.event_loop.send_packet(packets.OpponentPosition(robot = self.opponent_type, x = None, y = None))
-        if IS_HOST_DEVICE_PC:
-            sim_packet = packets.SimulatorOpponentsPositions(robot = self.opponent_type, present = False)
-            self.detector.event_loop.send_packet(sim_packet)
         self.detector.event_loop.send_packet(packets.OpponentDisappeared(robot = self.opponent_type, direction = self.opponent_direction))
 
 

@@ -398,27 +398,7 @@ class GraphRoutingLayer(fieldview.Layer):
         self.robot_controller = robot_controller
         self.edges = []
         self.robot = robot_controller.robot_layer.robot
-        self.main_opponent_zone = self.create_opponent_zone(MAIN_OPPONENT_AVOIDANCE_RANGE * 2.0 * 1000.0)
-        self.secondary_opponent_zone = self.create_opponent_zone(SECONDARY_OPPONENT_AVOIDANCE_RANGE * 2.0 * 1000.0)
-
-
-    def create_opponent_zone(self, distance):
-        group = QGraphicsItemGroup()
-        item = QGraphicsEllipseItem(-distance / 2.0, -distance / 2.0, distance, distance)
-        item.setPen(QPen(QBrush(), 0))
-        brush_color = QColor("#fa0000")
-        brush_color.setAlpha(127)
-        item.setBrush(brush_color)
-        group.addToGroup(item)
-        line = QGraphicsLineItem(-50, 0, 50, 0)
-        line.setPen(QPen(QColor("#fff000")))
-        group.addToGroup(line)
-        line = QGraphicsLineItem(0, -50, 0, 50)
-        line.setPen(QPen(QColor("#fff000")))
-        group.addToGroup(line)
-        self.addToGroup(group)
-        group.hide()
-        return group
+        self.zones = {}
 
 
     def setup(self):
@@ -464,19 +444,37 @@ class GraphRoutingLayer(fieldview.Layer):
             prev_y = y
 
 
-    def on_simulator_opponents_positions(self, packet):
-        if packet.present:
-            if packet.robot == OPPONENT_ROBOT_MAIN:
-                zone = self.main_opponent_zone
-            else:
-                zone = self.secondary_opponent_zone
-            zone.setPos(packet.y * 1000.0, packet.x * 1000.0)
-            zone.show()
-        else:
-            if packet.robot == OPPONENT_ROBOT_MAIN:
-                self.main_opponent_zone.hide()
-            else:
-                self.secondary_opponent_zone.hide()
+    def on_simulator_clear_graph_map_zones(self, packet):
+        for id, item in self.zones:
+            self.scene().removeItem(item)
+        self.zones = {}
+
+
+    def on_simulator_add_graph_map_zone(self, packet):
+        path = QPainterPath()
+        i = iter(packet.points)
+        path.moveTo(next(i) * 1000.0, next(i) * 1000.0)
+        while True:
+            try:
+                path.lineTo(next(i) * 1000.0, next(i) * 1000.0)
+            except StopIteration:
+                break;
+        path.closeSubpath()
+        item = QGraphicsPathItem(path)
+        item.setPen(QPen(QBrush(), 0))
+        brush_color = QColor("#fa0000")
+        brush_color.setAlpha(127)
+        item.setBrush(brush_color)
+        self.zones[packet.id] = item
+        self.addToGroup(item)
+
+
+    def on_simulator_enable_graph_map_zone(self, packet):
+        self.zones[packet.id].setVisible(packet.enabled)
+
+
+    def on_simulator_move_graph_map_zone(self, packet):
+        self.zones[packet.id].moveBy(packet.dy * 1000.0, packet.dx * 1000.0)
 
 
 
