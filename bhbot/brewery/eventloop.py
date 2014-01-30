@@ -495,6 +495,10 @@ class EventLoop(object):
             leds.driver.heartbeat_tick()
 
 
+    def on_device_ready(self, packet):
+        logger.set_team(packet.team)
+
+
     def on_start(self, packet):
         self.is_match_started = True
         self.start_date = datetime.datetime.now()

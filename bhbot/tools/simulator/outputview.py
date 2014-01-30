@@ -10,6 +10,7 @@ from PyQt4 import uic
 from mainbar import *
 
 import leds
+import logger
 from definitions import *
 import sys
 
@@ -19,6 +20,15 @@ import sys
 
 
 class OutputView(QWidget, OutputView_Ui):
+
+    COLORS = {logger.TERM_BLACK   : "#000000",
+              logger.TERM_RED     : "#a81300",
+              logger.TERM_GREEN   : "#005400",
+              logger.TERM_YELLOW  : "#c36806",
+              logger.TERM_BLUE    : "#1d295a",
+              logger.TERM_MAGENTA : "#66004b",
+              logger.TERM_CYAN    : "#006f84",
+              logger.TERM_WHITE   : "#ffffff"}
 
     def __init__(self, parent):
         QWidget.__init__(self, parent)
@@ -42,12 +52,23 @@ class OutputView(QWidget, OutputView_Ui):
 
 
     def add_log(self, text):
-        if text.startswith("["):
-            self.log_view.setTextColor(self.default_color)
-        else:
-            self.log_view.setTextColor(self.color)
-        self.log_view.append('{}'.format(text))
         self.log_view.setTextColor(self.default_color)
+        self.log_view.setFontWeight(QFont.Normal)
+        has_ec = False
+        while text.startswith('\033'):
+            has_ec = True
+            i = text.find('m')
+            ec = text[: i + 1]
+            if ec in OutputView.COLORS:
+                self.log_view.setTextColor(QColor(OutputView.COLORS[ec]))
+            if ec == logger.TERM_BOLD:
+                self.log_view.setFontWeight(QFont.Bold)
+            text = text[i + 1 :]
+        if has_ec:
+            text = text[:text.rfind('\033')]
+
+        self.log_view.append(text)
+
 
 
     def setup(self, team, is_main):

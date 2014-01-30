@@ -89,7 +89,7 @@ class RobotController(object):
             self.process = QProcess()
             self.process.setReadChannelMode(QProcess.MergedChannels)
             self.process.readyRead.connect(self.read_output)
-            args = []
+            args = ["--color", "always"]
 
             if self.is_main:
                 args.append("--hostname")
@@ -136,7 +136,7 @@ class RobotController(object):
 
     def read_output(self):
         while self.process.canReadLine():
-            log = str(self.process.readLine(), "utf-8").rstrip()
+            log = str(self.process.readLine(), "utf-8")[:-1]
             self.output_view.add_log(log)
 
 

@@ -28,6 +28,7 @@ if __name__ == "__main__":
     parser.add_argument("--pydev-debug", nargs=2)
     parser.add_argument("--disable-interbot", action="store_true", default=False)
     parser.add_argument("--hostname", action = "store", default = socket.gethostname())
+    parser.add_argument("--color", action = "store", default = "auto", help = "Colorize ouput (never, always, auto)")
     parser.add_argument('statemachine', action="store", nargs='?', default = None)
 
     args = parser.parse_args()
@@ -49,7 +50,7 @@ if __name__ == "__main__":
     import logger
     import leds
 
-    logger.initialize()
+    logger.initialize(args)
 
     loop = eventloop.EventLoop(args.statemachine, args.webserver_port, not args.disable_interbot)
     leds.initialize(loop)
