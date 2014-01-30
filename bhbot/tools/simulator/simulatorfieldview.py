@@ -354,7 +354,7 @@ class RobotLayer(fieldview.Layer):
         if self.robot.item:
             dy = pos.x() - self.robot.item.x()
             dx = pos.y() - self.robot.item.y()
-            angle = (self.robot.item.rotation() / 180.0 * math.pi) - math.atan2(dy, dx)
+            angle = (self.robot.item.rotation() / 180.0 * math.pi) + math.atan2(dx, dy)
             angle %= 2.0 * math.pi
             angle = int(round(angle / (2.0 * math.pi) * 18.0))
 
@@ -445,7 +445,7 @@ class GraphRoutingLayer(fieldview.Layer):
 
 
     def on_simulator_clear_graph_map_zones(self, packet):
-        for id, item in self.zones:
+        for id, item in self.zones.items():
             self.scene().removeItem(item)
         self.zones = {}
 

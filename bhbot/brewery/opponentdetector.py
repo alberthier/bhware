@@ -12,7 +12,7 @@ from definitions import *
 
 
 
-class Opponent(object):
+class Opponent:
 
     IN_FRONT_ANGLES = [16, 17, 0, 1, 2]
     IN_BACK_ANGLES = [7, 8, 9, 10, 11]
@@ -39,11 +39,10 @@ class Opponent(object):
             distance = TURRET_SHORT_DISTANCE_DETECTION_RANGE
 
         angle = (18 - packet.angle) % 18
-        angle = (angle - OpponentDetector.OFFSET) % 18
 
         robot_pose = self.detector.event_loop.robot.pose
         real_angle = (angle * 20.0 / 180.0) * math.pi
-        real_angle += robot_pose.angle
+        real_angle += robot_pose.angle + math.radians(OpponentDetector.OFFSET_DEG)
         self.x = robot_pose.x + distance * math.cos(real_angle)
         self.y = robot_pose.y + distance * math.sin(real_angle)
 
@@ -59,36 +58,41 @@ class Opponent(object):
             self.opponent_direction = None
 
         self.detector.event_loop.send_packet(packets.OpponentPosition(robot = self.opponent_type, x = self.x, y = self.y))
+        self.timer.restart()
 
         if self.opponent_direction is not None:
-            if previous_direction is None:
-                logger.log("Opponent detected")
+            if self.opponent_direction != previous_direction:
+                logger.log("{} opponent detected at ({:.2f}, {:.2f})".format(self.opponent_name(), self.x, self.y))
                 self.detected = True
                 self.detector.event_loop.send_packet(packets.OpponentDetected(robot = self.opponent_type, direction = self.opponent_direction, x = self.x, y = self.y))
-            self.timer.restart()
         elif self.opponent_direction is None and previous_direction is not None:
             self.opponent_disappeared()
 
 
     def opponent_disappeared(self):
-        logger.log("Opponent disapeared")
+        logger.log("{} opponent disapeared".format(self.opponent_name()))
         self.detected = False
         self.timer.stop()
-        previous_direction = self.opponent_direction
-        self.opponent_direction = None
         self.detector.event_loop.send_packet(packets.OpponentPosition(robot = self.opponent_type, x = None, y = None))
-        self.detector.event_loop.send_packet(packets.OpponentDisappeared(robot = self.opponent_type, direction = self.opponent_direction))
+        if self.opponent_direction is not None:
+            self.detector.event_loop.send_packet(packets.OpponentDisappeared(robot = self.opponent_type, direction = self.opponent_direction))
+        self.opponent_direction = None
+
+
+    def opponent_name(self):
+        if self.opponent_type == OPPONENT_ROBOT_MAIN:
+            return "Main"
+        else:
+            return "Secondary"
 
 
 
 
-class OpponentDetector(object):
+class OpponentDetector:
 
-    OFFSET = 0
+    OFFSET_DEG = 0.0
 
     def __init__(self, event_loop):
-        if IS_MAIN_ROBOT:
-            OpponentDetector.OFFSET = 2
         self.event_loop = event_loop
         self.main_opponent = Opponent(self, OPPONENT_ROBOT_MAIN)
         self.secondary_opponent = Opponent(self, OPPONENT_ROBOT_SECONDARY)
@@ -101,7 +105,7 @@ class OpponentDetector(object):
             self.secondary_opponent.on_turret_detect(packet)
 
 
-    def enable(self):
+    def setEnabled(self, enabled):
         logger.log("OpponentDetector: enabling")
-        self.main_opponent.enabled = True
-        self.secondary_opponent.enabled = True
+        self.main_opponent.enabled = enabled
+        self.secondary_opponent.enabled = enabled
