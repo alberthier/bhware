@@ -19,7 +19,6 @@ import bottle
 import builder
 import colordetector
 import commonstates
-import goalmanager
 import graphmap
 import interbot
 import leds
@@ -387,7 +386,7 @@ class InterbotServer(asyncore.dispatcher):
 
     def handle_accepted(self, sock, addr):
         self.event_loop.interbot_manager.on_connect()
-        self.event_loop.interbot_channel = InterbotControlChannel(self.event_loop, "TMT", sock)
+        self.event_loop.interbot_channel = InterbotControlChannel(self.event_loop, "IBT", sock)
 
 
 
@@ -573,7 +572,7 @@ class EventLoop(object):
             if IS_MAIN_ROBOT:
                 InterbotServer(self)
             else:
-                self.interbot_channel = InterbotControlChannel(self, "TMT", (MAIN_INTERBOT_IP, MAIN_INTERBOT_PORT))
+                self.interbot_channel = InterbotControlChannel(self, "IBT", (MAIN_INTERBOT_IP, MAIN_INTERBOT_PORT))
         webinterface.event_loop = self
         self.web_server = asyncwsgiserver.WsgiServer("", self.webserver_port, webinterface.app)
         if SERIAL_PORT_PATH is not None:

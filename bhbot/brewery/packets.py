@@ -589,20 +589,12 @@ class SimulatorGraphMapRoute(BasePacket):
 # Interbot
 
 
-class InterbotHello(BasePacket):
-
-    TYPE = 200
-
-
-
-
 class InterbotPosition(BasePacket):
 
     TYPE = 201
 
     DEFINITION = (
-        ('current_pose', Pose("Other robot pose")),
-        ('main_robot'  , Bool(True, "Sender is main robot")),
+        ('pose', Pose("Other robot pose")),
     )
 
 
@@ -613,7 +605,6 @@ class InterbotGoalStatus(BasePacket):
     TYPE = 202
 
     DEFINITION = (
-        ('main_robot'     , Bool  (True, "Sender is main robot")),
         ('goal_identifier', String(32, "", "Goal identifier")),
         ('goal_status'    , UInt8 (0, "Goal status")),
     )

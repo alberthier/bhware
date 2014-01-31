@@ -1,20 +1,22 @@
 # encoding: utf-8
 
-import sys
-import position
-import logger
-import tools
-import statemachine
-import signals
 import datetime
+import itertools
+import random
+import sys
+
+import logger
+import packets
+import position
+import statemachine
+import tools
 
 from definitions import *
 
-import itertools
-import random
 
 
-class Goal(object):
+
+class Goal:
 
     def __init__(self, identifier, weight, x, y, direction, handler_state, ctor_parameters = None, shared = True,
                  navigate = True):
@@ -34,9 +36,11 @@ class Goal(object):
         self.trial_count = 0
         self.last_try = None
 
+
     def increment_trials(self):
         self.trial_count+=1
         logger.log('Goal {} : increment trials : {}'.format(self.identifier, self.trial_count))
+
 
     def get_state(self):
         if isinstance(self.handler_state, statemachine.State):
@@ -47,25 +51,33 @@ class Goal(object):
             else:
                 return self.handler_state(self)
 
+
     def available(self):
         self.status = GOAL_AVAILABLE
+
 
     def doing(self):
         self.status = GOAL_DOING
         self.last_try = datetime.datetime.now()
 
+
     def done(self):
         self.status = GOAL_DONE
+
 
     def is_available(self):
         return self.status == GOAL_AVAILABLE
 
 
+
+
 class GlassDepositGoal(Goal):
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.barmen = []
         self.used = False
+
 
     def is_available(self):
         # logger.log('barmen : {} {}'.format(self.barmen, [b.glasses_count for b in self.barmen]))
@@ -73,13 +85,13 @@ class GlassDepositGoal(Goal):
 
 
 
-class GoalManager(object):
+
+class GoalManager:
 
     def __init__(self, event_loop):
         self.event_loop = event_loop
         self.harvesting_goals = []
         self.emptying_goals = []
-        self.on_goal_state_change = signals.SafeSignal()
         self.last_goal = None
 
 
@@ -87,14 +99,17 @@ class GoalManager(object):
     def all_goals(self):
         return itertools.chain(self.harvesting_goals, self.emptying_goals)
 
+
     def next_goal(self):
         if self.event_loop.robot.tank_full:
             return self.get_best_goal(self.emptying_goals)
         else:
             return self.get_best_goal(self.harvesting_goals)
 
+
     def is_goal_available(self, identifier):
         return any((g.is_available() for g in self.all_goals if g.identifier == identifier))
+
 
     def get_least_recent_tried_goal(self):
         available_goals = [ g for g in self.all_goals if g.is_available() ]
@@ -172,21 +187,29 @@ class GoalManager(object):
             if g.identifier == goal.identifier:
                 g.penality = 100.0
 
+
     def goal_done(self, goal):
         self.update_goals_status(goal, "done", GOAL_DONE)
+
 
     def goal_doing(self, goal):
         self.update_goals_status(goal, "doing", GOAL_DOING)
 
+
     def goal_available(self, goal):
         self.update_goals_status(goal, "available", GOAL_AVAILABLE)
+
 
     def update_goals_status(self, goal, status_string, new_status):
         logger.log("Goal {} : {}".format(status_string, goal.identifier))
 
         self.internal_goal_update(goal.identifier, new_status)
 
-        self.on_goal_state_change.send(goal)
+        if goal.shared :
+            logger.log('A shared goal status changed, notifying my buddy : {} -> {}'.format(goal.identifier, goal.status))
+            packet = packets.InterbotGoalStatus(goal_identifier = goal.identifier, goal_status = goal.status)
+            self.event_loop.send_packet(packet)
+
 
     def internal_goal_update(self, identifier, status):
         for g in self.all_goals:
@@ -194,3 +217,8 @@ class GoalManager(object):
                 old = g.status
                 g.status = status
                 logger.log('updated goal {} status : {} -> {}'.format(identifier, old, status))
+
+
+    def on_interbot_goal_status(self, packet):
+        logger.log('Got goal status : {} = {}'.format(packet.goal_identifier, packet.goal_status))
+        self.internal_goal_update(packet.goal_identifier, packet.goal_status)

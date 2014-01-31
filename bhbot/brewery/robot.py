@@ -2,10 +2,10 @@
 
 import math
 
+import goalmanager
+import logger
 import position
 import packets
-import logger
-
 import tools
 
 from definitions import *
@@ -20,7 +20,7 @@ class Robot(object):
         self._team = TEAM_UNKNOWN
         self.event_loop = event_loop
         self.moving = False
-        self.goal_manager = None
+        self.goal_manager = goalmanager.GoalManager(event_loop)
 
 
     def is_looking_at(self, pose):
@@ -58,6 +58,10 @@ class Robot(object):
 
     def on_keep_alive(self, packet):
         self.pose = packet.current_pose
+
+
+    def on_packet(self, packet):
+        packet.dispatch(self.goal_manager)
 
 
     def set_team(self, team):
