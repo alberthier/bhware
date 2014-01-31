@@ -1,13 +1,14 @@
 # encoding: utf-8
 
-import sys
-import struct
-import inspect
 import math
+import inspect
+import types
+import struct
+import sys
 
+import position
 from binarizer import *
 from definitions import *
-import position
 
 
 
@@ -133,7 +134,7 @@ class BasePacket(object):
     LOGVIEW_DEFAULT_ENABLED = True
     STRUCT = None
     BIN_STRUCT = None
-    HANDLER_METHOD = None
+    HANDLER_METHODS = None
 
     @classmethod
     def static_init(cls):
@@ -146,13 +147,14 @@ class BasePacket(object):
                 fmt += str(pad_size) + "x"
             cls.STRUCT = struct.Struct(fmt)
 
-        if cls.HANDLER_METHOD is None:
-            cls.HANDLER_METHOD = "on"
+        if cls.HANDLER_METHODS is None:
+            packet_method = "on"
             for c in cls.__name__:
                 if c.isupper():
-                    cls.HANDLER_METHOD += "_" + c.lower()
+                    packet_method += "_" + c.lower()
                 else:
-                    cls.HANDLER_METHOD += c
+                    packet_method += c
+            cls.HANDLER_METHODS = [ packet_method, 'on_packet' ]
 
     @property
     def name(self):
@@ -181,7 +183,7 @@ class BasePacket(object):
         try :
             return self.STRUCT.pack(*args)
         except Exception as e :
-            raise Exception("Error while serializing packet of type {} : {}".format(self.packet_type_string, e))
+            raise Exception("Error while serializing packet of type {} : {}".format(self.name, e))
 
 
     def deserialize(self, buf):
@@ -196,15 +198,18 @@ class BasePacket(object):
         return self.BIN_STRUCT.to_dump(self)
 
 
-    def dispatch(self, obj):
-        if hasattr(obj, self.HANDLER_METHOD):
-            return getattr(obj, self.HANDLER_METHOD)(self)
-        if hasattr(obj, 'on_packet'):
-            return getattr(obj, 'on_packet')(self)
+    def dispatch_generator(self, obj):
+        for method in self.HANDLER_METHODS:
+            if hasattr(obj, method):
+                g = getattr(obj, method)(self)
+                if isinstance(g, types.GeneratorType):
+                    yield from g
 
-    @property
-    def packet_type_string(self):
-        return self.__class__.__name__
+
+    def dispatch(self, obj):
+        for method in self.HANDLER_METHODS:
+            if hasattr(obj, method):
+                getattr(obj, method)(self)
 
 
 ################################################################################

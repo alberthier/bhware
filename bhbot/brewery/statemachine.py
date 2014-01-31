@@ -98,7 +98,7 @@ class StateMachine(object):
 
     def on_packet(self, packet):
         if self.current_state is not None:
-            generator = packet.dispatch(self.current_state)
+            generator = packet.dispatch_generator(self.current_state)
             self.process(generator)
 
 
