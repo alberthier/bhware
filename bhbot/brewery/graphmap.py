@@ -161,11 +161,12 @@ class Map:
         """
         :type packet: packets.InterbotPosition
         """
-        self.enable_zone(self.teammate_zone.id, True)
-        dx = packet.pose.x - self.teammate_zone.x
-        dy = packet.pose.y - self.teammate_zone.y
-        self.teammate_zone.x = packet.pose.x
-        self.teammate_zone.y = packet.pose.y
-        if abs(dx) > 0.01 or abs(dy) > 0.01:
-            # logger.log("Move team mate zone dx={} dy={}".format(dx,dy))
-            self.move_zone(self.teammate_zone.id, dx, dy)
+        if TEAMMATE_POSITION_IN_MAP:
+            self.enable_zone(self.teammate_zone.id, True)
+            dx = packet.pose.x - self.teammate_zone.x
+            dy = packet.pose.y - self.teammate_zone.y
+            self.teammate_zone.x = packet.pose.x
+            self.teammate_zone.y = packet.pose.y
+            if abs(dx) > 0.01 or abs(dy) > 0.01:
+                # logger.log("Move team mate zone dx={} dy={}".format(dx,dy))
+                self.move_zone(self.teammate_zone.id, dx, dy)
