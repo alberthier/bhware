@@ -339,7 +339,6 @@ class PicControlChannel(PacketClientSocketChannel):
 
 
     def ready(self):
-        statemachine.StateMachine(self.event_loop, self.event_loop.state_machine_name)
         self.event_loop.send_packet(packets.ControllerReady())
 
 
@@ -581,9 +580,11 @@ class EventLoop(object):
             except serial.SerialException:
                 logger.log("Unable to open serial port {}".format(SERIAL_PORT_PATH))
                 self.turret_channel = None
-        logger.log("Starting brewery with state machine '{}'".format(self.state_machine_name))
         self.pic_log_channel = PicLogChannel(self)
         self.pic_control_channel = PicControlChannel(self)
+
+        logger.log("Starting brewery with state machine '{}'".format(self.state_machine_name))
+        statemachine.StateMachine(self, self.state_machine_name)
 
         while not self.stopping:
             asyncore.loop(EVENT_LOOP_TICK_RESOLUTION_S, True, None, 1)
