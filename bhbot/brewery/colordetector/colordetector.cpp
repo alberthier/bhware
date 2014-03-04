@@ -20,7 +20,13 @@
 class ColorDetector
 {
 public:
-    ColorDetector(int webcamId, const std::string& imageFile, bool quiet);
+    enum Color {
+        ColorNone,
+        ColorRed,
+        ColorYellow
+    };
+public:
+    ColorDetector(int webcamId, const std::string& configFile, const std::string& imageFile, bool quiet);
     virtual ~ColorDetector();
 
     void process();
@@ -47,10 +53,11 @@ private:
     float m_yellowFireBlueRef;
     float m_yellowFireGreenRef;
     float m_yellowFireRedRef;
+    Color m_lastDetectedColor;
 };
 
 
-ColorDetector::ColorDetector(int webcamId, const std::string& imageFile, bool quiet) :
+ColorDetector::ColorDetector(int webcamId, const std::string& configFile, const std::string& imageFile, bool quiet) :
     m_quiet(quiet),
     m_webcam(NULL)
 {
@@ -62,6 +69,15 @@ ColorDetector::ColorDetector(int webcamId, const std::string& imageFile, bool qu
     } else {
         m_bgrImage = cv::imread(imageFile);
     }
+
+    std::ifstream cfg(configFile.c_str());
+    if (cfg.good()) {
+        std::cerr << "Loading '" << configFile << "'" << std::endl;
+    }
+    while (cfg.good()) {
+        processLine(cfg);
+    }
+    cfg.close();
 
     initDisplay();
 }
@@ -103,6 +119,7 @@ void ColorDetector::reset()
     m_yellowFireBlueRef = -30.0;
     m_yellowFireGreenRef = 220.0;
     m_yellowFireRedRef = 220.0;
+    m_lastDetectedColor = ColorNone;
 }
 
 
@@ -203,15 +220,26 @@ void ColorDetector::scan()
     green /= m_detectionZoneRects.size();
     red   /= m_detectionZoneRects.size();
 
+    if (!m_quiet) {
+        std::cerr << "B: " << blue << " G: " << green << " R: " << red << std::endl;
+    }
+
     if (testComponent(blue,  m_redFireBlueRef)  &&
         testComponent(green, m_redFireGreenRef) &&
         testComponent(red,   m_redFireRedRef)) {
-        sendPacket("ColorDetectorFire(color=TEAM_RED)");
-    }
-    if (testComponent(blue,  m_yellowFireBlueRef)  &&
-        testComponent(green, m_yellowFireGreenRef) &&
+        if (m_lastDetectedColor != ColorRed) {
+            m_lastDetectedColor = ColorRed;
+            sendPacket("ColorDetectorFire(color=TEAM_RED)");
+        }
+    } else if (testComponent(blue,  m_yellowFireBlueRef)  &&
+        testComponent(green, m_yellowFireGreenRef)        &&
         testComponent(red,   m_yellowFireRedRef)) {
-        sendPacket("ColorDetectorFire(color=TEAM_YELLOW)");
+        if (m_lastDetectedColor != ColorYellow) {
+            m_lastDetectedColor = ColorYellow;
+            sendPacket("ColorDetectorFire(color=TEAM_YELLOW)");
+        }
+    } else {
+        m_lastDetectedColor = ColorNone;
     }
 }
 
@@ -238,9 +266,13 @@ void ColorDetector::sendPacket(const std::string packet)
 
 int main(int argc, char** argv)
 {
-    const char* imageFile = "";
+    std::string imageFile;
+    std::string configFile;
     int webcamId = 0;
     bool quiet = 0;
+
+    configFile = argv[0];
+    configFile += ".cfg";
 
     for (int n = 2; n < argc; n += 2) {
         const char* name = argv[n - 1];
@@ -248,6 +280,8 @@ int main(int argc, char** argv)
 
         if (std::strcmp(name, "-i") == 0) {
             imageFile = value;
+        } else if (std::strcmp(name, "-c") == 0) {
+            configFile = value;
         } else if (std::strcmp(name, "-q") == 0) {
             quiet = std::atoi(value) != 0;
         } else if (std::strcmp(name, "-w") == 0) {
@@ -255,7 +289,7 @@ int main(int argc, char** argv)
         }
     }
 
-    ColorDetector detector(webcamId, imageFile, quiet);
+    ColorDetector detector(webcamId, configFile, imageFile, quiet);
     detector.process();
 
     return 0;

@@ -17,7 +17,6 @@ import time
 import asyncwsgiserver
 import bottle
 import builder
-import colordetector
 import commonstates
 import graphmap
 import interbot
