@@ -229,14 +229,14 @@ void ColorDetector::scan()
         testComponent(red,   m_redFireRedRef)) {
         if (m_lastDetectedColor != ColorRed) {
             m_lastDetectedColor = ColorRed;
-            sendPacket("ColorDetectorFire(color=TEAM_RED)");
+            sendPacket("packets.ColorDetectorFire(color=TEAM_RED)");
         }
     } else if (testComponent(blue,  m_yellowFireBlueRef)  &&
         testComponent(green, m_yellowFireGreenRef)        &&
         testComponent(red,   m_yellowFireRedRef)) {
         if (m_lastDetectedColor != ColorYellow) {
             m_lastDetectedColor = ColorYellow;
-            sendPacket("ColorDetectorFire(color=TEAM_YELLOW)");
+            sendPacket("packets.ColorDetectorFire(color=TEAM_YELLOW)");
         }
     } else {
         m_lastDetectedColor = ColorNone;
