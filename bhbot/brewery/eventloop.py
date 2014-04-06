@@ -267,9 +267,10 @@ class TurretChannel(FileDispatcherWithSend, BinaryPacketReader):
 
 class ProcessChannel:
 
-    def __init__(self, event_loop, cmd):
+    def __init__(self, event_loop, origin, cmd):
         self.process = subprocess.Popen(cmd, bufsize = 0, stdin = subprocess.PIPE, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
         self.event_loop = event_loop
+        self.origin = origin
         self.stdin = FileDispatcherWithSend(self.process.stdin)
         self.stdout = asyncore.file_dispatcher(self.process.stdout)
         self.stdout.handle_read = self.handle_read_stdout
@@ -291,9 +292,10 @@ class ProcessChannel:
         for code in result:
             try:
                 packet = eval(code)
-                self.event_loop.process(self, self.packet)
+                self.event_loop.process(self, packet)
             except Exception as e:
                 logger.log("Unable to evaluate the process answer: '{}'".format(code))
+                logger.log_exception(e)
 
 
     def handle_read_stderr(self):
@@ -477,9 +479,9 @@ class EventLoop(object):
 
         if IS_HOST_DEVICE_ARM and IS_MAIN_ROBOT:
             folder = os.path.join(os.path.dirname(__file__), "colordetector")
-            cmds = ["g++", "-Wall", "-O2", "-o", "colordetector", "-l", "opencv_core", "-l", "opencv_highgui", "-l", "opencv_imgproc", "colordetector.cpp"]
+            cmds = ["g++", "-Wall", "-O2", "-o", "colordetector", "colordetector.cpp", "-l", "opencv_core", "-l", "opencv_highgui", "-l", "opencv_imgproc"]
             builder.Builder("colordetector.cpp", "colordetector", cmds, folder).build()
-            self.colordetector = ProcessChannel(self, os.path.join(folder, "colordetector"))
+            self.colordetector = ProcessChannel(self, "CAM", [os.path.join(folder, "colordetector"), "-q", "1"])
         else:
             self.colordetector = None
 
