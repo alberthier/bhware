@@ -189,14 +189,11 @@ class RobotController(object):
 
 
     def on_servo_control(self, packet):
+        packet.status = SERVO_STATUS_SUCCESS
         self.send_packet(packet)
 
 
-    def on_electromagnet_control(self, packet):
-        self.send_packet(packet)
-
-
-    def on_suction_pump(self, packet):
+    def on_relay_control(self, packet):
         self.send_packet(packet)
 
 

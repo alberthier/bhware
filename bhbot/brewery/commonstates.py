@@ -639,85 +639,87 @@ class ServoControl(statemachine.State):
     def __init__(self, *args):
         """
             args can be 3 arguments: type, id, angle for a single servo control or
-            a list of tuples (type, id, angle) for multiple servos control
+            a list of tuples (type, id, angle, timeout) for multiple servos control
             ex:
-                ServoControl(SERVO_TYPE_AX, 0, 126)
-                ServoControl((SERVO_TYPE_AX, 0, 126), (SERVO_TYPE_RX, 1, 56), (SERVO_TYPE_AX, 2, 87))
+                ServoControl(SERVO_TYPE_AX, 0, 126, 1000)
+                ServoControl((SERVO_TYPE_AX, 0, 126, 1000), (SERVO_TYPE_RX, 1, 56, 1000), (SERVO_TYPE_AX, 2, 87, 1000))
         """
         if len(args) > 0:
             if type(args[0]) == tuple:
                 self.servo_commands = list(args)
-            elif len(args) == 3:
+            elif len(args) == 4:
                 self.servo_commands = [ args ]
+            else:
+                raise TypeError("Invalid arguments")
+        else:
+            raise TypeError("Invalid arguments")
+        self.statuses = {}
+        for cmd in self.servo_commands:
+            self.statuses[cmd[1]] = SERVO_STATUS_TIMED_OUT
 
 
     def on_enter(self):
-        for type, id, angle in self.servo_commands:
-            self.send_packet(packets.ServoControl(type, id, angle))
+        for cmd in self.servo_commands:
+            self.send_packet(packets.ServoControl(*cmd))
 
 
     def on_servo_control(self, packet):
         i = 0
-        for type, id, angle in self.servo_commands:
+        for type, id, angle, timeout in self.servo_commands:
             if packet.type == type and packet.id == id:
                 break
             i += 1
+        self.statuses[packet.id] = packet.status
         if i < len(self.servo_commands):
             del self.servo_commands[i]
         if len(self.servo_commands) == 0:
             yield None
 
 
+    def is_success(self):
+        return SERVO_STATUS_TIMED_OUT not in self.statuses.values()
 
 
-class ElectromagnetControl(statemachine.State):
+
+
+class RelayControl(statemachine.State):
 
     def __init__(self, *args):
         """
-            args can be 2 arguments: id, action for a single electromagnet control or
-            a list of tuples (id, action) for multiple electromagnet control
+            args can be 2 arguments: id, action for a single relay control or
+            a list of tuples (id, action) for multiple relay control
             ex:
-                ElectromagnetControl(0, ACTION_ON)
-                ElectromagnetControl((0, ACTION_ON), (1, ACTION_OFF), (2, ACTION_ON))
+                RelayControl(0, ACTION_ON)
+                RelayControl((0, ACTION_ON), (1, ACTION_OFF), (2, ACTION_ON))
         """
         if len(args) > 0:
             if type(args[0]) == tuple:
-                self.magnet_commands = list(args)
-            elif len(args) == 3:
-                self.magnet_commands = [ args ]
+                self.relay_commands = list(args)
+            elif len(args) == 2:
+                self.relay_commands = [ args ]
+            else:
+                raise TypeError("Invalid arguments")
+        else:
+            raise TypeError("Invalid arguments")
 
 
     def on_enter(self):
-        for id, action in self.magnet_commands:
-            self.send_packet(packets.ElectromagnetControl(id, action))
+        for cmd in self.relay_commands:
+            self.send_packet(packets.ElectromagnetControl(*cmd))
 
 
     def on_electromagnet_control(self, packet):
         i = 0
-        for id, action in self.magnet_commands:
+        for id, action in self.relay_commands:
             if packet.id == id:
                 break
             i += 1
-        if i < len(self.magnet_commands):
-            del self.magnet_commands[i]
-        if len(self.magnet_commands) == 0:
+        if i < len(self.relay_commands):
+            del self.relay_commands[i]
+        if len(self.relay_commands) == 0:
             yield None
 
 
-
-
-class SuctionPump(statemachine.State):
-
-    def __init__(self, action):
-        self.action = action
-
-
-    def on_enter(self):
-        self.send_packet(packets.SuctionPump(action))
-
-
-    def on_suction_pump(self, packet):
-        yield None
 
 
 ##################################################

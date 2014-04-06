@@ -215,7 +215,9 @@ class BasePacket(object):
 ################################################################################
 # Packet type ranges
 
-TURRET_RANGE_START    = 32
+PROCESS_RANGE_START   = 1
+PROCESS_RANGE_END     = 32
+TURRET_RANGE_START    = PROCESS_RANGE_END
 TURRET_RANGE_END      = 50
 PIC32_RANGE_START     = TURRET_RANGE_END
 PIC32_RANGE_END       = 150
@@ -230,7 +232,19 @@ INTERNAL_RANGE_END    = 256
 # Packet classes
 
 
+# Process packets
+
+
+class ColorDetectorFire(BasePacket):
+
+    TYPE = 1
+    DEFINITION = (
+        ('color', UEnum8(TEAM, TEAM_UNKNOWN)),
+    )
+
+
 # Turret packets
+
 
 class TurretDetect(BasePacket):
 
@@ -474,28 +488,21 @@ class ServoControl(BasePacket):
 
     TYPE = 69
     DEFINITION = (
-        ('type',  UEnum8(SERVO_TYPE, SERVO_TYPE_AX)),
-        ('id',    UInt8 (0, "Servo identifier")),
-        ('angle', UInt16(0, "Destination angle")),
+        ('type',    UEnum8(SERVO_TYPE, SERVO_TYPE_AX)),
+        ('id',      UInt8 (0, "Servo identifier")),
+        ('angle',   UInt16(0, "Destination angle [0, 300]")),
+        ('timeout', UInt32(0, "Timeout in ms")),
+        ('status',  UEnum8(SERVO_STATUS, SERVO_STATUS_TIMED_OUT)),
     )
 
 
 
 
-class ElectromagnetControl(BasePacket):
+class RelayControl(BasePacket):
 
     TYPE = 70
     DEFINITION = (
-        ('id',     UInt8 (0, "Servo identifier")),
-        ('action', UEnum8(ACTION, ACTION_OFF)),
-    )
-
-
-
-class SuctionPump(BasePacket):
-
-    TYPE = 71
-    DEFINITION = (
+        ('id',     UInt8 (0, "Relay identifier")),
         ('action', UEnum8(ACTION, ACTION_OFF)),
     )
 
