@@ -8,6 +8,7 @@ bhbot/brewery/colordetector/colordetector
 bhbot/brewery/web/cgi-bin/index.cgi
 drunkstar/host/
 drunkstar/dl/
+drunkstar/rootfs/
 drunkstar/buildroot.*/
 drunkstar/br-ccache/
 asser/log.txt
