@@ -26,6 +26,12 @@ def install_skeleton():
     print("Installing customized skeleton...")
     for f in os.listdir(SKELETON):
         call(["cp", "-rf", os.path.join(SKELETON, f), ROOTFS])
+    # VIM customization
+    call(["git", "clone", "https://github.com/alberthier/dotvim.git", "root/.vim"], cwd = ROOTFS)
+    call(["git", "submodule", "init"], cwd = ROOTFS + "/root/.vim")
+    call(["git", "submodule", "update"], cwd = ROOTFS + "/root/.vim")
+    call(["ln", "-s", ".vim/vimrc", ".vimrc"], cwd = ROOTFS + "/root")
+    shutil.rmtree(ROOTFS + "/root/.vim/.git")
 
 
 if __name__ == "__main__":
