@@ -52,6 +52,33 @@ def install_skeleton():
     shutil.rmtree(ROOTFS + "/root/.vim/.git")
 
 
+def make_ubi_image():
+    print("Create UBI image")
+    f = open("drunkstar.cfg", "w")
+    f.write("[ubifs]\n")
+    f.write("image=drunkstar.ubifs\n")
+    f.write("mode=ubi\n")
+    f.write("vol_id=0\n")
+    f.write("vol_type=dynamic\n")
+    f.write("vol_name=rootfs\n")
+    f.write("vol_alignment=1\n")
+    f.write("vol_flags=autoresize\n")
+    f.close()
+
+    call(["mkfs.ubifs", "--leb-size=0x1f800", "--min-io-size=0x800", "--max-leb-cnt=2048", "--compr=lzo", "--root=rootfs", "drunkstar.ubifs"])
+    call(["ubinize", "--peb-size=0x20000", "--sub-page-size=512", "--min-io-size=0x800", "-o", "drunkstar.ubi", "drunkstar.cfg"])
+
+    os.remove("drunkstar.cfg")
+    os.remove("drunkstar.ubifs")
+    os.rename("drunkstar.ubi", ROOTFS + "/root/install/drunkstar.ubi")
+
+
+def make_archive():
+    print("Create USB key archive")
+    content = os.listdir(ROOTFS)
+    call(["tar", "cjf", "../drunkstar.tar.bz2", "."], cwd = ROOTFS)
+
+
 if __name__ == "__main__":
     # cd to the script directory
     if os.getuid() != 0:
@@ -62,3 +89,5 @@ if __name__ == "__main__":
         cleanup()
         install_core()
         install_skeleton()
+        make_ubi_image()
+        make_archive()

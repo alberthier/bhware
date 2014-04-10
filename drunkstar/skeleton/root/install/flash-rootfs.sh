@@ -1,2 +1,2 @@
 #!/bin/sh
-ubiformat -y /dev/mtd3 -f /root/rootfs.ubi
+ubiformat -y /dev/mtd3 -f /root/install/drunkstar.ubi
