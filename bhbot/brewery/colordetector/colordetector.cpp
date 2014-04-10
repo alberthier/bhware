@@ -114,12 +114,12 @@ void ColorDetector::reset()
     m_pollTimeoutMs = 100;
     m_detectionZoneRects.clear();
     m_bgrImage = cv::Mat();
-    m_redFireBlueRef = -30.0;
-    m_redFireGreenRef = -30.0;
-    m_redFireRedRef = 220.0;
-    m_yellowFireBlueRef = -30.0;
-    m_yellowFireGreenRef = 220.0;
-    m_yellowFireRedRef = 220.0;
+    m_redFireBlueRef = -30.0f;
+    m_redFireGreenRef = -30.0f;
+    m_redFireRedRef = 220.0f;
+    m_yellowFireBlueRef = -30.0f;
+    m_yellowFireGreenRef = 220.0f;
+    m_yellowFireRedRef = 220.0f;
     m_lastDetectedColor = ColorNone;
 }
 
@@ -203,9 +203,9 @@ void ColorDetector::updateDisplay()
 
 void ColorDetector::scan()
 {
-    float blue  = 0.0;
-    float green = 0.0;
-    float red   = 0.0;
+    float blue  = 0.0f;
+    float green = 0.0f;
+    float red   = 0.0f;
 
     for (std::vector<cv::Rect>::iterator it = m_detectionZoneRects.begin(); it != m_detectionZoneRects.end(); ++it) {
         cv::Mat image(m_bgrImage, *it);
@@ -247,7 +247,7 @@ void ColorDetector::scan()
 
 bool ColorDetector::testComponent(float value, float reference)
 {
-    if (reference < 0.0) {
+    if (reference < 0.0f) {
         return value < -reference;
     } else {
         return value > reference;
