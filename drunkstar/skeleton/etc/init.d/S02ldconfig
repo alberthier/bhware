@@ -1,0 +1,19 @@
+#!/bin/sh
+#
+# Launch ldconfig
+#
+
+case "$1" in
+  start)
+	/sbin/ldconfig
+	;;
+  stop)
+	;;
+  restart|reload)
+	;;
+  *)
+	echo $"Usage: $0 {start|stop|restart}"
+	exit 1
+esac
+
+exit $?
