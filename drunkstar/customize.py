@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import sys
 import os
 import shutil
 from subprocess import *
@@ -17,6 +18,19 @@ LOCAL_OPENCV = "dl/drunkstar_opencv-2.4.8.tar.bz2"
 
 PACKAGES_URLS     = [DRUNKSTAR_CORE_URL,   PYTHON2_SOFTS_URL,   PYTHON3_SOFTS_URL,   OPENCV_URL]
 PACKAGES_ARCHIVES = [LOCAL_DRUNKSTAR_CORE, LOCAL_PYTHON2_SOFTS, LOCAL_PYTHON3_SOFTS, LOCAL_OPENCV]
+
+WIFI_SSID = ""
+WIFI_PASSWORD = ""
+
+
+def get_wifi_settings():
+    global WIFI_SSID
+    global WIFI_PASSWORD
+    print("Enter the Wifi SSID:")
+    WIFI_SSID = sys.stdin.readline().strip()
+    print("Enter the Wifi password:")
+    WIFI_PASSWORD = sys.stdin.readline().strip()
+
 
 def download():
     if not os.path.exists("dl"):
@@ -44,12 +58,24 @@ def install_skeleton():
     print("Installing customized skeleton...")
     for f in os.listdir(SKELETON):
         call(["cp", "-rf", os.path.join(SKELETON, f), ROOTFS])
-    # VIM customization
+
+    print("VIM customization")
     call(["git", "clone", "https://github.com/alberthier/dotvim.git", "root/.vim"], cwd = ROOTFS)
     call(["git", "submodule", "init"], cwd = ROOTFS + "/root/.vim")
     call(["git", "submodule", "update"], cwd = ROOTFS + "/root/.vim")
     call(["ln", "-s", ".vim/vimrc", ".vimrc"], cwd = ROOTFS + "/root")
     shutil.rmtree(ROOTFS + "/root/.vim/.git")
+
+    print("Wifi customization")
+    for conf_file in ["/etc/hostapd.conf", "/etc/wpa_supplicant/wpa_supplicant.conf"]:
+        f = open(ROOTFS + conf_file)
+        conf = f.read()
+        f.close()
+        conf = conf.replace("@@__BH_WIFI_SSID__@@", WIFI_SSID)
+        conf = conf.replace("@@__BH_WIFI_PASSWORD__@@", WIFI_PASSWORD)
+        f = open(ROOTFS + conf_file, "w")
+        f.write(conf)
+        f.close()
 
 
 def make_ubi_image():
@@ -85,6 +111,7 @@ if __name__ == "__main__":
         print("You must run this program as root")
     else:
         os.chdir(os.path.dirname(__file__))
+        get_wifi_settings()
         download()
         cleanup()
         install_core()
