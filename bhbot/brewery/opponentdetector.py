@@ -49,7 +49,7 @@ class Opponent:
         previous_direction = self.opponent_direction
         if packet.distance == 0:
             if angle in self.IN_FRONT_ANGLES:
-                self.opponent_direction = DIRECTION_FORWARDS
+                self.opponent_direction = DIRECTION_FORWARD
             elif angle in self.IN_BACK_ANGLES:
                 self.opponent_direction = DIRECTION_BACKWARDS
             else:

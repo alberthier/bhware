@@ -173,7 +173,7 @@ TEAM = Enum("Team color",
 
 DIRECTION = Enum("Direction",
     DIRECTION_AUTO      =  0,
-    DIRECTION_FORWARDS  =  1,
+    DIRECTION_FORWARD  =   1,
     DIRECTION_BACKWARDS = -1,
 )
 

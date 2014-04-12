@@ -261,11 +261,11 @@ class WaitForOpponentLeave(Timer):
         self.opponent_disappeared = False
         self.timer_expired = False
         self.exit_reason = None
-        if self.move_direction == DIRECTION_FORWARDS:
+        if self.move_direction == DIRECTION_FORWARD:
             direction = DIRECTION_BACKWARDS
             distance = -0.150
         else:
-            direction = DIRECTION_FORWARDS
+            direction = DIRECTION_FORWARD
             distance = 0.150
 
         current_pose = self.robot.pose
@@ -395,7 +395,7 @@ class AbstractMove(statemachine.State):
 
 class Rotate(AbstractMove):
 
-    def __init__(self, angle, direction = DIRECTION_FORWARDS, chained = None):
+    def __init__(self, angle, direction = DIRECTION_FORWARD, chained = None):
         AbstractMove.__init__(self, chained, NO_OPPONENT_HANDLING)
         pose = position.Pose(0.0, 0.0, angle, True)
         self.packet = packets.Rotate(direction = direction, angle = pose.angle)
@@ -405,7 +405,7 @@ class Rotate(AbstractMove):
 
 class LookAt(AbstractMove):
 
-    def __init__(self, x, y, direction = DIRECTION_FORWARDS, chained = None):
+    def __init__(self, x, y, direction = DIRECTION_FORWARD, chained = None):
         AbstractMove.__init__(self, chained, NO_OPPONENT_HANDLING)
         self.pose = position.Pose(x, y, None, True)
         self.direction = direction
@@ -424,7 +424,7 @@ class LookAt(AbstractMove):
 
 class LookAtOpposite(AbstractMove):
 
-    def __init__(self, x, y, direction = DIRECTION_FORWARDS, chained = None):
+    def __init__(self, x, y, direction = DIRECTION_FORWARD, chained = None):
         AbstractMove.__init__(self, chained, NO_OPPONENT_HANDLING)
         self.pose = position.Pose(x, y, None, True)
         self.direction = direction
@@ -443,7 +443,7 @@ class LookAtOpposite(AbstractMove):
 
 class MoveCurve(AbstractMove):
 
-    def __init__(self, angle, points, direction = DIRECTION_FORWARDS, chained = None, opponent_handling =  OPPONENT_HANDLING):
+    def __init__(self, angle, points, direction = DIRECTION_FORWARD, chained = None, opponent_handling =  OPPONENT_HANDLING):
         AbstractMove.__init__(self, chained = chained, opponent_leave_config = opponent_handling)
         apose = position.Pose(0.0, 0.0, angle, True)
         poses = []
@@ -459,7 +459,7 @@ class MoveCurve(AbstractMove):
 
 class MoveCurveTo(MoveCurve):
 
-    def __init__(self, angle, pose, direction = DIRECTION_FORWARDS, chained = None):
+    def __init__(self, angle, pose, direction = DIRECTION_FORWARD, chained = None):
         MoveCurve.__init__(self, angle, [pose], direction, chained)
 
 
@@ -467,7 +467,7 @@ class MoveCurveTo(MoveCurve):
 
 class MoveLine(AbstractMove):
 
-    def __init__(self, points, direction = DIRECTION_FORWARDS, chained = None, opponent_handling = OPPONENT_HANDLING):
+    def __init__(self, points, direction = DIRECTION_FORWARD, chained = None, opponent_handling = OPPONENT_HANDLING):
         AbstractMove.__init__(self, chained, opponent_handling)
         poses = []
         for pt in points:
@@ -482,7 +482,7 @@ class MoveLine(AbstractMove):
 
 class MoveLineTo(MoveLine):
 
-    def __init__(self, x, y, direction = DIRECTION_FORWARDS, chained = None, opponent_handling = OPPONENT_HANDLING):
+    def __init__(self, x, y, direction = DIRECTION_FORWARD, chained = None, opponent_handling = OPPONENT_HANDLING):
         MoveLine.__init__(self, [position.Pose(x, y, None, True)], direction, chained, opponent_handling)
 
 
@@ -490,7 +490,7 @@ class MoveLineTo(MoveLine):
 
 class MoveRelative(statemachine.State):
 
-    def __init__(self, distance, direction = DIRECTION_FORWARDS, chained = None):
+    def __init__(self, distance, direction = DIRECTION_FORWARD, chained = None):
         self.distance = distance
         self.direction = direction
         self.chained = chained
@@ -525,7 +525,7 @@ class RotateRelative(AbstractMove):
 
 class MoveArc(AbstractMove):
 
-    def __init__(self, center_x, center_y, radius, points, direction = DIRECTION_FORWARDS, chained = None):
+    def __init__(self, center_x, center_y, radius, points, direction = DIRECTION_FORWARD, chained = None):
         AbstractMove.__init__(self, chained, OPPONENT_HANDLING)
         cpose = position.Pose(center_x, center_y, None, True)
         angles = []
@@ -539,7 +539,7 @@ class MoveArc(AbstractMove):
 
 class FollowPath(statemachine.State):
 
-    def __init__(self, path, direction = DIRECTION_FORWARDS):
+    def __init__(self, path, direction = DIRECTION_FORWARD):
         super().__init__()
         self.path = path
         self.direction = direction
@@ -549,12 +549,12 @@ class FollowPath(statemachine.State):
     def on_enter(self):
         move = None
         for pose in self.path:
-            if self.direction == DIRECTION_FORWARDS:
+            if self.direction == DIRECTION_FORWARD:
                 if not self.robot.is_looking_at(pose):
-                    move = yield LookAt(pose.virt.x, pose.virt.y, DIRECTION_FORWARDS, move)
+                    move = yield LookAt(pose.virt.x, pose.virt.y, DIRECTION_FORWARD, move)
             else:
                 if not self.robot.is_looking_at_opposite(pose):
-                    move = yield LookAtOpposite(pose.virt.x, pose.virt.y, DIRECTION_FORWARDS, move)
+                    move = yield LookAtOpposite(pose.virt.x, pose.virt.y, DIRECTION_FORWARD, move)
             move = yield MoveLine([pose], self.direction, move)
         self.exit_reason = move.exit_reason
         yield None
@@ -576,7 +576,7 @@ class StopAll(statemachine.State):
 
 class Navigate(statemachine.State):
 
-    def __init__(self, x, y, direction = DIRECTION_FORWARDS):
+    def __init__(self, x, y, direction = DIRECTION_FORWARD):
         statemachine.State.__init__(self)
         self.destination = position.Pose(x, y, None, True)
         self.direction = direction
