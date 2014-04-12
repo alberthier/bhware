@@ -220,12 +220,12 @@ class FileDispatcherWithSend(asyncore.file_dispatcher):
 
 class TurretChannel(FileDispatcherWithSend, BinaryPacketReader):
 
-    def __init__(self, eventloop, serial_port_path, serial_port_speed):
+    def __init__(self, event_loop, serial_port_path, serial_port_speed):
         self.port = serial.PosixPollSerial(serial_port_path, serial_port_speed, timeout = 0)
         self.port.nonblocking()
         FileDispatcherWithSend.__init__(self, self.port)
         BinaryPacketReader.__init__(self)
-        self.eventloop = eventloop
+        self.event_loop = event_loop
         self.synchronized = False
         self.origin = "TUR"
 
