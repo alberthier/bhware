@@ -162,12 +162,21 @@ class BasePacket(object):
 
 
     def __init__(self, *args, **kwargs):
+        values_iter = None
+        if len(args) != 0 and type(args[0]) != tuple:
+            values_iter = iter(args)
         for name, item in self.DEFINITION:
             value = None
-            for aname, avalue in args:
-                if name == aname:
-                    value = avalue
-                    break
+            if values_iter is None:
+                for aname, avalue in args:
+                    if name == aname:
+                        value = avalue
+                        break
+            else:
+                try:
+                    value = next(values_iter)
+                except StopIteration:
+                    values_iter = None
             if value is None:
                 if name in kwargs:
                     value = kwargs[name]
