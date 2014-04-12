@@ -116,20 +116,24 @@ var data_to_fetch=undefined;
 function fetch()
 {
     item = data_to_fetch.pop();
-    if (item != undefined) {
-        var script = document.createElement('script');
-        script.type = 'text/javascript';
-        script.src = item[0];
-        jsonpcb.current_cb = item[1];
-        document.head.appendChild(script);
-        document.head.removeChild(script);
+    var req = new XMLHttpRequest();
+    req.open("GET", item[0], true);
+    req.onreadystatechange = function(e) {
+        if (req.readyState == 4) {
+            if(req.status == 200) {
+                // Success
+                jsonpcb.current_cb = item[1];
+                eval(req.responseText);
+            }
+        }
     }
+    req.send();
 }
 
 function jsonpcb(data) {
     jsonpcb.current_cb(data);
     jsonpcb.current_cb = undefined;
-    fetch();
+    window.setTimeout(fetch, 1000)
 }
 
 function setup() {
@@ -137,22 +141,19 @@ function setup() {
     var type = undefined;
     for (var i = 0; i < vars.length; ++i) {
         v = vars[i].split("=");
-        if (v[0] == "pic") {
-            var pic = decodeURIComponent(v[1]);
-            document.getElementById("picaddr").value = pic;
-        } else if (v[0] == "speeds") {
+        if (v[0] == "speeds") {
             type = "speeds";
         } else if (v[0] == "voltages") {
             type = "voltages";
         }
     }
     if (type == "speeds") {
-        data_to_fetch = [["http://" + pic + "/vmaxg.json", left_engine_speed ],
-                        ["http://" + pic + "/vmaxd.json", right_engine_speed ]];
+        data_to_fetch = [["pic/vmaxg.json", left_engine_speed ],
+                         ["pic/vmaxd.json", right_engine_speed ]];
         fetch()
     } else if (type == "voltages") {
-        data_to_fetch = [["http://" + pic + "/tensiong.json", left_engine_voltage ],
-                        ["http://" + pic + "/tensiond.json", right_engine_voltage ]];
+        data_to_fetch = [["pic/tensiong.json", left_engine_voltage ],
+                         ["pic/tensiond.json", right_engine_voltage ]];
         fetch()
     }
 }
@@ -161,7 +162,6 @@ function setup() {
     </head>
     <body onload="setup()">
         <form action="enginetests.html" method="get">
-                PIC address: <input id="picaddr" type="text" name="pic">
             <input type="submit" name="speeds" value="Speeds">
             <input type="submit" name="voltages" value="Voltages">
         </form>
