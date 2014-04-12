@@ -220,7 +220,7 @@ class FileDispatcherWithSend(asyncore.file_dispatcher):
 
 class TurretChannel(FileDispatcherWithSend, BinaryPacketReader):
 
-    def __init__(self, event_loop, serial_port_path, serial_port_speed):
+    def __init__(self, eventloop, serial_port_path, serial_port_speed):
         self.port = serial.PosixPollSerial(serial_port_path, serial_port_speed, timeout = 0)
         self.port.nonblocking()
         FileDispatcherWithSend.__init__(self, self.port)
@@ -256,7 +256,7 @@ class TurretChannel(FileDispatcherWithSend, BinaryPacketReader):
 
     def close(self):
         self.port.close()
-        super().close(self)
+        super().close()
 
 
     def handle_close(self):
