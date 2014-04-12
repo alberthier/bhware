@@ -705,10 +705,10 @@ class RelayControl(statemachine.State):
 
     def on_enter(self):
         for cmd in self.relay_commands:
-            self.send_packet(packets.ElectromagnetControl(*cmd))
+            self.send_packet(packets.RelayControl(*cmd))
 
 
-    def on_electromagnet_control(self, packet):
+    def on_relay_control(self, packet):
         i = 0
         for id, action in self.relay_commands:
             if packet.id == id:
