@@ -23,7 +23,7 @@ class Opponent:
         self.opponent_direction = None
         self.x = None
         self.y = None
-        self.timer = eventloop.Timer(self.detector.event_loop, OPPONENT_DETECTION_DISAPEARING_MS, self.opponent_disappeared)
+        self.timer = eventloop.Timer(self.detector.event_loop, OPPONENT_DETECTION_DISAPPEARING_MS, self.opponent_disappeared)
         self.enabled = True
         self.detected = False
 
@@ -70,7 +70,7 @@ class Opponent:
 
 
     def opponent_disappeared(self):
-        logger.log("{} opponent disapeared".format(self.opponent_name()))
+        logger.log("{} opponent disappeared".format(self.opponent_name()))
         self.detected = False
         self.timer.stop()
         self.detector.event_loop.send_packet(packets.OpponentPosition(robot = self.opponent_type, x = None, y = None))
