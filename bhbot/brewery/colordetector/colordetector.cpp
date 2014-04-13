@@ -70,6 +70,7 @@ private:
     Color m_lastDetectedColor;
     int m_camWidth;
     int m_camHeight;
+    bool m_writeLastCapture;
 
     ScanMethod m_scanMethod;
     char* m_scanMethodName;
@@ -148,6 +149,7 @@ void ColorDetector::reset()
     m_lastDetectedColor = ColorNone;
     m_scanMethod = ScanRgb;
     m_scanMethodName = "RGB";
+    m_writeLastCapture = false;
 }
 
 
@@ -162,7 +164,16 @@ bool ColorDetector::processLine(std::istream& stream)
 
     sstr >> command;
 
-    if (command == "ScanMethod") {
+    if (command == "WriteLastCapture")
+    {
+        std::string mode;
+        sstr >> mode;
+
+        m_writeLastCapture = mode == "1";
+
+        std::cerr << "WriteLastCapture " << m_writeLastCapture << std::endl;
+    }
+    else if (command == "ScanMethod") {
         std::string mode;
         sstr >> mode;
 
@@ -384,8 +395,9 @@ const char* getPixelColorTypeBH(int H, int S, int V)
 
 void ColorDetector::scan()
 {
-    // TODO : make configurable
-    imwrite("image.jpg",m_bgrImage);
+    if(m_writeLastCapture) {
+        imwrite("image.jpg",m_bgrImage);
+    }
 
     switch(m_scanMethod) {
         default:
@@ -426,6 +438,7 @@ void ColorDetector::scanRgb()
     if (testComponent(blue,  m_redFireBlueRef)  &&
         testComponent(green, m_redFireGreenRef) &&
         testComponent(red,   m_redFireRedRef)) {
+        // TODO : factor between scan methods
         if (m_lastDetectedColor != ColorRed) {
             m_lastDetectedColor = ColorRed;
             sendPacket("packets.ColorDetectorFire(color=TEAM_RED)");
@@ -433,6 +446,7 @@ void ColorDetector::scanRgb()
     } else if (testComponent(blue,  m_yellowFireBlueRef)  &&
         testComponent(green, m_yellowFireGreenRef)        &&
         testComponent(red,   m_yellowFireRedRef)) {
+        // TODO : factor between scan methods
         if (m_lastDetectedColor != ColorYellow) {
             m_lastDetectedColor = ColorYellow;
             sendPacket("packets.ColorDetectorFire(color=TEAM_YELLOW)");
