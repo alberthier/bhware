@@ -117,6 +117,8 @@ void ColorDetector::process()
             m_webcam->read(m_bgrImage);
         }
 
+        // TODO : make configurable
+        
         //scan();
 
         scanHsv();
@@ -194,10 +196,6 @@ void ColorDetector::initDisplay()
     if (!m_quiet) {
         cv::namedWindow(BGR_IMAGE, cv::WINDOW_NORMAL);
         cv::resizeWindow(BGR_IMAGE, m_camWidth, m_camHeight);
-
-        //cv::namedWindow(HSV_IMAGE, cv::WINDOW_NORMAL);
-        //cv::resizeWindow(HSV_IMAGE, 640, 480);
-        //cv::moveWindow(HSV_IMAGE, 710, 0);
     }
 #endif // !__arm__
 }
@@ -212,12 +210,6 @@ void ColorDetector::updateDisplay()
             cv::rectangle(img, cv::Point(it->x, it->y), cv::Point(it->x + it->width, it->y + it->height), cv::Scalar(0, 200, 0));
         }
         cv::imshow(BGR_IMAGE, img);
-
-        //cv::Mat hsvImage;
-        //cv::cvtColor(m_bgrImage, hsvImage, CV_BGR2HSV);
-        //cv::imshow(HSV_IMAGE, hsvImage);
-
-        //cv::waitKey(1);
     }
 #endif // !__arm__
 }
@@ -241,6 +233,7 @@ void ColorDetector::scanHsv()
     float green = 0.0f;
     float red   = 0.0f;
 
+    // TODO : make configurable
     imwrite("image.jpg",m_bgrImage);
 
     int pixels = 0;
@@ -249,45 +242,20 @@ void ColorDetector::scanHsv()
 
     for (std::vector<cv::Rect>::iterator it = m_detectionZoneRects.begin(); it != m_detectionZoneRects.end(); ++it) {
         cv::Mat image(m_bgrImage, *it);
-        //std::vector<cv::Mat> components;
-        //cv::split(image, components);
 
         cv::Mat hsvZone;
         cv::cvtColor(image, hsvZone, CV_BGR2HSV);
-
-        //std::vector<cv::Mat> components;
-        //cv::split(hsvZone, components);
 
         int h = hsvZone.rows;             // Pixel height
         int w = hsvZone.cols;              // Pixel width
 
         pixels = w * h;
 
-
-
-        //Map<String, Integer> tallyColors = new HashMap<String, Integer>();
-        //std::map<const char*, int> tallyColors;
-
-        //byte[] pixelsTotal = new byte[h*rowSize];
-        //mRgba.get(0,0,pixelsTotal);
-
-
-        //for (int y=0; y< hsvZone.rows; y++) {
-        //    for (int x=0; x<hsvZone.cols; x++) {
-	    // Get the HSV pixel components
-
-
-	        //int hVal = components[0].at<int>(y,x);
-	        //int sVal = components[1].at<int>(y,x);
-	        //int vVal = components[2].at<int>(y,x);
-
-	        //cv::Vec3b pixel = image.at<cv::Vec3b>(0,0)
-
         cv::MatIterator_<cv::Vec3b> it2 = image.begin<cv::Vec3b>(),
         it_end = image.end<cv::Vec3b>();
+
         for(; it2 != it_end; ++it2)
         {
-    // work with pixel in here, e.g.:
             cv::Vec3b& pixel = *it2; // reference to pixel in image
 
             int hVal = pixel[0];
@@ -295,27 +263,8 @@ void ColorDetector::scanHsv()
             int vVal = pixel[2];
 
 
-	    //int hVal = (int)pixelsTotal[(y*rowSize) + x + 0];   // Hue
-	    //int sVal = (int)pixelsTotal[(y*rowSize) + x + 1];   // Saturation
-	    //int vVal = (int)pixelsTotal[(y*rowSize) + x + 2];   // Value (Brightness)
-
-
-	    // Determine what type of color the HSV pixel is.
+	        // Determine what type of color the HSV pixel is.
 	        const char* ctype = getPixelColorTypeBH(hVal, sVal, vVal);
-
-	        /*std::cout << x << " " << y << " " <<  hVal << " " << sVal << " " << vVal << " " << ctype << std::endl;*/
-	        //std::cout <<  hVal << " " << sVal << " " << vVal << " " << ctype << std::endl;
-
-	    // Keep count of these colors.
-
-/*                    int totalNum = 0;
-	    try{
-		totalNum = tallyColors.get(ctype);
-	    } catch(Exception ex){
-		totalNum = 0;
-	    }
-	    totalNum++;
-	    tallyColors.put(ctype, totalNum);*/
 
 	        tallyColors[ctype]+=1;
 	    }
@@ -329,8 +278,7 @@ void ColorDetector::scanHsv()
             const char* v = colors[i];
             int pixCount = tallyColors[v];
 
-            //Log.i(TAG, v + " - " + (pixCount*100/pixels) + "%, ");
-
+            // TODO : make configurable
             if(pixCount>0) {
                 std::cerr << v << " - " << (pixCount*100/pixels) << " %" << std::endl;
             }
@@ -342,8 +290,8 @@ void ColorDetector::scanHsv()
         }
 
         float percentage = initialConfidence * (tallyMaxCount * 100 / pixels);
-        //Log.i(TAG, "Color of currency note: " + colors[tallyMaxIndex] + " (" + percentage + "% confidence).");
-        std::cerr << "Color of currency note: " << colors[tallyMaxIndex] << " (" << percentage << "% confidence)." << std::endl;
+
+        std::cerr << "Color of current note: " << colors[tallyMaxIndex] << " (" << percentage << "% confidence)." << std::endl;
 
         if (percentage > 80.0)
         {
@@ -360,136 +308,59 @@ void ColorDetector::scanHsv()
             else {
                 sendPacket("None");
             }
-
-
-            //sendPacket("packets.ColorDetectorFire(color=TEAM_RED)");
-            //sendPacket("packets.ColorDetectorFire(color=TEAM_YELLOW)");
         }
-
-// END
-
     }
-
-
-
-    //sendPacket("packets.ColorDetectorFire(color=TEAM_RED)");
-    //sendPacket("packets.ColorDetectorFire(color=TEAM_YELLOW)");
 }
 
-/*
-public Mat onCameraFrame(CvCameraViewFrame inputFrame) {
-        mRgba = inputFrame.rgba();
 
-        if (mIsColorSelected) {
-            Imgproc.cvtColor(mRgba, mRgba, Imgproc.COLOR_BGR2HSV);
-
-            int h = mRgba.height();             // Pixel height
-            int w = mRgba.width();              // Pixel width
-            int rowSize = (int)mRgba.step1();       // Size of row in bytes, including extra padding
-
-            float initialConfidence = 1.0f;
-
-            Map<String, Integer> tallyColors = new HashMap<String, Integer>();
-
-            byte[] pixelsTotal = new byte[h*rowSize];
-            mRgba.get(0,0,pixelsTotal);
-
-            //This for loop takes about 30 seconds to process for my camera frame
-            for (int y=0; y<h; y++) {
-                for (int x=0; x<w; x++) {
-                    // Get the HSV pixel components
-
-                    int hVal = (int)pixelsTotal[(y*rowSize) + x + 0];   // Hue
-                    int sVal = (int)pixelsTotal[(y*rowSize) + x + 1];   // Saturation
-                    int vVal = (int)pixelsTotal[(y*rowSize) + x + 2];   // Value (Brightness)
-
-
-                    // Determine what type of color the HSV pixel is.
-                    String ctype = getPixelColorType(hVal, sVal, vVal);
-                    // Keep count of these colors.
-                    int totalNum = 0;
-                    try{
-                        totalNum = tallyColors.get(ctype);
-                    } catch(Exception ex){
-                        totalNum = 0;
-                    }
-                    totalNum++;
-                    tallyColors.put(ctype, totalNum);
-                }
-            }
-
-            int tallyMaxIndex = 0;
-            int tallyMaxCount = -1;
-            int pixels = w * h;
-
-            for (int i=0; i<12; i++) {
-                const char* v = colors[i];
-                int pixCount = tallyColors[v];
-
-                //Log.i(TAG, v + " - " + (pixCount*100/pixels) + "%, ");
-
-                std::cout << v << " - " << (pixCount*100/pixels) << " %" << std::endl;
-
-                if (pixCount > tallyMaxCount) {
-                    tallyMaxCount = pixCount;
-                    tallyMaxIndex = i;
-                }
-            }
-
-            float percentage = initialConfidence * (tallyMaxCount * 100 / pixels);
-            //Log.i(TAG, "Color of currency note: " + colors[tallyMaxIndex] + " (" + percentage + "% confidence).");
-            std::cout << "Color of currency note: " << colors[tallyMaxIndex] << " (" << percentage << "% confidence)." << std::endl;
-
-        }
-
-        return mRgba;
-    }*/
-
-    const char* getPixelColorType(int H, int S, int V)
-    {
-        char* color;
-        if (V < 20)
-            color = "cBLACK";
-        else if (V > 190 && S < 27)
-            color = "cWHITE";
-        else if (S < 53 && V < 185)
-            color = "cGREY";
-        else {  // Is a color
-            if (H < 14)
-                color = "cRED";
-            else if (H < 25)
-                color = "cORANGE";
-            else if (H < 34)
-                color = "cYELLOW";
-            else if (H < 73)
-                color = "cGREEN";
-            else if (H < 102)
-                color = "cAQUA";
-            else if (H < 127)
-                color = "cBLUE";
-            else if (H < 149)
-                color = "cPURPLE";
-            else if (H < 175)
-                color = "cPINK";
-            else    // full circle
-                color = "cRED"; // back to Red
-        }
-        return color;
+const char* getPixelColorType(int H, int S, int V)
+{
+    char* color;
+    if (V < 20)
+        color = "cBLACK";
+    else if (V > 190 && S < 27)
+        color = "cWHITE";
+    else if (S < 53 && V < 185)
+        color = "cGREY";
+    else {  // Is a color
+        if (H < 14)
+            color = "cRED";
+        else if (H < 25)
+            color = "cORANGE";
+        else if (H < 34)
+            color = "cYELLOW";
+        else if (H < 73)
+            color = "cGREEN";
+        else if (H < 102)
+            color = "cAQUA";
+        else if (H < 127)
+            color = "cBLUE";
+        else if (H < 149)
+            color = "cPURPLE";
+        else if (H < 175)
+            color = "cPINK";
+        else    // full circle
+            color = "cRED"; // back to Red
     }
+    return color;
+}
 
-    const char* getPixelColorTypeBH(int H, int S, int V)
-    {
-        if (H > 200 )
-            return "cRED";
+const char* getPixelColorTypeBH(int H, int S, int V)
+{
+    // TODO : make configurable
+    if (H > 200 )
+        return "cRED";
 
-        if (H < 20 )
-            return "cRED";
+    // TODO : make configurable
+    if (H < 20 )
+        return "cRED";
 
-        if (H > 80 )
-            return "cGREEN";
+    // TODO : make configurable
+    if (H > 80 )
+        return "cGREEN";
 
-        return "cYELLOW";
-    }
+    return "cYELLOW";
+}
 
 
 void ColorDetector::scan()
@@ -498,6 +369,7 @@ void ColorDetector::scan()
     float green = 0.0f;
     float red   = 0.0f;
 
+    // TODO : make configurable
     imwrite("image.jpg",m_bgrImage);
 
     for (std::vector<cv::Rect>::iterator it = m_detectionZoneRects.begin(); it != m_detectionZoneRects.end(); ++it) {
