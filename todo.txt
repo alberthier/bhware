@@ -1,33 +1,4 @@
-brewery:
-- Quel est la valeur du cost d'un pathfinding qui échoue
-- goalmanager ne peut plus utiliser la carte : erreur de propriété non trouvée sur eventloop
+colordetector
+---------------
 
-sheldon:
-- Retry de gâteau
-- les bougies sont "trop" soufflées : j'ai l'impression qu'il repasse dessus
-- calibration webcam
-- tests barman
-- tests depose
-- integration gateau dans goal manager
-
-leonard:
-- n'arrive pas à se connecter à sheldon
-
-drunkstar:
--
-
-Stratégie dépose :
-
-Poser des goals de dépose dans notre camp. Les marquer comme utilisés.
-
-Stratégie fauche : poser des goals dans le camp adverse et aller les moissonner.
-Si on a pris qqch, aller direct le déposer. Ne pas faire de retry sur chaque goal.
-
-Autre possibilité, moissonner dans le sens du goal, 2 alternatives, par le nord ou par le sud
-
-
-Gérer cadeaux un a un
-
-Dépose des verres dans la zone de départ de chaque robot
-
-Priorité entre dépose et cadeaux
+- Error "Camera dropped frame!" on stdout
