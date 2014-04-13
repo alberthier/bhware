@@ -358,7 +358,7 @@ class PicLogChannel(ClientSocketChannel):
             while True:
                 i = self.buffer.find(b"\n")
                 if i != -1:
-                    logger.log(self.buffer[:i].rstrip().encode("string_escape"), "PIC")
+                    logger.log(self.buffer[:i].rstrip().decode("unicode_escape"), "PIC")
                     self.buffer = self.buffer[i + 1:]
                 else:
                     break
