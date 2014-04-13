@@ -31,6 +31,12 @@ public:
         ColorRed,
         ColorYellow
     };
+
+    enum ScanMethod {
+        ScanHsv,
+        ScanRgb
+    };
+
 public:
     ColorDetector(int webcamId, const std::string& configFile, const std::string& imageFile, bool quiet);
     virtual ~ColorDetector();
@@ -44,6 +50,7 @@ private:
     void initDisplay();
     void updateDisplay();
     void scan();
+    void scanRgb();
     void scanHsv();
     bool testComponent(float value, float reference);
     void sendPacket(const std::string packet);
@@ -63,6 +70,9 @@ private:
     Color m_lastDetectedColor;
     int m_camWidth;
     int m_camHeight;
+
+    ScanMethod m_scanMethod;
+    char* m_scanMethodName;
 };
 
 
@@ -117,11 +127,7 @@ void ColorDetector::process()
             m_webcam->read(m_bgrImage);
         }
 
-        // TODO : make configurable
-        
-        //scan();
-
-        scanHsv();
+        scan();
 
         updateDisplay();
     }
@@ -140,6 +146,8 @@ void ColorDetector::reset()
     m_yellowFireGreenRef = 220.0f;
     m_yellowFireRedRef = 220.0f;
     m_lastDetectedColor = ColorNone;
+    m_scanMethod = ScanRgb;
+    m_scanMethodName = "RGB";
 }
 
 
@@ -154,7 +162,22 @@ bool ColorDetector::processLine(std::istream& stream)
 
     sstr >> command;
 
-    if (command == "CameraSetup") {
+    if (command == "ScanMethod") {
+        std::string mode;
+        sstr >> mode;
+
+        if (mode == "HSV") {
+            m_scanMethod = ScanHsv;
+            m_scanMethodName = "HSV";
+        } else {
+            m_scanMethod = ScanRgb;
+            m_scanMethodName = "RGB";
+        }
+
+        std::cerr << "ScanMethod " << m_scanMethodName << std::endl;
+
+    }
+    else if (command == "CameraSetup") {
         sstr >> m_camWidth >> m_camHeight;
         std::cerr << "CameraSetup " << m_camWidth << " " << m_camHeight << std::endl;
     }
@@ -232,9 +255,6 @@ void ColorDetector::scanHsv()
     float blue  = 0.0f;
     float green = 0.0f;
     float red   = 0.0f;
-
-    // TODO : make configurable
-    imwrite("image.jpg",m_bgrImage);
 
     int pixels = 0;
 
@@ -362,15 +382,28 @@ const char* getPixelColorTypeBH(int H, int S, int V)
     return "cYELLOW";
 }
 
-
 void ColorDetector::scan()
+{
+    // TODO : make configurable
+    imwrite("image.jpg",m_bgrImage);
+
+    switch(m_scanMethod) {
+        default:
+        case ScanRgb:
+            scanRgb();
+            break;
+        case ScanHsv:
+            scanHsv();
+            break;
+    }
+}
+
+
+void ColorDetector::scanRgb()
 {
     float blue  = 0.0f;
     float green = 0.0f;
     float red   = 0.0f;
-
-    // TODO : make configurable
-    imwrite("image.jpg",m_bgrImage);
 
     for (std::vector<cv::Rect>::iterator it = m_detectionZoneRects.begin(); it != m_detectionZoneRects.end(); ++it) {
         cv::Mat image(m_bgrImage, *it);
