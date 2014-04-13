@@ -35,7 +35,8 @@ class Map:
 
 
     def on_device_ready(self, packet):
-        self.event_loop.send_packet(packets.SimulatorClearGraphMapZones())
+        if IS_HOST_DEVICE_PC:
+            self.event_loop.send_packet(packets.SimulatorClearGraphMapZones())
 
         self.main_opponent_zone = self.add_circular_zone(0.130 + ROBOT_GYRATION_RADIUS)
         self.secondary_opponent_zone = self.add_circular_zone(0.080 + ROBOT_GYRATION_RADIUS)
