@@ -3,13 +3,16 @@
 #include <opencv2/highgui/highgui.hpp>
 
 #include <iostream>
+#include <iomanip>
 #include <fstream>
 #include <sstream>
 #include <cstring>
 #include <vector>
+#include <map>
 
 #include <poll.h>
 
+#include <sys/time.h>
 
 #define BGR_IMAGE "BGR Image"
 #define HSV_IMAGE "HSV Image"
@@ -17,6 +20,8 @@
 
 //=================================================================================================
 
+const char* getPixelColorType(int H, int S, int V);
+const char* getPixelColorTypeBH(int H, int S, int V);
 
 class ColorDetector
 {
@@ -26,6 +31,12 @@ public:
         ColorRed,
         ColorYellow
     };
+
+    enum ScanMethod {
+        ScanHsv,
+        ScanRgb
+    };
+
 public:
     ColorDetector(int webcamId, const std::string& configFile, const std::string& imageFile, bool quiet);
     virtual ~ColorDetector();
@@ -39,6 +50,8 @@ private:
     void initDisplay();
     void updateDisplay();
     void scan();
+    void scanRgb();
+    void scanHsv();
     bool testComponent(float value, float reference);
     void sendPacket(const std::string packet);
 
@@ -55,6 +68,12 @@ private:
     float m_yellowFireGreenRef;
     float m_yellowFireRedRef;
     Color m_lastDetectedColor;
+    int m_camWidth;
+    int m_camHeight;
+    bool m_writeLastCapture;
+
+    ScanMethod m_scanMethod;
+    char* m_scanMethodName;
 };
 
 
@@ -64,21 +83,28 @@ ColorDetector::ColorDetector(int webcamId, const std::string& configFile, const 
 {
     reset();
 
-    if (imageFile.empty()) {
-        m_webcam = new cv::VideoCapture(webcamId);
-        m_webcam->read(m_bgrImage);
-    } else {
-        m_bgrImage = cv::imread(imageFile);
-    }
-
     std::ifstream cfg(configFile.c_str());
+
     if (cfg.good()) {
         std::cerr << "Loading '" << configFile << "'" << std::endl;
     }
+
     while (cfg.good()) {
         processLine(cfg);
     }
     cfg.close();
+
+    if (imageFile.empty()) {
+        m_webcam = new cv::VideoCapture(webcamId);
+        m_webcam->set(CV_CAP_PROP_FRAME_WIDTH,m_camWidth);
+        m_webcam->set(CV_CAP_PROP_FRAME_HEIGHT,m_camHeight);
+
+        std::cerr << "Using webcam " << webcamId << " resolution " << m_camWidth << "x" << m_camHeight << std::endl;
+
+        m_webcam->read(m_bgrImage);
+    } else {
+        m_bgrImage = cv::imread(imageFile);
+    }
 
     initDisplay();
 }
@@ -121,6 +147,9 @@ void ColorDetector::reset()
     m_yellowFireGreenRef = 220.0f;
     m_yellowFireRedRef = 220.0f;
     m_lastDetectedColor = ColorNone;
+    m_scanMethod = ScanRgb;
+    m_scanMethodName = "RGB";
+    m_writeLastCapture = false;
 }
 
 
@@ -134,7 +163,36 @@ bool ColorDetector::processLine(std::istream& stream)
     std::string command;
 
     sstr >> command;
-    if (command == "ColorDetectorSetup") {
+
+    if (command == "WriteLastCapture")
+    {
+        std::string mode;
+        sstr >> mode;
+
+        m_writeLastCapture = mode == "1";
+
+        std::cerr << "WriteLastCapture " << m_writeLastCapture << std::endl;
+    }
+    else if (command == "ScanMethod") {
+        std::string mode;
+        sstr >> mode;
+
+        if (mode == "HSV") {
+            m_scanMethod = ScanHsv;
+            m_scanMethodName = "HSV";
+        } else {
+            m_scanMethod = ScanRgb;
+            m_scanMethodName = "RGB";
+        }
+
+        std::cerr << "ScanMethod " << m_scanMethodName << std::endl;
+
+    }
+    else if (command == "CameraSetup") {
+        sstr >> m_camWidth >> m_camHeight;
+        std::cerr << "CameraSetup " << m_camWidth << " " << m_camHeight << std::endl;
+    }
+    else if (command == "ColorDetectorSetup") {
         sstr >> m_pollTimeoutMs;
         sstr >> m_redFireBlueRef >> m_redFireGreenRef >> m_redFireRedRef;
         sstr >> m_yellowFireBlueRef >> m_yellowFireGreenRef >> m_yellowFireRedRef;
@@ -171,11 +229,7 @@ void ColorDetector::initDisplay()
 #ifndef __arm__
     if (!m_quiet) {
         cv::namedWindow(BGR_IMAGE, cv::WINDOW_NORMAL);
-        cv::resizeWindow(BGR_IMAGE, 640, 480);
-
-        cv::namedWindow(HSV_IMAGE, cv::WINDOW_NORMAL);
-        cv::resizeWindow(HSV_IMAGE, 640, 480);
-        cv::moveWindow(HSV_IMAGE, 710, 0);
+        cv::resizeWindow(BGR_IMAGE, m_camWidth, m_camHeight);
     }
 #endif // !__arm__
 }
@@ -190,18 +244,174 @@ void ColorDetector::updateDisplay()
             cv::rectangle(img, cv::Point(it->x, it->y), cv::Point(it->x + it->width, it->y + it->height), cv::Scalar(0, 200, 0));
         }
         cv::imshow(BGR_IMAGE, img);
-
-        cv::Mat hsvImage;
-        cv::cvtColor(m_bgrImage, hsvImage, CV_BGR2HSV);
-        cv::imshow(HSV_IMAGE, hsvImage);
-
-        cv::waitKey(1);
     }
 #endif // !__arm__
 }
 
+double get_current_time_with_ms (void)
+{
+    struct timeval  tv;
+    gettimeofday(&tv, NULL);
+
+    return  (tv.tv_sec) + (tv.tv_usec) / 1000000 ;
+
+}
+
+const char* colors[] = {"cBLACK", "cWHITE", "cGREY", "cRED", "cORANGE", "cYELLOW", "cGREEN", "cAQUA", "cBLUE", "cPURPLE", "cPINK"};
+
+void ColorDetector::scanHsv()
+{
+    std::map<const char*, int> tallyColors;
+
+    float blue  = 0.0f;
+    float green = 0.0f;
+    float red   = 0.0f;
+
+    int pixels = 0;
+
+    float initialConfidence = 1.0f;
+
+    for (std::vector<cv::Rect>::iterator it = m_detectionZoneRects.begin(); it != m_detectionZoneRects.end(); ++it) {
+        cv::Mat image(m_bgrImage, *it);
+
+        cv::Mat hsvZone;
+        cv::cvtColor(image, hsvZone, CV_BGR2HSV);
+
+        int h = hsvZone.rows;             // Pixel height
+        int w = hsvZone.cols;              // Pixel width
+
+        pixels = w * h;
+
+        cv::MatIterator_<cv::Vec3b> it2 = image.begin<cv::Vec3b>(),
+        it_end = image.end<cv::Vec3b>();
+
+        for(; it2 != it_end; ++it2)
+        {
+            cv::Vec3b& pixel = *it2; // reference to pixel in image
+
+            int hVal = pixel[0];
+            int sVal = pixel[1];
+            int vVal = pixel[2];
+
+
+	        // Determine what type of color the HSV pixel is.
+	        const char* ctype = getPixelColorTypeBH(hVal, sVal, vVal);
+
+	        tallyColors[ctype]+=1;
+	    }
+
+
+        int tallyMaxIndex = 0;
+        int tallyMaxCount = -1;
+
+
+        for (int i=0; i<11; i++) {
+            const char* v = colors[i];
+            int pixCount = tallyColors[v];
+
+            // TODO : make configurable
+            if(pixCount>0) {
+                std::cerr << v << " - " << (pixCount*100/pixels) << " %" << std::endl;
+            }
+
+            if (pixCount > tallyMaxCount) {
+                tallyMaxCount = pixCount;
+                tallyMaxIndex = i;
+            }
+        }
+
+        float percentage = initialConfidence * (tallyMaxCount * 100 / pixels);
+
+        std::cerr << "Color of current note: " << colors[tallyMaxIndex] << " (" << percentage << "% confidence)." << std::endl;
+
+        if (percentage > 80.0)
+        {
+            if(colors[tallyMaxIndex] == "cYELLOW")
+            {
+                sendPacket("packets.ColorDetectorFire(color=TEAM_YELLOW)");
+            }
+
+            else if(colors[tallyMaxIndex] == "cRED")
+            {
+                sendPacket("packets.ColorDetectorFire(color=TEAM_RED)");
+            }
+
+            else {
+                sendPacket("None");
+            }
+        }
+    }
+}
+
+
+const char* getPixelColorType(int H, int S, int V)
+{
+    char* color;
+    if (V < 20)
+        color = "cBLACK";
+    else if (V > 190 && S < 27)
+        color = "cWHITE";
+    else if (S < 53 && V < 185)
+        color = "cGREY";
+    else {  // Is a color
+        if (H < 14)
+            color = "cRED";
+        else if (H < 25)
+            color = "cORANGE";
+        else if (H < 34)
+            color = "cYELLOW";
+        else if (H < 73)
+            color = "cGREEN";
+        else if (H < 102)
+            color = "cAQUA";
+        else if (H < 127)
+            color = "cBLUE";
+        else if (H < 149)
+            color = "cPURPLE";
+        else if (H < 175)
+            color = "cPINK";
+        else    // full circle
+            color = "cRED"; // back to Red
+    }
+    return color;
+}
+
+const char* getPixelColorTypeBH(int H, int S, int V)
+{
+    // TODO : make configurable
+    if (H > 200 )
+        return "cRED";
+
+    // TODO : make configurable
+    if (H < 20 )
+        return "cRED";
+
+    // TODO : make configurable
+    if (H > 80 )
+        return "cGREEN";
+
+    return "cYELLOW";
+}
 
 void ColorDetector::scan()
+{
+    if(m_writeLastCapture) {
+        imwrite("image.jpg",m_bgrImage);
+    }
+
+    switch(m_scanMethod) {
+        default:
+        case ScanRgb:
+            scanRgb();
+            break;
+        case ScanHsv:
+            scanHsv();
+            break;
+    }
+}
+
+
+void ColorDetector::scanRgb()
 {
     float blue  = 0.0f;
     float green = 0.0f;
@@ -228,6 +438,7 @@ void ColorDetector::scan()
     if (testComponent(blue,  m_redFireBlueRef)  &&
         testComponent(green, m_redFireGreenRef) &&
         testComponent(red,   m_redFireRedRef)) {
+        // TODO : factor between scan methods
         if (m_lastDetectedColor != ColorRed) {
             m_lastDetectedColor = ColorRed;
             sendPacket("packets.ColorDetectorFire(color=TEAM_RED)");
@@ -235,6 +446,7 @@ void ColorDetector::scan()
     } else if (testComponent(blue,  m_yellowFireBlueRef)  &&
         testComponent(green, m_yellowFireGreenRef)        &&
         testComponent(red,   m_yellowFireRedRef)) {
+        // TODO : factor between scan methods
         if (m_lastDetectedColor != ColorYellow) {
             m_lastDetectedColor = ColorYellow;
             sendPacket("packets.ColorDetectorFire(color=TEAM_YELLOW)");
@@ -257,7 +469,7 @@ bool ColorDetector::testComponent(float value, float reference)
 
 void ColorDetector::sendPacket(const std::string packet)
 {
-    std::cout << packet << std::endl;
+    std::cout << std::setprecision (32) << get_current_time_with_ms() << ", " << packet << std::endl;
     std::cout.flush();
 }
 
