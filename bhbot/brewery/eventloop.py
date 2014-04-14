@@ -15,7 +15,6 @@ import termios
 import time
 
 import asyncwsgiserver
-import bottle
 import builder
 import commonstates
 import graphmap
@@ -573,8 +572,7 @@ class EventLoop(object):
                 InterbotServer(self)
             else:
                 self.interbot_channel = InterbotControlChannel(self, "IBT", (MAIN_INTERBOT_IP, MAIN_INTERBOT_PORT))
-        webinterface.event_loop = self
-        self.web_server = asyncwsgiserver.WsgiServer("", self.webserver_port, webinterface.app)
+        self.web_server = asyncwsgiserver.WsgiServer("", self.webserver_port, webinterface.WebInterface(self))
         if SERIAL_PORT_PATH is not None:
             try:
                 self.turret_channel = TurretChannel(self, SERIAL_PORT_PATH, SERIAL_PORT_SPEED)
