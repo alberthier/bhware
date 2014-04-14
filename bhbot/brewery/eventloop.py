@@ -21,7 +21,6 @@ import graphmap
 import interbot
 import leds
 import logger
-import opponentdetector
 import packets
 import robot
 import statemachine
@@ -465,7 +464,6 @@ class EventLoop(object):
         self.fsms = []
         self.state_machine_name = state_machine_name
         self.webserver_port = webserver_port
-        self.opponent_detector = opponentdetector.OpponentDetector(self)
         self.interbot_manager = interbot.InterBotManager(self)
         self.stopping = False
         self.is_match_started = False
@@ -523,7 +521,6 @@ class EventLoop(object):
         while self.packet_queue:
             packet = self.packet_queue.pop()
             packet.dispatch(self.robot)
-            packet.dispatch(self.opponent_detector)
             packet.dispatch(self.interbot_manager)
             packet.dispatch(self.map)
             for fsm in self.fsms:
@@ -538,13 +535,13 @@ class EventLoop(object):
 
 
     def send_packet(self, packet):
-        if self.do_send_packet(packet, packets.TURRET_RANGE_END, self.turret_channel):
+        if self.do_send_packet(packet, packets.TURRET_RANGE_START, packets.TURRET_RANGE_END, self.turret_channel):
             return
-        elif self.do_send_packet(packet, packets.PIC32_RANGE_END, self.pic_control_channel):
+        elif self.do_send_packet(packet, packets.PIC32_RANGE_START, packets.PIC32_RANGE_END, self.pic_control_channel):
             return
-        elif self.do_send_packet(packet, packets.SIMULATOR_RANGE_END, self.pic_control_channel):
+        elif IS_HOST_DEVICE_PC and self.do_send_packet(packet, packets.SIMULATOR_RANGE_START, packets.SIMULATOR_RANGE_END, self.pic_control_channel):
             return
-        elif self.do_send_packet(packet, packets.INTERBOT_RANGE_END, self.interbot_channel):
+        elif self.do_send_packet(packet, packets.INTERBOT_RANGE_START, packets.INTERBOT_RANGE_END, self.interbot_channel):
             return
         elif packet.TYPE < packets.INTERNAL_RANGE_END:
             logger.log_packet(packet, "ARM")
@@ -552,8 +549,8 @@ class EventLoop(object):
             Timer(self, 0, self.process_packets_and_dispatch).start()
 
 
-    def do_send_packet(self, packet, packet_range_end, channel):
-        if packet.TYPE < packet_range_end:
+    def do_send_packet(self, packet, packet_range_start, packet_range_end, channel):
+        if packet.TYPE >= packet_range_start and packet.TYPE < packet_range_end:
             if channel is not None and channel.connected:
                 logger.log_packet(packet, "ARM")
                 channel.send(packet.serialize())

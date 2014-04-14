@@ -18,6 +18,11 @@ from position import *
 
 class Main(statemachine.State):
 
+    def on_enter(self):
+        statemachine.StateMachine("opponentdetector", opponent_type = OPPONENT_ROBOT_MAIN)
+        statemachine.StateMachine("opponentdetector", opponent_type = OPPONENT_ROBOT_SECONDARY)
+
+
     def on_device_ready(self, packet):
         yield AntiBlocking(True)
         yield CalibratePosition()

@@ -68,14 +68,23 @@ class Timer(statemachine.State):
         @type miliseconds: float
         """
         self.miliseconds = miliseconds
+        self.end_time = None
 
 
     def on_enter(self):
+        self.restart()
+
+
+    def restart(self):
         self.end_time = datetime.datetime.now() + datetime.timedelta(0, 0, 0, self.miliseconds)
 
 
+    def stop(self):
+        self.end_time = None
+
+
     def on_timer_tick(self):
-        if datetime.datetime.now() > self.end_time:
+        if self.end_time is not None and datetime.datetime.now() > self.end_time:
             self.return_value = Timer.TIMEOUT
             return self.on_timeout()
 
