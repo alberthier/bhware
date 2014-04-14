@@ -731,6 +731,44 @@ class RelayControl(statemachine.State):
 
 
 
+class MotorControl(statemachine.State):
+
+    def __init__(self, *args):
+        """
+            args can be 2 arguments: id, speed for a single motor control or
+            a list of tuples (id, speed) for multiple motor control
+            ex:
+                MotorControl(0, speed)
+                MotorControl((0, speed), (1, speed), (2, speed))
+        """
+        if len(args) > 0:
+            if type(args[0]) == tuple:
+                self.motor_commands = list(args)
+            elif len(args) == 2:
+                self.motor_commands = [ args ]
+            else:
+                raise TypeError("Invalid arguments")
+        else:
+            raise TypeError("Invalid arguments")
+
+
+    def on_enter(self):
+        for cmd in self.motor_commands:
+            self.send_packet(packets.MotorControl(*cmd))
+
+
+    def on_motor_control(self, packet):
+        i = 0
+        for id, speed in self.motor_commands:
+            if packet.id == id:
+                break
+            i += 1
+        if i < len(self.motor_commands):
+            del self.motor_commands[i]
+        if len(self.motor_commands) == 0:
+            yield None
+
+
 ##################################################
 # GOAL MANAGEMENT
 ##################################################

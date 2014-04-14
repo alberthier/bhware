@@ -516,6 +516,17 @@ class RelayControl(BasePacket):
     )
 
 
+
+
+class MotorControl(BasePacket):
+
+    TYPE = 71
+    DEFINITION = (
+        ('id',    UInt8 (0, "Motor identifier")),
+        ('speed', UInt16(0, "Speed [0x0 - 0x3FF - 0x7FF]")),
+    )
+
+
 # Simulator
 
 
