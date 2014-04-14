@@ -1,0 +1,33 @@
+Reglage PI
+==========
+KpD=
+KiD=
+DroueD=
+VmaxD=
+NbPasD=
+KpG=
+KiG=
+DroueG=
+VmaxG=
+NbPasG=
+
+
+Reglage Asser
+=============
+G_K1=
+G_K2 y=
+G_K3=
+Ratio_Acc=
+Ratio_Decc=
+Ratio_Acc_Rot=
+Ratio_Decc_Rot=
+G_C_ROT=
+VMinMouv=
+ErreurCodeur=
+EcartRouesLibres=
+EcartRouesMotrices=
+Dist Min=
+Angle Min=
+Coef_Gliss_Lateral=
+EcartVitesseAcc=
+
