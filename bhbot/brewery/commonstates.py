@@ -643,129 +643,60 @@ class CalibratePosition(statemachine.State):
 
 
 
-class ServoControl(statemachine.State):
+class Trigger(statemachine.State):
 
     def __init__(self, *args):
         """
-            args can be 3 arguments: type, id, angle for a single servo control or
-            a list of tuples (type, id, angle, timeout) for multiple servos control
+            args can be 3 or 4 arguments: actuator_type, id, args... for a actuator control or
+            a list of tuples (actuator_type, id, args...) for multiple motor control
             ex:
-                ServoControl(SERVO_TYPE_AX, 0, 126, 1000)
-                ServoControl((SERVO_TYPE_AX, 0, 126, 1000), (SERVO_TYPE_RX, 1, 56, 1000), (SERVO_TYPE_AX, 2, 87, 1000))
+                Trigger(ACTUATOR_TYPE_SERVO_AX, 1, 154, 1000)
+                Trigger((ACTUATOR_TYPE_SERVO_AX, 1, 154, 1000), (ACTUATOR_TYPE_RELAY, 2, ACTION_ON))
         """
         if len(args) > 0:
             if type(args[0]) == tuple:
-                self.servo_commands = list(args)
-            elif len(args) == 4:
-                self.servo_commands = [ args ]
+                self.commands = list(args)
+            elif len(args) == 3 or len(args) == 4:
+                self.commands = [ args ]
             else:
                 raise TypeError("Invalid arguments")
         else:
             raise TypeError("Invalid arguments")
-        self.statuses = {}
-        for cmd in self.servo_commands:
-            self.statuses[cmd[1]] = SERVO_STATUS_TIMED_OUT
 
 
     def on_enter(self):
-        for cmd in self.servo_commands:
-            self.send_packet(packets.ServoControl(*cmd))
+        for cmd in self.commands:
+            actuator_type = cmd[0]
+            if actuator_type in [ ACTUATOR_TYPE_SERVO_AX, ACTUATOR_TYPE_SERVO_RX ]:
+                self.send_packet(packets.ServoControl(*cmd))
+            elif actuator_type == ACTUATOR_TYPE_RELAY:
+                self.send_packet(packets.RelayControl(id = cmd[1], action = cmd[2]))
+            elif actuator_type == ACTUATOR_TYPE_MOTOR:
+                self.send_packet(packets.MotorControl(id = cmd[1], speed = cmd[2]))
+            else:
+                self.log("Unknown actuator type in command: {}".format(cmd))
 
 
     def on_servo_control(self, packet):
-        i = 0
-        for type, id, angle, timeout in self.servo_commands:
-            if packet.type == type and packet.id == id:
-                break
-            i += 1
-        self.statuses[packet.id] = packet.status
-        if i < len(self.servo_commands):
-            del self.servo_commands[i]
-        if len(self.servo_commands) == 0:
-            yield None
-
-
-    def is_success(self):
-        return SERVO_STATUS_TIMED_OUT not in self.statuses.values()
-
-
-
-
-class RelayControl(statemachine.State):
-
-    def __init__(self, *args):
-        """
-            args can be 2 arguments: id, action for a single relay control or
-            a list of tuples (id, action) for multiple relay control
-            ex:
-                RelayControl(0, ACTION_ON)
-                RelayControl((0, ACTION_ON), (1, ACTION_OFF), (2, ACTION_ON))
-        """
-        if len(args) > 0:
-            if type(args[0]) == tuple:
-                self.relay_commands = list(args)
-            elif len(args) == 2:
-                self.relay_commands = [ args ]
-            else:
-                raise TypeError("Invalid arguments")
-        else:
-            raise TypeError("Invalid arguments")
-
-
-    def on_enter(self):
-        for cmd in self.relay_commands:
-            self.send_packet(packets.RelayControl(*cmd))
+        if packet.status != SERVO_STATUS_SUCCESS:
+            self.log("Servo #{} timed out".format(packet.id))
+        yield from self.cleanup(packet.type, packet.id)
 
 
     def on_relay_control(self, packet):
-        i = 0
-        for id, action in self.relay_commands:
-            if packet.id == id:
-                break
-            i += 1
-        if i < len(self.relay_commands):
-            del self.relay_commands[i]
-        if len(self.relay_commands) == 0:
-            yield None
-
-
-
-
-class MotorControl(statemachine.State):
-
-    def __init__(self, *args):
-        """
-            args can be 2 arguments: id, speed for a single motor control or
-            a list of tuples (id, speed) for multiple motor control
-            ex:
-                MotorControl(0, speed)
-                MotorControl((0, speed), (1, speed), (2, speed))
-        """
-        if len(args) > 0:
-            if type(args[0]) == tuple:
-                self.motor_commands = list(args)
-            elif len(args) == 2:
-                self.motor_commands = [ args ]
-            else:
-                raise TypeError("Invalid arguments")
-        else:
-            raise TypeError("Invalid arguments")
-
-
-    def on_enter(self):
-        for cmd in self.motor_commands:
-            self.send_packet(packets.MotorControl(*cmd))
+        yield from self.cleanup(ACTUATOR_TYPE_RELAY, packet.id)
 
 
     def on_motor_control(self, packet):
-        i = 0
-        for id, speed in self.motor_commands:
-            if packet.id == id:
+        yield from self.cleanup(ACTUATOR_TYPE_MOTOR, packet.id)
+
+
+    def cleanup(self, actuator_type, id):
+        for i, cmd in enumerate(self.commands):
+            if cmd[0] == actuator_type and cmd[1] == id:
+                del self.commands[i]
                 break
-            i += 1
-        if i < len(self.motor_commands):
-            del self.motor_commands[i]
-        if len(self.motor_commands) == 0:
+        if len(self.commands) == 0:
             yield None
 
 
