@@ -1,15 +1,15 @@
 PI Settings
 -----------
-KpD=3.000
-KiD=8.000
-DroueD=59.900
-VmaxD=0.700
-NbPasD=192
-KpG=3.000
-KiG=8.000
-DroueG=59.900
-VmaxG=0.700
-NbPasG=192
+KpD=2.000
+KiD=7.000
+DroueD=40.820
+VmaxD=1.106
+NbPasD=1024
+KpG=2.000
+KiG=6.500
+DroueG=40.740
+VmaxG=1.131
+NbPasG=1024
 
 Asser Settings
 --------------
