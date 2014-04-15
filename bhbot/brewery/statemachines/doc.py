@@ -29,6 +29,7 @@ class Main(statemachine.State):
 
 
     def on_start(self, packet):
+        self.yield_at(90000, EndOfMatch())
         logger.log("Starting ...")
 
 
@@ -113,6 +114,9 @@ class DumpFruits(statemachine.State):
 
         #fermer la trappe
         yield commonstates.ServoControl(FRUITMOTH_HATCH_CLOSE)
+
+
+
 
 
 ##################################################

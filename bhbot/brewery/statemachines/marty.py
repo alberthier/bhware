@@ -25,17 +25,21 @@ class Main(statemachine.State):
 
     def on_device_ready(self, packet):
         yield AntiBlocking(True)
+
+        yield Trigger(GUN_LOAD, PAINT_1_HOLD, PAINT_2_HOLD, FIRE_FLIPPER_CLOSE)
+
         yield CalibratePosition()
 
 
     def on_start(self, packet):
+        self.yield_at(90000, EndOfMatch())
         logger.log("Starting ...")
 
 
 
 
 ##################################################
-# End of match - Baloon
+# End of match
 
 
 
