@@ -497,7 +497,7 @@ class MoveLineTo(MoveLine):
 
 
 
-class MoveRelative(statemachine.State):
+class MoveLineRelative(statemachine.State):
 
     def __init__(self, distance, direction = DIRECTION_FORWARD, chained = None):
         self.distance = distance
