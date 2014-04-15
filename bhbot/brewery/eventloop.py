@@ -12,11 +12,9 @@ import struct
 import subprocess
 import sys
 import termios
-import time
 
 import asyncwsgiserver
 import builder
-import commonstates
 import graphmap
 import interbot
 import leds
@@ -24,7 +22,6 @@ import logger
 import packets
 import robot
 import statemachine
-import tools
 import webinterface
 
 from definitions import *
