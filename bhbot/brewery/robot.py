@@ -20,6 +20,8 @@ class Robot(object):
         self._team = TEAM_UNKNOWN
         self.event_loop = event_loop
         self.moving = False
+        self.main_opponent_detected = False
+        self.secondary_opponent_detected = False
         self.goal_manager = goalmanager.GoalManager(event_loop)
 
 

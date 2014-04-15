@@ -25,7 +25,6 @@ class Main(commonstates.Timer):
         self.x = None
         self.y = None
         self.enabled = True
-        self.detected = False
         if not hasattr(self.fsm, "offset_deg"):
             self.fsm.offset_deg = 0.0
 
@@ -65,7 +64,7 @@ class Main(commonstates.Timer):
         if self.opponent_direction is not None:
             if self.opponent_direction != previous_direction:
                 self.log("{} opponent detected at ({:.2f}, {:.2f})".format(self.opponent_name(), self.x, self.y))
-                self.detected = True
+                self.set_detected(True)
                 self.send_packet(packets.OpponentDetected(robot = self.fsm.opponent_type, direction = self.opponent_direction, x = self.x, y = self.y))
         elif self.opponent_direction is None and previous_direction is not None:
             self.opponent_disappeared()
@@ -77,7 +76,7 @@ class Main(commonstates.Timer):
 
     def opponent_disappeared(self):
         self.log("{} opponent disappeared".format(self.opponent_name()))
-        self.detected = False
+        self.set_detected(False)
         self.stop()
         self.send_packet(packets.OpponentPosition(robot = self.fsm.opponent_type, x = None, y = None))
         if self.opponent_direction is not None:
@@ -90,4 +89,11 @@ class Main(commonstates.Timer):
             return "Main"
         else:
             return "Secondary"
+
+
+    def set_detected(self, detected):
+        if self.fsm.opponent_type == OPPONENT_ROBOT_MAIN:
+            self.robot.main_opponent_detected = detected
+        else:
+            self.robot.secondary_opponent_detected = detected
 
