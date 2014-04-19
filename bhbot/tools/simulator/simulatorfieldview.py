@@ -544,10 +544,10 @@ class GameElementsLayer(fieldview.Layer):
 
         self.fires = []
         for x, y, horizontal in [(15, 800, False), (900, 600, False), (400, 1100, True), (900, 1600, False), (1300, 1985, True)]:
-            self.fires.append(Fire(x, y, self, True, horizontal, TEAM_COLOR_YELLOW))
-            self.fires.append(Fire(3000 - x, y, self, True, horizontal, TEAM_COLOR_RED))
-        self.fires.append(Fire(900, 1100, self, False, horizontal, TEAM_COLOR_YELLOW))
-        self.fires.append(Fire(2100, 1100, self, False, horizontal, TEAM_COLOR_RED))
+            self.fires.append(Fire(x, y, self, True, horizontal, TEAM_COLOR_RED))
+            self.fires.append(Fire(3000 - x, y, self, True, horizontal, TEAM_COLOR_YELLOW))
+        self.fires.append(Fire(900, 1100, self, False, False, TEAM_COLOR_RED))
+        self.fires.append(Fire(2100, 1100, self, False, False, TEAM_COLOR_YELLOW))
 
         self.elements = self.fires
 

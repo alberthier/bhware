@@ -34,15 +34,15 @@
             x="-20"
             y="-20" />
         <rect
-            style="fill:#dea100;stroke:none"
-            id="yellow_border"
+            style="fill:#ba0d07;stroke:none"
+            id="red_border"
             width="420"
             height="720"
             x="-20"
             y="-20" />
         <rect
-            style="fill:#ba0d07;stroke:none"
-            id="red_border"
+            style="fill:#dea100;stroke:none"
+            id="yellow_border"
             width="420"
             height="720"
             x="2600"
@@ -80,29 +80,29 @@
         <path
             style="fill:#bfc1ab;stroke:none"
             id="yellow_start_zone"
-            d="M 0 0 h 390 v 300 a 390 390 0 0 1 -390 390 z" />
+            d="M 3000 0 v 690 a 390 390 0 0 1 -390 -390 v -300 z" />
         <path
             style="fill:none;stroke:#ffb901;stroke-width:20"
             id="yellow_start_zone_border"
-            d="M 390 0 v 300 a 390 390 0 0 1 -390 390" />
+            d="M 3000 690 a 390 390 0 0 1 -390 -390 v -300" />
         <circle
             style="fill:#ffb901;stroke:none"
             id="yellow_hand"
-            cx="180"
+            cx="2820"
             cy="300"
             r="50" />
         <path
             style="fill:#bfc1ab;stroke:none"
             id="red_start_zone"
-            d="M 3000 0 v 690 a 390 390 0 0 1 -390 -390 v -300 z" />
+            d="M 0 0 h 390 v 300 a 390 390 0 0 1 -390 390 z" />
         <path
             style="fill:none;stroke:#e91009;stroke-width:20"
             id="red_start_zone_border"
-            d="M 3000 690 a 390 390 0 0 1 -390 -390 v -300" />
+            d="M 390 0 v 300 a 390 390 0 0 1 -390 390" />
         <circle
             style="fill:#e91009;stroke:none"
             id="red_hand"
-            cx="2820"
+            cx="180"
             cy="300"
             r="50" />
 
