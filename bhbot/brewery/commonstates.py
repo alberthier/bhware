@@ -645,6 +645,14 @@ class CalibratePosition(statemachine.State):
 
 class Trigger(statemachine.State):
 
+    TYPE               = 0
+    ID                 = 1
+    SERVO_ANGLE        = 2
+    SERVO_TIMEOUT      = 3
+    RELAY_ACTION       = 2
+    RELAY_TOGGLE_COUNT = 3
+    MOTOR_SPEED        = 2
+
     def __init__(self, *args):
         """
             args can be 3 or 4 arguments: actuator_type, id, args... for a actuator control or
@@ -655,24 +663,43 @@ class Trigger(statemachine.State):
         """
         if len(args) > 0:
             if type(args[0]) == tuple:
-                self.commands = list(args)
+                self.setup_commands(list(args))
             elif len(args) == 3 or len(args) == 4:
-                self.commands = [ args ]
+                self.setup_commands([ args ])
             else:
                 raise TypeError("Invalid arguments")
         else:
             raise TypeError("Invalid arguments")
 
 
+    def setup_commands(self, args):
+        self.commands = args
+        for i in range(len(self.commands)):
+            args[i] = list(args[i])
+
+
+    def send_relay_command(self, cmd):
+        count = cmd[self.RELAY_TOGGLE_COUNT]
+        if count == 0:
+            return False
+        if count % 2 == 0:
+            action = ACTION_ON  if cmd[self.RELAY_ACTION] == ACTION_OFF else ACTION_OFF
+        else:
+            action = ACTION_OFF if cmd[self.RELAY_ACTION] == ACTION_OFF else ACTION_ON
+        cmd[self.RELAY_TOGGLE_COUNT] = count - 1
+        self.send_packet(packets.RelayControl(id = cmd[self.ID], action = action))
+        return True
+
+
     def on_enter(self):
         for cmd in self.commands:
-            actuator_type = cmd[0]
+            actuator_type = cmd[self.TYPE]
             if actuator_type in [ ACTUATOR_TYPE_SERVO_AX, ACTUATOR_TYPE_SERVO_RX ]:
                 self.send_packet(packets.ServoControl(*cmd))
             elif actuator_type == ACTUATOR_TYPE_RELAY:
-                self.send_packet(packets.RelayControl(id = cmd[1], action = cmd[2]))
+                self.send_relay_command(cmd)
             elif actuator_type == ACTUATOR_TYPE_MOTOR:
-                self.send_packet(packets.MotorControl(id = cmd[1], speed = cmd[2]))
+                self.send_packet(packets.MotorControl(id = cmd[self.ID], speed = cmd[self.MOTOR_SPEED]))
             else:
                 self.log("Unknown actuator type in command: {}".format(cmd))
 
@@ -693,8 +720,12 @@ class Trigger(statemachine.State):
 
     def cleanup(self, actuator_type, id):
         for i, cmd in enumerate(self.commands):
-            if cmd[0] == actuator_type and cmd[1] == id:
-                del self.commands[i]
+            if cmd[self.TYPE] == actuator_type and cmd[self.ID] == id:
+                if actuator_type == ACTUATOR_TYPE_RELAY:
+                    if not self.send_relay_command(cmd):
+                        del self.commands[i]
+                else:
+                    del self.commands[i]
                 break
         if len(self.commands) == 0:
             yield None
