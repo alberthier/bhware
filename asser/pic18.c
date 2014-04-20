@@ -52,8 +52,8 @@ float                           DonneeVmaxDroite                            =   
 unsigned short                  DonneeNbrPasCdrDroite                       =   5000;
 #endif /* Actionneurs_Robot1 */
 #ifdef Actionneurs_Robot2
-float                           DonneeVmaxDroite                            =   1.3;  /* en m/s */
-unsigned short                  DonneeNbrPasCdrDroite                       =   4096;
+float                           DonneeVmaxDroite                            =   1.131;  /* en m/s */
+unsigned short                  DonneeNbrPasCdrDroite                       =   1024;
 #endif /* Actionneurs_Robot2 */
 float                           DonneeKpGauche                              =   3.0;
 float                           DonneeKiGauche                              =   8.0;
@@ -63,8 +63,8 @@ float                           DonneeVmaxGauche                            =   
 unsigned short                  DonneeNbrPasCdrGauche                       =   5000;
 #endif /* Actionneurs_Robot1 */
 #ifdef Actionneurs_Robot2
-float                           DonneeVmaxGauche                            =   1.3;  /* en m/s */
-unsigned short                  DonneeNbrPasCdrGauche                       =   4096;
+float                           DonneeVmaxGauche                            =   1.106;  /* en m/s */
+unsigned short                  DonneeNbrPasCdrGauche                       =   1024;
 #endif /* Actionneurs_Robot2 */
 
 /** Tensions des moteurs (consignes reelles PWM) */

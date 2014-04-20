@@ -49,7 +49,7 @@
 #define                 PERIMETRE_DROIT         (PI * (DonneeDRoueDroite / 1000))   /* Perimetre en m de la roue libre du codeur droit */
 #define                 PERIMETRE_GAUCHE        (PI * (DonneeDRoueGauche / 1000))   /* Perimetre en m de la roue libre du codeur gauche */
     
-const   float           TE                      = 0.010;                            /* Periode de l'asservissement en seconde */
+const   float           TE                      = 0.008;                            /* Periode de l'asservissement en seconde */
 
 /** Vitesse maximale a demander aux moteurs */
 const   float           Umax                    = 1023.0;                           /* Vitesse maximale a demander aux moteurs, image de la tension (en unite PWM) etant donne le gain statique des moteurs */
@@ -67,8 +67,8 @@ float                   ECART_ROUE_LIBRE        = 0.166;                        
 float                   ECART_ROUE_MOTRICE      = 0.1;                          	/* Entraxe des roues motrices */
 #endif
 #ifdef Actionneurs_Robot2
-float                   ECART_ROUE_LIBRE        = 0.0202;                            /* Ecart entre les roues libres des codeurs incrementaux */
-float                   ECART_ROUE_MOTRICE      = 0.116;                          	/* Entraxe des roues motrices */
+float                   ECART_ROUE_LIBRE        = 0.096;                            /* Ecart entre les roues libres des codeurs incrementaux */
+float                   ECART_ROUE_MOTRICE      = 0.078;                          	/* Entraxe des roues motrices */
 #endif /* Actionneurs_Robot2 */
 float                   COEFFICIENT_DE_GLISSEMENT_LATERAL = 0.0;
 

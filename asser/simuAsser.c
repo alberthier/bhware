@@ -658,13 +658,11 @@ void SIMU_BoucleVitesse(void)
     t2_D = 0.278;
 #endif /* Actionneurs_Robot1 */
 
-#ifdef Actionneurs_Robot2
-    t1_G = 0.0539;
-    t2_G = 0.923;
-    t1_D = 0.0294;
-    t2_D = 0.961;
-    //t1_D = t1_G;
-    //t2_D = t2_G;
+#ifdef Actionneurs_Robot2 // Marty
+    t1_G = 0.155;
+    t2_G = 0.155;
+    t1_D = 0.177;
+    t2_D = 0.177;
 #endif /* Actionneurs_Robot2 */
 
     SIMU_SimulationMoteurCC_ordre2((signed int)tensionPWM_G
@@ -674,7 +672,7 @@ void SIMU_BoucleVitesse(void)
                                    , t1_G
                                    , t2_G
                                    , GAIN_STATIQUE_MOTEUR_G
-                                   , 20 //20
+                                   , 16 //20
                                    , SIMU_CR
                                    , TE_PI
                                    );
@@ -712,7 +710,7 @@ void SIMU_BoucleVitesse(void)
                                    , t1_D
                                    , t2_D
                                    , GAIN_STATIQUE_MOTEUR_D
-                                   , 20 //20
+                                   , 16 //20
                                    , SIMU_CR
                                    , TE_PI
                                    );
