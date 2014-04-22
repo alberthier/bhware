@@ -283,7 +283,7 @@ void ColorDetector::scanHsv()
         pixels = w * h;
 
         cv::MatIterator_<cv::Vec3b> it2 = image.begin<cv::Vec3b>(),
-        it_end = image.end<cv::Vec3b>();
+                it_end = image.end<cv::Vec3b>();
 
         for(; it2 != it_end; ++it2)
         {
@@ -294,11 +294,11 @@ void ColorDetector::scanHsv()
             int vVal = pixel[2];
 
 
-	        // Determine what type of color the HSV pixel is.
-	        const char* ctype = getPixelColorTypeBH(hVal, sVal, vVal);
+            // Determine what type of color the HSV pixel is.
+            const char* ctype = getPixelColorTypeBH(hVal, sVal, vVal);
 
-	        tallyColors[ctype]+=1;
-	    }
+            tallyColors[ctype]+=1;
+        }
 
 
         int tallyMaxIndex = 0;
@@ -400,13 +400,13 @@ void ColorDetector::scan()
     }
 
     switch(m_scanMethod) {
-        default:
-        case ScanRgb:
-            scanRgb();
-            break;
-        case ScanHsv:
-            scanHsv();
-            break;
+    default:
+    case ScanRgb:
+        scanRgb();
+        break;
+    case ScanHsv:
+        scanHsv();
+        break;
     }
 }
 
@@ -436,16 +436,16 @@ void ColorDetector::scanRgb()
     }
 
     if (testComponent(blue,  m_redFireBlueRef)  &&
-        testComponent(green, m_redFireGreenRef) &&
-        testComponent(red,   m_redFireRedRef)) {
+            testComponent(green, m_redFireGreenRef) &&
+            testComponent(red,   m_redFireRedRef)) {
         // TODO : factor between scan methods
         if (m_lastDetectedColor != ColorRed) {
             m_lastDetectedColor = ColorRed;
             sendPacket("packets.ColorDetectorFire(color=TEAM_RED)");
         }
     } else if (testComponent(blue,  m_yellowFireBlueRef)  &&
-        testComponent(green, m_yellowFireGreenRef)        &&
-        testComponent(red,   m_yellowFireRedRef)) {
+               testComponent(green, m_yellowFireGreenRef)        &&
+               testComponent(red,   m_yellowFireRedRef)) {
         // TODO : factor between scan methods
         if (m_lastDetectedColor != ColorYellow) {
             m_lastDetectedColor = ColorYellow;
