@@ -677,6 +677,19 @@ class OpponentDisappeared(BasePacket):
     )
 
 
+
+
+class RelayToggle(BasePacket):
+
+    TYPE = 233
+
+    DEFINITION = (
+        ('id'          , UInt8 (0, "Relay ID")),
+        ('action'      , UEnum8(ACTION, ACTION_OFF)),
+        ('toggle_count', Int8  (0, "Number of toggles before 'action'. 0 = release")),
+    )
+
+
 ################################################################################
 # Packets lookup setup
 

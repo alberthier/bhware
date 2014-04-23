@@ -119,6 +119,7 @@ class StateMachine(object):
         else:
             return (previous_state, None)
 
+
     def process(self, generator):
         previous_state = None
         while generator:
@@ -184,7 +185,7 @@ class State:
 
 
     def send_packet(self, packet):
-        self.event_loop.send_packet(packet)
+        self.event_loop.send_packet(packet, self.fsm)
 
 
     def yield_at(self, timeout_ms, state):

@@ -663,32 +663,13 @@ class Trigger(statemachine.State):
         """
         if len(args) > 0:
             if type(args[0]) == tuple:
-                self.setup_commands(list(args))
+                self.commands = list(args)
             elif len(args) == 3 or len(args) == 4:
-                self.setup_commands([ args ])
+                self.commands = [ args ]
             else:
                 raise TypeError("Invalid arguments")
         else:
             raise TypeError("Invalid arguments")
-
-
-    def setup_commands(self, args):
-        self.commands = args
-        for i in range(len(self.commands)):
-            args[i] = list(args[i])
-
-
-    def send_relay_command(self, cmd):
-        count = cmd[self.RELAY_TOGGLE_COUNT]
-        if count == 0:
-            return False
-        if count % 2 == 0:
-            action = ACTION_ON  if cmd[self.RELAY_ACTION] == ACTION_OFF else ACTION_OFF
-        else:
-            action = ACTION_OFF if cmd[self.RELAY_ACTION] == ACTION_OFF else ACTION_ON
-        cmd[self.RELAY_TOGGLE_COUNT] = count - 1
-        self.send_packet(packets.RelayControl(id = cmd[self.ID], action = action))
-        return True
 
 
     def on_enter(self):
@@ -697,7 +678,7 @@ class Trigger(statemachine.State):
             if actuator_type in [ ACTUATOR_TYPE_SERVO_AX, ACTUATOR_TYPE_SERVO_RX ]:
                 self.send_packet(packets.ServoControl(*cmd))
             elif actuator_type == ACTUATOR_TYPE_RELAY:
-                self.send_relay_command(cmd)
+                self.send_packet(packets.RelayToggle(id = cmd[self.ID], action = cmd[self.RELAY_ACTION], toggle_count = cmd[self.RELAY_TOGGLE_COUNT]))
             elif actuator_type == ACTUATOR_TYPE_MOTOR:
                 self.send_packet(packets.MotorControl(id = cmd[self.ID], speed = cmd[self.MOTOR_SPEED]))
             else:
@@ -710,7 +691,7 @@ class Trigger(statemachine.State):
         yield from self.cleanup(packet.type, packet.id)
 
 
-    def on_relay_control(self, packet):
+    def on_relay_toggle(self, packet):
         yield from self.cleanup(ACTUATOR_TYPE_RELAY, packet.id)
 
 
@@ -721,11 +702,7 @@ class Trigger(statemachine.State):
     def cleanup(self, actuator_type, id):
         for i, cmd in enumerate(self.commands):
             if cmd[self.TYPE] == actuator_type and cmd[self.ID] == id:
-                if actuator_type == ACTUATOR_TYPE_RELAY:
-                    if not self.send_relay_command(cmd):
-                        del self.commands[i]
-                else:
-                    del self.commands[i]
+                del self.commands[i]
                 break
         if len(self.commands) == 0:
             yield None

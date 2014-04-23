@@ -21,6 +21,7 @@ class Main(statemachine.State):
     def on_enter(self):
         statemachine.StateMachine(self.event_loop, "opponentdetector", opponent_type = OPPONENT_ROBOT_MAIN)
         statemachine.StateMachine(self.event_loop, "opponentdetector", opponent_type = OPPONENT_ROBOT_SECONDARY)
+        statemachine.StateMachine(self.event_loop, "relaytoggler")
 
 
     def on_device_ready(self, packet):
@@ -31,6 +32,13 @@ class Main(statemachine.State):
     def on_start(self, packet):
         self.yield_at(90000, EndOfMatch())
         logger.log("Starting ...")
+#        yield Trigger(GUN_FIRE)
+#        self.log("fired")
+        yield Trigger(PAINT_1_FLIP_FLOP_START)
+        self.log("started 111")
+        yield Timer(2000)
+        self.log("timer finished")
+        yield Trigger(PAINT_1_FLIP_FLOP_STOP)
 
 
 class DropTorch(statemachine.State):

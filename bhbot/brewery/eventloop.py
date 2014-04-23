@@ -510,18 +510,20 @@ class EventLoop(object):
     def process(self, channel, packet):
         logger.log_packet(packet, channel.origin)
         packet.dispatch(self)
-        self.packet_queue.appendleft(packet)
+        self.packet_queue.appendleft((packet, None))
         self.process_packets_and_dispatch()
 
 
     def process_packets_and_dispatch(self):
         while self.packet_queue:
-            packet = self.packet_queue.pop()
+            packet, sender = self.packet_queue.pop()
             packet.dispatch(self.robot)
             packet.dispatch(self.interbot_manager)
             packet.dispatch(self.map)
             for fsm in self.fsms:
-                packet.dispatch(fsm)
+                # avoid sending internal packets to the emitter, only other FSMs will receive the packet
+                if fsm is not sender:
+                    packet.dispatch(fsm)
 
 
     def get_elapsed_match_time(self):
@@ -531,7 +533,11 @@ class EventLoop(object):
         return delta.total_seconds()
 
 
-    def send_packet(self, packet):
+    def send_packet(self, packet, sender = None):
+        """
+            packet: packet to send
+            sender: the fsm which sent the packet
+        """
         if self.do_send_packet(packet, packets.TURRET_RANGE_START, packets.TURRET_RANGE_END, self.turret_channel):
             return
         elif self.do_send_packet(packet, packets.PIC32_RANGE_START, packets.PIC32_RANGE_END, self.pic_control_channel):
@@ -541,8 +547,9 @@ class EventLoop(object):
         elif self.do_send_packet(packet, packets.INTERBOT_RANGE_START, packets.INTERBOT_RANGE_END, self.interbot_channel):
             return
         elif packet.TYPE < packets.INTERNAL_RANGE_END:
-            logger.log_packet(packet, "ARM")
-            self.packet_queue.appendleft(packet)
+            # add the packet to send to the list of packets to dispatch
+            logger.log_packet(packet, "ARM:" + str(sender.name))
+            self.packet_queue.appendleft((packet, sender))
             Timer(self, 0, self.process_packets_and_dispatch).start()
 
 
