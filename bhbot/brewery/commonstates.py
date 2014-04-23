@@ -627,10 +627,10 @@ class CalibratePosition(statemachine.State):
 
 
     def on_enter(self):
-        if IS_HOST_DEVICE_PC or self.test:
+        if False :#or IS_HOST_DEVICE_PC or self.test:
             yield DefinePosition(self.x, ROBOT_CENTER_X, math.pi / 2.0)
         else:
-            estimated_start_y = 1.0
+            estimated_start_y = 0.5
             yield DefinePosition(ROBOT_CENTER_X, estimated_start_y, 0.0)
             yield MoveLineTo(self.x, estimated_start_y)
             yield Rotate(math.pi / 2.0)
@@ -638,6 +638,11 @@ class CalibratePosition(statemachine.State):
             yield MoveLineTo(self.x, 0.0, DIRECTION_BACKWARDS)
             yield SpeedControl()
             yield DefinePosition(None, ROBOT_CENTER_X, math.pi / 2.0)
+            if not tools.quasi_equal(YELLOW_START_Y, ROBOT_CENTER_X):
+                yield MoveLineTo(YELLOW_START_X, YELLOW_START_Y)
+            if not tools.quasi_equal(YELLOW_START_ANGLE, math.pi / 2.0):
+                yield Rotate(YELLOW_START_ANGLE)
+
         yield None
 
 

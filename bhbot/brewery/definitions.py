@@ -30,21 +30,15 @@ SECONDARY_ROBOT_CENTER_X               = 0.0775
 SECONDARY_ROBOT_CENTER_Y               = 0.0825
 SECONDARY_ROBOT_GYRATION_RADIUS        = 0.100535
 
-# Main start positons (the robot starts 90 degrees rotated that's why *_START_Y use ROBOT_X_SIZE and ROBOT_CENTER_X)
-MAIN_YELLOW_START_Y                    = MAIN_ROBOT_CENTER_X
-MAIN_YELLOW_START_X                    = 1.0
-MAIN_YELLOW_START_ANGLE                = math.pi / 2.0
-MAIN_RED_START_X                       = MAIN_YELLOW_START_X
-MAIN_RED_START_Y                       = FIELD_Y_SIZE - MAIN_YELLOW_START_Y
-MAIN_RED_START_ANGLE                   = -math.pi / 2.0
+# Main start positons
+MAIN_YELLOW_START_Y                    = MAIN_ROBOT_GYRATION_RADIUS + 0.01
+MAIN_YELLOW_START_X                    = 0.25
+MAIN_YELLOW_START_ANGLE                = 0.0
 
-# Secondary start positons (the robot starts 90 degrees rotated that's why *_START_Y use ROBOT_X_SIZE and ROBOT_CENTER_X)
+# Secondary start positons (the robot starts 90 degrees rotated that's why YELLOW_START_Y use ROBOT_CENTER_X)
 SECONDARY_YELLOW_START_Y               = SECONDARY_ROBOT_CENTER_X
-SECONDARY_YELLOW_START_X               = 1.450
+SECONDARY_YELLOW_START_X               = 0.55
 SECONDARY_YELLOW_START_ANGLE           = math.pi / 2.0
-SECONDARY_RED_START_X                  = SECONDARY_YELLOW_START_X
-SECONDARY_RED_START_Y                  = FIELD_Y_SIZE - SECONDARY_YELLOW_START_Y
-SECONDARY_RED_START_ANGLE              = -math.pi / 2.0
 
 def setup_definitions(is_main_robot):
     globals()["IS_MAIN_ROBOT"]         = is_main_robot
@@ -56,9 +50,6 @@ def setup_definitions(is_main_robot):
     globals()["YELLOW_START_Y"]        = MAIN_YELLOW_START_Y        if IS_MAIN_ROBOT else SECONDARY_YELLOW_START_Y
     globals()["YELLOW_START_X"]        = MAIN_YELLOW_START_X        if IS_MAIN_ROBOT else SECONDARY_YELLOW_START_X
     globals()["YELLOW_START_ANGLE"]    = MAIN_YELLOW_START_ANGLE    if IS_MAIN_ROBOT else SECONDARY_YELLOW_START_ANGLE
-    globals()["RED_START_Y"]           = MAIN_RED_START_Y           if IS_MAIN_ROBOT else SECONDARY_RED_START_Y
-    globals()["RED_START_X"]           = MAIN_RED_START_X           if IS_MAIN_ROBOT else SECONDARY_RED_START_X
-    globals()["RED_START_ANGLE"]       = MAIN_RED_START_ANGLE       if IS_MAIN_ROBOT else SECONDARY_RED_START_ANGLE
     globals()["GUN_FIRE"]              = MAIN_GUN_FIRE              if IS_MAIN_ROBOT else SECONDARY_GUN_FIRE
     globals()["GUN_LOAD"]              = MAIN_GUN_LOAD              if IS_MAIN_ROBOT else SECONDARY_GUN_LOAD
 
