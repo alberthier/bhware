@@ -31,19 +31,43 @@ class Map:
         self.event_loop = event_loop
         self.build_module()
         import graphpathfinding
-        self.pathfinder = graphpathfinding.PathFinder(ROBOT_GYRATION_RADIUS, ROBOT_GYRATION_RADIUS, 2.0 - ROBOT_GYRATION_RADIUS, 3.0 - ROBOT_GYRATION_RADIUS)
+        self.pathfinder = graphpathfinding.PathFinder(ROBOT_GYRATION_RADIUS, ROBOT_GYRATION_RADIUS, FIELD_X_SIZE - ROBOT_GYRATION_RADIUS, FIELD_Y_SIZE - ROBOT_GYRATION_RADIUS)
 
 
     def on_device_ready(self, packet):
         if IS_HOST_DEVICE_PC:
             self.event_loop.send_packet(packets.SimulatorClearGraphMapZones())
 
-        self.main_opponent_zone = self.add_circular_zone(0.130 + ROBOT_GYRATION_RADIUS)
-        self.secondary_opponent_zone = self.add_circular_zone(0.080 + ROBOT_GYRATION_RADIUS)
+        self.main_opponent_zone = self.add_zone(self.create_circular_coords(0.0, 0.0, 0.130 + ROBOT_GYRATION_RADIUS))
+        self.secondary_opponent_zone = self.add_zone(self.create_circular_coords(0.0, 0.0, 0.080 + ROBOT_GYRATION_RADIUS))
         if IS_MAIN_ROBOT:
-            self.teammate_zone = self.add_circular_zone(0.080 + ROBOT_GYRATION_RADIUS)
+            self.teammate_zone = self.add_zone(self.create_circular_coords(0.0, 0.0, 0.080 + ROBOT_GYRATION_RADIUS))
         else:
-            self.teammate_zone = self.add_circular_zone(0.130 + ROBOT_GYRATION_RADIUS)
+            self.teammate_zone = self.add_zone(self.create_circular_coords(0.0, 0.0, 0.130 + ROBOT_GYRATION_RADIUS))
+
+        # Add Field obstacles
+        offset = ROBOT_GYRATION_RADIUS
+        symetrical_zones = []
+        # Fruit baskets
+        basket_offset = math.sin(math.pi / 8.0) * offset
+        symetrical_zones.append([(0.0, 0.4 - offset),
+                                 (0.3 + basket_offset, 0.4 - offset),
+                                 (0.3 + offset, 0.4 - basket_offset),
+                                 (0.3 + offset, 1.1 + basket_offset),
+                                 (0.3 + basket_offset, 1.1 + offset),
+                                 (0.0, 1.1 + offset)])
+        #symetrical_zones.append(self.create_rect_coords(0.0, 0.4 - offset, 0.3 + offset, 0.7 + 2 * offset))
+        # Bottom hearts of fire
+        symetrical_zones.append(self.create_quarter_coords(FIELD_X_SIZE, 0.0, 0.25 + offset))
+        # Add symetrical zones
+        for zone in symetrical_zones:
+            self.add_zone(zone)
+            symetrical = []
+            for x, y in zone:
+                symetrical.append((x, FIELD_Y_SIZE - y))
+            self.add_zone(symetrical)
+        # Add central heart of fire
+        self.add_zone(self.create_circular_coords(FIELD_X_SIZE / 2.0, FIELD_Y_SIZE / 2.0, 0.15 + offset))
 
         self.pathfinder.field_config_done()
 
@@ -52,15 +76,33 @@ class Map:
         self.enable_zone(self.teammate_zone.id, False)
 
 
-    def add_circular_zone(self, radius):
+    def create_quarter_coords(self, x, y, radius):
+        coords = [(x, y)]
+        npoints = 4
+        for i in range(npoints):
+            a = float(i) * (math.pi / 2.0) / float(npoints - 1)
+            cx = math.cos(a) * radius
+            cy = math.sin(a) * radius
+            coords.append((x - cx, y + cy))
+        return coords
+
+
+    def create_circular_coords(self, x, y, radius):
         coords = []
         npoints = 8
         for i in range(npoints):
             a = float(i) * 2.0 * math.pi / float(npoints)
-            x = math.cos(a) * radius
-            y = math.sin(a) * radius
-            coords.append((x, y))
-        return self.add_zone(coords)
+            cx = math.cos(a) * radius
+            cy = math.sin(a) * radius
+            coords.append((x + cx, y + cy))
+        return coords
+
+
+    def create_rect_coords(self, x, y, width, height):
+        return [(x, y),
+                (x + width, y),
+                (x + width, y + height),
+                (x, y + height)]
 
 
     def add_zone(self, coords):
