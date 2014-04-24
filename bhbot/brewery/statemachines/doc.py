@@ -41,6 +41,28 @@ class Main(statemachine.State):
         yield Trigger(PAINT_1_FLIP_FLOP_STOP)
 
 
+
+
+class CalibratePosition(statemachine.State):
+
+    def on_enter(self):
+        if IS_HOST_DEVICE_PC:
+            yield DefinePosition(RED_START_X, RED_START_Y, RED_START_ANGLE)
+        else:
+            estimated_start_y = FIELD_Y_SIZE / 2.0
+            yield DefinePosition(ROBOT_CENTER_X, estimated_start_y, 0.0)
+            yield MoveLineTo(0.5, estimated_start_y)
+            yield Rotate(math.pi / 2.0)
+            yield SpeedControl(0.2)
+            yield MoveLineTo(0.5, 0.0, DIRECTION_BACKWARDS)
+            yield DefinePosition(None, ROBOT_CENTER_X, math.pi / 2.0)
+            yield SpeedControl()
+            yield MoveLineTo(0.5, RED_START_Y)
+            yield Rotate(0.0)
+            yield MoveLineTo(RED_START_X, RED_START_Y)
+        yield None
+
+
 class DropTorch(statemachine.State):
 
     def on_enter(self):

@@ -39,6 +39,25 @@ class Main(statemachine.State):
 
 
 
+class CalibratePosition(statemachine.State):
+
+    def on_enter(self):
+        if IS_HOST_DEVICE_PC:
+            yield DefinePosition(RED_START_X, RED_START_Y, RED_START_ANGLE)
+        else:
+            estimated_start_y = FIELD_Y_SIZE / 2.0
+            yield DefinePosition(0.3 + ROBOT_CENTER_X, estimated_start_y, 0.0)
+            yield MoveLineTo(RED_START_X, estimated_start_y)
+            yield Rotate(math.pi / 2.0)
+            yield SpeedControl(0.2)
+            yield MoveLineTo(RED_START_X, 0.0, DIRECTION_BACKWARDS)
+            yield SpeedControl()
+            yield DefinePosition(None, ROBOT_CENTER_X, math.pi / 2.0)
+        yield None
+
+
+
+
 ##################################################
 # End of match
 
