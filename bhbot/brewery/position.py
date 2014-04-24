@@ -59,13 +59,13 @@ class VirtualPose(object):
 
 
     def set_y(self, y):
-        if Pose.match_team == TEAM_RED :
+        if Pose.match_team == TEAM_YELLOW:
             self.real_pose.y = FIELD_Y_SIZE - y
         else :
             self.real_pose.y = y
 
     def get_y(self):
-        if Pose.match_team == TEAM_RED :
+        if Pose.match_team == TEAM_YELLOW:
             return FIELD_Y_SIZE - self.real_pose.y
         else :
             return self.real_pose.y
@@ -74,14 +74,14 @@ class VirtualPose(object):
     def set_angle(self, angle):
         if angle :
             angle = tools.normalize_angle(angle)
-        if angle and Pose.match_team == TEAM_RED :
+        if angle and Pose.match_team == TEAM_YELLOW:
             self.real_pose.angle = -angle
         else :
             self.real_pose.angle = angle
 
 
     def get_angle(self):
-        if self.real_pose.angle and Pose.match_team == TEAM_RED :
+        if self.real_pose.angle and Pose.match_team == TEAM_YELLOW:
             return -self.real_pose.angle
         else :
             return self.real_pose.angle
