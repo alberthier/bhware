@@ -127,7 +127,7 @@ class MainWindowController(QObject):
                         elif fname.endswith(".jpg") or fname.endswith(".svg"):
                             images.append(fname)
         logs.sort()
-        rlogs = [l for l in reversed(logs)]
+        logs = [l for l in reversed(logs)]
         if len(logs) == 0:
             QMessageBox.critical(self.ui, "Error", "No remote log file")
             QApplication.instance().quit();
@@ -135,7 +135,7 @@ class MainWindowController(QObject):
 
         self.download_dialog = uic.loadUi(os.path.dirname(__file__) + "/downloaddialog.ui")
         list_view = self.download_dialog.list_view
-        list_view.setModel(QStringListModel(rlogs))
+        list_view.setModel(QStringListModel(logs))
         list_view.selectionModel().select(list_view.model().createIndex(0, 0), QItemSelectionModel.Select)
         if self.download_dialog.exec_() == QDialog.Accepted:
             selected = list_view.selectionModel().currentIndex().row()
@@ -147,10 +147,10 @@ class MainWindowController(QObject):
                 for img in images:
                     if img.startswith(log_base):
                         self.remote_files_to_download += 1
-                        url = "http://{}:{}/root/bhware/bhbot/logs/{}".format(self.host, self.port, img)
+                        url = "http://{}:{}/fsroot/root/bhware/bhbot/logs/{}".format(self.host, self.port, img)
                         self.network_manager.get(QNetworkRequest(QUrl(url)))
                 self.remote_files_to_download += 1
-                url = "http://{}:{}/root/bhware/bhbot/logs/{}".format(self.host, self.port, self.log_file)
+                url = "http://{}:{}/fsroot/root/bhware/bhbot/logs/{}".format(self.host, self.port, self.log_file)
                 self.network_manager.get(QNetworkRequest(QUrl(url)))
                 return
         QApplication.instance().quit();
