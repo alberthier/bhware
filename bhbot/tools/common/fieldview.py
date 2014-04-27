@@ -187,9 +187,20 @@ class GhostRobotLayer(Layer):
         self.angle_label.setFont(font)
         self.addToGroup(self.angle_label)
 
+        self.mouse_item = None
+        self.is_main_robot = main_robot
+        self.update_mouse_item()
+
+
+    def update_mouse_item(self, pos = None):
+        rotation = 0.0
+        if self.mouse_item is not None:
+            rotation = self.mouse_item.rotation()
+            self.removeFromGroup(self.mouse_item)
+            self.scene().removeItem(self.mouse_item)
         # Ghost robot
         ghost_pen = QPen(QColor(self.color))
-        if main_robot:
+        if self.is_main_robot:
             (self.mouse_item, robot_item, gyration_item) = helpers.create_main_robot_base_item(ghost_pen, QBrush(), ghost_pen)
         else:
             (self.mouse_item, robot_item, gyration_item) = helpers.create_secondary_robot_base_item(ghost_pen, QBrush(), ghost_pen)
@@ -202,7 +213,11 @@ class GhostRobotLayer(Layer):
         line.setPen(ghost_pen)
         self.mouse_item.addToGroup(line)
 
-        self.mouse_item.setVisible(False)
+        self.mouse_item.setRotation(rotation)
+        if pos is None:
+            self.mouse_item.setVisible(False)
+        else:
+            self.mouse_item.setPos(pos.x(), pos.y())
         self.addToGroup(self.mouse_item)
 
 
@@ -227,6 +242,12 @@ class GhostRobotLayer(Layer):
         self.mouse_item.setRotation(angle)
         angle = self.convert_angle()
         self.angle_label.setText("angle = {:=0.04f} ({:=0.01f} deg)".format(angle, angle / math.pi * 180.0))
+
+
+    def mouse_press_event(self, pos, event):
+        if event.button() == Qt.LeftButton:
+            self.is_main_robot = not self.is_main_robot
+            self.update_mouse_item(pos)
 
 
     def convert_angle(self):
