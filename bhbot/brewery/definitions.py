@@ -106,7 +106,7 @@ LOG_DIR                                = os.path.join(os.path.dirname(os.path.di
 WEB_SERVER_PORT                        = 8080
 
 # Use pathfinding algorithm to evaluate the best goal
-GOAL_EVALUATION_USES_PATHFINDING       = False
+GOAL_EVALUATION_USES_PATHFINDING       = True
 
 # Pathfinding
 MAIN_OPPONENT_AVOIDANCE_RANGE          = 0.5

@@ -18,8 +18,7 @@ from definitions import *
 
 class Goal:
 
-    def __init__(self, identifier, weight, x, y, direction, handler_state, ctor_parameters = None, shared = True,
-                 navigate = True):
+    def __init__(self, identifier, weight, x, y, direction, handler_state, ctor_parameters = None, shared = False, navigate = True):
         self.identifier = identifier
         self.weight = weight
         self.x = x
@@ -35,10 +34,12 @@ class Goal:
         self.navigate = navigate
         self.trial_count = 0
         self.last_try = None
+        self.goal_manager = None
+        self.is_current = False
 
 
     def increment_trials(self):
-        self.trial_count+=1
+        self.trial_count += 1
         logger.log('Goal {} : increment trials : {}'.format(self.identifier, self.trial_count))
 
 
@@ -47,22 +48,28 @@ class Goal:
             return self.handler_state
         else :
             if self.ctor_parameters :
-                return self.handler_state(self, *self.ctor_parameters)
+                return self.handler_state(*self.ctor_parameters)
             else:
-                return self.handler_state(self)
+                return self.handler_state()
 
 
     def available(self):
         self.status = GOAL_AVAILABLE
+        self.is_current = False
+        self.goal_manager.update_goal_status(self, self.status)
 
 
     def doing(self):
         self.status = GOAL_DOING
+        self.is_current = True
         self.last_try = datetime.datetime.now()
+        self.goal_manager.update_goal_status(self, self.status)
 
 
     def done(self):
         self.status = GOAL_DONE
+        self.is_current = False
+        self.goal_manager.update_goal_status(self, self.status)
 
 
     def is_available(self):
@@ -71,79 +78,49 @@ class Goal:
 
 
 
-class GlassDepositGoal(Goal):
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.barmen = []
-        self.used = False
-
-
-    def is_available(self):
-        # logger.log('barmen : {} {}'.format(self.barmen, [b.glasses_count for b in self.barmen]))
-        return not self.used and any(b.glasses_count > 0 for b in self.barmen)
-
-
-
-
 class GoalManager:
 
     def __init__(self, event_loop):
         self.event_loop = event_loop
-        self.harvesting_goals = []
-        self.emptying_goals = []
+        self.goals = []
         self.last_goal = None
 
 
-    @property
-    def all_goals(self):
-        return itertools.chain(self.harvesting_goals, self.emptying_goals)
+    def add(self, goal):
+        goal.goal_manager = self
+        self.goals.append(goal)
 
 
-    def next_goal(self):
-        if self.event_loop.robot.tank_full:
-            return self.get_best_goal(self.emptying_goals)
-        else:
-            return self.get_best_goal(self.harvesting_goals)
-
-
-    def is_goal_available(self, identifier):
+    def has_available_goal(self, identifier):
         return any((g.is_available() for g in self.all_goals if g.identifier == identifier))
 
 
     def get_least_recent_tried_goal(self):
-        available_goals = [ g for g in self.all_goals if g.is_available() ]
-
-        if not available_goals :
-            return None
-
-        goals = None
+        available_goals = [ g for g in self.goals if g.is_available() ]
 
         never_tried = [ g for g in available_goals if g.last_try is None ]
 
-        if never_tried :
+        if len(never_tried) > 0:
             goals = never_tried
-
         else :
-            max_date = max([g.last_try for g in available_goals if g.last_try])
+            oldest = datetime.datetime.now()
+            goals = [ None ]
+            for g in available_goals:
+                if g.last_try is not None and g.last_try < oldest:
+                    oldest = g.last_try
+                    goals[0] = g
 
-            goals = [ g for g in available_goals if g.last_try == max_date ]
-
-        if len(goals) == 1 :
-            return  goals[0]
-        else :
-            return random.choice(goals)
+        return random.choice(goals)
 
 
-    def get_best_goal(self, goals):
+    def get_best_goal(self):
         """
-
         :type goals:  list of Goal
         """
 
-        available_goals = [ g for g in goals if g.is_available() ]
+        available_goals = [ g for g in self.goals if g.is_available() ]
 
-        if len(available_goals) > 1 and self.last_goal in available_goals:
+        if self.last_goal in available_goals:
             available_goals.remove(self.last_goal)
 
         logger.log('available goals : {}'.format([g.identifier for g in available_goals]))
@@ -155,7 +132,7 @@ class GoalManager:
             pose = position.Pose(goal.x, goal.y, virtual=True)
             logger.log("Evaluate goal {}".format(goal.identifier))
             if GOAL_EVALUATION_USES_PATHFINDING:
-                goal.navigation_cost = self.event_loop.eval_map.evaluate(self.event_loop.robot.pose, pose)
+                goal.navigation_cost = self.event_loop.map.evaluate(self.event_loop.robot.pose, pose)
             else:
                 goal.navigation_cost = tools.distance(self.event_loop.robot.pose.x, self.event_loop.robot.pose.y, pose.x, pose.y)
             goal.score = goal.penality
@@ -182,26 +159,21 @@ class GoalManager:
         return best_goal
 
 
+    def get_current_goal(self):
+        for g in self.goals:
+            if g.is_current:
+                return g
+        return None
+
+
     def penalize_goal(self, goal):
         for g in self.harvesting_goals + self.emptying_goals:
             if g.identifier == goal.identifier:
                 g.penality = 100.0
 
 
-    def goal_done(self, goal):
-        self.update_goals_status(goal, "done", GOAL_DONE)
-
-
-    def goal_doing(self, goal):
-        self.update_goals_status(goal, "doing", GOAL_DOING)
-
-
-    def goal_available(self, goal):
-        self.update_goals_status(goal, "available", GOAL_AVAILABLE)
-
-
-    def update_goals_status(self, goal, status_string, new_status):
-        logger.log("Goal {} : {}".format(status_string, goal.identifier))
+    def update_goal_status(self, goal, new_status):
+        logger.log("Goal {} : {}".format(GOAL_STATUS.lookup_by_value[new_status], goal.identifier))
 
         self.internal_goal_update(goal.identifier, new_status)
 
@@ -212,7 +184,7 @@ class GoalManager:
 
 
     def internal_goal_update(self, identifier, status):
-        for g in self.all_goals:
+        for g in self.goals:
             if g.identifier == identifier:
                 old = g.status
                 g.status = status
@@ -222,3 +194,4 @@ class GoalManager:
     def on_interbot_goal_status(self, packet):
         logger.log('Got goal status : {} = {}'.format(packet.goal_identifier, packet.goal_status))
         self.internal_goal_update(packet.goal_identifier, packet.goal_status)
+

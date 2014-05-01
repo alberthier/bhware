@@ -689,7 +689,8 @@ class Trigger(statemachine.State):
 ##################################################
 
 
-class FindNextGoal(statemachine.State):
+class ExecuteGoals(statemachine.State):
+
     def on_enter(self):
         gm = self.robot.goal_manager
 
@@ -698,46 +699,45 @@ class FindNextGoal(statemachine.State):
         while True:
 
             if not navigation_failure :
-                goal = gm.get_best_goal(gm.harvesting_goals)
+                goal = gm.get_best_goal()
             else :
                 goal = gm.get_least_recent_tried_goal()
 
             if goal :
                 logger.log('Next goal is {}'.format(goal.identifier))
 
-                gm.goal_doing(goal)
+                goal.doing()
 
                 if goal.navigate :
                     logger.log('Navigating to goal')
                     move = yield Navigate(goal.x, goal.y, goal.direction)
                     logger.log('End of navigation : {}'.format(TRAJECTORY.lookup_by_value[move.exit_reason]))
 
-                    if  move.exit_reason != TRAJECTORY_DESTINATION_REACHED :
+                    navigation_failure = move.exit_reason != TRAJECTORY_DESTINATION_REACHED
+                    if navigation_failure:
                         logger.log('Cannot navigate to goal -> picking another')
                         goal.increment_trials()
-                        gm.goal_available(goal)
+                        goal.available()
                         navigation_failure = True
-                        continue
-                    # else :
-                    #     navigation_failure = False
+                    else:
+                        logger.log('Navigation was successful')
 
-                    logger.log('Navigation was successful')
+                if not navigation_failure:
+                    state = goal.get_state()
 
-                state = goal.get_state()
+                    yield state
 
-                yield state
+                    logger.log('State exit reason : {}'.format(GOAL_STATUS.lookup_by_value[state.exit_reason]))
 
-                logger.log('State exit reason : {}'.format(GOAL_STATUS.lookup_by_value[state.exit_reason]))
-
-                if state.exit_reason == GOAL_DONE :
-                    gm.goal_done(goal)
-                else :
-                    goal.increment_trials()
-                    gm.goal_available(goal)
+                    if state.exit_reason == GOAL_DONE :
+                        goal.done()
+                    else :
+                        goal.increment_trials()
+                        goal.available()
             else :
                 break
 
         self.log('No more goals available')
-        self.log(str({ g.identifier : g.is_available() for g in gm.all_goals}))
+        self.log(str({ g.identifier : g.is_available() for g in gm.goals}))
 
         yield None
