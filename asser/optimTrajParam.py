@@ -347,6 +347,69 @@ def PI2011_coutOptimParam(paramPI, d_cfgTraj_local, d_cfgTestPI) :
 
     print([len(d_traj["errVitMesPI"]), tensionMax, coutTensionMax, coutErreurVitesse, d_cfgTraj_local['KpG'], d_cfgTraj_local['KiG']])
     return coutTotal
+    
+def criteria_PIsettings(paramPI, d_cfgTraj_local, d_cfgTestPI) :
+    if (d_cfgTestPI['moteur'] == "GAUCHE") :
+        d_cfgTraj_local['KpG'] = paramPI[0]
+        d_cfgTraj_local['KiG'] = paramPI[1]
+    elif (d_cfgTestPI['moteur'] == "DROIT") :
+        d_cfgTraj_local['KpD'] = paramPI[0]
+        d_cfgTraj_local['KiD'] = paramPI[1]
+    else :
+        print("Test PI : choix moteur incorrect (moteur = 'GAUCHE' ou 'DROIT')")
+        sys.exit(2)
+    
+    d_traj = testPI(d_cfgTraj_local, d_cfgTestPI)
+
+    tensionMax = 0.0
+    # cout de la tension maximum
+    for tension in d_traj["tensionMesPI"] :
+        if (tension > tensionMax) :
+            tensionMax = tension
+    coutTensionMax = (1023 - tensionMax) / 1023.0
+    #~ print(coutTensionMax)
+
+    indexMesureErrVitesse = int(len(d_traj["errVitMesPI"]) * 0.9)
+    coutErreurVitesse = d_traj["errVitMesPI"][indexMesureErrVitesse] / d_traj["vitMesPI"][indexMesureErrVitesse]
+
+    return coutTensionMax, coutErreurVitesse
+    
+def plot_criteria_PIsettings(d_cfgTraj_local) :
+
+    d_cfgTestPI = {'moteur' : "GAUCHE" # "GAUCHE ou "DROIT"
+                , 'profil' : "PARABOLE" # "ECHELON" ou "PARABOLE"
+                , 'nb_pts_mesure' : 220
+    
+                }
+
+    maxVal = 0.0
+    l_Kp = numpy.arange(2.5, 3.5, 0.25)
+    l_Ki = numpy.arange(2.0, 4.0, 0.5)
+    figure()
+    
+    for Kp in l_Kp :
+        l_critVoltage = []
+        l_critSpeedErr = []
+        for Ki in l_Ki :
+            critVoltage, critSpeedErr = criteria_PIsettings([Kp, Ki], d_cfgTraj_local, d_cfgTestPI)
+            l_critVoltage.append(critVoltage)
+            l_critSpeedErr.append(critSpeedErr)
+         
+        #~ print(l_critVoltage)
+        #~ print(l_critSpeedErr)
+        if max(l_critVoltage) > maxVal :
+            maxVal = max(l_critVoltage)
+        if max(l_critSpeedErr) > maxVal :
+            maxVal = max(l_critSpeedErr)
+        
+        plot(l_Ki, l_critVoltage, '-o', label='Kp='+str(Kp))
+        plot(l_Ki, l_critSpeedErr, '--o', label='Kp='+str(Kp))
+        ylim(-0.02, maxVal)
+        
+    grid()
+    legend(loc='upper right')
+    show()
+        
 
 def affichageTraj2011(d_traj):
     matplotlib.rcParams.update({'font.size': 10})
@@ -531,6 +594,7 @@ def affichageTestPI2012(d_traj):
     printLog(d_traj, "config_testPI")
 
     periode=d_traj["periode"][0]
+    print("Periode: " + str(periode))
     temps = [ periode * x for x in range(len(d_traj["vitMesPI"]))]
     print("len tps: " + str(len(d_traj["vitMesPI"])) )
 
@@ -587,6 +651,11 @@ def printLog(traj, logName) :
         
 #########################################################################
 #~ ### Test et reglage PI ##################################################
+
+plot_criteria_PIsettings(d_cfgTraj)
+sys.exit(2)
+
+
 #~ d_cfgTraj["KpG"] = 3.0
 #~ d_cfgTraj["KiG"] = 11.0
 #~ d_cfgTraj["KpD"] = 3.0
@@ -599,13 +668,13 @@ def printLog(traj, logName) :
 #~ d_cfgTraj["KiG"] = 3.2
 #~ d_cfgTraj["KpD"] = 1.6
 #~ d_cfgTraj["KiD"] = 3.2
-#~ d_cfgTestPI = {'moteur' : "GAUCHE" # "GAUCHE ou "DROIT"
-                #~ , 'profil' : "PARABOLE" # "ECHELON" ou "PARABOLE"
-                #~ , 'nb_pts_mesure' : 60
-                #~ }
-#~ traj = testPI(d_cfgTraj, d_cfgTestPI)
-#~ affichageTestPI2012(traj)
-#~ sys.exit(2)
+d_cfgTestPI = {'moteur' : "GAUCHE" # "GAUCHE ou "DROIT"
+                , 'profil' : "PARABOLE" # "ECHELON" ou "PARABOLE"
+                , 'nb_pts_mesure' : 220
+                }
+traj = testPI(d_cfgTraj, d_cfgTestPI)
+affichageTestPI2012(traj)
+sys.exit(2)
 
 
 #~ d_cfgTraj["KpG"] = 1.0
