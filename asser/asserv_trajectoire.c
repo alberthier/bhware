@@ -208,7 +208,6 @@ static void                     ASSER_TRAJ_InitialSplineForCircle(ConfigSegment 
 static void                     ASSER_TRAJ_Rotation_config(ConfigSegment * cfgSeg, segmentTrajectoire  * segmentTraj, unsigned char subSeg, ConfigArc * arc);
 static float                    ASSER_TRAJ_Spline34(float t, float t1, unsigned char n, float q, float a, float b, float c, unsigned char deriv);
 static void                     ASSER_TRAJ_IdentificationPoly4(float y0, float dy0, float yi, float y1, float dy1, float * a, float * b, float * c, float * d, float * e);
-static unsigned char            ASSER_TRAJ_Profil_S_Curve(float * Vconsigne, float Distance, float VStart, float VEnd, float Amax, float Dmax, float gASR, float Pr, float Vr, unsigned char fSatPI);
 #ifdef PIC32_BUILD
 void                            ASSER_TRAJ_LogAsserPIC(char * keyWord, float Val1, float * pVal2, float * pVal3, float * pVal4, float * pVal5);
 #else /* PIC32_BUILD */
@@ -757,7 +756,7 @@ extern void ASSER_TRAJ_AsservissementMouvementRobot(Pose poseRobot, VitessesRobo
                 ASSER_TRAJ_LogAsserValPC("Vend_0", vitesse_fin_profil);
                 ASSER_TRAJ_LogAsserValPC("Vstart_0", vitesse_debut_profil);
                 
-                ASSER_Running = ASSER_TRAJ_Profil_S_Curve(&VitesseProfil, distanceTotale_Profil, vitesse_debut_profil, vitesse_fin_profil, AmaxTemp, chemin.profilVitesse.Dmax, Vitesse_Gain_ASR, distanceParcourue_Profil, (((float)m_sensDeplacement) * POS_GetVitesseRelle()), (SaturationPIDflag | SaturationPIGflag));
+                ASSER_Running = ASSER_TRAJ_Profil_S_Curve(&VitesseProfil, distanceTotale_Profil, vitesse_debut_profil, POS_GetConsVitesseMax(), vitesse_fin_profil, AmaxTemp, chemin.profilVitesse.Dmax, Vitesse_Gain_ASR, distanceParcourue_Profil, (((float)m_sensDeplacement) * POS_GetVitesseRelle()), (SaturationPIDflag | SaturationPIGflag));
 
                 if (chemin.trajectoire.subTrajs.segmentCourant < (chemin.trajectoire.subTrajs.nbreSegments - 1))
                 {
@@ -899,7 +898,7 @@ extern void ASSER_TRAJ_AsservissementMouvementRobot(Pose poseRobot, VitessesRobo
             chemin.profilVitesse.distNormaliseeRestante = (chemin.distance - chemin.profilVitesse.distance_parcourue) / chemin.distance;
             ASSER_TRAJ_LogAsserValPC("dist_parcourue_rot",  chemin.profilVitesse.distance_parcourue);
 
-            ASSER_Running = ASSER_TRAJ_Profil_S_Curve(&VitesseProfil, chemin.distance, 0.0, 0.0, chemin.profilVitesse.AmaxRot, chemin.profilVitesse.DmaxRot, Vitesse_Gain_ASR, chemin.profilVitesse.distance_parcourue, (((float)m_sensDeplacement) * POS_GetVitesseRotation() * (ECART_ROUE_MOTRICE / 2.0)), (SaturationPIDflag | SaturationPIGflag));
+            ASSER_Running = ASSER_TRAJ_Profil_S_Curve(&VitesseProfil, chemin.distance, 0.0, POS_GetConsVitesseMax(), 0.0, chemin.profilVitesse.AmaxRot, chemin.profilVitesse.DmaxRot, Vitesse_Gain_ASR, chemin.profilVitesse.distance_parcourue, (((float)m_sensDeplacement) * POS_GetVitesseRotation() * (ECART_ROUE_MOTRICE / 2.0)), (SaturationPIDflag | SaturationPIGflag));
             if (chemin.trajectoire.rotation.angle > 0.0)
             {
                 vitessesConsignes->rotation = VitesseProfil / NORME_BARRE_SUIVI_TRAJ;
@@ -3714,7 +3713,7 @@ extern void ASSER_TRAJ_LogAsserPIC(char * keyWord, float Val1, float * pVal2, fl
  *  \return  Flag d'arrivee au point (False arrivee / True continuer le profil)
  */
 /**********************************************************************/
-extern unsigned char ASSER_TRAJ_Profil_S_Curve(float * Vconsigne, float Distance, float VStart, float VEnd, float Amax, float Dmax, float gASR, float Pr, float Vr, unsigned char fSatPI)
+extern unsigned char ASSER_TRAJ_Profil_S_Curve(float * Vconsigne, float Distance, float VStart, float Vmax_SCurve, float VEnd, float Amax, float Dmax, float gASR, float Pr, float Vr, unsigned char fSatPI)
 {
     unsigned char   AsserRunningFlag = True;
     float           Vmax_tmpMin;    
@@ -3735,7 +3734,7 @@ extern unsigned char ASSER_TRAJ_Profil_S_Curve(float * Vconsigne, float Distance
         }
 
         /* Initilisation de la vitesse maximum */
-        Vmax = POS_GetConsVitesseMax();
+        Vmax = Vmax_SCurve;
         
         /* Ajustement de VStart et VEnd pour eviter les division par zero */
         if ((Vmax - VStart) <= 0.0)

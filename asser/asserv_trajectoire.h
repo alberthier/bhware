@@ -278,6 +278,7 @@ extern void                 ASSER_TRAJ_ParcoursTrajectoire(Deplacement *traj, fl
 extern unsigned char        ASSER_TRAJ_isDeplacement(Deplacement *traj);
 extern float                ASSER_TRAJ_DiffThetaBSplinePerLenghtUnit(Trajectoire * traj, unsigned int iSegment, unsigned char iSubSegment, float t);
 extern float                ASSER_TRAJ_VitesseLimiteEnVirage(Deplacement *traj, float diffThetaTrajectoire);
+extern unsigned char        ASSER_TRAJ_Profil_S_Curve(float * Vconsigne, float Distance, float VStart, float Vmax_SCurve, float VEnd, float Amax, float Dmax, float gASR, float Pr, float Vr, unsigned char fSatPI);
 
 #ifdef PIC32_BUILD
 extern void                 ASSER_TRAJ_LogAsserPIC(char * keyWord, float Val1, float * pVal2, float * pVal3, float * pVal4, float * pVal5);
