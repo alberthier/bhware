@@ -224,15 +224,23 @@ def trajFunction(d_cfgTraj):
     # envoie de la configuration du simulateur
     send_config_simulator(simulator_process, d_cfgTraj)
     
-    #############
-    send_init_pose(simulator_process, x=0.2, y=0.2, angle=0.0) #4.71
- 
-    ###############
+    ### Init for basic mouvement test
+    send_init_pose(simulator_process, x=0.2, y=0.2, angle=math.pi/2.0)
+    
+    #test MOVE_LINE
+    deplacement = commandMsg("MSG_MOVE_LINE 1")
+    deplacement.addPose("0.2 1.2")
+    simulator_process.stdin.write(deplacement.cmdMsgGeneration())
     #test ROTATE
-    #~ send_init_pose(simulator_process, x=0.2, y=0.2, angle=(math.pi/2.0)*(1.0)) #4.71
-    #~ deplacement = commandMsg("MSG_ROTATE 0 -1.57") # 1.57
+    #~ deplacement = commandMsg("MSG_ROTATE 0 0.0")
     #~ simulator_process.stdin.write(deplacement.cmdMsgGeneration())
-
+    
+    #############
+    # Init of initial position for the S test
+    send_init_pose(simulator_process, x=0.2, y=0.2, angle=0.0) #4.71
+    #
+    # S test
+    # ------
     #test MOVE_CURVE
     #~ send_init_pose(simulator_process, x=0.2, y=1.0, angle=0.0)
     #~ deplacement = commandMsg("MSG_MOVE_CURVE 1 1 0.0")
@@ -242,156 +250,7 @@ def trajFunction(d_cfgTraj):
     #~ deplacement.addPose("1.35 0.85")
     #~ deplacement.addPose("1.5 0.85")
     #~ simulator_process.stdin.write(deplacement.cmdMsgGeneration())
-
     
-    #test MOVE_LINE
-    #~ deplacement = commandMsg("MSG_MOVE_LINE 1")
-    #~ deplacement.addPose("2.2 0.2")
-    #~ simulator_process.stdin.write(deplacement.cmdMsgGeneration())
-
-    
-    #test MOVE_ARC
-    #~ deplacement = commandMsg("MSG_MOVE_ARC 1 0.2 1.0 0.8")
-    #~ deplacement.addPose(str(- (2.0 * math.pi) / 8.0))
-    #~ deplacement.addPose(str(- (0.0 * math.pi) / 8.0))
-    
-    #~ deplacement.addPose(str(- (6.0 * math.pi) / 8.0))
-    #~ deplacement.addPose(str(- (8.0 * math.pi) / 8.0))
-    
-    #~ simulator_process.stdin.write(deplacement.cmdMsgGeneration())
-    
-    ### Sequence de deplacement : carre
-    send_init_pose(simulator_process, x=0.2, y=0.2, angle=math.pi/2.0)
-    
-    deplacement = commandMsg("MSG_MOVE_LINE 1")
-    deplacement.addPose("0.2 1.2")
-    simulator_process.stdin.write(deplacement.cmdMsgGeneration())
-    
-    deplacement = commandMsg("MSG_ROTATE 0 0.0")
-    simulator_process.stdin.write(deplacement.cmdMsgGeneration())
-    
-    deplacement = commandMsg("MSG_MOVE_LINE 1")
-    deplacement.addPose("1.2 1.2")
-    simulator_process.stdin.write(deplacement.cmdMsgGeneration())
-    
-    deplacement = commandMsg("MSG_ROTATE 0 -1.57")
-    simulator_process.stdin.write(deplacement.cmdMsgGeneration())
-    
-    deplacement = commandMsg("MSG_MOVE_LINE 1")
-    deplacement.addPose("1.2 0.2")
-    simulator_process.stdin.write(deplacement.cmdMsgGeneration())
-    
-    deplacement = commandMsg("MSG_ROTATE 0 3.14")
-    simulator_process.stdin.write(deplacement.cmdMsgGeneration())
-    
-    deplacement = commandMsg("MSG_MOVE_LINE 1")
-    deplacement.addPose("0.2 0.2")
-    simulator_process.stdin.write(deplacement.cmdMsgGeneration())
-    
-    deplacement = commandMsg("MSG_ROTATE 0 1.57")
-    simulator_process.stdin.write(deplacement.cmdMsgGeneration())
-    
-    #transmission de la commande de d'arret du simulateur
-    (stdoutdata, stderrdata) = simulator_process.communicate("QUIT\n")
-
-    print("Simulation terminee.")
-    #traitement des donnees de stdout
-    lines = lineForm(stdoutdata)
-    d_traj = stdoutParser(lines)
-
-    return d_traj
-
-def trajTest(d_cfgTraj):
-
-    #lancement du simulateur de deplacement
-    print("Lancement du simulateur")
-    simulator_process = subprocess.Popen('simulator_trajAsser.exe', shell=True, stdin = subprocess.PIPE, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
-
-    # envoie de la configuration du simulateur
-    send_config_simulator(simulator_process, d_cfgTraj)
-
-    # envoie au simulateur de l'init de pose
-    # send_init_pose(simulator_process, x=0.31, y=2.823, angle=1.5708) #1.5708
-
-
-    #~ send_init_pose(simulator_process, x=0.0, y=0.0, angle=3.1415927)
-    #send_init_pose(simulator_process)
-    #~ #generation d'un message de commande de deplacement
-    #~ # "MSG_MAIN_GOTO 0:'ROTATION'/1:'DEPLACEMENT'/2:'DEPLACEMENT_LIGNE_DROITE' 0:'MARCHE_AVANT'/1:'MARCHE_ARRIERE'"
-    #deplacement = commandMsg("MSG_MAIN_GOTO 1 1")   # 'DEPLACEMENT' en 'MARCHE_AVANT'
-    #~ deplacement.addPose(str(d_cfgTraj['Distance']) + " 0.0 0.0 0") # deplacement rectiligne sur la distance d_cfgTraj['Distance']
-    #deplacement.addPose("0.3 1.0 0.0 1")
-    #transmission de commandes de deplacement par l'entree standard
-    #simulator_process.stdin.write(deplacement.cmdMsgGeneration())
-
-    #~ #Test rotation
-    #~ deplacement = commandMsg("MSG_MAIN_GOTO 0 1")
-    #~ deplacement.addPose("0.31 2.823 -1.5808 0")
-
-    #3.1415927
-    #~ deplacement = commandMsg("MSG_MAIN_GOTO 2 1")   # 'DEPLACEMENT_LIGNE_DROITE' en 'MARCHE_AVANT'
-    #~ deplacement.addPose("0.310000002384 0.589999973774 -1.57079637051 1.0")
-
-#~ #******************* Test ***********************************************************
-    #~ #INIT_POSE_ROBOT 0 0 1 0.310000002384 2.82299995422 1.57079637051 1.0
-    #~ send_init_pose(simulator_process, x=0.310000002384, y=2.82299995422, angle=1.57079637051)
-    #~
-    #~ #MSG_MAIN_GOTO 2 1 1 0.310000002384 2.41000008583 1.57079637051 1.0
-    #~ deplacement = commandMsg("MSG_MAIN_GOTO 2 -1")
-    #~ deplacement.addPose("0.310000002384 2.41000008583 1.57079637051 1")
-    #~ #transmission de commandes de deplacement par l'entree standard
-    #~ simulator_process.stdin.write(deplacement.cmdMsgGeneration())
-    #~
-    #~ #MSG_MAIN_GOTO 0 1 1 0.31468001008 2.40945506096 -3.14159274101 1.0
-    #~ deplacement = commandMsg("MSG_MAIN_GOTO 0 1")
-    #~ deplacement.addPose("0.31468001008 2.40945506096 -3.14159274101 1")
-    #~ #transmission de commandes de deplacement par l'entree standard
-    #~ simulator_process.stdin.write(deplacement.cmdMsgGeneration())
-    #~
-    #~ #MSG_MAIN_GOTO 2 1 1 1.03999996185 2.41000008583 3.06248354912 1.0
-    #~ deplacement = commandMsg("MSG_MAIN_GOTO 2 -1")
-    #~ deplacement.addPose("1.03999996185 2.41000008583 3.06248354912 1")
-    #~ #transmission de commandes de deplacement par l'entree standard
-    #~ simulator_process.stdin.write(deplacement.cmdMsgGeneration())
-
-#~ #******************* Test ***********************************************************
-    #~ #INIT_POSE_ROBOT 0 0 1 0.5 1.10000002384 0.259999990463 1.0
-    #~ send_init_pose(simulator_process, x=0.5, y=1.10000002384, angle=0.259999990463)
-    #~
-    #~ #MSG_MAIN_GOTO 1 1 1 0.310000002384 2.29999995232 1.57079637051 1.0
-    #~ deplacement = commandMsg("MSG_MAIN_GOTO 1 1")
-    #~ deplacement.addPose("0.310000002384 2.29999995232 1.57079637051 1")
-    #~ #transmission de commandes de deplacement par l'entree standard
-    #~ simulator_process.stdin.write(deplacement.cmdMsgGeneration())
-    #~
-    #~ #MSG_MAIN_GOTO 0 1 1 0.307770013809 2.29856991768 1.57079637051 1.0
-    #~ deplacement = commandMsg("MSG_MAIN_GOTO 0 1")
-    #~ deplacement.addPose("0.307770013809 2.29856991768 1.57079637051 1")
-    #~ #transmission de commandes de deplacement par l'entree standard
-    #~ simulator_process.stdin.write(deplacement.cmdMsgGeneration())
-
-#~ #******************* Test ***********************************************************
-    #~ #INIT_POSE_ROBOT 0 0 1 1.60000002384 1.10000002384 0.259999990463 1.0
-    #~ send_init_pose(simulator_process, x=1.60000002384, y=1.10000002384, angle=0.259999990463)
-    #~
-    #~ #MSG_MAIN_GOTO 1 1 1 1.5 0.699999988079 1.57079637051 1.0
-    #~ deplacement = commandMsg("MSG_MAIN_GOTO 1 1")
-    #~ deplacement.addPose("1.5 0.699999988079 1.57079637051 1")
-    #~ #transmission de commandes de deplacement par l'entree standard
-    #~ simulator_process.stdin.write(deplacement.cmdMsgGeneration())
-
-    #~ #INIT_POSE_ROBOT 0 0 1 1.60000002384 1.10000002384 0.259999990463 1.0
-    send_init_pose(simulator_process, x=0.31, y=0.177, angle=-1.57079637051)
-    #~
-    #~ #MSG_MAIN_GOTO 1 1 1 1.5 0.699999988079 1.57079637051 1.0
-    deplacement = commandMsg("MSG_MAIN_GOTO 1 -1")
-    deplacement.addPose("0.35 0.21 0 0")
-    deplacement.addPose("0.37 0.65 0 0")
-    deplacement.addPose("0.53 0.81 0 0")
-    deplacement.addPose("1.29 0.83 0 0")
-    #~ #transmission de commandes de deplacement par l'entree standard
-    simulator_process.stdin.write(deplacement.cmdMsgGeneration())
-
     #transmission de la commande de d'arret du simulateur
     (stdoutdata, stderrdata) = simulator_process.communicate("QUIT\n")
 
