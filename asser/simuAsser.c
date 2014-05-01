@@ -56,6 +56,7 @@ float integPI_D = 0.0;
 
 unsigned short g_ConsigneMoteurG;
 unsigned short g_ConsigneMoteurD;
+float          g_ConsigneVitMoteur;
 
 float erreurVitesseMoteurG = 0.0;
 float erreurVitesseMoteurD = 0.0;
@@ -492,10 +493,12 @@ void SIMU_AsserVitessePI(int moteur_testPI, int profil_testPI, int N)
     int     cpt_periode = 0;
     int     p;
     float   vitesseMoteur = 0.0;
-    float   TE_MESURE;
     float   UMAX_REDUC = 1.0;
+    float   distanceParcourue_Profil_testPI;
 
     POS_InitialisationConfigRobot();
+
+    g_ConsigneVitMoteur = 0.0;
 
     vitesseMoteurG = 0.0;
     vitesseMoteurD = 0.0;
@@ -506,6 +509,8 @@ void SIMU_AsserVitessePI(int moteur_testPI, int profil_testPI, int N)
     deltaPasCodeurD = 0;
     deltaPasCodeurG = 0;
 
+    distanceParcourue_Profil_testPI = 0.0;
+
     ASSER_TRAJ_LogAsserValPC("vitconsPI", 0.0);
     ASSER_TRAJ_LogAsserValPC("vitMesPI", 0.0);
     ASSER_TRAJ_LogAsserValPC("errVitMesPI", 0.0);
@@ -515,39 +520,47 @@ void SIMU_AsserVitessePI(int moteur_testPI, int profil_testPI, int N)
     {
         N = 10;
     }
-    TE_MESURE = 0.02; /*  seconde */
 
-    for (cpt_periode = 0; cpt_periode < (N * 2); cpt_periode++)
+    for (cpt_periode = 0; cpt_periode < N; cpt_periode++)
     {
-        if ((cpt_periode % 2) == 0)
+        switch (profil_testPI)
         {
-            switch (profil_testPI)
+        case 1 : /* ECHELON */
+            g_ConsigneMoteurD = (unsigned short)(0x03FF + (unsigned short)(Umax*UMAX_REDUC));
+            g_ConsigneMoteurG = g_ConsigneMoteurD;
+            break;
+
+        case 2 : /* PARABOLE */
+            switch (moteur_testPI)
             {
-                case 1 : /* ECHELON */
-                    g_ConsigneMoteurD = (unsigned short)(0x03FF + (unsigned short)(Umax*UMAX_REDUC));
+                case GAUCHE :
+                    distanceParcourue_Profil_testPI = distanceParcourue_Profil_testPI + vitesseMoteurG * TE;
+                    /* Determination du profil de vitesse de consigne */
+                    ASSER_TRAJ_Profil_S_Curve(&g_ConsigneVitMoteur, 3.0, 0.0, DonneeVmaxGauche, 0.0, Ratio_Acc, Ratio_Decc, 0.002, distanceParcourue_Profil_testPI, vitesseMoteurG, 0);
+                    // Conversion of speed from m/s in PWM unit
+                    g_ConsigneMoteurG = (g_ConsigneVitMoteur / GAIN_STATIQUE_MOTEUR_G) + 0x03FF;
                     break;
 
-                case 2 : /* PARABOLE */
+                case DROIT :
+                    distanceParcourue_Profil_testPI = distanceParcourue_Profil_testPI + vitesseMoteurD * TE;
                     /* Determination du profil de vitesse de consigne */
-                    if ((g_ConsigneMoteurD + (unsigned short)((unsigned short)1023/ ((unsigned short)(N / 2.0)) )) <= (unsigned short)(0x03FF + (unsigned short)(Umax*UMAX_REDUC)))
-                    {
-                        g_ConsigneMoteurD = (unsigned short)0x03FF + (unsigned short)ASSER_Acc_Parabolique((unsigned int)floor(((float)cpt_periode) / (TE_MESURE / TE)), (unsigned int)(N / 2), (float)(Umax*UMAX_REDUC));
-                    }
-                    else
-                    {
-                        g_ConsigneMoteurD = (unsigned short)(0x03FF + (unsigned short)(Umax*UMAX_REDUC));
-                    }
+                    ASSER_TRAJ_Profil_S_Curve(&g_ConsigneVitMoteur, 3.0, 0.0, DonneeVmaxDroite, 0.0, Ratio_Acc, Ratio_Decc, 0.002, distanceParcourue_Profil_testPI, vitesseMoteurD, 0);
+                    // Conversion of speed from m/s in PWM unit
+                    g_ConsigneMoteurD = (g_ConsigneVitMoteur / GAIN_STATIQUE_MOTEUR_D) + 0x03FF;
                     break;
 
                 default :
-                    ASSER_TRAJ_LogAsserMsgPC("test PI : profil non gere", (float)profil_testPI);
+                    ASSER_TRAJ_LogAsserMsgPC("test PI : moteur non gere", (float)moteur_testPI);
                     break;
             }
+            break;
 
-            g_ConsigneMoteurG = g_ConsigneMoteurD;
+        default :
+            ASSER_TRAJ_LogAsserMsgPC("test PI : profil non gere", (float)profil_testPI);
+            break;
         }
 
-        ASSER_TRAJ_LogAsserValPC("vitconsPI", (g_ConsigneMoteurG - 0x03FF) * GAIN_STATIQUE_MOTEUR_G);
+        ASSER_TRAJ_LogAsserValPC("vitconsPI", g_ConsigneVitMoteur);
         //POS_ConversionVitessesLongRotToConsignesPWMRouesRobotUnicycle(vitesse_long, vitesse_rotation, &g_ConsigneMoteurG, &g_ConsigneMoteurD);
 
         /* Envois des consignes des boucles de vitesse au PIC asser */
