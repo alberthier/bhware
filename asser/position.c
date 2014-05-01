@@ -63,8 +63,8 @@ float                   GAIN_STATIQUE_MOTEUR_G;                                 
 float                   GAIN_STATIQUE_MOTEUR;
 
 #ifdef Actionneurs_Robot1
-float                   ECART_ROUE_LIBRE        = 0.166;                            /* Ecart entre les roues libres des codeurs incrementaux */
-float                   ECART_ROUE_MOTRICE      = 0.1;                          	/* Entraxe des roues motrices */
+float                   ECART_ROUE_LIBRE        = 0.210;                            /* Ecart entre les roues libres des codeurs incrementaux */
+float                   ECART_ROUE_MOTRICE      = 0.160;                          	/* Entraxe des roues motrices */
 #endif
 #ifdef Actionneurs_Robot2
 float                   ECART_ROUE_LIBRE        = 0.096;                            /* Ecart entre les roues libres des codeurs incrementaux */

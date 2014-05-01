@@ -44,27 +44,30 @@ float                           Vitesse_MD_Mesures[NbrMesuresMax]           =   
 float                           Vitesse_MG_Mesures[NbrMesuresMax]           =   {0};
 
 /** Variables des configuration PIC18 */
+/* Right side */
 float                           DonneeKpDroite                              =   3.0;
 float                           DonneeKiDroite                              =   11.0;
 float                           DonneeDRoueDroite                           =   40.0;   /* en mm */
 #ifdef Actionneurs_Robot1
-float                           DonneeVmaxDroite                            =   0.8;  /* en m/s */
-unsigned short                  DonneeNbrPasCdrDroite                       =   5000;
+float                           DonneeVmaxDroite                            =   0.911;  /* en m/s */
+unsigned short                  DonneeNbrPasCdrDroite                       =   5000*4;
 #endif /* Actionneurs_Robot1 */
 #ifdef Actionneurs_Robot2
 float                           DonneeVmaxDroite                            =   1.131;  /* en m/s */
-unsigned short                  DonneeNbrPasCdrDroite                       =   1024;
+unsigned short                  DonneeNbrPasCdrDroite                       =   1024*4;
 #endif /* Actionneurs_Robot2 */
+
+/* Left side */
 float                           DonneeKpGauche                              =   3.0;
 float                           DonneeKiGauche                              =   8.0;
 float                           DonneeDRoueGauche                           =   40.0;   /* en mm */
 #ifdef Actionneurs_Robot1
-float                           DonneeVmaxGauche                            =   0.74;  /* en m/s */
-unsigned short                  DonneeNbrPasCdrGauche                       =   5000;
+float                           DonneeVmaxGauche                            =   0.900;  /* en m/s */
+unsigned short                  DonneeNbrPasCdrGauche                       =   5000*4;
 #endif /* Actionneurs_Robot1 */
 #ifdef Actionneurs_Robot2
 float                           DonneeVmaxGauche                            =   1.106;  /* en m/s */
-unsigned short                  DonneeNbrPasCdrGauche                       =   1024;
+unsigned short                  DonneeNbrPasCdrGauche                       =   1024*4;
 #endif /* Actionneurs_Robot2 */
 
 /** Tensions des moteurs (consignes reelles PWM) */

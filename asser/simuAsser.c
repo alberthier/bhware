@@ -656,19 +656,11 @@ void SIMU_BoucleVitesse(void)
     // 1:gain statique, 2:premiere constante de temps, 3: deuxieme constante de temps
     // moteur gauche [0.90848238070313447, 0.001532263578663721, 0.14712688461925522]
 
-#ifdef Actionneurs_Robot1
-/*  courroie rapport 1.0
-    t1_G = 0.0612;
-    t2_G = 0.248;
-    t1_D = 0.0445;
-    t2_D = 0.243;
-    */
-    
-    // courroie rapport 1.2
-    t1_G = 0.091;
-    t2_G = 0.239;
-    t1_D = 0.066;
-    t2_D = 0.278;
+#ifdef Actionneurs_Robot1 // Doc
+    t1_G = 0.046;
+    t2_G = 0.286;
+    t1_D = 0.026;
+    t2_D = 0.302;
 #endif /* Actionneurs_Robot1 */
 
 #ifdef Actionneurs_Robot2 // Marty
