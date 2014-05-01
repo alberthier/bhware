@@ -376,15 +376,16 @@ def criteria_PIsettings(paramPI, d_cfgTraj_local, d_cfgTestPI) :
     
 def plot_criteria_PIsettings(d_cfgTraj_local) :
 
-    d_cfgTestPI = {'moteur' : "GAUCHE" # "GAUCHE ou "DROIT"
+    d_cfgTestPI = {'moteur' : "DROIT" # "GAUCHE ou "DROIT"
                 , 'profil' : "PARABOLE" # "ECHELON" ou "PARABOLE"
                 , 'nb_pts_mesure' : 220
     
                 }
 
     maxVal = 0.0
-    l_Kp = numpy.arange(2.5, 3.5, 0.25)
-    l_Ki = numpy.arange(2.0, 4.0, 0.5)
+    l_Kp = numpy.arange(0.5, 2.0, 0.25)
+    l_Ki = numpy.arange(1.5, 3.5, 0.25)
+    d_cfgTraj_local['RatioAcc'] = 1.6
     figure()
     
     for Kp in l_Kp :
@@ -652,8 +653,8 @@ def printLog(traj, logName) :
 #########################################################################
 #~ ### Test et reglage PI ##################################################
 
-plot_criteria_PIsettings(d_cfgTraj)
-sys.exit(2)
+#~ plot_criteria_PIsettings(d_cfgTraj)
+#~ sys.exit(2)
 
 
 #~ d_cfgTraj["KpG"] = 3.0
@@ -664,11 +665,12 @@ sys.exit(2)
 #~ d_cfgTraj["KiG"] = 37.27
 #~ d_cfgTraj["KpD"] = 6.36
 #~ d_cfgTraj["KiD"] = 37.27
-#~ d_cfgTraj["KpG"] = 1.6
-#~ d_cfgTraj["KiG"] = 3.2
-#~ d_cfgTraj["KpD"] = 1.6
-#~ d_cfgTraj["KiD"] = 3.2
-d_cfgTestPI = {'moteur' : "GAUCHE" # "GAUCHE ou "DROIT"
+d_cfgTraj["KpG"] = 1.25
+d_cfgTraj["KiG"] = 2.5
+d_cfgTraj["KpD"] = 1.25
+d_cfgTraj["KiD"] = 2.5
+d_cfgTraj['RatioAcc'] = 1.6
+d_cfgTestPI = {'moteur' : "DROIT" # "GAUCHE ou "DROIT"
                 , 'profil' : "PARABOLE" # "ECHELON" ou "PARABOLE"
                 , 'nb_pts_mesure' : 220
                 }
