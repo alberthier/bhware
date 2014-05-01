@@ -42,6 +42,7 @@
 #define ASSER_NBR_PAS               (OS_FLAGS) 0x02
 #define ASSER_RUNNING               (OS_FLAGS) 0x04
 #define ASSER_CONFIG                (OS_FLAGS) 0x08
+#define ASSER_TIMER                 (OS_FLAGS) 0x10
 
 /** I/O */
 #define IO_STOP_ROBOT               (OS_FLAGS) 0x01
@@ -64,7 +65,7 @@
 #define TASK_MAIN_ID                (INT16U) 8
 #define TASK_EVIT_ID                (INT16U) 7
 #define TASK_IO_ID                  (INT16U) 6
-#define TASK_ASSER_ID               (INT16U) 2
+#define TASK_ASSER_ID               (INT16U) 3
 #define TASK_UART_ID                (INT16U) 1
 
 /** Task Priority */
@@ -74,7 +75,7 @@
 #define TASK_MAIN_PRIO               (INT8U) 8
 #define TASK_EVIT_PRIO               (INT8U) 7
 #define TASK_IO_PRIO                 (INT8U) 6
-#define TASK_ASSER_PRIO              (INT8U) 2
+#define TASK_ASSER_PRIO              (INT8U) 3
 #define TASK_UART_PRIO               (INT8U) 1
 
 /***********************************************************************

@@ -46,8 +46,8 @@
 
 /* Constantes */
 
-#define                 PERIMETRE_DROIT         (PI * (DonneeDRoueDroite / 1000))   /* Perimetre en m de la roue libre du codeur droit */
-#define                 PERIMETRE_GAUCHE        (PI * (DonneeDRoueGauche / 1000))   /* Perimetre en m de la roue libre du codeur gauche */
+#define                 PERIMETRE_DROIT         (PI * (DonneeDRoueDroite / 1000.0)) /* Perimetre en m de la roue libre du codeur droit */
+#define                 PERIMETRE_GAUCHE        (PI * (DonneeDRoueGauche / 1000.0)) /* Perimetre en m de la roue libre du codeur gauche */
     
 const   float           TE                      = 0.008;                            /* Periode de l'asservissement en seconde */
 
@@ -75,7 +75,8 @@ float                   COEFFICIENT_DE_GLISSEMENT_LATERAL = 0.0;
 /** Tolerances de la condition d'arret des asservissements */
 #ifdef Actionneurs_Robot1
 float                   DIST_MIN                = 0.002;
-#else
+#endif
+#ifdef Actionneurs_Robot2
 float                   DIST_MIN                = 0.005;
 #endif
 float                   ANGLE_MIN               = 0.001;
@@ -423,7 +424,7 @@ extern void POS_ConversionVitessesLongRotToConsignesPWMRouesRobotUnicycle(float 
 #else /* PIC32_BUILD */
                 ASSER_TRAJ_LogAsserMsgPC("Position: ConversionVitesses: vitLong a zero", vitesseLongitudinale);
 #endif /* PIC32_BUILD */
-        return;
+                return;
             }
         }
     }
@@ -443,7 +444,7 @@ extern void POS_ConversionVitessesLongRotToConsignesPWMRouesRobotUnicycle(float 
 #else /* PIC32_BUILD */
                 ASSER_TRAJ_LogAsserMsgPC("Position: ConversionVitesses: vitLong a zero", vitesseLongitudinale);
 #endif /* PIC32_BUILD */
-        return;
+                return;
             }
         }
     }
@@ -460,7 +461,7 @@ extern void POS_ConversionVitessesLongRotToConsignesPWMRouesRobotUnicycle(float 
     ASSER_TRAJ_LogAsserValPC("vitLongitudinaleEffective", vitesseLongitudinale);
     ASSER_TRAJ_LogAsserValPC("VposG", vitRoueGauche);
     ASSER_TRAJ_LogAsserValPC("VposD", vitRoueDroite);
-#endif
+#endif /* PLOTS_SIMU */
 
     vitRoueGpwm = ((unsigned short)(vitRoueGauche / GAIN_STATIQUE_MOTEUR_G)) + OffsetPWM;
     vitRoueDpwm = ((unsigned short)(vitRoueDroite / GAIN_STATIQUE_MOTEUR_D)) + OffsetPWM;

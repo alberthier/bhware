@@ -102,11 +102,7 @@ float                           Ratio_Acc                               =   1.0;
 float                           Ratio_Decc                              =   1.0;
 float                           Ratio_Acc_Rot                           =   0.5;
 float                           Ratio_Decc_Rot                          =   0.8;
-#ifdef Actionneurs_Robot1
 float                           Vmax_limit                              =   0.7;
-#else
-float                           Vmax_limit                              =   1.3;
-#endif
 
 /** Vitesse minimum de mouvement de reference*/
 float                           VminMouvRef                             =   0.1; 
@@ -367,7 +363,7 @@ extern void ASSER_TRAJ_AsservissementMouvementRobot(Pose poseRobot, VitessesRobo
     {
         if (ASSER_TRAJ_TestFinAsservissement(&chemin, errDist, memo_errDist, DIST_MIN, errAngle, memo_errAngle, ANGLE_MIN) == True)
         {
-            if ((chemin.profilVitesse.distNormaliseeRestante * chemin.distance) < ((float)(DIST_MIN + 0.05)))
+            if ((chemin.profilVitesse.distNormaliseeRestante * chemin.distance) < ((float)0.05))
             {
                 if (shuntTestFinAsser == False)
                 {
@@ -375,10 +371,28 @@ extern void ASSER_TRAJ_AsservissementMouvementRobot(Pose poseRobot, VitessesRobo
                                 
                     ASSER_Running = False;
                 
-                    if (Vmax >= MIN(DonneeVmaxGauche, DonneeVmaxDroite))
+                    if (ASSER_TRAJ_isDeplacement(&chemin) == True)
+                    {    
+                        if (Vmax >= MIN(DonneeVmaxGauche, DonneeVmaxDroite))
+                        {
+                            Vr = fabs(POS_GetVitesseRelle());
+
+                            if (Vr > (VminMouv + EcartVitesseDecc))
+                            {
+#ifdef PIC32_BUILD      
+                                if (Test_mode == (unsigned long)1)
+                                {
+                                    TOOLS_LogFault(AsserPosErr, True, FLOAT, (float *)&Vr, True, "Vr>VminMouv a l'arrivee");
+                                }
+#else /* PIC32_BUILD */
+                                ASSER_TRAJ_LogAsserMsgPC("Asser: Vr>VminMouv a l'arrivee", Vr);
+#endif /* PIC32_BUILD */  
+                            }
+                        }
+                    }
+                    else
                     {
-                        Vr = POS_GetVitesseRelle();
-                        
+                        Vr = fabs((((float)m_sensDeplacement) * POS_GetVitesseRotation() * (ECART_ROUE_MOTRICE / 2.0)));
                         if (Vr > (VminMouv + EcartVitesseDecc))
                         {
 #ifdef PIC32_BUILD      
@@ -409,21 +423,40 @@ extern void ASSER_TRAJ_AsservissementMouvementRobot(Pose poseRobot, VitessesRobo
             
                 ASSER_Running = False;
                 
-                if (Vmax >= MIN(DonneeVmaxGauche, DonneeVmaxDroite))
-                {
-                    Vr = POS_GetVitesseRelle();
-                    
-                    if (POS_GetVitesseRelle() > (VminMouv + EcartVitesseDecc))
+                if (ASSER_TRAJ_isDeplacement(&chemin) == True)
+                {    
+                    if (Vmax >= MIN(DonneeVmaxGauche, DonneeVmaxDroite))
                     {
-#ifdef PIC32_BUILD  
-                      if (Test_mode == (unsigned long)1)
-                      {
-                          TOOLS_LogFault(AsserPosErr, True, FLOAT, (float *)&Vr, True, "Vr>VminMouv a l'arrivee");
-                      }
+                        Vr = fabs(POS_GetVitesseRelle());
+
+                        if (Vr > (VminMouv + EcartVitesseDecc))
+                        {
+#ifdef PIC32_BUILD      
+                            if (Test_mode == (unsigned long)1)
+                            {
+                                TOOLS_LogFault(AsserPosErr, True, FLOAT, (float *)&Vr, True, "Vr>VminMouv a l'arrivee");
+                            }
 #else /* PIC32_BUILD */
-                      ASSER_TRAJ_LogAsserMsgPC("Asser: Vr>VminMouv a l'arrivee", Vr);
+                            ASSER_TRAJ_LogAsserMsgPC("Asser: Vr>VminMouv a l'arrivee", Vr);
 #endif /* PIC32_BUILD */  
-                   }
+                        }
+                    }
+                }
+                else
+                {
+                    Vr = fabs((((float)m_sensDeplacement) * POS_GetVitesseRotation() * (ECART_ROUE_MOTRICE / 2.0)));
+
+                    if (Vr > (VminMouv + EcartVitesseDecc))
+                    {
+#ifdef PIC32_BUILD      
+                        if (Test_mode == (unsigned long)1)
+                        {
+                            TOOLS_LogFault(AsserPosErr, True, FLOAT, (float *)&Vr, True, "Vr>VminMouv a l'arrivee");
+                        }
+#else /* PIC32_BUILD */
+                        ASSER_TRAJ_LogAsserMsgPC("Asser: Vr>VminMouv a l'arrivee", Vr);
+#endif /* PIC32_BUILD */  
+                    }
                 }
             }
             else
@@ -503,7 +536,7 @@ extern void ASSER_TRAJ_AsservissementMouvementRobot(Pose poseRobot, VitessesRobo
                         MAIN_event = OSFlagPost(MAIN_event_gpr, MAIN_GOTO_WAYPOINT_REACHED, OS_FLAG_SET, &OS_Status);
                         if(OS_Status != OS_ERR_NONE)
                         {
-                            TOOLS_LogFault(OS_Err, True, INTEGER, &OS_Status, True, "Set MAIN_GOTO_WAYPOINT_REACHED flag error");
+                            TOOLS_LogFault(OS_Err, True, INTEGER, &OS_Status, True, "Post flag error");
                         }
     #endif /* PIC32_BUILD */
                     }
@@ -549,7 +582,7 @@ extern void ASSER_TRAJ_AsservissementMouvementRobot(Pose poseRobot, VitessesRobo
                     g_memoSubSegmentCourant = chemin.trajectoire.subTrajs.subSegmentCourant;
 
                     if ((chemin.trajectoire.subTrajs.segmentCourant == g_iSeg) \
-                            && (chemin.trajectoire.subTrajs.subSegmentCourant == g_iSubSeg))
+                    &&  (chemin.trajectoire.subTrajs.subSegmentCourant == g_iSubSeg))
                     {
                         g_iSeg = chemin.trajectoire.subTrajs.segmentCourant;
                         g_iSubSeg = chemin.trajectoire.subTrajs.subSegmentCourant;
@@ -577,7 +610,7 @@ extern void ASSER_TRAJ_AsservissementMouvementRobot(Pose poseRobot, VitessesRobo
                                     ASSER_TRAJ_IdentificationPoly4(dl_dt_0, d2l_dt2_0, dl_dt_i, dl_dt_1, d2l_dt2_1, &a_dlc, &b_dlc, &c_dlc, &d_dlc, &e_dlc);
 
                                     /* Longueur centrale de la spline */
-                                    distanceTotale_Profil += (a_dlc * POWER5_t1) / 5.0 + (b_dlc * POWER4_t1) / 4.0 + (c_dlc * CUBE_t1) / 3.0 + (d_dlc * SQUARE_t1) / 2.0 + e_dlc * ti;
+                                    distanceTotale_Profil += ((a_dlc * POWER5_t1) / 5.0) + ((b_dlc * POWER4_t1) / 4.0) + ((c_dlc * CUBE_t1) / 3.0) + ((d_dlc * SQUARE_t1) / 2.0) + (e_dlc * ti);
 
                                     Rinv_0 = fabsf(ASSER_TRAJ_Rinv_courbure(&chemin.trajectoire.subTrajs.segmentTraj[g_iSeg] \
                                                                       , g_iSubSeg \
@@ -585,7 +618,7 @@ extern void ASSER_TRAJ_AsservissementMouvementRobot(Pose poseRobot, VitessesRobo
                                     dRinv_0 = fabsf(ASSER_TRAJ_Rinv_courbure(&chemin.trajectoire.subTrajs.segmentTraj[g_iSeg] \
                                                                        , g_iSubSeg \
                                                                        , (0.01 * ti)));
-                                    dRinv_0 = (dRinv_0 - Rinv_0) / (0.01*ti);
+                                    dRinv_0 = (dRinv_0 - Rinv_0) / (0.01 * ti);
                                     Rinv_i = fabsf(ASSER_TRAJ_Rinv_courbure(&chemin.trajectoire.subTrajs.segmentTraj[g_iSeg] \
                                                                       , g_iSubSeg \
                                                                       , (ti / 2.0)));
@@ -599,14 +632,14 @@ extern void ASSER_TRAJ_AsservissementMouvementRobot(Pose poseRobot, VitessesRobo
 
                                     ASSER_TRAJ_IdentificationPoly4(Rinv_0, dRinv_0, Rinv_i, Rinv_1, dRinv_1, &a_Rinv, &b_Rinv, &c_Rinv, &d_Rinv, &e_Rinv);
 
-                                    distSupp = ( (a_dlc * a_Rinv) * POWER9_t1) / 9.0;
-                                    distSupp += ( (a_dlc * b_Rinv + a_Rinv * b_dlc) * POWER8_t1) / 8.0;
-                                    distSupp += ( (a_dlc * c_Rinv + a_Rinv * c_dlc + b_dlc * b_Rinv) * POWER7_t1) / 7.0;
-                                    distSupp += ( (a_dlc * d_Rinv + a_Rinv * d_dlc + b_dlc * c_Rinv + b_Rinv * c_dlc) * POWER6_t1) / 6.0;
-                                    distSupp += ( (a_dlc * e_Rinv + a_Rinv * e_dlc + b_dlc * d_Rinv + b_Rinv * d_dlc + c_dlc * c_Rinv) * POWER5_t1) / 5.0;
-                                    distSupp += ( (b_dlc * e_Rinv + b_Rinv * e_dlc + c_dlc * d_Rinv + c_Rinv * d_dlc) * POWER4_t1) / 4.0;
-                                    distSupp += ( (c_dlc * e_Rinv + c_Rinv * e_dlc + d_dlc * d_Rinv) * CUBE_t1) / 3.0;
-                                    distSupp += ( (d_dlc * e_Rinv + d_Rinv * e_dlc) * SQUARE_t1) / 2.0;
+                                    distSupp = ((a_dlc * a_Rinv) * POWER9_t1) / 9.0;
+                                    distSupp += (((a_dlc * b_Rinv) + (a_Rinv * b_dlc)) * POWER8_t1) / 8.0;
+                                    distSupp += (((a_dlc * c_Rinv) + (a_Rinv * c_dlc) + (b_dlc * b_Rinv)) * POWER7_t1) / 7.0;
+                                    distSupp += (((a_dlc * d_Rinv) + (a_Rinv * d_dlc) + (b_dlc * c_Rinv) + (b_Rinv * c_dlc)) * POWER6_t1) / 6.0;
+                                    distSupp += (((a_dlc * e_Rinv) + (a_Rinv * e_dlc) + (b_dlc * d_Rinv) + (b_Rinv * d_dlc) + (c_dlc * c_Rinv)) * POWER5_t1) / 5.0;
+                                    distSupp += (((b_dlc * e_Rinv) + (b_Rinv * e_dlc) + (c_dlc * d_Rinv) + (c_Rinv * d_dlc)) * POWER4_t1) / 4.0;
+                                    distSupp += (((c_dlc * e_Rinv) + (c_Rinv * e_dlc) + (d_dlc * d_Rinv)) * CUBE_t1) / 3.0;
+                                    distSupp += (((d_dlc * e_Rinv) + (d_Rinv * e_dlc)) * SQUARE_t1) / 2.0;
                                     distSupp += (e_dlc * e_Rinv) * ti;
                                     distSupp = distSupp * (ECART_ROUE_MOTRICE / 2.0);
                                     ASSER_TRAJ_LogAsserValPC("distSupp",  distSupp);
@@ -646,11 +679,11 @@ extern void ASSER_TRAJ_AsservissementMouvementRobot(Pose poseRobot, VitessesRobo
                             /* Passage au sous-segment suivant */
                             do
                             {
-                                g_iSubSeg = g_iSubSeg + 1;
+                                g_iSubSeg++;
                                 if (g_iSubSeg > SPLINE32)
                                 {
                                     /* Passage au segment suivant */
-                                    g_iSeg = g_iSeg + 1;
+                                    g_iSeg++;
                                     if (g_iSeg < chemin.trajectoire.subTrajs.nbreSegments)
                                     {
                                         g_iSubSeg = chemin.trajectoire.subTrajs.segmentTraj[g_iSeg].subSeg_firstUsed;
@@ -783,8 +816,16 @@ extern void ASSER_TRAJ_AsservissementMouvementRobot(Pose poseRobot, VitessesRobo
                         }
                         break;
 
-                   default:
+                   case LINE :
+                        /* VitesseProfill not changed */                            
                         break;
+                   default:                    
+#ifdef PIC32_BUILD
+                        TOOLS_LogFault(AsserPosErr, True, INTEGER, (int *)&chemin.trajectoire.subTrajs.subSegmentCourant, True, "subSegmentCourant non gere");
+#else /* PIC32_BUILD */
+                        ASSER_TRAJ_LogAsserMsgPC("Asser: subSegmentCourant non gere", (float)iSubSeg);
+#endif /* PIC32_BUILD */
+                        return;
                 }
 
                 ASSER_TRAJ_LogAsserValPC("VitesseProfil", VitesseProfil);
@@ -847,7 +888,7 @@ extern void ASSER_TRAJ_AsservissementMouvementRobot(Pose poseRobot, VitessesRobo
         }
         else /* ROTATION */
         {
-            if(fabsf(poseRobot.angle - chemin.trajectoire.rotation.poseDepartRobot.angle) > PI)
+            if (fabsf(poseRobot.angle - chemin.trajectoire.rotation.poseDepartRobot.angle) > PI)
             {
                 chemin.profilVitesse.distance_parcourue = fabsf(fabsf(poseRobot.angle - chemin.trajectoire.rotation.poseDepartRobot.angle) - (2.0 * PI)) * NORME_BARRE_SUIVI_TRAJ;
             }
@@ -970,7 +1011,7 @@ extern void ASSER_TRAJ_InitialisationTrajectoire(Pose poseRobot, unsigned char M
             /* Position a atteindre (condition d'arret du test de fin d'asservissement) */
             angle_fin_rotation = POS_ModuloAngle(Data->rotate.Angle);
             chemin.trajectoire.rotation.angle_final = angle_fin_rotation;
-            ASSER_TRAJ_LogAsserValPC("angle_final_rot", chemin.trajectoire.rotation.angle_final/PI);
+            ASSER_TRAJ_LogAsserValPC("angle_final_rot", chemin.trajectoire.rotation.angle_final / PI);
 
             chemin.posArrivee.x = poseRobot.x + (NORME_BARRE_SUIVI_TRAJ * cosf(angle_fin_rotation));
             chemin.posArrivee.y = poseRobot.y + (NORME_BARRE_SUIVI_TRAJ * sinf(angle_fin_rotation));
@@ -983,7 +1024,7 @@ extern void ASSER_TRAJ_InitialisationTrajectoire(Pose poseRobot, unsigned char M
             chemin.trajectoire.rotation.poseDepartRobot = poseRobot;
             chemin.trajectoire.rotation.angle = POS_ModuloAngle(angle_fin_rotation - poseRobot.angle);
 
-            ASSER_TRAJ_LogAsserValPC("plageAngleRotation", chemin.trajectoire.rotation.angle/PI);
+            ASSER_TRAJ_LogAsserValPC("plageAngleRotation", chemin.trajectoire.rotation.angle / PI);
 
             /* Calcul de la premiere pose de la trajectoire de consigne */
             poseReference = ASSER_TRAJ_TrajectoireRotation(&(chemin.trajectoire.rotation), 0.0);
@@ -1339,6 +1380,7 @@ extern void ASSER_TRAJ_InitialisationTrajectoire(Pose poseRobot, unsigned char M
             chemin.profilVitesse.vmax = POS_GetConsVitesseMax();                /* UMAX * GAIN_STATIQUE_MOTEUR */
 
             chemin.distance = 0.0;
+            
             for(iSegment = 0; iSegment < chemin.trajectoire.subTrajs.nbreSegments; iSegment++)
             {
                 chemin.trajectoire.subTrajs.segmentTraj[iSegment].subSeg_used.Flags.SPLINE31_USED = False;
@@ -1425,40 +1467,45 @@ extern void ASSER_TRAJ_InitialisationTrajectoire(Pose poseRobot, unsigned char M
                         ASSER_TRAJ_LogAsserValPC("def_yTraj", poseTest.y);
                         ASSER_TRAJ_LogAsserValPC("def_angleTraj", poseTest.angle);
 
-                        if (iSubSeg == SPLINE31)
+                        switch(iSubSeg)
                         {
-                            ASSER_TRAJ_LogAsserValPC("def_xTraj_SP31", poseTest.x);
-                            ASSER_TRAJ_LogAsserValPC("def_yTraj_SP31", poseTest.y);
-                        }
-                        if (iSubSeg == ARC1)
-                        {
-                            ASSER_TRAJ_LogAsserValPC("def_xTraj_ARC1", poseTest.x);
-                            ASSER_TRAJ_LogAsserValPC("def_yTraj_ARC1", poseTest.y);
-                        }
-                        if (iSubSeg == SPLINE341)
-                        {
-                            ASSER_TRAJ_LogAsserValPC("def_xTraj_SP341", poseTest.x);
-                            ASSER_TRAJ_LogAsserValPC("def_yTraj_SP341", poseTest.y);
-                        }
-                        if (iSubSeg == LINE)
-                        {
-                            ASSER_TRAJ_LogAsserValPC("def_xTraj_LINE", poseTest.x);
-                            ASSER_TRAJ_LogAsserValPC("def_yTraj_LINE", poseTest.y);
-                        }
-                        if (iSubSeg == SPLINE342)
-                        {
-                            ASSER_TRAJ_LogAsserValPC("def_xTraj_SP342", poseTest.x);
-                            ASSER_TRAJ_LogAsserValPC("def_yTraj_SP342", poseTest.y);
-                        }
-                        if (iSubSeg == ARC2)
-                        {
-                            ASSER_TRAJ_LogAsserValPC("def_xTraj_ARC2", poseTest.x);
-                            ASSER_TRAJ_LogAsserValPC("def_yTraj_ARC2", poseTest.y);
-                        }
-                        if (iSubSeg == SPLINE32)
-                        {
-                            ASSER_TRAJ_LogAsserValPC("def_xTraj_SP32", poseTest.x);
-                            ASSER_TRAJ_LogAsserValPC("def_yTraj_SP32", poseTest.y);
+                            case SPLINE31 :
+                                ASSER_TRAJ_LogAsserValPC("def_xTraj_SP31", poseTest.x);
+                                ASSER_TRAJ_LogAsserValPC("def_yTraj_SP31", poseTest.y);
+                                break;
+
+                            case ARC1 :
+                                ASSER_TRAJ_LogAsserValPC("def_xTraj_ARC1", poseTest.x);
+                                ASSER_TRAJ_LogAsserValPC("def_yTraj_ARC1", poseTest.y);
+                                break;
+
+                            case SPLINE341 :
+                                ASSER_TRAJ_LogAsserValPC("def_xTraj_SP341", poseTest.x);
+                                ASSER_TRAJ_LogAsserValPC("def_yTraj_SP341", poseTest.y);
+                                break;
+
+                            case LINE :
+                                ASSER_TRAJ_LogAsserValPC("def_xTraj_LINE", poseTest.x);
+                                ASSER_TRAJ_LogAsserValPC("def_yTraj_LINE", poseTest.y);
+                                break;
+
+                            case SPLINE342:
+                                ASSER_TRAJ_LogAsserValPC("def_xTraj_SP342", poseTest.x);
+                                ASSER_TRAJ_LogAsserValPC("def_yTraj_SP342", poseTest.y);
+                                break;
+
+                            case ARC2 :
+                                ASSER_TRAJ_LogAsserValPC("def_xTraj_ARC2", poseTest.x);
+                                ASSER_TRAJ_LogAsserValPC("def_yTraj_ARC2", poseTest.y);
+                                break;
+
+                            case SPLINE32 :
+                                ASSER_TRAJ_LogAsserValPC("def_xTraj_SP32", poseTest.x);
+                                ASSER_TRAJ_LogAsserValPC("def_yTraj_SP32", poseTest.y);
+                                break;
+
+                            default:
+                                break;
                         }
 
 
@@ -3344,13 +3391,12 @@ static Pose ASSER_TRAJ_ErreurPose(Pose poseRobot_P, Pose poseRef)
  *  \return           vitessesCons    Structure de vitesses avec les consignes de vitesse longitudinale (en m/s) et de vitesse de rotation (en rd/s)
  */
 /**********************************************************************/
-#ifdef Actionneurs_Robot1
 static VitessesRobotUnicycle ASSER_TRAJ_RetourDetatOrientation(Pose erreurPose, Pose diffPoseRef, float *gain)
 {
     VitessesRobotUnicycle   vitessesCons;
     float                   z, uref1, uref2, erreurAngle;
     float                   w[2];
-	float					tempw[2];
+    float                   tempw[2];
 
     erreurAngle = POS_ModuloAngle(erreurPose.angle);
     
@@ -3373,105 +3419,16 @@ static VitessesRobotUnicycle ASSER_TRAJ_RetourDetatOrientation(Pose erreurPose, 
     uref2 = diffPoseRef.angle;
 
     w[0] = - gain[0] * uref1 * fabsf(uref1) * (erreurPose.x + (erreurPose.y * z));
-    w[1] = -(gain[1] * uref1 * erreurPose.y) - (gain[2] * fabsf(uref1) * z);
-	tempw[0] = -(gain[1] * uref1 * erreurPose.y); //uref1 au lieu de 0.7
-	
-	tempw[1] = - (gain[2] * fabs(uref1) * z);//fabs(uref1) au lieu de 0.7
-	w[1] = tempw[0] + tempw[1];
+    w[1] = - (gain[1] * uref1 * erreurPose.y) - (gain[2] * fabsf(uref1) * z);
+    tempw[0] = -(gain[1] * uref1 * erreurPose.y);
+    tempw[1] = - (gain[2] * fabs(uref1) * z);
+    w[1] = tempw[0] + tempw[1];
 
-	vitessesCons.longitudinale = (w[0] + uref1) / cosf(erreurAngle);
-    vitessesCons.rotation = (w[1] * SQUARE(cosf(erreurAngle))) + uref2; // FOU cosf
-
-    return vitessesCons;
-}
-#else
-static VitessesRobotUnicycle ASSER_TRAJ_RetourDetatOrientation(Pose erreurPose, Pose diffPoseRef, float *gain)
-{
-    VitessesRobotUnicycle   vitessesCons;
-    float                   z, uref1, uref2, erreurAngle;
-    float                   w[2];
-	float					tempw[2];
-	static float			erreurAngleMemo = 0.0, tempwMemo = 0.0;
-	
-    erreurAngle = POS_ModuloAngle(erreurPose.angle);
-	
-	ASSER_TRAJ_LogAsserValPC("errAngle", erreurAngle);
-    
-    if (fabsf(erreurAngle) > ((PI / 2.0) - 0.1))
-    {
-        if (erreurAngle > 0.0)
-        {
-            erreurAngle = (PI / 2.0) - 0.1;
-        }
-        else
-        {
-            erreurAngle = - ((PI / 2.0) - 0.1);
-        }
-    }
-
-	z = tanf(erreurAngle);
-	
-    uref1 = sqrtf(SQUARE(diffPoseRef.x) + SQUARE(diffPoseRef.y));
-
-    uref2 = diffPoseRef.angle;
-	
-	ASSER_TRAJ_LogAsserValPC("z", z);
-	ASSER_TRAJ_LogAsserValPC("uref1", uref1);
-	ASSER_TRAJ_LogAsserValPC("uref2", uref2);
-
-    w[0] = - gain[0] * uref1 * fabsf(uref1) * (erreurPose.x + (erreurPose.y * z));
     vitessesCons.longitudinale = (w[0] + uref1) / cosf(erreurAngle);
-	
-	if((erreurPose.y > -0.003) && (erreurPose.y < 0.0))
-	{
-		tempw[0] = 0.1;
-	}
-	else if((erreurPose.y < 0.003)  && (erreurPose.y > 0.0))
-	{
-		tempw[0] = -0.1;
-	}
-	else if(erreurPose.y > 0.5)
-	{
-		tempw[0] = -80.0;
-	}
-	else if(erreurPose.y < -0.5)
-	{
-		tempw[0] = 80.0;
-	}
-	else
-	{
-		tempw[0] = -(((erreurPose.y - 0.003) / 0.5) * 80.0);
-		if(tempw[0] > 0.0)
-		{
-			tempw[0] += 0.1;
-		}
-		else
-		{
-			tempw[0] -= 0.1;
-		}
-	}
-	tempw[1] = tempwMemo;
-	tempw[1] = ((((erreurAngle - erreurAngleMemo) * 360.0) / (2.0 * PI * 0.01)) / gain[2]);
-	vitessesCons.rotation = (tempw[0] - (erreurAngle * 360.0 / (2.0 * PI)));
-	ASSER_TRAJ_LogAsserValPC("vrotaA", vitessesCons.rotation);
-	vitessesCons.rotation = (vitessesCons.rotation - tempw[1]);
-	ASSER_TRAJ_LogAsserValPC("vrotaB", vitessesCons.rotation);
-	vitessesCons.rotation = (((vitessesCons.rotation)/360.0)*gain[1])/* + uref2*/;
-	ASSER_TRAJ_LogAsserValPC("vrotaC", vitessesCons.rotation);
-	ASSER_TRAJ_LogAsserValPC("errAngle2", erreurAngle);
-	ASSER_TRAJ_LogAsserValPC("errAngleMemo", erreurAngleMemo);
-	ASSER_TRAJ_LogAsserValPC("vlongi", vitessesCons.longitudinale);
-	ASSER_TRAJ_LogAsserValPC("errY", erreurPose.y);
-	ASSER_TRAJ_LogAsserValPC("tempw0", tempw[0]);
-	ASSER_TRAJ_LogAsserValPC("tempw1", tempw[1]);
-	
-	/* Sauvegarde de l'erreur d'angle pour l'itération N+1 */
-	erreurAngleMemo = erreurAngle;
-	tempwMemo = tempw[1]; 
+    vitessesCons.rotation = (w[1] * SQUARE(cosf(erreurAngle))) + uref2;
 
     return vitessesCons;
 }
-#endif
 
 /**********************************************************************/
 /*! \brief ASSER_TRAJ_TestFinAsservissement
@@ -3559,13 +3516,13 @@ static void ASSER_TRAJ_IdentificationPoly4(float y0, float dy0, float yi, float 
     C1 = SQUARE_t1;
     C2 = 2.0 * ti;
     C3 = SQUARE_t1_2;
-    D1 = dy0 * ti + y0 - y1;
+    D1 = (dy0 * ti) + y0 - y1;
     D2 = dy0 - dy1;
     D3 = dy0 * (ti / 2.0) + y0 - yi;
 
     *e = y0;
     *d = dy0;
-    *a = - ( (((B3 - (C3 / C1) * B1) / (B2 - (C2 / C1) * B1)) * ((C2 / C1) * D1 - D2)) + D3 - (C3 / C1) * D1) / (A3 - (C3 / C1) * A1  + (((B3 - (C3 / C1) * B1) / (B2 - (C2 / C1) * B1)) * ((C2 / C1) * A1 - A2)));
+    *a = - ((((B3 - (C3 / C1) * B1) / (B2 - (C2 / C1) * B1)) * ((C2 / C1) * D1 - D2)) + D3 - (C3 / C1) * D1) / (A3 - (C3 / C1) * A1  + (((B3 - (C3 / C1) * B1) / (B2 - (C2 / C1) * B1)) * ((C2 / C1) * A1 - A2)));
     *b = ((*a) * ((C2 / C1) * A1 - A2) + (C2 / C1) * D1 - D2) / (B2 - (C2 / C1) * B1);
     *c = - (A1 / C1) * (*a) - (B1 / C1) * (*b) - (D1 / C1);
 }
@@ -3760,6 +3717,8 @@ extern void ASSER_TRAJ_LogAsserPIC(char * keyWord, float Val1, float * pVal2, fl
 extern unsigned char ASSER_TRAJ_Profil_S_Curve(float * Vconsigne, float Distance, float VStart, float VEnd, float Amax, float Dmax, float gASR, float Pr, float Vr, unsigned char fSatPI)
 {
     unsigned char   AsserRunningFlag = True;
+    float           Vmax_tmpMin;    
+    float           Vmax_tmpMax;  
 
     Vr = fabsf(Vr);
     
@@ -3792,10 +3751,27 @@ extern unsigned char ASSER_TRAJ_Profil_S_Curve(float * Vconsigne, float Distance
         /* Ajustement de Vmax suivant la distance si necessaire */      
         DistanceMin = (((Vmax * Vmax) - (VStart * VStart)) / Amax) + (((Vmax * Vmax) - (VEnd * VEnd)) / Dmax) + (2 * (Vmax * TE)) + (VStart * TE) + (VEnd * TE);
 
-        while (DistanceMin > Distance)
+        if (DistanceMin > Distance)
         {
-            Vmax -= 0.001;
-            DistanceMin = (((Vmax * Vmax) - (VStart * VStart)) / Amax) + (((Vmax * Vmax) - (VEnd * VEnd)) / Dmax) + (2 * (Vmax * TE)) + (VStart * TE) + (VEnd * TE);
+            Vmax_tmpMin = 0.0;
+            Vmax_tmpMax = Vmax;
+            
+            while ((Vmax_tmpMax - Vmax_tmpMin) > 0.001)
+            {
+                Vmax = (Vmax_tmpMin + Vmax_tmpMax) / 2.0;
+                  
+                DistanceMin = (((Vmax * Vmax) - (VStart * VStart)) / Amax) + (((Vmax * Vmax) - (VEnd * VEnd)) / Dmax) + (2 * (Vmax * TE)) + (VStart * TE) + (VEnd * TE);
+                
+                if (DistanceMin < Distance)
+                {
+                    Vmax_tmpMin = Vmax;
+                }
+                else
+                {
+                    Vmax_tmpMax = Vmax;
+                }
+            }
+            Vmax = Vmax_tmpMin;
         }
         
         if ((Vmax / 2.0) < VminMouvRef)
@@ -4451,19 +4427,38 @@ extern unsigned char ASSER_TRAJ_Profil_S_Curve(float * Vconsigne, float Distance
                 {
                     Phase = 8;
                     
-                    if (Vmax >= MIN(DonneeVmaxGauche, DonneeVmaxDroite))
-                    {
-                      if ((Vr > (VminMouv + EcartVitesseDecc)) && (VEnd == 0.0))
-                      {
-#ifdef PIC32_BUILD           
-                          if (Test_mode == (unsigned long)1)
-                          {
-                              TOOLS_LogFault(AsserPosErr, True, FLOAT, (float *)&Vr, True, "Vr>VminMouv a l'arrivee");
-                          }
+                    if (ASSER_TRAJ_isDeplacement(&chemin) == True)
+                    {    
+                        if (Vmax >= MIN(DonneeVmaxGauche, DonneeVmaxDroite))
+                        {   
+                            if (Vr > (VminMouv + EcartVitesseDecc))
+                            {
+#ifdef PIC32_BUILD      
+                                if (Test_mode == (unsigned long)1)
+                                {
+                                    TOOLS_LogFault(AsserPosErr, True, FLOAT, (float *)&Vr, True, "Vr>VminMouv a l'arrivee");
+                                }
 #else /* PIC32_BUILD */
-                          ASSER_TRAJ_LogAsserMsgPC("Asser: Vr>VminMouv a l'arrivee", Vr);
+                                ASSER_TRAJ_LogAsserMsgPC("Asser: Vr>VminMouv a l'arrivee", Vr);
 #endif /* PIC32_BUILD */  
-                      }
+                            }
+                        }
+                    }
+                    else
+                    {
+                        Vr = fabs((((float)m_sensDeplacement) * POS_GetVitesseRotation() * (ECART_ROUE_MOTRICE / 2.0)));
+    
+                        if (Vr > (VminMouv + EcartVitesseDecc))
+                        {
+#ifdef PIC32_BUILD      
+                            if (Test_mode == (unsigned long)1)
+                            {
+                                TOOLS_LogFault(AsserPosErr, True, FLOAT, (float *)&Vr, True, "Vr>VminMouv a l'arrivee");
+                            }
+#else /* PIC32_BUILD */
+                            ASSER_TRAJ_LogAsserMsgPC("Asser: Vr>VminMouv a l'arrivee", Vr);
+#endif /* PIC32_BUILD */  
+                        }
                     }
                 }
              }
