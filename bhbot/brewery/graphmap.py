@@ -19,6 +19,8 @@ class ZoneData:
 
     def __init__(self, id):
         self.id = id
+        self.is_detected = False
+        self.is_enabled = True
         self.x = 0.0
         self.y = 0.0
 
@@ -71,9 +73,9 @@ class Map:
 
         self.pathfinder.field_config_done()
 
-        self.enable_zone(self.main_opponent_zone.id, False)
-        self.enable_zone(self.secondary_opponent_zone.id, False)
-        self.enable_zone(self.teammate_zone.id, False)
+        self.enable_zone(self.main_opponent_zone, False)
+        self.enable_zone(self.secondary_opponent_zone, False)
+        self.enable_zone(self.teammate_zone, False)
 
 
     def create_quarter_coords(self, x, y, radius):
@@ -113,10 +115,11 @@ class Map:
         return ZoneData(id)
 
 
-    def enable_zone(self, id, enabled):
+    def enable_zone(self, zone, enabled):
         if IS_HOST_DEVICE_PC:
-            self.event_loop.send_packet(packets.SimulatorEnableGraphMapZone(id = id, enabled = enabled))
-        self.pathfinder.enable_zone(id, enabled)
+            self.event_loop.send_packet(packets.SimulatorEnableGraphMapZone(id = zone.id, enabled = enabled))
+        self.pathfinder.enable_zone(zone.id, enabled)
+        zone.is_enabled = enabled
 
 
     def move_zone(self, id, dx, dy):
@@ -141,6 +144,18 @@ class Map:
             pose_path.append(position.Pose(x, y))
         self.send_to_simulator(pose_path)
         return (cost, pose_path)
+
+
+    def evaluate(self, start, end):
+        # When evaluating a path we consider far opponents
+        for zone in [ self.main_opponent_zone, self.secondary_opponent_zone ]:
+            if zone.is_detected and zone.is_enabled:
+                self.pathfinder.enable_zone(zone.id, True)
+        cost = self.route(start, end)[0]
+        for zone in [ self.main_opponent_zone, self.secondary_opponent_zone ]:
+            if zone.is_detected and zone.is_enabled:
+                self.pathfinder.enable_zone(zone.id, False)
+        return cost
 
 
     def send_to_simulator(self, path):
@@ -169,14 +184,16 @@ class Map:
         else:
             zone = self.secondary_opponent_zone
         if packet.x is not None and packet.y is not None:
-            self.enable_zone(zone.id, True)
+            self.enable_zone(zone, packet.distance == OPPONENT_DISTANCE_NEAR)
+            zone.is_detected = True
             dx = packet.x - zone.x
             dy = packet.y - zone.y
             zone.x = packet.x
             zone.y = packet.y
             self.move_zone(zone.id, dx, dy)
         else:
-            self.enable_zone(zone.id, False)
+            self.enable_zone(zone, False)
+            zone.is_detected = False
 
 
     def build_module(self):
@@ -205,7 +222,7 @@ class Map:
         :type packet: packets.InterbotPosition
         """
         if TEAMMATE_POSITION_IN_MAP:
-            self.enable_zone(self.teammate_zone.id, True)
+            self.enable_zone(self.teammate_zone, True)
             dx = packet.pose.x - self.teammate_zone.x
             dy = packet.pose.y - self.teammate_zone.y
             self.teammate_zone.x = packet.pose.x
