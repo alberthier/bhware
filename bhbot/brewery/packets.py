@@ -260,7 +260,7 @@ class TurretDetect(BasePacket):
     MAX_SIZE = 4
     TYPE = 32
     DEFINITION = (
-        ('distance', UInt8 (0, "Detection distance")),
+        ('distance', UEnum8(OPPONENT_DISTANCE, OPPONENT_DISTANCE_NEAR)),
         ('angle'   , UInt8 (0, "Detection angle index (0 <= angle <= 17; 20 deg resolution)")),
         ('robot'   , UEnum8(OPPONENT_ROBOT, OPPONENT_ROBOT_MAIN)),
     )
@@ -646,6 +646,7 @@ class OpponentPosition(BasePacket):
 
     DEFINITION = (
         ('robot'    , UEnum8(OPPONENT_ROBOT, OPPONENT_ROBOT_MAIN)),
+        ('distance' , UEnum8(OPPONENT_DISTANCE, OPPONENT_DISTANCE_NEAR)),
         ('x'        , Float(0.0, "Opponent estimated X coordinate")),
         ('y'        , Float(0.0, "Opponent estimated Y coordinate")),
     )

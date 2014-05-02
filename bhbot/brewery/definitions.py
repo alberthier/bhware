@@ -207,6 +207,11 @@ OPPONENT_ROBOT = Enum("Detected opponent robot",
     OPPONENT_ROBOT_SECONDARY = 1,
 )
 
+OPPONENT_DISTANCE = Enum("Opponent distance",
+    OPPONENT_DISTANCE_NEAR = 0,
+    OPPONENT_DISTANCE_FAR  = 1,
+)
+
 TURRET_INIT_MODE = Enum("Turret initialization read/write mode",
     TURRET_INIT_MODE_READ  = 0,
     TURRET_INIT_MODE_WRITE = 1,

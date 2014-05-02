@@ -17,6 +17,7 @@ class Main(commonstates.Timer):
 
     def __init__(self):
         super().__init__(OPPONENT_DETECTION_DISAPPEARING_MS)
+        self.detections = []
 
 
     def on_enter(self):
@@ -34,10 +35,17 @@ class Main(commonstates.Timer):
             return
         if packet.robot != self.fsm.opponent_type:
             return
-        if packet.distance == 1:
+
+        self.detections.append(packet.distance)
+        if len(self.detections) < 2:
             return
-        else:
+
+        # if a near detection is present in the 6 last detections, the opponent is near us
+        if OPPONENT_DISTANCE_NEAR in self.detections:
             distance = TURRET_SHORT_DISTANCE_DETECTION_RANGE
+        else:
+            distance = TURRET_LONG_DISTANCE_DETECTION_RANGE
+        self.detections = []
 
         angle = (18 - packet.angle) % 18
 
@@ -48,7 +56,7 @@ class Main(commonstates.Timer):
         self.y = robot_pose.y + distance * math.sin(real_angle)
 
         previous_direction = self.opponent_direction
-        if packet.distance == 0:
+        if packet.distance == OPPONENT_DISTANCE_NEAR:
             if angle in self.IN_FRONT_ANGLES:
                 self.opponent_direction = DIRECTION_FORWARD
             elif angle in self.IN_BACK_ANGLES:
@@ -58,7 +66,7 @@ class Main(commonstates.Timer):
         else:
             self.opponent_direction = None
 
-        self.send_packet(packets.OpponentPosition(robot = self.fsm.opponent_type, x = self.x, y = self.y))
+        self.send_packet(packets.OpponentPosition(robot = self.fsm.opponent_type, distance = packet.distance, x = self.x, y = self.y))
         self.restart()
 
         if self.opponent_direction is not None:
@@ -78,6 +86,7 @@ class Main(commonstates.Timer):
         self.log("{} opponent disappeared".format(self.opponent_name()))
         self.set_detected(False)
         self.stop()
+        self.detections = []
         self.send_packet(packets.OpponentPosition(robot = self.fsm.opponent_type, x = None, y = None))
         if self.opponent_direction is not None:
             self.send_packet(packets.OpponentDisappeared(robot = self.fsm.opponent_type, direction = self.opponent_direction))
