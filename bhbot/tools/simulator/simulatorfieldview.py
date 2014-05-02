@@ -352,9 +352,11 @@ class RobotLayer(fieldview.Layer):
 
     def key_press_event(self, pos, event):
         if self.robot.item:
-            dy = pos.x() - self.robot.item.x()
-            dx = pos.y() - self.robot.item.y()
+            dx = pos.x() - self.robot.item.x()
+            dy = pos.y() - self.robot.item.y()
             angle = (self.robot.item.rotation() / 180.0 * math.pi) + math.atan2(dx, dy)
+            # convert to brewery's coordinates
+            angle = math.atan2(math.cos(angle), math.sin(angle))
             angle %= 2.0 * math.pi
             angle = int(round(angle / (2.0 * math.pi) * 18.0))
 
@@ -366,22 +368,26 @@ class RobotLayer(fieldview.Layer):
 
             if team == TEAM_YELLOW and key == 'q' or team == TEAM_RED and key == 's':
                 # Main opponent - short distance
-                packet.distance = 0
                 packet.robot = OPPONENT_ROBOT_MAIN
+                packet.distance = OPPONENT_DISTANCE_FAR
+                self.robot_controller.send_packet(packet)
+                packet.distance = OPPONENT_DISTANCE_NEAR
                 self.robot_controller.send_packet(packet)
             elif team == TEAM_YELLOW and key == 'Q' or team == TEAM_RED and key == 'S':
                 # Main opponent - long distance
-                packet.distance = 1
+                packet.distance = OPPONENT_DISTANCE_FAR
                 packet.robot = OPPONENT_ROBOT_MAIN
                 self.robot_controller.send_packet(packet)
             elif team == TEAM_YELLOW and key == 'w' or team == TEAM_RED and key == 'x':
                 # Secondary opponent - short distance
-                packet.distance = 0
                 packet.robot = OPPONENT_ROBOT_SECONDARY
+                packet.distance = OPPONENT_DISTANCE_FAR
+                self.robot_controller.send_packet(packet)
+                packet.distance = OPPONENT_DISTANCE_NEAR
                 self.robot_controller.send_packet(packet)
             elif team == TEAM_YELLOW and key == 'W' or team == TEAM_RED and key == 'X':
                 # Secondary opponent - long distance
-                packet.distance = 1
+                packet.distance = OPPONENT_DISTANCE_FAR
                 packet.robot = OPPONENT_ROBOT_SECONDARY
                 self.robot_controller.send_packet(packet)
 
