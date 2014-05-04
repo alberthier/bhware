@@ -245,7 +245,7 @@ class GhostRobotLayer(Layer):
 
 
     def mouse_press_event(self, pos, event):
-        if event.button() == Qt.LeftButton:
+        if event.button() == Qt.RightButton:
             self.is_main_robot = not self.is_main_robot
             self.update_mouse_item(pos)
 
