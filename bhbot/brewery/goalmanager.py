@@ -135,22 +135,34 @@ class GoalManager:
                 goal.navigation_cost = self.event_loop.map.evaluate(self.event_loop.robot.pose, pose)
             else:
                 goal.navigation_cost = tools.distance(self.event_loop.robot.pose.x, self.event_loop.robot.pose.y, pose.x, pose.y)
+            if goal.navigation_cost is None:
+                goal.navigation_cost = 999999.0
             goal.score = goal.penality
             goal.penality = 0.0
 
-        for order, goal in enumerate(sorted(available_goals, key=lambda x:x.navigation_cost)):
-            logger.log("Goal {} nav cost = {}".format(goal.identifier, goal.navigation_cost))
-            goal.score += order * 2
+        logger.log("Scoring distance")
+        for order, goal in enumerate(sorted(available_goals, key = lambda x : x.navigation_cost, reverse = True)):
+            goal.score += (order + 1) * 2
+            logger.log("Goal {} nav cost = {}, score = {}".format(goal.identifier, goal.navigation_cost, goal.score))
 
-        for order, goal in enumerate(sorted(available_goals, key=lambda x:x.weight, reverse=True)):
+        logger.log("Adding weights")
+        for goal in available_goals:
+            goal.score += goal.weight
+            logger.log("Goal {} score = {}".format(goal.identifier, goal.score))
+
+        logger.log("Scoring tentatives")
+        order = 0
+        last_value = None
+        for goal in sorted(available_goals, key = lambda x : x.trial_count, reverse = True):
+            if last_value != goal.trial_count:
+                last_value = goal.trial_count
+                order += 1
             goal.score += order
+            logger.log("Goal {} score = {}".format(goal.identifier, goal.score))
 
-        for order, goal in enumerate(sorted(available_goals, key=lambda x:x.trial_count, reverse=True)):
-            goal.score += order
+        logger.log("available_goals by score : {}".format(["{}:{}".format(g.identifier, g.score) for g in available_goals ] ))
 
-        logger.log("available_goals by score : {}".format( ["{}:{}".format(g.identifier, g.score) for g in available_goals ] ))
-
-        best_goal = min(available_goals, key=lambda g : g.score)
+        best_goal = max(available_goals, key = lambda g : g.score)
 
         logger.log("Best goal is {} with score {}".format(best_goal.identifier, best_goal.score))
 
