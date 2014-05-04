@@ -311,6 +311,38 @@ def testPI(d_cfgTraj, d_cfgTestPI) :
     d_traj = stdoutParser(lines)
 
     return d_traj
+    
+def test_MOVE_LINE(d_cfgTraj) :
+
+    #lancement du simulateur de deplacement
+    print("Lancement du simulateur")
+    if (platform.system() == 'Linux') :
+        shellCommand = './simulator_trajAsser'
+    if (platform.system() == 'Windows') :
+        shellCommand = 'simulator_trajAsser.exe'
+    simulator_process = subprocess.Popen(shellCommand, shell=True, stdin = subprocess.PIPE, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+
+    # envoie de la configuration du simulateur
+    send_config_simulator(simulator_process, d_cfgTraj)
+    print("Config envoyee")
+        
+    send_init_pose(simulator_process, x=0.2, y=0.2, angle=0.0)
+    deplacement_MOVE_LINE = commandMsg("MSG_MOVE_LINE 1")
+    deplacement_MOVE_LINE.addPose("1.2 0.2")
+    
+    #transmission de commandes de deplacement par l'entree standard
+    simulator_process.stdin.write(deplacement_MOVE_LINE.cmdMsgGeneration())
+    print("Test MOVE LINE")
+
+    #transmission de la commande d'arret du simulateur
+    (stdoutdata, stderrdata) = simulator_process.communicate("QUIT\n")
+    print("Simulation terminee.")
+
+    #traitement des donnees de stdout
+    lines = lineForm(stdoutdata)
+    d_traj = stdoutParser(lines)
+
+    return d_traj
 
 def PI2011_coutOptimParam(paramPI, d_cfgTraj_local, d_cfgTestPI) :
     if (d_cfgTestPI['moteur'] == "GAUCHE") :
@@ -359,17 +391,35 @@ def criteria_PIsettings(paramPI, d_cfgTraj_local, d_cfgTestPI) :
         print("Test PI : choix moteur incorrect (moteur = 'GAUCHE' ou 'DROIT')")
         sys.exit(2)
     
-    d_traj = testPI(d_cfgTraj_local, d_cfgTestPI)
+    if (d_cfgTestPI['profil'] == "ECHELON") or (d_cfgTestPI['profil'] == "PARABOLE") :
+        d_traj = testPI(d_cfgTraj_local, d_cfgTestPI)
+        
+    elif (d_cfgTestPI['profil'] == "MOVE_LINE") :
+        d_traj = test_MOVE_LINE(d_cfgTraj_local)
+        if (d_cfgTestPI['moteur'] == "GAUCHE") :
+            d_traj["tensionMesPI"] = d_traj["tensionPWM_MoteurGauche"]
+            d_traj["errVitMesPI"] = d_traj["erreurVitesseMoteurGauche"]
+        elif (d_cfgTestPI['moteur'] == "DROIT") :
+            d_traj["tensionMesPI"] = d_traj["tensionPWM_MoteurDroit"]
+            d_traj["errVitMesPI"] = d_traj["erreurVitesseMoteurDroit"]
+        else :
+            print("Test PI : choix moteur incorrect (moteur = 'GAUCHE' ou 'DROIT')")
+            sys.exit(2)
+        
 
     tensionMax = 0.0
+    i_tensionMax = 0
     # cout de la tension maximum
-    for tension in d_traj["tensionMesPI"] :
-        if (tension > tensionMax) :
-            tensionMax = tension
+    for i_tension in range(len(d_traj["tensionMesPI"])) :
+        if (d_traj["tensionMesPI"][i_tension] > tensionMax) :
+            tensionMax = d_traj["tensionMesPI"][i_tension]
+            i_tensionMax = i_tension
     coutTensionMax = (1023 - tensionMax) / 1023.0
     #~ print(coutTensionMax)
 
-    indexMesureErrVitesse = int(len(d_traj["errVitMesPI"]) * 0.9)
+    indexMesureErrVitesse = i_tensionMax + 60
+    if indexMesureErrVitesse > (len(d_traj["errVitMesPI"]) - 1) :
+        indexMesureErrVitesse = int(len(d_traj["errVitMesPI"]) - 1)
     coutErreurVitesse = d_traj["errVitMesPI"][indexMesureErrVitesse] / d_traj["vitMesPI"][indexMesureErrVitesse]
 
     return coutTensionMax, coutErreurVitesse
@@ -377,7 +427,7 @@ def criteria_PIsettings(paramPI, d_cfgTraj_local, d_cfgTestPI) :
 def plot_criteria_PIsettings(d_cfgTraj_local) :
 
     d_cfgTestPI = {'moteur' : "DROIT" # "GAUCHE ou "DROIT"
-                , 'profil' : "PARABOLE" # "ECHELON" ou "PARABOLE"
+                , 'profil' : "PARABOLE" # "ECHELON" ou "PARABOLE" ou "MOVE_LINE"
                 , 'nb_pts_mesure' : 220
     
                 }
@@ -644,6 +694,73 @@ def PI2011_optimParam(d_cfgTraj_local, d_cfgTestPI) :
     solPI = fmin(PI2011_coutOptimParam, p0, args=[d_cfgTraj_local, d_cfgTestPI], xtol=0.01, ftol=0.01, maxiter=45, disp = True, retall = True)
     return(solPI[0])
 
+def plot_test_MOVE_LINE(d_traj):
+
+    periode=d_traj["periode"][0]
+    print("Periode: " + str(periode))
+    temps = [ periode * x for x in range(len(d_traj["xRoueGauche"]))]
+    print("len tps: " + str(len(d_traj["xRoueGauche"])) )
+
+    # Plot the trajectory
+    # -------------------
+    figure(1)
+    plot(d_traj["xRoueGauche"], d_traj["yRoueGauche"], label="Rgauche")
+    hold(True)
+    plot(d_traj["xRoueDroite"], d_traj["yRoueDroite"], label="Rdroite")
+    plot(d_traj["xPoseReferenceRobot"], d_traj["yPoseReferenceRobot"], '--r', label="TrajRref")
+    xCentre = [(d_traj["xRoueGauche"][index] + d_traj["xRoueDroite"][index])/2.0 for index in range(len(d_traj["xRoueDroite"]))]
+    yCentre = [(d_traj["yRoueGauche"][index] + d_traj["yRoueDroite"][index])/2.0 for index in range(len(d_traj["yRoueDroite"]))]
+    plot(xCentre, yCentre, '-m', label="Rcentre")
+    if "xNewSubSeg" in d_traj.keys() :
+        plot(d_traj["xNewSubSeg"], d_traj["yNewSubSeg"], 'om')
+
+    grid(True)
+    xlabel("x (m)")
+    ylabel("y (m)")
+    legend(loc='lower right')
+    title("trajectoire")
+    
+    # Plot speed and voltage
+    # ----------------------
+    # # Speed
+    temps = [index*periode for index in range(len(d_traj["vitesseMoteurGauche"]))]
+    figure(2)
+    ax_v = subplot(211)
+    ylabel("vitesse (m/s)")
+    plot(temps, d_traj["vitesseMoteurGauche"], '-', label='mesure gauche')
+    plot(temps, d_traj["vitesseMoteurDroit"], '-', label='mesure droit')
+    plot(temps, d_traj["ConsigneMoteurDroit_MS"], '-', label='consigne droit')
+    plot(temps, d_traj["ConsigneMoteurGauche_MS"], '-k', label='consigne gauche')
+    #~ if (len(d_traj["VitesseProfil"]) < len(temps)) :
+        #~ plot(temps[:len(d_traj["VitesseProfil"])], d_traj["VitesseProfil"], label='Vitesse Profil')
+    #~ else :
+        #~ plot(temps, d_traj["VitesseProfil"], label='Vitesse Profil')
+        
+    #~ plot(temps, d_traj["VposG"], label='VposG')
+    #~ plot(temps, d_traj["VposD"], label='VposD')
+    # plot(temps, d_traj["VpiG"], label='VpiG')
+    # plot(temps, d_traj["VpiD"], label='VpiD')
+    
+    plot(temps, d_traj["Phase"], label='Phase')
+
+    ylim(-1.2, 1.2)
+    legend(loc="lower center")
+    grid(True)
+    title("vitesses")
+
+    # # Voltage
+    ax_t = subplot(212, sharex=ax_v)
+    ylabel("tension (unite PWM)")
+    plot(temps, d_traj["tensionPWM_MoteurGauche"], label='moteur gauche')
+    plot(temps, d_traj["tensionPWM_MoteurDroit"], label='moteur droit')
+    
+    xlabel("temps (s)")
+    legend(loc="lower center")
+    grid(True)
+    title("tensions moteurs")
+
+    show()
+
 
 def printLog(traj, logName) :
     if logName in traj.keys() :
@@ -674,8 +791,17 @@ d_cfgTestPI = {'moteur' : "DROIT" # "GAUCHE ou "DROIT"
                 , 'profil' : "PARABOLE" # "ECHELON" ou "PARABOLE"
                 , 'nb_pts_mesure' : 220
                 }
-traj = testPI(d_cfgTraj, d_cfgTestPI)
-affichageTestPI2012(traj)
+#~ traj = testPI(d_cfgTraj, d_cfgTestPI)
+#~ affichageTestPI2012(traj)
+#~ sys.exit(2)
+
+d_cfgTraj["KpG"] = 6.0
+d_cfgTraj["KiG"] = 17.0
+d_cfgTraj["KpD"] = 6.0
+d_cfgTraj["KiD"] = 17.0
+d_cfgTraj['RatioAcc'] = 1.6
+traj = test_MOVE_LINE(d_cfgTraj)
+plot_test_MOVE_LINE(traj)
 sys.exit(2)
 
 
