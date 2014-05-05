@@ -774,8 +774,8 @@ class EscapeToAnywhere(statemachine.State):
     def on_timer_tick(self):
         # We cannot use a simple while here. We have to give control back to the eventloop at each try
         # otherwise we will block all communications / statemachines
-        x = random.randrange(300, 2700) / 1000.0
-        y = random.randrange(600, 1700) / 1000.0
+        x = random.randrange(300, 1700) / 1000.0
+        y = random.randrange(600, 2700) / 1000.0
         move = yield Navigate(x, y)
         exit_reason = move.exit_reason
         if exit_reason == TRAJECTORY_BLOCKED:
