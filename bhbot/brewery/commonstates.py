@@ -4,6 +4,7 @@
 import datetime
 import functools
 import math
+import random
 
 import eventloop
 import logger
@@ -327,14 +328,16 @@ class WaitForOpponentLeave(Timer):
 
 
 class OpponentHandlingConfig:
-    def __init__(self, backout, retries: int or None=None, wait_delay: float or None=None):
+    def __init__(self, stop, backout, retries: int or None=None, wait_delay: float or None=None):
+        self.stop = stop
         self.backout = backout
         self.retries_count = retries
         self.wait_delay = wait_delay
 
 
-NO_OPPONENT_HANDLING = OpponentHandlingConfig(False, 0, 0)
-OPPONENT_HANDLING = OpponentHandlingConfig(True, None, None)
+NO_OPPONENT_HANDLING = OpponentHandlingConfig(False, False, None, None)
+#OPPONENT_HANDLING = OpponentHandlingConfig(True, True, 0, 0)
+OPPONENT_HANDLING = OpponentHandlingConfig(True, False, 0, 0)
 
 
 
@@ -700,35 +703,46 @@ class ExecuteGoals(statemachine.State):
     def on_enter(self):
         gm = self.robot.goal_manager
 
-        navigation_failure = False
+        navigation_failures = 0
 
         while True:
 
-            if not navigation_failure :
+            if navigation_failures == 0:
+                logger.log("Choosing the best goal")
                 goal = gm.get_best_goal()
-            else :
+            elif navigation_failures < 10:
+                logger.log("Choosing the least recently tried goal")
                 goal = gm.get_least_recent_tried_goal()
+            else:
+                logger.log("Escaping to anywhere !!")
+                yield EscapeToAnywhere()
+                navigation_failures = 0
+                continue
 
-            if goal :
+            if goal:
                 logger.log('Next goal is {}'.format(goal.identifier))
 
                 goal.doing()
 
+                current_navigation_succeeded = True
                 if goal.navigate :
                     logger.log('Navigating to goal')
                     move = yield Navigate(goal.x, goal.y, goal.direction)
                     logger.log('End of navigation : {}'.format(TRAJECTORY.lookup_by_value[move.exit_reason]))
 
-                    navigation_failure = move.exit_reason != TRAJECTORY_DESTINATION_REACHED
-                    if navigation_failure:
+                    current_navigation_succeeded = move.exit_reason == TRAJECTORY_DESTINATION_REACHED
+                    if current_navigation_succeeded:
+                        navigation_failures = 0
+                    else:
+                        navigation_failures += 1
+                    if not current_navigation_succeeded:
                         logger.log('Cannot navigate to goal -> picking another')
                         goal.increment_trials()
                         goal.available()
-                        navigation_failure = True
                     else:
                         logger.log('Navigation was successful')
 
-                if not navigation_failure:
+                if current_navigation_succeeded:
                     state = goal.get_state()
 
                     yield state
@@ -747,3 +761,27 @@ class ExecuteGoals(statemachine.State):
         self.log(str({ g.identifier : g.is_available() for g in gm.goals}))
 
         yield None
+
+
+
+
+class EscapeToAnywhere(statemachine.State):
+
+    def on_enter(self):
+        exit_reason = TRAJECTORY_OPPONENT_DETECTED
+
+
+    def on_timer_tick(self):
+        # We cannot use a simple while here. We have to give control back to the eventloop at each try
+        # otherwise we will block all communications / statemachines
+        x = random.randrange(300, 2700) / 1000.0
+        y = random.randrange(600, 1700) / 1000.0
+        move = yield Navigate(x, y)
+        exit_reason = move.exit_reason
+        if exit_reason == TRAJECTORY_BLOCKED:
+            move = yield MoveLineRelative(0.1, DIRECTION_BACKWARDS)
+            exit_reason = move.exit_reason
+        if exit_reason == TRAJECTORY_DESTINATION_REACHED:
+            yield None
+
+
