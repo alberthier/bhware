@@ -82,6 +82,7 @@ private:
     int m_camWidth;
     int m_camHeight;
     bool m_writeLastCapture;
+    bool m_writeReferenceCapture;
     std::string m_currentReferenceColor;
     int m_currentTolerance;
     int m_colorThreshold;
@@ -266,6 +267,7 @@ void ColorDetector::reset()
     m_currentTolerance = 0;
     m_mode = ModeScan;
     m_colorThreshold = 80;
+    m_writeReferenceCapture = false;
 }
 
 
@@ -288,6 +290,15 @@ bool ColorDetector::processLine(std::istream& stream)
         m_writeLastCapture = mode == "1";
 
         std::cerr << "WriteLastCapture " << m_writeLastCapture << std::endl;
+    }
+    else if (command == "WriteReferenceCapture")
+    {
+        std::string mode;
+        sstr >> mode;
+
+        m_writeReferenceCapture = mode == "1";
+
+        std::cerr << "WriteReferenceCapture " << m_writeReferenceCapture << std::endl;
     }
     else if (command == "SetColorThreshold")
     {
@@ -420,7 +431,10 @@ void ColorDetector::storeReference(std::string &_color)
 
     ss << "stored_" << _color << "_" << calibH <<"_"<<calibS<<"_"<<calibV<<".jpg";
 
-    imwrite(ss.str().c_str(),m_bgrImage);
+    if(m_writeReferenceCapture)
+    {
+        imwrite(ss.str().c_str(),m_bgrImage);
+    }
 }
 
 
