@@ -121,20 +121,31 @@ class TakeTorch(statemachine.State):
         self.my_side = my_side
 
 
-    def on_enter(self):
-        flip = not self.my_side
-        yield Trigger(ELEVATOR_UP)
+    def on_enter(self)
+        flip = self.my_side
+        yield Trigger(ARM_1_SETUP, ARM_2_SETUP)
+        yield Trigger(ELEVATOR_UP, FIRE_FLIPPER_OPEN)
+        elevator_levels = [ELEVATOR_LEVEL_3, ELEVATOR_LEVEL_2, ELEVATOR_LEVEL_1]
+        # TODO: This should depend on the number of stored fires
+        elevator_levels2 = [ELEVATOR_LEVEL_1, ELEVATOR_LEVEL_2, ELEVATOR_LEVEL_2]
         for i in range(3):
             yield Trigger(ARM_1_TAKE_TORCH_FIRE, ARM_2_TAKE_TORCH_FIRE)
-            yield Trigger(PUMP_ON, makeServoMoveCommand(ELEVATOR, 90 - 30 * i))
-            yield Trigger(makeServoMoveCommand(ELEVATOR, 100))
+            yield Trigger(PUMP_ON, elevator_levels[i])
+            yield Timer(300)
+            yield Trigger(ELEVATOR_UP)
             if flip:
-                yield Trigger(FIRE_FLIPPER_OPEN, ARM_1_FLIP_FIRE, ARM_2_FLIP_FIRE)
+                yield Trigger(ARM_1_FLIP_FIRE, ARM_2_FLIP_FIRE)
+                yield Trigger(PUMP_OFF)
+                yield Timer(300)
             else:
                 yield Trigger(ARM_1_STORE_FIRE, ARM_2_STORE_FIRE)
+                yield Trigger(elevator_levels2[i])
+                yield Trigger(PUMP_OFF)
+                yield Timer(300)
+                yield Trigger(ELEVATOR_UP)
             flip = not flip
-            yield Trigger(PUMP_OFF)
-        yield None
+        yield Trigger(FIRE_FLIPPER_CLOSE)
+        yield None:
 
 
 
