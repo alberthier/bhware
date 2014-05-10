@@ -160,6 +160,16 @@ TEAM = Enum("Team color",
     TEAM_UNKNOWN = 2,
 )
 
+COLOR = Enum("Color",
+    COLOR_YELLOW    = 0,
+    COLOR_RED       = 1,
+    COLOR_GREEN     = 2,
+    COLOR_BROWN     = 3,
+    COLOR_VIOLET    = 4,
+    COLOR_BLACK     = 5,
+    COLOR_NONE      = 32,
+)
+
 DIRECTION = Enum("Direction",
     DIRECTION_AUTO      =  0,
     DIRECTION_FORWARD  =   1,

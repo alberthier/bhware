@@ -328,11 +328,74 @@ def test_MOVE_LINE(d_cfgTraj) :
         
     send_init_pose(simulator_process, x=0.2, y=0.2, angle=0.0)
     deplacement_MOVE_LINE = commandMsg("MSG_MOVE_LINE 1")
-    deplacement_MOVE_LINE.addPose("1.2 0.2")
+    deplacement_MOVE_LINE.addPose("3.2 0.2")
     
     #transmission de commandes de deplacement par l'entree standard
     simulator_process.stdin.write(deplacement_MOVE_LINE.cmdMsgGeneration())
     print("Test MOVE LINE")
+
+    #transmission de la commande d'arret du simulateur
+    (stdoutdata, stderrdata) = simulator_process.communicate("QUIT\n")
+    print("Simulation terminee.")
+
+    #traitement des donnees de stdout
+    lines = lineForm(stdoutdata)
+    d_traj = stdoutParser(lines)
+
+    return d_traj
+    
+def test_MOVE_ROTATE(d_cfgTraj) :
+
+    #lancement du simulateur de deplacement
+    print("Lancement du simulateur")
+    if (platform.system() == 'Linux') :
+        shellCommand = './simulator_trajAsser'
+    if (platform.system() == 'Windows') :
+        shellCommand = 'simulator_trajAsser.exe'
+    simulator_process = subprocess.Popen(shellCommand, shell=True, stdin = subprocess.PIPE, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+
+    # envoie de la configuration du simulateur
+    send_config_simulator(simulator_process, d_cfgTraj)
+    print("Config envoyee")
+        
+    send_init_pose(simulator_process, x=0.2, y=0.2, angle=0.0)
+    deplacement_MOVE_ROTATE = commandMsg("MSG_ROTATE 0 1.57")
+    
+    #transmission de commandes de deplacement par l'entree standard
+    simulator_process.stdin.write(deplacement_MOVE_ROTATE.cmdMsgGeneration())
+    print("Test MOVE ROTATE")
+
+    #transmission de la commande d'arret du simulateur
+    (stdoutdata, stderrdata) = simulator_process.communicate("QUIT\n")
+    print("Simulation terminee.")
+
+    #traitement des donnees de stdout
+    lines = lineForm(stdoutdata)
+    d_traj = stdoutParser(lines)
+
+    return d_traj
+    
+def test_MOVE_CURVE(d_cfgTraj) :
+
+    #lancement du simulateur de deplacement
+    print("Lancement du simulateur")
+    if (platform.system() == 'Linux') :
+        shellCommand = './simulator_trajAsser'
+    if (platform.system() == 'Windows') :
+        shellCommand = 'simulator_trajAsser.exe'
+    simulator_process = subprocess.Popen(shellCommand, shell=True, stdin = subprocess.PIPE, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+
+    # envoie de la configuration du simulateur
+    send_config_simulator(simulator_process, d_cfgTraj)
+    print("Config envoyee")
+        
+    send_init_pose(simulator_process, x=0.2, y=0.2, angle=0.3)
+    deplacement_MOVE_CURVE = commandMsg("MSG_MOVE_CURVE 1 1 0.0")
+    deplacement_MOVE_CURVE.addPose("1.2 0.4")
+    
+    #transmission de commandes de deplacement par l'entree standard
+    simulator_process.stdin.write(deplacement_MOVE_CURVE.cmdMsgGeneration())
+    print("Test MOVE CURVE")
 
     #transmission de la commande d'arret du simulateur
     (stdoutdata, stderrdata) = simulator_process.communicate("QUIT\n")
@@ -456,6 +519,83 @@ def plot_criteria_PIsettings(d_cfgTraj_local) :
         plot(l_Ki, l_critVoltage, '-o', label='Kp='+str(Kp))
         plot(l_Ki, l_critSpeedErr, '--o', label='Kp='+str(Kp))
         ylim(-0.02, maxVal)
+        
+    grid()
+    legend(loc='upper right')
+    show()
+    
+def criteria_Kparams(paramK, d_cfgTraj_local) :
+
+    d_cfgTraj_local['K1'] = paramK[0]
+    d_cfgTraj_local['K2'] = paramK[1]
+    d_cfgTraj_local['K3'] = paramK[2]
+    
+    d_traj = test_MOVE_LINE(d_cfgTraj_local)
+
+    erreurPose_y_MaxAbs = 0.0
+    # cout de l'erreur de Pose_y maximum
+    mid_len = int(len(d_traj["erreurPose_y"])/2.0)
+    for erreurPose_y in d_traj["erreurPose_y"][mid_len:] :
+        if (math.fabs(float(erreurPose_y)) > erreurPose_y_MaxAbs) :
+            erreurPose_y_MaxAbs = math.fabs(float(erreurPose_y))
+            
+    return erreurPose_y_MaxAbs
+    
+    
+def plot_criteria_Kparams(d_cfgTraj_local) :
+
+    maxVal = 0.0
+    K1 = 10.0
+    #~ l_K2 = numpy.arange(1.0, 8.0, 1.0)
+    #~ l_K3 = numpy.arange(27.0, 33.0, 1.0)
+    l_K2 = numpy.arange(5.0, 50.0, 5.0)
+    l_K3 = numpy.arange(13.0, 28.0, 2.0)
+    
+    figure()
+    
+    for K2 in l_K2 :
+        l_critErreurPose_y_MaxAbs = []
+        for K3 in l_K3 :
+            critErreurPose_y_MaxAbs = criteria_Kparams([K1, K2, K3], d_cfgTraj_local)
+            l_critErreurPose_y_MaxAbs.append(critErreurPose_y_MaxAbs)
+            print([K1, K2, K3])
+        
+        plot(l_K3, l_critErreurPose_y_MaxAbs, '-o', label='K2='+str(K2))
+        #~ ylim(-0.02, maxVal)
+        
+    grid()
+    legend(loc='upper right')
+    show()
+    
+def criteria_Rparam(paramR, d_cfgTraj_local) :
+
+    d_cfgTraj_local['R1'] = paramR[0]
+    
+    d_traj = test_MOVE_ROTATE(d_cfgTraj_local)
+
+    erreurDist_Max = 0.0
+    # cout de l'erreur de distance maximum
+    for i_erreurPose_y in range(len(d_traj["erreurPose_y"])) :
+        erreurDist = math.sqrt((d_traj["erreurPose_y"][i_erreurPose_y]*d_traj["erreurPose_y"][i_erreurPose_y]) + (d_traj["erreurPose_x"][i_erreurPose_y]*d_traj["erreurPose_x"][i_erreurPose_y]))
+        if (erreurDist > erreurDist_Max) :
+            erreurDist_Max = erreurDist
+            
+    return erreurDist_Max
+        
+def plot_criteria_Rparam(d_cfgTraj_local) :
+
+    l_R1 = numpy.arange(22.0, 28.0, 0.5)
+    
+    figure()
+    
+    l_critErreurDist_Max = []
+    for R1 in l_R1 :
+        critErreurDist_Max = criteria_Rparam([R1], d_cfgTraj_local)
+        l_critErreurDist_Max.append(critErreurDist_Max)
+        print([R1])
+    
+    plot(l_R1, l_critErreurDist_Max, '-o')
+    #~ ylim(-0.02, maxVal)
         
     grid()
     legend(loc='upper right')
@@ -694,7 +834,7 @@ def PI2011_optimParam(d_cfgTraj_local, d_cfgTestPI) :
     solPI = fmin(PI2011_coutOptimParam, p0, args=[d_cfgTraj_local, d_cfgTestPI], xtol=0.01, ftol=0.01, maxiter=45, disp = True, retall = True)
     return(solPI[0])
 
-def plot_test_MOVE_LINE(d_traj):
+def plot_test_MOVE(d_traj):
 
     periode=d_traj["periode"][0]
     print("Periode: " + str(periode))
@@ -731,17 +871,18 @@ def plot_test_MOVE_LINE(d_traj):
     plot(temps, d_traj["vitesseMoteurDroit"], '-', label='mesure droit')
     plot(temps, d_traj["ConsigneMoteurDroit_MS"], '-', label='consigne droit')
     plot(temps, d_traj["ConsigneMoteurGauche_MS"], '-k', label='consigne gauche')
-    #~ if (len(d_traj["VitesseProfil"]) < len(temps)) :
-        #~ plot(temps[:len(d_traj["VitesseProfil"])], d_traj["VitesseProfil"], label='Vitesse Profil')
-    #~ else :
-        #~ plot(temps, d_traj["VitesseProfil"], label='Vitesse Profil')
+    plot(temps, d_traj["VgASR"], label='V g ASR')
+    if (len(d_traj["VitesseProfil"]) < len(temps)) :
+        plot(temps[:len(d_traj["VitesseProfil"])], d_traj["VitesseProfil"], label='Vitesse Profil')
+    else :
+        plot(temps, d_traj["VitesseProfil"], label='Vitesse Profil')
         
     #~ plot(temps, d_traj["VposG"], label='VposG')
     #~ plot(temps, d_traj["VposD"], label='VposD')
     # plot(temps, d_traj["VpiG"], label='VpiG')
     # plot(temps, d_traj["VpiD"], label='VpiD')
     
-    plot(temps, d_traj["Phase"], label='Phase')
+    #~ plot(temps, d_traj["Phase"], label='Phase')
 
     ylim(-1.2, 1.2)
     legend(loc="lower center")
@@ -758,6 +899,22 @@ def plot_test_MOVE_LINE(d_traj):
     legend(loc="lower center")
     grid(True)
     title("tensions moteurs")
+    
+    figure(3)
+    ax_err_x = subplot(311)
+    ylabel("erreur x (mm)")
+    plot(temps, [x*1e3 for x in d_traj["erreurPose_x"]])
+    grid(True)
+    
+    ax_err_y = subplot(312)
+    ylabel("erreur y (mm)")
+    plot(temps, [y*1e3 for y in d_traj["erreurPose_y"]])
+    grid(True)
+    
+    ax_err_x = subplot(313)
+    ylabel("erreur angle (degre)")
+    plot(temps, [angle_rad*180.0/math.pi for angle_rad in d_traj["erreurPose_angle"]])
+    grid(True)
 
     show()
 
@@ -782,26 +939,38 @@ def printLog(traj, logName) :
 #~ d_cfgTraj["KiG"] = 37.27
 #~ d_cfgTraj["KpD"] = 6.36
 #~ d_cfgTraj["KiD"] = 37.27
-d_cfgTraj["KpG"] = 1.25
-d_cfgTraj["KiG"] = 2.5
-d_cfgTraj["KpD"] = 1.25
-d_cfgTraj["KiD"] = 2.5
-d_cfgTraj['RatioAcc'] = 1.6
-d_cfgTestPI = {'moteur' : "DROIT" # "GAUCHE ou "DROIT"
-                , 'profil' : "PARABOLE" # "ECHELON" ou "PARABOLE"
-                , 'nb_pts_mesure' : 220
-                }
+
+#~ d_cfgTraj["KpG"] = 1.25
+#~ d_cfgTraj["KiG"] = 2.5
+#~ d_cfgTraj["KpD"] = 1.25
+#~ d_cfgTraj["KiD"] = 2.5
+#~ d_cfgTraj['RatioAcc'] = 1.6
+#~ d_cfgTestPI = {'moteur' : "DROIT" # "GAUCHE ou "DROIT"
+                #~ , 'profil' : "PARABOLE" # "ECHELON" ou "PARABOLE"
+                #~ , 'nb_pts_mesure' : 220
+                #~ }
 #~ traj = testPI(d_cfgTraj, d_cfgTestPI)
 #~ affichageTestPI2012(traj)
 #~ sys.exit(2)
 
-d_cfgTraj["KpG"] = 6.0
-d_cfgTraj["KiG"] = 17.0
-d_cfgTraj["KpD"] = 6.0
-d_cfgTraj["KiD"] = 17.0
-d_cfgTraj['RatioAcc'] = 1.6
-traj = test_MOVE_LINE(d_cfgTraj)
-plot_test_MOVE_LINE(traj)
+#~ plot_criteria_Kparams(d_cfgTraj)
+#~ sys.exit(2)
+
+plot_criteria_Rparam(d_cfgTraj)
+sys.exit(2)
+
+#~ d_cfgTraj["KpG"] = 5.0
+#~ d_cfgTraj["KiG"] = 14.0
+#~ d_cfgTraj["KpD"] = 5.0
+#~ d_cfgTraj["KiD"] = 14.0
+#~ d_cfgTraj['RatioAcc'] = 1.6
+#~ d_cfgTraj["K2"] = 10.0
+#~ d_cfgTraj["K3"] = 17.0
+#~ d_cfgTraj["R1"] = 26.5
+#~ traj = test_MOVE_LINE(d_cfgTraj)
+#~ traj = test_MOVE_CURVE(d_cfgTraj)
+traj = test_MOVE_ROTATE(d_cfgTraj)
+plot_test_MOVE(traj)
 sys.exit(2)
 
 
