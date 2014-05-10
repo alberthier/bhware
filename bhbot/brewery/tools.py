@@ -39,3 +39,9 @@ def normalize_angle(a):
     if na > math.pi:
         na -= 2.0 * math.pi
     return na
+
+def sym_x(coord_x):
+    return 2.0 - coord_x
+
+def sym_y(coord_y):
+    return 3.0 - coord_y
