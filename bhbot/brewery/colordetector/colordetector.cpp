@@ -52,7 +52,7 @@ private:
     void reset();
     bool processLine(std::istream& stream);
     void storeReference(std::string& _color);
-    bool wait();
+    bool wait(double delta);
     void initDisplay();
     void updateDisplay();
     void scan();
@@ -92,6 +92,67 @@ private:
     Mode m_mode;
 
     std::map<std::string, cv::Vec3f> m_referenceColors;
+};
+
+class Timer
+{
+public:
+    Timer(bool startIt=false)
+    {
+        if(startIt)
+            start();
+    }
+
+
+
+    void start()
+    {
+        gettimeofday(&m_time, NULL);
+    }
+
+    double stop()
+    {
+        struct timeval current;
+        gettimeofday(&current, NULL);
+
+        timersub(&current, &m_time, &m_delta);
+
+        m_deltaMs = computeDeltaMs(m_delta);
+
+        return m_deltaMs;
+
+    }
+
+    double tick()
+    {
+        struct timeval current;
+        struct timeval delta;
+
+        gettimeofday(&current, NULL);
+
+        timersub(&current, &m_time, &delta);
+
+        double ret = computeDeltaMs(delta);
+
+        return ret;
+
+    }
+
+    double getDeltaMs()
+    {
+        return m_deltaMs;
+    }
+
+    double computeDeltaMs(struct timeval & diff)
+    {
+        return diff.tv_sec * 1000.0, diff.tv_usec / 1000.0;
+    }
+
+private:
+    struct timeval m_time;
+    struct timeval m_delta;
+    double m_deltaMs;
+
 };
 
 
@@ -136,15 +197,30 @@ ColorDetector::~ColorDetector()
 
 void ColorDetector::process()
 {
+    Timer timer;
     bool again = true;
+
+    double delta = 0.0;
+
     while (std::cin.good() && again) {
-        if (wait()) {
+
+        timer.start();
+
+        Timer timerWait(true);
+        if (wait(delta)) {
             again = processLine(std::cin);
         }
+        timerWait.stop();
+
+        Timer timerCamera(true);
 
         if (m_webcam != NULL) {
             m_webcam->read(m_bgrImage);
         }
+
+        timerCamera.stop();
+
+        Timer timerProcess(true);
 
         if(m_mode == ModeReference)
         {
@@ -156,7 +232,18 @@ void ColorDetector::process()
             scan();
         }
 
+        timerProcess.stop();
+
+        timer.stop();
+
         updateDisplay();
+
+        std::cerr   << std::setprecision(3) << "loop duration " << timer.getDeltaMs() << "ms "
+                    << "processing " <<  std::setprecision(3) << timerProcess.getDeltaMs() << "ms "
+                    << "wait " <<  std::setprecision(3) << timerWait.getDeltaMs() << "ms "
+                    << std::endl;
+
+        delta = timer.getDeltaMs() - timerWait.getDeltaMs();
     }
 }
 
@@ -329,13 +416,13 @@ void ColorDetector::storeReference(std::string &_color)
 }
 
 
-bool ColorDetector::wait()
+bool ColorDetector::wait(double delta)
 {
     struct pollfd fds[1];
     fds[0].fd = 0;
     fds[0].events = POLLIN;
 
-    int rv = poll(fds, 1, m_pollTimeoutMs);
+    int rv = poll(fds, 1, std::max(m_pollTimeoutMs-delta,0.0));
 
     return rv > 0;
 }
