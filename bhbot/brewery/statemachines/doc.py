@@ -60,15 +60,14 @@ class Main(statemachine.State):
         gm.add(goalmanager.Goal  ("HuntTheMammoth"  ,  10,                                self.start_x ,                                        0.75, DIRECTION_FORWARD, HuntTheMammoth,                         None, False,    True))
         gm.add(FireHarvestingGoal("TakeMyTorch"     ,  10,                                         1.1 ,                                        0.90, DIRECTION_FORWARD, TakeTorch     ,                      (True,), False,    True))
         gm.add(FireHarvestingGoal("TakeTheirTorch"  ,   1,                                         1.1 ,                         FIELD_Y_SIZE - 0.90, DIRECTION_FORWARD, TakeTorch     ,                     (False,), False,    True))
-        gm.add(FireDepositGoal   ("DepositFires"    ,  10, FIELD_X_SIZE - 0.25 - ROBOT_GYRATION_RADIUS ,                0.25 + ROBOT_GYRATION_RADIUS, DIRECTION_FORWARD, EmptyFireTank ,                         None, False,    True))
-        gm.add(FireDepositGoal   ("DepositFires"    ,   1, FIELD_X_SIZE - 0.25 - ROBOT_GYRATION_RADIUS , FIELD_Y_SIZE - 0.25 + ROBOT_GYRATION_RADIUS, DIRECTION_FORWARD, EmptyFireTank ,                         None, False,    True))
-        gm.add(FireDepositGoal   ("DepositFires"    ,   3,                                        1.05 ,                                        1.50, DIRECTION_FORWARD, EmptyFireTank ,                         None, False,    True))
-        gm.add(goalmanager.Goal  ("TakeFruitE"      ,   7,                                        1.05 ,                                        1.50, DIRECTION_FORWARD, TakeFruit     ,                         None, False,    True))
-        gm.add(goalmanager.Goal  ("TakeFruitSE"     ,   7,                                        1.05 ,                                        1.50, DIRECTION_FORWARD, TakeFruit     ,                         None, False,    True))
-        gm.add(goalmanager.Goal  ("TakeFruitSW"     ,   7,                                        1.05 ,                                        1.50, DIRECTION_FORWARD, TakeFruit     ,                         None, False,    True))
-        gm.add(goalmanager.Goal  ("TakeFruitW"      ,   7,                                        1.05 ,                                        1.50, DIRECTION_FORWARD, TakeFruit     ,                         None, False,    True))
-        gm.add(FruitDepositGoal  ("DepositFruits"   ,   7,                                        1.05 ,                                        1.50, DIRECTION_FORWARD, DepositFruits ,                         None, False,    True))
-
+#        gm.add(FireDepositGoal   ("DepositFires"    ,  10, FIELD_X_SIZE - 0.25 - ROBOT_GYRATION_RADIUS ,                0.25 + ROBOT_GYRATION_RADIUS, DIRECTION_FORWARD, EmptyFireTank ,                         None, False,    True))
+#        gm.add(FireDepositGoal   ("DepositFires"    ,   1, FIELD_X_SIZE - 0.25 - ROBOT_GYRATION_RADIUS , FIELD_Y_SIZE - 0.25 + ROBOT_GYRATION_RADIUS, DIRECTION_FORWARD, EmptyFireTank ,                         None, False,    True))
+#        gm.add(FireDepositGoal   ("DepositFires"    ,   3,                                        1.05 ,                                        1.50, DIRECTION_FORWARD, EmptyFireTank ,                         None, False,    True))
+#        gm.add(goalmanager.Goal  ("TakeFruitE"      ,   7,                                        1.05 ,                                        1.50, DIRECTION_FORWARD, TakeFruit     ,                         None, False,    True))
+#        gm.add(goalmanager.Goal  ("TakeFruitSE"     ,   7,                                        1.05 ,                                        1.50, DIRECTION_FORWARD, TakeFruit     ,                         None, False,    True))
+#        gm.add(goalmanager.Goal  ("TakeFruitSW"     ,   7,                                        1.05 ,                                        1.50, DIRECTION_FORWARD, TakeFruit     ,                         None, False,    True))
+#        gm.add(goalmanager.Goal  ("TakeFruitW"      ,   7,                                        1.05 ,                                        1.50, DIRECTION_FORWARD, TakeFruit     ,                         None, False,    True))
+#        gm.add(FruitDepositGoal  ("DepositFruits"   ,   7,                                        1.05 ,                                        1.50, DIRECTION_FORWARD, DepositFruits ,                         None, False,    True))
 
         yield AntiBlocking(True)
         yield CalibratePosition()
@@ -123,65 +122,77 @@ class TakeTorch(statemachine.State):
 
 
     def on_enter(self):
+        flip = not self.my_side
+        yield Trigger(ELEVATOR_UP)
+        for i in range(3):
+            yield Trigger(ARM_1_TAKE_TORCH_FIRE, ARM_2_TAKE_TORCH_FIRE)
+            yield Trigger(PUMP_ON, makeServoMoveCommand(ELEVATOR, 90 - 30 * i))
+            yield Trigger(makeServoMoveCommand(ELEVATOR, 100))
+            if flip:
+                yield Trigger(FIRE_FLIPPER_OPEN, ARM_1_FLIP_FIRE, ARM_2_FLIP_FIRE)
+            else:
+                yield Trigger(ARM_1_STORE_FIRE, ARM_2_STORE_FIRE)
+            flip = not flip
+            yield Trigger(PUMP_OFF)
         yield None
 
 
 
 
-class DropTorch(statemachine.State):
-
-    def on_enter(self):
-        #sortir guide torche
-        #mettre bras 1 et 2 en position au dessus de la torche
-        yield commonstates.ServoControl(TORCH_GUIDE_OPEN, ARM_1_CLOSE, ARM_2_CLOSE)
-        #descendre bras
-        yield commonstates.ServoControl(ELEVATOR_DOWN)
-        #allumer pompe (paquet à créer)
-        #yield commonstates.ServoControl(ELEVATOR_DOWN)
-        #remonter bras
-        yield commonstates.ServoControl(ELEVATOR_UP)
-        #bras en position avant
-        yield commonstates.ServoControl(ARM_1_OPEN, ARM_2_OPEN)
-        #descendre bras
-        yield commonstates.ServoControl(ELEVATOR_DOWN)
-        #eteindre pompe (paquet à créer)
-        #yield commonstates.ServoControl(ELEVATOR_DOWN)
-        #remonter bras
-        yield commonstates.ServoControl(ELEVATOR_UP)
-
 class TakeFruit(statemachine.State):
 
+    def __init__(self, angle):
+        self.angle = angle
+
+
     def on_enter(self):
-        #slow down
+        cos_angle = math.cos(self.angle)
+        if abs(cos_angle) > 0.5:
+            x_orientation = 1.0 if math.cos(self.angle) > 0 else -1.0
+            y_orientation = 0.0
+        else:
+            x_orientation = 0.0
+            y_orientation = -1.0
+
+        yield RotateTo(self.angle)
+        # slow down
         yield commonstates.SpeedControl(0.2)
+        # Ouvrir la trappe
+        Trigger(FRUITMOTH_HATCH_OPEN)
+        # Sortir le développeur et le doigt
+        Trigger(FRUITMOTH_ARM_OPEN, FRUITMOTH_FINGER_OPEN)
 
-        #ouvrir la trappe
-        yield commonstates.ServoControl(FRUITMOTH_HATCH_OPEN)
-        #sortir le développeur
-        yield commonstates.ServoControl(FRUITMOTH_ARM_OPEN)
-        #ouvrir le doigt
-        yield commonstates.ServoControl(FRUITMOTH_FINGER_OPEN)
-        #avancer avec le robot
-        self.robot.move.forward(10)
-        #rentrer le doigt
-        yield commonstates.ServoControl(FRUITMOTH_FINGER_CLOSE)
-        #avancer avec le robot
-        self.robot.move.forward(10)
-        yield commonstates.ServoControl(FRUITMOTH_FINGER_OPEN)
-        #sortir le doigt
-        self.robot.move.forward(10)
-        yield commonstates.ServoControl(FRUITMOTH_FINGER_CLOSE)
+        self.retract_finger = True
+        x = self.robot.goal_manager.get_current_goal().x
+        y = self.robot.goal_manager.get_current_goal().y
+        increment_1 = 0.1
+        increment_2 = 0.2
+        increment_3 = 0.3
+        move = MoveLine([Pose(x + x_orientation * increment_1, y + y_orientation * increment_1),
+                         Pose(x + x_orientation * increment_2, y + y_orientation * increment_2),
+                         Pose(x + x_orientation * increment_3, y + y_orientation * increment_3)])
+        move.on_waypoint_reached = self.on_waypoint_reached
+        yield move
 
-        #puis tout rentrer à l'inverse du début
-
-        #fermer le bras
-        yield commonstates.ServoControl(FRUITMOTH_ARM_CLOSE)
-
+        # steps will be handled in on_waypoint_reached
+        yield Trigger(FRUITMOTH_FINGER_CLOSE)
+        # Fermer le bras
+        yield Trigger(FRUITMOTH_ARM_CLOSE)
         #fermer la trappe
-        yield commonstates.ServoControl(FRUITMOTH_HATCH_CLOSE)
-
+        yield Trigget(FRUITMOTH_HATCH_CLOSE)
         #standard speed
         yield commonstates.SpeedControl()
+        yield None
+
+
+    def on_waypoint_reached(self, packet):
+        if self.retract_finger:
+            self.retract_finger = False
+            Trigger(FRUITMOTH_FINGER_RETRACT)
+        else:
+            Trigger(FRUITMOTH_FINGER_OPEN)
+
+
 
 class DumpFruits(statemachine.State):
 
