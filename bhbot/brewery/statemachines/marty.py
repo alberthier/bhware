@@ -23,6 +23,8 @@ class Main(statemachine.State):
         statemachine.StateMachine(self.event_loop, "opponentdetector", opponent_type = OPPONENT_ROBOT_SECONDARY)
         statemachine.StateMachine(self.event_loop, "relaytoggler")
 
+
+    def on_device_ready(self, packet):
         gm = self.robot.goal_manager
 
         #                      |       ID       |Weight|                X                    |                     Y                     |     Direction    |     State     | Ctor parameters  |Shared|Navigate|
@@ -40,8 +42,6 @@ class Main(statemachine.State):
         gm.add(goalmanager.Goal("FieldFireSE"   ,    10,                                  1.6, FIELD_Y_SIZE - 0.9 + ROBOT_CENTER_X + 0.03, DIRECTION_FORWARD, PushFieldFire , (-math.pi / 2.0,), False,    True))
         gm.add(goalmanager.Goal("HuntTheMammoth",    15,   0.3 + ROBOT_GYRATION_RADIUS + 0.03,                                       2.25, DIRECTION_FORWARD, HuntTheMammoth,              None, False,    True))
 
-
-    def on_device_ready(self, packet):
         yield AntiBlocking(True)
         yield Trigger(GUN_LOAD, PAINT_1_HOLD, PAINT_2_HOLD, FIRE_FLIPPER_CLOSE)
         yield CalibratePosition()
