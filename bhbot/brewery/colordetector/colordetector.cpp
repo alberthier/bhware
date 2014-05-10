@@ -377,10 +377,6 @@ void ColorDetector::scanHsv()
 {
     std::map<const char*, int> tallyColors;
 
-    float blue  = 0.0f;
-    float green = 0.0f;
-    float red   = 0.0f;
-
     int pixels = 0;
 
     float initialConfidence = 1.0f;
