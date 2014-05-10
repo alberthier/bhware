@@ -182,7 +182,7 @@ ACTUATOR_TYPE = Enum("Actuator type",
     ACTUATOR_TYPE_SERVO_AX = 0,
     ACTUATOR_TYPE_SERVO_RX = 1,
     ACTUATOR_TYPE_RELAY    = 2,
-    ACTUATOR_TYPE_MOTOR    = 3,
+    ACTUATOR_TYPE_PWM      = 3,
 )
 
 SERVO_STATUS = Enum("Servo status",
@@ -289,5 +289,5 @@ VALVE_OFF               = (ACTUATOR_TYPE_RELAY, 3, ACTION_OFF, 1)              #
 
 # Motors : Values from 0x0 = max speed dir1; 0x3FF = stop ; 0x7FF = max speed dir2
 # name      actuator type       id  speed
-PUMP_ON  = (ACTUATOR_TYPE_MOTOR, 1, 0x7FF)
-PUMP_OFF = (ACTUATOR_TYPE_MOTOR, 1, 0x3FF)
+PUMP_ON  = (ACTUATOR_TYPE_PWM, 1, 0x7FF)
+PUMP_OFF = (ACTUATOR_TYPE_PWM, 1, 0x3FF)

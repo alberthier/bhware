@@ -664,7 +664,7 @@ class Trigger(statemachine.State):
                 self.send_packet(packets.ServoControl(*cmd))
             elif actuator_type == ACTUATOR_TYPE_RELAY:
                 self.send_packet(packets.RelayToggle(id = cmd[self.ID], action = cmd[self.RELAY_ACTION], toggle_count = cmd[self.RELAY_TOGGLE_COUNT]))
-            elif actuator_type == ACTUATOR_TYPE_MOTOR:
+            elif actuator_type == ACTUATOR_TYPE_PWM:
                 self.send_packet(packets.MotorControl(id = cmd[self.ID], speed = cmd[self.MOTOR_SPEED]))
             else:
                 self.log("Unknown actuator type in command: {}".format(cmd))
@@ -681,7 +681,7 @@ class Trigger(statemachine.State):
 
 
     def on_motor_control(self, packet):
-        yield from self.cleanup(ACTUATOR_TYPE_MOTOR, packet.id)
+        yield from self.cleanup(ACTUATOR_TYPE_PWM, packet.id)
 
 
     def cleanup(self, actuator_type, id):
