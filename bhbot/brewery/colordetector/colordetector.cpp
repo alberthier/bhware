@@ -61,6 +61,8 @@ private:
     void scanHsv2();
     bool testComponent(float value, float reference);
     void sendPacket(const std::string packet);
+    void sendPacketColor(std::string & color);
+    void sendPacketColor(const char * color);
     void updateMaskWindow(const std::string& color, cv::Mat & img);
 
 private:
@@ -76,6 +78,7 @@ private:
     float m_yellowFireGreenRef;
     float m_yellowFireRedRef;
     Color m_lastDetectedColor;
+    std::string m_lastDetectedColorString;
     int m_camWidth;
     int m_camHeight;
     bool m_writeLastCapture;
@@ -434,27 +437,47 @@ void ColorDetector::scanHsv()
 
         std::cerr << "Color of current note: " << colors[tallyMaxIndex] << " (" << percentage << "% confidence)." << std::endl;
 
+        // TODO : make configurable
+
         if (percentage > 80.0)
         {
             if(colors[tallyMaxIndex] == "cYELLOW")
             {
-                sendPacket("packets.ColorDetectorFire(color=TEAM_YELLOW)");
+                sendPacketColor("COLOR_YELLOW");
             }
 
             else if(colors[tallyMaxIndex] == "cRED")
             {
-                sendPacket("packets.ColorDetectorFire(color=TEAM_RED)");
+                sendPacketColor("COLOR_RED");
             }
 
-            else {
-                sendPacket("None");
+            else
+            {
+                sendPacketColor("COLOR_NONE");
             }
         }
     }
 }
 
+void ColorDetector::sendPacketColor(std::string & color)
+{
+    if( m_lastDetectedColorString != color)
+    {
+        m_lastDetectedColorString = color;
+        sendPacket(std::string("packets.ColorDetected(color=")+color+")");
+    }
+}
+
+void ColorDetector::sendPacketColor(const char* color)
+{
+    std::string tmp(color);
+    sendPacketColor(tmp);
+}
+
 void ColorDetector::scanHsv2()
 {
+    bool hasSeenColor = false;
+
     for (std::vector<cv::Rect>::iterator it = m_detectionZoneRects.begin(); it != m_detectionZoneRects.end(); ++it)
     {
         cv::Mat image(m_bgrImage, *it);
@@ -575,20 +598,23 @@ void ColorDetector::scanHsv2()
         {
             float ratio = float(maxValue*100) / totalPixels;
 
-            std::cerr << "MAIN COLOR : "<<detectedColor << " " << std::setprecision(2) << ratio << "%" << std::endl;
+            std::cerr << "MAIN COLOR : "<< detectedColor << " " << std::setprecision(2) << ratio << "%" << std::endl;
 
+            // TODO : make configurable
 
             if(ratio > 80)
             {
-                std::cerr << "DETECTED COLOR : "<<detectedColor  << std::endl;
+                std::cerr << "DETECTED COLOR : "<< detectedColor << std::endl;
 
-                std::stringstream ss;
-
-                ss << "packets.ColorDetectorFire(color=" << detectedColor << ")";
-
-                sendPacket(ss.str());
+                sendPacketColor(detectedColor);
+                hasSeenColor = true;
             }
         }
+    }
+
+    if(!hasSeenColor)
+    {
+        sendPacketColor("COLOR_NONE");
     }
 }
 
@@ -693,7 +719,7 @@ void ColorDetector::scanRgb()
         // TODO : factor between scan methods
         if (m_lastDetectedColor != ColorRed) {
             m_lastDetectedColor = ColorRed;
-            sendPacket("packets.ColorDetectorFire(color=TEAM_RED)");
+            sendPacket("packets.ColorDetected(color=TEAM_RED)");
         }
     } else if (testComponent(blue,  m_yellowFireBlueRef)  &&
                testComponent(green, m_yellowFireGreenRef)        &&
@@ -701,7 +727,7 @@ void ColorDetector::scanRgb()
         // TODO : factor between scan methods
         if (m_lastDetectedColor != ColorYellow) {
             m_lastDetectedColor = ColorYellow;
-            sendPacket("packets.ColorDetectorFire(color=TEAM_YELLOW)");
+            sendPacket("packets.ColorDetected(color=TEAM_YELLOW)");
         }
     } else {
         m_lastDetectedColor = ColorNone;

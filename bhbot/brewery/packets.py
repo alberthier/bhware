@@ -244,7 +244,7 @@ INTERNAL_RANGE_END    = 256
 # Process packets
 
 
-class ColorDetectorFire(BasePacket):
+class ColorDetected(BasePacket):
 
     TYPE = 1
     DEFINITION = (
