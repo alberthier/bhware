@@ -72,7 +72,7 @@ class Main(commonstates.Timer):
         if self.opponent_direction is not None:
             if self.opponent_direction != previous_direction:
                 self.log("{} opponent detected at ({:.2f}, {:.2f})".format(self.opponent_name(), self.x, self.y))
-                self.set_detected(True)
+                self.set_detected(self.opponent_direction)
                 self.send_packet(packets.OpponentDetected(robot = self.fsm.opponent_type, direction = self.opponent_direction, x = self.x, y = self.y))
         elif self.opponent_direction is None and previous_direction is not None:
             self.opponent_disappeared()
@@ -84,7 +84,7 @@ class Main(commonstates.Timer):
 
     def opponent_disappeared(self):
         self.log("{} opponent disappeared".format(self.opponent_name()))
-        self.set_detected(False)
+        self.set_detected(None)
         self.stop()
         self.detections = []
         self.send_packet(packets.OpponentPosition(robot = self.fsm.opponent_type, x = None, y = None))
@@ -100,9 +100,9 @@ class Main(commonstates.Timer):
             return "Secondary"
 
 
-    def set_detected(self, detected):
+    def set_detected(self, direction):
         if self.fsm.opponent_type == OPPONENT_ROBOT_MAIN:
-            self.robot.main_opponent_detected = detected
+            self.robot.main_opponent_direction = direction
         else:
-            self.robot.secondary_opponent_detected = detected
+            self.robot.secondary_opponent_direction = direction
 

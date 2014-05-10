@@ -47,7 +47,8 @@ class Goal:
         if isinstance(self.handler_state, statemachine.State):
             return self.handler_state
         else :
-            if self.ctor_parameters :
+            logger.log(self.ctor_parameters)
+            if self.ctor_parameters is not None:
                 return self.handler_state(*self.ctor_parameters)
             else:
                 return self.handler_state()

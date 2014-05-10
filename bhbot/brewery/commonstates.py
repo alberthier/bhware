@@ -4,6 +4,7 @@
 import datetime
 import functools
 import math
+import random
 
 import eventloop
 import logger
@@ -327,47 +328,44 @@ class WaitForOpponentLeave(Timer):
 
 
 class OpponentHandlingConfig:
-    def __init__(self, backout, retries: int or None=None, wait_delay: float or None=None):
+    def __init__(self, stop, backout, retries: int or None=None, wait_delay: float or None=None):
+        self.stop = stop
         self.backout = backout
         self.retries_count = retries
         self.wait_delay = wait_delay
 
 
-NO_OPPONENT_HANDLING = OpponentHandlingConfig(False, 0, 0)
-OPPONENT_HANDLING = OpponentHandlingConfig(True, None, None)
+NO_OPPONENT_HANDLING = OpponentHandlingConfig(False, False, None, None)
+#OPPONENT_HANDLING = OpponentHandlingConfig(True, True, 0, 0)
+OPPONENT_HANDLING = OpponentHandlingConfig(True, False, 0, 0)
 
 
 
 
 class AbstractMove(statemachine.State):
 
-    def __init__(self, chained, opponent_leave_config: OpponentHandlingConfig):
+    def __init__(self, chained, opponent_handling_config: OpponentHandlingConfig):
         self.current_opponent = None
         self.chained = chained
-        self.opponent_leave_config = opponent_leave_config
+        self.opponent_handling_config = opponent_handling_config
 
 
     def on_enter(self):
         if self.chained is not None and self.chained.exit_reason != REASON_DESTINATION_REACHED:
             self.exit_reason = self.chained.exit_reason
             yield None
-        elif self.robot.main_opponent_detected or self.robot.secondary_opponent_detected:
-            config = self.opponent_leave_config
-            leave_state = yield WaitForOpponentLeave(self.current_opponent, config.wait_delay,
-                                                     self.packet.direction, config.retries_count)
-            reason = leave_state.exit_reason
-            self.current_opponent = None
-            if reason in (WaitForOpponentLeave.TIMEOUT, TRAJECTORY_BLOCKED) :
-                self.exit_reason = TRAJECTORY_OPPONENT_DETECTED
-                yield None
+        elif self.opponent_handling_config.stop and self.packet.direction in [ self.robot.main_opponent_direction, self.robot.secondary_opponent_direction ]:
+            if self.robot.main_opponent_direction is not None:
+                self.current_opponent = OPPONENT_ROBOT_MAIN
             else:
-                self.send_packet(self.packet)
+                self.current_opponent = OPPONENT_ROBOT_SECONDARY
+            yield from self.handle_opponent_detected(None)
         else:
             self.send_packet(self.packet)
 
 
     def on_opponent_detected(self, packet):
-        if not isinstance(self, Rotate) and self.packet.direction == packet.direction and self.current_opponent is None:
+        if self.opponent_handling_config.stop and self.packet.direction == packet.direction and self.current_opponent is None:
             self.log("Opponent detected. direction = {}. Stop robot".format(packet.direction))
             self.send_packet(packets.Stop())
             self.current_opponent = packet.robot
@@ -381,31 +379,40 @@ class AbstractMove(statemachine.State):
             self.exit_reason = TRAJECTORY_BLOCKED
             yield None
         elif self.current_opponent is not None:
-            config = self.opponent_leave_config
-            if config.backout:
-                leave_state = yield WaitForOpponentLeave(self.current_opponent, config.wait_delay,
-                                                     self.packet.direction, config.retries_count)
-                reason = leave_state.exit_reason
-                self.current_opponent = None
-                if reason in (WaitForOpponentLeave.TIMEOUT, TRAJECTORY_BLOCKED) :
-                    self.exit_reason = TRAJECTORY_OPPONENT_DETECTED
-                    yield None
-                else:
-                    # Continue the current move
-                    if hasattr(self.packet, "points"):
-                        self.packet.points = self.packet.points[packet.current_point_index:]
-                    self.send_packet(self.packet)
+            if hasattr(self.packet, "points"):
+                index = packet.current_point_index
             else:
+                index = None
+            yield from self.handle_opponent_detected(index)
+        else:
+            self.exit_reason = TRAJECTORY_OPPONENT_DETECTED
+            yield None
+
+
+    def handle_opponent_detected(self, point_index):
+        if self.opponent_handling_config.backout:
+            leave_state = yield WaitForOpponentLeave(self.current_opponent, self.opponent_handling_config.wait_delay,
+                                                     self.packet.direction, self.opponent_handling_config.retries_count)
+            reason = leave_state.exit_reason
+            self.current_opponent = None
+            if reason in (WaitForOpponentLeave.TIMEOUT, TRAJECTORY_BLOCKED) :
                 self.exit_reason = TRAJECTORY_OPPONENT_DETECTED
                 yield None
+            else:
+                if point_index is not None:
+                    self.packet.points = self.packet.points[point_index:]
+                self.send_packet(self.packet)
+        else:
+            self.exit_reason = TRAJECTORY_OPPONENT_DETECTED
+            yield None
 
 
 
 
-class Rotate(AbstractMove):
+class RotateTo(AbstractMove):
 
     def __init__(self, angle, direction = DIRECTION_FORWARD, chained = None):
-        AbstractMove.__init__(self, chained, NO_OPPONENT_HANDLING)
+        super().__init__(chained, NO_OPPONENT_HANDLING)
         pose = position.Pose(0.0, 0.0, angle, True)
         self.packet = packets.Rotate(direction = direction, angle = pose.angle)
 
@@ -415,7 +422,7 @@ class Rotate(AbstractMove):
 class LookAt(AbstractMove):
 
     def __init__(self, x, y, direction = DIRECTION_FORWARD, chained = None):
-        AbstractMove.__init__(self, chained, NO_OPPONENT_HANDLING)
+        super().__init__(chained, NO_OPPONENT_HANDLING)
         self.pose = position.Pose(x, y, None, True)
         self.direction = direction
 
@@ -434,7 +441,7 @@ class LookAt(AbstractMove):
 class LookAtOpposite(AbstractMove):
 
     def __init__(self, x, y, direction = DIRECTION_FORWARD, chained = None):
-        AbstractMove.__init__(self, chained, NO_OPPONENT_HANDLING)
+        super().__init__(chained, NO_OPPONENT_HANDLING)
         self.pose = position.Pose(x, y, None, True)
         self.direction = direction
 
@@ -452,8 +459,8 @@ class LookAtOpposite(AbstractMove):
 
 class MoveCurve(AbstractMove):
 
-    def __init__(self, angle, points, direction = DIRECTION_FORWARD, chained = None, opponent_handling =  OPPONENT_HANDLING):
-        AbstractMove.__init__(self, chained = chained, opponent_leave_config = opponent_handling)
+    def __init__(self, angle, points, direction = DIRECTION_FORWARD, chained = None, opponent_handling_config = OPPONENT_HANDLING):
+        super().__init__(chained, opponent_handling_config)
         apose = position.Pose(0.0, 0.0, angle, True)
         poses = []
         for pt in points:
@@ -468,16 +475,16 @@ class MoveCurve(AbstractMove):
 
 class MoveCurveTo(MoveCurve):
 
-    def __init__(self, angle, pose, direction = DIRECTION_FORWARD, chained = None):
-        MoveCurve.__init__(self, angle, [pose], direction, chained)
+    def __init__(self, angle, pose, direction = DIRECTION_FORWARD, chained = None, opponent_handling_config = OPPONENT_HANDLING):
+        super().__init__(angle, [pose], direction, chained, opponent_handling)
 
 
 
 
 class MoveLine(AbstractMove):
 
-    def __init__(self, points, direction = DIRECTION_FORWARD, chained = None, opponent_handling = OPPONENT_HANDLING):
-        AbstractMove.__init__(self, chained, opponent_handling)
+    def __init__(self, points, direction = DIRECTION_FORWARD, chained = None, opponent_handling_config = OPPONENT_HANDLING):
+        super().__init__(chained, opponent_handling_config)
         poses = []
         for pt in points:
             if type(pt) == tuple:
@@ -491,16 +498,17 @@ class MoveLine(AbstractMove):
 
 class MoveLineTo(MoveLine):
 
-    def __init__(self, x, y, direction = DIRECTION_FORWARD, chained = None, opponent_handling = OPPONENT_HANDLING):
-        MoveLine.__init__(self, [position.Pose(x, y, None, True)], direction, chained, opponent_handling)
+    def __init__(self, x, y, direction = DIRECTION_FORWARD, chained = None, opponent_handling_config = OPPONENT_HANDLING):
+        super().__init__([position.Pose(x, y, None, True)], direction, chained, opponent_handling_config)
 
 
 
 
 class MoveLineRelative(statemachine.State):
 
-    def __init__(self, distance, direction = DIRECTION_FORWARD, chained = None):
-        self.distance = distance
+    def __init__(self, distance, direction = DIRECTION_FORWARD, chained = None, opponent_handling_config = OPPONENT_HANDLING):
+        self.opponent_handling_config = opponent_handling_config
+        self.distance = distance * direction
         self.direction = direction
         self.chained = chained
 
@@ -509,24 +517,24 @@ class MoveLineRelative(statemachine.State):
         current_pose = self.robot.pose
         x = current_pose.virt.x + math.cos(current_pose.virt.angle) * self.distance
         y = current_pose.virt.y + math.sin(current_pose.virt.angle) * self.distance
-        yield MoveLineTo(x, y, self.direction, self.chained)
+        move = yield MoveLineTo(x, y, self.direction, self.chained, self.opponent_handling_config)
+        self.exit_reason = move.exit_reason
         yield None
 
 
 
 
-class RotateRelative(AbstractMove):
+class RotateRelative(statemachine.State):
 
     def __init__(self, relative_angle, chained = None):
-
-        AbstractMove.__init__(self, chained, NO_OPPONENT_HANDLING)
-
         self.relative_angle = relative_angle
         self.chained = chained
 
+
     def on_enter(self):
         current_pose = self.robot.pose
-        yield Rotate(current_pose.angle+self.relative_angle, chained=self.chained)
+        move = yield RotateTo(current_pose.angle + self.relative_angle, self.chained)
+        self.exit_reason = move.exit_reason
         yield None
 
 
@@ -534,8 +542,8 @@ class RotateRelative(AbstractMove):
 
 class MoveArc(AbstractMove):
 
-    def __init__(self, center_x, center_y, radius, points, direction = DIRECTION_FORWARD, chained = None):
-        AbstractMove.__init__(self, chained, OPPONENT_HANDLING)
+    def __init__(self, center_x, center_y, radius, points, direction = DIRECTION_FORWARD, chained = None, opponent_handling_config = OPPONENT_HANDLING):
+        AbstractMove.__init__(self, chained, opponent_handling_config)
         cpose = position.Pose(center_x, center_y, None, True)
         angles = []
         for a in points:
@@ -548,15 +556,16 @@ class MoveArc(AbstractMove):
 
 class FollowPath(statemachine.State):
 
-    def __init__(self, path, direction = DIRECTION_FORWARD):
+    def __init__(self, path, direction = DIRECTION_FORWARD, chained = None):
         super().__init__()
         self.path = path
         self.direction = direction
         self.exit_reason = None
+        self.chained = chained
 
 
     def on_enter(self):
-        move = None
+        move = self.chained
         for pose in self.path:
             if self.direction == DIRECTION_FORWARD:
                 if not self.robot.is_looking_at(pose):
@@ -694,35 +703,46 @@ class ExecuteGoals(statemachine.State):
     def on_enter(self):
         gm = self.robot.goal_manager
 
-        navigation_failure = False
+        navigation_failures = 0
 
         while True:
 
-            if not navigation_failure :
+            if navigation_failures == 0:
+                logger.log("Choosing the best goal")
                 goal = gm.get_best_goal()
-            else :
+            elif navigation_failures < 10:
+                logger.log("Choosing the least recently tried goal")
                 goal = gm.get_least_recent_tried_goal()
+            else:
+                logger.log("Escaping to anywhere !!")
+                yield EscapeToAnywhere()
+                navigation_failures = 0
+                continue
 
-            if goal :
+            if goal:
                 logger.log('Next goal is {}'.format(goal.identifier))
 
                 goal.doing()
 
+                current_navigation_succeeded = True
                 if goal.navigate :
                     logger.log('Navigating to goal')
                     move = yield Navigate(goal.x, goal.y, goal.direction)
                     logger.log('End of navigation : {}'.format(TRAJECTORY.lookup_by_value[move.exit_reason]))
 
-                    navigation_failure = move.exit_reason != TRAJECTORY_DESTINATION_REACHED
-                    if navigation_failure:
+                    current_navigation_succeeded = move.exit_reason == TRAJECTORY_DESTINATION_REACHED
+                    if current_navigation_succeeded:
+                        navigation_failures = 0
+                    else:
+                        navigation_failures += 1
+                    if not current_navigation_succeeded:
                         logger.log('Cannot navigate to goal -> picking another')
                         goal.increment_trials()
                         goal.available()
-                        navigation_failure = True
                     else:
                         logger.log('Navigation was successful')
 
-                if not navigation_failure:
+                if current_navigation_succeeded:
                     state = goal.get_state()
 
                     yield state
@@ -741,3 +761,27 @@ class ExecuteGoals(statemachine.State):
         self.log(str({ g.identifier : g.is_available() for g in gm.goals}))
 
         yield None
+
+
+
+
+class EscapeToAnywhere(statemachine.State):
+
+    def on_enter(self):
+        exit_reason = TRAJECTORY_OPPONENT_DETECTED
+
+
+    def on_timer_tick(self):
+        # We cannot use a simple while here. We have to give control back to the eventloop at each try
+        # otherwise we will block all communications / statemachines
+        x = random.randrange(300, 1700) / 1000.0
+        y = random.randrange(600, 2700) / 1000.0
+        move = yield Navigate(x, y)
+        exit_reason = move.exit_reason
+        if exit_reason == TRAJECTORY_BLOCKED:
+            move = yield MoveLineRelative(0.1, DIRECTION_BACKWARDS)
+            exit_reason = move.exit_reason
+        if exit_reason == TRAJECTORY_DESTINATION_REACHED:
+            yield None
+
+
