@@ -256,6 +256,10 @@ bool ColorDetector::processLine(std::istream& stream)
 
 void ColorDetector::storeReference(std::string &_color)
 {
+    float calibH = 0.0;
+    float calibS = 0.0;
+    float calibV = 0.0;
+
     // TODO: store delta with color
     int delta = 15;
 
