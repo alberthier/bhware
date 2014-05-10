@@ -16,6 +16,33 @@ from position import *
 
 
 
+class FireHarvestingGoal(goalmanager.Goal):
+
+    def is_available(self):
+        robot = self.goal_manager.event_loop.robot
+        return super().is_available() and robot.stored_fires < 2
+
+
+
+
+class FireDepositGoal(goalmanager.Goal):
+
+    def is_available(self):
+        robot = self.goal_manager.event_loop.robot
+        return super().is_available() and robot.stored_fires != 0
+
+
+
+
+class FruitDepositGoal(goalmanager.Goal):
+
+    def is_available(self):
+        robot = self.goal_manager.event_loop.robot
+        return super().is_available() and robot.fruit_tank_full
+
+
+
+
 class Main(statemachine.State):
 
     def on_enter(self):
@@ -25,6 +52,24 @@ class Main(statemachine.State):
 
 
     def on_device_ready(self, packet):
+        gm = self.robot.goal_manager
+
+        self.start_x = 0.3 + ROBOT_GYRATION_RADIUS + 0.03
+
+        #                        |       ID         |Weight|                        X                      |                  Y                     |     Direction    | State         | Ctor parameters             |Shared|Navigate|
+        gm.add(goalmanager.Goal  ("HuntTheMammoth"  ,  10,                                self.start_x ,                                        0.75, DIRECTION_FORWARD, HuntTheMammoth,                         None, False,    True))
+        gm.add(FireHarvestingGoal("TakeMyTorch"     ,  10,                                         1.1 ,                                        0.90, DIRECTION_FORWARD, TakeTorch     ,                      (True,), False,    True))
+        gm.add(FireHarvestingGoal("TakeTheirTorch"  ,   1,                                         1.1 ,                         FIELD_Y_SIZE - 0.90, DIRECTION_FORWARD, TakeTorch     ,                     (False,), False,    True))
+        gm.add(FireDepositGoal   ("DepositFires"    ,  10, FIELD_X_SIZE - 0.25 - ROBOT_GYRATION_RADIUS ,                0.25 + ROBOT_GYRATION_RADIUS, DIRECTION_FORWARD, EmptyFireTank ,                         None, False,    True))
+        gm.add(FireDepositGoal   ("DepositFires"    ,   1, FIELD_X_SIZE - 0.25 - ROBOT_GYRATION_RADIUS , FIELD_Y_SIZE - 0.25 + ROBOT_GYRATION_RADIUS, DIRECTION_FORWARD, EmptyFireTank ,                         None, False,    True))
+        gm.add(FireDepositGoal   ("DepositFires"    ,   3,                                        1.05 ,                                        1.50, DIRECTION_FORWARD, EmptyFireTank ,                         None, False,    True))
+        gm.add(goalmanager.Goal  ("TakeFruitE"      ,   7,                                        1.05 ,                                        1.50, DIRECTION_FORWARD, TakeFruit     ,                         None, False,    True))
+        gm.add(goalmanager.Goal  ("TakeFruitSE"     ,   7,                                        1.05 ,                                        1.50, DIRECTION_FORWARD, TakeFruit     ,                         None, False,    True))
+        gm.add(goalmanager.Goal  ("TakeFruitSW"     ,   7,                                        1.05 ,                                        1.50, DIRECTION_FORWARD, TakeFruit     ,                         None, False,    True))
+        gm.add(goalmanager.Goal  ("TakeFruitW"      ,   7,                                        1.05 ,                                        1.50, DIRECTION_FORWARD, TakeFruit     ,                         None, False,    True))
+        gm.add(FruitDepositGoal  ("DepositFruits"   ,   7,                                        1.05 ,                                        1.50, DIRECTION_FORWARD, DepositFruits ,                         None, False,    True))
+
+
         yield AntiBlocking(True)
         yield CalibratePosition()
 
@@ -32,13 +77,9 @@ class Main(statemachine.State):
     def on_start(self, packet):
         self.yield_at(90000, EndOfMatch())
         logger.log("Starting ...")
-#        yield Trigger(GUN_FIRE)
-#        self.log("fired")
-        yield Trigger(PAINT_1_FLIP_FLOP_START)
-        self.log("started 111")
-        yield Timer(2000)
-        self.log("timer finished")
-        yield Trigger(PAINT_1_FLIP_FLOP_STOP)
+        yield Timer(1000)
+        yield MoveLineTo(self.start_x, RED_START_Y)
+        yield ExecuteGoals()
 
 
 
@@ -63,6 +104,30 @@ class CalibratePosition(statemachine.State):
         yield None
 
 
+
+
+class HuntTheMammoth(statemachine.State):
+
+    def on_enter(self):
+        yield RotateTo(0.0)
+        yield Trigger(GUN_FIRE)
+        yield None
+
+
+
+
+class TakeTorch(statemachine.State):
+
+    def __init__(self, my_side):
+        self.my_side = my_side
+
+
+    def on_enter(self):
+        yield None
+
+
+
+
 class DropTorch(statemachine.State):
 
     def on_enter(self):
@@ -84,7 +149,7 @@ class DropTorch(statemachine.State):
         #remonter bras
         yield commonstates.ServoControl(ELEVATOR_UP)
 
-class TakeFruits(statemachine.State):
+class TakeFruit(statemachine.State):
 
     def on_enter(self):
         #slow down
