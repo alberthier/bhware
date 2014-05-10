@@ -7,16 +7,19 @@ import packets
 import position
 import logger
 import commonstates
-import goalmanager
+import goalmanager as mgm
 
 from definitions import *
 from commonstates import *
 from position import *
+from tools import *
+
+# global constants
+
+TAKE_FRUITS_TRAVEL_DISTANCE = 0.5
 
 
-
-
-class FireHarvestingGoal(goalmanager.Goal):
+class FireHarvestingGoal(mgm.Goal):
 
     def is_available(self):
         robot = self.goal_manager.event_loop.robot
@@ -25,7 +28,7 @@ class FireHarvestingGoal(goalmanager.Goal):
 
 
 
-class FireDepositGoal(goalmanager.Goal):
+class FireDepositGoal(mgm.Goal):
 
     def is_available(self):
         robot = self.goal_manager.event_loop.robot
@@ -34,7 +37,7 @@ class FireDepositGoal(goalmanager.Goal):
 
 
 
-class FruitDepositGoal(goalmanager.Goal):
+class FruitDepositGoal(mgm.Goal):
 
     def is_available(self):
         robot = self.goal_manager.event_loop.robot
@@ -56,18 +59,49 @@ class Main(statemachine.State):
 
         self.start_x = 0.3 + ROBOT_GYRATION_RADIUS + 0.03
 
-        #                        |       ID         |Weight|                        X                      |                  Y                     |     Direction    | State         | Ctor parameters             |Shared|Navigate|
-        gm.add(goalmanager.Goal  ("HuntTheMammoth"  ,  10,                                self.start_x ,                                        0.75, DIRECTION_FORWARD, HuntTheMammoth,                         None, False,    True))
-        gm.add(FireHarvestingGoal("TakeMyTorch"     ,  10,                                         1.1 ,                                        0.90, DIRECTION_FORWARD, TakeTorch     ,                      (True,), False,    True))
-        gm.add(FireHarvestingGoal("TakeTheirTorch"  ,   1,                                         1.1 ,                         FIELD_Y_SIZE - 0.90, DIRECTION_FORWARD, TakeTorch     ,                     (False,), False,    True))
-#        gm.add(FireDepositGoal   ("DepositFires"    ,  10, FIELD_X_SIZE - 0.25 - ROBOT_GYRATION_RADIUS ,                0.25 + ROBOT_GYRATION_RADIUS, DIRECTION_FORWARD, EmptyFireTank ,                         None, False,    True))
-#        gm.add(FireDepositGoal   ("DepositFires"    ,   1, FIELD_X_SIZE - 0.25 - ROBOT_GYRATION_RADIUS , FIELD_Y_SIZE - 0.25 + ROBOT_GYRATION_RADIUS, DIRECTION_FORWARD, EmptyFireTank ,                         None, False,    True))
-#        gm.add(FireDepositGoal   ("DepositFires"    ,   3,                                        1.05 ,                                        1.50, DIRECTION_FORWARD, EmptyFireTank ,                         None, False,    True))
-#        gm.add(goalmanager.Goal  ("TakeFruitE"      ,   7,                                        1.05 ,                                        1.50, DIRECTION_FORWARD, TakeFruit     ,                         None, False,    True))
-#        gm.add(goalmanager.Goal  ("TakeFruitSE"     ,   7,                                        1.05 ,                                        1.50, DIRECTION_FORWARD, TakeFruit     ,                         None, False,    True))
-#        gm.add(goalmanager.Goal  ("TakeFruitSW"     ,   7,                                        1.05 ,                                        1.50, DIRECTION_FORWARD, TakeFruit     ,                         None, False,    True))
-#        gm.add(goalmanager.Goal  ("TakeFruitW"      ,   7,                                        1.05 ,                                        1.50, DIRECTION_FORWARD, TakeFruit     ,                         None, False,    True))
-#        gm.add(FruitDepositGoal  ("DepositFruits"   ,   7,                                        1.05 ,                                        1.50, DIRECTION_FORWARD, DepositFruits ,                         None, False,    True))
+        FRUIT_TAKE_DISTANCE = 0.28
+
+        FRUIT_SIDE_X_CENTER = 1.3
+        FRUIT_SIDE_X_TOP = FRUIT_SIDE_X_CENTER - TAKE_FRUITS_TRAVEL_DISTANCE/2
+        FRUIT_SIDE_X_BOTTOM = FRUIT_SIDE_X_CENTER + TAKE_FRUITS_TRAVEL_DISTANCE/2
+        FRUIT_SIDE_X = FRUIT_SIDE_X_CENTER + TAKE_FRUITS_TRAVEL_DISTANCE/2
+        FRUIT_SIDE_Y = FRUIT_TAKE_DISTANCE
+        FRUIT_BOTTOM_X = FIELD_X_SIZE - FRUIT_TAKE_DISTANCE
+        FRUIT_BOTTOM_Y_CENTER = 0.7
+        # FRUIT_BOTTOM_Y = 1.03
+
+        TAKE_FRUITS_X_DELTA = TAKE_FRUITS_TRAVEL_DISTANCE/2
+
+        MY_TORCH_Y = 0.90
+
+        if self.robot.team == TEAM_YELLOW :
+            FRUIT_SIDE_X_BOTTOM, FRUIT_SIDE_X_TOP = FRUIT_SIDE_X_TOP, FRUIT_SIDE_X_BOTTOM
+            TAKE_FRUITS_X_DELTA*=-1
+
+        #                        |       ID       |Weight| X          | Y                  | Direction         | State      | Ctor parameters|Shared|Navigate|
+        gm.add(
+            mgm.Goal          ("HuntTheMammoth"  ,  10,  self.start_x,               0.75, DIRECTION_FORWARD, HuntTheMammoth,           None, False,    True),
+
+            FireHarvestingGoal("TakeMyTorch"     ,  10,           1.1,         MY_TORCH_Y, DIRECTION_FORWARD,  TakeTorch     ,       (True,), False,    True),
+            FireHarvestingGoal("TakeTheirTorch"  ,   1,           1.1,   sym_y(MY_TORCH_Y), DIRECTION_FORWARD, TakeTorch     ,      (False,), False,    True),
+
+            FireDepositGoal   ("Deposit_Mine"    ,  10,          1.68,               0.32, DIRECTION_FORWARD, EmptyFireTank ,           None, False,    True),
+            FireDepositGoal   ("Deposit_Center"  ,   1,          1.05,               1.50, DIRECTION_FORWARD, EmptyFireTank ,           None, False,    True),
+            FireDepositGoal   ("Deposit_Theirs"  ,   3,          1.68,               2.66, DIRECTION_FORWARD, EmptyFireTank ,           None, False,    True),
+
+            FruitDepositGoal  ("DepFruits_Inner" ,   7,          0.52,               2.10, DIRECTION_BACKWARDS, DumpFruits ,            None, False,    True),
+            FruitDepositGoal  ("DepFruits_Outer" ,   7,          0.52,               2.37, DIRECTION_BACKWARDS, DumpFruits ,            None, False,    True),
+        )
+
+        fruit_goals = (
+            mgm.Goal("Fruits_Mine"      ,   7, FRUIT_SIDE_X_BOTTOM ,         FRUIT_SIDE_Y, DIRECTION_FORWARD, TakeFruits     ,                         None, False,    True),
+            mgm.Goal("Fruits_MineCenter",   7, FRUIT_BOTTOM_X      ,FRUIT_BOTTOM_Y_CENTER + TAKE_FRUITS_X_DELTA, DIRECTION_FORWARD, TakeFruits     ,None, False,    True),
+            mgm.Goal("Fruits_TheirsCenter", 7, FRUIT_BOTTOM_X      ,sym_y(FRUIT_BOTTOM_Y_CENTER) + TAKE_FRUITS_X_DELTA, DIRECTION_FORWARD, TakeFruits     , None, False,    True),
+            mgm.Goal("Fruits_Theirs"   ,    7, FRUIT_SIDE_X_TOP    ,  sym_y(FRUIT_SIDE_Y), DIRECTION_FORWARD, TakeFruits     ,                         None, False,    True),
+        )
+
+        gm.add(*fruit_goals)
+
 
         yield AntiBlocking(True)
         yield CalibratePosition()
@@ -110,6 +144,7 @@ class HuntTheMammoth(statemachine.State):
     def on_enter(self):
         yield RotateTo(0.0)
         yield Trigger(GUN_FIRE)
+        self.exit_reason = GOAL_DONE
         yield None
 
 
@@ -122,8 +157,7 @@ class TakeTorch(statemachine.State):
 
 
     def on_enter(self):
-        flip = not self.my_side
-        yield Trigger(ELEVATOR_UP)
+
         for i in range(3):
             yield Trigger(ARM_1_TAKE_TORCH_FIRE, ARM_2_TAKE_TORCH_FIRE)
             yield Trigger(PUMP_ON, makeServoMoveCommand(ELEVATOR, 90 - 30 * i))
@@ -134,18 +168,24 @@ class TakeTorch(statemachine.State):
                 yield Trigger(ARM_1_STORE_FIRE, ARM_2_STORE_FIRE)
             flip = not flip
             yield Trigger(PUMP_OFF)
+
+        self.exit_reason = GOAL_DONE
+        self.robot.stored_fires=3
+
         yield None
 
 
 
 
-class TakeFruit(statemachine.State):
+class TakeFruits(statemachine.State):
 
-    def __init__(self, angle):
-        self.angle = angle
+    def __init__(self, angle=0.0):
+        #self.angle = self.robot.pose.angle
+        pass
 
 
     def on_enter(self):
+        self.angle = self.robot.pose.angle
         cos_angle = math.cos(self.angle)
         if abs(cos_angle) > 0.5:
             x_orientation = 1.0 if math.cos(self.angle) > 0 else -1.0
@@ -179,9 +219,14 @@ class TakeFruit(statemachine.State):
         # Fermer le bras
         yield Trigger(FRUITMOTH_ARM_CLOSE)
         #fermer la trappe
-        yield Trigget(FRUITMOTH_HATCH_CLOSE)
+        yield Trigger(FRUITMOTH_HATCH_CLOSE)
         #standard speed
-        yield commonstates.SpeedControl()
+        # yield commonstates.SpeedControl()
+        
+        self.robot.fruit_tank_full = True
+        self.exit_reason = GOAL_DONE
+
+        
         yield None
 
 
@@ -190,39 +235,45 @@ class TakeFruit(statemachine.State):
             self.retract_finger = False
             Trigger(FRUITMOTH_FINGER_RETRACT)
         else:
-            Trigger(FRUITMOTH_FINGER_OPEN)
-
+            Trigger(FRUITMOTH_FINGER_OPEN)            
 
 
 class DumpFruits(statemachine.State):
 
     def on_enter(self):
+        yield RotateTo(0.0)
 
         #ouvrir la trappe
-        yield commonstates.ServoControl(FRUITMOTH_HATCH_OPEN)
+        yield Trigger(FRUITMOTH_HATCH_OPEN)
         #sortir le développeur
-        yield commonstates.ServoControl(FRUITMOTH_ARM_OPEN)
+        yield Trigger(FRUITMOTH_ARM_OPEN)
 
         #fermer la trappe
-        yield commonstates.ServoControl(FRUITMOTH_HATCH_CLOSE)
+        yield Trigger(FRUITMOTH_HATCH_CLOSE)
+        self.robot.fruit_tank_full=False
+        self.exit_reason=GOAL_DONE
 
         #incliner le bac
-        yield commonstates.ServoControl(FRUITMOTH_TUB_OPEN)
+        yield Trigger(FRUITMOTH_TUB_OPEN)
 
         #rentrer le bac
         yield commonstates.ServoControl(FRUITMOTH_TUB_CLOSE)
 
-        #ouvrir la trappe
-        yield commonstates.ServoControl(FRUITMOTH_HATCH_OPEN)
+        self.exit_reason = GOAL_DONE
 
-        #rentrer le développeur
-        yield commonstates.ServoControl(FRUITMOTH_ARM_CLOSE)
+        yield None
 
-        #fermer la trappe
-        yield commonstates.ServoControl(FRUITMOTH_HATCH_CLOSE)
+class EmptyFireTank(statemachine.State):
 
+    def on_enter(self):
+        if self.goal.identifier == 'Deposit_Mine' :
+            yield RotateTo(- math.pi / 4.0)
+        elif self.goal.identifier == 'Deposit_Theirs' :
+            yield RotateTo( math.pi / 4.0)
 
-
+        self.exit_reason = GOAL_DONE
+        self.robot.stored_fires = 0
+        yield None
 
 
 ##################################################

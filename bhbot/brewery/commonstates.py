@@ -746,6 +746,7 @@ class ExecuteGoals(statemachine.State):
 
                 if current_navigation_succeeded:
                     state = goal.get_state()
+                    state.goal = goal
 
                     yield state
 
@@ -760,7 +761,7 @@ class ExecuteGoals(statemachine.State):
                 break
 
         self.log('No more goals available')
-        self.log(str({ g.identifier : g.is_available() for g in gm.goals}))
+        self.log('Current goals : {}'.format({ g.identifier : g.is_available() for g in gm.goals}))
 
         yield None
 
