@@ -43,7 +43,7 @@ class Main(statemachine.State):
         gm.add(goalmanager.Goal("HuntTheMammoth",    15,   0.3 + ROBOT_GYRATION_RADIUS + 0.03,                                       2.25, DIRECTION_FORWARD, HuntTheMammoth,              None, False,    True))
 
         yield AntiBlocking(True)
-        yield Trigger(GUN_LOAD, PAINT_1_HOLD, PAINT_2_HOLD, FIRE_FLIPPER_CLOSE)
+        yield Trigger(FIRE_FLIPPER_CLOSE)
         yield CalibratePosition()
 
 
