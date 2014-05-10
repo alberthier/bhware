@@ -84,6 +84,7 @@ private:
     bool m_writeLastCapture;
     std::string m_currentReferenceColor;
     int m_currentTolerance;
+    int m_colorThreshold;
 
     ScanMethod m_scanMethod;
     char* m_scanMethodName;
@@ -145,7 +146,7 @@ public:
 
     double computeDeltaMs(struct timeval & diff)
     {
-        return diff.tv_sec * 1000.0, diff.tv_usec / 1000.0;
+        return diff.tv_sec * 1000.0 + diff.tv_usec / 1000.0;
     }
 
 private:
@@ -264,6 +265,7 @@ void ColorDetector::reset()
     m_writeLastCapture = false;
     m_currentTolerance = 0;
     m_mode = ModeScan;
+    m_colorThreshold = 80;
 }
 
 
@@ -286,6 +288,12 @@ bool ColorDetector::processLine(std::istream& stream)
         m_writeLastCapture = mode == "1";
 
         std::cerr << "WriteLastCapture " << m_writeLastCapture << std::endl;
+    }
+    else if (command == "SetColorThreshold")
+    {
+        sstr >> m_colorThreshold;
+
+        std::cerr << "SetColorThreshold " << m_colorThreshold << std::endl;
     }
     else if (command == "StoreReference")
     {
@@ -524,9 +532,7 @@ void ColorDetector::scanHsv()
 
         std::cerr << "Color of current note: " << colors[tallyMaxIndex] << " (" << percentage << "% confidence)." << std::endl;
 
-        // TODO : make configurable
-
-        if (percentage > 80.0)
+        if (percentage > m_colorThreshold)
         {
             if(colors[tallyMaxIndex] == "cYELLOW")
             {
@@ -687,9 +693,7 @@ void ColorDetector::scanHsv2()
 
             std::cerr << "MAIN COLOR : "<< detectedColor << " " << std::setprecision(2) << ratio << "%" << std::endl;
 
-            // TODO : make configurable
-
-            if(ratio > 80)
+            if(ratio > m_colorThreshold)
             {
                 std::cerr << "DETECTED COLOR : "<< detectedColor << std::endl;
 
