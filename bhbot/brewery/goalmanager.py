@@ -47,7 +47,6 @@ class Goal:
         if isinstance(self.handler_state, statemachine.State):
             return self.handler_state
         else :
-            logger.log(self.ctor_parameters)
             if self.ctor_parameters is not None:
                 return self.handler_state(*self.ctor_parameters)
             else:
@@ -87,9 +86,10 @@ class GoalManager:
         self.last_goal = None
 
 
-    def add(self, goal):
-        goal.goal_manager = self
-        self.goals.append(goal)
+    def add(self, *args):
+        for goal in args :
+            goal.goal_manager = self
+            self.goals.append(goal)
 
 
     def has_available_goal(self, identifier):
