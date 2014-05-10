@@ -499,7 +499,8 @@ class ServoControl(BasePacket):
     DEFINITION = (
         ('type',    UEnum8(ACTUATOR_TYPE, ACTUATOR_TYPE_SERVO_AX)),
         ('id',      UInt8 (0, "Servo identifier")),
-        ('angle',   UInt16(0, "Destination angle [0, 300]")),
+        ('command', UEnum8(SERVO_COMMAND, SERVO_COMMAND_MOVE)),
+        ('value',   UInt16(0, "Destination angle [0, 300]")),
         ('timeout', UInt32(0, "Timeout in ms")),
         ('status',  UEnum8(SERVO_STATUS, SERVO_STATUS_TIMED_OUT)),
     )

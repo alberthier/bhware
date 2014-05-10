@@ -632,8 +632,9 @@ class Trigger(statemachine.State):
 
     TYPE               = 0
     ID                 = 1
-    SERVO_ANGLE        = 2
-    SERVO_TIMEOUT      = 3
+    SERVO_COMMAND      = 2
+    SERVO_VALUE        = 3
+    SERVO_TIMEOUT      = 4
     RELAY_ACTION       = 2
     RELAY_TOGGLE_COUNT = 3
     MOTOR_SPEED        = 2
@@ -673,7 +674,7 @@ class Trigger(statemachine.State):
     def on_servo_control(self, packet):
         if packet.status != SERVO_STATUS_SUCCESS:
             self.log("Servo #{} timed out".format(packet.id))
-        yield from self.cleanup(packet.type, packet.id)
+        yield from self.cleanup(packet.type, packet.id, packet.command)
 
 
     def on_relay_toggle(self, packet):
@@ -684,10 +685,11 @@ class Trigger(statemachine.State):
         yield from self.cleanup(ACTUATOR_TYPE_PWM, packet.id)
 
 
-    def cleanup(self, actuator_type, id):
+    def cleanup(self, actuator_type, id, subcommand = None):
         for i, cmd in enumerate(self.commands):
             if cmd[self.TYPE] == actuator_type and cmd[self.ID] == id:
-                del self.commands[i]
+                if subcommand is None or subcommand == cmd[self.SERVO_COMMAND]:
+                    del self.commands[i]
                 break
         if len(self.commands) == 0:
             yield None

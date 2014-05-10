@@ -185,6 +185,11 @@ ACTUATOR_TYPE = Enum("Actuator type",
     ACTUATOR_TYPE_PWM      = 3,
 )
 
+SERVO_COMMAND = Enum("Servo subcommand",
+    SERVO_COMMAND_MOVE        = 0,
+    SERVO_COMMAND_SETUP_SPEED = 1,
+)
+
 SERVO_STATUS = Enum("Servo status",
     SERVO_STATUS_TIMED_OUT = 0,
     SERVO_STATUS_SUCCESS   = 1,
@@ -225,8 +230,12 @@ GOAL_STATUS = Enum("Goal status",
 )
 
 
-def makeServoCommand(servo, angle):
-    return (servo[0], servo[1], angle, servo[2])
+def makeServoMoveCommand(servo, value):
+    return (servo[0], servo[1], SERVO_COMMAND_MOVE, value, servo[2])
+
+def makeServoSetupCommand(servo, value):
+    return (servo[0], servo[1], SERVO_COMMAND_SETUP_SPEED, value, servo[2])
+
 
 
 DEFAULT_SERVOS_TIMEOUT_MS = 1000
@@ -234,37 +243,40 @@ DEFAULT_SERVOS_TIMEOUT_MS = 1000
 # RX Servos
 DEFAULT_RX_SERVOS_TIMEOUT_MS = DEFAULT_SERVOS_TIMEOUT_MS
 # name           actuator type          id angle timeout
-ELEVATOR      = (ACTUATOR_TYPE_SERVO_RX, 0, DEFAULT_RX_SERVOS_TIMEOUT_MS)
-ELEVATOR_UP   = makeServoCommand(ELEVATOR, 123)
-ELEVATOR_DOWN = makeServoCommand(ELEVATOR,  64)
-ARM_1         = (ACTUATOR_TYPE_SERVO_RX, 1, DEFAULT_RX_SERVOS_TIMEOUT_MS)
-ARM_1_OPEN    = makeServoCommand(ARM_1,    123)
-ARM_1_CLOSE   = makeServoCommand(ARM_1,     64)
-ARM_1         = (ACTUATOR_TYPE_SERVO_RX, 2, DEFAULT_RX_SERVOS_TIMEOUT_MS)
-ARM_1_OPEN    = makeServoCommand(ARM_1,    123)
-ARM_1_CLOSE   = makeServoCommand(ARM_1,     64)
+ELEVATOR       = (ACTUATOR_TYPE_SERVO_RX, 0, DEFAULT_RX_SERVOS_TIMEOUT_MS)
+ELEVATOR_SETUP = makeServoSetupCommand(ELEVATOR, 1234)
+ELEVATOR_UP    = makeServoMoveCommand (ELEVATOR,  123)
+ELEVATOR_DOWN  = makeServoMoveCommand (ELEVATOR,   64)
+ARM_1          = (ACTUATOR_TYPE_SERVO_RX, 1, DEFAULT_RX_SERVOS_TIMEOUT_MS)
+ARM_1_SETUP    = makeServoSetupCommand(ARM_1,    1234)
+ARM_1_OPEN     = makeServoMoveCommand (ARM_1,     123)
+ARM_1_CLOSE    = makeServoMoveCommand (ARM_1,      64)
+ARM_2          = (ACTUATOR_TYPE_SERVO_RX, 2, DEFAULT_RX_SERVOS_TIMEOUT_MS)
+ARM_2_SETUP    = makeServoSetupCommand(ARM_2,    1234)
+ARM_2_OPEN     = makeServoMoveCommand (ARM_2,     123)
+ARM_2_CLOSE    = makeServoMoveCommand (ARM_2,      64)
 
 # AX Servos
 DEFAULT_AX_SERVOS_TIMEOUT_MS = DEFAULT_SERVOS_TIMEOUT_MS
 # name                    actuator type          id angle timeout
 FIRE_FLIPPER           = (ACTUATOR_TYPE_SERVO_AX, 2, DEFAULT_AX_SERVOS_TIMEOUT_MS)
-FIRE_FLIPPER_OPEN      = makeServoCommand(FIRE_FLIPPER,      55) # ID: OK - ANGLE : OK
-FIRE_FLIPPER_CLOSE     = makeServoCommand(FIRE_FLIPPER,     180) # ID: OK - ANGLE : OK
+FIRE_FLIPPER_OPEN      = makeServoMoveCommand(FIRE_FLIPPER,      55) # ID: OK - ANGLE : OK
+FIRE_FLIPPER_CLOSE     = makeServoMoveCommand(FIRE_FLIPPER,     180) # ID: OK - ANGLE : OK
 TORCH_GUIDE            = (ACTUATOR_TYPE_SERVO_AX, 1, DEFAULT_AX_SERVOS_TIMEOUT_MS)
-TORCH_GUIDE_OPEN       = makeServoCommand(TORCH_GUIDE,      123)
-TORCH_GUIDE_CLOSE      = makeServoCommand(TORCH_GUIDE,       64)
+TORCH_GUIDE_OPEN       = makeServoMoveCommand(TORCH_GUIDE,      123)
+TORCH_GUIDE_CLOSE      = makeServoMoveCommand(TORCH_GUIDE,       64)
 FRUITMOTH_HATCH        = (ACTUATOR_TYPE_SERVO_AX, 2, DEFAULT_AX_SERVOS_TIMEOUT_MS)
-FRUITMOTH_HATCH_OPEN   = makeServoCommand(FRUITMOTH_HATCH,  123)
-FRUITMOTH_HATCH_CLOSE  = makeServoCommand(FRUITMOTH_HATCH,   64)
+FRUITMOTH_HATCH_OPEN   = makeServoMoveCommand(FRUITMOTH_HATCH,  123)
+FRUITMOTH_HATCH_CLOSE  = makeServoMoveCommand(FRUITMOTH_HATCH,   64)
 FRUITMOTH_TANK         = (ACTUATOR_TYPE_SERVO_AX, 3, DEFAULT_AX_SERVOS_TIMEOUT_MS)
-FRUITMOTH_TANK_OPEN    = makeServoCommand(FRUITMOTH_TANK,   123)
-FRUITMOTH_TANK_CLOSE   = makeServoCommand(FRUITMOTH_TANK,    64)
+FRUITMOTH_TANK_OPEN    = makeServoMoveCommand(FRUITMOTH_TANK,   123)
+FRUITMOTH_TANK_CLOSE   = makeServoMoveCommand(FRUITMOTH_TANK,    64)
 FRUITMOTH_ARM          = (ACTUATOR_TYPE_SERVO_AX, 4, DEFAULT_AX_SERVOS_TIMEOUT_MS)
-FRUITMOTH_ARM_OPEN     = makeServoCommand(FRUITMOTH_ARM,    123)
-FRUITMOTH_ARM_CLOSE    = makeServoCommand(FRUITMOTH_ARM,     64)
+FRUITMOTH_ARM_OPEN     = makeServoMoveCommand(FRUITMOTH_ARM,    123)
+FRUITMOTH_ARM_CLOSE    = makeServoMoveCommand(FRUITMOTH_ARM,     64)
 FRUITMOTH_FINGER       = (ACTUATOR_TYPE_SERVO_AX, 5, DEFAULT_AX_SERVOS_TIMEOUT_MS)
-FRUITMOTH_FINGER_OPEN  = makeServoCommand(FRUITMOTH_FINGER, 123)
-FRUITMOTH_FINGER_CLOSE = makeServoCommand(FRUITMOTH_FINGER,  64)
+FRUITMOTH_FINGER_OPEN  = makeServoMoveCommand(FRUITMOTH_FINGER, 123)
+FRUITMOTH_FINGER_CLOSE = makeServoMoveCommand(FRUITMOTH_FINGER,  64)
 
 # Magnets
 FLIP_FLOP_MODE = -1
