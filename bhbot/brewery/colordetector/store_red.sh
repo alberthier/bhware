@@ -1,0 +1,1 @@
+echo "StoreReference RED" > input
