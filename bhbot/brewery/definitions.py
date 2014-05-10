@@ -252,22 +252,30 @@ DEFAULT_SERVOS_TIMEOUT_MS = 2000
 
 # RX Servos
 DEFAULT_RX_SERVOS_TIMEOUT_MS = DEFAULT_SERVOS_TIMEOUT_MS
-# name           actuator type          id angle timeout
-ELEVATOR        = (ACTUATOR_TYPE_SERVO_RX, 5, DEFAULT_RX_SERVOS_TIMEOUT_MS)
-ELEVATOR_SETUP  = makeServoSetupCommand(ELEVATOR, 1234)
-ELEVATOR_UP     = makeServoMoveCommand (ELEVATOR,  200)
-ELEVATOR_MIDDLE = makeServoMoveCommand (ELEVATOR,  100)
-ELEVATOR_DOWN   = makeServoMoveCommand (ELEVATOR,   50)
-ARM_1           = (ACTUATOR_TYPE_SERVO_RX, 1, DEFAULT_RX_SERVOS_TIMEOUT_MS)
-ARM_1_SETUP     = makeServoSetupCommand(ARM_1,    1234)
-ARM_1_OPEN      = makeServoMoveCommand (ARM_1,     250)
-ARM_1_MIDDLE    = makeServoMoveCommand (ARM_1,     150)
-ARM_1_CLOSE     = makeServoMoveCommand (ARM_1,      80)
-ARM_2           = (ACTUATOR_TYPE_SERVO_RX, 9, DEFAULT_RX_SERVOS_TIMEOUT_MS)
-ARM_2_SETUP     = makeServoSetupCommand(ARM_2,    1234)
-ARM_2_OPEN      = makeServoMoveCommand (ARM_2,     250)
-ARM_2_MIDDLE    = makeServoMoveCommand (ARM_2,     150)
-ARM_2_CLOSE     = makeServoMoveCommand (ARM_2,      80)
+# name                actuator type          id angle timeout
+ELEVATOR              = (ACTUATOR_TYPE_SERVO_RX, 5, DEFAULT_RX_SERVOS_TIMEOUT_MS)
+ELEVATOR_SETUP        = makeServoSetupCommand(ELEVATOR, 1023)
+ELEVATOR_UP           = makeServoMoveCommand (ELEVATOR,  200)
+ELEVATOR_LEVEL_3      = makeServoMoveCommand (ELEVATOR,  135)
+ELEVATOR_LEVEL_2      = makeServoMoveCommand (ELEVATOR,  100)
+ELEVATOR_LEVEL_1      = makeServoMoveCommand (ELEVATOR,   75)
+ELEVATOR_DOWN         = makeServoMoveCommand (ELEVATOR,   50)
+ARM_1                 = (ACTUATOR_TYPE_SERVO_RX, 1, DEFAULT_RX_SERVOS_TIMEOUT_MS)
+ARM_1_SETUP           = makeServoSetupCommand(ARM_1,     150)
+ARM_1_TAKE_TORCH_FIRE = makeServoMoveCommand (ARM_1,     200)
+ARM_1_STORE_FIRE      = makeServoMoveCommand (ARM_1,      90)
+ARM_1_FLIP_FIRE       = makeServoMoveCommand (ARM_1,     250)
+ARM_1_OPEN            = makeServoMoveCommand (ARM_1,     250)
+ARM_1_MIDDLE          = makeServoMoveCommand (ARM_1,     150)
+ARM_1_CLOSE           = makeServoMoveCommand (ARM_1,      80)
+ARM_2                 = (ACTUATOR_TYPE_SERVO_RX, 9, DEFAULT_RX_SERVOS_TIMEOUT_MS)
+ARM_2_SETUP           = makeServoSetupCommand(ARM_2,     150)
+ARM_2_TAKE_TORCH_FIRE = makeServoMoveCommand (ARM_2,      35)
+ARM_2_STORE_FIRE      = makeServoMoveCommand (ARM_2,      80)
+ARM_2_FLIP_FIRE       = makeServoMoveCommand (ARM_2,     220)
+ARM_2_OPEN            = makeServoMoveCommand (ARM_2,     250)
+ARM_2_MIDDLE          = makeServoMoveCommand (ARM_2,     150)
+ARM_2_CLOSE           = makeServoMoveCommand (ARM_2,      80)
 
 # AX Servos
 DEFAULT_AX_SERVOS_TIMEOUT_MS = DEFAULT_SERVOS_TIMEOUT_MS
