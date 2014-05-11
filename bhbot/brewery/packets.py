@@ -519,12 +519,12 @@ class RelayControl(BasePacket):
 
 
 
-class MotorControl(BasePacket):
+class PwmControl(BasePacket):
 
     TYPE = 71
     DEFINITION = (
-        ('id',    UInt8 (0, "Motor identifier")),
-        ('speed', UInt16(0, "Speed [0x0 - 0x3FF - 0x7FF]")),
+        ('id',    UInt8 (0, "PWM identifier")),
+        ('value', UInt16(0, "Value [0x0 - 0x3FF - 0x7FF]")),
     )
 
 

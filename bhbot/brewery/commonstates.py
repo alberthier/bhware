@@ -637,7 +637,7 @@ class Trigger(statemachine.State):
     SERVO_TIMEOUT      = 4
     RELAY_ACTION       = 2
     RELAY_TOGGLE_COUNT = 3
-    MOTOR_SPEED        = 2
+    PWM_VALUE          = 2
 
     def __init__(self, *args):
         """
@@ -666,7 +666,7 @@ class Trigger(statemachine.State):
             elif actuator_type == ACTUATOR_TYPE_RELAY:
                 self.send_packet(packets.RelayToggle(id = cmd[self.ID], action = cmd[self.RELAY_ACTION], toggle_count = cmd[self.RELAY_TOGGLE_COUNT]))
             elif actuator_type == ACTUATOR_TYPE_PWM:
-                self.send_packet(packets.MotorControl(id = cmd[self.ID], speed = cmd[self.MOTOR_SPEED]))
+                self.send_packet(packets.PwmControl(id = cmd[self.ID], value = cmd[self.PWM_VALUE]))
             else:
                 self.log("Unknown actuator type in command: {}".format(cmd))
 
@@ -681,7 +681,7 @@ class Trigger(statemachine.State):
         yield from self.cleanup(ACTUATOR_TYPE_RELAY, packet.id)
 
 
-    def on_motor_control(self, packet):
+    def on_pwm_control(self, packet):
         yield from self.cleanup(ACTUATOR_TYPE_PWM, packet.id)
 
 

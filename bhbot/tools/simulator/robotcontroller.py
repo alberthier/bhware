@@ -197,6 +197,9 @@ class RobotController(object):
         self.send_packet(packet)
 
 
+    def on_pwm_control(self, packet):
+        self.send_packet(packet)
+
     def on_simulator_data(self, packet):
         self.output_view.handle_led(packet.leds)
 
