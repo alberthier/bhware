@@ -45,3 +45,7 @@ def sym_x(coord_x):
 
 def sym_y(coord_y):
     return 3.0 - coord_y
+
+
+def sym_angle(angle):
+    return -angle
