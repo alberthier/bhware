@@ -74,9 +74,17 @@ class Main(statemachine.State):
 
         MY_TORCH_Y = 0.90
 
+
+        MINE_TREE_ANGLE          =       -math.pi
+        THEIRS_TREE_ANGLE        =            0.0
+        MINE_TREE_CENTER_ANGLE   = -math.pi / 2.0
+        THEIRS_TREE_CENTER_ANGLE = -math.pi / 2.0
         if self.robot.team == TEAM_YELLOW :
             FRUIT_SIDE_X_BOTTOM, FRUIT_SIDE_X_TOP = FRUIT_SIDE_X_TOP, FRUIT_SIDE_X_BOTTOM
-            TAKE_FRUITS_X_DELTA*=-1
+            TAKE_FRUITS_X_DELTA *= -1
+            MINE_TREE_ANGLE, THEIRS_TREE_ANGLE = THEIRS_TREE_ANGLE, MINE_TREE_ANGLE
+            THEIRS_TREE_CENTER_ANGLE *= -1
+            MINE_TREE_CENTER_ANGLE   *= -1
 
         #                        |       ID       |Weight| X          | Y                  | Direction         | State      | Ctor parameters|Shared|Navigate|
         gm.add(
@@ -94,10 +102,10 @@ class Main(statemachine.State):
         )
 
         fruit_goals = (
-            mgm.Goal("Fruits_Mine"      ,   7, FRUIT_SIDE_X_BOTTOM ,         FRUIT_SIDE_Y, DIRECTION_FORWARD, TakeFruits     ,                         (-math.pi,), False,    True),
-            mgm.Goal("Fruits_MineCenter",   7, FRUIT_BOTTOM_X      ,FRUIT_BOTTOM_Y_CENTER + TAKE_FRUITS_X_DELTA, DIRECTION_FORWARD, TakeFruits     ,   (-math.pi / 2.0,), False,    True),
-            mgm.Goal("Fruits_TheirsCenter", 7, FRUIT_BOTTOM_X      ,sym_y(FRUIT_BOTTOM_Y_CENTER) + TAKE_FRUITS_X_DELTA, DIRECTION_FORWARD, TakeFruits     , (-math.pi / 2.0,), False,    True),
-            mgm.Goal("Fruits_Theirs"   ,    7, FRUIT_SIDE_X_TOP    ,  sym_y(FRUIT_SIDE_Y), DIRECTION_FORWARD, TakeFruits     ,                         (0.0,), False,    True),
+            mgm.Goal("Fruits_Mine"      ,   7, FRUIT_SIDE_X_BOTTOM ,         FRUIT_SIDE_Y, DIRECTION_FORWARD, TakeFruits     ,                         (MINE_TREE_ANGLE,), False,    True),
+            mgm.Goal("Fruits_MineCenter",   7, FRUIT_BOTTOM_X      ,FRUIT_BOTTOM_Y_CENTER + TAKE_FRUITS_X_DELTA, DIRECTION_FORWARD, TakeFruits     ,   (MINE_TREE_CENTER_ANGLE,), False,    True),
+            mgm.Goal("Fruits_TheirsCenter", 7, FRUIT_BOTTOM_X      ,sym_y(FRUIT_BOTTOM_Y_CENTER) + TAKE_FRUITS_X_DELTA, DIRECTION_FORWARD, TakeFruits     , (THEIRS_TREE_CENTER_ANGLE,), False,    True),
+            mgm.Goal("Fruits_Theirs"   ,    7, FRUIT_SIDE_X_TOP    ,  sym_y(FRUIT_SIDE_Y), DIRECTION_FORWARD, TakeFruits     ,                         (THEIRS_TREE_ANGLE,), False,    True),
         )
 
         gm.add(*fruit_goals)
@@ -195,13 +203,11 @@ class TakeTorch(statemachine.State):
 
 class TakeFruits(statemachine.State):
 
-    def __init__(self, angle=0.0):
-        #self.angle = self.robot.pose.angle
-        pass
+    def __init__(self, angle):
+        self.angle = angle
 
 
     def on_enter(self):
-        self.angle = self.robot.pose.angle
         cos_angle = math.cos(self.angle)
         if abs(cos_angle) > 0.5:
             x_orientation = 1.0 if math.cos(self.angle) > 0 else -1.0
@@ -219,11 +225,13 @@ class TakeFruits(statemachine.State):
         Trigger(FRUITMOTH_ARM_OPEN, FRUITMOTH_FINGER_OPEN)
 
         self.retract_finger = True
-        x = self.robot.goal_manager.get_current_goal().x
-        y = self.robot.goal_manager.get_current_goal().y
-        increment_1 = 0.1
-        increment_2 = 0.2
-        increment_3 = 0.3
+        x = self.goal.x
+        y = self.goal.y
+        if self.robot.team == TEAM_YELLOW:
+            y = sym_y(y)
+        increment_1 = 0.2
+        increment_2 = 0.3
+        increment_3 = 0.5
         move = MoveLine([Pose(x + x_orientation * increment_1, y + y_orientation * increment_1),
                          Pose(x + x_orientation * increment_2, y + y_orientation * increment_2),
                          Pose(x + x_orientation * increment_3, y + y_orientation * increment_3)])
@@ -237,11 +245,10 @@ class TakeFruits(statemachine.State):
         #fermer la trappe
         yield Trigger(FRUITMOTH_HATCH_CLOSE)
         #standard speed
-        # yield commonstates.SpeedControl()
+        yield commonstates.SpeedControl()
 
         self.robot.fruit_tank_full = True
         self.exit_reason = GOAL_DONE
-
 
         yield None
 
