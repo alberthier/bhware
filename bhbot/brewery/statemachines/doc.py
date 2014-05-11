@@ -158,30 +158,37 @@ class TakeTorch(statemachine.State):
 
     def on_enter(self):
         flip = self.my_side
-        yield Trigger(ARM_1_SETUP, ARM_2_SETUP)
         yield Trigger(ELEVATOR_UP, FIRE_FLIPPER_OPEN)
-        elevator_levels = [ELEVATOR_LEVEL_3, ELEVATOR_LEVEL_2, ELEVATOR_LEVEL_1]
-        elevator_levels2 = [ELEVATOR_LEVEL_1, ELEVATOR_LEVEL_2, ELEVATOR_LEVEL_2]
+        elevator_take_levels = [ELEVATOR_LEVEL_3, ELEVATOR_LEVEL_2, ELEVATOR_LEVEL_1]
+        elevator_store_levels = [ELEVATOR_LEVEL_1, ELEVATOR_LEVEL_2, ELEVATOR_LEVEL_3, ELEVATOR_UP]
         for i in range(3):
             yield Trigger(ARM_1_TAKE_TORCH_FIRE, ARM_2_TAKE_TORCH_FIRE)
-            yield Trigger(PUMP_ON, elevator_levels[i])
+            yield Trigger(PUMP_ON, elevator_take_levels[i])
             yield Timer(300)
             yield Trigger(ELEVATOR_UP)
+            yield from self.arm_speed(200)
             if flip:
+                # On retourne le feu
                 yield Trigger(ARM_1_FLIP_FIRE, ARM_2_FLIP_FIRE)
                 yield Trigger(PUMP_OFF)
                 yield Timer(300)
             else:
+                # Sinon, on le stocke
                 yield Trigger(ARM_1_STORE_FIRE, ARM_2_STORE_FIRE)
-                yield Trigger(elevator_levels2[i])
+                yield Trigger(elevator_store_levels[self.robot.stored_fires])
                 yield Trigger(PUMP_OFF)
                 yield Timer(300)
                 yield Trigger(ELEVATOR_UP)
                 self.robot.stored_fires += 1
+                yield from self.arm_speed(1023)
             flip = not flip
         yield Trigger(FIRE_FLIPPER_CLOSE)
         self.exit_reason = GOAL_DONE
         yield None
+
+
+    def arm_speed(self, speed):
+        yield Trigger(makeServoSetupCommand(ARM_1, speed), makeServoSetupCommand(ARM_2, speed))
 
 
 
@@ -231,11 +238,11 @@ class TakeFruits(statemachine.State):
         yield Trigger(FRUITMOTH_HATCH_CLOSE)
         #standard speed
         # yield commonstates.SpeedControl()
-        
+
         self.robot.fruit_tank_full = True
         self.exit_reason = GOAL_DONE
 
-        
+
         yield None
 
 
@@ -244,7 +251,7 @@ class TakeFruits(statemachine.State):
             self.retract_finger = False
             Trigger(FRUITMOTH_FINGER_RETRACT)
         else:
-            Trigger(FRUITMOTH_FINGER_OPEN)            
+            Trigger(FRUITMOTH_FINGER_OPEN)
 
 
 class DumpFruits(statemachine.State):
