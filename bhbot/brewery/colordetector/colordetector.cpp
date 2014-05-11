@@ -88,7 +88,7 @@ private:
     int m_colorThreshold;
 
     ScanMethod m_scanMethod;
-    char* m_scanMethodName;
+    std::string m_scanMethodName;
     std::map<std::string, std::string> m_maskWindow;
 
     Mode m_mode;
@@ -548,12 +548,12 @@ void ColorDetector::scanHsv()
 
         if (percentage > m_colorThreshold)
         {
-            if(colors[tallyMaxIndex] == "cYELLOW")
+            if(std::strcmp(colors[tallyMaxIndex], "cYELLOW") == 0)
             {
                 sendPacketColor("COLOR_YELLOW");
             }
 
-            else if(colors[tallyMaxIndex] == "cRED")
+            else if(std::strcmp(colors[tallyMaxIndex], "cRED") == 0)
             {
                 sendPacketColor("COLOR_RED");
             }
@@ -603,18 +603,14 @@ void ColorDetector::scanHsv2()
 
         for(itRefColor=m_referenceColors.begin(); itRefColor!=m_referenceColors.end(); itRefColor++)
         {
-            float h, s, v;
             int nbPixels = 0;
 
             cv::Mat mask;
             cv::Mat mask2;
             cv::Mat kernel;
 
-            h = itRefColor->second[0];
-            s = itRefColor->second[1];
-            v = itRefColor->second[2];
+            float h = itRefColor->second[0];
 
-            int erosion_size = 1;
 
             // TODO : s tolerance is disabled, should we use a separate tolerance ?
 
@@ -726,7 +722,7 @@ void ColorDetector::scanHsv2()
 
 const char* getPixelColorType(int H, int S, int V)
 {
-    char* color;
+    const char* color;
     if (V < 20)
         color = "cBLACK";
     else if (V > 190 && S < 27)

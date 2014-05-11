@@ -1,5 +1,5 @@
 BINARY=colordetector
-CPPFLAGS+=-Wno-deprecated-writable-strings
+CPPFLAGS+=
 SOURCES=$(BINARY).cpp
 
 all: release
