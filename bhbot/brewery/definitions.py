@@ -68,7 +68,7 @@ EVENT_LOOP_TICK_RESOLUTION_S           = 0.05
 
 #Teammate collaboration
 TEAMMATE_INFO_DELAY_MS                 = 1000 #Time between two position information sent to teammate
-TEAMMATE_POSITION_IN_MAP               = False
+TEAMMATE_POSITION_IN_MAP               = True
 
 # Remote device connection
 if IS_HOST_DEVICE_ARM:

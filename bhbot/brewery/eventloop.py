@@ -16,7 +16,6 @@ import termios
 import asyncwsgiserver
 import builder
 import graphmap
-import interbot
 import leds
 import logger
 import packets
@@ -382,8 +381,8 @@ class InterbotServer(asyncore.dispatcher):
 
 
     def handle_accepted(self, sock, addr):
-        self.event_loop.interbot_manager.on_connect()
         self.event_loop.interbot_channel = InterbotControlChannel(self.event_loop, "IBT", sock)
+        self.event_loop.send_packet(packets.InterbotConnected())
 
 
 
@@ -392,12 +391,12 @@ class InterbotControlChannel(PacketClientSocketChannel):
 
     def handle_connect(self):
         super().handle_connect()
-        self.event_loop.interbot_manager.on_connect()
+        self.event_loop.send_packet(packets.InterbotConnected())
 
 
     def handle_close(self):
         super().handle_close()
-        self.event_loop.interbot_manager.on_disconnect()
+        self.event_loop.send_packet(packets.InterbotDisconnected())
 
 
 
@@ -463,7 +462,6 @@ class EventLoop(object):
         self.fsms = []
         self.state_machine_name = state_machine_name
         self.webserver_port = webserver_port
-        self.interbot_manager = interbot.InterBotManager(self)
         self.stopping = False
         self.is_match_started = False
         self.map = graphmap.Map(self)
@@ -520,7 +518,6 @@ class EventLoop(object):
         while self.packet_queue:
             packet, sender = self.packet_queue.pop()
             packet.dispatch(self.robot)
-            packet.dispatch(self.interbot_manager)
             packet.dispatch(self.map)
             for fsm in self.fsms:
                 # avoid sending internal packets to the emitter, only other FSMs will receive the packet
@@ -550,7 +547,7 @@ class EventLoop(object):
             return
         elif packet.TYPE < packets.INTERNAL_RANGE_END:
             # add the packet to send to the list of packets to dispatch
-            logger.log_packet(packet, "ARM:" + str(sender.name))
+            logger.log_packet(packet, "ARM" + (":" + sender.name if sender is not None else ""))
             self.packet_queue.appendleft((packet, sender))
             Timer(self, 0, self.process_packets_and_dispatch).start()
 

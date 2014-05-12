@@ -19,7 +19,7 @@ class Robot(object):
         self.pose = position.Pose(0.0, 0.0, 0.0)
         self._team = TEAM_UNKNOWN
         self.event_loop = event_loop
-        self.moving = False
+        self.destination = None
         self.main_opponent_direction = None
         self.secondary_opponent_direction = None
         self.goal_manager = goalmanager.GoalManager(event_loop)
@@ -51,12 +51,8 @@ class Robot(object):
         self.team = packet.team
 
 
-    def on_goto_started(self, packet):
-        self.moving = True
-
-
     def on_goto_finished(self, packet):
-        self.moving = False
+        self.destination = None
         self.pose = packet.current_pose
 
 

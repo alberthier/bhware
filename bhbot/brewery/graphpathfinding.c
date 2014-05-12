@@ -334,6 +334,8 @@ static Zone* zone_new(int id, PyObject* points_list)
         float x = 0.0;
         float y = 0.0;
         if (!PyArg_ParseTuple(item, "ff", &x, &y)) {
+            Py_DECREF(item);
+            Py_DECREF(iterator);
             return NULL;
         }
         self->nodes[self->nodes_count++] = node_new(x, y);
@@ -351,6 +353,35 @@ static void zone_free(Zone* self)
     free(self->edges);
     free(self->nodes);
     free(self);
+}
+
+
+static PyObject* zone_update(Zone* self, PyObject* points_list)
+{
+    int i = 0;
+    int points_count = PySequence_Length(points_list);
+    PyObject* iterator = PyObject_GetIter(points_list);
+    PyObject* item = NULL;
+
+    if (points_count != self->nodes_count) {
+        PyErr_SetString(PyExc_RuntimeError, "Unable to update the zone. points count don't match.");
+        return NULL;
+    }
+
+    while ((item = PyIter_Next(iterator))) {
+        Node* node = self->nodes[i];
+        if (!PyArg_ParseTuple(item, "ff", &node->x, &node->y)) {
+            Py_DECREF(item);
+            Py_DECREF(iterator);
+            return NULL;
+        }
+        Py_DECREF(item);
+        ++i;
+    }
+
+    Py_DECREF(iterator);
+
+    Py_RETURN_NONE;
 }
 
 
@@ -543,6 +574,24 @@ static PyObject* pathfinder_move_zone(PathFinder* self, PyObject* args)
         Zone* zone = self->zones[id];
         zone->dx += dx;
         zone->dy += dy;
+    }
+
+    Py_RETURN_NONE;
+}
+
+
+static PyObject* pathfinder_update_zone(PathFinder* self, PyObject* args)
+{
+    int id = 0;
+    PyObject* points_list = NULL;
+
+    if (!PyArg_ParseTuple(args, "iO", &id, &points_list)) {
+        return NULL;
+    }
+
+    if (id >= 0 && id < self->zones_count) {
+        Zone* zone = self->zones[id];
+        return zone_update(zone, points_list);
     }
 
     Py_RETURN_NONE;
@@ -810,12 +859,13 @@ static PyObject* pathfinder_find_path(PathFinder* self, PyObject* args)
 
 /* Object methods */
 static PyMethodDef PathFinder_methods[] = {
-    { "add_zone"                         , (PyCFunction) pathfinder_add_zone                         , METH_VARARGS, "Add a zone. Takes a list of points (x, y) as argument" },
-    { "enable_zone"                      , (PyCFunction) pathfinder_enable_zone                      , METH_VARARGS, "Enables/disables a zone identified by id" },
-    { "move_zone"                        , (PyCFunction) pathfinder_move_zone                        , METH_VARARGS, "Moves the zone identified by id of (dx, dy)" },
+    { "add_zone"                         , (PyCFunction) pathfinder_add_zone                         , METH_VARARGS, "Add a zone. Takes a list of points (x, y) as argument"    },
+    { "enable_zone"                      , (PyCFunction) pathfinder_enable_zone                      , METH_VARARGS, "Enables/disables a zone identified by id"                 },
+    { "move_zone"                        , (PyCFunction) pathfinder_move_zone                        , METH_VARARGS, "Moves the zone identified by id of (dx, dy)"              },
+    { "update_zone"                      , (PyCFunction) pathfinder_update_zone                      , METH_VARARGS, "Update the zone identified by id"                         },
     { "field_config_done"                , (PyCFunction) pathfinder_field_config_done                , METH_NOARGS , "Field config done. prepare data for pathfinding requests" },
-    { "get_edges"                        , (PyCFunction) pathfinder_get_edges                        , METH_NOARGS , "returns the list of edges [x1, y1, x2, y2, ...]" },
-    { "find_path"                        , (PyCFunction) pathfinder_find_path                        , METH_VARARGS, "Finds a path from (x1, y1) to (x2, y2)" },
+    { "get_edges"                        , (PyCFunction) pathfinder_get_edges                        , METH_NOARGS , "returns the list of edges [x1, y1, x2, y2, ...]"          },
+    { "find_path"                        , (PyCFunction) pathfinder_find_path                        , METH_VARARGS, "Finds a path from (x1, y1) to (x2, y2)"                   },
     {NULL}  /* Sentinel */
 };
 

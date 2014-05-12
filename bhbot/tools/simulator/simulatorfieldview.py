@@ -457,6 +457,17 @@ class GraphRoutingLayer(fieldview.Layer):
 
 
     def on_simulator_add_graph_map_zone(self, packet):
+        if packet.id in self.zones:
+            item = self.zones[packet.id]
+        else:
+            item = QGraphicsPathItem()
+            item.setPen(QPen(QBrush(), 0))
+            brush_color = QColor("#fa0000")
+            brush_color.setAlpha(32)
+            item.setBrush(brush_color)
+            self.zones[packet.id] = item
+            self.addToGroup(item)
+
         path = QPainterPath()
         i = iter(packet.points)
         y = next(i) * 1000.0
@@ -470,13 +481,7 @@ class GraphRoutingLayer(fieldview.Layer):
             except StopIteration:
                 break;
         path.closeSubpath()
-        item = QGraphicsPathItem(path)
-        item.setPen(QPen(QBrush(), 0))
-        brush_color = QColor("#fa0000")
-        brush_color.setAlpha(32)
-        item.setBrush(brush_color)
-        self.zones[packet.id] = item
-        self.addToGroup(item)
+        item.setPath(path)
 
 
     def on_simulator_enable_graph_map_zone(self, packet):

@@ -49,6 +49,7 @@ class FruitDepositGoal(mgm.Goal):
 class Main(statemachine.State):
 
     def on_enter(self):
+        statemachine.StateMachine(self.event_loop, "interbot")
         statemachine.StateMachine(self.event_loop, "opponentdetector", opponent_type = OPPONENT_ROBOT_MAIN)
         statemachine.StateMachine(self.event_loop, "opponentdetector", opponent_type = OPPONENT_ROBOT_SECONDARY)
         statemachine.StateMachine(self.event_loop, "relaytoggler")

@@ -148,7 +148,7 @@ def log_packet(packet, sender = "ARM"):
             log_file.flush()
         except:
             pass
-    ignore |= type(packet).__name__ in [ "InterbotPosition", "KeepAlive" ]
+    ignore |= type(packet).__name__ in [ "KeepAlive" ]
     if not ignore and not type(packet).__name__.startswith("Simulator"):
         try:
             sys.stdout.write("[" + text + "\n")

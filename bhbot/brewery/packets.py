@@ -622,7 +622,9 @@ class InterbotPosition(BasePacket):
     TYPE = 201
 
     DEFINITION = (
-        ('pose', Pose("Other robot pose")),
+        ('pose',        Pose("Other robot pose")),
+        ('is_moving',   Bool(False, "Is the robot moving or not")),
+        ('destination', Pose("Other robot destination")),
     )
 
 
@@ -641,9 +643,23 @@ class InterbotGoalStatus(BasePacket):
 # Internal
 
 
-class OpponentPosition(BasePacket):
+class InterbotConnected(BasePacket):
 
     TYPE = 230
+
+
+
+
+class InterbotDisconnected(BasePacket):
+
+    TYPE = 231
+
+
+
+
+class OpponentPosition(BasePacket):
+
+    TYPE = 232
 
     DEFINITION = (
         ('robot'    , UEnum8(OPPONENT_ROBOT, OPPONENT_ROBOT_MAIN)),
@@ -657,7 +673,7 @@ class OpponentPosition(BasePacket):
 
 class OpponentDetected(BasePacket):
 
-    TYPE = 231
+    TYPE = 233
 
     DEFINITION = (
         ('robot'    , UEnum8(OPPONENT_ROBOT, OPPONENT_ROBOT_MAIN)),
@@ -671,7 +687,7 @@ class OpponentDetected(BasePacket):
 
 class OpponentDisappeared(BasePacket):
 
-    TYPE = 232
+    TYPE = 234
 
     DEFINITION = (
         ('robot'    , UEnum8(OPPONENT_ROBOT, OPPONENT_ROBOT_MAIN)),
@@ -683,7 +699,7 @@ class OpponentDisappeared(BasePacket):
 
 class RelayToggle(BasePacket):
 
-    TYPE = 233
+    TYPE = 235
 
     DEFINITION = (
         ('id'          , UInt8 (0, "Relay ID")),

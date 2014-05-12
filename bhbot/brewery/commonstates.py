@@ -87,6 +87,7 @@ class Timer(statemachine.State):
     def on_timer_tick(self):
         if self.end_time is not None and datetime.datetime.now() > self.end_time:
             self.return_value = Timer.TIMEOUT
+            self.restart()
             return self.on_timeout()
 
 
@@ -361,6 +362,10 @@ class AbstractMove(statemachine.State):
                 self.current_opponent = OPPONENT_ROBOT_SECONDARY
             yield from self.handle_opponent_detected(None)
         else:
+            # Ugly hack to intercept the destination point
+            if hasattr(self.packet, "points"):
+                dest = self.packet.points[-1]
+                self.robot.destination = position.Pose(dest.x, dest.y, 0.0)
             self.send_packet(self.packet)
 
 

@@ -1,14 +1,15 @@
 # encoding: utf-8
 
-import sys
-import itertools
-
-import packets
-import builder
-import logger
-import position
-import math
 import datetime
+import itertools
+import sys
+
+import builder
+import eventloop
+import logger
+import math
+import packets
+import position
 
 from definitions import *
 
@@ -21,8 +22,6 @@ class ZoneData:
         self.id = id
         self.is_detected = False
         self.is_enabled = True
-        self.x = 0.0
-        self.y = 0.0
 
 
 
@@ -34,6 +33,7 @@ class Map:
         self.build_module()
         import graphpathfinding
         self.pathfinder = graphpathfinding.PathFinder(ROBOT_GYRATION_RADIUS, ROBOT_GYRATION_RADIUS, FIELD_X_SIZE - ROBOT_GYRATION_RADIUS, FIELD_Y_SIZE - ROBOT_GYRATION_RADIUS)
+        self.teammate_zone_timer = eventloop.Timer(self.event_loop, TEAMMATE_INFO_DELAY_MS * 2, self.disable_teammate_zone)
 
 
     def on_device_ready(self, packet):
@@ -42,10 +42,7 @@ class Map:
 
         self.main_opponent_zone = self.add_zone(self.create_circular_coords(0.0, 0.0, 0.130 + ROBOT_GYRATION_RADIUS))
         self.secondary_opponent_zone = self.add_zone(self.create_circular_coords(0.0, 0.0, 0.080 + ROBOT_GYRATION_RADIUS))
-        if IS_MAIN_ROBOT:
-            self.teammate_zone = self.add_zone(self.create_circular_coords(0.0, 0.0, 0.080 + ROBOT_GYRATION_RADIUS))
-        else:
-            self.teammate_zone = self.add_zone(self.create_circular_coords(0.0, 0.0, 0.130 + ROBOT_GYRATION_RADIUS))
+        self.teammate_zone = self.add_zone(self.create_segment_coords(0.0, 0.0, 0.0, 0.0, self.get_teammate_radius()))
 
         # Add Field obstacles
         offset = ROBOT_GYRATION_RADIUS
@@ -78,6 +75,14 @@ class Map:
         self.enable_zone(self.teammate_zone, False)
 
 
+    def get_teammate_radius(self):
+        if IS_MAIN_ROBOT:
+            return 0.080 + ROBOT_GYRATION_RADIUS
+        else:
+            return 0.130 + ROBOT_GYRATION_RADIUS
+
+
+
     def create_quarter_coords(self, x, y, radius):
         coords = [(x, y)]
         npoints = 4
@@ -100,6 +105,23 @@ class Map:
         return coords
 
 
+    def create_segment_coords(self, x1, y1, x2, y2, radius):
+        coords = []
+        npoints = 4
+        angle = math.atan2(y2 - y1, x2 - x1)
+        for i in range(npoints):
+            a = float(i) * math.pi / float(npoints - 1) + angle
+            cx = math.cos(a) * radius
+            cy = math.sin(a) * radius
+            coords.append((x1 + cx, y1 + cy))
+        for i in range(npoints):
+            a = float(i) * math.pi / float(npoints - 1) + math.pi + angle
+            cx = math.cos(a) * radius
+            cy = math.sin(a) * radius
+            coords.append((x2 + cx, y2 + cy))
+        return coords
+
+
     def create_rect_coords(self, x, y, width, height):
         return [(x, y),
                 (x + width, y),
@@ -113,6 +135,13 @@ class Map:
             flattened_coords = list(itertools.chain.from_iterable(coords))
             self.event_loop.send_packet(packets.SimulatorAddGraphMapZone(id = id, points = flattened_coords))
         return ZoneData(id)
+
+
+    def update_zone(self, zone, coords):
+        self.pathfinder.update_zone(zone.id, coords)
+        if IS_HOST_DEVICE_PC:
+            flattened_coords = list(itertools.chain.from_iterable(coords))
+            self.event_loop.send_packet(packets.SimulatorAddGraphMapZone(id = zone.id, points = flattened_coords))
 
 
     def enable_zone(self, zone, enabled):
@@ -222,11 +251,13 @@ class Map:
         :type packet: packets.InterbotPosition
         """
         if TEAMMATE_POSITION_IN_MAP:
+            if packet.is_moving:
+                coords = self.create_segment_coords(packet.pose.x, packet.pose.y, packet.destination.x, packet.destination.y, self.get_teammate_radius())
+            else:
+                coords = self.create_segment_coords(packet.pose.x, packet.pose.y, packet.pose.x, packet.pose.y, self.get_teammate_radius())
             self.enable_zone(self.teammate_zone, True)
-            dx = packet.pose.x - self.teammate_zone.x
-            dy = packet.pose.y - self.teammate_zone.y
-            self.teammate_zone.x = packet.pose.x
-            self.teammate_zone.y = packet.pose.y
-            if abs(dx) > 0.01 or abs(dy) > 0.01:
-                # logger.log("Move team mate zone dx={} dy={}".format(dx,dy))
-                self.move_zone(self.teammate_zone.id, dx, dy)
+            self.update_zone(self.teammate_zone, coords)
+
+
+    def disable_teammate_zone(self):
+        self.enable_zone(self.teammate_zone, False)
