@@ -611,7 +611,6 @@ void ColorDetector::scanHsv2()
 
             float h = itRefColor->second[0];
 
-
             // TODO : s tolerance is disabled, should we use a separate tolerance ?
 
             if(h - m_currentTolerance > 0)
@@ -646,6 +645,7 @@ void ColorDetector::scanHsv2()
             }
 
             // TODO : erode + dilate picture
+            // int erosion_size = 1;
 
             // Create kernels for the morphological operation
             //kernel = cv::CreateStructuringElementEx(5, 5, 2, 2, CV_SHAPE_ELLIPSE);
