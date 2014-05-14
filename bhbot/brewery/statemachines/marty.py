@@ -28,20 +28,22 @@ class Main(statemachine.State):
     def on_device_ready(self, packet):
         gm = self.robot.goal_manager
 
-        #                      |       ID       |Weight|                X                    |                     Y                     |     Direction    |     State     | Ctor parameters  |Shared|Navigate|
-        gm.add(goalmanager.Goal("BorderFireW"   ,     1,                                  0.8,                      ROBOT_CENTER_X + 0.03, DIRECTION_FORWARD, PullBorderFire, (-math.pi / 2.0,), False,    True))
-        gm.add(goalmanager.Goal("BorderFireSW"  ,     5, FIELD_X_SIZE - ROBOT_CENTER_X - 0.03,                                        1.3, DIRECTION_FORWARD, PushBorderFire,            (0.0,), False,    True))
-        gm.add(goalmanager.Goal("BorderFireSE"  ,     5,                                  0.8,       FIELD_Y_SIZE - ROBOT_CENTER_X - 0.03, DIRECTION_FORWARD, PullBorderFire,            (0.0,), False,    True))
-        gm.add(goalmanager.Goal("BorderFireE"   ,     5, FIELD_X_SIZE - ROBOT_CENTER_X - 0.03,                         FIELD_Y_SIZE - 1.3, DIRECTION_FORWARD, PushBorderFire,  (math.pi / 2.0,), False,    True))
-        gm.add(goalmanager.Goal("FieldFireW"    ,    10,          1.1 - ROBOT_CENTER_X - 0.03,                                        0.4, DIRECTION_FORWARD, PushFieldFire ,            (0.0,), False,    True))
-        gm.add(goalmanager.Goal("FieldFireW"    ,    10,          1.1 + ROBOT_CENTER_X + 0.03,                                        0.4, DIRECTION_FORWARD, PullFieldFire ,        (math.pi,), False,    True))
-        gm.add(goalmanager.Goal("FieldFireSW"   ,    10,                                  1.6,                0.9 - ROBOT_CENTER_X - 0.03, DIRECTION_FORWARD, PullFieldFire ,  (math.pi / 0.2,), False,    True))
-        gm.add(goalmanager.Goal("FieldFireSW"   ,    10,                                  1.6,                0.9 + ROBOT_CENTER_X + 0.03, DIRECTION_FORWARD, PushFieldFire , (-math.pi / 2.0,), False,    True))
-        gm.add(goalmanager.Goal("FieldFireE"    ,    10,          1.1 - ROBOT_CENTER_X - 0.03,                         FIELD_Y_SIZE - 0.4, DIRECTION_FORWARD, PullFieldFire ,            (0.0,), False,    True))
-        gm.add(goalmanager.Goal("FieldFireE"    ,    10,          1.1 + ROBOT_CENTER_X + 0.03,                         FIELD_Y_SIZE - 0.4, DIRECTION_FORWARD, PushFieldFire ,        (math.pi,), False,    True))
-        gm.add(goalmanager.Goal("FieldFireSE"   ,    10,                                  1.6, FIELD_Y_SIZE - 0.9 - ROBOT_CENTER_X - 0.03, DIRECTION_FORWARD, PullFieldFire ,  (math.pi / 0.2,), False,    True))
-        gm.add(goalmanager.Goal("FieldFireSE"   ,    10,                                  1.6, FIELD_Y_SIZE - 0.9 + ROBOT_CENTER_X + 0.03, DIRECTION_FORWARD, PushFieldFire , (-math.pi / 2.0,), False,    True))
-        gm.add(goalmanager.Goal("HuntTheMammoth",    15,   0.3 + ROBOT_GYRATION_RADIUS + 0.03,                                       2.25, DIRECTION_FORWARD, HuntTheMammoth,              None, False,    True))
+        border_fire_dist = 0.15
+
+        #                      |       ID       |Weight|                            X                    |                           Y                     |     Direction    |     State     | Ctor parameters  |Shared|Navigate|
+        gm.add(goalmanager.Goal("BorderFireW"   ,     1,                                              0.8,                ROBOT_CENTER_X + border_fire_dist, DIRECTION_FORWARD, PullBorderFire, (-math.pi / 2.0,), False,    True))
+        gm.add(goalmanager.Goal("BorderFireSW"  ,     5, FIELD_X_SIZE - ROBOT_CENTER_X - border_fire_dist,                                              1.3, DIRECTION_FORWARD, PushBorderFire,            (0.0,), False,    True))
+        gm.add(goalmanager.Goal("BorderFireSE"  ,     5,                                              0.8, FIELD_Y_SIZE - ROBOT_CENTER_X - border_fire_dist, DIRECTION_FORWARD, PullBorderFire,  (math.pi / 2.0,), False,    True))
+        gm.add(goalmanager.Goal("BorderFireE"   ,     5, FIELD_X_SIZE - ROBOT_CENTER_X - border_fire_dist,                               FIELD_Y_SIZE - 1.3, DIRECTION_FORWARD, PushBorderFire,            (0.0,), False,    True))
+        gm.add(goalmanager.Goal("FieldFireW"    ,    10,                      1.1 - ROBOT_CENTER_X - 0.03,                                              0.4, DIRECTION_FORWARD, PushFieldFire ,            (0.0,), False,    True))
+        gm.add(goalmanager.Goal("FieldFireW"    ,    10,                      1.1 + ROBOT_CENTER_X + 0.03,                                              0.4, DIRECTION_FORWARD, PullFieldFire ,        (math.pi,), False,    True))
+        gm.add(goalmanager.Goal("FieldFireSW"   ,    10,                                              1.6,                      0.9 - ROBOT_CENTER_X - 0.03, DIRECTION_FORWARD, PullFieldFire ,  (math.pi / 0.2,), False,    True))
+        gm.add(goalmanager.Goal("FieldFireSW"   ,    10,                                              1.6,                      0.9 + ROBOT_CENTER_X + 0.03, DIRECTION_FORWARD, PushFieldFire , (-math.pi / 2.0,), False,    True))
+        gm.add(goalmanager.Goal("FieldFireE"    ,    10,                      1.1 - ROBOT_CENTER_X - 0.03,                               FIELD_Y_SIZE - 0.4, DIRECTION_FORWARD, PullFieldFire ,            (0.0,), False,    True))
+        gm.add(goalmanager.Goal("FieldFireE"    ,    10,                      1.1 + ROBOT_CENTER_X + 0.03,                               FIELD_Y_SIZE - 0.4, DIRECTION_FORWARD, PushFieldFire ,        (math.pi,), False,    True))
+        gm.add(goalmanager.Goal("FieldFireSE"   ,    10,                                              1.6,       FIELD_Y_SIZE - 0.9 - ROBOT_CENTER_X - 0.03, DIRECTION_FORWARD, PullFieldFire ,  (math.pi / 0.2,), False,    True))
+        gm.add(goalmanager.Goal("FieldFireSE"   ,    10,                                              1.6,       FIELD_Y_SIZE - 0.9 + ROBOT_CENTER_X + 0.03, DIRECTION_FORWARD, PushFieldFire , (-math.pi / 2.0,), False,    True))
+        gm.add(goalmanager.Goal("HuntTheMammoth",    15,               0.3 + ROBOT_GYRATION_RADIUS + 0.03,                                             2.25, DIRECTION_FORWARD, HuntTheMammoth,              None, False,    True))
 
         yield AntiBlocking(True)
         yield Trigger(FIRE_FLIPPER_CLOSE)
@@ -103,10 +105,15 @@ class PushBorderFire(statemachine.State):
 
 
     def on_enter(self):
+        dist = 0.18
+        goal = self.robot.goal_manager.get_current_goal()
+        fx = goal.x + math.cos(self.angle) * dist
+        fy = goal.y + math.sin(self.angle) * dist
         yield RotateTo(self.angle)
-        yield Trigger(FIRE_FLIPPER_OPEN)
-        yield MoveLineRelative(0.05)
-        yield MoveLineRelative(0.05, DIRECTION_BACKWARDS)
+        yield Trigger(makeServoMoveCommand(FIRE_FLIPPER, 60))
+        yield MoveLineTo(fx, fy)
+        yield Trigger(makeServoMoveCommand(FIRE_FLIPPER, 40))
+        yield MoveLineTo(goal.x, goal.y, DIRECTION_BACKWARDS)
         yield Trigger(FIRE_FLIPPER_CLOSE)
         self.exit_reason = GOAL_DONE
         yield None
@@ -121,10 +128,15 @@ class PullBorderFire(statemachine.State):
 
 
     def on_enter(self):
+        dist = 0.18
+        goal = self.robot.goal_manager.get_current_goal()
+        fx = goal.x + math.cos(self.angle) * dist
+        fy = goal.y + math.sin(self.angle) * dist
         yield RotateTo(self.angle)
-        yield MoveLineRelative(0.05)
-        yield Trigger(FIRE_FLIPPER_OPEN)
-        yield MoveLineRelative(0.05, DIRECTION_BACKWARDS)
+        yield Trigger(FIRE_FLIPPER_CLOSE)
+        yield MoveLineTo(fx, fy)
+        yield Trigger(makeServoMoveCommand(FIRE_FLIPPER, 50))
+        yield MoveLineTo(goal.x, goal.y, DIRECTION_BACKWARDS)
         yield Trigger(FIRE_FLIPPER_CLOSE)
         self.exit_reason = GOAL_DONE
         yield None
