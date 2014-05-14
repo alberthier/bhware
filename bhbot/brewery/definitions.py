@@ -281,8 +281,8 @@ ARM_2_CLOSE           = makeServoMoveCommand (ARM_2,      80)
 DEFAULT_AX_SERVOS_TIMEOUT_MS = DEFAULT_SERVOS_TIMEOUT_MS
 # name                    actuator type          id angle timeout
 FIRE_FLIPPER             = (ACTUATOR_TYPE_SERVO_AX, 12, DEFAULT_AX_SERVOS_TIMEOUT_MS)
-FIRE_FLIPPER_OPEN        = makeServoMoveCommand(FIRE_FLIPPER,     290) # ID: OK - ANGLE : OK
-FIRE_FLIPPER_CLOSE       = makeServoMoveCommand(FIRE_FLIPPER,     190) # ID: OK - ANGLE : OK
+FIRE_FLIPPER_OPEN        = makeServoMoveCommand(FIRE_FLIPPER,      55) # ID: OK - ANGLE : OK
+FIRE_FLIPPER_CLOSE       = makeServoMoveCommand(FIRE_FLIPPER,     180) # ID: OK - ANGLE : OK
 TORCH_GUIDE              = (ACTUATOR_TYPE_SERVO_AX,  1, DEFAULT_AX_SERVOS_TIMEOUT_MS)
 TORCH_GUIDE_OPEN         = makeServoMoveCommand(TORCH_GUIDE,      205)
 TORCH_GUIDE_CLOSE        = makeServoMoveCommand(TORCH_GUIDE,      155)
