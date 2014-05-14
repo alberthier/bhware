@@ -77,9 +77,9 @@ class Map:
 
     def get_teammate_radius(self):
         if IS_MAIN_ROBOT:
-            return 0.080 + ROBOT_GYRATION_RADIUS
+            return 0.080 + SECONDARY_ROBOT_GYRATION_RADIUS
         else:
-            return 0.130 + ROBOT_GYRATION_RADIUS
+            return 0.080 + MAIN_ROBOT_GYRATION_RADIUS
 
 
 
@@ -107,15 +107,15 @@ class Map:
 
     def create_segment_coords(self, x1, y1, x2, y2, radius):
         coords = []
-        npoints = 4
-        angle = math.atan2(y2 - y1, x2 - x1)
+        npoints = 4 
+        angle = math.atan2(y2 - y1, x2 - x1) 
         for i in range(npoints):
-            a = float(i) * math.pi / float(npoints - 1) + angle
+            a = float(i) * math.pi / float(npoints - 1) + math.pi / 2.0 + angle
             cx = math.cos(a) * radius
             cy = math.sin(a) * radius
             coords.append((x1 + cx, y1 + cy))
         for i in range(npoints):
-            a = float(i) * math.pi / float(npoints - 1) + math.pi + angle
+            a = float(i) * math.pi / float(npoints - 1) - math.pi / 2.0 + angle
             cx = math.cos(a) * radius
             cy = math.sin(a) * radius
             coords.append((x2 + cx, y2 + cy))
@@ -261,3 +261,4 @@ class Map:
 
     def disable_teammate_zone(self):
         self.enable_zone(self.teammate_zone, False)
+

@@ -52,7 +52,6 @@ class Robot(object):
 
 
     def on_goto_finished(self, packet):
-        self.destination = None
         self.pose = packet.current_pose
 
 

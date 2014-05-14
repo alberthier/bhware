@@ -67,7 +67,7 @@ KEEP_ALIVE_MINIMUM_AGE_S               = (KEEP_ALIVE_DELAY_MS * 4.0 / 5.0) / 100
 EVENT_LOOP_TICK_RESOLUTION_S           = 0.05
 
 #Teammate collaboration
-TEAMMATE_INFO_DELAY_MS                 = 1000 #Time between two position information sent to teammate
+TEAMMATE_INFO_DELAY_MS                 = 250 #Time between two position information sent to teammate
 TEAMMATE_POSITION_IN_MAP               = True
 
 # Remote device connection

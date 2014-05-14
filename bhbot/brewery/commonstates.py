@@ -362,10 +362,6 @@ class AbstractMove(statemachine.State):
                 self.current_opponent = OPPONENT_ROBOT_SECONDARY
             yield from self.handle_opponent_detected(None)
         else:
-            # Ugly hack to intercept the destination point
-            if hasattr(self.packet, "points"):
-                dest = self.packet.points[-1]
-                self.robot.destination = position.Pose(dest.x, dest.y, 0.0)
             self.send_packet(self.packet)
 
 
@@ -571,6 +567,8 @@ class FollowPath(statemachine.State):
 
     def on_enter(self):
         move = self.chained
+        dest = self.path[-1]
+        self.robot.destination = position.Pose(dest.x, dest.y, 0.0)
         for pose in self.path:
             if self.direction == DIRECTION_FORWARD:
                 if not self.robot.is_looking_at(pose):
@@ -579,6 +577,7 @@ class FollowPath(statemachine.State):
                 if not self.robot.is_looking_at_opposite(pose):
                     move = yield LookAtOpposite(pose.virt.x, pose.virt.y, DIRECTION_FORWARD, move)
             move = yield MoveLine([pose], self.direction, move)
+        self.robot.destination = None
         self.exit_reason = move.exit_reason
         yield None
 
