@@ -300,7 +300,7 @@ class SuperTakeFruitsMovement(statemachine.State):
 
 
     def on_enter(self):
-        move = MoveCurve(path)
+        move = MoveCurve(None, path, DIRECTION_FORWARD, None, False) # Use non virtual coordinates
         move.on_waypoint_reached = self.on_waypoint_reached
         yield move
         yield None
