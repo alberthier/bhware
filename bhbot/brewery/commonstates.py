@@ -412,9 +412,9 @@ class AbstractMove(statemachine.State):
 
 class RotateTo(AbstractMove):
 
-    def __init__(self, angle, direction = DIRECTION_FORWARD, chained = None):
+    def __init__(self, angle, direction = DIRECTION_FORWARD, chained = None, virtual = True):
         super().__init__(chained, NO_OPPONENT_HANDLING)
-        pose = position.Pose(0.0, 0.0, angle, True)
+        pose = position.Pose(0.0, 0.0, angle, virtual)
         self.packet = packets.Rotate(direction = direction, angle = pose.angle)
 
 
@@ -422,9 +422,9 @@ class RotateTo(AbstractMove):
 
 class LookAt(AbstractMove):
 
-    def __init__(self, x, y, direction = DIRECTION_FORWARD, chained = None):
+    def __init__(self, x, y, direction = DIRECTION_FORWARD, chained = None, virtual = True):
         super().__init__(chained, NO_OPPONENT_HANDLING)
-        self.pose = position.Pose(x, y, None, True)
+        self.pose = position.Pose(x, y, None, virtual)
         self.direction = direction
 
 
@@ -441,9 +441,9 @@ class LookAt(AbstractMove):
 
 class LookAtOpposite(AbstractMove):
 
-    def __init__(self, x, y, direction = DIRECTION_FORWARD, chained = None):
+    def __init__(self, x, y, direction = DIRECTION_FORWARD, chained = None, virtual = True):
         super().__init__(chained, NO_OPPONENT_HANDLING)
-        self.pose = position.Pose(x, y, None, True)
+        self.pose = position.Pose(x, y, None, virtual)
         self.direction = direction
 
 
@@ -460,13 +460,13 @@ class LookAtOpposite(AbstractMove):
 
 class MoveCurve(AbstractMove):
 
-    def __init__(self, angle, points, direction = DIRECTION_FORWARD, chained = None, opponent_handling_config = OPPONENT_HANDLING):
+    def __init__(self, angle, points, direction = DIRECTION_FORWARD, chained = None, virtual = True, opponent_handling_config = OPPONENT_HANDLING):
         super().__init__(chained, opponent_handling_config)
-        apose = position.Pose(0.0, 0.0, angle, True)
+        apose = position.Pose(0.0, 0.0, angle, virtual)
         poses = []
         for pt in points:
             if isinstance(pt, tuple):
-                poses.append(position.Pose(pt[0], pt[1], None, True))
+                poses.append(position.Pose(pt[0], pt[1], None, virtual))
             else:
                 poses.append(pt)
         self.packet = packets.MoveCurve(direction = direction, angle = apose.angle, points = poses)
@@ -476,20 +476,20 @@ class MoveCurve(AbstractMove):
 
 class MoveCurveTo(MoveCurve):
 
-    def __init__(self, angle, pose, direction = DIRECTION_FORWARD, chained = None, opponent_handling_config = OPPONENT_HANDLING):
-        super().__init__(angle, [pose], direction, chained, opponent_handling)
+    def __init__(self, angle, pose, direction = DIRECTION_FORWARD, chained = None, virtual = True, opponent_handling_config = OPPONENT_HANDLING):
+        super().__init__(angle, [pose], direction, chained, virtual, opponent_handling)
 
 
 
 
 class MoveLine(AbstractMove):
 
-    def __init__(self, points, direction = DIRECTION_FORWARD, chained = None, opponent_handling_config = OPPONENT_HANDLING):
+    def __init__(self, points, direction = DIRECTION_FORWARD, chained = None, virtual = True, opponent_handling_config = OPPONENT_HANDLING):
         super().__init__(chained, opponent_handling_config)
         poses = []
         for pt in points:
             if type(pt) == tuple:
-                poses.append(position.Pose(pt[0], pt[1], None, True))
+                poses.append(position.Pose(pt[0], pt[1], None, virtual))
             else:
                 poses.append(pt)
         self.packet = packets.MoveLine(direction = direction, points = poses)
@@ -499,8 +499,8 @@ class MoveLine(AbstractMove):
 
 class MoveLineTo(MoveLine):
 
-    def __init__(self, x, y, direction = DIRECTION_FORWARD, chained = None, opponent_handling_config = OPPONENT_HANDLING):
-        super().__init__([position.Pose(x, y, None, True)], direction, chained, opponent_handling_config)
+    def __init__(self, x, y, direction = DIRECTION_FORWARD, chained = None, virtual = True, opponent_handling_config = OPPONENT_HANDLING):
+        super().__init__([position.Pose(x, y, None, virtual)], direction, chained, virtual, opponent_handling_config)
 
 
 
@@ -543,12 +543,12 @@ class RotateRelative(statemachine.State):
 
 class MoveArc(AbstractMove):
 
-    def __init__(self, center_x, center_y, radius, points, direction = DIRECTION_FORWARD, chained = None, opponent_handling_config = OPPONENT_HANDLING):
+    def __init__(self, center_x, center_y, radius, points, direction = DIRECTION_FORWARD, chained = None, virtual = True, opponent_handling_config = OPPONENT_HANDLING):
         AbstractMove.__init__(self, chained, opponent_handling_config)
-        cpose = position.Pose(center_x, center_y, None, True)
+        cpose = position.Pose(center_x, center_y, None, virtual)
         angles = []
         for a in points:
-            apose = position.Pose(0.0, 0.0, a, True)
+            apose = position.Pose(0.0, 0.0, a, virtual)
             angles.append(apose.angle)
         self.packet = packets.MoveArc(direction = direction, center = cpose, radius = radius, points = angles)
 
