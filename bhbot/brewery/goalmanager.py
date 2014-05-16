@@ -36,6 +36,7 @@ class Goal:
         self.last_try = None
         self.goal_manager = None
         self.is_current = False
+        self.is_blacklisted = False
 
 
     def increment_trials(self):
@@ -104,6 +105,56 @@ class GoalManager:
 
     def has_available_goal(self, identifier):
         return any((g.is_available() for g in self.all_goals if g.identifier == identifier))
+
+
+    def get_candidate_goals(self):
+        return [ goal for goal in self.goals if goal.is_available() and not goal.is_blacklisted ]
+
+
+    def whitelist_all(self):
+        for goal in self.goals:
+            goal.is_blacklisted = False
+
+
+    def has_blacklisted_goals(self):
+        for goal in self.goals:
+            if goal.is_available() and goal.is_blacklisted:
+                return True
+        return False
+
+
+    def get_next_goal(self):
+        candidates = self.get_candidate_goals()
+
+        for goal in candidates:
+            pose = position.Pose(goal.x, goal.y, virtual = True)
+            logger.log("Evaluate goal {}".format(goal.identifier))
+            if GOAL_EVALUATION_USES_PATHFINDING:
+                goal.navigation_cost = self.event_loop.map.evaluate(self.event_loop.robot.pose, pose)
+            else:
+                goal.navigation_cost = tools.distance(self.event_loop.robot.pose.x, self.event_loop.robot.pose.y, pose.x, pose.y)
+        # Remove unreachable goals
+        candidates = [ goal for goal in candidates if goal.navigation_cost is not None ]
+
+        if len(candidates) == 0:
+            return None
+        if len(candidates) == 1:
+            return candidates[0]
+
+        candidates.sort(key = lambda goal : goal.navigation_cost)
+        nearest_cost = candidates[0].navigation_cost
+        farest_cost = candidates[-1].navigation_cost
+        total_range = farest_cost - nearest_cost
+
+        logger.log("Nearest cost: {}    Farest cost: {}    Range: {}".format(nearest_cost, farest_cost, total_range))
+
+        for goal in candidates:
+            current = goal.navigation_cost - nearest_cost
+            k = (total_range - current) / total_range
+            goal.score = goal.weight * (1.0 / 3.0 + k * 2.0 / 3.0)
+            logger.log("Goal '{}'     Navigation cost: {}    Score: {}".format(goal.identifier, goal.navigation_cost, goal.score))
+
+        return max(candidates, key = lambda goal : goal.score)
 
 
     def get_least_recent_tried_goal(self):

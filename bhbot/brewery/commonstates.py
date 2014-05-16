@@ -713,15 +713,13 @@ class ExecuteGoals(statemachine.State):
 
         while True:
 
-            if navigation_failures == 0:
+            if navigation_failures < 10:
                 logger.log("Choosing the best goal")
-                goal = gm.get_best_goal()
-            elif navigation_failures < 10:
-                logger.log("Choosing the least recently tried goal")
-                goal = gm.get_least_recent_tried_goal()
+                goal = gm.get_next_goal()
             else:
                 logger.log("Escaping to anywhere !!")
                 yield EscapeToAnywhere()
+                gm.whitelist_all()
                 navigation_failures = 0
                 continue
 
@@ -739,16 +737,20 @@ class ExecuteGoals(statemachine.State):
                     current_navigation_succeeded = move.exit_reason == TRAJECTORY_DESTINATION_REACHED
                     if current_navigation_succeeded:
                         navigation_failures = 0
+                        logger.log('Navigation was successful')
                     else:
                         navigation_failures += 1
-                    if not current_navigation_succeeded:
                         logger.log('Cannot navigate to goal -> picking another')
-                        goal.increment_trials()
+                        goal.is_blacklisted = True
                         goal.available()
-                    else:
-                        logger.log('Navigation was successful')
+                    if move.exit_reason == TRAJECTORY_BLOCKED:
+                        direction = DIRECTION_BACKWARDS if goal.direction == DIRECTION_FORWARD else DIRECTION_FORWARD
+                        dist = ROBOT_GYRATION_RADIUS - ROBOT_CENTER_X + 0.02
+                        yield MoveLineRelative(dist, direction)
+                        # TODO: place a blocker here in the map
 
                 if current_navigation_succeeded:
+                    gm.whitelist_all()
                     state = goal.get_state()
                     state.goal = goal
 
@@ -761,11 +763,14 @@ class ExecuteGoals(statemachine.State):
                     else :
                         goal.increment_trials()
                         goal.available()
-            else :
-                break
+
+            else:
+                navigation_failures += 1
+                if not gm.has_blacklisted_goals():
+                    break
+            self.log('Goal statuses: {}'.format({ g.identifier : g.is_available() for g in gm.goals}))
 
         self.log('No more goals available')
-        self.log('Current goals : {}'.format({ g.identifier : g.is_available() for g in gm.goals}))
 
         yield None
 
