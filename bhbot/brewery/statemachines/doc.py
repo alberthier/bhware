@@ -110,24 +110,38 @@ class Main(statemachine.State):
             MINE_TREE_CENTER_ANGLE   *= -1
 
 
-        #                      |        ID           |Weight|     X       |          Y         | Direction          |    State      | Ctor parameters|Shared|Navigate|
+        tree_e_y = TREE_E_Y
+        tree_se_y = TREE_SE_Y
+        tree_sw_y = TREE_SW_Y
+        tree_w_y = TREE_W_Y
+        if self.robot.team == TEAM_YELLOW:
+            tree_e_y, tree_w_y = tree_w_y, tree_e_y
+            tree_se_y, tree_sw_y = tree_sw_y, tree_se_y
+        if self.robot.team == TEAM_YELLOW:
+            st_weight = 3
+        else:
+            st_weight = 5
+
+
+
+        #                      |        ID           |  Weight  |     X       |          Y         | Direction          |    State      | Ctor parameters|Shared|Navigate|
         gm.add(
-            mgm.Goal           ("HuntTheMammoth"     ,    10, self.start_x,                0.75, DIRECTION_FORWARD  , HuntTheMammoth ,            None, False,    True),
+            mgm.Goal           ("HuntTheMammoth"     ,        10, self.start_x,                0.75, DIRECTION_FORWARD  , HuntTheMammoth ,            None, False,    True),
 
-            FireHarvestingGoal ("TakeTorch_Mine"     ,    10,          1.1,          MY_TORCH_Y, DIRECTION_FORWARD  , TakeTorch      ,         (True,), False,    True),
-            FireHarvestingGoal ("TakeTorch_Theirs"   ,     1,          1.1,   sym_y(MY_TORCH_Y), DIRECTION_FORWARD  , TakeTorch      ,        (False,), False,    True),
+            FireHarvestingGoal ("TakeTorch_Mine"     ,        10,          1.1,          MY_TORCH_Y, DIRECTION_FORWARD  , TakeTorch      ,         (True,), False,    True),
+            FireHarvestingGoal ("TakeTorch_Theirs"   ,         1,          1.1,   sym_y(MY_TORCH_Y), DIRECTION_FORWARD  , TakeTorch      ,        (False,), False,    True),
 
-            FireDepositGoal    ("DepositFires_Mine"  ,    10,         1.68,                0.32, DIRECTION_FORWARD  , EmptyFireTank  ,            None, False,    True),
-            FireDepositGoal    ("DepositFires_Center",     1,         1.05,                1.50, DIRECTION_FORWARD  , EmptyFireTank  ,            None, False,    True),
-            FireDepositGoal    ("DepositFires_Theirs",     3,         1.68,                2.66, DIRECTION_FORWARD  , EmptyFireTank  ,            None, False,    True),
+            FireDepositGoal    ("DepositFires_Mine"  ,        10,         1.65,                0.35, DIRECTION_FORWARD  , EmptyFireTank  ,            None, False,    True),
+            FireDepositGoal    ("DepositFires_Center",         1,         1.05,                1.50, DIRECTION_FORWARD  , EmptyFireTank  ,            None, False,    True),
+            FireDepositGoal    ("DepositFires_Theirs",         3,         1.65,                2.65, DIRECTION_FORWARD  , EmptyFireTank  ,            None, False,    True),
 
-#            FruitHarvestingGoal("FruitTreeE"         ,     3,     TREE_E_X,            TREE_E_Y, DIRECTION_FORWARD  , SuperTakeFruits,            None, False,    True),
-#            FruitHarvestingGoal("FruitTreeSE"        ,     3,    TREE_SE_X,           TREE_SE_Y, DIRECTION_FORWARD  , SuperTakeFruits,            None, False,    True),
-#            FruitHarvestingGoal("FruitTreeSW"        ,     3,    TREE_SW_X,           TREE_SW_Y, DIRECTION_FORWARD  , SuperTakeFruits,            None, False,    True),
-#            FruitHarvestingGoal("FruitTreeW"         ,     3,     TREE_W_X,            TREE_W_Y, DIRECTION_FORWARD  , SuperTakeFruits,            None, False,    True),
+            FruitHarvestingGoal("FruitTreeE"         ,         3,     TREE_E_X,            tree_e_y, DIRECTION_FORWARD  , SuperTakeFruits,            None, False,    True),
+            FruitHarvestingGoal("FruitTreeSE"        , st_weight,    TREE_SE_X,           tree_se_y, DIRECTION_FORWARD  , SuperTakeFruits,            None, False,    True),
+            FruitHarvestingGoal("FruitTreeSW"        , st_weight,    TREE_SW_X,           tree_sw_y, DIRECTION_FORWARD  , SuperTakeFruits,            None, False,    True),
+            FruitHarvestingGoal("FruitTreeW"         ,         3,     TREE_W_X,            tree_w_y, DIRECTION_FORWARD  , SuperTakeFruits,            None, False,    True),
 
-            FruitDepositGoal   ("DepFruits_Inner"    ,     7,         0.52,                2.10, DIRECTION_BACKWARDS, DumpFruits     ,            None, False,    True),
-            FruitDepositGoal   ("DepFruits_Outer"    ,     7,         0.52,                2.37, DIRECTION_BACKWARDS, DumpFruits     ,            None, False,    True),
+            FruitDepositGoal   ("DepFruits_Inner"    ,         7,         0.52,                2.10, DIRECTION_BACKWARDS, DumpFruits     ,            None, False,    True),
+            FruitDepositGoal   ("DepFruits_Outer"    ,         7,         0.52,                2.37, DIRECTION_BACKWARDS, DumpFruits     ,            None, False,    True),
         )
 
 #        fruit_goals = (
@@ -253,15 +267,15 @@ class SuperTakeFruits(statemachine.State):
                 (None         , TREE_SE_X         , TREE_SE_Y         , None                    ), #  3 - Approach South-East tree
                 (None         , TREE_SE_X         , 2.3 + rfd         , FRUITMOTH_FINGER_RETRACT), #  4 - Just before South-East trunk
                 (None         , TREE_SE_X         , 2.3 - dfd         , FRUITMOTH_FINGER_OPEN   ), #  5 - Just after South-East trunk
-                ("FruitTreeSE", TREE_SE_X         , 2.3 + TREE_GO_AWAY, None                    ), #  6 - Finished with South-East tree
+                ("FruitTreeSE", TREE_SE_X         , 2.3 - TREE_GO_AWAY, None                    ), #  6 - Finished with South-East tree
                 (None         , TREE_SW_X         , TREE_SW_Y         , None                    ), #  7 - Approach South-West tree
                 (None         , TREE_SW_X         , 0.7 + rfd         , FRUITMOTH_FINGER_RETRACT), #  8 - Just before South-West trunk
                 (None         , TREE_SW_X         , 0.7 - dfd         , FRUITMOTH_FINGER_OPEN   ), #  9 - Just after South-West trunk
-                ("FruitTreeSW", TREE_SW_X         , 0.7 + TREE_GO_AWAY, None                    ), # 10 - Finished with South-West tree
+                ("FruitTreeSW", TREE_SW_X         , 0.7 - TREE_GO_AWAY, None                    ), # 10 - Finished with South-West tree
                 (None         , TREE_W_X          , TREE_W_Y          , None                    ), # 11 - Approach West tree
                 (None         , 1.3 + rfd         , TREE_W_Y          , FRUITMOTH_FINGER_RETRACT), # 12 - Just before West trunk
                 (None         , 1.3 - dfd         , TREE_W_Y          , FRUITMOTH_FINGER_OPEN   ), # 13 - Just after West trunk
-                ("FruitTreeW" , 1.3 + TREE_GO_AWAY, TREE_W_Y          , None                    ), # 14 - Finished with West tree
+                ("FruitTreeW" , 1.3 - TREE_GO_AWAY, TREE_W_Y          , None                    ), # 14 - Finished with West tree
                 ]
         if goal.identifier == "FruitTreeE":
             start = 0
@@ -272,17 +286,18 @@ class SuperTakeFruits(statemachine.State):
         else:
             start = 11
         if "FruitTreeW" not in self.robot.visited_trees:
-            end = 14
+            end = 15
         elif "FruitTreeSW" not in self.robot.visited_trees:
-            end = 10
+            end = 11
         elif "FruitTreeSE" not in self.robot.visited_trees:
-            end = 6
+            end = 7
         else:
-            end = 2
+            end = 3
         yield SuperTakeFruitsMovement(operations[start : end])
         yield Trigger(FRUITMOTH_FINGER_CLOSE, FRUITMOTH_ARM_CLOSE)
         yield Trigger(FRUITMOTH_HATCH_CLOSE)
-
+        self.exit_reason = GOAL_DONE
+        yield None
 
 
 
@@ -300,19 +315,29 @@ class SuperTakeFruitsMovement(statemachine.State):
 
 
     def on_enter(self):
-        move = MoveCurve(None, path, DIRECTION_FORWARD, None, False) # Use non virtual coordinates
+        move = MoveCurve(None, self.path, DIRECTION_FORWARD, None, False) # Use non virtual coordinates
         move.on_waypoint_reached = self.on_waypoint_reached
         yield move
+        if len(self.done_trees) != 0:
+            # normally there is one last element left as WaypointReached isn't called for the last point
+            # (it's not a waypoint, it's the destination)
+            self.handle_tree()
         yield None
 
 
     def on_waypoint_reached(self, packet):
         cmd = self.commands.popleft()
         if cmd is not None:
-            yield Trigger(cmd)
+            # Don't use Trigger as we won't wait for the confirmation
+            self.send_packet(packets.ServoControl(*cmd))
+        self.handle_tree()
+
+
+    def handle_tree(self):
         tree = self.done_trees.popleft()
         if tree is not None:
             self.robot.visited_trees.append(tree)
+            self.log("Visited Trees: {}".format(self.robot.visited_trees))
 
 
 
