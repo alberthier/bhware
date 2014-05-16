@@ -2,6 +2,7 @@
 
 import leds
 import packets
+import tools
 
 from commonstates import *
 from definitions import *
@@ -40,3 +41,16 @@ class Main(Timer):
             if packet.is_moving:
                 packet.destination = self.robot.destination
             self.event_loop.send_packet(packet)
+
+
+#    def on_interbot_position(self, packet):
+#        d = tools.distance(packet.pose.x, packet.pose.y, self.robot.pose.x, self.robot.pose.y)
+#        if d < MAIN_ROBOT_GYRATION_RADIUS + SECONDARY_ROBOT_GYRATION_RADIUS:
+#            a = tools.angle_between(packet.pose.x, packet.pose.y, self.robot.pose.x, self.robot.pose.y)
+#            packet = packets.OpponentDetected(x = packet.pose.x, y = packet.pose.y)
+#            if tools.is_between(-math.pi / 8.0, 0.0, a) or tools.is_between(0.0, math.pi / 0.8, a):
+#                packet.direction = DIRECTION_FORWARD
+#            if tools.is_between(-math.pi, - 7.0 * math.pi / 8.0, a) or tools.is_between(math.pi, 7.0 * math.pi / 8.0, a):
+#                packet.direction = DIRECTION_BACKWARDS
+#            self.send_packet(packet)
+
