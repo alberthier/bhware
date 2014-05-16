@@ -22,6 +22,8 @@ class ZoneData:
         self.id = id
         self.is_detected = False
         self.is_enabled = True
+        self.x = 0.0
+        self.y = 0.0
 
 
 
@@ -255,6 +257,8 @@ class Map:
                 coords = self.create_segment_coords(packet.pose.x, packet.pose.y, packet.destination.x, packet.destination.y, self.get_teammate_radius())
             else:
                 coords = self.create_segment_coords(packet.pose.x, packet.pose.y, packet.pose.x, packet.pose.y, self.get_teammate_radius())
+            self.teammate_zone.x = packet.pose.x
+            self.teammate_zone.y = packet.pose.y
             self.enable_zone(self.teammate_zone, True)
             self.update_zone(self.teammate_zone, coords)
 
