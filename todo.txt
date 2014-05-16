@@ -7,10 +7,6 @@ Divers
 Stratégie - Général
 -------------------
 
-- Simplifier la prise en compte de la pondération des Goals:
-  score = 1/3 * weight + 2 / 3 * weight * (farest_goal_distance - this_goal_distance) / farest_goal_distance
-- Gérer une blacklist de goals avant le déplacement aléatoire
-- Gérer un mouvement de recul dans ExecuteGoals en cas de TRAJECTORY_BLOCKED après la navigation
 - Ajouter une zone interdite dans la map lorsqu'une trajectoire est bloquée
 
 
@@ -31,6 +27,7 @@ Stratégie - Marty
 
 - Gérer le sens de démarrage. Le canon n'est pas symétrique.
   Il faut commencer en avant du coté rouge et en arrière du coté jaune
+  CalibratePosition dépend donc de la couleur pour Marty
 - Trouver les bonnes distances d'approche de feux
 
 Colordetector
