@@ -289,11 +289,11 @@ class GraphicsRobotObject(QObject):
             self.layer.robot_controller.send_packet(p)
         else:
             if self.current_point_index != 0:
-                self.layer.robot_controller.send_packet(packets.WaypointReached())
+                self.layer.robot_controller.send_packet(packets.WaypointReached(self.current_point_index, self.get_pose()))
             p = self.current_goto_packet.points[self.current_point_index]
             self.current_point_index += 1
             if isinstance(self.current_goto_packet, packets.MoveCurve):
-                if len(self.current_goto_packet.points) == self.current_point_index:
+                if len(self.current_goto_packet.points) == self.current_point_index and self.current_goto_packet.angle is not None:
                     angle = self.current_goto_packet.angle
                     if self.current_goto_packet.direction < 0:
                         angle += math.pi
