@@ -248,9 +248,9 @@ class SuperTakeFruits(statemachine.State):
 
     def on_enter(self):
         goal = self.robot.goal_manager.get_current_goal()
-        if goal.identifier == "W":
+        if goal.identifier == "FruitTreeW":
             angle = -math.pi
-        elif goal.identifier == "E":
+        elif goal.identifier == "FruitTreeE":
             angle = 0.0
         else:
             angle = -math.pi / 2.0
@@ -258,8 +258,8 @@ class SuperTakeFruits(statemachine.State):
         yield Trigger(FRUITMOTH_HATCH_OPEN)
         yield Trigger(FRUITMOTH_ARM_OPEN)
         yield Trigger(FRUITMOTH_FINGER_OPEN)
-        rfd = 0.08 # Retract finger before tree distance
-        dfd = 0.08 # Deploy finger after tree distance
+        rfd = 0.10 # Retract finger before tree distance
+        dfd = 0.03 # Deploy finger after tree distance
         operations = [
                 (None         , 1.3 - rfd         , TREE_E_Y          , FRUITMOTH_FINGER_RETRACT), #  0 - Just before East trunk
                 (None         , 1.3 + dfd         , TREE_E_Y          , FRUITMOTH_FINGER_OPEN   ), #  1 - Just after East trunk
