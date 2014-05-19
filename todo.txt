@@ -14,7 +14,6 @@ Stratégie - Général
 Stratégie - Doc
 ---------------
 
-- Initialisation des actionneurs
 - Gérer des alternatives en cercle pour les goals de dépose de feux
 - Gérer plusieurs points de dépose de fruits
 - Valider la sequence de dépose de feux
