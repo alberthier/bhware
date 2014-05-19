@@ -30,6 +30,9 @@ TREE_SE_Y = 2.3 + TREE_APPROACH
 TREE_SW_Y = 0.7 + TREE_APPROACH
 TREE_W_Y = FRUIT_TAKE_DISTANCE
 
+elevator_take_levels = [ELEVATOR_LEVEL_3, ELEVATOR_LEVEL_2, ELEVATOR_LEVEL_1]
+elevator_store_levels = [ELEVATOR_LEVEL_1, ELEVATOR_LEVEL_2, ELEVATOR_LEVEL_3, ELEVATOR_UP]
+
 
 class FireHarvestingGoal(mgm.Goal):
 
@@ -199,6 +202,14 @@ class CalibratePosition(statemachine.State):
         yield None
 
 
+class ArmSpeed(statemachine.State):
+
+    def __init__(self, speed):
+        self.speed = speed
+
+    def on_enter(self):
+        yield Trigger(makeServoSetupCommand(ARM_1, self.speed), makeServoSetupCommand(ARM_2, self.speed))
+        yield None
 
 
 class HuntTheMammoth(statemachine.State):
@@ -267,6 +278,89 @@ class CameraCalibrate(statemachine.State):
         yield None
 
 
+class FireStealer(statemachine.State):
+
+    def __init__(self):
+        self.detection_enabled = False
+
+    def on_enter(self):
+        yield from self.start_position()
+
+    def start_position(self):
+        yield ArmSpeed(1023)
+        yield Trigger(PUMP_OFF)
+        yield Trigger(ARM_1_TAKE_TORCH_FIRE, ARM_2_TAKE_TORCH_FIRE, ELEVATOR_LEVEL_1)
+        self.send_packet(packets.ColorDetectorPacket("EnableScan"))
+        # yield Timer(2000)
+        # self.detection_enabled=True
+
+
+    def on_color_detected(self, packet):
+        # if not self.detection_enabled:
+        #     return
+        if packet.color == COLOR_NONE:
+            return
+        # self.detection_enabled = False
+
+        if self.robot.stored_fires < 4 :
+            self.send_packet(packets.ColorDetectorPacket("DisableScan"))
+            yield TakeFire(ELEVATOR_DOWN)
+
+            if packet.color == COLOR_RED :
+                yield StoreFire()
+            else :
+                yield TurnFire()
+            yield from self.start_position()
+
+        else :
+            yield Trigger(TORCH_GUIDE_OPEN)
+            yield Timer(500)
+            yield Trigger(TORCH_GUIDE_CLOSE)
+
+class TurnFire(statemachine.State):
+
+    def on_enter(self):
+
+        yield Trigger(FIRE_FLIPPER_OPEN)
+        yield ArmSpeed(150)
+        yield Trigger(ARM_1_FLIP_FIRE, ARM_2_FLIP_FIRE)
+        yield Timer(500)
+        yield Trigger(PUMP_OFF)
+        yield Timer(300)
+        yield Trigger(FIRE_FLIPPER_CLOSE)
+        yield ArmSpeed(1023)
+
+        yield None
+
+class StoreFire(statemachine.State):
+
+    def on_enter(self):
+        yield ArmSpeed(150)
+        yield Trigger(ARM_1_STORE_FIRE, ARM_2_STORE_FIRE)
+        yield Trigger(elevator_store_levels[self.robot.stored_fires])
+        yield Timer(500)
+        yield Trigger(PUMP_OFF)
+        yield Timer(500)
+        yield ArmSpeed(1023)
+        yield Trigger(ELEVATOR_UP)
+        self.robot.stored_fires += 1
+        yield None
+
+
+class TakeFire(statemachine.State):
+
+    def __init__(self, take_level):
+        self.take_level = take_level
+
+    def on_enter(self):
+        yield Trigger(ARM_1_TAKE_TORCH_FIRE, ARM_2_TAKE_TORCH_FIRE)
+        yield Trigger(PUMP_ON, self.take_level)
+        yield Timer(300)
+        yield Trigger(ELEVATOR_UP)
+        yield None
+
+
+
 class TakeTorch(statemachine.State):
 
     def __init__(self, my_side):
@@ -276,13 +370,12 @@ class TakeTorch(statemachine.State):
     def on_enter(self):
         flip = self.my_side
         yield Trigger(ELEVATOR_UP, FIRE_FLIPPER_OPEN)
-        elevator_take_levels = [ELEVATOR_LEVEL_3, ELEVATOR_LEVEL_2, ELEVATOR_LEVEL_1]
-        elevator_store_levels = [ELEVATOR_LEVEL_1, ELEVATOR_LEVEL_2, ELEVATOR_LEVEL_3, ELEVATOR_UP]
         for i in range(3):
-            yield Trigger(ARM_1_TAKE_TORCH_FIRE, ARM_2_TAKE_TORCH_FIRE)
-            yield Trigger(PUMP_ON, elevator_take_levels[i])
-            yield Timer(300)
-            yield Trigger(ELEVATOR_UP)
+            # yield Trigger(ARM_1_TAKE_TORCH_FIRE, ARM_2_TAKE_TORCH_FIRE)
+            # yield Trigger(PUMP_ON, elevator_take_levels[i])
+            # yield Timer(300)
+            # yield Trigger(ELEVATOR_UP)
+            yield TakeFire(elevator_take_levels[i])
             yield from self.arm_speed(200)
             if flip:
                 # On retourne le feu
