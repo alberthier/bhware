@@ -64,6 +64,7 @@ private:
     void sendPacketColor(std::string & color);
     void sendPacketColor(const char * color);
     void updateMaskWindow(const std::string& color, cv::Mat & img);
+    void writeImage(std::string name, cv::Mat &img);
 
 private:
     bool m_quiet;
@@ -94,6 +95,8 @@ private:
     Mode m_mode;
 
     std::map<std::string, cv::Vec3f> m_referenceColors;
+
+    std::string m_logPrefix;
 };
 
 class Timer
@@ -240,10 +243,13 @@ void ColorDetector::process()
 
         updateDisplay();
 
-        std::cerr   << std::setprecision(3) << "loop duration " << timer.getDeltaMs() << "ms "
-                    << "processing " <<  std::setprecision(3) << timerProcess.getDeltaMs() << "ms "
-                    << "wait " <<  std::setprecision(3) << timerWait.getDeltaMs() << "ms "
-                    << std::endl;
+        if (!m_quiet)
+        {
+            std::cerr   << std::setprecision(3) << "loop duration " << timer.getDeltaMs() << "ms "
+                        << "processing " <<  std::setprecision(3) << timerProcess.getDeltaMs() << "ms "
+                        << "wait " <<  std::setprecision(3) << timerWait.getDeltaMs() << "ms "
+                        << std::endl;
+        }
 
         delta = timer.getDeltaMs() - timerWait.getDeltaMs();
     }
@@ -268,6 +274,15 @@ void ColorDetector::reset()
     m_mode = ModeScan;
     m_colorThreshold = 80;
     m_writeReferenceCapture = false;
+}
+
+void ColorDetector::writeImage(std::string name, cv::Mat &img)
+{
+    std::stringstream ss;
+
+    ss << m_logPrefix << "_" << name;
+
+    imwrite(ss.str().c_str(),img);
 }
 
 
@@ -314,6 +329,13 @@ bool ColorDetector::processLine(std::istream& stream)
         m_mode = ModeReference;
 
         std::cerr << "StoreReference " << m_currentReferenceColor << std::endl;
+    }
+    else if (command == "SetLogPrefix")
+    {
+
+        sstr >> m_logPrefix;
+
+        std::cerr << "SetLogPrefix " << m_logPrefix << std::endl;
     }
     else if (command == "SetReferenceTolerance")
     {
@@ -398,7 +420,7 @@ void ColorDetector::storeReference(std::string &_color)
 
             int pixTrans = ( pixOrig + delta) % 180;
 
-            std::cerr << "pixel " << pixOrig << "->" <<  pixTrans << std::endl;
+            //std::cerr << "pixel " << pixOrig << "->" <<  pixTrans << std::endl;
 
             pixVal += pixTrans;
 
@@ -433,7 +455,7 @@ void ColorDetector::storeReference(std::string &_color)
 
     if(m_writeReferenceCapture)
     {
-        imwrite(ss.str().c_str(),m_bgrImage);
+        writeImage(ss.str(),m_bgrImage);
     }
 }
 
@@ -687,7 +709,10 @@ void ColorDetector::scanHsv2()
         {
             if(itColorTotal->second > 0)
             {
-                std::cerr << itColorTotal->first << " " << itColorTotal->second << std::endl;
+                if(!m_quiet)
+                {
+                    std::cerr << itColorTotal->first << " " << itColorTotal->second << std::endl;
+                }
             }
 
             if(itColorTotal->second > maxValue)
