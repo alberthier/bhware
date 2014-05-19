@@ -234,7 +234,9 @@ SIMULATOR_RANGE_START = PIC32_RANGE_END
 SIMULATOR_RANGE_END   = 200
 INTERBOT_RANGE_START  = SIMULATOR_RANGE_END
 INTERBOT_RANGE_END    = 230
-INTERNAL_RANGE_START  = INTERBOT_RANGE_END
+COLORDET_RANGE_START  = INTERBOT_RANGE_END
+COLORDET_RANGE_END    = 236
+INTERNAL_RANGE_START  = CAMERA_RANGE_END
 INTERNAL_RANGE_END    = 256
 
 ################################################################################
@@ -250,6 +252,19 @@ class ColorDetected(BasePacket):
     DEFINITION = (
         ('color', UEnum8(TEAM, TEAM_UNKNOWN)),
     )
+
+
+class ColorDetectorPacket:
+    TYPE = 230
+
+    def __init__(self, string):
+        self.string = string
+
+    def serialize(self):
+        return self.string
+
+    def to_dump(self):
+        return "command='{}'".format(self.string)
 
 
 # Turret packets

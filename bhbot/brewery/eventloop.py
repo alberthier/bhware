@@ -274,6 +274,7 @@ class ProcessChannel:
         self.stderr.writable = lambda: False
         self.stdout_buffer = bytes()
         self.stderr_buffer = bytes()
+        self.connected = True
 
 
     def send(self, data):
@@ -286,6 +287,8 @@ class ProcessChannel:
         for code in result:
             try:
                 packet = eval(code)
+                if type(packet) == tuple :
+                    packet = packet[1]
                 self.event_loop.process(self, packet)
             except Exception as e:
                 logger.log("Unable to evaluate the process answer: '{}'".format(code))
@@ -542,6 +545,8 @@ class EventLoop(object):
         elif self.do_send_packet(packet, packets.PIC32_RANGE_START, packets.PIC32_RANGE_END, self.pic_control_channel):
             return
         elif IS_HOST_DEVICE_PC and self.do_send_packet(packet, packets.SIMULATOR_RANGE_START, packets.SIMULATOR_RANGE_END, self.pic_control_channel):
+            return
+        elif self.do_send_packet(packet, packets.COLORDET_RANGE_START, packets.COLORDET_RANGE_END, self.colordetector):
             return
         elif self.do_send_packet(packet, packets.INTERBOT_RANGE_START, packets.INTERBOT_RANGE_END, self.interbot_channel):
             return
