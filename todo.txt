@@ -7,7 +7,6 @@ Divers
 Stratégie - Général
 -------------------
 
-- Ajouter une zone interdite dans la map lorsqu'une trajectoire est bloquée
 - Les movements de teammate ne devraient être pris en compte que pour l'évaluation d'une route, et pas pour un déplacement.
 
 
