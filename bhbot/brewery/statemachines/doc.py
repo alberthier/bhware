@@ -156,6 +156,9 @@ class Main(statemachine.State):
 
         yield AntiBlocking(True)
         yield CalibratePosition()
+        yield InitialMotorPosition()
+        # yield CameraCalibrate()
+        # yield FireStealer()
 
 
     def on_start(self, packet):
@@ -166,7 +169,15 @@ class Main(statemachine.State):
         yield ExecuteGoals()
 
 
-
+class InitialMotorPosition(statemachine.State):
+    def on_enter(self):
+        yield Trigger(PUMP_OFF)
+        yield Trigger(ELEVATOR_UP)
+        yield Trigger(ARM_1_TAKE_TORCH_FIRE, ARM_2_TAKE_TORCH_FIRE)
+        yield Trigger(TORCH_GUIDE_CLOSE)
+        self.send_packet(packets.ColorDetectorPacket("SetLogPrefix {}".format(logger.log_index)))
+        self.send_packet(packets.ColorDetectorPacket("DisableScan"))
+        yield None
 
 class CalibratePosition(statemachine.State):
 
