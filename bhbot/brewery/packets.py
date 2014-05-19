@@ -203,6 +203,10 @@ class BasePacket(object):
         self.BIN_STRUCT.deserialize_to(self, it)
 
 
+    def serialize_as_text(self):
+        return self.name + self.BIN_STRUCT.serialize_as_text(self)
+
+
     def to_dump(self):
         return self.BIN_STRUCT.to_dump(self)
 
@@ -224,9 +228,9 @@ class BasePacket(object):
 ################################################################################
 # Packet type ranges
 
-PROCESS_RANGE_START   = 1
-PROCESS_RANGE_END     = 32
-TURRET_RANGE_START    = PROCESS_RANGE_END
+COLORDET_RANGE_START  = 1
+COLORDET_RANGE_END    = 32
+TURRET_RANGE_START    = COLORDET_RANGE_END
 TURRET_RANGE_END      = 50
 PIC32_RANGE_START     = TURRET_RANGE_END
 PIC32_RANGE_END       = 150
@@ -234,9 +238,7 @@ SIMULATOR_RANGE_START = PIC32_RANGE_END
 SIMULATOR_RANGE_END   = 200
 INTERBOT_RANGE_START  = SIMULATOR_RANGE_END
 INTERBOT_RANGE_END    = 230
-COLORDET_RANGE_START  = INTERBOT_RANGE_END
-COLORDET_RANGE_END    = 236
-INTERNAL_RANGE_START  = CAMERA_RANGE_END
+INTERNAL_RANGE_START  = INTERBOT_RANGE_END
 INTERNAL_RANGE_END    = 256
 
 ################################################################################
@@ -246,25 +248,19 @@ INTERNAL_RANGE_END    = 256
 # Process packets
 
 
-class ColorDetected(BasePacket):
+class DisableScan(BasePacket):
 
     TYPE = 1
+
+
+
+
+class SetLogPrefix(BasePacket):
+
+    TYPE = 2
     DEFINITION = (
-        ('color', UEnum8(TEAM, TEAM_UNKNOWN)),
+        ('prefix', String(128)),
     )
-
-
-class ColorDetectorPacket:
-    TYPE = 230
-
-    def __init__(self, string):
-        self.string = string
-
-    def serialize(self):
-        return self.string
-
-    def to_dump(self):
-        return "command='{}'".format(self.string)
 
 
 # Turret packets

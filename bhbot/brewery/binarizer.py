@@ -33,6 +33,10 @@ class AbstractItem:
         return str(value)
 
 
+    def to_dump_as_text(self, value):
+        return self.to_dump(value)
+
+
     def from_dump(self, value):
         return value
 
@@ -272,6 +276,13 @@ class Struct(AbstractItem):
         return instance
 
 
+    def serialize_as_text(self, instance):
+        text = ""
+        for name, item in self.content:
+            text += " " + item.to_dump_as_text(getattr(instance, name))
+        return text
+
+
     def to_dump(self, value):
         return '({})'.format(
             ', '.join("('{name}', {val})".format(
@@ -360,8 +371,10 @@ class String(AbstractItem):
         self.C_TYPE = "{}s".format(length)
         self.DESCRIPTION = "String of length {}".format(self.length)
 
+
     def serialize(self, value, buf):
         buf.append(bytes(value,'utf-8','ignore'))
+
 
     def deserialize(self, iterator):
         val = super().deserialize(iterator)

@@ -33,8 +33,6 @@ start_time = None
 term_enable_colors = False
 term_color = ""
 
-log_index = 0
-
 
 def initialize(args = None):
     global filepath
@@ -160,7 +158,6 @@ def log_packet(packet, sender = "ARM"):
 
 
 def get_next_log_filepath():
-    global log_index
     if not os.path.exists(LOG_DIR):
         try:
             os.makedirs(LOG_DIR)
@@ -173,7 +170,6 @@ def get_next_log_filepath():
             try:
                 i = int(f[11:15]) + 1
                 max_index = max(max_index, i)
-                log_index = max_index
             except:
                 pass
     return os.path.join(LOG_DIR, "brewerylog_{:=#04}.py".format(max_index))

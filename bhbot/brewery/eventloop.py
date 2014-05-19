@@ -107,11 +107,15 @@ class ClientSocketChannel(asyncore.dispatcher_with_send):
 
 
 
-class BinaryPacketReader:
+class BinaryPacketHandler:
 
     def __init__(self):
         self.buffer = bytes()
         self.packet = None
+
+
+    def write_packet(self, packet):
+        self.send(packet.serialize())
 
 
     def read_packet(self):
@@ -159,11 +163,11 @@ class BinaryPacketReader:
 
 
 
-class PacketClientSocketChannel(ClientSocketChannel, BinaryPacketReader):
+class PacketClientSocketChannel(ClientSocketChannel, BinaryPacketHandler):
 
     def __init__(self, event_loop, origin, remote):
         ClientSocketChannel.__init__(self, event_loop, origin, remote)
-        BinaryPacketReader.__init__(self)
+        BinaryPacketHandler.__init__(self)
 
 
     def handle_read(self):
@@ -212,13 +216,13 @@ class FileDispatcherWithSend(asyncore.file_dispatcher):
 
 
 
-class TurretChannel(FileDispatcherWithSend, BinaryPacketReader):
+class TurretChannel(FileDispatcherWithSend, BinaryPacketHandler):
 
     def __init__(self, event_loop, serial_port_path, serial_port_speed):
         self.port = serial.PosixPollSerial(serial_port_path, serial_port_speed, timeout = 0)
         self.port.nonblocking()
         FileDispatcherWithSend.__init__(self, self.port)
-        BinaryPacketReader.__init__(self)
+        BinaryPacketHandler.__init__(self)
         self.event_loop = event_loop
         self.synchronized = False
         self.origin = "TUR"
@@ -275,6 +279,10 @@ class ProcessChannel:
         self.stdout_buffer = bytes()
         self.stderr_buffer = bytes()
         self.connected = True
+
+
+    def write_packet(self, packet):
+        self.send(packet.serialize_as_text())
 
 
     def send(self, data):
@@ -561,7 +569,7 @@ class EventLoop(object):
         if packet.TYPE >= packet_range_start and packet.TYPE < packet_range_end:
             if channel is not None and channel.connected:
                 logger.log_packet(packet, "ARM")
-                channel.send(packet.serialize())
+                channel.write_packet(packet)
             else:
                 logger.log("Channel for packet {} doesn't exist or isn't connected".format(packet.name))
             return True
