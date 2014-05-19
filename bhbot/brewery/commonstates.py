@@ -747,7 +747,7 @@ class ExecuteGoals(statemachine.State):
                         direction = DIRECTION_BACKWARDS if goal.direction == DIRECTION_FORWARD else DIRECTION_FORWARD
                         dist = ROBOT_GYRATION_RADIUS - ROBOT_CENTER_X + 0.02
                         yield MoveLineRelative(dist, direction)
-                        # TODO: place a blocker here in the map
+                        self.event_loop.map.robot_blocked(goal.direction)
 
                 if current_navigation_succeeded:
                     gm.whitelist_all()

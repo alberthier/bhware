@@ -36,6 +36,7 @@ class Map:
         import graphpathfinding
         self.pathfinder = graphpathfinding.PathFinder(ROBOT_GYRATION_RADIUS, ROBOT_GYRATION_RADIUS, FIELD_X_SIZE - ROBOT_GYRATION_RADIUS, FIELD_Y_SIZE - ROBOT_GYRATION_RADIUS)
         self.teammate_zone_timer = eventloop.Timer(self.event_loop, TEAMMATE_INFO_DELAY_MS * 2, self.disable_teammate_zone)
+        self.ubo_zone_timer = eventloop.Timer(self.event_loop, 2000, self.disable_ubo_zone)
 
 
     def on_device_ready(self, packet):
@@ -45,6 +46,7 @@ class Map:
         self.main_opponent_zone = self.add_zone(self.create_circular_coords(0.0, 0.0, 0.130 + ROBOT_GYRATION_RADIUS))
         self.secondary_opponent_zone = self.add_zone(self.create_circular_coords(0.0, 0.0, 0.080 + ROBOT_GYRATION_RADIUS))
         self.teammate_zone = self.add_zone(self.create_segment_coords(0.0, 0.0, 0.0, 0.0, self.get_teammate_radius()))
+        self.ubo_zone = self.add_zone(self.create_rect_coords(0.0, 0.0, 0.0, 0.0, 0.0))
 
         # Add Field obstacles
         offset = ROBOT_GYRATION_RADIUS
@@ -75,6 +77,7 @@ class Map:
         self.enable_zone(self.main_opponent_zone, False)
         self.enable_zone(self.secondary_opponent_zone, False)
         self.enable_zone(self.teammate_zone, False)
+        self.enable_zone(self.ubo_zone, False)
 
 
     def get_teammate_radius(self):
@@ -124,11 +127,15 @@ class Map:
         return coords
 
 
-    def create_rect_coords(self, x, y, width, height):
-        return [(x, y),
-                (x + width, y),
-                (x + width, y + height),
-                (x, y + height)]
+    def create_rect_coords(self, x, y, width, height, angle):
+        w_2 = width / 2.0
+        h_2 = height / 2.0
+        cos_a = math.cos(angle)
+        sin_a = math.sin(angle)
+        coords = []
+        for dx, dy in [(w_2, h_2), (-w_2, h_2), (-w_2, -h_2), (w_2, -h_2)]:
+            coords.append((x - dx * sin_a + dy * cos_a, y + dx * cos_a + dy * sin_a))
+        return coords
 
 
     def add_zone(self, coords):
@@ -263,6 +270,27 @@ class Map:
             self.update_zone(self.teammate_zone, coords)
 
 
+    def robot_blocked(self, direction):
+        pose = self.event_loop.robot.pose
+        width = 0.4
+        height = 0.3
+        if direction == DIRECTION_FORWARD:
+            angle = pose.angle
+        else:
+            angle = pose.angle + math.pi
+        d = ROBOT_CENTER_X + height / 2.0
+        x = pose.x + d * math.cos(angle)
+        y = pose.y + d * math.sin(angle)
+        coords = self.create_rect_coords(x, y, width, height, angle)
+        self.enable_zone(self.ubo_zone, True)
+        self.update_zone(self.ubo_zone, coords)
+        self.ubo_zone_timer.restart()
+
+
     def disable_teammate_zone(self):
         self.enable_zone(self.teammate_zone, False)
+
+
+    def disable_ubo_zone(self):
+        self.enable_zone(self.ubo_zone, False)
 

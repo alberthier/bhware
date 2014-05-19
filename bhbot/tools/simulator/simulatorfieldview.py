@@ -38,7 +38,7 @@ class GraphicsRobotObject(QObject):
         self.carried_elements = []
         self.current_goto_packet = None
         self.current_point_index = 0
-        self.stop_requested = False
+        self.stop_reason = REASON_DESTINATION_REACHED
 
 
     def setup(self):
@@ -121,7 +121,16 @@ class GraphicsRobotObject(QObject):
 
 
     def stop_animation(self):
-        self.stop_requested = True
+        self.stop_reason = REASON_STOP_REQUESTED
+        self.move_animation.stop()
+
+
+    def block(self):
+        if self.current_goto_packet is not None:
+            if self.current_goto_packet.direction == DIRECTION_FORWARD:
+                self.stop_reason = REASON_BLOCKED_FRONT
+            else:
+                self.stop_reason = REASON_BLOCKED_BACK
         self.move_animation.stop()
 
 
@@ -244,7 +253,7 @@ class GraphicsRobotObject(QObject):
 
     def on_rotate(self, packet):
         self.layer.robot_controller.send_packet(packets.GotoStarted())
-        self.stop_requested = False
+        self.stop_reason = REASON_DESTINATION_REACHED
         self.robot_rotate(packet.angle)
 
 
@@ -257,33 +266,29 @@ class GraphicsRobotObject(QObject):
         if packet.angle is not None:
             p1.angle = packet.angle
         self.current_goto_packet = packet
-        self.stop_requested = False
+        self.stop_reason = REASON_DESTINATION_REACHED
         self.process()
 
 
     def on_move_line(self, packet):
         self.layer.robot_controller.send_packet(packets.GotoStarted())
         self.current_goto_packet = packet
-        self.stop_requested = False
+        self.stop_reason = REASON_DESTINATION_REACHED
         self.process()
 
 
     def on_move_arc(self, packet):
         self.layer.robot_controller.send_packet(packets.GotoStarted())
         self.current_goto_packet = packet
-        self.stop_requested = False
+        self.stop_reason = REASON_DESTINATION_REACHED
         self.process()
 
 
     def process(self):
-        if self.current_goto_packet is None or self.current_point_index == len(self.current_goto_packet.points) or self.stop_requested:
-            if self.stop_requested:
-                reason = REASON_STOP_REQUESTED
-            else:
-                reason = REASON_DESTINATION_REACHED
+        if self.current_goto_packet is None or self.current_point_index == len(self.current_goto_packet.points) or self.stop_reason != REASON_DESTINATION_REACHED:
             self.current_goto_packet = None
             self.current_point_index = 0
-            p = packets.GotoFinished(reason = reason,
+            p = packets.GotoFinished(reason = self.stop_reason,
                                      current_pose = self.get_pose(),
                                      current_point_index = self.current_point_index)
             self.layer.robot_controller.send_packet(p)
@@ -390,6 +395,8 @@ class RobotLayer(fieldview.Layer):
                 packet.distance = OPPONENT_DISTANCE_FAR
                 packet.robot = OPPONENT_ROBOT_SECONDARY
                 self.robot_controller.send_packet(packet)
+            elif team == TEAM_YELLOW and key == 'a' or team == TEAM_RED and key == 'z':
+                self.robot.block()
 
 
 
