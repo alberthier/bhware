@@ -211,6 +211,61 @@ class HuntTheMammoth(statemachine.State):
 
 
 
+class CameraCalibrateColor(statemachine.State):
+    def __init__(self, color):
+        self.color = color
+        self.success = False
+
+    def on_enter(self):
+        yield from self.calibrate()
+
+    def calibrate(self):
+        self.send_packet(packets.ColorDetectorPacket("StoreReference {}".format(self.color)))
+        yield None
+
+
+    def on_color_detected(self, packet):
+        if packet.color == self.color:
+            logger.log("Calibration of color {} successful".format(self.color))
+            self.success = True
+            yield None
+
+
+
+
+class CameraCalibrate(statemachine.State):
+    def on_enter(self):
+        yield Trigger(ARM_1_TAKE_TORCH_FIRE, ARM_2_TAKE_TORCH_FIRE, ELEVATOR_LEVEL_1)
+        yield Timer(5000)
+        yield Trigger(FIRE_FLIPPER_OPEN)
+        #self.send_packet(packets.ColorDetectorPacket("WriteReferenceCapture 1"))
+        self.send_packet(packets.ColorDetectorPacket("StoreReference COLOR_RED"))
+        yield Timer(5000)
+
+        # for i in range(5) :
+        #     state = CameraCalibrateColor("COLOR_RED")
+        #     yield state
+        #     if state.success:
+        #         break
+
+        yield Trigger(TORCH_GUIDE_OPEN)
+        yield Timer(1000)
+        yield Trigger(TORCH_GUIDE_CLOSE)
+        yield Trigger(ELEVATOR_UP)
+        yield Timer(2000)
+        yield Trigger(ELEVATOR_LEVEL_1)
+        yield Timer(5000)
+
+        self.send_packet(packets.ColorDetectorPacket("StoreReference COLOR_YELLOW"))
+
+        yield Timer(5000)
+
+        yield Trigger(TORCH_GUIDE_OPEN)
+        yield Timer(1000)
+        yield Trigger(TORCH_GUIDE_CLOSE)
+
+        yield None
+
 
 class TakeTorch(statemachine.State):
 

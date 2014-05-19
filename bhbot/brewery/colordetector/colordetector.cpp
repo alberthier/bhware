@@ -39,7 +39,8 @@ public:
 
     enum Mode {
         ModeReference,
-        ModeScan
+        ModeScan,
+        ModePause
     };
 
 public:
@@ -52,6 +53,7 @@ private:
     void reset();
     bool processLine(std::istream& stream);
     void storeReference(std::string& _color);
+    void adaptativeStoreReference(std::string& _color);
     bool wait(double delta);
     void initDisplay();
     void updateDisplay();
@@ -227,15 +229,23 @@ void ColorDetector::process()
 
         Timer timerProcess(true);
 
-        if(m_mode == ModeReference)
+        switch(m_mode)
         {
-            m_mode = ModeScan;
-            storeReference(m_currentReferenceColor);
+            case ModeScan:
+                scan();
+            break;
+
+            case ModeReference:
+                adaptativeStoreReference(m_currentReferenceColor);
+                m_mode = ModePause;
+            break;
+
+            case ModePause:
+                m_lastDetectedColorString = "";
+            break;
         }
-        else
-        {
-            scan();
-        }
+
+
 
         timerProcess.stop();
 
@@ -330,6 +340,16 @@ bool ColorDetector::processLine(std::istream& stream)
 
         std::cerr << "StoreReference " << m_currentReferenceColor << std::endl;
     }
+    else if (command == "EnableScan")
+    {
+        m_mode = ModeScan;
+        std::cerr << "Scan mode enabled" << std::endl;
+    }
+    else if (command == "DisableScan")
+    {
+        m_mode = ModePause;
+        std::cerr << "Scan mode disabled" << std::endl;
+    }
     else if (command == "SetLogPrefix")
     {
 
@@ -383,6 +403,31 @@ bool ColorDetector::processLine(std::istream& stream)
     }
 
     return again;
+}
+
+void ColorDetector::adaptativeStoreReference(std::string &_color)
+{
+
+    for(int i=0;i<30;i++)
+    {
+        m_lastDetectedColorString = "";
+        storeReference(_color);
+        scanHsv2();
+
+        if(m_lastDetectedColorString == _color)
+        {
+            std::cerr << "CALIBRATION SUCCESSFUL" << std::endl;
+            return;
+        } else {
+            std::cerr << "CALIBRATION FAILED --> TRY AGAIN" << std::endl;
+            m_currentTolerance++;
+            std::cerr << "TOLERANCE set to " << m_currentTolerance << std::endl;
+        }
+
+    }
+
+    std::cerr << "CALIBRATION FUCKED UP" << std::endl;
+
 }
 
 void ColorDetector::storeReference(std::string &_color)
