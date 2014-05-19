@@ -702,9 +702,10 @@ static void pathfinder_synchronize(PathFinder* self)
         for (j = 0; j < self->zones_count && edge1->enabled; ++j) {
             Zone* zone = self->zones[j];
             if (zone->enabled) {
-                for (k = 0; k < zone->nodes_count && edge1->enabled; ++k) {
+                for (k = 0; k < zone->nodes_count; ++k) {
                     Edge* edge2 = zone->edges[k];
-                    if (edge1 != edge2 && edge_intersects(edge1, edge2)) {
+                    int semi_enabled = (!edge2->zone_internal) && (edge2->node1->enabled || edge2->node2->enabled);
+                    if (edge1 != edge2 && semi_enabled && edge_intersects(edge1, edge2)) {
                         edge1->enabled = 0;
                     }
                 }
