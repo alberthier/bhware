@@ -268,6 +268,7 @@ class Map:
             self.teammate_zone.y = packet.pose.y
             self.enable_zone(self.teammate_zone, True)
             self.update_zone(self.teammate_zone, coords)
+            self.teammate_zone_timer.restart()
 
 
     def robot_blocked(self, direction):
