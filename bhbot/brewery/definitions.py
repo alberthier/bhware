@@ -220,6 +220,7 @@ TRAJECTORY = Enum("Navigation result",
 OPPONENT_ROBOT = Enum("Detected opponent robot",
     OPPONENT_ROBOT_MAIN      = 0,
     OPPONENT_ROBOT_SECONDARY = 1,
+    OPPONENT_ROBOT_TEAMMATE  = 2,
 )
 
 OPPONENT_DISTANCE = Enum("Opponent distance",

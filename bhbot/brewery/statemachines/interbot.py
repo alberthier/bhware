@@ -45,12 +45,18 @@ class Main(Timer):
 
 #    def on_interbot_position(self, packet):
 #        d = tools.distance(packet.pose.x, packet.pose.y, self.robot.pose.x, self.robot.pose.y)
-#        if d < MAIN_ROBOT_GYRATION_RADIUS + SECONDARY_ROBOT_GYRATION_RADIUS:
+#        if d < MAIN_ROBOT_GYRATION_RADIUS + SECONDARY_ROBOT_GYRATION_RADIUS + 0.3:
 #            a = tools.angle_between(packet.pose.x, packet.pose.y, self.robot.pose.x, self.robot.pose.y)
-#            packet = packets.OpponentDetected(x = packet.pose.x, y = packet.pose.y)
-#            if tools.is_between(-math.pi / 8.0, 0.0, a) or tools.is_between(0.0, math.pi / 0.8, a):
+#            a1 = a
+#            a += self.robot.pose.angle
+#            cos_a = math.cos(a)
+#            self.log("Other robot detected m=({:0.4},{:0.4},{:0.4}) o=({:0.4},{:0.4}) d={} a1={} a={} cosa={}".format(self.robot.pose.x, self.robot.pose.y, self.robot.pose.angle, packet.pose.x, packet.pose.y, d, a1, a, cos_a))
+#            packet = packets.OpponentDetected(x = packet.pose.x, y = packet.pose.y, robot = OPPONENT_ROBOT_TEAMMATE)
+#            if cos_a > 0.8:
 #                packet.direction = DIRECTION_FORWARD
-#            if tools.is_between(-math.pi, - 7.0 * math.pi / 8.0, a) or tools.is_between(math.pi, 7.0 * math.pi / 8.0, a):
+#                self.send_packet(packet)
+#
+#            elif cos_a < -0.8:
 #                packet.direction = DIRECTION_BACKWARDS
-#            self.send_packet(packet)
+#                self.send_packet(packet)
 

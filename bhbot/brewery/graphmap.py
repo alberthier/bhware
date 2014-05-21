@@ -81,11 +81,7 @@ class Map:
 
 
     def get_teammate_radius(self):
-        if IS_MAIN_ROBOT:
-            return 0.080 + SECONDARY_ROBOT_GYRATION_RADIUS
-        else:
-            return 0.080 + MAIN_ROBOT_GYRATION_RADIUS
-
+        return MAIN_ROBOT_GYRATION_RADIUS + SECONDARY_ROBOT_GYRATION_RADIUS
 
 
     def create_quarter_coords(self, x, y, radius):
