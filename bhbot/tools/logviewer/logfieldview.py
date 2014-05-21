@@ -36,10 +36,8 @@ class RealTrajectoryLayer(fieldview.Layer):
                 self.path.moveTo(y * 1000.0, x * 1000.0)
             else:
                 self.path.lineTo(y * 1000.0, x * 1000.0)
-        if packet_type is packets.Rotate or packet_type is packets.MoveLine or packet_type is packets.MoveCurve or packet_type is packets.MoveArc:
-            movement = logtools.get_value(log_line[logger.LOG_LINE_CONTENT], "movement")
-            if movement != MOVEMENT_ROTATE:
-                self.has_first_goto = True
+        if packet_type is packets.MoveLine or packet_type is packets.MoveCurve or packet_type is packets.MoveArc:
+            self.has_first_goto = True
 
         if lineno == last_lineno:
             path_item = QGraphicsPathItem(self)
