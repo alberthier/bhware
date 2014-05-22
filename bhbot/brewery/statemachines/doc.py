@@ -191,17 +191,13 @@ class CalibratePosition(statemachine.State):
         if IS_HOST_DEVICE_PC:
             yield DefinePosition(RED_START_X, RED_START_Y, RED_START_ANGLE)
         else:
-            estimated_start_y = FIELD_Y_SIZE / 2.0
-            yield DefinePosition(ROBOT_CENTER_X, estimated_start_y, 0.0)
-            yield MoveLineTo(0.5, estimated_start_y)
-            yield RotateTo(math.pi / 2.0)
-            yield SpeedControl(0.2)
-            yield MoveLineTo(0.5, 0.0, DIRECTION_BACKWARDS)
-            yield DefinePosition(None, ROBOT_CENTER_X, math.pi / 2.0)
-            yield SpeedControl()
-            yield MoveLineTo(0.5, RED_START_Y)
+            estimated_start_x = 1.0
+            yield DefinePosition(estimated_start_x, ROBOT_CENTER_X, math.pi / 2.0)
+            yield MoveLineTo(estimated_start_x, RED_START_Y)
             yield RotateTo(0.0)
-            yield MoveLineTo(RED_START_X, RED_START_Y, DIRECTION_BACKWARDS)
+            yield MoveLineTo(0.0, RED_START_Y, DIRECTION_BACKWARDS)
+            yield DefinePosition(ROBOT_CENTER_X, None, 0.0)
+            yield MoveLineTo(RED_START_X, RED_START_Y)
         yield None
 
 
