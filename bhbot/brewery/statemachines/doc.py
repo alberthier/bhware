@@ -181,6 +181,7 @@ class InitialMotorPosition(statemachine.State):
         yield Trigger(ELEVATOR_UP)
         yield Trigger(ARM_1_TAKE_TORCH_FIRE, ARM_2_TAKE_TORCH_FIRE)
         yield Trigger(TORCH_GUIDE_CLOSE)
+        yield Trigger(FIRE_FLIPPER_CLOSE)
         self.send_packet(packets.SetLogPrefix(logger.filepath[:-3]))
         self.send_packet(packets.DisableScan())
         yield None
