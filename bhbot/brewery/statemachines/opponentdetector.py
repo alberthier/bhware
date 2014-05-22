@@ -1,5 +1,6 @@
 # encoding: utf-8
 
+import collections
 import math
 
 import commonstates
@@ -12,12 +13,15 @@ from definitions import *
 
 class Main(commonstates.Timer):
 
-    IN_FRONT_ANGLES = [16, 17, 0, 1, 2]
-    IN_BACK_ANGLES = [7, 8, 9, 10, 11]
+#    IN_FRONT_ANGLES = [16, 17, 0, 1, 2]
+    IN_FRONT_ANGLES = [2, 3, 4, 5, 6, 7]
+#    IN_BACK_ANGLES = [7, 8, 9, 10, 11]
+    IN_BACK_ANGLES = [10, 11, 12, 13, 14, 15]
+    PACKET_COUNT = 6
 
     def __init__(self):
         super().__init__(OPPONENT_DETECTION_DISAPPEARING_MS)
-        self.detections = []
+        self.detections = collections.deque()
 
 
     def on_enter(self):
@@ -27,7 +31,7 @@ class Main(commonstates.Timer):
         self.y = None
         self.enabled = True
         if not hasattr(self.fsm, "offset_deg"):
-            self.fsm.offset_deg = 0.0
+            self.fsm.offset_deg = -90.0
 
 
     def on_turret_detect(self, packet):
@@ -37,15 +41,23 @@ class Main(commonstates.Timer):
             return
 
         self.detections.append(packet.distance)
-        if len(self.detections) < 2:
+        if len(self.detections) < self.PACKET_COUNT:
             return
+        elif len(self.detections) > self.PACKET_COUNT:
+            self.detections.popleft()
 
         # if a near detection is present in the 6 last detections, the opponent is near us
         if OPPONENT_DISTANCE_NEAR in self.detections:
+            self.log("Opponent detected near")
+            opponent_distance = OPPONENT_DISTANCE_NEAR
+        else:
+            self.log("Opponent detected far")
+            opponent_distance = OPPONENT_DISTANCE_FAR
+
+        if opponent_distance == OPPONENT_DISTANCE_NEAR:
             distance = TURRET_SHORT_DISTANCE_DETECTION_RANGE
         else:
             distance = TURRET_LONG_DISTANCE_DETECTION_RANGE
-        self.detections = []
 
         angle = (18 - packet.angle) % 18
 
@@ -56,8 +68,9 @@ class Main(commonstates.Timer):
         self.y = robot_pose.y + distance * math.sin(real_angle)
 
         previous_direction = self.opponent_direction
-        if packet.distance == OPPONENT_DISTANCE_NEAR:
+        if opponent_distance == OPPONENT_DISTANCE_NEAR:
             if angle in self.IN_FRONT_ANGLES:
+
                 self.opponent_direction = DIRECTION_FORWARD
             elif angle in self.IN_BACK_ANGLES:
                 self.opponent_direction = DIRECTION_BACKWARDS
@@ -66,7 +79,7 @@ class Main(commonstates.Timer):
         else:
             self.opponent_direction = None
 
-        self.send_packet(packets.OpponentPosition(robot = self.fsm.opponent_type, distance = packet.distance, x = self.x, y = self.y))
+        self.send_packet(packets.OpponentPosition(robot = self.fsm.opponent_type, distance = opponent_distance, x = self.x, y = self.y))
         self.restart()
 
         if self.opponent_direction is not None:
