@@ -201,7 +201,7 @@ class CalibratePosition(statemachine.State):
             yield SpeedControl()
             yield MoveLineTo(0.5, RED_START_Y)
             yield RotateTo(0.0)
-            yield MoveLineTo(RED_START_X, RED_START_Y)
+            yield MoveLineTo(RED_START_X, RED_START_Y, DIRECTION_BACKWARDS)
         yield None
 
 
