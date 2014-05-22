@@ -361,6 +361,7 @@ class List(AbstractItem):
 
 
 
+
 class String(AbstractItem):
 
     DESCRIPTION = "String of specified length"
@@ -383,3 +384,7 @@ class String(AbstractItem):
         if ind != -1 :
             val = val[:ind]
         return val
+
+
+    def to_dump(self, value):
+        return "'" + value + "'"
