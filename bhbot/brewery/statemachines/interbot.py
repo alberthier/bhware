@@ -45,7 +45,7 @@ class Main(Timer):
 
     def on_interbot_position(self, packet):
         d = tools.distance(packet.pose.x, packet.pose.y, self.robot.pose.x, self.robot.pose.y)
-        if d < MAIN_ROBOT_GYRATION_RADIUS + SECONDARY_ROBOT_GYRATION_RADIUS + 0.5:
+        if d < MAIN_ROBOT_GYRATION_RADIUS + SECONDARY_ROBOT_GYRATION_RADIUS + 0.6:
             a = tools.angle_between(0.0, 0.0, packet.pose.x - self.robot.pose.x, packet.pose.y - self.robot.pose.y)
             a1 = a
             a -= self.robot.pose.angle
