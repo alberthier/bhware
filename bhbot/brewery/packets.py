@@ -651,6 +651,15 @@ class InterbotGoalStatus(BasePacket):
     )
 
 
+class InterbotGeneric(BasePacket):
+
+    TYPE = 203
+
+    DEFINITION = (
+        ('data', String(255, "", "Data")),
+    )
+
+
 # Internal
 
 
