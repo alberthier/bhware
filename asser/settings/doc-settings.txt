@@ -1,33 +1,33 @@
 Reglage PI
 ==========
-KpD=
-KiD=
-DroueD=
-VmaxD=
-NbPasD=
-KpG=
-KiG=
-DroueG=
-VmaxG=
-NbPasG=
+KpD=3.01
+KiD=8.3
+DroueD=39.847
+VmaxD=0.9
+NbPasD=5000
+KpG=2.63
+KiG=8.54
+DroueG=39.967
+VmaxG=0.911
+NbPasG=5000
 
 
 Reglage Asser
 =============
-G_K1=
-G_K2 y=
-G_K3=
-Ratio_Acc=
-Ratio_Decc=
-Ratio_Acc_Rot=
-Ratio_Decc_Rot=
-G_C_ROT=
-VMinMouv=
-ErreurCodeur=
-EcartRouesLibres=
-EcartRouesMotrices=
-Dist Min=
-Angle Min=
-Coef_Gliss_Lateral=
-EcartVitesseAcc=
+G_K1=10.0
+G_K2 y=10.0
+G_K3=17.0
+Ratio_Acc=1.0
+Ratio_Decc=1.8
+Ratio_Acc_Rot=1.45
+Ratio_Decc_Rot=0.85
+G_C_ROT=26.0
+VMinMouv=0.1
+ErreurCodeur=300
+EcartRouesLibres=0.212
+EcartRouesMotrices=0.16
+Dist Min=0.001
+Angle Min=0.001
+Coef_Gliss_Lateral=0.0
+EcartVitesseAcc=0.05
 
