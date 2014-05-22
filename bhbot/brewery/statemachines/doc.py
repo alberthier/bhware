@@ -610,7 +610,7 @@ class EmptyFireTank(statemachine.State):
 class EndOfMatch(statemachine.State):
 
     def on_enter(self):
+        yield StopAll()
         yield Trigger(ARM_1_TAKE_TORCH_FIRE, ARM_2_TAKE_TORCH_FIRE)
         yield Trigger(ELEVATOR_LEVEL_2) # This is absolutely requierd to avoid elevator damages
         yield Trigger(MAMMOTH_NET_THROW)
-        yield StopAll()
