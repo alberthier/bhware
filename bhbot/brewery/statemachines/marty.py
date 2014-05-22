@@ -80,7 +80,7 @@ class CalibratePosition(statemachine.State):
             estimated_start_y = FIELD_Y_SIZE / 2.0
             yield DefinePosition(0.3 + ROBOT_CENTER_X, estimated_start_y, 0.0)
             yield MoveLineTo(RED_START_X, estimated_start_y)
-            yield Rotate(math.pi / 2.0)
+            yield RotateTo(math.pi / 2.0)
             yield SpeedControl(0.2)
             yield MoveLineTo(RED_START_X, 0.0, DIRECTION_BACKWARDS)
             yield SpeedControl()
