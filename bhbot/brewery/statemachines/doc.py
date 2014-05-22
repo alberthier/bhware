@@ -7,13 +7,16 @@ import statemachine
 import packets
 import position
 import logger
-import commonstates
 import goalmanager as mgm
 
 from definitions import *
 from commonstates import *
 from position import *
 from tools import *
+
+import statemachines.commontests
+import statemachines.doctests
+
 
 # global constants
 

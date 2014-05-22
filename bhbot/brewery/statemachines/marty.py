@@ -13,6 +13,9 @@ from definitions import *
 from commonstates import *
 from position import *
 
+import statemachines.commontests
+import statemachines.martytests
+
 
 
 
