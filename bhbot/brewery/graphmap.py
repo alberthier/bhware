@@ -182,12 +182,12 @@ class Map:
 
     def evaluate(self, start, end):
         # When evaluating a path we consider far opponents
-        for zone in [ self.main_opponent_zone, self.secondary_opponent_zone ]:
-            if zone.is_detected and zone.is_enabled:
+        for zone in [ self.main_opponent_zone, self.secondary_opponent_zone, self.teammate_zone ]:
+            if zone.is_detected and not zone.is_enabled:
                 self.pathfinder.enable_zone(zone.id, True)
         cost = self.route(start, end)[0]
-        for zone in [ self.main_opponent_zone, self.secondary_opponent_zone ]:
-            if zone.is_detected and zone.is_enabled:
+        for zone in [ self.main_opponent_zone, self.secondary_opponent_zone, self.teammate_zone ]:
+            if zone.is_detected and not zone.is_enabled:
                 self.pathfinder.enable_zone(zone.id, False)
         return cost
 
@@ -262,7 +262,8 @@ class Map:
                 coords = self.create_segment_coords(packet.pose.x, packet.pose.y, packet.pose.x, packet.pose.y, self.get_teammate_radius())
             self.teammate_zone.x = packet.pose.x
             self.teammate_zone.y = packet.pose.y
-            self.enable_zone(self.teammate_zone, True)
+            self.enable_zone(self.teammate_zone, not packet.is_moving)
+            self.teammate_zone.is_detected = True
             self.update_zone(self.teammate_zone, coords)
             self.teammate_zone_timer.restart()
 
