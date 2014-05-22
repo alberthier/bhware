@@ -161,8 +161,8 @@ class Main(statemachine.State):
 
 
         yield AntiBlocking(True)
-        yield CalibratePosition()
         yield InitialMotorPosition()
+        yield CalibratePosition()
         # yield CameraCalibrate()
         # yield FireStealer()
 
@@ -179,8 +179,8 @@ class InitialMotorPosition(statemachine.State):
     def on_enter(self):
         yield Trigger(PUMP_OFF)
         yield Trigger(ELEVATOR_UP)
-        yield Trigger(ARM_1_TAKE_TORCH_FIRE, ARM_2_TAKE_TORCH_FIRE)
-        yield Trigger(TORCH_GUIDE_CLOSE)
+        yield Trigger(ARM_1_STORE_FIRE, ARM_2_STORE_FIRE, TORCH_GUIDE_CLOSE, FIRE_FLIPPER_CLOSE, FRUITMOTH_FINGER_CLOSE, FRUITMOTH_ARM_CLOSE)
+        yield Trigger(FRUITMOTH_HATCH_CLOSE)
         self.send_packet(packets.SetLogPrefix(logger.filepath[:-3]))
         self.send_packet(packets.DisableScan())
         yield None
@@ -195,8 +195,10 @@ class CalibratePosition(statemachine.State):
             yield DefinePosition(estimated_start_x, ROBOT_CENTER_X, math.pi / 2.0)
             yield MoveLineTo(estimated_start_x, RED_START_Y)
             yield RotateTo(0.0)
+            yield SpeedControl(0.2)
             yield MoveLineTo(0.0, RED_START_Y, DIRECTION_BACKWARDS)
             yield DefinePosition(ROBOT_CENTER_X, None, 0.0)
+            yield SpeedControl()
             yield MoveLineTo(RED_START_X, RED_START_Y)
         yield None
 
