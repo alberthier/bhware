@@ -31,7 +31,7 @@ SECONDARY_ROBOT_CENTER_Y               = 0.0825
 SECONDARY_ROBOT_GYRATION_RADIUS        = 0.100535
 
 # Main start positons
-MAIN_RED_START_Y                       = MAIN_ROBOT_GYRATION_RADIUS + 0.01
+MAIN_RED_START_Y                       = MAIN_ROBOT_GYRATION_RADIUS
 MAIN_RED_START_X                       = 0.25
 MAIN_RED_START_ANGLE                   = 0.0
 
