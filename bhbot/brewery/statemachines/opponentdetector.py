@@ -13,15 +13,22 @@ from definitions import *
 
 class Main(commonstates.Timer):
 
-#    IN_FRONT_ANGLES = [16, 17, 0, 1, 2]
-    IN_FRONT_ANGLES = [2, 3, 4, 5, 6, 7]
-#    IN_BACK_ANGLES = [7, 8, 9, 10, 11]
-    IN_BACK_ANGLES = [10, 11, 12, 13, 14, 15]
-    PACKET_COUNT = 6
+    MAIN_IN_FRONT_IDS = [  2,  3,  4,  5,  6,  7 ]
+    MAIN_IN_BACK_IDS  = [ 11, 12, 13, 14, 15, 16 ]
+    MAIN_ANGLES = [ -90, -70, -50, -30, -10, 10, 30, 50, 70, 90, 110, 130, 150, 170, -170, -150, -130, -110 ]
+
+    SECONDARY_IN_FRONT_IDS = [  2,  3,  4,  5,  6,  7 ]
+    SECONDARY_IN_BACK_IDS  = [ 11, 12, 13, 14, 15, 16 ]
+    SECONDARY_ANGLES = [ -90, -70, -50, -30, -10, 10, 30, 50, 70, 90, 110, 130, 150, 170, -170, -150, -130, -110 ]
+
+    PACKET_BUFFER_SIZE = 6
 
     def __init__(self):
         super().__init__(OPPONENT_DETECTION_DISAPPEARING_MS)
         self.detections = collections.deque()
+        self.in_front_ids = self.MAIN_IN_FRONT_IDS if IS_MAIN_ROBOT else self.SECONDARY_IN_FRONT_IDS
+        self.in_back_ids  = self.MAIN_IN_BACK_IDS  if IS_MAIN_ROBOT else self.SECONDARY_IN_BACK_IDS
+        self.angles       = self.MAIN_ANGLES       if IS_MAIN_ROBOT else self.SECONDARY_ANGLES
 
 
     def on_enter(self):
@@ -29,29 +36,26 @@ class Main(commonstates.Timer):
         self.opponent_direction = None
         self.x = None
         self.y = None
-        self.enabled = True
-        if not hasattr(self.fsm, "offset_deg"):
-            self.fsm.offset_deg = -90.0
+        if not hasattr(self.fsm, "enabled"):
+            self.fsm.enabled = True
 
 
     def on_turret_detect(self, packet):
-        if not self.enabled:
+        if not self.fsm.enabled:
             return
         if packet.robot != self.fsm.opponent_type:
             return
 
         self.detections.append(packet.distance)
-        if len(self.detections) < self.PACKET_COUNT:
+        if len(self.detections) < self.PACKET_BUFFER_SIZE:
             return
-        elif len(self.detections) > self.PACKET_COUNT:
+        elif len(self.detections) > self.PACKET_BUFFER_SIZE:
             self.detections.popleft()
 
         # if a near detection is present in the 6 last detections, the opponent is near us
         if OPPONENT_DISTANCE_NEAR in self.detections:
-            self.log("Opponent detected near")
             opponent_distance = OPPONENT_DISTANCE_NEAR
         else:
-            self.log("Opponent detected far")
             opponent_distance = OPPONENT_DISTANCE_FAR
 
         if opponent_distance == OPPONENT_DISTANCE_NEAR:
@@ -59,20 +63,16 @@ class Main(commonstates.Timer):
         else:
             distance = TURRET_LONG_DISTANCE_DETECTION_RANGE
 
-        angle = (18 - packet.angle) % 18
-
         robot_pose = self.robot.pose
-        real_angle = (angle * 20.0 / 180.0) * math.pi
-        real_angle += robot_pose.angle + math.radians(self.fsm.offset_deg)
+        real_angle = math.radians(self.angles[packet.angle]) + robot_pose.angle
         self.x = robot_pose.x + distance * math.cos(real_angle)
         self.y = robot_pose.y + distance * math.sin(real_angle)
 
         previous_direction = self.opponent_direction
         if opponent_distance == OPPONENT_DISTANCE_NEAR:
-            if angle in self.IN_FRONT_ANGLES:
-
+            if packet.angle in self.in_front_ids:
                 self.opponent_direction = DIRECTION_FORWARD
-            elif angle in self.IN_BACK_ANGLES:
+            elif packet.angle in self.in_back_ids:
                 self.opponent_direction = DIRECTION_BACKWARDS
             else:
                 self.opponent_direction = None
@@ -99,7 +99,7 @@ class Main(commonstates.Timer):
         self.log("{} opponent disappeared".format(self.opponent_name()))
         self.set_detected(None)
         self.stop()
-        self.detections = []
+        self.detections = collections.deque()
         self.send_packet(packets.OpponentPosition(robot = self.fsm.opponent_type, x = None, y = None))
         if self.opponent_direction is not None:
             self.send_packet(packets.OpponentDisappeared(robot = self.fsm.opponent_type, direction = self.opponent_direction))

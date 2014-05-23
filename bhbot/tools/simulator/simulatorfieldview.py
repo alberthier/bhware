@@ -361,9 +361,14 @@ class RobotLayer(fieldview.Layer):
             dy = pos.y() - self.robot.item.y()
             angle = (self.robot.item.rotation() / 180.0 * math.pi) + math.atan2(dx, dy)
             # convert to brewery's coordinates
-            angle = math.atan2(math.cos(angle), math.sin(angle))
+            angle = -math.atan2(math.cos(angle), math.sin(angle))
             angle %= 2.0 * math.pi
             angle = int(round(angle / (2.0 * math.pi) * 18.0))
+
+            # Rotate the turret:
+            angle += 4;
+            if angle >= 18:
+                angle -= 18
 
             packet = packets.TurretDetect()
             packet.angle = angle
