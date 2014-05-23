@@ -280,6 +280,7 @@ class Map:
         x = pose.x + d * math.cos(angle)
         y = pose.y + d * math.sin(angle)
         coords = self.create_rect_coords(x, y, width, height, angle)
+        logger.log("Place UBO zone: {}".format(coords))
         self.enable_zone(self.ubo_zone, True)
         self.update_zone(self.ubo_zone, coords)
         self.ubo_zone_timer.restart()
