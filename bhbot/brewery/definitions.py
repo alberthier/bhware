@@ -277,6 +277,9 @@ ARM_2_FLIP_FIRE       = makeServoMoveCommand (ARM_2,     220)
 ARM_2_OPEN            = makeServoMoveCommand (ARM_2,     250)
 ARM_2_MIDDLE          = makeServoMoveCommand (ARM_2,     150)
 ARM_2_CLOSE           = makeServoMoveCommand (ARM_2,      80)
+ARM                   = (ACTUATOR_TYPE_SERVO_AX, 2, DEFAULT_AX_SERVOS_TIMEOUT_MS) # Marty's arm
+ARM_OPEN              = makeServoMoveCommand(ARM,         55)
+ARM_OPEN              = makeServoMoveCommand(ARM,        180)
 
 # AX Servos
 DEFAULT_AX_SERVOS_TIMEOUT_MS = DEFAULT_SERVOS_TIMEOUT_MS
