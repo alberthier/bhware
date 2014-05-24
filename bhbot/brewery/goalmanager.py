@@ -50,6 +50,7 @@ class Goal:
         else :
             if self.ctor_parameters is not None:
                 try :
+                    logger.log('Next state : {}{}'.format(self.handler_state.__name__, self.ctor_parameters))
                     return self.handler_state(*self.ctor_parameters)
                 except Exception as e :
                     logger.dbg("Exception while calling constructor for {} with parameters".format(self.handler_state, self.ctor_parameters))
@@ -57,6 +58,7 @@ class Goal:
                     raise
             else:
                 try :
+                    logger.log('Next state : {}()'.format(self.handler_state.__name__))
                     return self.handler_state()
                 except Exception as e :
                     logger.dbg("Exception while calling constructor for {}".format(self.handler_state))
