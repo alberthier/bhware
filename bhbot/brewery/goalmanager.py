@@ -249,6 +249,12 @@ class GoalManager:
 
 
     def update_goal_status(self, goal, new_status):
+        if not isinstance(goal, Goal):
+            for g in self.goals:
+                logger.log("{} == {}".format(g.identifier, goal))
+                if g.identifier == goal:
+                    goal = g
+                    break
         logger.log("Goal {} : {}".format(GOAL_STATUS.lookup_by_value[new_status], goal.identifier))
 
         self.internal_goal_update(goal.identifier, new_status)

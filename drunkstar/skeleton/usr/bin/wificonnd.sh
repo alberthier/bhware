@@ -13,8 +13,8 @@ while true; do
 
     if [ ${is_wifi_configured} -ne 0 ]; then
         killall wpa_supplicant
-        ifdown ${IFACE_NAME}
-        ifup ${IFACE_NAME}
+        /etc/init.d/S40network stop
+        /etc/init.d/S40network start
     fi
 
     sleep 2
