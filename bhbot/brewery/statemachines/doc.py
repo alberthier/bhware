@@ -14,10 +14,6 @@ from commonstates import *
 from position import *
 from tools import *
 
-import statemachines.commontests
-import statemachines.doctests
-
-
 # global constants
 
 TAKE_FRUITS_TRAVEL_DISTANCE = 0.5
@@ -33,8 +29,11 @@ TREE_SE_Y = 2.3 + TREE_APPROACH
 TREE_SW_Y = 0.7 + TREE_APPROACH
 TREE_W_Y = FRUIT_TAKE_DISTANCE
 
-elevator_take_levels = [ELEVATOR_LEVEL_3, ELEVATOR_LEVEL_2, ELEVATOR_LEVEL_1]
-elevator_store_levels = [ELEVATOR_LEVEL_1, ELEVATOR_LEVEL_2, ELEVATOR_LEVEL_3, ELEVATOR_UP]
+elevator_take_levels = [ELEVATOR_TAKE_LEVEL_3, ELEVATOR_TAKE_LEVEL_2, ELEVATOR_TAKE_LEVEL_1]
+elevator_store_levels = [ELEVATOR_STORE_LEVEL_1, ELEVATOR_STORE_LEVEL_2, ELEVATOR_STORE_LEVEL_3, ELEVATOR_STORE_LEVEL_4]
+
+ARM_SPEED_WITH_FIRE = 200
+ARM_SPEED_MAX = 1023
 
 
 class FireHarvestingGoal(mgm.Goal):
@@ -101,13 +100,51 @@ class Main(statemachine.State):
 
         TAKE_FRUITS_X_DELTA = TAKE_FRUITS_TRAVEL_DISTANCE/2
 
-        MY_TORCH_Y = 0.90
+        MY_TORCH_X = 0.91
+        MY_TORCH_Y = 0.78
+        MY_TORCH_ANGLE = 0.80
+
+        MY_TORCH_X_2 = 1.21
+        MY_TORCH_Y_2 = 0.70
+        MY_TORCH_ANGLE_2 = 2.39
+
+        if self.robot.team == TEAM_YELLOW :
+            MY_TORCH_X = 1.0
+            MY_TORCH_Y = sym_y(2.31)
+            MY_TORCH_ANGLE = 0.79
+
+            MY_TORCH_X_2 = 1.30
+            MY_TORCH_Y_2 = sym_y(2.20)
+            MY_TORCH_ANGLE_2 = sym_angle(-2.29)
 
 
         MINE_TREE_ANGLE          =       -math.pi
         THEIRS_TREE_ANGLE        =            0.0
         MINE_TREE_CENTER_ANGLE   = -math.pi / 2.0
         THEIRS_TREE_CENTER_ANGLE = -math.pi / 2.0
+
+        CENT_FD_X_1 = 1.0
+        CENT_FD_Y_1 = 1.12
+        CENT_FD_ANGLE_1 = 1.8
+
+        CENT_FD_X_2 = 1.0
+        CENT_FD_Y_2 = sym_y(CENT_FD_Y_1)
+        CENT_FD_ANGLE_2 = -1.28
+
+        if self.robot.team == TEAM_YELLOW :
+            MY_FD_X = 1.63
+            MY_FD_Y = sym_y(2.68) # double inversion
+            MY_FD_ANGLE = sym_angle(0.83)
+
+            CENT_FD_ANGLE_1 = sym_angle(-1.28)
+            CENT_FD_ANGLE_2 = sym_angle(1.8)
+
+        else :
+            MY_FD_X = 1.72
+            MY_FD_Y = 0.36
+            MY_FD_ANGLE = -0.78
+
+
         if self.robot.team == TEAM_YELLOW :
             FRUIT_SIDE_X_BOTTOM, FRUIT_SIDE_X_TOP = FRUIT_SIDE_X_TOP, FRUIT_SIDE_X_BOTTOM
             TAKE_FRUITS_X_DELTA *= -1
@@ -134,20 +171,31 @@ class Main(statemachine.State):
         gm.add(
             mgm.Goal           ("HuntTheMammoth"     ,        10, self.start_x,                0.75, DIRECTION_FORWARD  , HuntTheMammoth ,            None, False,    True),
 
-            FireHarvestingGoal ("TakeTorch_Mine"     ,        10,          1.1,          MY_TORCH_Y, DIRECTION_FORWARD  , TakeTorch      ,         (True,), False,    True),
-            FireHarvestingGoal ("TakeTorch_Theirs"   ,         1,          1.1,   sym_y(MY_TORCH_Y), DIRECTION_FORWARD  , TakeTorch      ,        (False,), False,    True),
+           FireHarvestingGoal ("TakeTorch_Mine"     ,        10,          MY_TORCH_X,          MY_TORCH_Y, DIRECTION_FORWARD  , TakeTorch      ,         (MY_TORCH_ANGLE, True,), False,    True),
+           FireHarvestingGoal ("TakeTorch_Mine"     ,        10,        MY_TORCH_X_2,        MY_TORCH_Y_2, DIRECTION_FORWARD  , TakeTorch      ,       (MY_TORCH_ANGLE_2, True,), False,    True),
+#            FireHarvestingGoal ("TakeTorch_Theirs"   ,         1,          1.1,   sym_y(MY_TORCH_Y), DIRECTION_FORWARD  , TakeTorch      ,        (False,), False,    True),
 
-            FireDepositGoal    ("DepositFires_Mine"  ,        10,         1.65,                0.35, DIRECTION_FORWARD  , EmptyFireTank  ,            None, False,    True),
-            FireDepositGoal    ("DepositFires_Center",         1,         1.05,                1.50, DIRECTION_FORWARD  , EmptyFireTank  ,            None, False,    True),
-            FireDepositGoal    ("DepositFires_Theirs",         3,         1.65,                2.65, DIRECTION_FORWARD  , EmptyFireTank  ,            None, False,    True),
+            FireDepositGoal    ("DepositFires_Mine"  ,        10,      MY_FD_X,             MY_FD_Y, DIRECTION_FORWARD  , EmptyFireTank  ,       (MY_FD_ANGLE,), False,    True),
+            FireDepositGoal    ("DepositFires_Center",         1,    CENT_FD_X_1,           CENT_FD_Y_1, DIRECTION_FORWARD  , EmptyFireTank  ,       (CENT_FD_ANGLE_1,), False,    True),
+            FireDepositGoal    ("DepositFires_Center",         1,    CENT_FD_X_2,           CENT_FD_Y_2, DIRECTION_FORWARD  , EmptyFireTank  ,       (CENT_FD_ANGLE_2,), False,    True),
+            # FireDepositGoal    ("DepositFires_Theirs",         3,         1.65,                2.65, DIRECTION_FORWARD  , EmptyFireTank  ,            None, False,    True),
 
-            FruitHarvestingGoal("FruitTreeE"         ,         3,     TREE_E_X,            tree_e_y, DIRECTION_FORWARD  , SuperTakeFruits,            None, False,    True),
-            FruitHarvestingGoal("FruitTreeSE"        , st_weight,    TREE_SE_X,           tree_se_y, DIRECTION_FORWARD  , SuperTakeFruits,            None, False,    True),
-            FruitHarvestingGoal("FruitTreeSW"        , st_weight,    TREE_SW_X,           tree_sw_y, DIRECTION_FORWARD  , SuperTakeFruits,            None, False,    True),
-            FruitHarvestingGoal("FruitTreeW"         ,         3,     TREE_W_X,            tree_w_y, DIRECTION_FORWARD  , SuperTakeFruits,            None, False,    True),
-
-            FruitDepositGoal   ("DepFruits_Inner"    ,         7,         0.52,                2.10, DIRECTION_BACKWARDS, DumpFruits     ,            None, False,    True),
-            FruitDepositGoal   ("DepFruits_Outer"    ,         7,         0.52,                2.37, DIRECTION_BACKWARDS, DumpFruits     ,            None, False,    True),
+            # FruitHarvestingGoal("FruitTreeE"         ,         3,     TREE_E_X,            tree_e_y, DIRECTION_FORWARD  , SuperTakeFruits,            None, False,    True),
+            # FruitHarvestingGoal("FruitTreeSE"        , st_weight,    TREE_SE_X,           tree_se_y, DIRECTION_FORWARD  , SuperTakeFruits,            None, False,    True),
+            # FruitHarvestingGoal("FruitTreeSW"        , st_weight,    TREE_SW_X,           tree_sw_y, DIRECTION_FORWARD  , SuperTakeFruits,            None, False,    True),
+            # FruitHarvestingGoal("FruitTreeW"         ,         3,     TREE_W_X,            tree_w_y, DIRECTION_FORWARD  , SuperTakeFruits,            None, False,    True),
+#
+           # FireDepositGoal    ("DepositFires_Mine"  ,        10,         1.65,                0.35, DIRECTION_FORWARD  , EmptyFireTank  ,            None, False,    True),
+#            FireDepositGoal    ("DepositFires_Center",         1,         1.05,                1.50, DIRECTION_FORWARD  , EmptyFireTank  ,            None, False,    True),
+#            FireDepositGoal    ("DepositFires_Theirs",         3,         1.65,                2.65, DIRECTION_FORWARD  , EmptyFireTank  ,            None, False,    True),
+#
+#            FruitHarvestingGoal("FruitTreeE"         ,         3,     TREE_E_X,            tree_e_y, DIRECTION_FORWARD  , SuperTakeFruits,            None, False,    True),
+#            FruitHarvestingGoal("FruitTreeSE"        , st_weight,    TREE_SE_X,           tree_se_y, DIRECTION_FORWARD  , SuperTakeFruits,            None, False,    True),
+#            FruitHarvestingGoal("FruitTreeSW"        , st_weight,    TREE_SW_X,           tree_sw_y, DIRECTION_FORWARD  , SuperTakeFruits,            None, False,    True),
+#            FruitHarvestingGoal("FruitTreeW"         ,         3,     TREE_W_X,            tree_w_y, DIRECTION_FORWARD  , SuperTakeFruits,            None, False,    True),
+#
+#            FruitDepositGoal   ("DepFruits_Inner"    ,         7,         0.52,                2.10, DIRECTION_BACKWARDS, DumpFruits     ,            None, False,    True),
+#            FruitDepositGoal   ("DepFruits_Outer"    ,         7,         0.52,                2.37, DIRECTION_BACKWARDS, DumpFruits     ,            None, False,    True),
         )
 
 #        fruit_goals = (
@@ -177,12 +225,13 @@ class Main(statemachine.State):
 
 class InitialMotorPosition(statemachine.State):
     def on_enter(self):
-        yield Trigger(PUMP_OFF)
-        yield Trigger(ELEVATOR_UP)
-        yield Trigger(ARM_1_STORE_FIRE, ARM_2_STORE_FIRE, TORCH_GUIDE_CLOSE, FIRE_FLIPPER_CLOSE, FRUITMOTH_FINGER_CLOSE, FRUITMOTH_ARM_CLOSE)
+        yield Trigger(FRUITMOTH_FINGER_CLOSE, FRUITMOTH_ARM_CLOSE)
         yield Trigger(FRUITMOTH_HATCH_CLOSE)
         self.send_packet(packets.SetLogPrefix(logger.filepath[:-3]))
         self.send_packet(packets.DisableScan())
+
+        yield ArmIdle()
+
         yield None
 
 class CalibratePosition(statemachine.State):
@@ -265,7 +314,7 @@ class CameraCalibrate(statemachine.State):
         yield Trigger(TORCH_GUIDE_CLOSE)
         yield Trigger(ELEVATOR_UP)
         yield Timer(2000)
-        yield Trigger(ELEVATOR_LEVEL_1)
+        yield Trigger(ELEVATOR_TAKE_LEVEL_1)
         yield Timer(5000)
 
         self.send_packet(packets.ColorDetectorPacket("StoreReference COLOR_YELLOW"))
@@ -364,12 +413,14 @@ class TakeFire(statemachine.State):
 
 class TakeTorch(statemachine.State):
 
-    def __init__(self, my_side):
+    def __init__(self, angle, my_side):
+        self.angle = angle
         self.my_side = my_side
 
 
     def on_enter(self):
-        flip = self.my_side
+        flip = not self.my_side
+        yield RotateTo(self.angle)
         yield Trigger(ELEVATOR_UP, FIRE_FLIPPER_OPEN)
         for i in range(3):
             # yield Trigger(ARM_1_TAKE_TORCH_FIRE, ARM_2_TAKE_TORCH_FIRE)
@@ -377,31 +428,101 @@ class TakeTorch(statemachine.State):
             # yield Timer(300)
             # yield Trigger(ELEVATOR_UP)
             yield TakeFire(elevator_take_levels[i])
-            yield from self.arm_speed(200)
+            yield ArmSpeed(ARM_SPEED_WITH_FIRE)
             if flip:
                 # On retourne le feu
                 yield Trigger(ARM_1_FLIP_FIRE, ARM_2_FLIP_FIRE)
                 yield Trigger(PUMP_OFF)
+                yield ArmSpeed(ARM_SPEED_MAX)
                 yield Timer(300)
             else:
                 # Sinon, on le stocke
                 yield Trigger(ARM_1_STORE_FIRE, ARM_2_STORE_FIRE)
                 yield Trigger(elevator_store_levels[self.robot.stored_fires])
                 yield Trigger(PUMP_OFF)
+                yield ArmSpeed(ARM_SPEED_MAX)
                 yield Timer(300)
                 yield Trigger(ELEVATOR_UP)
                 self.robot.stored_fires += 1
-                yield from self.arm_speed(1023)
             flip = not flip
-        yield Trigger(FIRE_FLIPPER_CLOSE)
+        yield Trigger(FIRE_FLIPPER_CLOSE, TORCH_GUIDE_OPEN)
+        yield ArmIdle()
         self.exit_reason = GOAL_DONE
         yield None
 
 
-    def arm_speed(self, speed):
-        yield Trigger(makeServoSetupCommand(ARM_1, speed), makeServoSetupCommand(ARM_2, speed))
+# class DepositFires(statemachine.State):
+#
+#     def __init__(self, arm1_angle, arm2_angle):
+#         # self.my_side = my_side
+#         self.arm1_angle = arm1_angle
+#         self.arm2_angle = arm2_angle
+#
+#
+#     def on_enter(self):
+#         yield Trigger(ELEVATOR_UP)
+#         for i in range(self.robot.stored_fires, 0, -1):
+#             yield ArmSpeed(ARM_SPEED_MAX)
+#             yield Trigger(ARM_1_STORE_FIRE, ARM_2_STORE_FIRE)
+#             yield Trigger(PUMP_ON, elevator_take_levels[i])
+#             yield Timer(300)
+#             yield ArmSpeed(ARM_SPEED_WITH_FIRE)
+#             yield Trigger(ELEVATOR_UP)
+#             yield Trigger(makeServoMoveCommand(ARM_1, self.arm1_angle,),
+#                           makeServoMoveCommand(ARM_2, self.arm2_angle))
+#             yield Trigger(ELEVATOR_DEPOSIT_FIRE)
+#             yield Trigger(PUMP_OFF)
+#             yield ArmSpeed(ARM_SPEED_MAX)
+#
+#         yield Trigger(ELEVATOR_UP)
+#         yield Trigger(PUMP_OFF)
+#
+#         # TODO : Put arm in safe position
+#
+#         self.exit_reason = GOAL_DONE
+#         yield None
+
+class DepositFire(statemachine.State):
+
+    def __init__(self, arm1_angle, arm2_angle, pump_state=False, level=ELEVATOR_DEPOSIT_FIRE):
+        # self.my_side = my_side
+        self.arm1_angle = arm1_angle
+        self.arm2_angle = arm2_angle
+        self.pump_state = pump_state
+        self.deposit_level = level
 
 
+    def on_enter(self):
+        yield ArmSpeed(ARM_SPEED_MAX)
+        yield Trigger(ELEVATOR_UP)
+        yield Trigger(ARM_1_STORE_FIRE, ARM_2_STORE_FIRE)
+        logger.log("Deposit of fire {} stored at level {} angles : {} {}".format(
+            self.robot.stored_fires,
+            elevator_store_levels[self.robot.stored_fires - 1],
+            self.arm1_angle,
+            self.arm2_angle,
+        ))
+        yield Trigger(PUMP_ON, elevator_store_levels[self.robot.stored_fires - 1])
+        yield Timer(300)
+        yield ArmSpeed(ARM_SPEED_WITH_FIRE)
+        yield Trigger(ELEVATOR_UP)
+        yield Trigger(makeServoMoveCommand(ARM_1, self.arm1_angle,),
+                      makeServoMoveCommand(ARM_2, self.arm2_angle))
+
+        yield Trigger(self.deposit_level)
+
+        if not self.pump_state :
+            yield Trigger(PUMP_OFF)
+            yield Timer(300)
+            yield Trigger(ELEVATOR_UP)
+
+        self.robot.stored_fires-=1
+        yield ArmSpeed(ARM_SPEED_MAX)
+
+        # TODO : Put arm in safe position
+
+        self.exit_reason = GOAL_DONE
+        yield None
 
 
 class SuperTakeFruits(statemachine.State):
@@ -586,13 +707,49 @@ class DumpFruits(statemachine.State):
 
         yield None
 
+
+class ArmIdle(statemachine.State):
+    def on_enter(self):
+        yield ArmSpeed(ARM_SPEED_MAX)
+        yield Trigger(ELEVATOR_UP)
+        yield Trigger(PUMP_OFF, ARM_1_SECURE, ARM_2_SECURE, TORCH_GUIDE_HIDE, FIRE_FLIPPER_CLOSE)
+        yield None
+
+
 class EmptyFireTank(statemachine.State):
 
+    def __init__(self, angle):
+        self.angle = angle
+
     def on_enter(self):
-        if self.goal.identifier == 'Deposit_Mine' :
-            yield RotateTo(- math.pi / 4.0)
-        elif self.goal.identifier == 'Deposit_Theirs' :
-            yield RotateTo( math.pi / 4.0)
+        yield RotateTo(self.angle)
+        yield MoveLineRelative(0.05)
+
+        positions = []
+
+        if "Center" in self.goal.identifier :
+            positions = [ [180, 152],
+                          [125, 152],
+                        ]
+        else :
+            positions = [ [150, 152],
+                          [ 95, 152],
+                        ]
+
+        for deposit_angles in positions :
+            if self.robot.stored_fires > 0 :
+                yield DepositFire(*deposit_angles)
+
+        if self.robot.stored_fires > 0 :
+            yield MoveLineRelative(0.15, direction=DIRECTION_BACKWARDS)
+            yield DepositFire(*[122, 152], pump_state=True, level=ELEVATOR_DEPOSIT_FIRE)
+            yield Trigger(PUMP_OFF)
+            yield Timer(300)
+            yield Trigger(ELEVATOR_UP)
+
+        yield MoveLineRelative(0.15, direction=DIRECTION_BACKWARDS)
+
+        yield ArmIdle()
 
         self.exit_reason = GOAL_DONE
         self.robot.stored_fires = 0
@@ -610,5 +767,5 @@ class EndOfMatch(statemachine.State):
     def on_enter(self):
         yield StopAll()
         yield Trigger(ARM_1_TAKE_TORCH_FIRE, ARM_2_TAKE_TORCH_FIRE)
-        yield Trigger(ELEVATOR_LEVEL_2) # This is absolutely requierd to avoid elevator damages
+        yield Trigger(ELEVATOR_TAKE_LEVEL_2) # This is absolutely requierd to avoid elevator damages
         yield Trigger(MAMMOTH_NET_THROW)
