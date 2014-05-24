@@ -525,9 +525,9 @@ class TakeFruits(statemachine.State):
         # slow down
         yield SpeedControl(0.2)
         # Ouvrir la trappe
-        Trigger(FRUITMOTH_HATCH_OPEN)
+        yield Trigger(FRUITMOTH_HATCH_OPEN)
         # Sortir le développeur et le doigt
-        Trigger(FRUITMOTH_ARM_OPEN, FRUITMOTH_FINGER_OPEN)
+        yield Trigger(FRUITMOTH_ARM_OPEN, FRUITMOTH_FINGER_OPEN)
 
         self.retract_finger = True
         x = self.goal.x
@@ -561,9 +561,9 @@ class TakeFruits(statemachine.State):
     def on_waypoint_reached(self, packet):
         if self.retract_finger:
             self.retract_finger = False
-            yield Trigger(FRUITMOTH_FINGER_RETRACT)
+            self.send_packet(*FRUITMOTH_FINGER_RETRACT)
         else:
-            yield Trigger(FRUITMOTH_FINGER_OPEN)
+            self.send_packet(*FRUITMOTH_FINGER_OPEN)
 
 
 class DumpFruits(statemachine.State):
