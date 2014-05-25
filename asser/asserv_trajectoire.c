@@ -468,6 +468,7 @@ extern void ASSER_TRAJ_AsservissementMouvementRobot(Pose poseRobot, VitessesRobo
             }
         }
     }
+    ASSER_TRAJ_LogAsserValPC("flag_ASSER_TRAJ_TestFinAsservissement", flag_ASSER_TRAJ_TestFinAsservissement);
 
     /* distance de deplacement sur la periode */
     if (ASSER_TRAJ_isDeplacement(&chemin) == True)
