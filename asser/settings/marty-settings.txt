@@ -14,7 +14,7 @@ NbPasG=1024
 Asser Settings
 --------------
 G_K1=10.000
-G_K2 y=25.000
+G_K2=25.000
 G_K3=9.000
 Ratio_Acc=0.800
 Ratio_Decc=1.800
@@ -25,7 +25,14 @@ VMinMouv=0.100
 ErreurCodeur=60
 EcartRouesLibres=0.0943
 EcartRouesMotrices=0.078
-Dist Min=0.001
-Angle Min=0.001
+Dist_Min=0.001
+Angle_Min=0.001
 Coef_Gliss_Lateral=0.000
 EcartVitesseAcc=0.050
+
+Reglage Simulator
+-----------------
+t1_G=0.155;
+t2_G=0.155;
+t1_D=0.177;
+t2_D=0.177;

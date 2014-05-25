@@ -4,6 +4,7 @@
 
 import subprocess
 import sys
+import os.path
 import platform
 import time
 from matplotlib.pyplot import *
@@ -74,6 +75,61 @@ def stdoutParser(l_line):
     file("log.txt","w").write(str(d_traj))
     return d_traj
 
+def get_parameters_from_setting_file(robot, l_flash_params) :
+    filename_path = os.path.join(".", "settings")
+    filename_path = os.path.join(filename_path, robot + "-settings.txt")
+
+    f_flash_params = open(filename_path, "r")
+    lines_flash_params = f_flash_params.readlines()
+    f_flash_params.close()
+    
+    #~ l_flash_params = ['KpD', 'KiD', 'DroueD', 'VmaxD', 'NbPasD'
+                #~ , 'KpG', 'KiG', 'DroueG', 'VmaxG', 'NbPasG'
+                #~ , 'G_K1', 'G_K2', 'G_K3', 'Ratio_Acc', 'Ratio_Decc'
+                #~ , 'Ratio_Acc_Rot', 'Ratio_Decc_Rot', 'G_C_ROT', 'VMinMouv', 'EcartRouesLibres'
+                #~ , 'EcartRouesMotrices', 'Dist_Min', 'Angle_Min', 'Coef_Gliss_Lateral', 'EcartVitesseAcc'
+                #~ , 't1_G', 't2_G', 't1_D', 't2_D']
+    
+    d_flash_params = {}
+    for flash_param in l_flash_params :
+        for line in lines_flash_params :
+            res = re.search(flash_param + '=([\d.]+)', line)
+            if res != None :
+                d_flash_params[flash_param] = res.groups()[0]
+        
+    return l_flash_params, d_flash_params
+    
+def MSG_flash_parameters_1(l_flash_params, d_flash_params) :
+    #generation d'un message de configuration des parametres de la flash
+    parametersFlash = commandMsg("PARAMETERS_FLASH_1")
+    for flash_param in l_flash_params :
+        parametersFlash.addPose("FP" + str(l_flash_params.index(flash_param)) + " " + d_flash_params[flash_param])
+    return parametersFlash.cmdMsgGeneration()
+    
+def MSG_flash_parameters_2(l_flash_params, d_flash_params) :
+    #generation d'un message de configuration des parametres de la flash
+    parametersFlash = commandMsg("PARAMETERS_FLASH_2")
+    for flash_param in l_flash_params :
+        parametersFlash.addPose("FP" + str(l_flash_params.index(flash_param)) + " " + d_flash_params[flash_param])
+    return parametersFlash.cmdMsgGeneration()
+
+def send_flash_parameters_1(process, robot) :
+    l_flash_params = ['KpD', 'KiD', 'DroueD', 'VmaxD', 'NbPasD'
+                , 'KpG', 'KiG', 'DroueG', 'VmaxG', 'NbPasG'
+                , 'G_K1', 'G_K2', 'G_K3', 'Ratio_Acc', 'Ratio_Decc'
+                , 'Ratio_Acc_Rot', 'Ratio_Decc_Rot', 'G_C_ROT']
+    l_flash_params, d_flash_params = get_parameters_from_setting_file(robot, l_flash_params)
+    msg = MSG_flash_parameters_1(l_flash_params, d_flash_params)
+    #~ msg = "PARAMETERS_FLASH 1 FP0 3.01 FP1 8.3 FP2 39.847 FP3 0.9 FP4 5000 FP5 2.63 FP6 8.54 FP7 39.967 FP8 0.911 FP9 5000 FP10 10.0 FP11 10.0 FP12 17.0 FP13 1.0 FP14 1.8 FP15 1.45 FP16 0.85 FP17 26.0 FP18 0.1 FP19 0.212 FP20 0.16 FP21 0.001 FP22 0.001 FP23 0.0 FP24 0.05 FP25 0.046 FP26 0.286 FP27 0.026 FP28 0.302"
+    process.stdin.write(msg)
+    
+def send_flash_parameters_2(process, robot) :
+    l_flash_params = ['VMinMouv', 'EcartRouesLibres'
+                , 'EcartRouesMotrices', 'Dist_Min', 'Angle_Min', 'Coef_Gliss_Lateral', 'EcartVitesseAcc'
+                , 't1_G', 't2_G', 't1_D', 't2_D']
+    l_flash_params, d_flash_params = get_parameters_from_setting_file(robot, l_flash_params)
+    msg = MSG_flash_parameters_2(l_flash_params, d_flash_params)
+    process.stdin.write(msg)
 
 def MSG_init_pose(x=0.0, y=0.0, angle=0.0) :
     #generation d'un message d'init de pose
@@ -181,21 +237,25 @@ def send_config_modeleMoteurCC(process,
                                                     constante_vitesse,
                                                     rapport_reduction))
 
-def send_config_simulator(simulator_process, d_cfgTraj) :
+def send_config_simulator(simulator_process, d_cfgTraj, robot='doc') :
+    # envoie au simulateur de la configuration des parametres de la memoire flash
+    send_flash_parameters_1(simulator_process, robot)
+    send_flash_parameters_2(simulator_process, robot)
+    
     # envoie au simulateur de la configuration des gains de l'asser de vitesse PI
-    send_config_PI(simulator_process, d_cfgTraj['KpG'], d_cfgTraj['KiG'], d_cfgTraj['KpD'], d_cfgTraj['KiD'])
+    #~ send_config_PI(simulator_process, d_cfgTraj['KpG'], d_cfgTraj['KiG'], d_cfgTraj['KpD'], d_cfgTraj['KiD'])
 
     # envoie au simulateur de la configuration des gains de l'asser de déplacement longitudinal (l'asser haut niveau)
-    send_config_AsserTrajectoire(simulator_process, d_cfgTraj['K1'], d_cfgTraj['K2'], d_cfgTraj['K3'])
+    #~ send_config_AsserTrajectoire(simulator_process, d_cfgTraj['K1'], d_cfgTraj['K2'], d_cfgTraj['K3'])
 
     # envoie au simulateur de la configuration des gains de l'asser de rotation
-    send_config_AsserRotation(simulator_process, d_cfgTraj['R1'])
+    #~ send_config_AsserRotation(simulator_process, d_cfgTraj['R1'])
 
     # envoie au simulateur de la configuration des parametres du profil de vitesse
     #~ send_config_profilVitesse(simulator_process, d_cfgTraj['Amax'], d_cfgTraj['Dmax'])
 
     # envoie au simulateur de la configuration des parametres haut niveau du profil de vitesse
-    send_configGeneraleAsser(simulator_process, d_cfgTraj['RatioAcc'], d_cfgTraj['RatioDecc'], d_cfgTraj['RatioAccRot'], d_cfgTraj['RatioDeccRot'])
+    #~ send_configGeneraleAsser(simulator_process, d_cfgTraj['RatioAcc'], d_cfgTraj['RatioDecc'], d_cfgTraj['RatioAccRot'], d_cfgTraj['RatioDeccRot'])
 
     # envoie au simulateur des parametres du modele des moteurs à courant continu de déplacement
     #~ send_config_modeleMoteurCC(simulator_process,
@@ -312,7 +372,7 @@ def testPI(d_cfgTraj, d_cfgTestPI) :
 
     return d_traj
     
-def test_MOVE_LINE(d_cfgTraj) :
+def test_MOVE_LINE(d_cfgTraj, distance = 2.0, robot='doc') :
 
     #lancement du simulateur de deplacement
     print("Lancement du simulateur")
@@ -323,12 +383,12 @@ def test_MOVE_LINE(d_cfgTraj) :
     simulator_process = subprocess.Popen(shellCommand, shell=True, stdin = subprocess.PIPE, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
 
     # envoie de la configuration du simulateur
-    send_config_simulator(simulator_process, d_cfgTraj)
+    send_config_simulator(simulator_process, d_cfgTraj, robot)
     print("Config envoyee")
         
     send_init_pose(simulator_process, x=0.2, y=0.2, angle=0.0)
     deplacement_MOVE_LINE = commandMsg("MSG_MOVE_LINE 1")
-    deplacement_MOVE_LINE.addPose("3.2 0.2")
+    deplacement_MOVE_LINE.addPose(str(0.2+distance) + " 0.2")
     
     #transmission de commandes de deplacement par l'entree standard
     simulator_process.stdin.write(deplacement_MOVE_LINE.cmdMsgGeneration())
@@ -344,7 +404,7 @@ def test_MOVE_LINE(d_cfgTraj) :
 
     return d_traj
     
-def test_MOVE_ROTATE(d_cfgTraj) :
+def test_MOVE_LINE_MULTI_PTS(d_cfgTraj, robot='doc') :
 
     #lancement du simulateur de deplacement
     print("Lancement du simulateur")
@@ -355,11 +415,47 @@ def test_MOVE_ROTATE(d_cfgTraj) :
     simulator_process = subprocess.Popen(shellCommand, shell=True, stdin = subprocess.PIPE, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
 
     # envoie de la configuration du simulateur
-    send_config_simulator(simulator_process, d_cfgTraj)
+    send_config_simulator(simulator_process, d_cfgTraj, robot)
+    print("Config envoyee")
+        
+    send_init_pose(simulator_process, x=1.0, y=2.72, angle=0.000)
+    deplacement_MOVE_LINE_MULTI_PTS = commandMsg("MSG_MOVE_LINE 1")
+    deplacement_MOVE_LINE_MULTI_PTS.addPose("1.2 2.72")
+    deplacement_MOVE_LINE_MULTI_PTS.addPose("1.4 2.72")
+    deplacement_MOVE_LINE_MULTI_PTS.addPose("1.6 2.72")
+    deplacement_MOVE_LINE_MULTI_PTS.addPose("1.8 2.72")
+    deplacement_MOVE_LINE_MULTI_PTS.addPose("2.0 2.72")
+    
+    #transmission de commandes de deplacement par l'entree standard
+    simulator_process.stdin.write(deplacement_MOVE_LINE_MULTI_PTS.cmdMsgGeneration())
+    print("Test MOVE LINE MULTI PTS")
+
+    #transmission de la commande d'arret du simulateur
+    (stdoutdata, stderrdata) = simulator_process.communicate("QUIT\n")
+    print("Simulation terminee.")
+
+    #traitement des donnees de stdout
+    lines = lineForm(stdoutdata)
+    d_traj = stdoutParser(lines)
+
+    return d_traj
+    
+def test_MOVE_ROTATE(d_cfgTraj, angle = math.pi/2.0, robot='doc') :
+
+    #lancement du simulateur de deplacement
+    print("Lancement du simulateur")
+    if (platform.system() == 'Linux') :
+        shellCommand = './simulator_trajAsser'
+    if (platform.system() == 'Windows') :
+        shellCommand = 'simulator_trajAsser.exe'
+    simulator_process = subprocess.Popen(shellCommand, shell=True, stdin = subprocess.PIPE, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+
+    # envoie de la configuration du simulateur
+    send_config_simulator(simulator_process, d_cfgTraj, robot)
     print("Config envoyee")
         
     send_init_pose(simulator_process, x=0.2, y=0.2, angle=0.0)
-    deplacement_MOVE_ROTATE = commandMsg("MSG_ROTATE 0 1.57")
+    deplacement_MOVE_ROTATE = commandMsg("MSG_ROTATE 0 " + str(angle))
     
     #transmission de commandes de deplacement par l'entree standard
     simulator_process.stdin.write(deplacement_MOVE_ROTATE.cmdMsgGeneration())
@@ -375,7 +471,7 @@ def test_MOVE_ROTATE(d_cfgTraj) :
 
     return d_traj
     
-def test_MOVE_CURVE(d_cfgTraj) :
+def test_MOVE_CURVE(d_cfgTraj, robot='doc') :
 
     #lancement du simulateur de deplacement
     print("Lancement du simulateur")
@@ -386,7 +482,7 @@ def test_MOVE_CURVE(d_cfgTraj) :
     simulator_process = subprocess.Popen(shellCommand, shell=True, stdin = subprocess.PIPE, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
 
     # envoie de la configuration du simulateur
-    send_config_simulator(simulator_process, d_cfgTraj)
+    send_config_simulator(simulator_process, d_cfgTraj, robot)
     print("Config envoyee")
         
     send_init_pose(simulator_process, x=0.2, y=0.2, angle=0.3)
@@ -404,6 +500,51 @@ def test_MOVE_CURVE(d_cfgTraj) :
     #traitement des donnees de stdout
     lines = lineForm(stdoutdata)
     d_traj = stdoutParser(lines)
+
+    return d_traj
+    
+def test_MOVE_SHORT_TREE(d_cfgTraj, robot='doc') :
+
+    #lancement du simulateur de deplacement
+    print("Lancement du simulateur")
+    if (platform.system() == 'Linux') :
+        shellCommand = './simulator_trajAsser'
+    if (platform.system() == 'Windows') :
+        shellCommand = 'simulator_trajAsser.exe'
+    simulator_process = subprocess.Popen(shellCommand, shell=True, stdin = subprocess.PIPE, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+
+    # envoie de la configuration du simulateur
+    send_config_simulator(simulator_process, d_cfgTraj, robot)
+    print("Config envoyee")
+        
+    send_init_pose(simulator_process, x=0.95, y=2.72, angle=0.0)
+    deplacement = commandMsg("MSG_MOVE_LINE 1")
+    deplacement.addPose("1.05 2.72")
+    simulator_process.stdin.write(deplacement.cmdMsgGeneration())
+    
+    deplacement = commandMsg("MSG_ROTATE 0 0.0")
+    simulator_process.stdin.write(deplacement.cmdMsgGeneration())
+    
+    deplacement = commandMsg("MSG_MOVE_CURVE 1 0 0.0")
+    deplacement.addPose("1.2 2.72")
+    deplacement.addPose("1.33 2.72")
+    deplacement.addPose("1.55 2.72")
+    #transmission de commandes de deplacement par l'entree standard
+    simulator_process.stdin.write(deplacement.cmdMsgGeneration())
+    print("Test MOVE SHORT TREE")
+
+    #transmission de la commande d'arret du simulateur
+    (stdoutdata, stderrdata) = simulator_process.communicate("QUIT\n")
+    print("Simulation terminee.")
+
+    #traitement des donnees de stdout
+    lines = lineForm(stdoutdata)
+    d_traj = stdoutParser(lines)
+    
+    if "fFinDbg" in d_traj.keys() :
+        print("fFinDbg: " + str(d_traj["fFinDbg"][-4:]))
+    if "fFinDbgSeg" in d_traj.keys() :
+        print("fFinDbgSeg: " + str(d_traj["fFinDbgSeg"][-2:]))
 
     return d_traj
 
@@ -534,7 +675,8 @@ def criteria_Kparams(paramK, d_cfgTraj_local) :
 
     erreurPose_y_MaxAbs = 0.0
     # cout de l'erreur de Pose_y maximum
-    mid_len = int(len(d_traj["erreurPose_y"])/2.0)
+    #~ mid_len = int(len(d_traj["erreurPose_y"])/2.0)
+    mid_len = 0
     for erreurPose_y in d_traj["erreurPose_y"][mid_len:] :
         if (math.fabs(float(erreurPose_y)) > erreurPose_y_MaxAbs) :
             erreurPose_y_MaxAbs = math.fabs(float(erreurPose_y))
@@ -548,8 +690,8 @@ def plot_criteria_Kparams(d_cfgTraj_local) :
     K1 = 10.0
     #~ l_K2 = numpy.arange(1.0, 8.0, 1.0)
     #~ l_K3 = numpy.arange(27.0, 33.0, 1.0)
-    l_K2 = numpy.arange(5.0, 50.0, 5.0)
-    l_K3 = numpy.arange(13.0, 28.0, 2.0)
+    l_K2 = numpy.arange(25.0, 46.0, 5.0)
+    l_K3 = numpy.arange(8.0, 11.0, 1.0)
     
     figure()
     
@@ -840,6 +982,7 @@ def plot_test_MOVE(d_traj):
     print("Periode: " + str(periode))
     temps = [ periode * x for x in range(len(d_traj["xRoueGauche"]))]
     print("len tps: " + str(len(d_traj["xRoueGauche"])) )
+    #~ print(d_traj["fFin"])
 
     # Plot the trajectory
     # -------------------
@@ -871,18 +1014,25 @@ def plot_test_MOVE(d_traj):
     plot(temps, d_traj["vitesseMoteurDroit"], '-', label='mesure droit')
     plot(temps, d_traj["ConsigneMoteurDroit_MS"], '-', label='consigne droit')
     plot(temps, d_traj["ConsigneMoteurGauche_MS"], '-k', label='consigne gauche')
-    plot(temps, d_traj["VgASR"], label='V g ASR')
+    #~ plot(temps, d_traj["VgASR"], label='V g ASR')
     if (len(d_traj["VitesseProfil"]) < len(temps)) :
         plot(temps[:len(d_traj["VitesseProfil"])], d_traj["VitesseProfil"], label='Vitesse Profil')
     else :
         plot(temps, d_traj["VitesseProfil"], label='Vitesse Profil')
+    plot(temps, d_traj["fFin"], '-', label='ASSER_Running')
+    #~ plot(temps, d_traj["testFinAsservissement"], '-', label='testFinAsservissement')
         
     #~ plot(temps, d_traj["VposG"], label='VposG')
     #~ plot(temps, d_traj["VposD"], label='VposD')
     # plot(temps, d_traj["VpiG"], label='VpiG')
     # plot(temps, d_traj["VpiD"], label='VpiD')
     
-    #~ plot(temps, d_traj["Phase"], label='Phase')
+    plot(temps, d_traj["Phase"], label='Phase')
+    plot(temps, d_traj["flag_ASSER_TRAJ_TestFinAsservissement"], label='testFinAsser')
+    
+    if "periodeNewSeg" in d_traj.keys() :
+        for tpsNewSeg in d_traj["periodeNewSeg"] :
+            plot([tpsNewSeg*periode, tpsNewSeg*periode], [-0.6, 0.6], '-r')
 
     ylim(-1.2, 1.2)
     legend(loc="lower center")
@@ -953,24 +1103,35 @@ def printLog(traj, logName) :
 #~ affichageTestPI2012(traj)
 #~ sys.exit(2)
 
+
+#~ d_cfgTraj["KpG"] = 3.3
+#~ d_cfgTraj["KiG"] = 12.0
+#~ d_cfgTraj["KpD"] = 3.5
+#~ d_cfgTraj["KiD"] = 12.0
+#~ d_cfgTraj["K2"] = 25.0
+#~ d_cfgTraj["K3"] = 9.0
+#~ d_cfgTraj['RatioAcc'] = 2.0
+#~ d_cfgTraj['RatioDecc'] = 2.4
+#~ d_cfgTraj['RatioAccRot'] = 6.0
+#~ d_cfgTraj['RatioDeccRot'] = 1.0
+
 #~ plot_criteria_Kparams(d_cfgTraj)
 #~ sys.exit(2)
 
-plot_criteria_Rparam(d_cfgTraj)
-sys.exit(2)
+#~ plot_criteria_Rparam(d_cfgTraj)
+#~ sys.exit(2)
 
-#~ d_cfgTraj["KpG"] = 5.0
-#~ d_cfgTraj["KiG"] = 14.0
-#~ d_cfgTraj["KpD"] = 5.0
-#~ d_cfgTraj["KiD"] = 14.0
-#~ d_cfgTraj['RatioAcc'] = 1.6
-#~ d_cfgTraj["K2"] = 10.0
-#~ d_cfgTraj["K3"] = 17.0
 #~ d_cfgTraj["R1"] = 26.5
-#~ traj = test_MOVE_LINE(d_cfgTraj)
-#~ traj = test_MOVE_CURVE(d_cfgTraj)
-traj = test_MOVE_ROTATE(d_cfgTraj)
+
+
+
+#~ traj = test_MOVE_LINE(d_cfgTraj, distance = 1.0, robot='doc') #, distance = 3.0
+#~ traj = test_MOVE_LINE_MULTI_PTS(d_cfgTraj)
+#~ traj = test_MOVE_CURVE(d_cfgTraj, robot='doc')
+traj = test_MOVE_ROTATE(d_cfgTraj, angle = 1.57, robot='doc')
+#~ traj = test_MOVE_SHORT_TREE(d_cfgTraj, robot='doc')
 plot_test_MOVE(traj)
+print("tps: " + str(len(traj["xRoueGauche"]) * float(traj["periode"][0])) + "s" )
 sys.exit(2)
 
 
