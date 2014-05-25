@@ -189,9 +189,19 @@ ColorDetector::ColorDetector(int webcamId, const std::string& configFile, const 
         m_webcam->set(CV_CAP_PROP_FRAME_WIDTH,m_camWidth);
         m_webcam->set(CV_CAP_PROP_FRAME_HEIGHT,m_camHeight);
 
-        std::cerr << "Using webcam " << webcamId << " resolution " << m_camWidth << "x" << m_camHeight << std::endl;
-
         m_webcam->read(m_bgrImage);
+
+        double realWidth = m_webcam->get(CV_CAP_PROP_FRAME_WIDTH);
+        double realHeight = m_webcam->get(CV_CAP_PROP_FRAME_HEIGHT);
+
+        std::cerr << "Using webcam " << webcamId
+                    << " resolution " << m_camWidth << "x" << m_camHeight
+                    << " real resolution " << realWidth << "x" << realHeight
+                    << std::endl;
+
+        m_camWidth = realWidth;
+        m_camHeight = realHeight;
+
     } else {
         m_bgrImage = cv::imread(imageFile);
     }
@@ -260,6 +270,7 @@ void ColorDetector::process()
         if (!m_quiet)
         {
             std::cerr   << std::setprecision(3) << "loop duration " << timer.getDeltaMs() << "ms "
+                        << "camera read " << std::setprecision(3) << timerCamera.getDeltaMs() << "ms "
                         << "processing " <<  std::setprecision(3) << timerProcess.getDeltaMs() << "ms "
                         << "wait " <<  std::setprecision(3) << timerWait.getDeltaMs() << "ms "
                         << std::endl;
@@ -328,6 +339,12 @@ bool ColorDetector::processLine(std::istream& stream)
         m_writeReferenceCapture = mode == "1";
 
         std::cerr << "WriteReferenceCapture " << m_writeReferenceCapture << std::endl;
+    }
+    else if (command == "SetLoopInterval")
+    {
+        sstr >> m_pollTimeoutMs;
+
+        std::cerr << "SetLoopInterval " << m_pollTimeoutMs << std::endl;
     }
     else if (command == "SetColorThreshold")
     {
@@ -969,7 +986,12 @@ const char* getPixelColorTypeBH(int H, int S, int V)
 void ColorDetector::scan()
 {
     if(m_writeLastCapture) {
-        imwrite("image.jpg",m_bgrImage);
+        cv::Mat img = m_bgrImage.clone();
+        for (std::vector<cv::Rect>::const_iterator it = m_detectionZoneRects.begin(); it != m_detectionZoneRects.end(); ++it) {
+            cv::rectangle(img, cv::Point(it->x, it->y), cv::Point(it->x + it->width, it->y + it->height), cv::Scalar(0, 200, 0));
+        }
+
+        imwrite("image.jpg",img);
     }
 
     switch(m_scanMethod) {
