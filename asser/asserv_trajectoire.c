@@ -763,7 +763,8 @@ extern void ASSER_TRAJ_AsservissementMouvementRobot(Pose poseRobot, VitessesRobo
                 
                 ASSER_Running = ASSER_TRAJ_Profil_S_Curve(&VitesseProfil, distanceTotale_Profil, vitesse_debut_profil, POS_GetConsVitesseMax(), vitesse_fin_profil, AmaxTemp, chemin.profilVitesse.Dmax, Vitesse_Gain_ASR, distanceParcourue_Profil, (((float)m_sensDeplacement) * POS_GetVitesseRelle()), (SaturationPIDflag | SaturationPIGflag));
 
-                if (chemin.trajectoire.subTrajs.segmentCourant < (chemin.trajectoire.subTrajs.nbreSegments - 1))
+                if ((chemin.trajectoire.subTrajs.segmentCourant < (chemin.trajectoire.subTrajs.nbreSegments - 1)) \
+                        | ((chemin.trajectoire.subTrajs.segmentCourant == (chemin.trajectoire.subTrajs.nbreSegments - 1)) & (g_iSubSeg < chemin.trajectoire.subTrajs.segmentTraj[(chemin.trajectoire.subTrajs.nbreSegments - 1)].subSeg_lastUsed)))
                 {
                     ASSER_Running = True;
                 }
