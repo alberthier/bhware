@@ -26,6 +26,9 @@
 
 #define TAILLE_TAB_GABARIT_VITESSE      2001
 
+extern float   t1_G, t2_G;
+extern float   t1_D, t2_D;
+
 int     SIMU_GetCompteur(void);
 void    SIMU_REDEF_ASSER_RecoverNbrPas(float vitesseRoueGauche, float vitesseRoueDroite, signed int* deltaPasGauche, signed int* deltaPasDroite);
 float   SIMU_ErreurVitesseConsPWMVToVitMS(unsigned int consPMW, float vitMS, float K);
