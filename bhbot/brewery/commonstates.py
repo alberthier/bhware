@@ -661,6 +661,9 @@ class Trigger(statemachine.State):
         else:
             raise TypeError("Invalid arguments")
 
+        self.exit_reason = None
+        self.statuses = {}
+
 
     def on_enter(self):
         for cmd in self.commands:
@@ -678,14 +681,20 @@ class Trigger(statemachine.State):
     def on_servo_control(self, packet):
         if packet.status != SERVO_STATUS_SUCCESS:
             self.log("Servo #{} timed out".format(packet.id))
+        self.exit_reason = packet.status
+        self.statuses[packet.id] = packet.status
         yield from self.cleanup(packet.type, packet.id, packet.command)
 
 
     def on_relay_toggle(self, packet):
+        self.exit_reason = SERVO_STATUS_SUCCESS
+        self.statuses[packet.id] = SERVO_STATUS_SUCCESS
         yield from self.cleanup(ACTUATOR_TYPE_RELAY, packet.id)
 
 
     def on_pwm_control(self, packet):
+        self.exit_reason = SERVO_STATUS_SUCCESS
+        self.statuses[packet.id] = SERVO_STATUS_SUCCESS
         yield from self.cleanup(ACTUATOR_TYPE_PWM, packet.id)
 
 
