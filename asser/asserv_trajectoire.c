@@ -315,6 +315,7 @@ extern void ASSER_TRAJ_AsservissementMouvementRobot(Pose poseRobot, VitessesRobo
     float           delta_distance                          = 0.0;
     float           parametrePositionSegmentTrajectoireAv   = 0.0;
     unsigned int    memo_segmentCourant                     = 0;
+    unsigned char   flag_ASSER_TRAJ_TestFinAsservissement   = False;
 #ifndef PIC32_BUILD
     unsigned char   memo_subSegmentCourant                  = 0;
 #endif
@@ -360,7 +361,8 @@ extern void ASSER_TRAJ_AsservissementMouvementRobot(Pose poseRobot, VitessesRobo
     /* Test fin d'asser */
     if (ASSER_compteurPeriode > 0)
     {
-        if (ASSER_TRAJ_TestFinAsservissement(&chemin, errDist, memo_errDist, DIST_MIN, errAngle, memo_errAngle, ANGLE_MIN) == True)
+        flag_ASSER_TRAJ_TestFinAsservissement = ASSER_TRAJ_TestFinAsservissement(&chemin, errDist, memo_errDist, DIST_MIN, errAngle, memo_errAngle, ANGLE_MIN);
+        if (flag_ASSER_TRAJ_TestFinAsservissement == True)
         {
             if ((chemin.profilVitesse.distNormaliseeRestante * chemin.distance) < ((float)0.05))
             {
@@ -414,7 +416,8 @@ extern void ASSER_TRAJ_AsservissementMouvementRobot(Pose poseRobot, VitessesRobo
     }
     else
     {
-        if (ASSER_TRAJ_TestFinAsservissement(&chemin, errDist, memo_errDist, DIST_MIN, errAngle, memo_errAngle, ANGLE_MIN) == True)
+        flag_ASSER_TRAJ_TestFinAsservissement = ASSER_TRAJ_TestFinAsservissement(&chemin, errDist, memo_errDist, DIST_MIN, errAngle, memo_errAngle, ANGLE_MIN);
+        if (flag_ASSER_TRAJ_TestFinAsservissement == True)
         {
             if (chemin.trajectoire.subTrajs.nbreSegments == (unsigned int)1)
             {
@@ -3479,6 +3482,8 @@ static unsigned char ASSER_TRAJ_TestFinAsservissement(Deplacement * traj, float 
             ret = True;
         }
     }
+
+    ASSER_TRAJ_LogAsserValPC("testFinAsservissement", ret);
 
     return ret;
 }
