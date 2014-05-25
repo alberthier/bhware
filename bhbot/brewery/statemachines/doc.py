@@ -159,12 +159,12 @@ class Main(statemachine.State):
         tree_w_y = TREE_W_Y
         if self.robot.team == TEAM_YELLOW:
             tree_e_y, tree_w_y = tree_w_y, tree_e_y
-            tree_se_y, tree_sw_y = tree_sw_y, tree_se_y
+            tree_se_y = sym_y(tree_se_y)
+            tree_sw_y = sym_y(tree_sw_y)
         if self.robot.team == TEAM_YELLOW:
             st_weight = 3
         else:
             st_weight = 5
-
 
 
         #                      |        ID           |  Weight  |     X       |          Y         | Direction          |    State      | Ctor parameters|Shared|Navigate|
