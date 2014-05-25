@@ -123,8 +123,6 @@
 /** Active le fonctionnement du capteur de couleur */ 
 //#define Capteur_Couleur_connected
 
-/** Active les actionneurs */
-#define Actionneurs
 
 
 /**********************************************************************/
