@@ -14,7 +14,7 @@ NbPasG=1024
 Asser Settings
 --------------
 G_K1=10.000
-G_K2 y=25.000
+G_K2=25.000
 G_K3=9.000
 Ratio_Acc=0.800
 Ratio_Decc=1.800

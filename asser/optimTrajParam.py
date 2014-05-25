@@ -372,7 +372,7 @@ def testPI(d_cfgTraj, d_cfgTestPI) :
 
     return d_traj
     
-def test_MOVE_LINE(d_cfgTraj, distance = 2.0) :
+def test_MOVE_LINE(d_cfgTraj, distance = 2.0, robot='doc') :
 
     #lancement du simulateur de deplacement
     print("Lancement du simulateur")
@@ -383,7 +383,7 @@ def test_MOVE_LINE(d_cfgTraj, distance = 2.0) :
     simulator_process = subprocess.Popen(shellCommand, shell=True, stdin = subprocess.PIPE, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
 
     # envoie de la configuration du simulateur
-    send_config_simulator(simulator_process, d_cfgTraj)
+    send_config_simulator(simulator_process, d_cfgTraj, robot)
     print("Config envoyee")
         
     send_init_pose(simulator_process, x=0.2, y=0.2, angle=0.0)
@@ -440,7 +440,7 @@ def test_MOVE_LINE_MULTI_PTS(d_cfgTraj, robot='doc') :
 
     return d_traj
     
-def test_MOVE_ROTATE(d_cfgTraj, angle = math.pi/2.0) :
+def test_MOVE_ROTATE(d_cfgTraj, angle = math.pi/2.0, robot='doc') :
 
     #lancement du simulateur de deplacement
     print("Lancement du simulateur")
@@ -451,7 +451,7 @@ def test_MOVE_ROTATE(d_cfgTraj, angle = math.pi/2.0) :
     simulator_process = subprocess.Popen(shellCommand, shell=True, stdin = subprocess.PIPE, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
 
     # envoie de la configuration du simulateur
-    send_config_simulator(simulator_process, d_cfgTraj)
+    send_config_simulator(simulator_process, d_cfgTraj, robot)
     print("Config envoyee")
         
     send_init_pose(simulator_process, x=0.2, y=0.2, angle=0.0)
@@ -471,7 +471,7 @@ def test_MOVE_ROTATE(d_cfgTraj, angle = math.pi/2.0) :
 
     return d_traj
     
-def test_MOVE_CURVE(d_cfgTraj) :
+def test_MOVE_CURVE(d_cfgTraj, robot='doc') :
 
     #lancement du simulateur de deplacement
     print("Lancement du simulateur")
@@ -482,7 +482,7 @@ def test_MOVE_CURVE(d_cfgTraj) :
     simulator_process = subprocess.Popen(shellCommand, shell=True, stdin = subprocess.PIPE, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
 
     # envoie de la configuration du simulateur
-    send_config_simulator(simulator_process, d_cfgTraj)
+    send_config_simulator(simulator_process, d_cfgTraj, robot)
     print("Config envoyee")
         
     send_init_pose(simulator_process, x=0.2, y=0.2, angle=0.3)
@@ -503,7 +503,7 @@ def test_MOVE_CURVE(d_cfgTraj) :
 
     return d_traj
     
-def test_MOVE_SHORT_TREE(d_cfgTraj) :
+def test_MOVE_SHORT_TREE(d_cfgTraj, robot='doc') :
 
     #lancement du simulateur de deplacement
     print("Lancement du simulateur")
@@ -514,7 +514,7 @@ def test_MOVE_SHORT_TREE(d_cfgTraj) :
     simulator_process = subprocess.Popen(shellCommand, shell=True, stdin = subprocess.PIPE, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
 
     # envoie de la configuration du simulateur
-    send_config_simulator(simulator_process, d_cfgTraj)
+    send_config_simulator(simulator_process, d_cfgTraj, robot)
     print("Config envoyee")
         
     send_init_pose(simulator_process, x=0.95, y=2.72, angle=0.0)
@@ -1125,11 +1125,11 @@ def printLog(traj, logName) :
 
 
 
-#~ traj = test_MOVE_LINE(d_cfgTraj, distance = 1.0) #, distance = 3.0
+#~ traj = test_MOVE_LINE(d_cfgTraj, distance = 1.0, robot='doc') #, distance = 3.0
 #~ traj = test_MOVE_LINE_MULTI_PTS(d_cfgTraj)
-#~ traj = test_MOVE_CURVE(d_cfgTraj)
-traj = test_MOVE_ROTATE(d_cfgTraj, angle = 1.57)
-#~ traj = test_MOVE_SHORT_TREE(d_cfgTraj)
+#~ traj = test_MOVE_CURVE(d_cfgTraj, robot='doc')
+traj = test_MOVE_ROTATE(d_cfgTraj, angle = 1.57, robot='doc')
+#~ traj = test_MOVE_SHORT_TREE(d_cfgTraj, robot='doc')
 plot_test_MOVE(traj)
 print("tps: " + str(len(traj["xRoueGauche"]) * float(traj["periode"][0])) + "s" )
 sys.exit(2)
