@@ -682,9 +682,9 @@ class TakeFruits(statemachine.State):
     def on_waypoint_reached(self, packet):
         if self.retract_finger:
             self.retract_finger = False
-            self.send_packet(*FRUITMOTH_FINGER_RETRACT)
+            self.send_packet(packets.ServoControl(*FRUITMOTH_FINGER_RETRACT))
         else:
-            self.send_packet(*FRUITMOTH_FINGER_OPEN)
+            self.send_packet(packets.ServoControl(*FRUITMOTH_FINGER_OPEN))
 
 
 class DumpFruits(statemachine.State):
