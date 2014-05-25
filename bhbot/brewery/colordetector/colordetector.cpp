@@ -32,6 +32,7 @@ public:
     };
 
     enum ScanMethod {
+        ScanMask,
         ScanHsv2,
         ScanHsv,
         ScanRgb
@@ -61,6 +62,7 @@ private:
     void scanRgb();
     void scanHsv();
     void scanHsv2();
+    void scanMask();
     bool testComponent(float value, float reference);
     void sendPacket(const std::string packet);
     void sendPacketColor(std::string & color);
@@ -374,6 +376,9 @@ bool ColorDetector::processLine(std::istream& stream)
         else if (mode == "HSV2") {
             m_scanMethod = ScanHsv2;
             m_scanMethodName = "HSV2";
+        } else if (mode == "MASK") {
+            m_scanMethod = ScanMask;
+            m_scanMethodName = "MASK";
         } else {
             m_scanMethod = ScanRgb;
             m_scanMethodName = "RGB";
@@ -523,6 +528,15 @@ void ColorDetector::initDisplay()
     if (!m_quiet) {
         cv::namedWindow(BGR_IMAGE, cv::WINDOW_NORMAL);
         cv::resizeWindow(BGR_IMAGE, m_camWidth, m_camHeight);
+
+//        cv::namedWindow("GRAY", cv::WINDOW_NORMAL);
+        cv::namedWindow("GREEN MASK", cv::WINDOW_NORMAL);
+        cv::resizeWindow("GREEN MASK", m_camWidth, m_camHeight);
+//        cv::namedWindow("REDMASK", cv::WINDOW_NORMAL);
+//        cv::namedWindow("REDMASK2", cv::WINDOW_NORMAL);
+
+//        cv::namedWindow("YELLOW TRI", cv::WINDOW_NORMAL);
+//        cv::namedWindow("RED TRI", cv::WINDOW_NORMAL);
     }
 #endif // !__arm__
 }
@@ -789,6 +803,117 @@ void ColorDetector::scanHsv2()
     }
 }
 
+void ColorDetector::scanMask()
+{
+    bool hasSeenColor = false;
+
+    for (std::vector<cv::Rect>::iterator it = m_detectionZoneRects.begin(); it != m_detectionZoneRects.end(); ++it)
+    {
+        cv::Mat image(m_bgrImage, *it);
+
+        cv::Mat hsvZone;
+        cv::cvtColor(image, hsvZone, CV_BGR2HSV);
+
+        std::map<std::string, cv::Vec3f>::iterator itRefColor;
+
+        std::map<std::string, int> colorTotal;
+
+        cv::Mat maskRed;
+        cv::Mat maskGreen;
+        cv::Mat maskLum;
+
+        std::vector<cv::Mat> componentsBgr;
+        cv::split(image, componentsBgr);
+
+        cv::threshold(componentsBgr[2], maskRed, 128, 255, cv::THRESH_BINARY);
+
+
+//// -----------------
+
+        double meanRed = cv::mean(maskRed)[0];
+
+        std::cerr << "MEAN RED " << meanRed << std::endl;
+
+
+        cv::threshold(componentsBgr[1], maskGreen, 128, 255, cv::THRESH_BINARY);
+
+#ifndef __arm__
+        cv::imshow("GREEN MASK", maskGreen);
+#endif // !__arm__
+
+        double meanGreen = cv::mean(maskGreen)[0];
+
+        std::cerr << "MEAN GREEN " << meanGreen << std::endl;
+
+        if (meanRed < 128)
+        {
+            break;
+        }
+
+        if (meanGreen > 128)
+        {
+            hasSeenColor = true;
+            sendPacketColor("COLOR_YELLOW");
+        }
+        else
+        {
+            hasSeenColor = true;
+            sendPacketColor("COLOR_RED");
+        }
+
+
+// ----------------------
+
+/* WORKING
+
+        cv::inRange(image
+                            , cv::Scalar(0,0,0)
+                            , cv::Scalar(255,128,255)
+                            , maskGreen
+                            );
+
+        cv::cvtColor(image, maskLum, CV_BGR2GRAY);
+
+        cv::imshow("REDMASK", maskRed);
+        cv::imshow("REDMASK2", maskGreen);
+        cv::imshow("GRAY", maskLum);
+
+        cv::Mat maskGreenInv = 255 - maskGreen;
+
+        cv::Mat maskYellow = maskRed & maskGreenInv;
+        cv::Mat maskRedFinal = maskRed & maskGreen;
+
+        cv::imshow("YELLOW TRI", maskYellow);
+        cv::imshow("RED TRI", maskRedFinal);
+
+
+        double meanYellow = cv::mean(maskYellow)[0];
+        double meanRed = cv::mean(maskRedFinal)[0];
+
+        if (meanYellow > 128)
+        {
+            std::cerr << "YELLOW" << std::endl;
+            hasSeenColor = true;
+            sendPacketColor("COLOR_YELLOW");
+        }
+        else
+        {
+            if (meanRed > 128) {
+                std::cerr << "RED" << std::endl;
+                hasSeenColor = true;
+                sendPacketColor("COLOR_RED");
+            }
+        }
+*/ /* WORKING END */
+
+
+    }
+
+    if(!hasSeenColor)
+    {
+        sendPacketColor("COLOR_NONE");
+    }
+}
 
 const char* getPixelColorType(int H, int S, int V)
 {
@@ -855,6 +980,9 @@ void ColorDetector::scan()
         break;
     case ScanHsv:
         scanHsv();
+        break;
+    case ScanMask:
+        scanMask();
         break;
     }
 }
