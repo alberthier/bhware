@@ -40,6 +40,8 @@ float   CONSTANTE_COUPLE    = 0.0234;
 float   CONSTANTE_VITESSE   = 0.02346;
 float   RAPPORT_REDUCTION   = 20.0;
 unsigned int NB_PERIODE_RETARD = 0u;
+float   t1_G, t2_G;
+float   t1_D, t2_D;
 
 /* mesure deplacement de chaque roue en pas codeur */
 signed int deltaPasCodeurG;
@@ -385,13 +387,17 @@ void SIMU_InitialisationLogRobot(void)
     ASSER_TRAJ_LogAsserValPC("VgASR", 0.0);
     ASSER_TRAJ_LogAsserValPC("Phase", 0.0);
     ASSER_TRAJ_LogAsserValPC("fFin", 0.0);
+    ASSER_TRAJ_LogAsserValPC("fFinDbg", -1.0);
     ASSER_TRAJ_LogAsserValPC("VpiG", 0.0);
     ASSER_TRAJ_LogAsserValPC("VpiD", 0.0);
     ASSER_TRAJ_LogAsserValPC("VposG", 0.0);
     ASSER_TRAJ_LogAsserValPC("VposD", 0.0);        
+    ASSER_TRAJ_LogAsserValPC("testFinAsservissement", -1.0);
 
     ASSER_TRAJ_LogAsserValPC("vitLongMvt", 0.0);
     ASSER_TRAJ_LogAsserValPC("vitAngulaireRotation", 0.0);
+
+    ASSER_TRAJ_LogAsserValPC("flag_ASSER_TRAJ_TestFinAsservissement", False);
 }
 
 void SIMU_LogRobot(void)
@@ -611,9 +617,6 @@ static float ASSER_Acc_Parabolique(unsigned int k, unsigned int k1, float vmax)
 /**********************************************************************/
 void SIMU_BoucleVitesse(void)
 {
-    float   t1_G, t2_G;
-    float   t1_D, t2_D;
-
     erreurVitesseMoteurG = SIMU_ErreurVitesseConsPWMVToVitMS(simu_consigneMoteurG, vitesseMoteurG, GAIN_STATIQUE_MOTEUR_G);
     erreurVitesseMoteurD = SIMU_ErreurVitesseConsPWMVToVitMS(simu_consigneMoteurD, vitesseMoteurD, GAIN_STATIQUE_MOTEUR_D);
 
@@ -655,20 +658,6 @@ void SIMU_BoucleVitesse(void)
 
     // 1:gain statique, 2:premiere constante de temps, 3: deuxieme constante de temps
     // moteur gauche [0.90848238070313447, 0.001532263578663721, 0.14712688461925522]
-
-#ifdef Actionneurs_Robot1 // Doc
-    t1_G = 0.046;
-    t2_G = 0.286;
-    t1_D = 0.026;
-    t2_D = 0.302;
-#endif /* Actionneurs_Robot1 */
-
-#ifdef Actionneurs_Robot2 // Marty
-    t1_G = 0.155;
-    t2_G = 0.155;
-    t1_D = 0.177;
-    t2_D = 0.177;
-#endif /* Actionneurs_Robot2 */
 
     SIMU_SimulationMoteurCC_ordre2((signed int)tensionPWM_G
                                    , tensionPWM_G_n

@@ -49,3 +49,13 @@ def sym_y(coord_y):
 
 def sym_angle(angle):
     return -angle
+
+def angle_minus_pi_to_pi(a):
+    if a > math.pi :
+        return a - 2 * math.pi
+    if a <= -math.pi :
+        return a + 2 * math.pi
+    return a
+
+def compare_angles(a1, a2, epsilon):
+    return abs(angle_minus_pi_to_pi((angle_minus_pi_to_pi(a1) - angle_minus_pi_to_pi(a2)))) < epsilon

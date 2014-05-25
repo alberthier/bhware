@@ -15,7 +15,7 @@ NbPasG=5000
 Reglage Asser
 =============
 G_K1=10.0
-G_K2 y=10.0
+G_K2=10.0
 G_K3=17.0
 Ratio_Acc=1.0
 Ratio_Decc=1.8
@@ -26,8 +26,14 @@ VMinMouv=0.1
 ErreurCodeur=300
 EcartRouesLibres=0.212
 EcartRouesMotrices=0.16
-Dist Min=0.001
-Angle Min=0.001
+Dist_Min=0.001
+Angle_Min=0.001
 Coef_Gliss_Lateral=0.0
 EcartVitesseAcc=0.05
 
+Reglage Simulator
+=================
+t1_G=0.046;
+t2_G=0.286;
+t1_D=0.026;
+t2_D=0.302;
