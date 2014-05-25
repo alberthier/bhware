@@ -419,7 +419,8 @@ extern void ASSER_TRAJ_AsservissementMouvementRobot(Pose poseRobot, VitessesRobo
         flag_ASSER_TRAJ_TestFinAsservissement = ASSER_TRAJ_TestFinAsservissement(&chemin, errDist, memo_errDist, DIST_MIN, errAngle, memo_errAngle, ANGLE_MIN);
         if (flag_ASSER_TRAJ_TestFinAsservissement == True)
         {
-            if (chemin.trajectoire.subTrajs.nbreSegments == (unsigned int)1)
+            if ((ASSER_TRAJ_isDeplacement(&chemin) == True) & (chemin.trajectoire.subTrajs.nbreSegments == (unsigned int)1) \
+                    | (ASSER_TRAJ_isDeplacement(&chemin) == False))
             {
                 Phase = 0;
             
