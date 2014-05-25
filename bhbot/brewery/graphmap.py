@@ -59,7 +59,9 @@ class Map:
                                  (0.3 + offset, 1.1 + basket_offset),
                                  (0.3 + basket_offset, 1.1 + offset),
                                  (0.0, 1.1 + offset)])
-        #symetrical_zones.append(self.create_rect_coords(0.0, 0.4 - offset, 0.3 + offset, 0.7 + 2 * offset))
+        three_dist = 0.37 if IS_MAIN_ROBOT else 0.21
+        symetrical_zones.append(self.create_half_circle_coords(1.3, 0.0, three_dist, False))
+        symetrical_zones.append(self.create_half_circle_coords(2.0, 0.7, three_dist, True))
         # Bottom hearts of fire
         symetrical_zones.append(self.create_quarter_coords(FIELD_X_SIZE, 0.0, 0.25 + offset))
         # Add symetrical zones
@@ -92,6 +94,19 @@ class Map:
             cx = math.cos(a) * radius
             cy = math.sin(a) * radius
             coords.append((x - cx, y + cy))
+        return coords
+
+
+    def create_half_circle_coords(self, x, y, radius, vertical):
+        coords = []
+        npoints = 5
+        for i in range(npoints):
+            a = float(i) * (math.pi) / float(npoints - 1)
+            if vertical:
+                a += math.pi / 2.0
+            cx = math.cos(a) * radius
+            cy = math.sin(a) * radius
+            coords.append((x + cx, y + cy))
         return coords
 
 
