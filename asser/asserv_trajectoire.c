@@ -544,7 +544,8 @@ extern void ASSER_TRAJ_AsservissementMouvementRobot(Pose poseRobot, VitessesRobo
     #endif /* PIC32_BUILD */
                     }
     #ifndef PIC32_BUILD
-                    if (memo_subSegmentCourant != chemin.trajectoire.subTrajs.subSegmentCourant)
+                    if ((memo_subSegmentCourant != chemin.trajectoire.subTrajs.subSegmentCourant) \
+                        | (memo_segmentCourant != chemin.trajectoire.subTrajs.segmentCourant))
                     {
                         ASSER_TRAJ_LogAsserValPC("periodeNewSubSeg", ASSER_compteurPeriode);
                         ASSER_TRAJ_LogAsserValPC("xNewSubSeg", poseRobot.x);
