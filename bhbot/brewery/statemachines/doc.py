@@ -124,25 +124,31 @@ class Main(statemachine.State):
         THEIRS_TREE_CENTER_ANGLE = -math.pi / 2.0
 
         CENT_FD_X_1 = 1.0
-        CENT_FD_Y_1 = 1.12
+        CENT_FD_Y_1 = 1.02
         CENT_FD_ANGLE_1 = 1.8
 
         CENT_FD_X_2 = 1.0
         CENT_FD_Y_2 = sym_y(CENT_FD_Y_1)
         CENT_FD_ANGLE_2 = -1.28
 
+        CENT_FD_X_3 = 1.35
+        CENT_FD_Y_3 = 1.51
+        CENT_FD_ANGLE_3 = math.pi
+
         if self.robot.team == TEAM_YELLOW :
-            MY_FD_X = 1.63
-            MY_FD_Y = sym_y(2.68) # double inversion
+            MY_FD_X = 1.59
+            MY_FD_Y = sym_y(2.58) # double inversion
             MY_FD_ANGLE = sym_angle(0.83)
 
             CENT_FD_ANGLE_1 = sym_angle(-1.28)
             CENT_FD_ANGLE_2 = sym_angle(1.8)
 
+            CENT_FD_Y_3 = sym_y(CENT_FD_Y_3)
+
         else :
-            MY_FD_X = 1.72
-            MY_FD_Y = 0.36
-            MY_FD_ANGLE = -0.78
+            MY_FD_X = 1.59
+            MY_FD_Y = 0.42
+            MY_FD_ANGLE = -0.64
 
 
         if self.robot.team == TEAM_YELLOW :
@@ -178,6 +184,7 @@ class Main(statemachine.State):
             FireDepositGoal    ("DepositFires_Mine"  ,        10,      MY_FD_X,             MY_FD_Y, DIRECTION_FORWARD  , EmptyFireTank  ,       (MY_FD_ANGLE,), False,    True),
             FireDepositGoal    ("DepositFires_Center",         1,    CENT_FD_X_1,           CENT_FD_Y_1, DIRECTION_FORWARD  , EmptyFireTank  ,       (CENT_FD_ANGLE_1,), False,    True),
             FireDepositGoal    ("DepositFires_Center",         1,    CENT_FD_X_2,           CENT_FD_Y_2, DIRECTION_FORWARD  , EmptyFireTank  ,       (CENT_FD_ANGLE_2,), False,    True),
+            FireDepositGoal    ("DepositFires_Center",         1,    CENT_FD_X_3,           CENT_FD_Y_3, DIRECTION_FORWARD  , EmptyFireTank  ,       (CENT_FD_ANGLE_3,), False,    True),
             # FireDepositGoal    ("DepositFires_Theirs",         3,         1.65,                2.65, DIRECTION_FORWARD  , EmptyFireTank  ,            None, False,    True),
 
             # FruitHarvestingGoal("FruitTreeE"         ,         3,     TREE_E_X,            tree_e_y, DIRECTION_FORWARD  , SuperTakeFruits,            None, False,    True),
@@ -423,10 +430,7 @@ class TakeTorch(statemachine.State):
         yield RotateTo(self.angle)
         yield Trigger(ELEVATOR_UP, FIRE_FLIPPER_OPEN)
         for i in range(3):
-            # yield Trigger(ARM_1_TAKE_TORCH_FIRE, ARM_2_TAKE_TORCH_FIRE)
-            # yield Trigger(PUMP_ON, elevator_take_levels[i])
-            # yield Timer(300)
-            # yield Trigger(ELEVATOR_UP)
+
             yield TakeFire(elevator_take_levels[i])
             yield ArmSpeed(ARM_SPEED_WITH_FIRE)
             if flip:
@@ -445,7 +449,7 @@ class TakeTorch(statemachine.State):
                 yield Trigger(ELEVATOR_UP)
                 self.robot.stored_fires += 1
             flip = not flip
-        yield Trigger(FIRE_FLIPPER_CLOSE, TORCH_GUIDE_OPEN)
+
         yield ArmIdle()
         self.exit_reason = GOAL_DONE
         yield None
@@ -723,7 +727,32 @@ class EmptyFireTank(statemachine.State):
 
     def on_enter(self):
         yield RotateTo(self.angle)
-        yield MoveLineRelative(0.05)
+
+        approach_dist = 0.15
+
+        move_fw = yield MoveLineRelative(approach_dist)
+
+        if move_fw.exit_reason != TRAJECTORY_DESTINATION_REACHED :
+            yield MoveLineRelative(0.02, direction=DIRECTION_BACKWARDS)
+
+            torch_guide_mvt = yield Trigger(TORCH_GUIDE_OPEN)
+            if torch_guide_mvt.exit_reason == SERVO_STATUS_TIMED_OUT:
+                yield Trigger(TORCH_GUIDE_HIDE)
+            yield None
+
+            move_bw = yield MoveLineTo((self.goal.x, self.goal.y), direction=DIRECTION_BACKWARDS)
+
+            move_fw = yield MoveLineRelative(approach_dist)
+
+            if move_fw.exit_reason != TRAJECTORY_DESTINATION_REACHED :
+                # TODO : blacklist
+
+                yield None
+
+        yield RotateTo(self.angle)
+
+        if not compare_angles(self.angle, self.robot.pose.angle, 0.26): # 15 degrees
+            yield None
 
         positions = []
 

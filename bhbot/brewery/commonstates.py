@@ -762,6 +762,7 @@ class ExecuteGoals(statemachine.State):
                     gm.whitelist_all()
                     state = goal.get_state()
                     state.goal = goal
+                    state.exit_reason = GOAL_FAILED
 
                     yield state
 
