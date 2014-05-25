@@ -68,6 +68,7 @@ private:
     void sendPacketColor(std::string & color);
     void sendPacketColor(const char * color);
     void updateMaskWindow(const std::string& color, cv::Mat & img);
+    void updateWindow(std::string name, cv::Mat & img);
     void writeImage(std::string name, cv::Mat &img);
 
 private:
@@ -95,6 +96,7 @@ private:
     ScanMethod m_scanMethod;
     std::string m_scanMethodName;
     std::map<std::string, std::string> m_maskWindow;
+    std::map<std::string, std::string> m_windows;
 
     Mode m_mode;
 
@@ -838,7 +840,7 @@ void ColorDetector::scanMask()
         cv::threshold(componentsBgr[1], maskGreen, 128, 255, cv::THRESH_BINARY);
 
 #ifndef __arm__
-        cv::imshow("GREEN MASK", maskGreen);
+        updateWindow("GREEN MASK", maskGreen);
 #endif // !__arm__
 
         double meanGreen = cv::mean(maskGreen)[0];
@@ -1059,16 +1061,32 @@ void ColorDetector::updateMaskWindow(const std::string& color, cv::Mat & img)
         {
             std::string name = std::string("MASK "+color);
 
-            const char* constName = name.c_str();
-
-            cv::namedWindow(constName, cv::WINDOW_NORMAL);
-            cv::resizeWindow(constName, m_camWidth, m_camHeight);
-            cv::moveWindow(constName,(m_maskWindow.size()+1)*(m_camWidth+50),0);
-
             m_maskWindow[color]=name;
         }
 
-        cv::imshow(m_maskWindow[color].c_str(), img);
+        updateWindow(m_maskWindow[color].c_str(), img);
+    }
+#endif
+}
+
+
+void ColorDetector::updateWindow(std::string name, cv::Mat & img)
+{
+#ifndef __arm__
+    if (!m_quiet)
+    {
+        const char* constName = name.c_str();
+
+        if( m_windows.find(name) == m_windows.end() )
+        {
+            cv::namedWindow(constName, cv::WINDOW_NORMAL);
+            cv::resizeWindow(constName, m_camWidth, m_camHeight);
+            cv::moveWindow(constName,(m_windows.size()+1)*(m_camWidth+5),0);
+
+            m_windows[name]=name;
+        }
+
+        cv::imshow(constName, img);
     }
 #endif
 }
