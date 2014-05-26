@@ -85,6 +85,9 @@ private:
     float m_yellowFireRedRef;
     Color m_lastDetectedColor;
     std::string m_lastDetectedColorString;
+    std::string m_lastSentColorString;
+    int m_lastDetectedColorDebounceCounter;
+    int m_colorOccurrenceNeeded;
     int m_camWidth;
     int m_camHeight;
     bool m_writeLastCapture;
@@ -299,6 +302,8 @@ void ColorDetector::reset()
     m_mode = ModeScan;
     m_colorThreshold = 80;
     m_writeReferenceCapture = false;
+    m_lastDetectedColorDebounceCounter = 0;
+    m_colorOccurrenceNeeded = 1;
 }
 
 void ColorDetector::writeImage(std::string name, cv::Mat &img)
@@ -352,9 +357,14 @@ bool ColorDetector::processLine(std::istream& stream)
 
         std::cerr << "SetColorThreshold " << m_colorThreshold << std::endl;
     }
+    else if (command == "ColorOccurrenceNeeded")
+    {
+        sstr >> m_colorOccurrenceNeeded;
+
+        std::cerr << "ColorOccurrenceNeeded " << m_colorOccurrenceNeeded << std::endl;
+    }
     else if (command == "StoreReference")
     {
-
         sstr >> m_currentReferenceColor;
 
         m_mode = ModeReference;
@@ -668,10 +678,23 @@ void ColorDetector::scanHsv()
 
 void ColorDetector::sendPacketColor(std::string & color)
 {
-    if( m_lastDetectedColorString != color)
+    if( m_lastDetectedColorString == color)
+    {
+        m_lastDetectedColorDebounceCounter++;
+    }
+    else
     {
         m_lastDetectedColorString = color;
-        sendPacket(std::string("packets.ColorDetected(color=")+color+")");
+        m_lastDetectedColorDebounceCounter = 1;
+    }
+
+    if( m_lastDetectedColorDebounceCounter >= m_colorOccurrenceNeeded )
+    {
+        if( m_lastSentColorString != m_lastDetectedColorString)
+        {
+            sendPacket(std::string("packets.ColorDetected(color=")+color+")");
+            m_lastSentColorString = color;
+        }
     }
 }
 
