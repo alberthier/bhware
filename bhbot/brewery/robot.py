@@ -23,6 +23,7 @@ class Robot(object):
         self.main_opponent_direction = None
         self.secondary_opponent_direction = None
         self.goal_manager = goalmanager.GoalManager(event_loop)
+        self.fruit_tank_full = False
 
 
     def is_looking_at(self, pose):

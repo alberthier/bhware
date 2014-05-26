@@ -22,6 +22,7 @@ MAIN_ROBOT_Y_SIZE                      = 0.300
 MAIN_ROBOT_CENTER_X                    = 0.1475
 MAIN_ROBOT_CENTER_Y                    = 0.150
 MAIN_ROBOT_GYRATION_RADIUS             = 0.218
+MAIN_ROBOT_MEAN_METER_PER_S            = 0.6
 
 # Secondary robot
 SECONDARY_ROBOT_X_SIZE                 = 0.155
@@ -29,6 +30,7 @@ SECONDARY_ROBOT_Y_SIZE                 = 0.165
 SECONDARY_ROBOT_CENTER_X               = 0.0775
 SECONDARY_ROBOT_CENTER_Y               = 0.0825
 SECONDARY_ROBOT_GYRATION_RADIUS        = 0.100535
+SECONDARY_ROBOT_MEAN_METER_PER_S       = 0.8
 
 # Main start positons
 MAIN_RED_START_Y                       = MAIN_ROBOT_GYRATION_RADIUS
@@ -39,6 +41,8 @@ MAIN_RED_START_ANGLE                   = 0.0
 SECONDARY_RED_START_Y                  = SECONDARY_ROBOT_CENTER_X
 SECONDARY_RED_START_X                  = 0.55
 SECONDARY_RED_START_ANGLE              = math.pi / 2.0
+
+ROBOT_MEAN_SPEED = MAIN_ROBOT_MEAN_METER_PER_S
 
 def setup_definitions(is_main_robot):
     globals()["IS_MAIN_ROBOT"]         = is_main_robot
@@ -52,6 +56,7 @@ def setup_definitions(is_main_robot):
     globals()["RED_START_ANGLE"]       = MAIN_RED_START_ANGLE       if IS_MAIN_ROBOT else SECONDARY_RED_START_ANGLE
     globals()["GUN_FIRE"]              = MAIN_GUN_FIRE              if IS_MAIN_ROBOT else SECONDARY_GUN_FIRE
     globals()["GUN_LOAD"]              = MAIN_GUN_LOAD              if IS_MAIN_ROBOT else SECONDARY_GUN_LOAD
+    globals()["ROBOT_MEAN_SPEED"]      = MAIN_ROBOT_MEAN_METER_PER_S if IS_MAIN_ROBOT else SECONDARY_ROBOT_MEAN_METER_PER_S
 
 # Rule specific
 MATCH_DURATION_MS                      = 90000

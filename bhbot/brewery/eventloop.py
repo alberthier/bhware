@@ -542,6 +542,9 @@ class EventLoop(object):
         delta = datetime.datetime.now() - self.start_date
         return delta.total_seconds()
 
+    def get_remaining_match_time(self):
+        return MATCH_DURATION_MS / 1000.0 - self.get_elapsed_match_time()
+
 
     def send_packet(self, packet, sender = None):
         """
