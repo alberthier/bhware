@@ -196,7 +196,6 @@ class GoalManager:
 
         logger.log("Best goal : {}".format(best_goal.uid))
 
-
         farthest_funny_action = funny_action_goals[-1]
 
         time_to_start_funny_action = farthest_funny_action.estimate_start_time()
@@ -213,9 +212,7 @@ class GoalManager:
 
         logger.log("Best goal with funny action : {} ( duration {}s, will have {}s remaining".
                    format(best_goal_funny.uid, best_goal_funny.estimate_end_time(),
-                          time_remaining_after
-
-                                                                                                     ))
+                          time_remaining_after  ))
 
         if not best_goal_funny :
             logger.dbg("No time for funny action !!!")
