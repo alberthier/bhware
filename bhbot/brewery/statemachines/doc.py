@@ -213,8 +213,8 @@ class Main(statemachine.State):
 #            FruitHarvestingGoal("FruitTreeSW"        , st_weight,    TREE_SW_X,           tree_sw_y, DIRECTION_FORWARD  , SuperTakeFruits,              None, False,    True),
 #            FruitHarvestingGoal("FruitTreeW"         ,         3,     TREE_W_X,            tree_w_y, DIRECTION_FORWARD  , SuperTakeFruits,              None, False,    True),
 
-           FruitDepositGoal   ("DepFruits_Inner"    ,         3,         0.52,                2.10, DIRECTION_BACKWARDS, DumpFruits     ,              None, False,    True),
-           FruitDepositGoal   ("DepFruits_Outer"    ,         3,         0.52,                2.37, DIRECTION_BACKWARDS, DumpFruits     ,              None, False,    True),
+           FruitDepositGoal   ("DepFruits_Inner"    ,         3,         0.55,                2.10, DIRECTION_BACKWARDS, DumpFruits     ,              None, False,    True),
+           FruitDepositGoal   ("DepFruits_Outer"    ,         3,         0.55,                2.37, DIRECTION_BACKWARDS, DumpFruits     ,              None, False,    True),
         )
 
 
@@ -684,7 +684,7 @@ class TakeFruits(statemachine.State):
         #standard speed
         yield SpeedControl()
 
-        self.robot.fruit_tank_full = True
+        self.robot.fruit_tank_trees += 1
         self.exit_reason = GOAL_DONE
         self.robot.visited_trees.append(self.robot.goal_manager.get_current_goal().identifier)
         yield None
@@ -701,7 +701,9 @@ class TakeFruits(statemachine.State):
 class DumpFruits(statemachine.State):
 
     def on_enter(self):
+        y = self.robot.goal_manager.get_current_goal().y
         yield RotateTo(0.0)
+        yield MoveLineTo(0.3 + ROBOT_CENTER_X, y, DIRECTION_BACKWARDS)
 
         #ouvrir la trappe
         yield Trigger(FRUITMOTH_HATCH_OPEN)
@@ -710,14 +712,20 @@ class DumpFruits(statemachine.State):
 
         #fermer la trappe
         yield Trigger(FRUITMOTH_HATCH_CLOSE)
-        self.robot.fruit_tank_full=False
+        self.robot.fruit_tank_trees = 0
         self.exit_reason=GOAL_DONE
 
         #incliner le bac
-        yield Trigger(FRUITMOTH_TUB_OPEN)
+        yield Trigger(FRUITMOTH_TANK_OPEN)
+
+        yield Timer(300)
 
         #rentrer le bac
-        yield ServoControl(FRUITMOTH_TUB_CLOSE)
+        yield Trigger(FRUITMOTH_TANK_CLOSE, FRUITMOTH_HATCH_OPEN)
+        yield Trigger(FRUITMOTH_ARM_CLOSE)
+        yield Trigger(FRUITMOTH_HATCH_CLOSE)
+
+        yield MoveLineTo(0.3 + ROBOT_GYRATION_RADIUS + 0.01, y)
 
         self.exit_reason = GOAL_DONE
 
@@ -758,7 +766,6 @@ class EmptyFireTank(statemachine.State):
 
             if move_fw.exit_reason != TRAJECTORY_DESTINATION_REACHED :
                 # TODO : blacklist
-
                 yield None
 
         yield RotateTo(self.angle)
