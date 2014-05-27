@@ -196,6 +196,9 @@ class GoalManager:
 
         logger.log("Best goal : {}".format(best_goal.uid))
 
+        if not funny_action_goals :
+            return best_goal
+
         farthest_funny_action = funny_action_goals[-1]
 
         time_to_start_funny_action = farthest_funny_action.estimate_start_time()
