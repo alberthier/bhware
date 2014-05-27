@@ -14,8 +14,8 @@ from commonstates import *
 from position import *
 from tools import *
 
-import statemachines.testscommon as testscommon
-import statemachines.testsdoc as testsdoc
+#import statemachines.testscommon as testscommon
+#import statemachines.testsdoc as testsdoc
 
 # global constants
 
@@ -201,8 +201,8 @@ class Main(statemachine.State):
         #                      |        ID           |  Weight  |     X       |          Y         | Direction          |    State      | Ctor parameters|Shared|Navigate|
         gm.add(
             mgm.Goal           ("HuntTheMammoth"     ,        10, self.start_x,                0.75, DIRECTION_FORWARD  , HuntTheMammoth ,              None, False,    True),
-            capture_the_mammoth_1,
-            capture_the_mammoth_2,
+#            capture_the_mammoth_1,
+#            capture_the_mammoth_2,
 
             FireHarvestingGoal ("TakeTorch_Mine"     ,        10,   MY_TORCH_X,          MY_TORCH_Y, DIRECTION_FORWARD  , TakeTorch      ,    (MY_TORCH_ANGLE, True,), False,    True),
             FireHarvestingGoal ("TakeTorch_Mine"     ,        10, MY_TORCH_X_2,        MY_TORCH_Y_2, DIRECTION_FORWARD  , TakeTorch      ,  (MY_TORCH_ANGLE_2, True,), False,    True),
@@ -239,6 +239,14 @@ class Main(statemachine.State):
         logger.log("Starting ...")
         yield Timer(1000)
         yield MoveLineTo(self.start_x, RED_START_Y)
+        huntgoal = self.robot.goal_manager.get_goals("HuntTheMammoth")[0]
+        yield Navigate(huntgoal.x, huntgoal.y)
+        yield HuntTheMammoth()
+        self.robot.goal_manager.update_goal_status(huntgoal, GOAL_DONE)
+        torchgoal = self.robot.goal_manager.get_goals("TakeTorch_Mine")[0]
+        yield Navigate(torchgoal.x, torchgoal.y)
+        yield TakeTorch(0.91, True)
+        torchgoal = self.robot.goal_manager.update_goal_status(torchgoal, GOAL_DONE)
         yield ExecuteGoals()
 
 
@@ -473,7 +481,7 @@ class TakeTorch(statemachine.State):
     def on_enter(self):
         flip = not self.my_side
         yield RotateTo(self.angle)
-        yield Trigger(ELEVATOR_UP, FIRE_FLIPPER_OPEN)
+        yield Trigger(ELEVATOR_UP, FIRE_FLIPPER_OPEN, TORCH_GUIDE_CLOSE)
         for i in range(3):
 
             yield TakeFire(elevator_take_levels[i])
@@ -496,6 +504,7 @@ class TakeTorch(statemachine.State):
             flip = not flip
 
         yield ArmIdle()
+        yield Trigger(TORCH_GUIDE_HIDE)
         self.exit_reason = GOAL_DONE
         yield None
 
@@ -816,8 +825,8 @@ class EmptyFireTank(statemachine.State):
 
         yield RotateTo(self.angle)
 
-        if not compare_angles(self.angle, self.robot.pose.angle, 0.26): # 15 degrees
-            yield None
+#        if not compare_angles(self.angle, self.robot.pose.angle, 0.26): # 15 degrees
+#            yield None
 
         positions = []
 

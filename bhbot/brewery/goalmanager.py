@@ -248,6 +248,14 @@ class GoalManager:
                 g.penality = 100.0
 
 
+    def get_goals(self, identifier):
+        goals = []
+        for goal in self.goals:
+            if goal.identifier == identifier:
+                goals.append(goal)
+        return goals
+
+
     def update_goal_status(self, goal, new_status):
         if not isinstance(goal, Goal):
             for g in self.goals:
