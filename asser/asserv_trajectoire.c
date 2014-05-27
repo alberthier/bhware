@@ -144,7 +144,6 @@ static float                    errDist, memo_errDist, errAngle, memo_errAngle, 
 static unsigned int             g_iSeg                                  =   0u;
 static unsigned int             g_iSubSeg                               =   0u;
 static unsigned int             g_memoSegmentCourant                    =   0;
-static unsigned char            g_memoSubSegmentCourant                 =   0;
 static char                     m_sensDeplacement                       =   MARCHE_AVANT;
 static float                    distanceTotale_Profil                   =   0.0;
 static float                    vitesse_debut_profil                    =   0.0;
@@ -581,177 +580,180 @@ extern void ASSER_TRAJ_AsservissementMouvementRobot(Pose poseRobot, VitessesRobo
                 ASSER_TRAJ_LogAsserValPC("Vend_01", vitesse_fin_profil);
                 ASSER_TRAJ_LogAsserValPC("Vstart_01", vitesse_debut_profil);
 
-                if (chemin.trajectoire.subTrajs.subSegmentCourant != g_memoSubSegmentCourant)
+                ASSER_TRAJ_LogAsserValPC("g_iSeg", g_iSeg);
+                ASSER_TRAJ_LogAsserValPC("g_iSubSeg", g_iSubSeg);
+
+
+                if ((chemin.trajectoire.subTrajs.segmentCourant == g_iSeg) \
+                &&  (chemin.trajectoire.subTrajs.subSegmentCourant == g_iSubSeg))
                 {
-                    g_memoSubSegmentCourant = chemin.trajectoire.subTrajs.subSegmentCourant;
+                    g_iSeg = chemin.trajectoire.subTrajs.segmentCourant;
+                    g_iSubSeg = chemin.trajectoire.subTrajs.subSegmentCourant;
+                    distanceTotale_Profil = 0.0;
 
-                    if ((chemin.trajectoire.subTrajs.segmentCourant == g_iSeg) \
-                    &&  (chemin.trajectoire.subTrajs.subSegmentCourant == g_iSubSeg))
+                    do
                     {
-                        g_iSeg = chemin.trajectoire.subTrajs.segmentCourant;
-                        g_iSubSeg = chemin.trajectoire.subTrajs.subSegmentCourant;
-                        distanceTotale_Profil = 0.0;
+                        /* Determination de la longueur du sous-segment a l'exterieur*/
+                        switch(g_iSubSeg)
+                        {
+                            case SPLINE31 :
+                            case SPLINE341 :
+                            case SPLINE342 :
+                            case SPLINE32 :
 
+                                ASSER_TRAJ_Trajectoire_SubSegment(&chemin.trajectoire.subTrajs.segmentTraj[g_iSeg], g_iSubSeg, 0.0, &poseTraj, &diff1Traj, &diff2Traj);
+                                dl_dt_0 = sqrt(SQUARE(diff1Traj.x) + SQUARE(diff1Traj.y));
+                                d2l_dt2_0 = sqrt(SQUARE(diff2Traj.x) + SQUARE(diff2Traj.y));
+                                ASSER_TRAJ_Trajectoire_SubSegment(&chemin.trajectoire.subTrajs.segmentTraj[g_iSeg], g_iSubSeg, (ti / 2.0), &poseTraj, &diff1Traj, &diff2Traj);
+                                dl_dt_i = sqrt(SQUARE(diff1Traj.x) + SQUARE(diff1Traj.y));
+                                ASSER_TRAJ_Trajectoire_SubSegment(&chemin.trajectoire.subTrajs.segmentTraj[g_iSeg], g_iSubSeg, ti, &poseTraj, &diff1Traj, &diff2Traj);
+                                dl_dt_1 = sqrt(SQUARE(diff1Traj.x) + SQUARE(diff1Traj.y));
+                                d2l_dt2_1 = sqrt(SQUARE(diff2Traj.x) + SQUARE(diff2Traj.y));
+
+                                ASSER_TRAJ_IdentificationPoly4(dl_dt_0, d2l_dt2_0, dl_dt_i, dl_dt_1, d2l_dt2_1, &a_dlc, &b_dlc, &c_dlc, &d_dlc, &e_dlc);
+
+                                /* Longueur centrale de la spline */
+                                distanceTotale_Profil += ((a_dlc * POWER5_t1) / 5.0) + ((b_dlc * POWER4_t1) / 4.0) + ((c_dlc * CUBE_t1) / 3.0) + ((d_dlc * SQUARE_t1) / 2.0) + (e_dlc * ti);
+
+                                Rinv_0 = fabsf(ASSER_TRAJ_Rinv_courbure(&chemin.trajectoire.subTrajs.segmentTraj[g_iSeg] \
+                                                                  , g_iSubSeg \
+                                                                  , 0.0));
+                                dRinv_0 = fabsf(ASSER_TRAJ_Rinv_courbure(&chemin.trajectoire.subTrajs.segmentTraj[g_iSeg] \
+                                                                   , g_iSubSeg \
+                                                                   , (0.01 * ti)));
+                                dRinv_0 = (dRinv_0 - Rinv_0) / (0.01 * ti);
+                                Rinv_i = fabsf(ASSER_TRAJ_Rinv_courbure(&chemin.trajectoire.subTrajs.segmentTraj[g_iSeg] \
+                                                                  , g_iSubSeg \
+                                                                  , (ti / 2.0)));
+                                Rinv_1 = fabsf(ASSER_TRAJ_Rinv_courbure(&chemin.trajectoire.subTrajs.segmentTraj[g_iSeg] \
+                                                                  , g_iSubSeg \
+                                                                  , ti));
+                                dRinv_1 = fabsf(ASSER_TRAJ_Rinv_courbure(&chemin.trajectoire.subTrajs.segmentTraj[g_iSeg] \
+                                                                   , g_iSubSeg \
+                                                                   , (0.99 * ti)));
+                                dRinv_1 = (Rinv_1 - dRinv_1) / (0.01 * ti);
+
+                                ASSER_TRAJ_IdentificationPoly4(Rinv_0, dRinv_0, Rinv_i, Rinv_1, dRinv_1, &a_Rinv, &b_Rinv, &c_Rinv, &d_Rinv, &e_Rinv);
+
+                                distSupp = ((a_dlc * a_Rinv) * POWER9_t1) / 9.0;
+                                distSupp += (((a_dlc * b_Rinv) + (a_Rinv * b_dlc)) * POWER8_t1) / 8.0;
+                                distSupp += (((a_dlc * c_Rinv) + (a_Rinv * c_dlc) + (b_dlc * b_Rinv)) * POWER7_t1) / 7.0;
+                                distSupp += (((a_dlc * d_Rinv) + (a_Rinv * d_dlc) + (b_dlc * c_Rinv) + (b_Rinv * c_dlc)) * POWER6_t1) / 6.0;
+                                distSupp += (((a_dlc * e_Rinv) + (a_Rinv * e_dlc) + (b_dlc * d_Rinv) + (b_Rinv * d_dlc) + (c_dlc * c_Rinv)) * POWER5_t1) / 5.0;
+                                distSupp += (((b_dlc * e_Rinv) + (b_Rinv * e_dlc) + (c_dlc * d_Rinv) + (c_Rinv * d_dlc)) * POWER4_t1) / 4.0;
+                                distSupp += (((c_dlc * e_Rinv) + (c_Rinv * e_dlc) + (d_dlc * d_Rinv)) * CUBE_t1) / 3.0;
+                                distSupp += (((d_dlc * e_Rinv) + (d_Rinv * e_dlc)) * SQUARE_t1) / 2.0;
+                                distSupp += (e_dlc * e_Rinv) * ti;
+                                distSupp = distSupp * (ECART_ROUE_MOTRICE / 2.0);
+                                ASSER_TRAJ_LogAsserValPC("distSupp",  distSupp);
+
+                                distanceTotale_Profil += distSupp;
+
+                                AmaxTemp = chemin.profilVitesse.Amax * AMAX_REDUCTION;
+
+                                break;
+
+                            case ARC1 :
+                                distanceTotale_Profil += (NORME_BARRE_SUIVI_TRAJ + (1.0 / chemin.trajectoire.subTrajs.segmentTraj[g_iSeg].arc1.rayon_inverse) ) * fabs(chemin.trajectoire.subTrajs.segmentTraj[chemin.trajectoire.subTrajs.segmentCourant].arc1.angle);
+                                AmaxTemp = chemin.profilVitesse.Amax * AMAX_REDUCTION;
+                                break;
+
+                            case ARC2 :
+                                distanceTotale_Profil += (NORME_BARRE_SUIVI_TRAJ + (1.0 / chemin.trajectoire.subTrajs.segmentTraj[g_iSeg].arc2.rayon_inverse) ) * fabs(chemin.trajectoire.subTrajs.segmentTraj[chemin.trajectoire.subTrajs.segmentCourant].arc2.angle);
+                                AmaxTemp = chemin.profilVitesse.Amax * AMAX_REDUCTION;
+                                break;
+
+                            case LINE :
+                                distanceTotale_Profil += sqrtf(((float)SQUARE(chemin.trajectoire.subTrajs.segmentTraj[g_iSeg].line.ax) + SQUARE(chemin.trajectoire.subTrajs.segmentTraj[g_iSeg].line.ay))) * ti;
+                                AmaxTemp = chemin.profilVitesse.Amax;
+                                break;
+
+                            default :
+                                AmaxTemp = chemin.profilVitesse.Amax;
+#ifdef PIC32_BUILD
+                                TOOLS_LogFault(AsserPosErr, True, INTEGER, (int *)&iSubSeg, True, "dist supp");
+#else /* PIC32_BUILD */
+                                ASSER_TRAJ_LogAsserMsgPC("Asser: dist supp pour vitesse en courbe non gere", (float)iSubSeg);
+#endif /* PIC32_BUILD */
+                                return;
+                        }
+
+
+                        /* Passage au sous-segment suivant */
                         do
                         {
-                            /* Determination de la longueur du sous-segment a l'exterieur*/
-                            switch(g_iSubSeg)
+                            g_iSubSeg++;
+                            if (g_iSubSeg > SPLINE32)
                             {
-                                case SPLINE31 :
-                                case SPLINE341 :
-                                case SPLINE342 :
-                                case SPLINE32 :
-
-                                    ASSER_TRAJ_Trajectoire_SubSegment(&chemin.trajectoire.subTrajs.segmentTraj[g_iSeg], g_iSubSeg, 0.0, &poseTraj, &diff1Traj, &diff2Traj);
-                                    dl_dt_0 = sqrt(SQUARE(diff1Traj.x) + SQUARE(diff1Traj.y));
-                                    d2l_dt2_0 = sqrt(SQUARE(diff2Traj.x) + SQUARE(diff2Traj.y));
-                                    ASSER_TRAJ_Trajectoire_SubSegment(&chemin.trajectoire.subTrajs.segmentTraj[g_iSeg], g_iSubSeg, (ti / 2.0), &poseTraj, &diff1Traj, &diff2Traj);
-                                    dl_dt_i = sqrt(SQUARE(diff1Traj.x) + SQUARE(diff1Traj.y));
-                                    ASSER_TRAJ_Trajectoire_SubSegment(&chemin.trajectoire.subTrajs.segmentTraj[g_iSeg], g_iSubSeg, ti, &poseTraj, &diff1Traj, &diff2Traj);
-                                    dl_dt_1 = sqrt(SQUARE(diff1Traj.x) + SQUARE(diff1Traj.y));
-                                    d2l_dt2_1 = sqrt(SQUARE(diff2Traj.x) + SQUARE(diff2Traj.y));
-
-                                    ASSER_TRAJ_IdentificationPoly4(dl_dt_0, d2l_dt2_0, dl_dt_i, dl_dt_1, d2l_dt2_1, &a_dlc, &b_dlc, &c_dlc, &d_dlc, &e_dlc);
-
-                                    /* Longueur centrale de la spline */
-                                    distanceTotale_Profil += ((a_dlc * POWER5_t1) / 5.0) + ((b_dlc * POWER4_t1) / 4.0) + ((c_dlc * CUBE_t1) / 3.0) + ((d_dlc * SQUARE_t1) / 2.0) + (e_dlc * ti);
-
-                                    Rinv_0 = fabsf(ASSER_TRAJ_Rinv_courbure(&chemin.trajectoire.subTrajs.segmentTraj[g_iSeg] \
-                                                                      , g_iSubSeg \
-                                                                      , 0.0));
-                                    dRinv_0 = fabsf(ASSER_TRAJ_Rinv_courbure(&chemin.trajectoire.subTrajs.segmentTraj[g_iSeg] \
-                                                                       , g_iSubSeg \
-                                                                       , (0.01 * ti)));
-                                    dRinv_0 = (dRinv_0 - Rinv_0) / (0.01 * ti);
-                                    Rinv_i = fabsf(ASSER_TRAJ_Rinv_courbure(&chemin.trajectoire.subTrajs.segmentTraj[g_iSeg] \
-                                                                      , g_iSubSeg \
-                                                                      , (ti / 2.0)));
-                                    Rinv_1 = fabsf(ASSER_TRAJ_Rinv_courbure(&chemin.trajectoire.subTrajs.segmentTraj[g_iSeg] \
-                                                                      , g_iSubSeg \
-                                                                      , ti));
-                                    dRinv_1 = fabsf(ASSER_TRAJ_Rinv_courbure(&chemin.trajectoire.subTrajs.segmentTraj[g_iSeg] \
-                                                                       , g_iSubSeg \
-                                                                       , (0.99 * ti)));
-                                    dRinv_1 = (Rinv_1 - dRinv_1) / (0.01 * ti);
-
-                                    ASSER_TRAJ_IdentificationPoly4(Rinv_0, dRinv_0, Rinv_i, Rinv_1, dRinv_1, &a_Rinv, &b_Rinv, &c_Rinv, &d_Rinv, &e_Rinv);
-
-                                    distSupp = ((a_dlc * a_Rinv) * POWER9_t1) / 9.0;
-                                    distSupp += (((a_dlc * b_Rinv) + (a_Rinv * b_dlc)) * POWER8_t1) / 8.0;
-                                    distSupp += (((a_dlc * c_Rinv) + (a_Rinv * c_dlc) + (b_dlc * b_Rinv)) * POWER7_t1) / 7.0;
-                                    distSupp += (((a_dlc * d_Rinv) + (a_Rinv * d_dlc) + (b_dlc * c_Rinv) + (b_Rinv * c_dlc)) * POWER6_t1) / 6.0;
-                                    distSupp += (((a_dlc * e_Rinv) + (a_Rinv * e_dlc) + (b_dlc * d_Rinv) + (b_Rinv * d_dlc) + (c_dlc * c_Rinv)) * POWER5_t1) / 5.0;
-                                    distSupp += (((b_dlc * e_Rinv) + (b_Rinv * e_dlc) + (c_dlc * d_Rinv) + (c_Rinv * d_dlc)) * POWER4_t1) / 4.0;
-                                    distSupp += (((c_dlc * e_Rinv) + (c_Rinv * e_dlc) + (d_dlc * d_Rinv)) * CUBE_t1) / 3.0;
-                                    distSupp += (((d_dlc * e_Rinv) + (d_Rinv * e_dlc)) * SQUARE_t1) / 2.0;
-                                    distSupp += (e_dlc * e_Rinv) * ti;
-                                    distSupp = distSupp * (ECART_ROUE_MOTRICE / 2.0);
-                                    ASSER_TRAJ_LogAsserValPC("distSupp",  distSupp);
-
-                                    distanceTotale_Profil += distSupp;
-
-                                    AmaxTemp = chemin.profilVitesse.Amax * AMAX_REDUCTION;
-
-                                    break;
-
-                                case ARC1 :
-                                    distanceTotale_Profil += (NORME_BARRE_SUIVI_TRAJ + (1.0 / chemin.trajectoire.subTrajs.segmentTraj[g_iSeg].arc1.rayon_inverse) ) * fabs(chemin.trajectoire.subTrajs.segmentTraj[chemin.trajectoire.subTrajs.segmentCourant].arc1.angle);
-                                    AmaxTemp = chemin.profilVitesse.Amax * AMAX_REDUCTION;
-                                    break;
-
-                                case ARC2 :
-                                    distanceTotale_Profil += (NORME_BARRE_SUIVI_TRAJ + (1.0 / chemin.trajectoire.subTrajs.segmentTraj[g_iSeg].arc2.rayon_inverse) ) * fabs(chemin.trajectoire.subTrajs.segmentTraj[chemin.trajectoire.subTrajs.segmentCourant].arc2.angle);
-                                    AmaxTemp = chemin.profilVitesse.Amax * AMAX_REDUCTION;
-                                    break;
-
-                                case LINE :
-                                    distanceTotale_Profil += sqrtf(((float)SQUARE(chemin.trajectoire.subTrajs.segmentTraj[g_iSeg].line.ax) + SQUARE(chemin.trajectoire.subTrajs.segmentTraj[g_iSeg].line.ay))) * ti;
-                                    AmaxTemp = chemin.profilVitesse.Amax;
-                                    break;
-
-                                default :
-                                    AmaxTemp = chemin.profilVitesse.Amax;
-#ifdef PIC32_BUILD
-                                    TOOLS_LogFault(AsserPosErr, True, INTEGER, (int *)&iSubSeg, True, "dist supp");
-#else /* PIC32_BUILD */
-                                    ASSER_TRAJ_LogAsserMsgPC("Asser: dist supp pour vitesse en courbe non gere", (float)iSubSeg);
-#endif /* PIC32_BUILD */
-                                    return;
-                            }
-
-
-                            /* Passage au sous-segment suivant */
-                            do
-                            {
-                                g_iSubSeg++;
-                                if (g_iSubSeg > SPLINE32)
+                                /* Passage au segment suivant */
+                                g_iSeg++;
+                                if (g_iSeg < chemin.trajectoire.subTrajs.nbreSegments)
                                 {
-                                    /* Passage au segment suivant */
-                                    g_iSeg++;
-                                    if (g_iSeg < chemin.trajectoire.subTrajs.nbreSegments)
-                                    {
-                                        g_iSubSeg = chemin.trajectoire.subTrajs.segmentTraj[g_iSeg].subSeg_firstUsed;
-                                    }
+                                    g_iSubSeg = chemin.trajectoire.subTrajs.segmentTraj[g_iSeg].subSeg_firstUsed;
                                 }
-                            } while ((TEST_BIT(chemin.trajectoire.subTrajs.segmentTraj[g_iSeg].subSeg_used.Info, g_iSubSeg) == False) && (g_iSeg < chemin.trajectoire.subTrajs.nbreSegments));
-                        } while ( (g_iSubSeg != LINE) && ((chemin.trajectoire.subTrajs.subSegmentCourant != LINE) || (g_iSeg == (chemin.trajectoire.subTrajs.nbreSegments - 1))) && (g_iSeg < chemin.trajectoire.subTrajs.nbreSegments));
+                            }
+                        } while ((TEST_BIT(chemin.trajectoire.subTrajs.segmentTraj[g_iSeg].subSeg_used.Info, g_iSubSeg) == False) && (g_iSeg < chemin.trajectoire.subTrajs.nbreSegments));
+                    } while ( ((chemin.trajectoire.subTrajs.subSegmentCourant == LINE) || (g_iSubSeg != LINE)) && ((chemin.trajectoire.subTrajs.subSegmentCourant != LINE) || (g_iSubSeg == LINE)) && (g_iSeg < chemin.trajectoire.subTrajs.nbreSegments));
 
-                        /* Init */
-                        distanceParcourue_Profil = 0.0;
+                    /* Init */
+                    distanceParcourue_Profil = 0.0;
 
-                        /* determination des vitesses initiale et finale de chaque profil S-curve */
-                        if ((chemin.trajectoire.subTrajs.segmentCourant == 0)
-                        &&  (chemin.trajectoire.subTrajs.subSegmentCourant == chemin.trajectoire.subTrajs.segmentTraj[chemin.trajectoire.subTrajs.segmentCourant].subSeg_firstUsed))
-                        {
-                            vitesse_debut_profil = 0.0;
-                        }
-                        else
-                        {
-                            vitesse_debut_profil = MIN(vitesse_fin_profil, (((float)m_sensDeplacement) * POS_GetVitesseRelle()));
-                        }
-
-                        if (g_iSeg == chemin.trajectoire.subTrajs.nbreSegments)
-                        {
-                            vitesse_fin_profil = 0.0;
-                        }
-                        else
-                        {
-                            diffThetaTrajectoire = ASSER_TRAJ_DiffThetaBSplinePerLenghtUnit(&chemin.trajectoire \
-                                                                                            , g_iSeg \
-                                                                                            , g_iSubSeg \
-                                                                                            , 0.0);
-
-                            vitesse_fin_profil_0 = ASSER_TRAJ_VitesseLimiteEnVirage(&chemin, diffThetaTrajectoire);
-
-                            delta_distance_Av = 0.02;
-                            parametrePositionSegmentTrajectoireAv = 0.0;
-                            segmentCourantAv = g_iSeg;
-                            subSegmentCourantAv = g_iSubSeg;
-
-                            ASSER_TRAJ_ParcoursTrajectoire(&chemin \
-                                                           , delta_distance_Av \
-                                                           , &segmentCourantAv \
-                                                           , &subSegmentCourantAv \
-                                                           , &parametrePositionSegmentTrajectoireAv \
-                                                           , NULL);
-
-                            diffThetaTrajectoire = ASSER_TRAJ_DiffThetaBSplinePerLenghtUnit(&chemin.trajectoire \
-                                                                                            , segmentCourantAv \
-                                                                                            , subSegmentCourantAv \
-                                                                                            , parametrePositionSegmentTrajectoireAv);
-
-                            vitesse_fin_profil = ASSER_TRAJ_VitesseLimiteEnVirage(&chemin, diffThetaTrajectoire);
-
-                            vitesse_fin_profil = MIN(vitesse_fin_profil_0, vitesse_fin_profil);
-                        }
-
-                        Phase = 0;
-
-                        ASSER_TRAJ_LogAsserValPC("vitesse_debut_profil",  vitesse_debut_profil);
-                        ASSER_TRAJ_LogAsserValPC("vitesse_fin_profil",  vitesse_fin_profil);
-
+                    /* determination des vitesses initiale et finale de chaque profil S-curve */
+                    if ((chemin.trajectoire.subTrajs.segmentCourant == 0)
+                    &&  (chemin.trajectoire.subTrajs.subSegmentCourant == chemin.trajectoire.subTrajs.segmentTraj[chemin.trajectoire.subTrajs.segmentCourant].subSeg_firstUsed))
+                    {
+                        vitesse_debut_profil = 0.0;
                     }
-                } /* Fin d'init du nouveau profil de vitesse */
+                    else
+                    {
+                        vitesse_debut_profil = MIN(vitesse_fin_profil, (((float)m_sensDeplacement) * POS_GetVitesseRelle()));
+                    }
+
+                    if (g_iSeg == chemin.trajectoire.subTrajs.nbreSegments)
+                    {
+                        vitesse_fin_profil = 0.0;
+                    }
+                    else
+                    {
+                        diffThetaTrajectoire = ASSER_TRAJ_DiffThetaBSplinePerLenghtUnit(&chemin.trajectoire \
+                                                                                        , g_iSeg \
+                                                                                        , g_iSubSeg \
+                                                                                        , 0.0);
+
+                        vitesse_fin_profil_0 = ASSER_TRAJ_VitesseLimiteEnVirage(&chemin, diffThetaTrajectoire);
+
+                        delta_distance_Av = 0.02;
+                        parametrePositionSegmentTrajectoireAv = 0.0;
+                        segmentCourantAv = g_iSeg;
+                        subSegmentCourantAv = g_iSubSeg;
+
+                        ASSER_TRAJ_ParcoursTrajectoire(&chemin \
+                                                       , delta_distance_Av \
+                                                       , &segmentCourantAv \
+                                                       , &subSegmentCourantAv \
+                                                       , &parametrePositionSegmentTrajectoireAv \
+                                                       , NULL);
+
+                        diffThetaTrajectoire = ASSER_TRAJ_DiffThetaBSplinePerLenghtUnit(&chemin.trajectoire \
+                                                                                        , segmentCourantAv \
+                                                                                        , subSegmentCourantAv \
+                                                                                        , parametrePositionSegmentTrajectoireAv);
+
+                        vitesse_fin_profil = ASSER_TRAJ_VitesseLimiteEnVirage(&chemin, diffThetaTrajectoire);
+
+                        vitesse_fin_profil = MIN(vitesse_fin_profil_0, vitesse_fin_profil);
+                    }
+
+                    vitesse_debut_profil = 0.0;
+                    vitesse_fin_profil = 0.0;
+
+                    Phase = 0;
+
+                    ASSER_TRAJ_LogAsserValPC("vitesse_debut_profil",  vitesse_debut_profil);
+                    ASSER_TRAJ_LogAsserValPC("vitesse_fin_profil",  vitesse_fin_profil);
+
+                }
+                 /* Fin d'init du nouveau profil de vitesse */
 
                 /* Ajout de distance pour obtenir la distance parcourue par la roue (pas toujours la même) a l'exterieur des virages */
                 distanceParcourue_Profil += delta_distance * (1.0 + NORME_BARRE_SUIVI_TRAJ * ASSER_TRAJ_Rinv_courbure(&chemin.trajectoire.subTrajs.segmentTraj[chemin.trajectoire.subTrajs.segmentCourant] \
@@ -1527,7 +1529,6 @@ extern void ASSER_TRAJ_InitialisationTrajectoire(Pose poseRobot, unsigned char M
         ASSER_TRAJ_LogAsserValPC("yNewSubSeg", poseRobot.y);
 
         g_memoSegmentCourant = (NBRE_MAX_PTS_TRAJ  + 1);
-        g_memoSubSegmentCourant = (SPLINE32  + 1);
         g_iSeg = 0;
         g_iSubSeg = chemin.trajectoire.subTrajs.segmentTraj[g_iSeg].subSeg_firstUsed;
     }
