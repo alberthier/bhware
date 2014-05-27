@@ -356,26 +356,29 @@ class FireStealer(statemachine.State):
         yield from self.start_position()
 
     def start_position(self):
-        yield ArmSpeed(1023)
+        yield ArmSpeed(ARM_SPEED_MAX)
         yield Trigger(PUMP_OFF)
-        yield Trigger(ARM_1_TAKE_TORCH_FIRE, ARM_2_TAKE_TORCH_FIRE, ELEVATOR_LEVEL_1)
+        yield Trigger(ARM_1_TAKE_TORCH_FIRE, ARM_2_TAKE_TORCH_FIRE, ELEVATOR_UP)
+        self.detection_enabled=True
         self.send_packet(packets.ColorDetectorPacket("EnableScan"))
         # yield Timer(2000)
         # self.detection_enabled=True
 
 
     def on_color_detected(self, packet):
-        # if not self.detection_enabled:
-        #     return
+        if not self.detection_enabled:
+            return
+
         if packet.color == COLOR_NONE:
             return
-        # self.detection_enabled = False
+
+        self.detection_enabled = False
 
         if self.robot.stored_fires < 4 :
             self.send_packet(packets.ColorDetectorPacket("DisableScan"))
             yield TakeFire(ELEVATOR_DOWN)
 
-            if packet.color == COLOR_RED :
+            if packet.color == self.robot.fire_color :
                 yield StoreFire()
             else :
                 yield TurnFire()
@@ -391,26 +394,26 @@ class TurnFire(statemachine.State):
     def on_enter(self):
 
         yield Trigger(FIRE_FLIPPER_OPEN)
-        yield ArmSpeed(150)
+        yield ArmSpeed(ARM_SPEED_WITH_FIRE)
         yield Trigger(ARM_1_FLIP_FIRE, ARM_2_FLIP_FIRE)
         yield Timer(500)
         yield Trigger(PUMP_OFF)
         yield Timer(300)
         yield Trigger(FIRE_FLIPPER_CLOSE)
-        yield ArmSpeed(1023)
+        yield ArmSpeed(ARM_SPEED_MAX)
 
         yield None
 
 class StoreFire(statemachine.State):
 
     def on_enter(self):
-        yield ArmSpeed(150)
+        yield ArmSpeed(ARM_SPEED_WITH_FIRE)
         yield Trigger(ARM_1_STORE_FIRE, ARM_2_STORE_FIRE)
         yield Trigger(elevator_store_levels[self.robot.stored_fires])
         yield Timer(500)
         yield Trigger(PUMP_OFF)
         yield Timer(500)
-        yield ArmSpeed(1023)
+        yield ArmSpeed(ARM_SPEED_MAX)
         yield Trigger(ELEVATOR_UP)
         self.robot.stored_fires += 1
         yield None

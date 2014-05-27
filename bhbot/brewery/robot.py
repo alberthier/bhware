@@ -65,6 +65,7 @@ class Robot(object):
     def set_team(self, team):
         position.Pose.match_team = team
         self._team = team
+        self.fire_color = COLOR_RED if team == TEAM_RED else COLOR_YELLOW
 
     def get_team(self):
         return self._team
