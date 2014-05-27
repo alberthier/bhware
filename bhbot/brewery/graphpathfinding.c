@@ -457,6 +457,7 @@ typedef struct _PathFinder
     float field_x2;
     float field_y2;
     int is_field_config_done;
+    int is_synchronized;
     Node* start_node;
     Node* end_node;
     Node** nodes;
@@ -475,6 +476,7 @@ static int pathfinder_init(PathFinder* self, PyObject* args, PyObject* kwds)
     }
 
     self->is_field_config_done = 0;
+    self->is_synchronized = 0;
     self->nodes = array_new(Node*, 2);
     self->nodes_count = 0;
     self->zones = NULL;
@@ -520,6 +522,8 @@ static PyObject* pathfinder_add_zone(PathFinder* self, PyObject* args)
     int i = 0;
     PyObject* points_list = NULL;
 
+    self->is_synchronized = 0;
+
     if (self->is_field_config_done) {
         PyErr_SetString(PyExc_RuntimeError, "Setup already finished. Adding new zones is forbidden");
         return NULL;
@@ -548,6 +552,8 @@ static PyObject* pathfinder_enable_zone(PathFinder* self, PyObject* args)
     int id = 0;
     int enabled = 0;
 
+    self->is_synchronized = 0;
+
     if (!PyArg_ParseTuple(args, "ii", &id, &enabled)) {
         return NULL;
     }
@@ -565,6 +571,8 @@ static PyObject* pathfinder_move_zone(PathFinder* self, PyObject* args)
     int id = 0;
     float dx = 0.0;
     float dy = 0.0;
+
+    self->is_synchronized = 0;
 
     if (!PyArg_ParseTuple(args, "iff", &id, &dx, &dy)) {
         return NULL;
@@ -584,6 +592,8 @@ static PyObject* pathfinder_update_zone(PathFinder* self, PyObject* args)
 {
     int id = 0;
     PyObject* points_list = NULL;
+
+    self->is_synchronized = 0;
 
     if (!PyArg_ParseTuple(args, "iO", &id, &points_list)) {
         return NULL;
@@ -643,62 +653,26 @@ static int pathfinder_is_node_in_field(PathFinder* self, Node* node)
 }
 
 
-static void pathfinder_synchronize(PathFinder* self)
+static void pathfinder_update_edges_affine_params(PathFinder* self, Edge** edges, int edges_count)
+{
+    int i = 0;
+
+    for (i = 0; i < edges_count; ++i) {
+        Edge* edge = edges[i];
+        edge_update(edge);
+        edge->enabled = (!edge->zone_internal) && edge->node1->enabled && edge->node2->enabled;
+    }
+}
+
+
+static void pathfinder_disable_intersecting_edges(PathFinder* self, Edge** edges, int edges_count)
 {
     int i = 0;
     int j = 0;
     int k = 0;
 
-    /* Apply zone translations */
-    for (i = 0; i < self->zones_count; ++i) {
-        Zone* zone = self->zones[i];
-        for (j = 0; j < zone->nodes_count; ++j) {
-            Node* node = zone->nodes[j];
-            node->x += zone->dx;
-            node->y += zone->dy;
-        }
-        zone->dx = 0.0;
-        zone->dy = 0.0;
-    }
-    /* Remove nodes outside of field */
-    for (i = 0; i < self->nodes_count; ++i) {
-        Node* node = self->nodes[i];
-        node->enabled = pathfinder_is_node_in_field(self, node);
-    }
-    /* Remove disabled zones nodes */
-    for (i = 0; i < self->zones_count; ++i) {
-        Zone* zone = self->zones[i];
-        for (j = 0; j < zone->nodes_count; ++j) {
-            Node* node = zone->nodes[j];
-            node->enabled &= zone->enabled;
-        }
-    }
-    /* Remove nodes in a zone*/
-    for (i = 0; i < self->nodes_count; ++i) {
-        Node* node = self->nodes[i];
-        if (node->enabled) {
-            for (j = 0; j < self->zones_count; ++j) {
-                Zone* zone = self->zones[j];
-                if (zone->enabled && zone_contains_node(zone, node)) {
-                    node->enabled = 0;
-                    break;
-                }
-            }
-        }
-    }
-    /* Start node is always enabled */
-    self->start_node->enabled = 1;
-
-    /* Update edge affine params */
-    for (i = 0; i < self->edges_count; ++i) {
-        Edge* edge = self->edges[i];
-        edge_update(edge);
-        edge->enabled = (!edge->zone_internal) && edge->node1->enabled && edge->node2->enabled;
-    }
-
-    /* Remove intersecting edges */
-    for (i = 0; i < self->edges_count; ++i) {
-        Edge* edge1 = self->edges[i];
+    for (i = 0; i < edges_count; ++i) {
+        Edge* edge1 = edges[i];
         for (j = 0; j < self->zones_count && edge1->enabled; ++j) {
             Zone* zone = self->zones[j];
             if (zone->enabled) {
@@ -711,6 +685,83 @@ static void pathfinder_synchronize(PathFinder* self)
                 }
             }
         }
+    }
+}
+
+
+static void pathfinder_synchronize(PathFinder* self)
+{
+    int i = 0;
+    int j = 0;
+
+    if (self->is_synchronized) {
+        self->end_node->enabled = pathfinder_is_node_in_field(self, self->end_node);
+        if (self->end_node->enabled) {
+            /* Disable end node if it is in a zone*/
+            for (j = 0; j < self->zones_count; ++j) {
+                Zone* zone = self->zones[j];
+                if (zone->enabled && zone_contains_node(zone, self->end_node)) {
+                    self->end_node->enabled = 0;
+                    break;
+                }
+            }
+        }
+
+        /* Update edge affine params */
+        pathfinder_update_edges_affine_params(self, self->end_node->edges, self->end_node->edges_count);
+        pathfinder_update_edges_affine_params(self, self->start_node->edges, self->start_node->edges_count);
+
+        /* Remove intersecting edges */
+        pathfinder_disable_intersecting_edges(self, self->end_node->edges, self->end_node->edges_count);
+        pathfinder_disable_intersecting_edges(self, self->start_node->edges, self->start_node->edges_count);
+    } else {
+        /* Apply zone translations */
+        for (i = 0; i < self->zones_count; ++i) {
+            Zone* zone = self->zones[i];
+            for (j = 0; j < zone->nodes_count; ++j) {
+                Node* node = zone->nodes[j];
+                node->x += zone->dx;
+                node->y += zone->dy;
+            }
+            zone->dx = 0.0;
+            zone->dy = 0.0;
+        }
+        /* Remove nodes outside of field */
+        for (i = 0; i < self->nodes_count; ++i) {
+            Node* node = self->nodes[i];
+            node->enabled = pathfinder_is_node_in_field(self, node);
+        }
+        /* Remove disabled zones nodes */
+        for (i = 0; i < self->zones_count; ++i) {
+            Zone* zone = self->zones[i];
+            for (j = 0; j < zone->nodes_count; ++j) {
+                Node* node = zone->nodes[j];
+                node->enabled &= zone->enabled;
+            }
+        }
+        /* Remove nodes in a zone*/
+        for (i = 0; i < self->nodes_count; ++i) {
+            Node* node = self->nodes[i];
+            if (node->enabled) {
+                for (j = 0; j < self->zones_count; ++j) {
+                    Zone* zone = self->zones[j];
+                    if (zone->enabled && zone_contains_node(zone, node)) {
+                        node->enabled = 0;
+                        break;
+                    }
+                }
+            }
+        }
+        /* Start node is always enabled */
+        self->start_node->enabled = 1;
+
+        /* Update edge affine params */
+        pathfinder_update_edges_affine_params(self, self->edges, self->edges_count);
+
+        /* Remove intersecting edges */
+        pathfinder_disable_intersecting_edges(self, self->edges, self->edges_count);
+
+        self->is_synchronized = 1;
     }
 }
 

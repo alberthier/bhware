@@ -14,9 +14,8 @@ from commonstates import *
 from position import *
 from tools import *
 
-import statemachines.commontests
-import statemachines.martytests
-
+import statemachines.testscommon as testscommon
+import statemachines.testsmarty as testsmarty
 
 
 BORDER_FIRE_DIST = 0.15

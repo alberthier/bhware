@@ -280,7 +280,7 @@ ARM_1_FLIP_FIRE       = makeServoMoveCommand (ARM_1,     260)
 ARM_1_OPEN            = makeServoMoveCommand (ARM_1,     250)
 ARM_1_MIDDLE          = makeServoMoveCommand (ARM_1,     150)
 ARM_1_CLOSE           = makeServoMoveCommand (ARM_1,      80)
-ARM_1_SECURE          = makeServoMoveCommand (ARM_1,      50)
+ARM_1_SECURE          = makeServoMoveCommand (ARM_1,      65)
 ARM_2                 = (ACTUATOR_TYPE_SERVO_RX, 9, DEFAULT_RX_SERVOS_TIMEOUT_MS)
 ARM_2_SETUP           = makeServoSetupCommand(ARM_2,     200)
 ARM_2_TAKE_TORCH_FIRE = makeServoMoveCommand (ARM_2,      35)
@@ -289,7 +289,7 @@ ARM_2_FLIP_FIRE       = makeServoMoveCommand (ARM_2,     220)
 ARM_2_OPEN            = makeServoMoveCommand (ARM_2,     250)
 ARM_2_MIDDLE          = makeServoMoveCommand (ARM_2,     150)
 ARM_2_CLOSE           = makeServoMoveCommand (ARM_2,      80)
-ARM_2_SECURE          = makeServoMoveCommand (ARM_2,     140)
+ARM_2_SECURE          = makeServoMoveCommand (ARM_2,     120)
 
 # AX Servos
 DEFAULT_AX_SERVOS_TIMEOUT_MS = DEFAULT_SERVOS_TIMEOUT_MS
@@ -315,7 +315,7 @@ FRUITMOTH_ARM_OPEN       = makeServoMoveCommand(FRUITMOTH_ARM,    282)
 FRUITMOTH_ARM_CLOSE      = makeServoMoveCommand(FRUITMOTH_ARM,    170)
 FRUITMOTH_FINGER         = (ACTUATOR_TYPE_SERVO_AX, 11, DEFAULT_AX_SERVOS_TIMEOUT_MS)
 FRUITMOTH_FINGER_OPEN    = makeServoMoveCommand(FRUITMOTH_FINGER, 210)
-FRUITMOTH_FINGER_RETRACT = makeServoMoveCommand(FRUITMOTH_FINGER, 160)
+FRUITMOTH_FINGER_RETRACT = makeServoMoveCommand(FRUITMOTH_FINGER, 150)
 FRUITMOTH_FINGER_CLOSE   = makeServoMoveCommand(FRUITMOTH_FINGER, 175)
 
 # Magnets

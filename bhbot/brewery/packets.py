@@ -263,6 +263,16 @@ class SetLogPrefix(BasePacket):
     )
 
 
+
+
+class ColorDetected(BasePacket):
+
+    TYPE = 3
+    DEFINITION = (
+        ('color' , UEnum8(COLOR, COLOR_NONE)),
+    )
+
+
 # Turret packets
 
 

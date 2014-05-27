@@ -874,7 +874,9 @@ void ColorDetector::scanMask()
 
         double meanRed = cv::mean(maskRed)[0];
 
-        std::cerr << "MEAN RED " << meanRed << std::endl;
+        if (!m_quiet) {
+            std::cerr << "MEAN RED " << meanRed << std::endl;
+        }
 
 
         cv::threshold(componentsBgr[1], maskGreen, 128, 255, cv::THRESH_BINARY);
@@ -885,7 +887,9 @@ void ColorDetector::scanMask()
 
         double meanGreen = cv::mean(maskGreen)[0];
 
-        std::cerr << "MEAN GREEN " << meanGreen << std::endl;
+        if (!m_quiet) {
+            std::cerr << "MEAN GREEN " << meanGreen << std::endl;
+        }
 
         if (meanRed < 128)
         {
