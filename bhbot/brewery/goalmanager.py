@@ -20,7 +20,6 @@ class Goal:
 
     def __init__(self, identifier, weight, x, y, direction, handler_state, ctor_parameters = None, shared = False, navigate = True):
         self.identifier = identifier
-        self.uid = identifier
         self.weight = weight
         self.x = x
         self.y = y
@@ -38,9 +37,6 @@ class Goal:
         self.goal_manager = None
         self.is_current = False
         self.is_blacklisted = False
-        self.estimated_duration = 15
-        self.funny_action = False
-        self.minimal_remaining_time = 999
 
 
     def increment_trials(self):
@@ -92,11 +88,6 @@ class Goal:
     def is_available(self):
         return self.status == GOAL_AVAILABLE
 
-    def estimate_start_time(self):
-        return self.navigation_cost * ROBOT_MEAN_SPEED
-
-    def estimate_end_time(self):
-        return self.estimate_start_time() + self.estimated_duration
 
 
 
@@ -106,25 +97,12 @@ class GoalManager:
         self.event_loop = event_loop
         self.goals = []
         self.last_goal = None
-        self.goal_ids = set()
 
 
     def add(self, *args):
         for goal in args :
             goal.goal_manager = self
-            added = False
-            add_int = 1
-            while not added :
-                add_int+=1
-                if goal.uid in self.goal_ids :
-                    goal.uid = "{}_{}".format(goal.identifier,add_int)
-                else :
-                    self.goals.append(goal)
-                    self.goal_ids.add(goal.uid)
-                    added = True
-
-
-
+            self.goals.append(goal)
 
 
     def has_available_goal(self, identifier):
@@ -146,33 +124,23 @@ class GoalManager:
                 return True
         return False
 
-    def compute_distances(self, goals):
-        for goal in goals:
+
+    def get_next_goal(self):
+        candidates = self.get_candidate_goals()
+
+        for goal in candidates:
             pose = position.Pose(goal.x, goal.y, virtual = True)
-            logger.log("Evaluate goal {}".format(goal.uid))
+            logger.log("Evaluate goal {}".format(goal.identifier))
             if GOAL_EVALUATION_USES_PATHFINDING:
                 goal.navigation_cost = self.event_loop.map.evaluate(self.event_loop.robot.pose, pose)
             else:
                 goal.navigation_cost = tools.distance(self.event_loop.robot.pose.x, self.event_loop.robot.pose.y, pose.x, pose.y)
-            logger.log("Goal {} : navigation cost {}".format(goal.uid, goal.navigation_cost))
-
-
-    def get_next_goal(self):
-        time_remaining = self.event_loop.get_remaining_match_time()
-        candidates = self.get_candidate_goals()
-
-        self.compute_distances(candidates)
-
         # Remove unreachable goals
         candidates = [ goal for goal in candidates if goal.navigation_cost is not None ]
-        funny_action_goals = [ goal for goal in candidates if goal.funny_action ]
-        candidates = [ goal for goal in candidates if time_remaining <= goal.minimal_remaining_time ]
 
         if len(candidates) == 0:
-            logger.log("No goals available")
             return None
         if len(candidates) == 1:
-            logger.log("Only one goal available")
             return candidates[0]
 
         candidates.sort(key = lambda goal : goal.navigation_cost)
@@ -186,42 +154,9 @@ class GoalManager:
             current = goal.navigation_cost - nearest_cost
             k = (total_range - current) / total_range
             goal.score = goal.weight * (1.0 / 3.0 + k * 2.0 / 3.0)
-            logger.log("Goal '{}'     Navigation cost: {}    Score: {}".format(goal.uid, goal.navigation_cost, goal.score))
+            logger.log("Goal '{}'     Navigation cost: {}    Score: {}".format(goal.identifier, goal.navigation_cost, goal.score))
 
-
-        for g in funny_action_goals :
-            g.score-=15
-
-        best_goal = max(candidates, key = lambda goal : goal.score)
-
-        logger.log("Best goal : {}".format(best_goal.uid))
-
-        farthest_funny_action = funny_action_goals[-1]
-
-        time_to_start_funny_action = farthest_funny_action.estimate_start_time()
-
-        logger.log("Time to farthest funny action : {}".format(time_to_start_funny_action))
-
-        candidates = [ goal for goal in candidates
-                        if time_remaining - goal.estimate_end_time()
-                            > time_to_start_funny_action ]
-
-        best_goal_funny = max(candidates, key = lambda goal : goal.score)
-
-        time_remaining_after = time_remaining - best_goal_funny.estimate_end_time()
-
-        logger.log("Best goal with funny action : {} ( duration {}s, will have {}s remaining".
-                   format(best_goal_funny.uid, best_goal_funny.estimate_end_time(),
-                          time_remaining_after  ))
-
-        if not best_goal_funny :
-            logger.dbg("No time for funny action !!!")
-            best_goal_funny = best_goal
-
-        logger.log("Estimated duration for goal {} : {}".format(best_goal_funny.uid, best_goal_funny.estimate_end_time()))
-
-        return best_goal_funny
-
+        return max(candidates, key = lambda goal : goal.score)
 
 
     def get_least_recent_tried_goal(self):
@@ -259,7 +194,7 @@ class GoalManager:
 
         for goal in available_goals:
             pose = position.Pose(goal.x, goal.y, virtual=True)
-            logger.log("Evaluate goal {}".format(goal.uid))
+            logger.log("Evaluate goal {}".format(goal.identifier))
             if GOAL_EVALUATION_USES_PATHFINDING:
                 goal.navigation_cost = self.event_loop.map.evaluate(self.event_loop.robot.pose, pose)
             else:
@@ -272,12 +207,12 @@ class GoalManager:
         logger.log("Scoring distance")
         for order, goal in enumerate(sorted(available_goals, key = lambda x : x.navigation_cost, reverse = True)):
             goal.score += (order + 1) * 2
-            logger.log("Goal {} nav cost = {}, score = {}".format(goal.uid, goal.navigation_cost, goal.score))
+            logger.log("Goal {} nav cost = {}, score = {}".format(goal.identifier, goal.navigation_cost, goal.score))
 
         logger.log("Adding weights")
         for goal in available_goals:
             goal.score += goal.weight
-            logger.log("Goal {} score = {}".format(goal.uid, goal.score))
+            logger.log("Goal {} score = {}".format(goal.identifier, goal.score))
 
         logger.log("Scoring tentatives")
         order = 0
@@ -287,13 +222,13 @@ class GoalManager:
                 last_value = goal.trial_count
                 order += 1
             goal.score += order
-            logger.log("Goal {} score = {}".format(goal.uid, goal.score))
+            logger.log("Goal {} score = {}".format(goal.identifier, goal.score))
 
         logger.log("available_goals by score : {}".format(["{}:{}".format(g.identifier, g.score) for g in available_goals ] ))
 
         best_goal = max(available_goals, key = lambda g : g.score)
 
-        logger.log("Best goal is {} with score {}".format(best_goal.uid, best_goal.score))
+        logger.log("Best goal is {} with score {}".format(best_goal.identifier, best_goal.score))
 
         self.last_goal = best_goal
 
@@ -320,7 +255,7 @@ class GoalManager:
                 if g.identifier == goal:
                     goal = g
                     break
-        logger.log("Goal {} : {}".format(GOAL_STATUS.lookup_by_value[new_status], goal.uid))
+        logger.log("Goal {} : {}".format(GOAL_STATUS.lookup_by_value[new_status], goal.identifier))
 
         self.internal_goal_update(goal.identifier, new_status)
 
