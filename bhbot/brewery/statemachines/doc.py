@@ -14,6 +14,9 @@ from commonstates import *
 from position import *
 from tools import *
 
+import statemachines.testscommon as testscommon
+import statemachines.testsdoc as testsdoc
+
 # global constants
 
 TAKE_FRUITS_TRAVEL_DISTANCE = 0.5
@@ -197,23 +200,23 @@ class Main(statemachine.State):
 
         #                      |        ID           |  Weight  |     X       |          Y         | Direction          |    State      | Ctor parameters|Shared|Navigate|
         gm.add(
-#            mgm.Goal           ("HuntTheMammoth"     ,        10, self.start_x,                0.75, DIRECTION_FORWARD  , HuntTheMammoth ,              None, False,    True),
-#            capture_the_mammoth_1,
-#            capture_the_mammoth_2,
-#
-#            FireHarvestingGoal ("TakeTorch_Mine"     ,        10,   MY_TORCH_X,          MY_TORCH_Y, DIRECTION_FORWARD  , TakeTorch      ,    (MY_TORCH_ANGLE, True,), False,    True),
-#            FireHarvestingGoal ("TakeTorch_Mine"     ,        10, MY_TORCH_X_2,        MY_TORCH_Y_2, DIRECTION_FORWARD  , TakeTorch      ,  (MY_TORCH_ANGLE_2, True,), False,    True),
-#           FireHarvestingGoal ("TakeTorch_Theirs"   ,          1,          1.1,   sym_y(MY_TORCH_Y), DIRECTION_FORWARD  , TakeTorch      ,                   (False,), False,    True),
+            mgm.Goal           ("HuntTheMammoth"     ,        10, self.start_x,                0.75, DIRECTION_FORWARD  , HuntTheMammoth ,              None, False,    True),
+            capture_the_mammoth_1,
+            capture_the_mammoth_2,
+
+            FireHarvestingGoal ("TakeTorch_Mine"     ,        10,   MY_TORCH_X,          MY_TORCH_Y, DIRECTION_FORWARD  , TakeTorch      ,    (MY_TORCH_ANGLE, True,), False,    True),
+            FireHarvestingGoal ("TakeTorch_Mine"     ,        10, MY_TORCH_X_2,        MY_TORCH_Y_2, DIRECTION_FORWARD  , TakeTorch      ,  (MY_TORCH_ANGLE_2, True,), False,    True),
+            FireHarvestingGoal ("TakeTorch_Theirs"   ,         1,          1.1,   sym_y(MY_TORCH_Y), DIRECTION_FORWARD  , TakeTorch      ,                   (False,), False,    True),
             FruitHarvestingGoal("FruitTreeE"         ,         7,     TREE_E_X,            tree_e_y, DIRECTION_FORWARD  , TakeFruits     ,                     (0.0,), False,    True),
             FruitHarvestingGoal("FruitTreeSE"        ,         7,    TREE_SE_X,           tree_se_y, DIRECTION_FORWARD  , TakeFruits     ,          (-math.pi / 2.0,), False,    True),
-#            FruitHarvestingGoal("FruitTreeSW"        ,         7,    TREE_SW_X,           tree_sw_y, DIRECTION_FORWARD  , TakeFruits     ,          (-math.pi / 2.0,), False,    True),
-#            FruitHarvestingGoal("FruitTreeW"         ,         7,     TREE_W_X,            tree_w_y, DIRECTION_FORWARD  , TakeFruits     ,                 (math.pi,), False,    True),
-#
-#            FireDepositGoal    ("DepositFires_Mine"  ,        10,      MY_FD_X,             MY_FD_Y, DIRECTION_FORWARD  , EmptyFireTank  ,             (MY_FD_ANGLE,), False,    True),
-#            FireDepositGoal    ("DepositFires_Center",         1,  CENT_FD_X_1,         CENT_FD_Y_1, DIRECTION_FORWARD  , EmptyFireTank  ,         (CENT_FD_ANGLE_1,), False,    True),
-#            FireDepositGoal    ("DepositFires_Center",         1,  CENT_FD_X_2,         CENT_FD_Y_2, DIRECTION_FORWARD  , EmptyFireTank  ,         (CENT_FD_ANGLE_2,), False,    True),
-#            FireDepositGoal    ("DepositFires_Center",         1,  CENT_FD_X_3,         CENT_FD_Y_3, DIRECTION_FORWARD  , EmptyFireTank  ,         (CENT_FD_ANGLE_3,), False,    True),
-#            FireDepositGoal    ("DepositFires_Theirs",         3,         1.65,                2.65, DIRECTION_FORWARD  , EmptyFireTank  ,                       None, False,    True),
+            FruitHarvestingGoal("FruitTreeSW"        ,         7,    TREE_SW_X,           tree_sw_y, DIRECTION_FORWARD  , TakeFruits     ,          (-math.pi / 2.0,), False,    True),
+            FruitHarvestingGoal("FruitTreeW"         ,         7,     TREE_W_X,            tree_w_y, DIRECTION_FORWARD  , TakeFruits     ,                 (math.pi,), False,    True),
+
+            FireDepositGoal    ("DepositFires_Mine"  ,        10,      MY_FD_X,             MY_FD_Y, DIRECTION_FORWARD  , EmptyFireTank  ,             (MY_FD_ANGLE,), False,    True),
+            FireDepositGoal    ("DepositFires_Center",         1,  CENT_FD_X_1,         CENT_FD_Y_1, DIRECTION_FORWARD  , EmptyFireTank  ,         (CENT_FD_ANGLE_1,), False,    True),
+            FireDepositGoal    ("DepositFires_Center",         1,  CENT_FD_X_2,         CENT_FD_Y_2, DIRECTION_FORWARD  , EmptyFireTank  ,         (CENT_FD_ANGLE_2,), False,    True),
+            FireDepositGoal    ("DepositFires_Center",         1,  CENT_FD_X_3,         CENT_FD_Y_3, DIRECTION_FORWARD  , EmptyFireTank  ,         (CENT_FD_ANGLE_3,), False,    True),
+            FireDepositGoal    ("DepositFires_Theirs",         3,         1.65,                2.65, DIRECTION_FORWARD  , EmptyFireTank  ,                       None, False,    True),
 #            FruitHarvestingGoal("FruitTreeE"         ,         3,     TREE_E_X,            tree_e_y, DIRECTION_FORWARD  , SuperTakeFruits,                       None, False,    True),
 #            FruitHarvestingGoal("FruitTreeSE"        , st_weight,    TREE_SE_X,           tree_se_y, DIRECTION_FORWARD  , SuperTakeFruits,                       None, False,    True),
 #            FruitHarvestingGoal("FruitTreeSW"        , st_weight,    TREE_SW_X,           tree_sw_y, DIRECTION_FORWARD  , SuperTakeFruits,                       None, False,    True),
