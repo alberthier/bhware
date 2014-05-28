@@ -70,6 +70,7 @@ class Timer(statemachine.State):
         """
         self.miliseconds = miliseconds
         self.end_time = None
+        self.start_time = None
 
 
     def on_enter(self):
@@ -77,7 +78,8 @@ class Timer(statemachine.State):
 
 
     def restart(self):
-        self.end_time = datetime.datetime.now() + datetime.timedelta(0, 0, 0, self.miliseconds)
+        self.start_time = datetime.datetime.now()
+        self.end_time = self.start_time + datetime.timedelta(0, 0, 0, self.miliseconds)
 
 
     def stop(self):
@@ -89,6 +91,9 @@ class Timer(statemachine.State):
             self.return_value = Timer.TIMEOUT
             self.restart()
             return self.on_timeout()
+
+    def get_current_wait_time(self):
+        return (datetime.datetime.now() - self.start_time).total_seconds()
 
 
     def on_timeout(self):
