@@ -113,8 +113,10 @@ class CalibrateAxis(statemachine.State):
 
             yield SpeedControl()
 
-            if tools.compare_angles(self.robot.pose.angle, self.angle, margin_angle) :
+            if tools.compare_angles(self.robot.pose.virt.angle, self.angle, margin_angle) :
                 yield DefinePosition(self.position, None, angle=self.angle)
+            else :
+                logger.log("No resettle because angle seems to be wrong (expected: {}, got: {}".format(self.robot.pose.virt.angle, self.angle))
 
             yield MoveLineRelative(delta_pos, direction = DIRECTION_FORWARD)
 
@@ -130,8 +132,10 @@ class CalibrateAxis(statemachine.State):
 
             yield SpeedControl()
 
-            if tools.compare_angles(self.robot.pose.angle, self.angle, margin_angle) :
+            if tools.compare_angles(self.robot.pose.virt.angle, self.angle, margin_angle) :
                 yield DefinePosition(None, self.position, angle=self.angle)
+            else:
+                logger.log("No resettle because angle seems to be wrong (expected: {}, got: {}".format(self.robot.pose.virt.angle, self.angle))
 
             yield MoveLineRelative(delta_pos, direction = DIRECTION_FORWARD)
 
