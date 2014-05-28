@@ -529,7 +529,8 @@ class TakeTorch(statemachine.State):
         if self.angle :
             yield RotateTo(self.angle)
 
-        yield Trigger(ELEVATOR_UP, FIRE_FLIPPER_OPEN, TORCH_GUIDE_CLOSE)
+        yield Trigger(ELEVATOR_UP, FIRE_FLIPPER_OPEN)
+
         for i in range(3):
 
             yield TakeFire(elevator_take_levels[i])
@@ -551,8 +552,10 @@ class TakeTorch(statemachine.State):
                 self.robot.stored_fires += 1
             flip = not flip
 
+        yield Trigger(TORCH_GUIDE_OPEN)
+
         yield ArmIdle()
-        yield Trigger(TORCH_GUIDE_HIDE)
+
         self.exit_reason = GOAL_DONE
         yield None
 
@@ -861,20 +864,22 @@ class EmptyFireTank(statemachine.State):
             torch_guide_mvt = yield Trigger(TORCH_GUIDE_OPEN)
             if torch_guide_mvt.exit_reason == SERVO_STATUS_TIMED_OUT:
                 yield Trigger(TORCH_GUIDE_HIDE)
-            yield None
+                yield None
+
+            yield Trigger(TORCH_GUIDE_HIDE)
 
             move_bw = yield MoveLineTo((self.goal.x, self.goal.y), direction=DIRECTION_BACKWARDS)
 
             move_fw = yield MoveLineRelative(approach_dist)
 
             if move_fw.exit_reason != TRAJECTORY_DESTINATION_REACHED :
-                # TODO : blacklist
+                self.goal.is_blacklisted = True
                 yield None
 
         yield RotateTo(self.angle)
 
-#        if not compare_angles(self.angle, self.robot.pose.angle, 0.26): # 15 degrees
-#            yield None
+        if not compare_angles(self.angle, self.robot.pose.virt.angle, 0.26): # 15 degrees
+            yield None
 
         positions = []
 
