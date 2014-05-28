@@ -93,6 +93,45 @@ class FunnyActionGoal(mgm.Goal):
 
 
 
+class TimerWaitTeamMateToLeave(Timer):
+
+    def __init__(self, time_ms, distance = None, dx = None, dy = None):
+        logger.log('Wait for {} ms or teammate is {} m away'.format(time_ms, distance))
+        super().__init__(time_ms)
+        self.distance = distance
+        self.dx = dx
+        self.dy = dy
+
+    def on_interbot_position(self, packet):
+
+        dx = None
+        if self.dx :
+            dx = abs(packet.pose.x - self.robot.pose.x)
+            if dx < self.dx:
+                logger.log("Insufficient x distance : {} m".format(dx))
+                return
+
+        dy = None
+        if self.dy :
+            dy = abs(packet.pose.y - self.robot.pose.y)
+            if dy < self.dy:
+                logger.log("Insufficient y distance : {} m".format(dy))
+                return
+
+        distance = None
+
+        if self.distance :
+            distance = tools.distance(packet.pose.x, packet.pose.y, self.robot.pose.x, self.robot.pose.y)
+            if distance < self.distance:
+                logger.log("Insufficient distance : {} m".format(distance))
+                return
+
+        logger.log("Teammate is away (dx {} dy {} d {}) after {}s".format(dx,dy,distance, self.get_current_wait_time()))
+        yield None
+
+
+
+
 class Main(statemachine.State):
 
     def on_enter(self):
@@ -237,7 +276,7 @@ class Main(statemachine.State):
     def on_start(self, packet):
         self.yield_at(90000, EndOfMatch())
         logger.log("Starting ...")
-        yield Timer(1000)
+        yield TimerWaitTeamMateToLeave(1000, dy = 0.3)
         yield MoveLineTo(self.start_x, RED_START_Y)
         huntgoal = self.robot.goal_manager.get_goals("HuntTheMammoth")[0]
         yield Navigate(huntgoal.x, huntgoal.y)
