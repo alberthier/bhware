@@ -409,6 +409,7 @@ class AbstractMove(statemachine.State):
                     self.packet.points = self.packet.points[point_index:]
                 self.send_packet(self.packet)
         else:
+            self.log("Opponent detected, cancelling log")
             self.exit_reason = TRAJECTORY_OPPONENT_DETECTED
             yield None
 
