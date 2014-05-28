@@ -271,7 +271,7 @@ class Main(statemachine.State):
 
         self.fsm.interbot_fsm.current_state.set_teammate_collision_detection(False)
 
-        yield Trigger(TORCH_GUIDE_OPEN)
+        yield Trigger(TORCH_GUIDE_CLOSE)
 
         yield TimerWaitTeamMateToLeave(1000, dy = 0.3)
         yield MoveLineTo(self.start_x, RED_START_Y)
