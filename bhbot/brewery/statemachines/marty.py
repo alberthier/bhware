@@ -156,36 +156,36 @@ class Main(statemachine.State):
     def on_device_ready(self, packet):
         gm = self.robot.goal_manager
 
-        calibration_y1 = CalibrationGoal("ReCalibrateY"   ,    14,                                             0.20,                                           1.78 , DIRECTION_BACKWARDS,  None, (-math.pi / 2.0,), False,    True)
-        calibration_y1.cal_angle = -math.pi/2
-        calibration_y1.cal_y = 1.90 - SECONDARY_ROBOT_CENTER_Y
-
-        calibration_y2 = CalibrationGoal("ReCalibrateY"   ,    14,                                             0.20,                                    sym_y(1.78) , DIRECTION_BACKWARDS,  None, (-math.pi / 2.0,), False,    True)
-        calibration_y2.cal_angle = math.pi/2
-        calibration_y2.cal_y = 1.10 + SECONDARY_ROBOT_CENTER_Y
-
-        calibration_x1 = CalibrationGoal("ReCalibrateX"   ,    14,                                             0.42,                                           1.0 , DIRECTION_BACKWARDS,  None,              (0.0,), False,    True)
-        calibration_x1.cal_angle = 0.0
-        calibration_x1.cal_x = 0.9 + SECONDARY_ROBOT_CENTER_Y
+        # calibration_y1 = CalibrationGoal("ReCalibrateY"   ,    14,                                             0.20,                                           1.78 , DIRECTION_BACKWARDS,  None, (-math.pi / 2.0,), False,    True)
+        # calibration_y1.cal_angle = -math.pi/2
+        # calibration_y1.cal_y = 1.90 - SECONDARY_ROBOT_CENTER_Y
+        #
+        # calibration_y2 = CalibrationGoal("ReCalibrateY"   ,    14,                                             0.20,                                    sym_y(1.78) , DIRECTION_BACKWARDS,  None, (-math.pi / 2.0,), False,    True)
+        # calibration_y2.cal_angle = math.pi/2
+        # calibration_y2.cal_y = 1.10 + SECONDARY_ROBOT_CENTER_Y
+        #
+        # calibration_x1 = CalibrationGoal("ReCalibrateX"   ,    14,                                             0.42,                                           1.0 , DIRECTION_BACKWARDS,  None,              (0.0,), False,    True)
+        # calibration_x1.cal_angle = 0.0
+        # calibration_x1.cal_x = 0.9 + SECONDARY_ROBOT_CENTER_Y
 
         #                      |       ID       |Weight|                            X                    |                           Y                     |     Direction    |     State     | Ctor parameters  |Shared|Navigate|
-        gm.add(goalmanager.Goal("BorderFireW"   ,     2,                                              0.8,               ROBOT_CENTER_X + BORDER_FIRE_DIST , DIRECTION_FORWARD, PullBorderFire, (-math.pi / 2.0,), False,    True))
-        gm.add(goalmanager.Goal("BorderFireSW"  ,    10, FIELD_X_SIZE - ROBOT_CENTER_X - BORDER_FIRE_DIST,                                             1.3 , DIRECTION_FORWARD, PushBorderFire,            (0.0,), False,    True))
+        # gm.add(goalmanager.Goal("BorderFireW"   ,     2,                                              0.8,               ROBOT_CENTER_X + BORDER_FIRE_DIST , DIRECTION_FORWARD, PullBorderFire, (-math.pi / 2.0,), False,    True))
+        # gm.add(goalmanager.Goal("BorderFireSW"  ,    10, FIELD_X_SIZE - ROBOT_CENTER_X - BORDER_FIRE_DIST,                                             1.3 , DIRECTION_FORWARD, PushBorderFire,            (0.0,), False,    True))
         gm.add(goalmanager.Goal("BorderFireSE"  ,    10, FIELD_X_SIZE - ROBOT_CENTER_X - BORDER_FIRE_DIST,                                       sym_y(1.3), DIRECTION_FORWARD, PullBorderFire,            (0.0,), False,    True))
         gm.add(goalmanager.Goal("BorderFireE"   ,    10,                                              0.8,         sym_y(ROBOT_CENTER_X + BORDER_FIRE_DIST), DIRECTION_FORWARD, PushBorderFire,  (math.pi / 2.0,), False,    True))
-        gm.add(goalmanager.Goal("FieldFireW"    ,     7,           1.1 - ROBOT_CENTER_X - FIELD_FIRE_DIST,                                             0.4 , DIRECTION_FORWARD, PushFieldFire ,            (0.0,), False,    True))
-        gm.add(goalmanager.Goal("FieldFireW"    ,     7,           1.1 + ROBOT_CENTER_X + FIELD_FIRE_DIST,                                             0.4 , DIRECTION_FORWARD, PullFieldFire ,        (math.pi,), False,    True))
-        gm.add(goalmanager.Goal("FieldFireSW"   ,     7,                                              1.6,          0.9 - ROBOT_CENTER_X - FIELD_FIRE_DIST , DIRECTION_FORWARD, PullFieldFire ,  (math.pi / 0.2,), False,    True))
-        gm.add(goalmanager.Goal("FieldFireSW"   ,     7,                                              1.6,          0.9 + ROBOT_CENTER_X + FIELD_FIRE_DIST , DIRECTION_FORWARD, PushFieldFire , (-math.pi / 2.0,), False,    True))
+        # gm.add(goalmanager.Goal("FieldFireW"    ,     7,           1.1 - ROBOT_CENTER_X - FIELD_FIRE_DIST,                                             0.4 , DIRECTION_FORWARD, PushFieldFire ,            (0.0,), False,    True))
+        # gm.add(goalmanager.Goal("FieldFireW"    ,     7,           1.1 + ROBOT_CENTER_X + FIELD_FIRE_DIST,                                             0.4 , DIRECTION_FORWARD, PullFieldFire ,        (math.pi,), False,    True))
+        # gm.add(goalmanager.Goal("FieldFireSW"   ,     7,                                              1.6,          0.9 - ROBOT_CENTER_X - FIELD_FIRE_DIST , DIRECTION_FORWARD, PullFieldFire ,  (math.pi / 0.2,), False,    True))
+        # gm.add(goalmanager.Goal("FieldFireSW"   ,     7,                                              1.6,          0.9 + ROBOT_CENTER_X + FIELD_FIRE_DIST , DIRECTION_FORWARD, PushFieldFire , (-math.pi / 2.0,), False,    True))
         gm.add(goalmanager.Goal("FieldFireSE"   ,    10,                                              1.6,    sym_y(0.9 + ROBOT_CENTER_X + FIELD_FIRE_DIST), DIRECTION_FORWARD, PullFieldFire ,  (math.pi / 2.0,), False,    True))
         gm.add(goalmanager.Goal("FieldFireSE"   ,    10,                                              1.6,    sym_y(0.9 - ROBOT_CENTER_X - FIELD_FIRE_DIST), DIRECTION_FORWARD, PushFieldFire , (-math.pi / 2.0,), False,    True))
         gm.add(goalmanager.Goal("FieldFireE"    ,    10,           1.1 - ROBOT_CENTER_X - FIELD_FIRE_DIST,                                       sym_y(0.4), DIRECTION_FORWARD, PullFieldFire ,            (0.0,), False,    True))
         gm.add(goalmanager.Goal("FieldFireE"    ,    10,           1.1 + ROBOT_CENTER_X + FIELD_FIRE_DIST,                                       sym_y(0.4), DIRECTION_FORWARD, PushFieldFire ,        (math.pi,), False,    True))
         gm.add(goalmanager.Goal("HuntTheMammoth",    15,    0.3 + ROBOT_GYRATION_RADIUS + FIELD_FIRE_DIST,                                  MAMMOTH_HUNT_Y , DIRECTION_FORWARD, HuntTheMammoth,              None, False,    True))
         gm.add(goalmanager.Goal("PaintFresco"   ,    20,                                      RED_START_X,                                            1.30 , DIRECTION_FORWARD, PaintFresco   ,              None, False,    True))
-        gm.add(NoBotherGoal("DontBotherDoc" ,     1,                                      0.52,                                     0.13 , DIRECTION_FORWARD, DontBotherDoc ,              None, False,    True))
-        gm.add(ProtectionGoal("ProtectOurFires",   99,                                             1.67,                                            0.32 , DIRECTION_FORWARD, ProtectOurFires ,              None, False,  True))
-        gm.add(DisabledGoal    ("DepositFires_Mine", 0,                                               0.0,                                            0.0 , DIRECTION_FORWARD,           None ,              None, True,     True))
+        # gm.add(NoBotherGoal("DontBotherDoc" ,     1,                                      0.52,                                     0.13 , DIRECTION_FORWARD, DontBotherDoc ,              None, False,    True))
+        # gm.add(ProtectionGoal("ProtectOurFires",   99,                                             1.67,                                            0.32 , DIRECTION_FORWARD, ProtectOurFires ,              None, False,  True))
+        # gm.add(DisabledGoal    ("DepositFires_Mine", 0,                                               0.0,                                            0.0 , DIRECTION_FORWARD,           None ,              None, True,     True))
         # gm.add(calibration_y1)
         # gm.add(calibration_y2)
         # gm.add(calibration_x1)
@@ -274,8 +274,9 @@ class PaintFresco(statemachine.State):
         yield MoveLineTo(ROBOT_CENTER_X - 0.02, goal.y, DIRECTION_BACKWARDS)
         yield Trigger(PAINT_1_FLIP_FLOP_START, PAINT_1_FLIP_FLOP_START)
         yield SpeedControl()
-        yield MoveLineTo(0.4, goal.y)
+        yield MoveLineTo(0.2, goal.y)
         yield Trigger(PAINT_1_FLIP_FLOP_STOP, PAINT_1_FLIP_FLOP_STOP)
+        yield CalibrateAxis("y", 1.10, math.pi/2)
         self.exit_reason = GOAL_DONE
         yield None
 

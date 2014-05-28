@@ -156,22 +156,22 @@ class Main(statemachine.State):
 
         TAKE_FRUITS_X_DELTA = TAKE_FRUITS_TRAVEL_DISTANCE/2
 
-        MY_TORCH_X = 0.91
-        MY_TORCH_Y = 0.78
-        MY_TORCH_ANGLE = 0.80
+        MY_TORCH_X = 0.925
+        MY_TORCH_Y = 0.875
+        MY_TORCH_ANGLE = None #0.65
 
-        MY_TORCH_X_2 = 1.21
-        MY_TORCH_Y_2 = 0.70
-        MY_TORCH_ANGLE_2 = 2.39
+        MY_TORCH_X_2 = 1.145
+        MY_TORCH_Y_2 = 0.737
+        MY_TORCH_ANGLE_2 = None #2.39
 
-        if self.robot.team == TEAM_YELLOW :
-            MY_TORCH_X = 1.0
-            MY_TORCH_Y = sym_y(2.31)
-            MY_TORCH_ANGLE = 0.79
-
-            MY_TORCH_X_2 = 1.30
-            MY_TORCH_Y_2 = sym_y(2.20)
-            MY_TORCH_ANGLE_2 = sym_angle(-2.29)
+        # if self.robot.team == TEAM_YELLOW :
+        #     MY_TORCH_X = 1.0
+        #     MY_TORCH_Y = sym_y(2.31)
+        #     MY_TORCH_ANGLE = 0.79
+        #
+        #     MY_TORCH_X_2 = 1.30
+        #     MY_TORCH_Y_2 = sym_y(2.20)
+        #     MY_TORCH_ANGLE_2 = sym_angle(-2.29)
 
 
         MINE_TREE_ANGLE          =       -math.pi
@@ -232,16 +232,16 @@ class Main(statemachine.State):
         #                      |        ID           |  Weight  |     X       |          Y         | Direction          |    State      | Ctor parameters|Shared|Navigate|
         gm.add(
             mgm.Goal           ("HuntTheMammoth"     ,        10, self.start_x,                0.75, DIRECTION_FORWARD  , HuntTheMammoth ,              None, False,    True),
-            FunnyActionGoal("CaptureTheMammoth"  ,        10, self.start_x,                0.75, DIRECTION_FORWARD  , CaptureTheMammoth ,              None, False,    True),
-            FunnyActionGoal("CaptureTheMammoth"  ,        10, self.start_x,         sym_y(0.75), DIRECTION_FORWARD  , CaptureTheMammoth ,              None, False,    True),
+            # FunnyActionGoal("CaptureTheMammoth"  ,        10, self.start_x,                0.75, DIRECTION_FORWARD  , CaptureTheMammoth ,              None, False,    True),
+            # FunnyActionGoal("CaptureTheMammoth"  ,        10, self.start_x,         sym_y(0.75), DIRECTION_FORWARD  , CaptureTheMammoth ,              None, False,    True),
 
             FireHarvestingGoal ("TakeTorch_Mine"     ,        10,   MY_TORCH_X,          MY_TORCH_Y, DIRECTION_FORWARD  , TakeTorch      ,    (MY_TORCH_ANGLE, True,), False,    True),
             FireHarvestingGoal ("TakeTorch_Mine"     ,        10, MY_TORCH_X_2,        MY_TORCH_Y_2, DIRECTION_FORWARD  , TakeTorch      ,  (MY_TORCH_ANGLE_2, True,), False,    True),
             # FireHarvestingGoal ("TakeTorch_Theirs"   ,         1,          1.1,   sym_y(MY_TORCH_Y), DIRECTION_FORWARD  , TakeTorch      ,                   (False,), False,    True),
-            FruitHarvestingGoal("FruitTreeE"         ,         7,     TREE_E_X,            tree_e_y, DIRECTION_FORWARD  , TakeFruits     ,                     (0.0,), False,    True),
-            FruitHarvestingGoal("FruitTreeSE"        ,         7,    TREE_SE_X,           tree_se_y, DIRECTION_FORWARD  , TakeFruits     ,          (-math.pi / 2.0,), False,    True),
-            FruitHarvestingGoal("FruitTreeSW"        ,         7,    TREE_SW_X,           tree_sw_y, DIRECTION_FORWARD  , TakeFruits     ,          (-math.pi / 2.0,), False,    True),
-            FruitHarvestingGoal("FruitTreeW"         ,         7,     TREE_W_X,            tree_w_y, DIRECTION_FORWARD  , TakeFruits     ,                 (math.pi,), False,    True),
+            # FruitHarvestingGoal("FruitTreeE"         ,         7,     TREE_E_X,            tree_e_y, DIRECTION_FORWARD  , TakeFruits     ,                     (0.0,), False,    True),
+            # FruitHarvestingGoal("FruitTreeSE"        ,         7,    TREE_SE_X,           tree_se_y, DIRECTION_FORWARD  , TakeFruits     ,          (-math.pi / 2.0,), False,    True),
+            # FruitHarvestingGoal("FruitTreeSW"        ,         7,    TREE_SW_X,           tree_sw_y, DIRECTION_FORWARD  , TakeFruits     ,          (-math.pi / 2.0,), False,    True),
+            # FruitHarvestingGoal("FruitTreeW"         ,         7,     TREE_W_X,            tree_w_y, DIRECTION_FORWARD  , TakeFruits     ,                 (math.pi,), False,    True),
 
             FireDepositGoal    ("DepositFires_Mine"  ,        10,      MY_FD_X,             MY_FD_Y, DIRECTION_FORWARD  , EmptyFireTank  ,             (MY_FD_ANGLE,), True,    True),
             FireDepositGoal    ("DepositFires_Center",         1,  CENT_FD_X_1,         CENT_FD_Y_1, DIRECTION_FORWARD  , EmptyFireTank  ,         (CENT_FD_ANGLE_1,), False,    True),
@@ -271,6 +271,8 @@ class Main(statemachine.State):
 
         self.fsm.interbot_fsm.current_state.set_teammate_collision_detection(False)
 
+        yield Trigger(TORCH_GUIDE_OPEN)
+
         yield TimerWaitTeamMateToLeave(1000, dy = 0.3)
         yield MoveLineTo(self.start_x, RED_START_Y)
         huntgoal = self.robot.goal_manager.get_goals("HuntTheMammoth")[0]
@@ -282,7 +284,7 @@ class Main(statemachine.State):
 
         self.fsm.interbot_fsm.current_state.set_teammate_collision_detection(True)
 
-        yield TakeTorch(0.91, True)
+        yield TakeTorch(None, True)
         torchgoal = self.robot.goal_manager.update_goal_status(torchgoal, GOAL_DONE)
 
         while True :
@@ -523,7 +525,10 @@ class TakeTorch(statemachine.State):
 
     def on_enter(self):
         flip = not self.my_side
-        yield RotateTo(self.angle)
+
+        if self.angle :
+            yield RotateTo(self.angle)
+
         yield Trigger(ELEVATOR_UP, FIRE_FLIPPER_OPEN, TORCH_GUIDE_CLOSE)
         for i in range(3):
 
