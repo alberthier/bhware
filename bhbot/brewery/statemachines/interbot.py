@@ -16,6 +16,7 @@ class Main(Timer):
         super().__init__(TEAMMATE_INFO_DELAY_MS)
         self.connected = False
         self.started = False
+        self.teammate_collision_detection = True
 
 
     def on_interbot_connected(self, packet):
@@ -37,13 +38,16 @@ class Main(Timer):
     def on_timeout(self):
         if self.connected and self.started:
             packet = packets.InterbotPosition(pose = self.robot.pose)
-            packet.is_moving = self.robot.destination != None
+            packet.is_moving = self.robot.destination is not None
             if packet.is_moving:
                 packet.destination = self.robot.destination
             self.event_loop.send_packet(packet)
 
 
     def on_interbot_position(self, packet):
+        if not self.teammate_collision_detection:
+            return
+
         d = tools.distance(packet.pose.x, packet.pose.y, self.robot.pose.x, self.robot.pose.y)
         if d < MAIN_ROBOT_GYRATION_RADIUS + SECONDARY_ROBOT_GYRATION_RADIUS + 0.6:
             a = tools.angle_between(0.0, 0.0, packet.pose.x - self.robot.pose.x, packet.pose.y - self.robot.pose.y)
@@ -59,3 +63,5 @@ class Main(Timer):
                 packet.direction = DIRECTION_BACKWARDS
                 self.send_packet(packet)
 
+    def set_teammate_collision_detection(self, status):
+        self.teammate_collision_detection = status

@@ -135,7 +135,7 @@ class TimerWaitTeamMateToLeave(Timer):
 class Main(statemachine.State):
 
     def on_enter(self):
-        statemachine.StateMachine(self.event_loop, "interbot")
+        self.fsm.interbot_fsm = statemachine.StateMachine(self.event_loop, "interbot")
         statemachine.StateMachine(self.event_loop, "opponentdetector", opponent_type = OPPONENT_ROBOT_MAIN)
         statemachine.StateMachine(self.event_loop, "opponentdetector", opponent_type = OPPONENT_ROBOT_SECONDARY)
         statemachine.StateMachine(self.event_loop, "relaytoggler")
@@ -276,6 +276,9 @@ class Main(statemachine.State):
     def on_start(self, packet):
         self.yield_at(90000, EndOfMatch())
         logger.log("Starting ...")
+
+        self.fsm.interbot_fsm.current_state.set_teammate_collision_detection(False)
+
         yield TimerWaitTeamMateToLeave(1000, dy = 0.3)
         yield MoveLineTo(self.start_x, RED_START_Y)
         huntgoal = self.robot.goal_manager.get_goals("HuntTheMammoth")[0]
@@ -284,6 +287,9 @@ class Main(statemachine.State):
         self.robot.goal_manager.update_goal_status(huntgoal, GOAL_DONE)
         torchgoal = self.robot.goal_manager.get_goals("TakeTorch_Mine")[0]
         yield Navigate(torchgoal.x, torchgoal.y)
+
+        self.fsm.interbot_fsm.current_state.set_teammate_collision_detection(True)
+
         yield TakeTorch(0.91, True)
         torchgoal = self.robot.goal_manager.update_goal_status(torchgoal, GOAL_DONE)
         yield ExecuteGoals()
