@@ -243,6 +243,7 @@ GOAL_STATUS = Enum("Goal status",
     GOAL_DOING      = 1,
     GOAL_DONE       = 2,
     GOAL_FAILED     = 3,
+    GOAL_DISABLED   = 4,
 )
 
 

@@ -258,6 +258,12 @@ class GoalManager:
                 goals.append(goal)
         return goals
 
+    def is_done(self, goal_id):
+        for goal in self.goals :
+            if goal.identifier == goal_id and goal.status == GOAL_DONE :
+                return True
+        return False
+
 
     def update_goal_status(self, goal, new_status):
         if not isinstance(goal, Goal):

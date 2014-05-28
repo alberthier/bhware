@@ -22,6 +22,54 @@ BORDER_FIRE_DIST = 0.15
 FIELD_FIRE_DIST  = 0.15
 MAMMOTH_HUNT_Y   = 2.45 
 
+
+
+
+class DisabledGoal(goalmanager.Goal):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.status = GOAL_DISABLED
+
+
+
+
+class ProtectionGoal(goalmanager.Goal):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    @property
+    def status(self):
+        if self.goal_manager.is_done("DepositFires_Mine") :
+            return GOAL_AVAILABLE
+        return GOAL_DISABLED
+
+    @status.setter
+    def status(self, value):
+        pass
+
+
+
+
+class NoBotherGoal(goalmanager.Goal):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    @property
+    def status(self):
+        if self.goal_manager.is_done("DepositFires_Mine") :
+            return GOAL_DONE
+        return GOAL_AVAILABLE
+
+    @status.setter
+    def status(self, value):
+        pass
+
+
+
+
 class Main(statemachine.State):
 
     def on_enter(self):
@@ -33,6 +81,18 @@ class Main(statemachine.State):
 
     def on_device_ready(self, packet):
         gm = self.robot.goal_manager
+
+        calibration_y1 = CalibrationGoal("ReCalibrateY"   ,    14,                                             0.20,                                           1.78 , DIRECTION_BACKWARDS,  None, (-math.pi / 2.0,), False,    True)
+        calibration_y1.cal_angle = -math.pi/2
+        calibration_y1.cal_y = 1.90 - SECONDARY_ROBOT_CENTER_Y
+
+        calibration_y2 = CalibrationGoal("ReCalibrateY"   ,    14,                                             0.20,                                    sym_y(1.78) , DIRECTION_BACKWARDS,  None, (-math.pi / 2.0,), False,    True)
+        calibration_y2.cal_angle = math.pi/2
+        calibration_y2.cal_y = 1.10 + SECONDARY_ROBOT_CENTER_Y
+
+        calibration_x1 = CalibrationGoal("ReCalibrateX"   ,    14,                                             0.42,                                           1.0 , DIRECTION_BACKWARDS,  None,              (0.0,), False,    True)
+        calibration_x1.cal_angle = 0.0
+        calibration_x1.cal_x = 0.9 + SECONDARY_ROBOT_CENTER_Y
 
         #                      |       ID       |Weight|                            X                    |                           Y                     |     Direction    |     State     | Ctor parameters  |Shared|Navigate|
         gm.add(goalmanager.Goal("BorderFireW"   ,     1,                                              0.8,               ROBOT_CENTER_X + BORDER_FIRE_DIST , DIRECTION_FORWARD, PullBorderFire, (-math.pi / 2.0,), False,    True))
@@ -49,6 +109,9 @@ class Main(statemachine.State):
         gm.add(goalmanager.Goal("FieldFireE"    ,    10,           1.1 + ROBOT_CENTER_X + FIELD_FIRE_DIST,                                       sym_y(0.4), DIRECTION_FORWARD, PushFieldFire ,        (math.pi,), False,    True))
         gm.add(goalmanager.Goal("HuntTheMammoth",    15,    0.3 + ROBOT_GYRATION_RADIUS + FIELD_FIRE_DIST,                                  MAMMOTH_HUNT_Y , DIRECTION_FORWARD, HuntTheMammoth,              None, False,    True))
         gm.add(goalmanager.Goal("PaintFresco"   ,    20,                                      RED_START_X,                                            1.30 , DIRECTION_FORWARD, PaintFresco   ,              None, False,    True))
+        gm.add(NoBotherGoal("DontBotherDoc" ,     1,                                      0.52,                                     0.13 , DIRECTION_FORWARD, DontBotherDoc ,              None, False,    True))
+        gm.add(ProtectionGoal("ProtectOurFires",   99,                                             1.67,                                            0.32 , DIRECTION_FORWARD, ProtectOurFires ,              None, False,  True))
+        gm.add(DisabledGoal    ("DepositFires_Mine", 0,                                               0.0,                                            0.0 , DIRECTION_FORWARD,           None ,              None, True,     True))
 
         yield AntiBlocking(True)
         yield Trigger(ARM_CLOSE)
@@ -59,7 +122,10 @@ class Main(statemachine.State):
         self.yield_at(90000, EndOfMatch())
         logger.log("Starting ...")
         yield FirstHurryToTheOtherMammoth()
-        yield ExecuteGoals()
+
+        while True :
+            yield ExecuteGoals()
+            yield Timer(1000)
 
 
 
@@ -96,7 +162,18 @@ class FirstHurryToTheOtherMammoth(statemachine.State):
         yield None
 
 
+class DontBotherDoc(statemachine.State):
 
+    def on_enter(self):
+        yield Timer(1000)
+        yield None
+
+
+class ProtectOurFires(statemachine.State):
+
+    def on_enter(self):
+        yield MoveLineRelative(0.15)
+        # yield None
 
 class HuntTheMammoth(statemachine.State):
 
