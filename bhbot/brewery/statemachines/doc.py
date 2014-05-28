@@ -84,7 +84,7 @@ class FruitDepositGoal(mgm.Goal):
 class FunnyActionGoal(mgm.Goal):
 
     def is_available(self):
-        return self.goal_manager.event_loop.get_remaining_match_time() < 25
+        return self.goal_manager.event_loop.get_remaining_match_time() < 15
 
 
 
@@ -232,8 +232,8 @@ class Main(statemachine.State):
         #                      |        ID           |  Weight  |     X       |          Y         | Direction          |    State      | Ctor parameters|Shared|Navigate|
         gm.add(
             mgm.Goal           ("HuntTheMammoth"     ,        10, self.start_x,                0.75, DIRECTION_FORWARD  , HuntTheMammoth ,              None, False,    True),
-            # FunnyActionGoal("CaptureTheMammoth"  ,        10, self.start_x,                0.75, DIRECTION_FORWARD  , CaptureTheMammoth ,              None, False,    True),
-            # FunnyActionGoal("CaptureTheMammoth"  ,        10, self.start_x,         sym_y(0.75), DIRECTION_FORWARD  , CaptureTheMammoth ,              None, False,    True),
+            FunnyActionGoal("CaptureTheMammoth"  ,        10, self.start_x,                0.75, DIRECTION_BACKWARDS  , CaptureTheMammoth ,              None, False,    True),
+            FunnyActionGoal("CaptureTheMammoth"  ,        10, self.start_x,         sym_y(0.75), DIRECTION_BACKWARDS  , CaptureTheMammoth ,              None, False,    True),
 
             FireHarvestingGoal ("TakeTorch_Mine"     ,        10,   MY_TORCH_X,          MY_TORCH_Y, DIRECTION_FORWARD  , TakeTorch      ,    (MY_TORCH_ANGLE, True,), False,    True),
             FireHarvestingGoal ("TakeTorch_Mine"     ,        10, MY_TORCH_X_2,        MY_TORCH_Y_2, DIRECTION_FORWARD  , TakeTorch      ,  (MY_TORCH_ANGLE_2, True,), False,    True),
