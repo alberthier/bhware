@@ -70,6 +70,80 @@ class NoBotherGoal(goalmanager.Goal):
 
 
 
+class CalibrationGoal(goalmanager.Goal):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.cal_x = 0.0
+        self.cal_y = 0.0
+        self.cal_angle = 0.0
+
+    def get_state(self):
+        if self.cal_y > 0.0 :
+            return CalibrateAxis("y", self.cal_y, self.cal_angle)
+
+
+
+
+class CalibrateAxis(statemachine.State):
+
+    def __init__(self, axis : str, position : float, angle : float):
+        self.angle = angle
+        self.position = position
+        self.axis = axis
+
+    def on_enter(self):
+
+        yield RotateTo(self.angle)
+
+        delta_pos = 0.2
+        margin_pos = 0.05
+        margin_angle = math.pi / 6
+
+        if self.axis == "x":
+
+            if self.robot.pose.virt.angle > math.pi/2 or self.robot.pose.virt.angle < -math.pi/2 :
+                target_x = self.position - delta_pos
+            else :
+                target_x = self.position + delta_pos
+
+            yield SpeedControl(0.2)
+
+            move = yield MoveLineTo(target_x, self.robot.pose.virt.y, direction=DIRECTION_BACKWARDS)
+
+            yield SpeedControl()
+
+            if tools.compare_angles(self.robot.pose.angle, self.angle, margin_angle) :
+                yield DefinePosition(self.position, None, angle=self.angle)
+
+            yield MoveLineRelative(delta_pos, direction = DIRECTION_FORWARD)
+
+        if self.axis == "y":
+            if self.robot.pose.virt.angle > 0.0 :
+                target_y = self.position - delta_pos
+            else :
+                target_y = self.position + delta_pos
+
+            yield SpeedControl(0.2)
+
+            move = yield MoveLineTo(self.robot.pose.virt.x, target_y, direction=DIRECTION_BACKWARDS)
+
+            yield SpeedControl()
+
+            if tools.compare_angles(self.robot.pose.angle, self.angle, margin_angle) :
+                yield DefinePosition(None, self.position, angle=self.angle)
+
+            yield MoveLineRelative(delta_pos, direction = DIRECTION_FORWARD)
+
+        self.exit_reason = GOAL_DONE
+        yield None
+
+
+
+
+
+
+
 class Main(statemachine.State):
 
     def on_enter(self):
@@ -95,10 +169,10 @@ class Main(statemachine.State):
         calibration_x1.cal_x = 0.9 + SECONDARY_ROBOT_CENTER_Y
 
         #                      |       ID       |Weight|                            X                    |                           Y                     |     Direction    |     State     | Ctor parameters  |Shared|Navigate|
-        gm.add(goalmanager.Goal("BorderFireW"   ,     1,                                              0.8,               ROBOT_CENTER_X + BORDER_FIRE_DIST , DIRECTION_FORWARD, PullBorderFire, (-math.pi / 2.0,), False,    True))
+        gm.add(goalmanager.Goal("BorderFireW"   ,     2,                                              0.8,               ROBOT_CENTER_X + BORDER_FIRE_DIST , DIRECTION_FORWARD, PullBorderFire, (-math.pi / 2.0,), False,    True))
         gm.add(goalmanager.Goal("BorderFireSW"  ,    10, FIELD_X_SIZE - ROBOT_CENTER_X - BORDER_FIRE_DIST,                                             1.3 , DIRECTION_FORWARD, PushBorderFire,            (0.0,), False,    True))
         gm.add(goalmanager.Goal("BorderFireSE"  ,    10, FIELD_X_SIZE - ROBOT_CENTER_X - BORDER_FIRE_DIST,                                       sym_y(1.3), DIRECTION_FORWARD, PullBorderFire,            (0.0,), False,    True))
-        gm.add(goalmanager.Goal("BorderFireE"   ,    10,                                              0.8,         sym_y(ROBOT_CENTER_X - BORDER_FIRE_DIST), DIRECTION_FORWARD, PushBorderFire,  (math.pi / 2.0,), False,    True))
+        gm.add(goalmanager.Goal("BorderFireE"   ,    10,                                              0.8,         sym_y(ROBOT_CENTER_X + BORDER_FIRE_DIST), DIRECTION_FORWARD, PushBorderFire,  (math.pi / 2.0,), False,    True))
         gm.add(goalmanager.Goal("FieldFireW"    ,     7,           1.1 - ROBOT_CENTER_X - FIELD_FIRE_DIST,                                             0.4 , DIRECTION_FORWARD, PushFieldFire ,            (0.0,), False,    True))
         gm.add(goalmanager.Goal("FieldFireW"    ,     7,           1.1 + ROBOT_CENTER_X + FIELD_FIRE_DIST,                                             0.4 , DIRECTION_FORWARD, PullFieldFire ,        (math.pi,), False,    True))
         gm.add(goalmanager.Goal("FieldFireSW"   ,     7,                                              1.6,          0.9 - ROBOT_CENTER_X - FIELD_FIRE_DIST , DIRECTION_FORWARD, PullFieldFire ,  (math.pi / 0.2,), False,    True))
@@ -112,6 +186,9 @@ class Main(statemachine.State):
         gm.add(NoBotherGoal("DontBotherDoc" ,     1,                                      0.52,                                     0.13 , DIRECTION_FORWARD, DontBotherDoc ,              None, False,    True))
         gm.add(ProtectionGoal("ProtectOurFires",   99,                                             1.67,                                            0.32 , DIRECTION_FORWARD, ProtectOurFires ,              None, False,  True))
         gm.add(DisabledGoal    ("DepositFires_Mine", 0,                                               0.0,                                            0.0 , DIRECTION_FORWARD,           None ,              None, True,     True))
+        # gm.add(calibration_y1)
+        # gm.add(calibration_y2)
+        # gm.add(calibration_x1)
 
         yield AntiBlocking(True)
         yield Trigger(ARM_CLOSE)
@@ -223,6 +300,9 @@ class PushBorderFire(statemachine.State):
         yield MoveLineTo(goal.x, goal.y, DIRECTION_BACKWARDS)
         yield Trigger(ARM_CLOSE)
         self.exit_reason = GOAL_DONE
+
+        yield RecalibrateAfterBorderFire(self.goal)
+
         yield None
 
 
@@ -246,6 +326,55 @@ class PullBorderFire(statemachine.State):
         yield MoveLineTo(goal.x, goal.y, DIRECTION_BACKWARDS)
         yield Trigger(ARM_CLOSE)
         self.exit_reason = GOAL_DONE
+
+        yield RecalibrateAfterBorderFire(self.goal)
+
+        yield None
+
+
+class RecalibrateAfterBorderFire(statemachine.State):
+
+    def __init__(self, goal):
+        self.parent_goal = goal
+
+    def on_enter(self):
+        dx = 0.0
+        dy = 0.0
+        angle = math.pi
+        calib_pos = None
+        calib_axis = None
+
+        delta = 0.2
+
+        if self.parent_goal.identifier == "BorderFireW" or self.parent_goal.identifier == "BorderFireE":
+            dx = +delta
+
+        elif self.parent_goal.identifier == "BorderFireSW":
+            dy = -delta
+
+        elif self.parent_goal.identifier == "BorderFireSE":
+            dy = delta
+
+        if self.parent_goal.identifier == "BorderFireW":
+            angle = math.pi/2
+            calib_pos = 0
+            calib_axis = "y"
+
+        if self.parent_goal.identifier == "BorderFireE":
+            angle = -math.pi/2
+            calib_pos = FIELD_Y_SIZE
+            calib_axis = "y"
+
+        if self.parent_goal.identifier == "BorderFireSW" or self.parent_goal.identifier == "BorderFireSE":
+            calib_pos = FIELD_X_SIZE
+            calib_axis = "x"
+
+
+        yield LookAt(self.parent_goal.x + dx, self.parent_goal.y + dy)
+        yield MoveLineTo(self.parent_goal.x + dx, self.parent_goal.y + dy)
+
+        yield CalibrateAxis(calib_axis, calib_pos, angle)
+
         yield None
 
 
