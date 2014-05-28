@@ -237,7 +237,7 @@ class Main(statemachine.State):
 
             FireHarvestingGoal ("TakeTorch_Mine"     ,        10,   MY_TORCH_X,          MY_TORCH_Y, DIRECTION_FORWARD  , TakeTorch      ,    (MY_TORCH_ANGLE, True,), False,    True),
             FireHarvestingGoal ("TakeTorch_Mine"     ,        10, MY_TORCH_X_2,        MY_TORCH_Y_2, DIRECTION_FORWARD  , TakeTorch      ,  (MY_TORCH_ANGLE_2, True,), False,    True),
-            FireHarvestingGoal ("TakeTorch_Theirs"   ,         1,          1.1,   sym_y(MY_TORCH_Y), DIRECTION_FORWARD  , TakeTorch      ,                   (False,), False,    True),
+            # FireHarvestingGoal ("TakeTorch_Theirs"   ,         1,          1.1,   sym_y(MY_TORCH_Y), DIRECTION_FORWARD  , TakeTorch      ,                   (False,), False,    True),
             FruitHarvestingGoal("FruitTreeE"         ,         7,     TREE_E_X,            tree_e_y, DIRECTION_FORWARD  , TakeFruits     ,                     (0.0,), False,    True),
             FruitHarvestingGoal("FruitTreeSE"        ,         7,    TREE_SE_X,           tree_se_y, DIRECTION_FORWARD  , TakeFruits     ,          (-math.pi / 2.0,), False,    True),
             FruitHarvestingGoal("FruitTreeSW"        ,         7,    TREE_SW_X,           tree_sw_y, DIRECTION_FORWARD  , TakeFruits     ,          (-math.pi / 2.0,), False,    True),
