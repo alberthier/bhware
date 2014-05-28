@@ -243,11 +243,11 @@ class Main(statemachine.State):
             # FruitHarvestingGoal("FruitTreeSW"        ,         7,    TREE_SW_X,           tree_sw_y, DIRECTION_FORWARD  , TakeFruits     ,          (-math.pi / 2.0,), False,    True),
             # FruitHarvestingGoal("FruitTreeW"         ,         7,     TREE_W_X,            tree_w_y, DIRECTION_FORWARD  , TakeFruits     ,                 (math.pi,), False,    True),
 
-            FireDepositGoal    ("DepositFires_Mine"  ,        10,      MY_FD_X,             MY_FD_Y, DIRECTION_FORWARD  , EmptyFireTank  ,             (MY_FD_ANGLE,), True,    True),
-            FireDepositGoal    ("DepositFires_Center",         1,  CENT_FD_X_1,         CENT_FD_Y_1, DIRECTION_FORWARD  , EmptyFireTank  ,         (CENT_FD_ANGLE_1,), False,    True),
-            FireDepositGoal    ("DepositFires_Center",         1,  CENT_FD_X_2,         CENT_FD_Y_2, DIRECTION_FORWARD  , EmptyFireTank  ,         (CENT_FD_ANGLE_2,), False,    True),
-            FireDepositGoal    ("DepositFires_Center",         1,  CENT_FD_X_3,         CENT_FD_Y_3, DIRECTION_FORWARD  , EmptyFireTank  ,         (CENT_FD_ANGLE_3,), False,    True),
-            FireDepositGoal    ("DepositFires_Theirs",         3,         1.65,                2.65, DIRECTION_FORWARD  , EmptyFireTank  ,                       None, False,    True),
+            # FireDepositGoal    ("DepositFires_Mine"  ,        10,      MY_FD_X,             MY_FD_Y, DIRECTION_FORWARD  , EmptyFireTank  ,             (MY_FD_ANGLE,), True,    True),
+            FireDepositGoal    ("DepositFires_Center",         5,  CENT_FD_X_1,         CENT_FD_Y_1, DIRECTION_FORWARD  , EmptyFireTank  ,         (CENT_FD_ANGLE_1,), False,    True),
+            FireDepositGoal    ("DepositFires_Center",         5,  CENT_FD_X_2,         CENT_FD_Y_2, DIRECTION_FORWARD  , EmptyFireTank  ,         (CENT_FD_ANGLE_2,), False,    True),
+            FireDepositGoal    ("DepositFires_Center",         5,  CENT_FD_X_3,         CENT_FD_Y_3, DIRECTION_FORWARD  , EmptyFireTank  ,         (CENT_FD_ANGLE_3,), False,    True),
+            # FireDepositGoal    ("DepositFires_Theirs",         3,         1.65,                2.65, DIRECTION_FORWARD  , EmptyFireTank  ,                       None, False,    True),
 #            FruitHarvestingGoal("FruitTreeE"         ,         3,     TREE_E_X,            tree_e_y, DIRECTION_FORWARD  , SuperTakeFruits,                       None, False,    True),
 #            FruitHarvestingGoal("FruitTreeSE"        , st_weight,    TREE_SE_X,           tree_se_y, DIRECTION_FORWARD  , SuperTakeFruits,                       None, False,    True),
 #            FruitHarvestingGoal("FruitTreeSW"        , st_weight,    TREE_SW_X,           tree_sw_y, DIRECTION_FORWARD  , SuperTakeFruits,                       None, False,    True),
@@ -274,18 +274,18 @@ class Main(statemachine.State):
         yield Trigger(TORCH_GUIDE_CLOSE)
 
         yield TimerWaitTeamMateToLeave(1000, dy = 0.3)
-        yield MoveLineTo(self.start_x, RED_START_Y)
-        huntgoal = self.robot.goal_manager.get_goals("HuntTheMammoth")[0]
-        yield Navigate(huntgoal.x, huntgoal.y)
-        yield HuntTheMammoth()
-        self.robot.goal_manager.update_goal_status(huntgoal, GOAL_DONE)
-        torchgoal = self.robot.goal_manager.get_goals("TakeTorch_Mine")[0]
-        yield Navigate(torchgoal.x, torchgoal.y)
+        # yield MoveLineTo(self.start_x, RED_START_Y)
+        # huntgoal = self.robot.goal_manager.get_goals("HuntTheMammoth")[0]
+        # yield Navigate(huntgoal.x, huntgoal.y)
+        # yield HuntTheMammoth()
+        # self.robot.goal_manager.update_goal_status(huntgoal, GOAL_DONE)
+        # torchgoal = self.robot.goal_manager.get_goals("TakeTorch_Mine")[0]
+        # yield Navigate(torchgoal.x, torchgoal.y)
 
-        self.fsm.interbot_fsm.current_state.set_teammate_collision_detection(True)
+        # self.fsm.interbot_fsm.current_state.set_teammate_collision_detection(True)
 
-        yield TakeTorch(None, True)
-        torchgoal = self.robot.goal_manager.update_goal_status(torchgoal, GOAL_DONE)
+        # yield TakeTorch(None, True)
+        # torchgoal = self.robot.goal_manager.update_goal_status(torchgoal, GOAL_DONE)
 
         while True :
             yield ExecuteGoals()
