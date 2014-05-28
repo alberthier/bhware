@@ -280,8 +280,10 @@ class PaintFresco(statemachine.State):
         yield SpeedControl()
         yield MoveLineTo(0.2, goal.y)
         yield Trigger(PAINT_1_FLIP_FLOP_STOP, PAINT_1_FLIP_FLOP_STOP)
-        yield CalibrateAxis("y", 1.10, math.pi/2)
         self.exit_reason = GOAL_DONE
+
+        yield CalibrateAxis("y", 1.10, math.pi/2)
+
         yield None
 
 
