@@ -25,6 +25,9 @@ class Pose(object):
             self.virt.y = y
             self.virt.angle = angle
 
+    def __sub__(self, other):
+        return tools.distance(self.x, self.y, other.x, other.y)
+
 
     def __repr__(self):
         return "Pose({}, {}, {})".format(self.x, self.y, self.angle)
