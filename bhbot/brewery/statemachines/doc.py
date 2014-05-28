@@ -83,12 +83,8 @@ class FruitDepositGoal(mgm.Goal):
 
 class FunnyActionGoal(mgm.Goal):
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.funny_action = True
-        self.weigth=-999
-        self.estimated_duration=0
-        self.minimal_remaining_time=30
+    def is_available(self):
+        return self.goal_manager.event_loop.get_remaining_match_time() < 25
 
 
 
@@ -233,15 +229,11 @@ class Main(statemachine.State):
             st_weight = 5
 
 
-        capture_the_mammoth_1 = FunnyActionGoal("CaptureTheMammoth"  ,        10, self.start_x,                0.75, DIRECTION_FORWARD  , CaptureTheMammoth ,              None, False,    True)
-        capture_the_mammoth_2 = FunnyActionGoal("CaptureTheMammoth"  ,        10, self.start_x,         sym_y(0.75), DIRECTION_FORWARD  , CaptureTheMammoth ,              None, False,    True)
-
-
         #                      |        ID           |  Weight  |     X       |          Y         | Direction          |    State      | Ctor parameters|Shared|Navigate|
         gm.add(
             mgm.Goal           ("HuntTheMammoth"     ,        10, self.start_x,                0.75, DIRECTION_FORWARD  , HuntTheMammoth ,              None, False,    True),
-#            capture_the_mammoth_1,
-#            capture_the_mammoth_2,
+            FunnyActionGoal("CaptureTheMammoth"  ,        10, self.start_x,                0.75, DIRECTION_FORWARD  , CaptureTheMammoth ,              None, False,    True),
+            FunnyActionGoal("CaptureTheMammoth"  ,        10, self.start_x,         sym_y(0.75), DIRECTION_FORWARD  , CaptureTheMammoth ,              None, False,    True),
 
             FireHarvestingGoal ("TakeTorch_Mine"     ,        10,   MY_TORCH_X,          MY_TORCH_Y, DIRECTION_FORWARD  , TakeTorch      ,    (MY_TORCH_ANGLE, True,), False,    True),
             FireHarvestingGoal ("TakeTorch_Mine"     ,        10, MY_TORCH_X_2,        MY_TORCH_Y_2, DIRECTION_FORWARD  , TakeTorch      ,  (MY_TORCH_ANGLE_2, True,), False,    True),
@@ -292,7 +284,10 @@ class Main(statemachine.State):
 
         yield TakeTorch(0.91, True)
         torchgoal = self.robot.goal_manager.update_goal_status(torchgoal, GOAL_DONE)
-        yield ExecuteGoals()
+
+        while True :
+            yield ExecuteGoals()
+            yield Timer(1000)
 
 
 
