@@ -402,9 +402,6 @@ class CaptureTheMammoth(statemachine.State):
         yield RotateTo(0.0)
         yield Trigger(ARM_1_TAKE_TORCH_FIRE, ARM_2_TAKE_TORCH_FIRE)
         yield Trigger(ELEVATOR_TAKE_LEVEL_2) # This is absolutely required to avoid elevator damages
-
-        yield Timer(500) # STUPIDTIMER
-
         # we don't exit and just wait for EndOfMatch
 
 
@@ -480,7 +477,6 @@ class FireStealer(statemachine.State):
         yield ArmSpeed(ARM_SPEED_MAX)
         yield Trigger(PUMP_OFF)
         yield Trigger(ARM_1_TAKE_TORCH_FIRE, ARM_2_TAKE_TORCH_FIRE, ELEVATOR_UP)
-        yield Timer(500) # STUPIDTIMER
         self.detection_enabled=True
         self.send_packet(packets.ColorDetectorPacket("EnableScan"))
         # yield Timer(2000)
@@ -556,11 +552,10 @@ class TakeFire(statemachine.State):
 
     def on_enter(self):
         yield Trigger(ARM_1_TAKE_TORCH_FIRE, ARM_2_TAKE_TORCH_FIRE)
-        yield Timer(500) # STUPIDTIMER
         yield Trigger(PUMP_ON)
         yield Timer(100)
         yield Trigger(self.take_level)
-        yield Timer(500) # STUPIDTIMER
+        yield Timer(400)
         yield Trigger(ELEVATOR_UP)
         yield None
 
@@ -583,7 +578,6 @@ class TakeTorch(statemachine.State):
         yield MoveLineRelative(0.05)
 
         yield Trigger(ELEVATOR_UP, FIRE_FLIPPER_OPEN)
-        yield Timer(600) # STUPIDTIMER
 
         for i in range(3):
 
@@ -592,27 +586,22 @@ class TakeTorch(statemachine.State):
             if flip:
                 # On retourne le feu
                 yield Trigger(ARM_1_FLIP_FIRE, ARM_2_FLIP_FIRE)
-                yield Timer(400) # STUPIDTIMER
                 yield Trigger(PUMP_OFF)
                 yield ArmSpeed(ARM_SPEED_MAX)
                 yield Timer(300)
             else:
                 # Sinon, on le stocke
                 yield Trigger(ARM_1_STORE_FIRE, ARM_2_STORE_FIRE)
-                yield Timer(400) # STUPIDTIMER
                 yield Trigger(elevator_store_levels[self.robot.stored_fires])
-                yield Timer(400) # STUPIDTIMER
                 yield Trigger(PUMP_OFF)
-                yield Timer(400) # STUPIDTIMER
                 yield ArmSpeed(ARM_SPEED_MAX)
                 yield Timer(300)
                 yield Trigger(ELEVATOR_UP)
-                yield Timer(400) # STUPIDTIMER
                 self.robot.stored_fires += 1
             flip = not flip
 
         yield Trigger(TORCH_GUIDE_OPEN)
-        yield Timer(700) # STUPIDTIMER
+        yield Timer(500) # STUPIDTIMER
 
         yield ArmIdle()
 
@@ -668,7 +657,6 @@ class DepositFire(statemachine.State):
         yield ArmSpeed(ARM_SPEED_MAX)
         yield Trigger(ELEVATOR_UP)
         yield Trigger(ARM_1_STORE_FIRE, ARM_2_STORE_FIRE)
-        yield Timer(500) # STUPIDTIMER
         logger.log("Deposit of fire {} stored at level {} angles : {} {}".format(
             self.robot.stored_fires,
             elevator_store_levels[self.robot.stored_fires - 1],
@@ -676,26 +664,21 @@ class DepositFire(statemachine.State):
             self.arm2_angle,
         ))
         yield Trigger(PUMP_ON, elevator_store_levels[self.robot.stored_fires - 1])
-        yield Timer(500) # STUPIDTIMER
         yield Timer(300)
         yield ArmSpeed(ARM_SPEED_WITH_FIRE)
         yield Trigger(ELEVATOR_UP)
         yield Trigger(makeServoMoveCommand(ARM_1, self.arm1_angle,),
                       makeServoMoveCommand(ARM_2, self.arm2_angle))
-        yield Timer(500) # STUPIDTIMER
 
         yield Trigger(self.deposit_level)
-        yield Timer(500) # STUPIDTIMER
 
         if not self.pump_state :
             yield Trigger(PUMP_OFF)
             yield Timer(300)
-            yield Timer(800) # STUPIDTIMER_PUMP a voir avec Pite avant d'enlever
             yield Trigger(ELEVATOR_UP)
 
         self.robot.stored_fires-=1
         yield ArmSpeed(ARM_SPEED_MAX)
-        yield Timer(500) # STUPIDTIMER
 
         # TODO : Put arm in safe position
 
@@ -906,9 +889,7 @@ class ArmIdle(statemachine.State):
     def on_enter(self):
         yield ArmSpeed(ARM_SPEED_MAX)
         yield Trigger(ELEVATOR_UP)
-        yield Timer(400) # STUPIDTIMER
         yield Trigger(PUMP_OFF, ARM_1_SECURE, ARM_2_SECURE, TORCH_GUIDE_HIDE, FIRE_FLIPPER_CLOSE)
-        yield Timer(600) # STUPIDTIMER
         yield None
 
 
@@ -930,6 +911,7 @@ class EmptyFireTank(statemachine.State):
             yield MoveLineRelative(0.02, direction=DIRECTION_BACKWARDS)
 
             torch_guide_mvt = yield Trigger(TORCH_GUIDE_OPEN)
+            yield Timer(500) # STUPIDTIMER
             if torch_guide_mvt.exit_reason == SERVO_STATUS_TIMED_OUT:
                 yield Trigger(TORCH_GUIDE_HIDE)
                 yield None
@@ -969,7 +951,6 @@ class EmptyFireTank(statemachine.State):
             yield DepositFire(*[122, 152], pump_state=True, level=ELEVATOR_DEPOSIT_FIRE)
             yield Trigger(PUMP_OFF)
             yield Timer(300)
-            yield Timer(800) # STUPIDTIMER_PUMP a voir avec Pite avant d'enlever
             yield Trigger(ELEVATOR_UP)
 
         yield MoveLineRelative(0.15, direction=DIRECTION_BACKWARDS)
@@ -988,11 +969,9 @@ class NinjaaaaaaaaRedN(statemachine.State):
     def on_enter(self):
         yield RotateTo(math.pi)
         yield Trigger(TORCH_GUIDE_HIDE)
-        yield Timer(200) # STUPIDTIMER
         yield Trigger(TORCH_GUIDE_OPEN)
-        yield Timer(200) # STUPIDTIMER
+        yield Timer(500) # STUPIDTIMER
         yield Trigger(TORCH_GUIDE_HIDE)
-        yield Timer(200) # STUPIDTIMER
         yield None
 
 
@@ -1003,11 +982,9 @@ class NinjaaaaaaaaRedS(statemachine.State):
     def on_enter(self):
         yield RotateTo(math.pi / 2.0)
         yield Trigger(TORCH_GUIDE_HIDE)
-        yield Timer(200) # STUPIDTIMER
         yield Trigger(TORCH_GUIDE_OPEN)
-        yield Timer(200) # STUPIDTIMER
+        yield Timer(500) # STUPIDTIMER
         yield Trigger(TORCH_GUIDE_HIDE)
-        yield Timer(200) # STUPIDTIMER
         self.exit_reason = GOAL_DONE
         yield None
 
@@ -1019,11 +996,9 @@ class NinjaaaaaaaaYellowN(statemachine.State):
     def on_enter(self):
         yield RotateTo(math.pi)
         yield Trigger(TORCH_GUIDE_HIDE)
-        yield Timer(200) # STUPIDTIMER
         yield Trigger(TORCH_GUIDE_OPEN)
-        yield Timer(200) # STUPIDTIMER
+        yield Timer(500) # STUPIDTIMER
         yield Trigger(TORCH_GUIDE_HIDE)
-        yield Timer(200) # STUPIDTIMER
         self.exit_reason = GOAL_DONE
         yield None
         yield None
@@ -1034,11 +1009,9 @@ class NinjaaaaaaaaYellowS(statemachine.State):
         yield RotateTo(math.pi / 2.0)
         yield MoveLineTo(self.robot.goal_manager.get_current_goal().x, sym_y(2.3))
         yield Trigger(TORCH_GUIDE_HIDE)
-        yield Timer(200) # STUPIDTIMER
         yield Trigger(TORCH_GUIDE_OPEN)
-        yield Timer(200) # STUPIDTIMER
+        yield Timer(500) # STUPIDTIMER
         yield Trigger(TORCH_GUIDE_HIDE)
-        yield Timer(200) # STUPIDTIMER
         self.exit_reason = GOAL_DONE
         yield None
         yield None
