@@ -280,10 +280,10 @@ class PaintFresco(statemachine.State):
         yield RotateTo(0.0)
         yield SpeedControl(0.3)
         yield MoveLineTo(ROBOT_CENTER_X - 0.02, goal.y, DIRECTION_BACKWARDS)
-        yield Trigger(PAINT_1_FLIP_FLOP_START, PAINT_1_FLIP_FLOP_START)
+        yield Trigger(PAINT_1_FLIP_FLOP_START, PAINT_2_FLIP_FLOP_START)
         yield SpeedControl()
         yield MoveLineTo(0.2, goal.y)
-        yield Trigger(PAINT_1_FLIP_FLOP_STOP, PAINT_1_FLIP_FLOP_STOP)
+        yield Trigger(PAINT_1_FLIP_FLOP_STOP, PAINT_2_FLIP_FLOP_STOP)
         self.exit_reason = GOAL_DONE
 
         yield CalibrateAxis("y", 1.10, math.pi/2)
