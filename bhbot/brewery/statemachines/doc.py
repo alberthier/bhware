@@ -309,6 +309,7 @@ class Main(statemachine.State):
         logger.log("Starting ...")
 
         self.fsm.interbot_fsm.current_state.set_teammate_collision_detection(False)
+        self.event_loop.map.use_interbot_position = False
 
         yield Trigger(TORCH_GUIDE_CLOSE)
 
@@ -388,6 +389,7 @@ class HuntTheMammoth(statemachine.State):
 
 
         self.fsm.interbot_fsm.current_state.set_teammate_collision_detection(True)
+        self.event_loop.map.use_interbot_position = TEAMMATE_POSITION_IN_MAP
 
 
         self.exit_reason = GOAL_DONE

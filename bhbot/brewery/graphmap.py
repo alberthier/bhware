@@ -37,6 +37,7 @@ class Map:
         self.pathfinder = graphpathfinding.PathFinder(ROBOT_GYRATION_RADIUS, ROBOT_GYRATION_RADIUS, FIELD_X_SIZE - ROBOT_GYRATION_RADIUS, FIELD_Y_SIZE - ROBOT_GYRATION_RADIUS)
         self.teammate_zone_timer = eventloop.Timer(self.event_loop, TEAMMATE_INFO_DELAY_MS * 2, self.disable_teammate_zone)
         self.ubo_zone_timer = eventloop.Timer(self.event_loop, 2000, self.disable_ubo_zone)
+        self.use_interbot_position = TEAMMATE_POSITION_IN_MAP
 
 
     def on_device_ready(self, packet):
@@ -272,7 +273,7 @@ class Map:
         """
         :type packet: packets.InterbotPosition
         """
-        if TEAMMATE_POSITION_IN_MAP:
+        if self.use_interbot_position:
             if packet.is_moving:
                 coords = self.create_segment_coords(packet.pose.x, packet.pose.y, packet.destination.x, packet.destination.y, self.get_teammate_radius())
             else:
