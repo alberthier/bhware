@@ -549,6 +549,13 @@ class PwmControl(BasePacket):
     )
 
 
+
+
+class RobotInit(BasePacket):
+
+    TYPE = 72
+
+
 # Simulator
 
 
@@ -759,6 +766,7 @@ for (item_name, item_type) in inspect.getmembers(sys.modules[__name__]):
 
 
 def create_packet(buffer):
+    # TODO : when unknown packet, return a dummy class
     (packet_type,) = struct.unpack("<B", buffer[:1])
     packet_class = PACKETS_BY_TYPE[packet_type]
     return packet_class()

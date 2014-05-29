@@ -4,6 +4,7 @@
 import signal
 import argparse
 import socket
+import sys
 
 
 
@@ -75,3 +76,5 @@ if __name__ == "__main__":
     leds.initialize(loop)
     loop.start()
     logger.close()
+
+    sys.exit(loop.exit_value)

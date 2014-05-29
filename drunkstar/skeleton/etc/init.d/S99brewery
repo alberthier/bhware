@@ -2,5 +2,5 @@
 
 if [ `hostname` != "jennifer" ]; then
   source /root/.profile
-  /root/bhware/bhbot/brewery/brewery.py &
+  /root/bhware/bhbot/brewery/loop_brewery.sh &
 fi

@@ -39,6 +39,7 @@ class ClientSocketChannel(asyncore.dispatcher_with_send):
         self.existing_socket = None
         self.address = None
         self.show_reconnect_error_log = True
+        self.is_closing = False
         if isinstance(remote, socket.socket):
             self.existing_socket = remote
         else:
@@ -47,8 +48,15 @@ class ClientSocketChannel(asyncore.dispatcher_with_send):
         if self.existing_socket is None:
             self.try_connect()
 
+    def close(self):
+        self.is_closing = True
+        super().close()
+
 
     def bytes_available(self):
+        if self.is_closing :
+            return 0
+
         available = ctypes.c_int()
         fcntl.ioctl(self.socket.fileno(), termios.FIONREAD, available)
         return available.value
@@ -481,6 +489,7 @@ class EventLoop(object):
         self.start_date = None
         self.packet_queue = collections.deque()
         self.interbot_enabled = interbot_enabled
+        self.exit_value = 0
 
         if IS_HOST_DEVICE_ARM and IS_MAIN_ROBOT:
             folder = os.path.join(os.path.dirname(__file__), "colordetector")
@@ -506,6 +515,14 @@ class EventLoop(object):
     def on_start(self, packet):
         self.is_match_started = True
         self.start_date = datetime.datetime.now()
+
+
+    def on_robot_init(self, packet):
+        if not self.is_match_started:
+            logger.log("Got RobotInit, exiting...")
+            self.stop(72)
+        else :
+            logger.log("ERROR : Got RobotInit during match -> ignoring")
 
 
     def on_turret_boot(self, packet):
@@ -609,7 +626,7 @@ class EventLoop(object):
                     break
 
 
-    def stop(self):
+    def stop(self, exit_value = 0):
         logger.log("Stopping...")
         self.stopping = True
         if self.turret_channel is not None:
@@ -624,4 +641,6 @@ class EventLoop(object):
             self.interbot_server.close()
         if self.colordetector is not None:
             self.colordetector.close()
+
+        self.exit_value = exit_value
 
