@@ -95,6 +95,8 @@ private:
     std::string m_currentReferenceColor;
     int m_currentTolerance;
     int m_colorThreshold;
+    int m_greenThreshold;
+    int m_redThreshold;
 
     ScanMethod m_scanMethod;
     std::string m_scanMethodName;
@@ -301,6 +303,8 @@ void ColorDetector::reset()
     m_currentTolerance = 0;
     m_mode = ModeScan;
     m_colorThreshold = 80;
+    m_greenThreshold = 128;
+    m_redThreshold = 128;
     m_writeReferenceCapture = false;
     m_lastDetectedColorDebounceCounter = 0;
     m_colorOccurrenceNeeded = 1;
@@ -344,6 +348,18 @@ bool ColorDetector::processLine(std::istream& stream)
         m_writeReferenceCapture = mode == "1";
 
         std::cerr << "WriteReferenceCapture " << m_writeReferenceCapture << std::endl;
+    }
+    else if (command == "GreenThreshold")
+    {
+        sstr >> m_greenThreshold;
+
+        std::cerr << "GreenThreshold " << m_greenThreshold << std::endl;
+    }
+    else if (command == "RedThreshold")
+    {
+        sstr >> m_redThreshold;
+
+        std::cerr << "RedThreshold " << m_redThreshold << std::endl;
     }
     else if (command == "SetLoopInterval")
     {
@@ -867,7 +883,7 @@ void ColorDetector::scanMask()
         std::vector<cv::Mat> componentsBgr;
         cv::split(image, componentsBgr);
 
-        cv::threshold(componentsBgr[2], maskRed, 128, 255, cv::THRESH_BINARY);
+        cv::threshold(componentsBgr[2], maskRed, m_redThreshold, 255, cv::THRESH_BINARY);
 
 
 //// -----------------
@@ -879,7 +895,7 @@ void ColorDetector::scanMask()
         }
 
 
-        cv::threshold(componentsBgr[1], maskGreen, 128, 255, cv::THRESH_BINARY);
+        cv::threshold(componentsBgr[1], maskGreen, m_greenThreshold, 255, cv::THRESH_BINARY);
 
 #ifndef __arm__
         updateWindow("GREEN MASK", maskGreen);
