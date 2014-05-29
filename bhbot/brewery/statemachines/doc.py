@@ -234,11 +234,20 @@ class Main(statemachine.State):
         else:
             mammoth_capt_y = 0.707
 
+        if self.robot.team == TEAM_RED:
+            ninja_n = mgm.Goal("NinjaaaaaaaaRedN", 4, 1.3, 0.32, DIRECTION_FORWARD, NinjaaaaaaaaRedN, None, False, True)
+            ninja_s = mgm.Goal("NinjaaaaaaaaRedS", 4, 1.51, 0.7, DIRECTION_FORWARD, NinjaaaaaaaaRedS, None, False, True)
+        else:
+            ninja_n = mgm.Goal("NinjaaaaaaaaYellowN", 4, 1.3, sym_y(2.52), DIRECTION_FORWARD, NinjaaaaaaaaYellowN, None, False, True)
+            ninja_s = mgm.Goal("NinjaaaaaaaaYellowS", 4, 1.7, sym_y(2.50), DIRECTION_FORWARD, NinjaaaaaaaaYellowS, None, False, True)
+
         #                      |        ID           |  Weight  |     X       |          Y         | Direction          |    State      | Ctor parameters|Shared|Navigate|
         gm.add(
             mgm.Goal           ("HuntTheMammoth"     ,        10, self.start_x,                0.75, DIRECTION_FORWARD  , HuntTheMammoth ,              None, False,    True),
             mgm.Goal("CaptureTheMammoth"  ,        1, 0.3 + 0.242,          mammoth_capt_y, DIRECTION_BACKWARDS  , CaptureTheMammoth ,              None, False,    True),
             mgm.Goal("CaptureTheMammoth"  ,        1, 0.3 + 0.242,         sym_y(mammoth_capt_y), DIRECTION_BACKWARDS  , CaptureTheMammoth ,              None, False,    True),
+            ninja_n,
+            ninja_s,
 
             # FireHarvestingGoal ("TakeTorch_Theirs"   ,         1,          1.1,   sym_y(MY_TORCH_Y), DIRECTION_FORWARD  , TakeTorch      ,                   (False,), False,    True),
             # FruitHarvestingGoal("FruitTreeE"         ,         7,     TREE_E_X,            tree_e_y, DIRECTION_FORWARD  , TakeFruits     ,                     (0.0,), False,    True),
@@ -246,18 +255,18 @@ class Main(statemachine.State):
             # FruitHarvestingGoal("FruitTreeSW"        ,         7,    TREE_SW_X,           tree_sw_y, DIRECTION_FORWARD  , TakeFruits     ,          (-math.pi / 2.0,), False,    True),
             # FruitHarvestingGoal("FruitTreeW"         ,         7,     TREE_W_X,            tree_w_y, DIRECTION_FORWARD  , TakeFruits     ,                 (math.pi,), False,    True),
 
-            FireDepositGoal    ("DepositFires_Mine"  ,        10,      MY_FD_X,             MY_FD_Y, DIRECTION_FORWARD  , EmptyFireTank  ,             (MY_FD_ANGLE,), True,    True),
-            FireDepositGoal    ("DepositFires_Center",         5,  CENT_FD_X_1,         CENT_FD_Y_1, DIRECTION_FORWARD  , EmptyFireTank  ,         (CENT_FD_ANGLE_1,), False,    True),
-            FireDepositGoal    ("DepositFires_Center",         5,  CENT_FD_X_2,         CENT_FD_Y_2, DIRECTION_FORWARD  , EmptyFireTank  ,         (CENT_FD_ANGLE_2,), False,    True),
-            FireDepositGoal    ("DepositFires_Center",         5,  CENT_FD_X_3,         CENT_FD_Y_3, DIRECTION_FORWARD  , EmptyFireTank  ,         (CENT_FD_ANGLE_3,), False,    True),
+            FireDepositGoal    ("DepositFires_Mine"  ,        15,      MY_FD_X,             MY_FD_Y, DIRECTION_FORWARD  , EmptyFireTank  ,             (MY_FD_ANGLE,), True,    True),
+            FireDepositGoal    ("DepositFires_Center",         8,  CENT_FD_X_1,         CENT_FD_Y_1, DIRECTION_FORWARD  , EmptyFireTank  ,         (CENT_FD_ANGLE_1,), False,    True),
+            FireDepositGoal    ("DepositFires_Center",         8,  CENT_FD_X_2,         CENT_FD_Y_2, DIRECTION_FORWARD  , EmptyFireTank  ,         (CENT_FD_ANGLE_2,), False,    True),
+            FireDepositGoal    ("DepositFires_Center",         8,  CENT_FD_X_3,         CENT_FD_Y_3, DIRECTION_FORWARD  , EmptyFireTank  ,         (CENT_FD_ANGLE_3,), False,    True),
             # FireDepositGoal    ("DepositFires_Theirs",         3,         1.65,                2.65, DIRECTION_FORWARD  , EmptyFireTank  ,                       None, False,    True),
 #            FruitHarvestingGoal("FruitTreeE"         ,         3,     TREE_E_X,            tree_e_y, DIRECTION_FORWARD  , SuperTakeFruits,                       None, False,    True),
 #            FruitHarvestingGoal("FruitTreeSE"        , st_weight,    TREE_SE_X,           tree_se_y, DIRECTION_FORWARD  , SuperTakeFruits,                       None, False,    True),
 #            FruitHarvestingGoal("FruitTreeSW"        , st_weight,    TREE_SW_X,           tree_sw_y, DIRECTION_FORWARD  , SuperTakeFruits,                       None, False,    True),
 #            FruitHarvestingGoal("FruitTreeW"         ,         3,     TREE_W_X,            tree_w_y, DIRECTION_FORWARD  , SuperTakeFruits,                       None, False,    True),
 
-            FruitDepositGoal   ("DepFruits_Inner"    ,         3,         0.55,                2.10, DIRECTION_BACKWARDS, DumpFruits     ,                       None, False,    True),
-            FruitDepositGoal   ("DepFruits_Outer"    ,         3,         0.55,                2.37, DIRECTION_BACKWARDS, DumpFruits     ,                       None, False,    True),
+#            FruitDepositGoal   ("DepFruits_Inner"    ,         3,         0.55,                2.10, DIRECTION_BACKWARDS, DumpFruits     ,                       None, False,    True),
+#            FruitDepositGoal   ("DepFruits_Outer"    ,         3,         0.55,                2.37, DIRECTION_BACKWARDS, DumpFruits     ,                       None, False,    True),
         )
 
 
@@ -969,6 +978,69 @@ class EmptyFireTank(statemachine.State):
 
         self.exit_reason = GOAL_DONE
         self.robot.stored_fires = 0
+        yield None
+
+
+
+
+class NinjaaaaaaaaRedN(statemachine.State):
+
+    def on_enter(self):
+        yield RotateTo(math.pi)
+        yield Trigger(TORCH_GUIDE_HIDE)
+        yield Timer(200) # STUPIDTIMER
+        yield Trigger(TORCH_GUIDE_OPEN)
+        yield Timer(200) # STUPIDTIMER
+        yield Trigger(TORCH_GUIDE_HIDE)
+        yield Timer(200) # STUPIDTIMER
+        yield None
+
+
+
+
+class NinjaaaaaaaaRedS(statemachine.State):
+
+    def on_enter(self):
+        yield RotateTo(math.pi / 2.0)
+        yield Trigger(TORCH_GUIDE_HIDE)
+        yield Timer(200) # STUPIDTIMER
+        yield Trigger(TORCH_GUIDE_OPEN)
+        yield Timer(200) # STUPIDTIMER
+        yield Trigger(TORCH_GUIDE_HIDE)
+        yield Timer(200) # STUPIDTIMER
+        self.exit_reason = GOAL_DONE
+        yield None
+
+
+
+
+class NinjaaaaaaaaYellowN(statemachine.State):
+
+    def on_enter(self):
+        yield RotateTo(math.pi)
+        yield Trigger(TORCH_GUIDE_HIDE)
+        yield Timer(200) # STUPIDTIMER
+        yield Trigger(TORCH_GUIDE_OPEN)
+        yield Timer(200) # STUPIDTIMER
+        yield Trigger(TORCH_GUIDE_HIDE)
+        yield Timer(200) # STUPIDTIMER
+        self.exit_reason = GOAL_DONE
+        yield None
+        yield None
+
+class NinjaaaaaaaaYellowS(statemachine.State):
+
+    def on_enter(self):
+        yield RotateTo(math.pi / 2.0)
+        yield MoveLineTo(self.robot.goal_manager.get_current_goal().x, sym_y(2.3))
+        yield Trigger(TORCH_GUIDE_HIDE)
+        yield Timer(200) # STUPIDTIMER
+        yield Trigger(TORCH_GUIDE_OPEN)
+        yield Timer(200) # STUPIDTIMER
+        yield Trigger(TORCH_GUIDE_HIDE)
+        yield Timer(200) # STUPIDTIMER
+        self.exit_reason = GOAL_DONE
+        yield None
         yield None
 
 
