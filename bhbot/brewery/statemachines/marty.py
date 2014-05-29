@@ -20,7 +20,7 @@ import statemachines.testsmarty as testsmarty
 
 BORDER_FIRE_DIST = 0.15
 FIELD_FIRE_DIST  = 0.15
-MAMMOTH_HUNT_Y   = 2.45 
+MAMMOTH_HUNT_Y   = 2.15 
 
 
 
