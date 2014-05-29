@@ -234,11 +234,12 @@ class Main(statemachine.State):
         else:
             mammoth_capt_y = 0.707
 
+        ninja_dist = ROBOT_GYRATION_RADIUS + 0.02
         if self.robot.team == TEAM_RED:
-            ninja_n = mgm.Goal("NinjaaaaaaaaRedN", 4, 1.3, 0.32, DIRECTION_FORWARD, NinjaaaaaaaaRedN, None, False, True)
-            ninja_s = mgm.Goal("NinjaaaaaaaaRedS", 4, 1.51, 0.7, DIRECTION_FORWARD, NinjaaaaaaaaRedS, None, False, True)
+            ninja_n = mgm.Goal("NinjaaaaaaaaRedN", 4, 1.45, 0.33, DIRECTION_FORWARD, NinjaaaaaaaaRedN, None, False, True)
+            ninja_s = mgm.Goal("NinjaaaaaaaaRedS", 4, 1.51, 0.65, DIRECTION_FORWARD, NinjaaaaaaaaRedS, None, False, True)
         else:
-            ninja_n = mgm.Goal("NinjaaaaaaaaYellowN", 4, 1.3, sym_y(2.52), DIRECTION_FORWARD, NinjaaaaaaaaYellowN, None, False, True)
+            ninja_n = mgm.Goal("NinjaaaaaaaaYellowN", 4, 1.45, sym_y(2.52), DIRECTION_FORWARD, NinjaaaaaaaaYellowN, None, False, True)
             ninja_s = mgm.Goal("NinjaaaaaaaaYellowS", 4, 1.7, sym_y(2.50), DIRECTION_FORWARD, NinjaaaaaaaaYellowS, None, False, True)
 
         #                      |        ID           |  Weight  |     X       |          Y         | Direction          |    State      | Ctor parameters|Shared|Navigate|
@@ -970,10 +971,12 @@ class NinjaaaaaaaaRedN(statemachine.State):
 
     def on_enter(self):
         yield RotateTo(math.pi)
+        yield MoveLineTo(1.1 + ROBOT_CENTER_X + 0.02, self.goal.y)
         yield Trigger(TORCH_GUIDE_HIDE)
         yield Trigger(TORCH_GUIDE_OPEN)
         yield Timer(500) # STUPIDTIMER
         yield Trigger(TORCH_GUIDE_HIDE)
+        self.exit_reason = GOAL_DONE
         yield None
 
 
@@ -983,6 +986,7 @@ class NinjaaaaaaaaRedS(statemachine.State):
 
     def on_enter(self):
         yield RotateTo(math.pi / 2.0)
+        yield MoveLineTo(self.goal.x, 0.9 - ROBOT_CENTER_X - 0.02)
         yield Trigger(TORCH_GUIDE_HIDE)
         yield Trigger(TORCH_GUIDE_OPEN)
         yield Timer(500) # STUPIDTIMER
@@ -997,25 +1001,27 @@ class NinjaaaaaaaaYellowN(statemachine.State):
 
     def on_enter(self):
         yield RotateTo(math.pi)
+        yield MoveLineTo(1.1 + ROBOT_CENTER_X + 0.02, self.goal.y)
         yield Trigger(TORCH_GUIDE_HIDE)
         yield Trigger(TORCH_GUIDE_OPEN)
         yield Timer(500) # STUPIDTIMER
         yield Trigger(TORCH_GUIDE_HIDE)
         self.exit_reason = GOAL_DONE
         yield None
-        yield None
+
+
+
 
 class NinjaaaaaaaaYellowS(statemachine.State):
 
     def on_enter(self):
         yield RotateTo(math.pi / 2.0)
-        yield MoveLineTo(self.robot.goal_manager.get_current_goal().x, sym_y(2.3))
+        yield MoveLineTo(self.goal.x, 0.9 - ROBOT_CENTER_X - 0.02)
         yield Trigger(TORCH_GUIDE_HIDE)
         yield Trigger(TORCH_GUIDE_OPEN)
         yield Timer(500) # STUPIDTIMER
         yield Trigger(TORCH_GUIDE_HIDE)
         self.exit_reason = GOAL_DONE
-        yield None
         yield None
 
 
