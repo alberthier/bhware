@@ -262,7 +262,7 @@ DEFAULT_RX_SERVOS_TIMEOUT_MS = DEFAULT_SERVOS_TIMEOUT_MS
 # name                actuator type          id angle timeout
 ELEVATOR              = (ACTUATOR_TYPE_SERVO_RX, 5, DEFAULT_RX_SERVOS_TIMEOUT_MS)
 ELEVATOR_SETUP        = makeServoSetupCommand(ELEVATOR, 1023)
-ELEVATOR_UP           = makeServoMoveCommand (ELEVATOR,  200)
+ELEVATOR_UP           = makeServoMoveCommand (ELEVATOR,  210)
 ELEVATOR_TAKE_LEVEL_3 = makeServoMoveCommand (ELEVATOR,  135)
 ELEVATOR_TAKE_LEVEL_2 = makeServoMoveCommand (ELEVATOR,  100)
 ELEVATOR_TAKE_LEVEL_1 = makeServoMoveCommand (ELEVATOR,   75)
