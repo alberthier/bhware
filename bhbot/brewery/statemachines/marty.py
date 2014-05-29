@@ -174,7 +174,7 @@ class Main(statemachine.State):
 
         #                      |       ID       |Weight|                            X                    |                           Y                     |     Direction    |     State     | Ctor parameters  |Shared|Navigate|
         # gm.add(goalmanager.Goal("BorderFireW"   ,     2,                                              0.8,               ROBOT_CENTER_X + BORDER_FIRE_DIST , DIRECTION_FORWARD, PullBorderFire, (-math.pi / 2.0,), False,    True))
-        # gm.add(goalmanager.Goal("BorderFireSW"  ,    10, FIELD_X_SIZE - ROBOT_CENTER_X - BORDER_FIRE_DIST,                                             1.3 , DIRECTION_FORWARD, PushBorderFire,            (0.0,), False,    True))
+        gm.add(goalmanager.Goal("BorderFireSW"  ,    10, FIELD_X_SIZE - ROBOT_CENTER_X - BORDER_FIRE_DIST,                                             1.3 , DIRECTION_FORWARD, PushBorderFire,            (0.0,), False,    True))
         gm.add(goalmanager.Goal("BorderFireSE"  ,    10, FIELD_X_SIZE - ROBOT_CENTER_X - BORDER_FIRE_DIST,                                       sym_y(1.3), DIRECTION_FORWARD, PullBorderFire,            (0.0,), False,    True))
         gm.add(goalmanager.Goal("BorderFireE"   ,    10,                                              0.8,         sym_y(ROBOT_CENTER_X + BORDER_FIRE_DIST), DIRECTION_FORWARD, PushBorderFire,  (math.pi / 2.0,), False,    True))
         # gm.add(goalmanager.Goal("FieldFireW"    ,     7,           1.1 - ROBOT_CENTER_X - FIELD_FIRE_DIST,                                             0.4 , DIRECTION_FORWARD, PushFieldFire ,            (0.0,), False,    True))
