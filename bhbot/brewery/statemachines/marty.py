@@ -343,7 +343,7 @@ class PaintFresco(statemachine.State):
 
         yield DefinePosition(None, 1.10 + ROBOT_X_SIZE - ROBOT_CENTER_X, angle = -math.pi/2)
 
-        yield MoveLineRelative(0.2, direction = DIRECTION_BACKWARDS)
+        yield MoveLineRelative(ROBOT_GYRATION_RADIUS+0.05, direction = DIRECTION_BACKWARDS)
 
         yield None
 
