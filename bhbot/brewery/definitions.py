@@ -39,7 +39,7 @@ MAIN_RED_START_ANGLE                   = 0.0
 
 # Secondary start positons (the robot starts 90 degrees rotated that's why YELLOW_START_Y use ROBOT_CENTER_X)
 SECONDARY_RED_START_Y                  = SECONDARY_ROBOT_GYRATION_RADIUS + 0.01
-SECONDARY_RED_START_X                  = 0.58
+SECONDARY_RED_START_X                  = 0.56
 SECONDARY_RED_START_ANGLE              = math.pi / 2.0
 
 ROBOT_MEAN_SPEED = MAIN_ROBOT_MEAN_METER_PER_S

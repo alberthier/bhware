@@ -50,6 +50,8 @@ class Map:
 
         # Add Field obstacles
         offset = ROBOT_GYRATION_RADIUS
+        if not IS_MAIN_ROBOT:
+            offset += 0.07
         symetrical_zones = []
         # Fruit baskets
         basket_offset = math.sin(math.pi / 8.0) * offset
