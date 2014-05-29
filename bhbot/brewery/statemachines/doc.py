@@ -659,6 +659,7 @@ class DepositFire(statemachine.State):
         yield ArmSpeed(ARM_SPEED_MAX)
         yield Trigger(ELEVATOR_UP)
         yield Trigger(ARM_1_STORE_FIRE, ARM_2_STORE_FIRE)
+        yield Timer(500) # STUPIDTIMER
         logger.log("Deposit of fire {} stored at level {} angles : {} {}".format(
             self.robot.stored_fires,
             elevator_store_levels[self.robot.stored_fires - 1],
@@ -666,21 +667,26 @@ class DepositFire(statemachine.State):
             self.arm2_angle,
         ))
         yield Trigger(PUMP_ON, elevator_store_levels[self.robot.stored_fires - 1])
+        yield Timer(500) # STUPIDTIMER
         yield Timer(300)
         yield ArmSpeed(ARM_SPEED_WITH_FIRE)
         yield Trigger(ELEVATOR_UP)
         yield Trigger(makeServoMoveCommand(ARM_1, self.arm1_angle,),
                       makeServoMoveCommand(ARM_2, self.arm2_angle))
+        yield Timer(500) # STUPIDTIMER
 
         yield Trigger(self.deposit_level)
+        yield Timer(500) # STUPIDTIMER
 
         if not self.pump_state :
             yield Trigger(PUMP_OFF)
             yield Timer(300)
+            yield Timer(800) # STUPIDTIMER_PUMP a voir avec Pite avant d'enlever
             yield Trigger(ELEVATOR_UP)
 
         self.robot.stored_fires-=1
         yield ArmSpeed(ARM_SPEED_MAX)
+        yield Timer(500) # STUPIDTIMER
 
         # TODO : Put arm in safe position
 
@@ -954,6 +960,7 @@ class EmptyFireTank(statemachine.State):
             yield DepositFire(*[122, 152], pump_state=True, level=ELEVATOR_DEPOSIT_FIRE)
             yield Trigger(PUMP_OFF)
             yield Timer(300)
+            yield Timer(800) # STUPIDTIMER_PUMP a voir avec Pite avant d'enlever
             yield Trigger(ELEVATOR_UP)
 
         yield MoveLineRelative(0.15, direction=DIRECTION_BACKWARDS)
