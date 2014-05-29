@@ -20,7 +20,8 @@ import statemachines.testsmarty as testsmarty
 
 BORDER_FIRE_DIST = 0.15
 FIELD_FIRE_DIST  = 0.15
-MAMMOTH_HUNT_Y   = 2.15 
+MAMMOTH_HUNT_Y   = 1.71
+MAMMOTH_HUNT_X   = 0.3 + ROBOT_GYRATION_RADIUS + 0.02
 
 
 
@@ -172,6 +173,8 @@ class Main(statemachine.State):
         # calibration_x1.cal_angle = 0.0
         # calibration_x1.cal_x = 0.9 + SECONDARY_ROBOT_CENTER_Y
 
+        mammoth_direction = DIRECTION_FORWARD if self.robot.team == TEAM_RED else DIRECTION_BACKWARDS
+
         #                      |       ID       |Weight|                            X                    |                           Y                     |     Direction    |     State     | Ctor parameters  |Shared|Navigate|
         # gm.add(goalmanager.Goal("BorderFireW"   ,     2,                                              0.8,               ROBOT_CENTER_X + BORDER_FIRE_DIST , DIRECTION_FORWARD, PullBorderFire, (-math.pi / 2.0,), False,    True))
         gm.add(goalmanager.Goal("BorderFireSW"  ,    10, FIELD_X_SIZE - ROBOT_CENTER_X - BORDER_FIRE_DIST,                                             1.3 , DIRECTION_FORWARD, PushBorderFire,            (0.0,), False,    True))
@@ -185,7 +188,7 @@ class Main(statemachine.State):
         gm.add(goalmanager.Goal("FieldFireSE"   ,    10,                                              1.6,    sym_y(0.9 - ROBOT_CENTER_X - FIELD_FIRE_DIST), DIRECTION_FORWARD, PushFieldFire , (-math.pi / 2.0,), False,    True))
         gm.add(goalmanager.Goal("FieldFireE"    ,    10,           1.1 - ROBOT_CENTER_X - FIELD_FIRE_DIST,                                       sym_y(0.4), DIRECTION_FORWARD, PullFieldFire ,            (0.0,), False,    True))
         gm.add(goalmanager.Goal("FieldFireE"    ,    10,           1.1 + ROBOT_CENTER_X + FIELD_FIRE_DIST,                                       sym_y(0.4), DIRECTION_FORWARD, PushFieldFire ,        (math.pi,), False,    True))
-        gm.add(goalmanager.Goal("HuntTheMammoth",    19,                                             0.48,                                  MAMMOTH_HUNT_Y , DIRECTION_FORWARD, HuntTheMammoth,              None, False,    True))
+        gm.add(goalmanager.Goal("HuntTheMammoth",    19,                                   MAMMOTH_HUNT_X,                                  MAMMOTH_HUNT_Y , mammoth_direction, HuntTheMammoth,              None, False,    True))
         gm.add(goalmanager.Goal("PaintFresco"   ,    20,                                      RED_START_X,                                            1.30 , DIRECTION_FORWARD, PaintFresco   ,              None, False,    True))
         # gm.add(NoBotherGoal("DontBotherDoc" ,     1,                                      0.52,                                     0.13 , DIRECTION_FORWARD, DontBotherDoc ,              None, False,    True))
         # gm.add(ProtectionGoal("ProtectOurFires",   99,                                             1.67,                                            0.32 , DIRECTION_FORWARD, ProtectOurFires ,              None, False,  True))
@@ -262,11 +265,26 @@ class HuntTheMammoth(statemachine.State):
 
     def on_enter(self):
         if self.robot.team == TEAM_YELLOW:
-            yield RotateTo(-math.pi / 2.0)
+            direction = DIRECTION_BACKWARDS
+            angle = -math.pi / 2.0
         else:
-            yield RotateTo(math.pi / 2.0)
+            direction = DIRECTION_FORWARD
+            angle = math.pi / 2.0
+
+        x = self.robot.pose.x
+        y = 2.15
+
+        if self.robot.team == TEAM_RED:
+            yield LookAt(x, y, direction = direction)
+        else :
+            yield LookAtOpposite(x, y, direction = direction)
+        yield MoveLineTo(x, y, direction = direction)
+        yield RotateTo(angle)
+
+
         yield Timer(300)
         yield Trigger(GUN_FIRE)
+        yield Timer(300)
         self.exit_reason = GOAL_DONE
         yield None
 
