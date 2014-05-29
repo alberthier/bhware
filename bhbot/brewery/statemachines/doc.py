@@ -371,6 +371,11 @@ class HuntTheMammoth(statemachine.State):
     def on_enter(self):
         yield RotateTo(0.0)
         yield Trigger(GUN_FIRE)
+
+
+        self.fsm.interbot_fsm.current_state.set_teammate_collision_detection(True)
+
+
         self.exit_reason = GOAL_DONE
         yield None
 
