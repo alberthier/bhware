@@ -237,8 +237,8 @@ class Main(statemachine.State):
         #                      |        ID           |  Weight  |     X       |          Y         | Direction          |    State      | Ctor parameters|Shared|Navigate|
         gm.add(
             mgm.Goal           ("HuntTheMammoth"     ,        10, self.start_x,                0.75, DIRECTION_FORWARD  , HuntTheMammoth ,              None, False,    True),
-            FunnyActionGoal("CaptureTheMammoth"  ,        10, 0.3 + 0.242,          mammoth_capt_y, DIRECTION_BACKWARDS  , CaptureTheMammoth ,              None, False,    True),
-            FunnyActionGoal("CaptureTheMammoth"  ,        10, 0.3 + 0.242,         sym_y(mammoth_capt_y), DIRECTION_BACKWARDS  , CaptureTheMammoth ,              None, False,    True),
+            mgm.Goal("CaptureTheMammoth"  ,        1, 0.3 + 0.242,          mammoth_capt_y, DIRECTION_BACKWARDS  , CaptureTheMammoth ,              None, False,    True),
+            mgm.Goal("CaptureTheMammoth"  ,        1, 0.3 + 0.242,         sym_y(mammoth_capt_y), DIRECTION_BACKWARDS  , CaptureTheMammoth ,              None, False,    True),
 
             # FireHarvestingGoal ("TakeTorch_Theirs"   ,         1,          1.1,   sym_y(MY_TORCH_Y), DIRECTION_FORWARD  , TakeTorch      ,                   (False,), False,    True),
             # FruitHarvestingGoal("FruitTreeE"         ,         7,     TREE_E_X,            tree_e_y, DIRECTION_FORWARD  , TakeFruits     ,                     (0.0,), False,    True),
