@@ -299,7 +299,8 @@ class Main(statemachine.State):
         yield Trigger(TORCH_GUIDE_CLOSE)
 
         yield TimerWaitTeamMateToLeave(1000, dy = 0.3)
-        # yield MoveLineTo(self.start_x, RED_START_Y)
+        yield MoveLineTo(self.start_x, RED_START_Y)
+
         # huntgoal = self.robot.goal_manager.get_goals("HuntTheMammoth")[0]
         # yield Navigate(huntgoal.x, huntgoal.y)
         # yield HuntTheMammoth()
