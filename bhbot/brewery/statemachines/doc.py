@@ -544,7 +544,10 @@ class TakeFire(statemachine.State):
 
     def on_enter(self):
         yield Trigger(ARM_1_TAKE_TORCH_FIRE, ARM_2_TAKE_TORCH_FIRE)
-        yield Trigger(PUMP_ON, self.take_level)
+        yield Timer(100)
+        yield Trigger(PUMP_ON)
+        yield Timer(100)
+        yield Trigger(self.take_level)
         yield Timer(300)
         yield Trigger(ELEVATOR_UP)
         yield None
@@ -568,6 +571,7 @@ class TakeTorch(statemachine.State):
         yield MoveLineRelative(0.05)
 
         yield Trigger(ELEVATOR_UP, FIRE_FLIPPER_OPEN)
+        yield Trigger(100)
 
         for i in range(3):
 
@@ -576,13 +580,16 @@ class TakeTorch(statemachine.State):
             if flip:
                 # On retourne le feu
                 yield Trigger(ARM_1_FLIP_FIRE, ARM_2_FLIP_FIRE)
+                yield Trigger(100)
                 yield Trigger(PUMP_OFF)
                 yield ArmSpeed(ARM_SPEED_MAX)
                 yield Timer(300)
             else:
                 # Sinon, on le stocke
                 yield Trigger(ARM_1_STORE_FIRE, ARM_2_STORE_FIRE)
+                yield Trigger(100)
                 yield Trigger(elevator_store_levels[self.robot.stored_fires])
+                yield Trigger(100)
                 yield Trigger(PUMP_OFF)
                 yield ArmSpeed(ARM_SPEED_MAX)
                 yield Timer(300)
