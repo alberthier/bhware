@@ -241,7 +241,7 @@ class SpeedControl(statemachine.State):
         if speed is not None:
             self.packet.vmax_limit = speed
         else:
-            self.packet.vmax_limit = 88.0
+            self.packet.vmax_limit = ROBOT_VMAX_LIMIT
 
 
     def on_enter(self):
