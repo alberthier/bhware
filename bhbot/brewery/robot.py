@@ -23,6 +23,7 @@ class Robot(object):
         self.main_opponent_direction = None
         self.secondary_opponent_direction = None
         self.goal_manager = goalmanager.GoalManager(event_loop)
+        self.mammoth_sparrow_loaded = True
 
 
     def is_looking_at(self, pose):
