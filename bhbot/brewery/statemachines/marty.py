@@ -202,7 +202,7 @@ class Main(statemachine.State):
     def on_start(self, packet):
         self.yield_at(90000, EndOfMatch())
         logger.log("Starting ...")
-        yield FirstHurryToTheOtherMammoth()
+        #yield FirstHurryToTheOtherMammoth()
 
         while True :
             yield ExecuteGoals()
@@ -263,6 +263,8 @@ class HuntTheMammoth(statemachine.State):
     def on_enter(self):
         if self.robot.team == TEAM_YELLOW:
             yield RotateTo(-math.pi / 2.0)
+        else:
+            yield RotateTo(math.pi / 2.0)
         yield Timer(300)
         yield Trigger(GUN_FIRE)
         self.exit_reason = GOAL_DONE
