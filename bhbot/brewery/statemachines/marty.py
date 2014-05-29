@@ -21,7 +21,7 @@ import statemachines.testsmarty as testsmarty
 BORDER_FIRE_DIST = 0.15
 FIELD_FIRE_DIST  = 0.15
 MAMMOTH_HUNT_Y   = 1.71
-MAMMOTH_HUNT_X   = 0.3 + ROBOT_GYRATION_RADIUS + 0.02
+MAMMOTH_HUNT_X   = 0.3 + ROBOT_GYRATION_RADIUS + 0.05
 
 
 
@@ -100,45 +100,61 @@ class CalibrateAxis(statemachine.State):
         delta_pos = 0.2
         margin_pos = 0.05
         margin_angle = math.pi / 6
+        defined_position = 0.0
+        robot_delta = ROBOT_X_SIZE - ROBOT_CENTER_X
 
         if self.axis == "x":
 
             if self.robot.pose.virt.angle > math.pi/2 or self.robot.pose.virt.angle < -math.pi/2 :
                 target_x = self.position + delta_pos
+                defined_position = self.position - robot_delta
             else :
                 target_x = self.position - delta_pos
+                defined_position = self.position + robot_delta
 
             yield SpeedControl(0.2)
 
-            move = yield MoveLineTo(target_x, self.robot.pose.virt.y, direction=DIRECTION_BACKWARDS)
+            x = target_x
+            y = self.robot.pose.y
+
+            yield LookAt(x, y)
+
+            move = yield MoveLineTo(x, y, direction=DIRECTION_FORWARD)
 
             yield SpeedControl()
 
-            if tools.compare_angles(self.robot.pose.virt.angle, self.angle, margin_angle) :
-                yield DefinePosition(self.position, None, angle=self.angle)
+            if True :#tools.compare_angles(self.robot.pose.virt.angle, self.angle, margin_angle) :
+                yield DefinePosition(defined_position, None, angle=self.angle)
             else :
                 logger.log("No resettle because angle seems to be wrong (expected: {}, got: {}".format(self.robot.pose.virt.angle, self.angle))
 
-            yield MoveLineRelative(delta_pos, direction = DIRECTION_FORWARD)
+            yield MoveLineRelative(delta_pos, direction = DIRECTION_BACKWARDS)
 
         if self.axis == "y":
             if self.robot.pose.virt.angle > 0.0 :
                 target_y = self.position - delta_pos
+                defined_position = self.position + robot_delta
             else :
                 target_y = self.position + delta_pos
+                defined_position = self.position - robot_delta
 
             yield SpeedControl(0.2)
 
-            move = yield MoveLineTo(self.robot.pose.virt.x, target_y, direction=DIRECTION_BACKWARDS)
+            x = self.robot.pose.x
+            y = target_y
+
+            yield LookAt(x, y)
+
+            move = yield MoveLineTo(x, y, direction=DIRECTION_FORWARD)
 
             yield SpeedControl()
 
-            if tools.compare_angles(self.robot.pose.virt.angle, self.angle, margin_angle) :
-                yield DefinePosition(None, self.position, angle=self.angle)
+            if True: #tools.compare_angles(self.robot.pose.virt.angle, self.angle, margin_angle) :
+                yield DefinePosition(None, defined_position, angle=self.angle)
             else:
                 logger.log("No resettle because angle seems to be wrong (expected: {}, got: {}".format(self.robot.pose.virt.angle, self.angle))
 
-            yield MoveLineRelative(delta_pos, direction = DIRECTION_FORWARD)
+            yield MoveLineRelative(delta_pos, direction = DIRECTION_BACKWARDS)
 
         self.exit_reason = GOAL_DONE
         yield None
@@ -177,7 +193,7 @@ class Main(statemachine.State):
 
         #                      |       ID       |Weight|                            X                    |                           Y                     |     Direction    |     State     | Ctor parameters  |Shared|Navigate|
         # gm.add(goalmanager.Goal("BorderFireW"   ,     2,                                              0.8,               ROBOT_CENTER_X + BORDER_FIRE_DIST , DIRECTION_FORWARD, PullBorderFire, (-math.pi / 2.0,), False,    True))
-        gm.add(goalmanager.Goal("BorderFireSW"  ,    10, FIELD_X_SIZE - ROBOT_CENTER_X - BORDER_FIRE_DIST,                                             1.3 , DIRECTION_FORWARD, PushBorderFire,            (0.0,), False,    True))
+        # gm.add(goalmanager.Goal("BorderFireSW"  ,    10, FIELD_X_SIZE - ROBOT_CENTER_X - BORDER_FIRE_DIST,                                             1.3 , DIRECTION_FORWARD, PushBorderFire,            (0.0,), False,    True))
         gm.add(goalmanager.Goal("BorderFireSE"  ,    10, FIELD_X_SIZE - ROBOT_CENTER_X - BORDER_FIRE_DIST,                                       sym_y(1.3), DIRECTION_FORWARD, PullBorderFire,            (0.0,), False,    True))
         gm.add(goalmanager.Goal("BorderFireE"   ,    10,                                              0.8,         sym_y(ROBOT_CENTER_X + BORDER_FIRE_DIST), DIRECTION_FORWARD, PushBorderFire,  (math.pi / 2.0,), False,    True))
         # gm.add(goalmanager.Goal("FieldFireW"    ,     7,           1.1 - ROBOT_CENTER_X - FIELD_FIRE_DIST,                                             0.4 , DIRECTION_FORWARD, PushFieldFire ,            (0.0,), False,    True))
@@ -206,6 +222,8 @@ class Main(statemachine.State):
         self.yield_at(90000, EndOfMatch())
         logger.log("Starting ...")
         #yield FirstHurryToTheOtherMammoth()
+
+        yield Trigger(ARM_OPEN)
 
         while True :
             yield ExecuteGoals()
@@ -272,19 +290,27 @@ class HuntTheMammoth(statemachine.State):
             angle = math.pi / 2.0
 
         x = self.robot.pose.x
-        y = 2.15
+        y = 2.24
 
         if self.robot.team == TEAM_RED:
             yield LookAt(x, y, direction = direction)
         else :
             yield LookAtOpposite(x, y, direction = direction)
         yield MoveLineTo(x, y, direction = direction)
+
+        # yield CalibrateAxis("y", 0.3, math.pi/2)
+
         yield RotateTo(angle)
 
 
         yield Timer(300)
         yield Trigger(GUN_FIRE)
         yield Timer(300)
+
+        yield RotateTo(0.0)
+
+        yield MoveLineRelative(0.1)
+
         self.exit_reason = GOAL_DONE
         yield None
 
@@ -295,17 +321,29 @@ class PaintFresco(statemachine.State):
 
     def on_enter(self):
         goal = self.robot.goal_manager.get_current_goal()
+
+        yield Trigger(ARM_CLOSE)
+
         yield RotateTo(0.0)
         yield SpeedControl(0.3)
         yield MoveLineTo(ROBOT_CENTER_X - 0.02, goal.y, DIRECTION_BACKWARDS)
         #yield DefinePosition(ROBOT_CENTER_X, None, 0.0)
         yield Trigger(PAINT_1_FLIP_FLOP_START, PAINT_2_FLIP_FLOP_START)
+        yield Timer(300)
         yield SpeedControl()
         yield MoveLineTo(0.2, goal.y)
         yield Trigger(PAINT_1_FLIP_FLOP_STOP, PAINT_2_FLIP_FLOP_STOP)
         self.exit_reason = GOAL_DONE
 
-        yield CalibrateAxis("y", 1.10, math.pi/2)
+        # yield CalibrateAxis("y", 1.10, -math.pi/2)
+
+        yield RotateTo(-math.pi/2)
+
+        yield MoveLineTo(self.robot.pose.x, 1.1 )
+
+        yield DefinePosition(None, 1.10 + ROBOT_X_SIZE - ROBOT_CENTER_X, angle = -math.pi/2)
+
+        yield MoveLineRelative(0.2, direction = DIRECTION_BACKWARDS)
 
         yield None
 
@@ -329,6 +367,7 @@ class PushBorderFire(statemachine.State):
         yield Trigger(makeServoMoveCommand(ARM, 40))
         yield MoveLineTo(goal.x, goal.y, DIRECTION_BACKWARDS)
         yield Trigger(ARM_CLOSE)
+        yield MoveLineRelative(0.05, DIRECTION_BACKWARDS)
         self.exit_reason = GOAL_DONE
 
         yield RecalibrateAfterBorderFire(self.goal)
@@ -355,6 +394,7 @@ class PullBorderFire(statemachine.State):
         yield Trigger(makeServoMoveCommand(ARM, 50))
         yield MoveLineTo(goal.x, goal.y, DIRECTION_BACKWARDS)
         yield Trigger(ARM_CLOSE)
+        yield MoveLineRelative(0.05, DIRECTION_BACKWARDS)
         self.exit_reason = GOAL_DONE
 
         yield RecalibrateAfterBorderFire(self.goal)
@@ -370,7 +410,6 @@ class RecalibrateAfterBorderFire(statemachine.State):
     def on_enter(self):
         dx = 0.0
         dy = 0.0
-        angle = math.pi
         calib_pos = None
         calib_axis = None
 
@@ -379,19 +418,21 @@ class RecalibrateAfterBorderFire(statemachine.State):
         if self.parent_goal.identifier == "BorderFireW" or self.parent_goal.identifier == "BorderFireE":
             dx = +delta
 
-        elif self.parent_goal.identifier == "BorderFireSW":
+        if self.parent_goal.identifier == "BorderFireSW":
             dy = -delta
+            angle = 0.0
 
         elif self.parent_goal.identifier == "BorderFireSE":
             dy = delta
+            angle = 0.0
 
         if self.parent_goal.identifier == "BorderFireW":
-            angle = math.pi/2
+            angle = -math.pi/2
             calib_pos = 0
             calib_axis = "y"
 
         if self.parent_goal.identifier == "BorderFireE":
-            angle = -math.pi/2
+            angle = math.pi/2
             calib_pos = FIELD_Y_SIZE
             calib_axis = "y"
 
@@ -402,8 +443,35 @@ class RecalibrateAfterBorderFire(statemachine.State):
 
         yield LookAt(self.parent_goal.x + dx, self.parent_goal.y + dy)
         yield MoveLineTo(self.parent_goal.x + dx, self.parent_goal.y + dy)
+        #
+        # yield CalibrateAxis(calib_axis, calib_pos, angle)
 
-        yield CalibrateAxis(calib_axis, calib_pos, angle)
+        if self.parent_goal.identifier == "BorderFireE":
+            yield RotateTo(math.pi/2)
+
+            yield MoveLineTo(self.robot.pose.x, FIELD_Y_SIZE )
+
+            yield DefinePosition(None, FIELD_Y_SIZE - (ROBOT_X_SIZE - ROBOT_CENTER_X), angle = math.pi/2)
+
+            yield MoveLineRelative(0.2, direction = DIRECTION_BACKWARDS)
+
+        elif self.parent_goal.identifier == "BorderFireW":
+            yield RotateTo(-math.pi/2)
+
+            yield MoveLineTo(self.robot.pose.x, 0.0 )
+
+            yield DefinePosition(None, 0.0 + (ROBOT_X_SIZE - ROBOT_CENTER_X), angle = -math.pi/2)
+
+            yield MoveLineRelative(0.2, direction = DIRECTION_BACKWARDS)
+
+        else :
+            yield RotateTo(0.0)
+
+            yield MoveLineTo(FIELD_X_SIZE, self.robot.pose.virt.y)
+
+            yield DefinePosition(FIELD_X_SIZE - (ROBOT_X_SIZE - ROBOT_CENTER_X), None, angle = 0.0)
+
+            yield MoveLineRelative(0.2, direction = DIRECTION_BACKWARDS)
 
         yield None
 
