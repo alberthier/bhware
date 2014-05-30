@@ -947,9 +947,14 @@ class EmptyFireTank(statemachine.State):
                           [125, 152],
                         ]
         else :
-            positions = [ [160, 152],
-                          [105, 152],
-                        ]
+            if self.robot.team == TEAM_RED :
+                positions = [ [160, 152],
+                              [105, 152],
+                            ]
+            else :
+                positions = [ [140, 152],
+                              [ 95, 152],
+                            ]
 
         for deposit_angles in positions :
             if self.robot.stored_fires > 0 :
