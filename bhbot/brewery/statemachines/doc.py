@@ -229,10 +229,11 @@ class Main(statemachine.State):
             st_weight = 5
 
 
-        if self.robot.team == TEAM_RED:
-            mammoth_capt_y = 0.882
-        else:
-            mammoth_capt_y = 0.707
+        my_mammoth_capt_y = 0.882
+        their_mammoth_capt_y = 2.338
+        if self.robot.team == TEAM_YELLOW:
+            my_mammoth_capt_y = sym_y(my_mammoth_capt_y)
+            their_mammoth_capt_y = sym_y(their_mammoth_capt_y)
 
         ninja_dist = ROBOT_GYRATION_RADIUS + 0.02
         if self.robot.team == TEAM_RED:
@@ -245,8 +246,8 @@ class Main(statemachine.State):
         #                      |        ID           |  Weight  |     X       |          Y         | Direction          |    State      | Ctor parameters|Shared|Navigate|
         gm.add(
             mgm.Goal           ("HuntTheMammoth"     ,        10, self.start_x,                0.75, DIRECTION_FORWARD  , HuntTheMammoth ,              None, False,    True),
-            mgm.Goal("CaptureTheMammoth"  ,        1, 0.3 + 0.242,          mammoth_capt_y, DIRECTION_BACKWARDS  , CaptureTheMammoth ,              None, False,    True),
-            mgm.Goal("CaptureTheMammoth"  ,        1, 0.3 + 0.242,         sym_y(mammoth_capt_y), DIRECTION_BACKWARDS  , CaptureTheMammoth ,              None, False,    True),
+            mgm.Goal("CaptureTheMammoth"  ,        1, 0.3 + 0.242,          my_mammoth_capt_y, DIRECTION_BACKWARDS  , CaptureTheMammoth ,              None, False,    True),
+            mgm.Goal("CaptureTheMammoth"  ,        1, 0.3 + 0.242,       their_mammoth_capt_y, DIRECTION_BACKWARDS  , CaptureTheMammoth ,              None, False,    True),
             mgm.Goal("PullBorderFireW",            4,         0.9,                          0.25, DIRECTION_BACKWARDS, PullBorderFire,                    None, False, True),
             ninja_n,
             ninja_s,
