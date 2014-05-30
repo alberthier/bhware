@@ -46,7 +46,7 @@ class Main(Timer):
 
 
     def on_interbot_position(self, packet):
-        if not self.teammate_collision_detection or not self.event_loop.is_match_started
+        if not self.teammate_collision_detection or not self.event_loop.is_match_started:
             return
 
         d = tools.distance(packet.pose.x, packet.pose.y, self.robot.pose.x, self.robot.pose.y)
