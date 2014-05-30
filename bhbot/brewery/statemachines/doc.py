@@ -247,6 +247,7 @@ class Main(statemachine.State):
             mgm.Goal           ("HuntTheMammoth"     ,        10, self.start_x,                0.75, DIRECTION_FORWARD  , HuntTheMammoth ,              None, False,    True),
             mgm.Goal("CaptureTheMammoth"  ,        1, 0.3 + 0.242,          mammoth_capt_y, DIRECTION_BACKWARDS  , CaptureTheMammoth ,              None, False,    True),
             mgm.Goal("CaptureTheMammoth"  ,        1, 0.3 + 0.242,         sym_y(mammoth_capt_y), DIRECTION_BACKWARDS  , CaptureTheMammoth ,              None, False,    True),
+            mgm.Goal("PullBorderFireW",            4,         0.9,                          0.25, DIRECTION_BACKWARDS, PullBorderFire,                    None, False, True),
             ninja_n,
             ninja_s,
 
@@ -1021,6 +1022,20 @@ class NinjaaaaaaaaYellowS(statemachine.State):
         yield Trigger(TORCH_GUIDE_OPEN)
         yield Timer(500) # STUPIDTIMER
         yield Trigger(TORCH_GUIDE_HIDE)
+        self.exit_reason = GOAL_DONE
+        yield None
+
+
+
+
+class PullBorderFire(statemachine.State):
+
+    def on_enter(self):
+        yield Trigger(ELEVATOR_UP, ARM_1_MIDDLE, ARM_2_MIDDLE)
+        yield RotateTo(-math.pi / 2.0)
+        yield Trigger(makeServoMoveCommand(ELEVATOR, 100))
+        yield MoveLineRelative(0.3, DIRECTION_BACKWARDS)
+        yield ArmIdle()
         self.exit_reason = GOAL_DONE
         yield None
 
