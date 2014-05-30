@@ -952,7 +952,7 @@ class EmptyFireTank(statemachine.State):
                               [105, 152],
                             ]
             else :
-                positions = [ [150, 152],
+                positions = [ [140, 152],
                               [ 95, 152],
                             ]
 
