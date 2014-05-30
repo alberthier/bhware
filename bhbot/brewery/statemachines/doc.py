@@ -255,6 +255,13 @@ class Main(statemachine.State):
             ninja_n = mgm.Goal("NinjaaaaaaaaYellowN", 4, 1.45, sym_y(2.57), DIRECTION_FORWARD, NinjaaaaaaaaYellowN, None, False, True)
             ninja_s = mgm.Goal("NinjaaaaaaaaYellowS", 4, 1.63, sym_y(2.60), DIRECTION_FORWARD, NinjaaaaaaaaYellowS, None, False, True)
 
+        if self.robot.team == TEAM_RED:
+            my_south_tree = FruitHarvestingGoal("FruitTreeSW"        ,         7,    TREE_SW_X,           tree_sw_y, DIRECTION_FORWARD  , TakeFruits     ,          (-math.pi / 2.0,), False,    True),
+            my_side_tree = FruitHarvestingGoal("FruitTreeW"         ,         7,     TREE_W_X,            tree_w_y, DIRECTION_FORWARD  , TakeFruits     ,                 (math.pi,), False,    True),
+        else:
+            my_south_tree = FruitHarvestingGoal("FruitTreeE"         ,         7,     TREE_E_X,            tree_e_y, DIRECTION_FORWARD  , TakeFruits     ,                     (0.0,), False,    True),
+            my_side_tree = FruitHarvestingGoal("FruitTreeSE"        ,         7,    TREE_SE_X,           tree_se_y, DIRECTION_FORWARD  , TakeFruits     ,          (-math.pi / 2.0,), False,    True),
+
         #                      |        ID           |  Weight  |     X       |          Y         | Direction          |    State      | Ctor parameters|Shared|Navigate|
         gm.add(
             mgm.Goal           ("HuntTheMammoth"     ,        10, self.start_x,                0.75, DIRECTION_FORWARD  , HuntTheMammoth ,              None, False,    True),
@@ -266,10 +273,8 @@ class Main(statemachine.State):
             ninja_s,
 
             # FireHarvestingGoal ("TakeTorch_Theirs"   ,         1,          1.1,   sym_y(MY_TORCH_Y), DIRECTION_FORWARD  , TakeTorch      ,                   (False,), False,    True),
-            # FruitHarvestingGoal("FruitTreeE"         ,         7,     TREE_E_X,            tree_e_y, DIRECTION_FORWARD  , TakeFruits     ,                     (0.0,), False,    True),
-            # FruitHarvestingGoal("FruitTreeSE"        ,         7,    TREE_SE_X,           tree_se_y, DIRECTION_FORWARD  , TakeFruits     ,          (-math.pi / 2.0,), False,    True),
-            # FruitHarvestingGoal("FruitTreeSW"        ,         7,    TREE_SW_X,           tree_sw_y, DIRECTION_FORWARD  , TakeFruits     ,          (-math.pi / 2.0,), False,    True),
-            # FruitHarvestingGoal("FruitTreeW"         ,         7,     TREE_W_X,            tree_w_y, DIRECTION_FORWARD  , TakeFruits     ,                 (math.pi,), False,    True),
+#            my_south_tree,
+#            my_side_tree,
 
             FireDepositGoal    ("DepositFires_Mine"  ,        15,      MY_FD_X,             MY_FD_Y, DIRECTION_FORWARD  , EmptyFireTank  ,             (MY_FD_ANGLE,), True,    True),
             FireDepositGoal    ("DepositFires_Center",         8,  CENT_FD_X_1,         CENT_FD_Y_1, DIRECTION_FORWARD  , EmptyFireTank  ,         (CENT_FD_ANGLE_1,), False,    True),
@@ -829,7 +834,9 @@ class TakeFruits(statemachine.State):
         yield Trigger(FRUITMOTH_HATCH_OPEN)
         # Sortir le développeur et le doigt
         yield Trigger(FRUITMOTH_ARM_OPEN)
-        yield Trigger(FRUITMOTH_FINGER_OPEN)
+
+        #yield Trigger(FRUITMOTH_FINGER_OPEN) # for 4 fingers
+        yield Trigger(FRUITMOTH_FINGER_RETRACT) # for 2 fruits
 
         self.retract_finger = True
         x = self.goal.x
@@ -861,11 +868,12 @@ class TakeFruits(statemachine.State):
 
 
     def on_waypoint_reached(self, packet):
-        if self.retract_finger:
-            self.retract_finger = False
-            self.send_packet(packets.ServoControl(*FRUITMOTH_FINGER_RETRACT))
-        else:
-            self.send_packet(packets.ServoControl(*FRUITMOTH_FINGER_OPEN))
+        pass
+#        if self.retract_finger:
+#            self.retract_finger = False
+#            self.send_packet(packets.ServoControl(*FRUITMOTH_FINGER_RETRACT))
+#        else:
+#            self.send_packet(packets.ServoControl(*FRUITMOTH_FINGER_OPEN))
 
 
 
