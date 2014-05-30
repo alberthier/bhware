@@ -234,11 +234,21 @@ class Main(statemachine.State):
         else:
             mammoth_capt_y = 0.707
 
+        ninja_dist = ROBOT_GYRATION_RADIUS + 0.02
+        if self.robot.team == TEAM_RED:
+            ninja_n = mgm.Goal("NinjaaaaaaaaRedN", 4, 1.45, 0.33, DIRECTION_FORWARD, NinjaaaaaaaaRedN, None, False, True)
+            ninja_s = mgm.Goal("NinjaaaaaaaaRedS", 4, 1.51, 0.65, DIRECTION_FORWARD, NinjaaaaaaaaRedS, None, False, True)
+        else:
+            ninja_n = mgm.Goal("NinjaaaaaaaaYellowN", 4, 1.45, sym_y(2.52), DIRECTION_FORWARD, NinjaaaaaaaaYellowN, None, False, True)
+            ninja_s = mgm.Goal("NinjaaaaaaaaYellowS", 4, 1.7, sym_y(2.50), DIRECTION_FORWARD, NinjaaaaaaaaYellowS, None, False, True)
+
         #                      |        ID           |  Weight  |     X       |          Y         | Direction          |    State      | Ctor parameters|Shared|Navigate|
         gm.add(
             mgm.Goal           ("HuntTheMammoth"     ,        10, self.start_x,                0.75, DIRECTION_FORWARD  , HuntTheMammoth ,              None, False,    True),
             mgm.Goal("CaptureTheMammoth"  ,        1, 0.3 + 0.242,          mammoth_capt_y, DIRECTION_BACKWARDS  , CaptureTheMammoth ,              None, False,    True),
             mgm.Goal("CaptureTheMammoth"  ,        1, 0.3 + 0.242,         sym_y(mammoth_capt_y), DIRECTION_BACKWARDS  , CaptureTheMammoth ,              None, False,    True),
+            ninja_n,
+            ninja_s,
 
             # FireHarvestingGoal ("TakeTorch_Theirs"   ,         1,          1.1,   sym_y(MY_TORCH_Y), DIRECTION_FORWARD  , TakeTorch      ,                   (False,), False,    True),
             # FruitHarvestingGoal("FruitTreeE"         ,         7,     TREE_E_X,            tree_e_y, DIRECTION_FORWARD  , TakeFruits     ,                     (0.0,), False,    True),
@@ -246,18 +256,18 @@ class Main(statemachine.State):
             # FruitHarvestingGoal("FruitTreeSW"        ,         7,    TREE_SW_X,           tree_sw_y, DIRECTION_FORWARD  , TakeFruits     ,          (-math.pi / 2.0,), False,    True),
             # FruitHarvestingGoal("FruitTreeW"         ,         7,     TREE_W_X,            tree_w_y, DIRECTION_FORWARD  , TakeFruits     ,                 (math.pi,), False,    True),
 
-            FireDepositGoal    ("DepositFires_Mine"  ,        10,      MY_FD_X,             MY_FD_Y, DIRECTION_FORWARD  , EmptyFireTank  ,             (MY_FD_ANGLE,), True,    True),
-            FireDepositGoal    ("DepositFires_Center",         5,  CENT_FD_X_1,         CENT_FD_Y_1, DIRECTION_FORWARD  , EmptyFireTank  ,         (CENT_FD_ANGLE_1,), False,    True),
-            FireDepositGoal    ("DepositFires_Center",         5,  CENT_FD_X_2,         CENT_FD_Y_2, DIRECTION_FORWARD  , EmptyFireTank  ,         (CENT_FD_ANGLE_2,), False,    True),
-            FireDepositGoal    ("DepositFires_Center",         5,  CENT_FD_X_3,         CENT_FD_Y_3, DIRECTION_FORWARD  , EmptyFireTank  ,         (CENT_FD_ANGLE_3,), False,    True),
+            FireDepositGoal    ("DepositFires_Mine"  ,        15,      MY_FD_X,             MY_FD_Y, DIRECTION_FORWARD  , EmptyFireTank  ,             (MY_FD_ANGLE,), True,    True),
+            FireDepositGoal    ("DepositFires_Center",         8,  CENT_FD_X_1,         CENT_FD_Y_1, DIRECTION_FORWARD  , EmptyFireTank  ,         (CENT_FD_ANGLE_1,), False,    True),
+            FireDepositGoal    ("DepositFires_Center",         8,  CENT_FD_X_2,         CENT_FD_Y_2, DIRECTION_FORWARD  , EmptyFireTank  ,         (CENT_FD_ANGLE_2,), False,    True),
+            FireDepositGoal    ("DepositFires_Center",         8,  CENT_FD_X_3,         CENT_FD_Y_3, DIRECTION_FORWARD  , EmptyFireTank  ,         (CENT_FD_ANGLE_3,), False,    True),
             # FireDepositGoal    ("DepositFires_Theirs",         3,         1.65,                2.65, DIRECTION_FORWARD  , EmptyFireTank  ,                       None, False,    True),
 #            FruitHarvestingGoal("FruitTreeE"         ,         3,     TREE_E_X,            tree_e_y, DIRECTION_FORWARD  , SuperTakeFruits,                       None, False,    True),
 #            FruitHarvestingGoal("FruitTreeSE"        , st_weight,    TREE_SE_X,           tree_se_y, DIRECTION_FORWARD  , SuperTakeFruits,                       None, False,    True),
 #            FruitHarvestingGoal("FruitTreeSW"        , st_weight,    TREE_SW_X,           tree_sw_y, DIRECTION_FORWARD  , SuperTakeFruits,                       None, False,    True),
 #            FruitHarvestingGoal("FruitTreeW"         ,         3,     TREE_W_X,            tree_w_y, DIRECTION_FORWARD  , SuperTakeFruits,                       None, False,    True),
 
-            FruitDepositGoal   ("DepFruits_Inner"    ,         3,         0.55,                2.10, DIRECTION_BACKWARDS, DumpFruits     ,                       None, False,    True),
-            FruitDepositGoal   ("DepFruits_Outer"    ,         3,         0.55,                2.37, DIRECTION_BACKWARDS, DumpFruits     ,                       None, False,    True),
+#            FruitDepositGoal   ("DepFruits_Inner"    ,         3,         0.55,                2.10, DIRECTION_BACKWARDS, DumpFruits     ,                       None, False,    True),
+#            FruitDepositGoal   ("DepFruits_Outer"    ,         3,         0.55,                2.37, DIRECTION_BACKWARDS, DumpFruits     ,                       None, False,    True),
         )
 
 
@@ -300,6 +310,7 @@ class Main(statemachine.State):
         logger.log("Starting ...")
 
         self.fsm.interbot_fsm.current_state.set_teammate_collision_detection(False)
+        self.event_loop.map.use_interbot_position = False
 
         yield Trigger(TORCH_GUIDE_CLOSE)
 
@@ -379,6 +390,7 @@ class HuntTheMammoth(statemachine.State):
 
 
         self.fsm.interbot_fsm.current_state.set_teammate_collision_detection(True)
+        self.event_loop.map.use_interbot_position = TEAMMATE_POSITION_IN_MAP
 
 
         self.exit_reason = GOAL_DONE
@@ -393,9 +405,6 @@ class CaptureTheMammoth(statemachine.State):
         yield RotateTo(0.0)
         yield Trigger(ARM_1_TAKE_TORCH_FIRE, ARM_2_TAKE_TORCH_FIRE)
         yield Trigger(ELEVATOR_TAKE_LEVEL_2) # This is absolutely required to avoid elevator damages
-
-        yield Timer(500) # STUPIDTIMER
-
         # we don't exit and just wait for EndOfMatch
 
 
@@ -471,7 +480,6 @@ class FireStealer(statemachine.State):
         yield ArmSpeed(ARM_SPEED_MAX)
         yield Trigger(PUMP_OFF)
         yield Trigger(ARM_1_TAKE_TORCH_FIRE, ARM_2_TAKE_TORCH_FIRE, ELEVATOR_UP)
-        yield Timer(500) # STUPIDTIMER
         self.detection_enabled=True
         self.send_packet(packets.ColorDetectorPacket("EnableScan"))
         # yield Timer(2000)
@@ -547,11 +555,10 @@ class TakeFire(statemachine.State):
 
     def on_enter(self):
         yield Trigger(ARM_1_TAKE_TORCH_FIRE, ARM_2_TAKE_TORCH_FIRE)
-        yield Timer(500) # STUPIDTIMER
         yield Trigger(PUMP_ON)
         yield Timer(100)
         yield Trigger(self.take_level)
-        yield Timer(500) # STUPIDTIMER
+        yield Timer(400)
         yield Trigger(ELEVATOR_UP)
         yield None
 
@@ -574,7 +581,6 @@ class TakeTorch(statemachine.State):
         yield MoveLineRelative(0.05)
 
         yield Trigger(ELEVATOR_UP, FIRE_FLIPPER_OPEN)
-        yield Timer(600) # STUPIDTIMER
 
         for i in range(3):
 
@@ -583,27 +589,22 @@ class TakeTorch(statemachine.State):
             if flip:
                 # On retourne le feu
                 yield Trigger(ARM_1_FLIP_FIRE, ARM_2_FLIP_FIRE)
-                yield Timer(400) # STUPIDTIMER
                 yield Trigger(PUMP_OFF)
                 yield ArmSpeed(ARM_SPEED_MAX)
                 yield Timer(300)
             else:
                 # Sinon, on le stocke
                 yield Trigger(ARM_1_STORE_FIRE, ARM_2_STORE_FIRE)
-                yield Timer(400) # STUPIDTIMER
                 yield Trigger(elevator_store_levels[self.robot.stored_fires])
-                yield Timer(400) # STUPIDTIMER
                 yield Trigger(PUMP_OFF)
-                yield Timer(400) # STUPIDTIMER
                 yield ArmSpeed(ARM_SPEED_MAX)
                 yield Timer(300)
                 yield Trigger(ELEVATOR_UP)
-                yield Timer(400) # STUPIDTIMER
                 self.robot.stored_fires += 1
             flip = not flip
 
         yield Trigger(TORCH_GUIDE_OPEN)
-        yield Timer(700) # STUPIDTIMER
+        yield Timer(500) # STUPIDTIMER
 
         yield ArmIdle()
 
@@ -659,7 +660,6 @@ class DepositFire(statemachine.State):
         yield ArmSpeed(ARM_SPEED_MAX)
         yield Trigger(ELEVATOR_UP)
         yield Trigger(ARM_1_STORE_FIRE, ARM_2_STORE_FIRE)
-        yield Timer(500) # STUPIDTIMER
         logger.log("Deposit of fire {} stored at level {} angles : {} {}".format(
             self.robot.stored_fires,
             elevator_store_levels[self.robot.stored_fires - 1],
@@ -667,26 +667,21 @@ class DepositFire(statemachine.State):
             self.arm2_angle,
         ))
         yield Trigger(PUMP_ON, elevator_store_levels[self.robot.stored_fires - 1])
-        yield Timer(500) # STUPIDTIMER
         yield Timer(300)
         yield ArmSpeed(ARM_SPEED_WITH_FIRE)
         yield Trigger(ELEVATOR_UP)
         yield Trigger(makeServoMoveCommand(ARM_1, self.arm1_angle,),
                       makeServoMoveCommand(ARM_2, self.arm2_angle))
-        yield Timer(500) # STUPIDTIMER
 
         yield Trigger(self.deposit_level)
-        yield Timer(500) # STUPIDTIMER
 
         if not self.pump_state :
             yield Trigger(PUMP_OFF)
             yield Timer(300)
-            yield Timer(800) # STUPIDTIMER_PUMP a voir avec Pite avant d'enlever
             yield Trigger(ELEVATOR_UP)
 
         self.robot.stored_fires-=1
         yield ArmSpeed(ARM_SPEED_MAX)
-        yield Timer(500) # STUPIDTIMER
 
         # TODO : Put arm in safe position
 
@@ -897,9 +892,7 @@ class ArmIdle(statemachine.State):
     def on_enter(self):
         yield ArmSpeed(ARM_SPEED_MAX)
         yield Trigger(ELEVATOR_UP)
-        yield Timer(400) # STUPIDTIMER
         yield Trigger(PUMP_OFF, ARM_1_SECURE, ARM_2_SECURE, TORCH_GUIDE_HIDE, FIRE_FLIPPER_CLOSE)
-        yield Timer(600) # STUPIDTIMER
         yield None
 
 
@@ -921,6 +914,7 @@ class EmptyFireTank(statemachine.State):
             yield MoveLineRelative(0.02, direction=DIRECTION_BACKWARDS)
 
             torch_guide_mvt = yield Trigger(TORCH_GUIDE_OPEN)
+            yield Timer(500) # STUPIDTIMER
             if torch_guide_mvt.exit_reason == SERVO_STATUS_TIMED_OUT:
                 yield Trigger(TORCH_GUIDE_HIDE)
                 yield None
@@ -960,7 +954,6 @@ class EmptyFireTank(statemachine.State):
             yield DepositFire(*[122, 152], pump_state=True, level=ELEVATOR_DEPOSIT_FIRE)
             yield Trigger(PUMP_OFF)
             yield Timer(300)
-            yield Timer(800) # STUPIDTIMER_PUMP a voir avec Pite avant d'enlever
             yield Trigger(ELEVATOR_UP)
 
         yield MoveLineRelative(0.15, direction=DIRECTION_BACKWARDS)
@@ -969,6 +962,66 @@ class EmptyFireTank(statemachine.State):
 
         self.exit_reason = GOAL_DONE
         self.robot.stored_fires = 0
+        yield None
+
+
+
+
+class NinjaaaaaaaaRedN(statemachine.State):
+
+    def on_enter(self):
+        yield RotateTo(math.pi)
+        yield MoveLineTo(1.1 + ROBOT_CENTER_X + 0.02, self.goal.y)
+        yield Trigger(TORCH_GUIDE_HIDE)
+        yield Trigger(TORCH_GUIDE_OPEN)
+        yield Timer(500) # STUPIDTIMER
+        yield Trigger(TORCH_GUIDE_HIDE)
+        self.exit_reason = GOAL_DONE
+        yield None
+
+
+
+
+class NinjaaaaaaaaRedS(statemachine.State):
+
+    def on_enter(self):
+        yield RotateTo(math.pi / 2.0)
+        yield MoveLineTo(self.goal.x, 0.9 - ROBOT_CENTER_X - 0.02)
+        yield Trigger(TORCH_GUIDE_HIDE)
+        yield Trigger(TORCH_GUIDE_OPEN)
+        yield Timer(500) # STUPIDTIMER
+        yield Trigger(TORCH_GUIDE_HIDE)
+        self.exit_reason = GOAL_DONE
+        yield None
+
+
+
+
+class NinjaaaaaaaaYellowN(statemachine.State):
+
+    def on_enter(self):
+        yield RotateTo(math.pi)
+        yield MoveLineTo(1.1 + ROBOT_CENTER_X + 0.02, self.goal.y)
+        yield Trigger(TORCH_GUIDE_HIDE)
+        yield Trigger(TORCH_GUIDE_OPEN)
+        yield Timer(500) # STUPIDTIMER
+        yield Trigger(TORCH_GUIDE_HIDE)
+        self.exit_reason = GOAL_DONE
+        yield None
+
+
+
+
+class NinjaaaaaaaaYellowS(statemachine.State):
+
+    def on_enter(self):
+        yield RotateTo(math.pi / 2.0)
+        yield MoveLineTo(self.goal.x, 0.9 - ROBOT_CENTER_X - 0.02)
+        yield Trigger(TORCH_GUIDE_HIDE)
+        yield Trigger(TORCH_GUIDE_OPEN)
+        yield Timer(500) # STUPIDTIMER
+        yield Trigger(TORCH_GUIDE_HIDE)
+        self.exit_reason = GOAL_DONE
         yield None
 
 
