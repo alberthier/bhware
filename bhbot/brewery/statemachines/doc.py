@@ -241,8 +241,8 @@ class Main(statemachine.State):
             ninja_n = mgm.Goal("NinjaaaaaaaaRedN", 4, 1.45, 0.38, DIRECTION_FORWARD, NinjaaaaaaaaRedN, None, False, True)
             ninja_s = mgm.Goal("NinjaaaaaaaaRedS", 4, 1.56, 0.65, DIRECTION_FORWARD, NinjaaaaaaaaRedS, None, False, True)
         else:
-            ninja_n = mgm.Goal("NinjaaaaaaaaYellowN", 4, 1.45, sym_y(2.52), DIRECTION_FORWARD, NinjaaaaaaaaYellowN, None, False, True)
-            ninja_s = mgm.Goal("NinjaaaaaaaaYellowS", 4, 1.7, sym_y(2.60), DIRECTION_FORWARD, NinjaaaaaaaaYellowS, None, False, True)
+            ninja_n = mgm.Goal("NinjaaaaaaaaYellowN", 4, 1.45, sym_y(2.57), DIRECTION_FORWARD, NinjaaaaaaaaYellowN, None, False, True)
+            ninja_s = mgm.Goal("NinjaaaaaaaaYellowS", 4, 1.63, sym_y(2.60), DIRECTION_FORWARD, NinjaaaaaaaaYellowS, None, False, True)
 
         #                      |        ID           |  Weight  |     X       |          Y         | Direction          |    State      | Ctor parameters|Shared|Navigate|
         gm.add(
