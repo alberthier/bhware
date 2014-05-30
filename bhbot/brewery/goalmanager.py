@@ -37,6 +37,7 @@ class Goal:
         self.goal_manager = None
         self.is_current = False
         self.is_blacklisted = False
+        self.uid = self.identifier
 
 
     def increment_trials(self):
@@ -97,12 +98,23 @@ class GoalManager:
         self.event_loop = event_loop
         self.goals = []
         self.last_goal = None
+        self.goal_ids = set()
 
 
     def add(self, *args):
         for goal in args :
             goal.goal_manager = self
-            self.goals.append(goal)
+            added = False
+            add_int = 1
+            while not added :
+                add_int+=1
+                if goal.uid in self.goal_ids :
+                    goal.uid = "{}_{}".format(goal.identifier,add_int)
+                else :
+                    self.goals.append(goal)
+                    self.goal_ids.add(goal.uid)
+                    added = True
+
 
 
     def has_available_goal(self, identifier):
@@ -130,7 +142,7 @@ class GoalManager:
 
         for goal in candidates:
             pose = position.Pose(goal.x, goal.y, virtual = True)
-            logger.log("Evaluate goal {}".format(goal.identifier))
+            logger.log("Evaluate goal {}".format(goal.uid))
             if GOAL_EVALUATION_USES_PATHFINDING:
                 goal.navigation_cost = self.event_loop.map.evaluate(self.event_loop.robot.pose, pose)
             else:

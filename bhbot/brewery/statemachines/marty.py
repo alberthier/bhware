@@ -86,6 +86,17 @@ class CalibrationGoal(goalmanager.Goal):
 
 
 
+
+class MammothHuntGoal(goalmanager.Goal):
+
+    def is_available(self):
+        robot = self.goal_manager.event_loop.robot
+        return robot.mammoth_sparrow_loaded
+
+
+
+
+
 class CalibrateAxis(statemachine.State):
 
     def __init__(self, axis : str, position : float, angle : float):
@@ -172,6 +183,7 @@ class Main(statemachine.State):
         statemachine.StateMachine(self.event_loop, "opponentdetector", opponent_type = OPPONENT_ROBOT_MAIN)
         statemachine.StateMachine(self.event_loop, "opponentdetector", opponent_type = OPPONENT_ROBOT_SECONDARY)
         statemachine.StateMachine(self.event_loop, "relaytoggler")
+        self.robot.mammoth_sparrow_loaded = True
 
 
     def on_device_ready(self, packet):
@@ -204,7 +216,8 @@ class Main(statemachine.State):
         gm.add(goalmanager.Goal("FieldFireSE"   ,    10,                                              1.6,    sym_y(0.9 - ROBOT_CENTER_X - FIELD_FIRE_DIST), DIRECTION_FORWARD, PushFieldFire , (-math.pi / 2.0,), False,    True))
         gm.add(goalmanager.Goal("FieldFireE"    ,    10,           1.1 - ROBOT_CENTER_X - FIELD_FIRE_DIST,                                       sym_y(0.4), DIRECTION_FORWARD, PullFieldFire ,            (0.0,), False,    True))
         gm.add(goalmanager.Goal("FieldFireE"    ,    10,           1.1 + ROBOT_CENTER_X + FIELD_FIRE_DIST,                                       sym_y(0.4), DIRECTION_FORWARD, PushFieldFire ,        (math.pi,), False,    True))
-        gm.add(goalmanager.Goal("HuntTheMammoth",    19,                                   MAMMOTH_HUNT_X,                                  MAMMOTH_HUNT_Y , mammoth_direction, HuntTheMammoth,              None, False,    True))
+        gm.add(MammothHuntGoal("HuntTheMammoth",    19,                                   MAMMOTH_HUNT_X,                                  MAMMOTH_HUNT_Y , mammoth_direction, HuntTheMammoth,              None, False,    True))
+        gm.add(MammothHuntGoal("HuntTheMammoth",    19,                                            0.476,                                            2.33 ,  DIRECTION_FORWARD, HuntTheMammoth2,              None, False,    True))
         gm.add(goalmanager.Goal("PaintFresco"   ,    20,                                      RED_START_X,                                            1.30 , DIRECTION_FORWARD, PaintFresco   ,              None, False,    True))
         # gm.add(NoBotherGoal("DontBotherDoc" ,     1,                                      0.52,                                     0.13 , DIRECTION_FORWARD, DontBotherDoc ,              None, False,    True))
         # gm.add(ProtectionGoal("ProtectOurFires",   99,                                             1.67,                                            0.32 , DIRECTION_FORWARD, ProtectOurFires ,              None, False,  True))
@@ -293,19 +306,22 @@ class HuntTheMammoth(statemachine.State):
         y = 2.24
 
         if self.robot.team == TEAM_RED:
-            yield LookAt(x, y, direction = direction)
+            move = yield LookAt(x, y, direction = direction)
         else :
-            yield LookAtOpposite(x, y, direction = direction)
-        yield MoveLineTo(x, y, direction = direction)
+            move = yield LookAtOpposite(x, y, direction = direction)
+        move = yield MoveLineTo(x, y, direction = direction, chained = move)
 
         # yield CalibrateAxis("y", 0.3, math.pi/2)
 
-        yield RotateTo(angle)
+        move = yield RotateTo(angle, chained = move)
+
+        if move.exit_reason != TRAJECTORY_DESTINATION_REACHED :
+            logger.log("We missed the mammoth, leave")
+            yield None
 
 
-        yield Timer(300)
-        yield Trigger(GUN_FIRE)
-        yield Timer(300)
+        yield KillMammoth()
+
 
         yield RotateTo(0.0)
 
@@ -314,6 +330,44 @@ class HuntTheMammoth(statemachine.State):
         self.exit_reason = GOAL_DONE
         yield None
 
+
+
+class HuntTheMammoth2(statemachine.State):
+
+    def on_enter(self):
+
+        if self.robot.team == TEAM_YELLOW:
+            angle = -math.pi / 2.0
+        else:
+            angle = math.pi / 2.0
+
+        move = yield RotateTo(angle)
+
+        if move.exit_reason != TRAJECTORY_DESTINATION_REACHED :
+            logger.log("We missed the mammoth, leave")
+            yield None
+
+
+        yield KillMammoth()
+
+
+        self.exit_reason = GOAL_DONE
+        yield None
+
+
+
+
+class KillMammoth(statemachine.State):
+
+    def on_enter(self):
+
+        yield Timer(300)
+        yield Trigger(GUN_FIRE)
+        yield Timer(300)
+
+        self.robot.mammoth_sparrow_loaded = False
+
+        yield None
 
 
 
