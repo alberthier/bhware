@@ -1034,8 +1034,9 @@ class NinjaaaaaaaaYellowS(statemachine.State):
 class PullBorderFire(statemachine.State):
 
     def on_enter(self):
-        yield Trigger(ELEVATOR_UP, ARM_1_MIDDLE, ARM_2_MIDDLE)
+        yield Trigger(ELEVATOR_UP)
         yield RotateTo(-math.pi / 2.0)
+        yield Trigger(ARM_1_MIDDLE, ARM_2_MIDDLE)
         yield Trigger(makeServoMoveCommand(ELEVATOR, 100))
         yield MoveLineRelative(0.3, DIRECTION_BACKWARDS)
         yield ArmIdle()
