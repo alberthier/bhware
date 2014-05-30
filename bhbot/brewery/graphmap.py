@@ -269,21 +269,21 @@ class Map:
         bld.build()
 
 
-    def on_interbot_position(self, packet):
-        """
-        :type packet: packets.InterbotPosition
-        """
-        if self.use_interbot_position:
-            if packet.is_moving:
-                coords = self.create_segment_coords(packet.pose.x, packet.pose.y, packet.destination.x, packet.destination.y, self.get_teammate_radius())
-            else:
-                coords = self.create_segment_coords(packet.pose.x, packet.pose.y, packet.pose.x, packet.pose.y, self.get_teammate_radius())
-            self.teammate_zone.x = packet.pose.x
-            self.teammate_zone.y = packet.pose.y
-            self.enable_zone(self.teammate_zone, not packet.is_moving)
-            self.teammate_zone.is_detected = True
-            self.update_zone(self.teammate_zone, coords)
-            self.teammate_zone_timer.restart()
+#    def on_interbot_position(self, packet):
+#        """
+#        :type packet: packets.InterbotPosition
+#        """
+#        if self.use_interbot_position:
+#            if packet.is_moving:
+#                coords = self.create_segment_coords(packet.pose.x, packet.pose.y, packet.destination.x, packet.destination.y, self.get_teammate_radius())
+#            else:
+#                coords = self.create_segment_coords(packet.pose.x, packet.pose.y, packet.pose.x, packet.pose.y, self.get_teammate_radius())
+#            self.teammate_zone.x = packet.pose.x
+#            self.teammate_zone.y = packet.pose.y
+#            self.enable_zone(self.teammate_zone, not packet.is_moving)
+#            self.teammate_zone.is_detected = True
+#            self.update_zone(self.teammate_zone, coords)
+#            self.teammate_zone_timer.restart()
 
 
     def robot_blocked(self, direction):
