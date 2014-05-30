@@ -20,6 +20,7 @@ class Main(statemachine.State):
 
     def on_enter(self):
         self.current_toggles = {}
+        self.count = 0
 
 
     def on_relay_toggle(self, packet):
@@ -41,20 +42,23 @@ class Main(statemachine.State):
 
 
     def on_timer_tick(self):
-        keys_to_remove = []
-        for id in self.current_toggles.keys():
-            action = self.reverse(self.current_toggles[id][self.ACTION])
-            count = self.current_toggles[id][self.COUNT]
-            if count != FLIP_FLOP_MODE:
-                count -= 1
-            if count != 0:
-                self.current_toggles[id] = (action, count)
-            else:
-                keys_to_remove.append(id)
-            self.send_packet(packets.RelayControl(id = id, action = action))
-        for id in keys_to_remove:
-            self.send_packet(packets.RelayToggle(id, self.current_toggles[id][self.ACTION], 0))
-            del self.current_toggles[id]
+        self.count += 1
+        if self.count == 2:
+            self.count = 0
+            keys_to_remove = []
+            for id in self.current_toggles.keys():
+                action = self.reverse(self.current_toggles[id][self.ACTION])
+                count = self.current_toggles[id][self.COUNT]
+                if count != FLIP_FLOP_MODE:
+                    count -= 1
+                if count != 0:
+                    self.current_toggles[id] = (action, count)
+                else:
+                    keys_to_remove.append(id)
+                self.send_packet(packets.RelayControl(id = id, action = action))
+            for id in keys_to_remove:
+                self.send_packet(packets.RelayToggle(id, self.current_toggles[id][self.ACTION], 0))
+                del self.current_toggles[id]
 
 
     def reverse(self, action):
