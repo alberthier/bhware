@@ -1027,6 +1027,7 @@ class NinjaaaaaaaaYellowS(statemachine.State):
         yield Trigger(TORCH_GUIDE_OPEN)
         yield Timer(500) # STUPIDTIMER
         yield Trigger(TORCH_GUIDE_HIDE)
+        yield MoveLineTo(self.goal.x, self.goal.y)
         self.exit_reason = GOAL_DONE
         yield None
 
