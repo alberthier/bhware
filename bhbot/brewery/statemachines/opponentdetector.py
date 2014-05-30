@@ -19,7 +19,7 @@ class Main(commonstates.Timer):
 
     SECONDARY_IN_FRONT_IDS = [3,  4,  5,  6 ]
     SECONDARY_IN_BACK_IDS  = [ 12, 13, 14, 15 ]
-    SECONDARY_ANGLES = [ -90, -70, -50, -30, -10, 10, 30, 50, 70, 90, 110, 130, 150, 170, -170, -150, -130, -110 ]
+    SECONDARY_ANGLES = [ 90, 70, 50, 30, 10, -10, -30, -50, -70, -90, -110, -130, -150, -170, 170, 150, 130, 110 ]
 
     PACKET_BUFFER_SIZE = 6
 
