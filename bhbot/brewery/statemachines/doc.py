@@ -407,7 +407,7 @@ class CaptureTheMammoth(statemachine.State):
 
     def on_enter(self):
         yield RotateTo(0.0)
-        yield MoveLineTo(0.3 + ROBOT_CENTER_X + 0.06, self.goal.y, direction=DIRECTION_BACKWARDS)
+      #  yield MoveLineTo(0.3 + ROBOT_CENTER_X + 0.06, self.goal.y, direction=DIRECTION_BACKWARDS)
         yield Trigger(ARM_1_TAKE_TORCH_FIRE, ARM_2_TAKE_TORCH_FIRE)
         yield Trigger(ELEVATOR_TAKE_LEVEL_2) # This is absolutely required to avoid elevator damages
         # we don't exit and just wait for EndOfMatch
