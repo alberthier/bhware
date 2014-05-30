@@ -256,25 +256,25 @@ class Main(statemachine.State):
             ninja_s = mgm.Goal("NinjaaaaaaaaYellowS", 4, 1.63, sym_y(2.60), DIRECTION_FORWARD, NinjaaaaaaaaYellowS, None, False, True)
 
         if self.robot.team == TEAM_RED:
-            my_south_tree = FruitHarvestingGoal("FruitTreeSW"        ,         7,    TREE_SW_X,           tree_sw_y, DIRECTION_FORWARD  , TakeFruits     ,          (-math.pi / 2.0,), False,    True),
-            my_side_tree = FruitHarvestingGoal("FruitTreeW"         ,         7,     TREE_W_X,            tree_w_y, DIRECTION_FORWARD  , TakeFruits     ,                 (math.pi,), False,    True),
+            my_south_tree = FruitHarvestingGoal("FruitTreeSW"        ,         7,    TREE_SW_X,           tree_sw_y, DIRECTION_FORWARD  , TakeFruits     ,          (-math.pi / 2.0,), False,    True)
+            my_side_tree = FruitHarvestingGoal("FruitTreeW"         ,         7,     TREE_W_X,            tree_w_y, DIRECTION_FORWARD  , TakeFruits     ,                 (math.pi,), False,    True)
         else:
-            my_south_tree = FruitHarvestingGoal("FruitTreeE"         ,         7,     TREE_E_X,            tree_e_y, DIRECTION_FORWARD  , TakeFruits     ,                     (0.0,), False,    True),
-            my_side_tree = FruitHarvestingGoal("FruitTreeSE"        ,         7,    TREE_SE_X,           tree_se_y, DIRECTION_FORWARD  , TakeFruits     ,          (-math.pi / 2.0,), False,    True),
+            my_south_tree = FruitHarvestingGoal("FruitTreeE"         ,         7,     TREE_E_X,            tree_e_y, DIRECTION_FORWARD  , TakeFruits     ,                     (0.0,), False,    True)
+            my_side_tree = FruitHarvestingGoal("FruitTreeSE"        ,         7,    TREE_SE_X,           tree_se_y, DIRECTION_FORWARD  , TakeFruits     ,          (-math.pi / 2.0,), False,    True)
 
         #                      |        ID           |  Weight  |     X       |          Y         | Direction          |    State      | Ctor parameters|Shared|Navigate|
         gm.add(
-            mgm.Goal           ("HuntTheMammoth"     ,        10, self.start_x,                0.75, DIRECTION_FORWARD  , HuntTheMammoth ,              None, False,    True),
-            mgm.Goal("CaptureTheMammoth"  ,        1, 0.3 + 0.242,          my_mammoth_capt_y, DIRECTION_BACKWARDS  , CaptureTheMammoth ,              None, False,    True),
-            mgm.Goal("CaptureTheMammoth"  ,        1, 0.3 + 0.242,       their_mammoth_capt_y, DIRECTION_BACKWARDS  , CaptureTheMammoth ,              None, False,    True),
-            mgm.Goal("PullBorderFireW",            4,   pullfire_x,                          0.25, DIRECTION_FORWARD, PullBorderFire,                    None, False, True),
-            mgm.Goal("PullAndReturnBorderFire",            4,   1.74,                   pullret_y, DIRECTION_FORWARD, PullAndReturnBorderFire,                    None, False, True),
-            ninja_n,
-            ninja_s,
+           mgm.Goal           ("HuntTheMammoth"     ,        10, self.start_x,                0.75, DIRECTION_FORWARD  , HuntTheMammoth ,              None, False,    True),
+           mgm.Goal("CaptureTheMammoth"  ,        1, 0.3 + 0.242,          my_mammoth_capt_y, DIRECTION_BACKWARDS  , CaptureTheMammoth ,              None, False,    True),
+           mgm.Goal("CaptureTheMammoth"  ,        1, 0.3 + 0.242,       their_mammoth_capt_y, DIRECTION_BACKWARDS  , CaptureTheMammoth ,              None, False,    True),
+           mgm.Goal("PullBorderFireW",            4,   pullfire_x,                          0.25, DIRECTION_FORWARD, PullBorderFire,                    None, False, True),
+           mgm.Goal("PullAndReturnBorderFire",            4,   1.74,                   pullret_y, DIRECTION_FORWARD, PullAndReturnBorderFire,                    None, False, True),
+           ninja_n,
+           ninja_s,
 
             # FireHarvestingGoal ("TakeTorch_Theirs"   ,         1,          1.1,   sym_y(MY_TORCH_Y), DIRECTION_FORWARD  , TakeTorch      ,                   (False,), False,    True),
-#            my_south_tree,
-#            my_side_tree,
+            my_south_tree,
+            my_side_tree,
 
             FireDepositGoal    ("DepositFires_Mine"  ,        15,      MY_FD_X,             MY_FD_Y, DIRECTION_FORWARD  , EmptyFireTank  ,             (MY_FD_ANGLE,), True,    True),
             FireDepositGoal    ("DepositFires_Center",         8,  CENT_FD_X_1,         CENT_FD_Y_1, DIRECTION_FORWARD  , EmptyFireTank  ,         (CENT_FD_ANGLE_1,), False,    True),
@@ -286,7 +286,7 @@ class Main(statemachine.State):
 #            FruitHarvestingGoal("FruitTreeSW"        , st_weight,    TREE_SW_X,           tree_sw_y, DIRECTION_FORWARD  , SuperTakeFruits,                       None, False,    True),
 #            FruitHarvestingGoal("FruitTreeW"         ,         3,     TREE_W_X,            tree_w_y, DIRECTION_FORWARD  , SuperTakeFruits,                       None, False,    True),
 
-#            FruitDepositGoal   ("DepFruits_Inner"    ,         3,         0.55,                2.10, DIRECTION_BACKWARDS, DumpFruits     ,                       None, False,    True),
+            FruitDepositGoal   ("DepFruits_Inner"    ,         3,      0.55,                2.10, DIRECTION_BACKWARDS, DumpFruits     ,                       None, False,    True),
 #            FruitDepositGoal   ("DepFruits_Outer"    ,         3,         0.55,                2.37, DIRECTION_BACKWARDS, DumpFruits     ,                       None, False,    True),
         )
 
@@ -883,7 +883,7 @@ class DumpFruits(statemachine.State):
     def on_enter(self):
         y = self.robot.goal_manager.get_current_goal().y
         yield RotateTo(0.0)
-        yield MoveLineTo(0.3 + ROBOT_CENTER_X, y, DIRECTION_BACKWARDS)
+        yield MoveLineTo(0.3, y, DIRECTION_BACKWARDS)
 
         #ouvrir la trappe
         yield Trigger(FRUITMOTH_HATCH_OPEN)
@@ -898,7 +898,7 @@ class DumpFruits(statemachine.State):
         #incliner le bac
         yield Trigger(FRUITMOTH_TANK_OPEN)
 
-        yield Timer(300)
+        yield Timer(800)
 
         #rentrer le bac
         yield Trigger(FRUITMOTH_TANK_CLOSE, FRUITMOTH_HATCH_OPEN)
@@ -906,7 +906,7 @@ class DumpFruits(statemachine.State):
         yield Trigger(FRUITMOTH_HATCH_CLOSE)
 
         yield DefinePosition(0.3 + ROBOT_CENTER_X, None, 0.0)
-        yield MoveLineTo(0.3 + ROBOT_GYRATION_RADIUS + 0.02, y)
+        yield MoveLineTo(0.3 + ROBOT_GYRATION_RADIUS + 0.05, y)
 
         self.exit_reason = GOAL_DONE
 
