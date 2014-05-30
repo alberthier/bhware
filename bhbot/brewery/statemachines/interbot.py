@@ -15,7 +15,7 @@ class Main(Timer):
     def __init__(self):
         super().__init__(TEAMMATE_INFO_DELAY_MS)
         self.connected = False
-        self.started = False
+        # self.started = False
         self.teammate_collision_detection = True
 
 
@@ -32,11 +32,12 @@ class Main(Timer):
 
 
     def on_start(self, packet):
-        self.started = True
+        # self.started = True
+        pass
 
 
     def on_timeout(self):
-        if self.connected and self.started:
+        if self.connected and self.event_loop.is_match_started:
             packet = packets.InterbotPosition(pose = self.robot.pose)
             packet.is_moving = self.robot.destination is not None
             if packet.is_moving:
@@ -45,7 +46,7 @@ class Main(Timer):
 
 
     def on_interbot_position(self, packet):
-        if not self.teammate_collision_detection:
+        if not self.teammate_collision_detection or not self.event_loop.is_match_started
             return
 
         d = tools.distance(packet.pose.x, packet.pose.y, self.robot.pose.x, self.robot.pose.y)
