@@ -140,6 +140,7 @@ class Main(statemachine.State):
         self.robot.visited_trees = []
 
 
+
     def on_device_ready(self, packet):
         gm = self.robot.goal_manager
 
@@ -308,6 +309,7 @@ class Main(statemachine.State):
 
 
     def on_start(self, packet):
+        self.event_loop.is_match_started = True
         self.yield_at(90000, EndOfMatch())
         logger.log("Starting ...")
 

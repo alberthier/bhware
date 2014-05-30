@@ -513,7 +513,6 @@ class EventLoop(object):
 
 
     def on_start(self, packet):
-        self.is_match_started = True
         self.start_date = datetime.datetime.now()
 
 

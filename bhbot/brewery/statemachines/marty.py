@@ -232,6 +232,7 @@ class Main(statemachine.State):
 
 
     def on_start(self, packet):
+        self.event_loop.is_match_started = True
         self.yield_at(90000, EndOfMatch())
         logger.log("Starting ...")
         #yield FirstHurryToTheOtherMammoth()
