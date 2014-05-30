@@ -22,6 +22,7 @@ BORDER_FIRE_DIST = 0.15
 FIELD_FIRE_DIST  = 0.15
 MAMMOTH_HUNT_Y   = 1.71
 MAMMOTH_HUNT_X   = 0.3 + ROBOT_GYRATION_RADIUS + 0.05
+MAMMOTH_HUNT_Y_FINAL = 2.33
 
 
 
@@ -216,8 +217,8 @@ class Main(statemachine.State):
         gm.add(goalmanager.Goal("FieldFireSE"   ,    10,                                              1.6,    sym_y(0.9 - ROBOT_CENTER_X - FIELD_FIRE_DIST), DIRECTION_FORWARD, PushFieldFire , (-math.pi / 2.0,), False,    True))
         gm.add(goalmanager.Goal("FieldFireE"    ,    10,           1.1 - ROBOT_CENTER_X - FIELD_FIRE_DIST,                                       sym_y(0.4), DIRECTION_FORWARD, PullFieldFire ,            (0.0,), False,    True))
         gm.add(goalmanager.Goal("FieldFireE"    ,    10,           1.1 + ROBOT_CENTER_X + FIELD_FIRE_DIST,                                       sym_y(0.4), DIRECTION_FORWARD, PushFieldFire ,        (math.pi,), False,    True))
-        gm.add(MammothHuntGoal("HuntTheMammoth",    19,                                   MAMMOTH_HUNT_X,                                  MAMMOTH_HUNT_Y , mammoth_direction, HuntTheMammoth,              None, False,    True))
-        gm.add(MammothHuntGoal("HuntTheMammoth",    19,                                            0.476,                                            2.33 ,  DIRECTION_FORWARD, HuntTheMammoth2,              None, False,    True))
+        gm.add(MammothHuntGoal("HuntTheMammoth",    19,                                   MAMMOTH_HUNT_X,                                   MAMMOTH_HUNT_Y , mammoth_direction, HuntTheMammoth,              None, False,    True))
+        gm.add(MammothHuntGoal("HuntTheMammoth",    19,                                            0.476,                             MAMMOTH_HUNT_Y_FINAL ,  DIRECTION_FORWARD, HuntTheMammoth2,              None, False,    True))
         gm.add(goalmanager.Goal("PaintFresco"   ,    20,                                      RED_START_X,                                            1.30 , DIRECTION_FORWARD, PaintFresco   ,              None, False,    True))
         # gm.add(NoBotherGoal("DontBotherDoc" ,     1,                                      0.52,                                     0.13 , DIRECTION_FORWARD, DontBotherDoc ,              None, False,    True))
         # gm.add(ProtectionGoal("ProtectOurFires",   99,                                             1.67,                                            0.32 , DIRECTION_FORWARD, ProtectOurFires ,              None, False,  True))
@@ -304,7 +305,7 @@ class HuntTheMammoth(statemachine.State):
             angle = math.pi / 2.0
 
         x = self.robot.pose.x
-        y = 2.24
+        y = MAMMOTH_HUNT_Y_FINAL
 
         if self.robot.team == TEAM_RED:
             move = yield LookAt(x, y, direction = direction)
