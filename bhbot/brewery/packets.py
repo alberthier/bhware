@@ -273,6 +273,12 @@ class ColorDetected(BasePacket):
     )
 
 
+class EnableScan(BasePacket):
+
+    TYPE = 4
+
+
+
 # Turret packets
 
 

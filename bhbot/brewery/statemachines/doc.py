@@ -484,9 +484,10 @@ class FireStealer(statemachine.State):
     def start_position(self):
         yield ArmSpeed(ARM_SPEED_MAX)
         yield Trigger(PUMP_OFF)
+        yield Trigger(TORCH_GUIDE_CLOSE)
         yield Trigger(ARM_1_TAKE_TORCH_FIRE, ARM_2_TAKE_TORCH_FIRE, ELEVATOR_UP)
         self.detection_enabled=True
-        self.send_packet(packets.ColorDetectorPacket("EnableScan"))
+        self.send_packet(packets.EnableScan())
         # yield Timer(2000)
         # self.detection_enabled=True
 
@@ -501,7 +502,7 @@ class FireStealer(statemachine.State):
         self.detection_enabled = False
 
         if self.robot.stored_fires < 4 :
-            self.send_packet(packets.ColorDetectorPacket("DisableScan"))
+            self.send_packet(packets.DisableScan())
             yield TakeFire(ELEVATOR_DOWN)
 
             if packet.color == self.robot.fire_color :
