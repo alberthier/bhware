@@ -231,7 +231,7 @@ class Main(statemachine.State):
 
 
         my_mammoth_capt_y = 0.882
-        their_mammoth_capt_y = 2.338
+        their_mammoth_capt_y = 2.238
         if self.robot.team == TEAM_YELLOW:
             my_mammoth_capt_y = sym_y(my_mammoth_capt_y)
             their_mammoth_capt_y = sym_y(their_mammoth_capt_y)
@@ -249,7 +249,7 @@ class Main(statemachine.State):
             mgm.Goal           ("HuntTheMammoth"     ,        10, self.start_x,                0.75, DIRECTION_FORWARD  , HuntTheMammoth ,              None, False,    True),
             mgm.Goal("CaptureTheMammoth"  ,        1, 0.3 + 0.242,          my_mammoth_capt_y, DIRECTION_BACKWARDS  , CaptureTheMammoth ,              None, False,    True),
             mgm.Goal("CaptureTheMammoth"  ,        1, 0.3 + 0.242,       their_mammoth_capt_y, DIRECTION_BACKWARDS  , CaptureTheMammoth ,              None, False,    True),
-            mgm.Goal("PullBorderFireW",            4,         0.9,                          0.25, DIRECTION_BACKWARDS, PullBorderFire,                    None, False, True),
+            mgm.Goal("PullBorderFireW",            4,         0.85,                          0.25, DIRECTION_BACKWARDS, PullBorderFire,                    None, False, True),
             ninja_n,
             ninja_s,
 
@@ -1041,6 +1041,7 @@ class PullBorderFire(statemachine.State):
         yield RotateTo(-math.pi / 2.0)
         yield Trigger(ARM_1_MIDDLE, ARM_2_MIDDLE)
         yield Trigger(makeServoMoveCommand(ELEVATOR, 100))
+        yield Timer(400)
         yield MoveLineRelative(0.3, DIRECTION_BACKWARDS)
         yield ArmIdle()
         self.exit_reason = GOAL_DONE
