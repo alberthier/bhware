@@ -238,7 +238,7 @@ class Main(statemachine.State):
 
         ninja_dist = ROBOT_GYRATION_RADIUS + 0.02
         if self.robot.team == TEAM_RED:
-            ninja_n = mgm.Goal("NinjaaaaaaaaRedN", 4, 1.45, 0.35, DIRECTION_FORWARD, NinjaaaaaaaaRedN, None, False, True)
+            ninja_n = mgm.Goal("NinjaaaaaaaaRedN", 4, 1.45, 0.38, DIRECTION_FORWARD, NinjaaaaaaaaRedN, None, False, True)
             ninja_s = mgm.Goal("NinjaaaaaaaaRedS", 4, 1.51, 0.65, DIRECTION_FORWARD, NinjaaaaaaaaRedS, None, False, True)
         else:
             ninja_n = mgm.Goal("NinjaaaaaaaaYellowN", 4, 1.45, sym_y(2.52), DIRECTION_FORWARD, NinjaaaaaaaaYellowN, None, False, True)
@@ -407,6 +407,7 @@ class CaptureTheMammoth(statemachine.State):
 
     def on_enter(self):
         yield RotateTo(0.0)
+        yield MoveLineTo(0.3 + ROBOT_CENTER_X + 0.06, self.goal.y, direction=DIRECTION_BACKWARDS)
         yield Trigger(ARM_1_TAKE_TORCH_FIRE, ARM_2_TAKE_TORCH_FIRE)
         yield Trigger(ELEVATOR_TAKE_LEVEL_2) # This is absolutely required to avoid elevator damages
         # we don't exit and just wait for EndOfMatch
@@ -945,8 +946,8 @@ class EmptyFireTank(statemachine.State):
                           [125, 152],
                         ]
         else :
-            positions = [ [150, 152],
-                          [ 95, 152],
+            positions = [ [160, 152],
+                          [105, 152],
                         ]
 
         for deposit_angles in positions :
