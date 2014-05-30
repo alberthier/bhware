@@ -13,9 +13,9 @@ from definitions import *
 
 class Main(commonstates.Timer):
 
-    MAIN_IN_FRONT_IDS = [  2,  3,  4,  5,  6,  7 ]
-    MAIN_IN_BACK_IDS  = [ 11, 12, 13, 14, 15, 16 ]
-    MAIN_ANGLES = [ -90, -70, -50, -30, -10, 10, 30, 50, 70, 90, 110, 130, 150, 170, -170, -150, -130, -110 ]
+    MAIN_IN_FRONT_IDS = [  3,  4,  5,  6 ]
+    MAIN_IN_BACK_IDS  = [ 12, 13, 14, 15 ]
+    MAIN_ANGLES = [ 90, 70, 50, 30, 10, -10, -30, -50, -70, -90, -110, -130, -150, -170, 170, 150, 130, 110 ]
 
     SECONDARY_IN_FRONT_IDS = [3,  4,  5,  6 ]
     SECONDARY_IN_BACK_IDS  = [ 12, 13, 14, 15 ]

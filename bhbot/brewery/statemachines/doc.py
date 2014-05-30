@@ -238,9 +238,14 @@ class Main(statemachine.State):
 
 
         if self.robot.team == TEAM_RED:
-            pullfire_x = 0.85
+            pullfire_x = 0.89
         else:
             pullfire_x = 0.70
+
+        if self.robot.team == TEAM_RED:
+            pullret_y = 1.41
+        else:
+            pullret_y = sym_y(1.80)
 
         ninja_dist = ROBOT_GYRATION_RADIUS + 0.02
         if self.robot.team == TEAM_RED:
@@ -255,7 +260,8 @@ class Main(statemachine.State):
             mgm.Goal           ("HuntTheMammoth"     ,        10, self.start_x,                0.75, DIRECTION_FORWARD  , HuntTheMammoth ,              None, False,    True),
             mgm.Goal("CaptureTheMammoth"  ,        1, 0.3 + 0.242,          my_mammoth_capt_y, DIRECTION_BACKWARDS  , CaptureTheMammoth ,              None, False,    True),
             mgm.Goal("CaptureTheMammoth"  ,        1, 0.3 + 0.242,       their_mammoth_capt_y, DIRECTION_BACKWARDS  , CaptureTheMammoth ,              None, False,    True),
-            mgm.Goal("PullBorderFireW",            4,   pullfire_x,                          0.25, DIRECTION_BACKWARDS, PullBorderFire,                    None, False, True),
+            mgm.Goal("PullBorderFireW",            4,   pullfire_x,                          0.25, DIRECTION_FORWARD, PullBorderFire,                    None, False, True),
+            mgm.Goal("PullAndReturnBorderFire",            4,   1.74,                   pullret_y, DIRECTION_FORWARD, PullAndReturnBorderFire,                    None, False, True),
             ninja_n,
             ninja_s,
 
@@ -1058,6 +1064,35 @@ class PullBorderFire(statemachine.State):
         yield ArmIdle()
         self.exit_reason = GOAL_DONE
         yield None
+
+
+
+
+class PullAndReturnBorderFire(statemachine.State):
+
+    def on_enter(self):
+        yield Trigger(ELEVATOR_UP)
+        yield RotateTo(0.0)
+        yield Trigger(ARM_1_MIDDLE, ARM_2_MIDDLE)
+        yield MoveLineRelative(0.05)
+        yield Trigger(makeServoMoveCommand(ELEVATOR, 100))
+        yield Timer(400)
+        yield MoveLineRelative(0.3, DIRECTION_BACKWARDS)
+        yield MoveLineRelative(0.13)
+        yield Trigger(ELEVATOR_DOWN, FIRE_FLIPPER_OPEN, PUMP_ON)
+        yield ArmSpeed(ARM_SPEED_WITH_FIRE)
+        yield Timer(300)
+        yield Trigger(ELEVATOR_UP)
+        yield Timer(500)
+        yield Trigger(ARM_1_FLIP_FIRE, ARM_2_FLIP_FIRE)
+        yield Timer(100)
+        yield Trigger(PUMP_OFF)
+        yield ArmSpeed(ARM_SPEED_MAX)
+        yield Timer(500)
+        yield ArmIdle()
+        self.exit_reason = GOAL_DONE
+        yield None
+
 
 
 
