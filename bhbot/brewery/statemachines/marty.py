@@ -381,8 +381,8 @@ class PaintFresco(statemachine.State):
 
         yield RotateTo(0.0)
         yield SpeedControl(0.3)
-        yield MoveLineTo(ROBOT_CENTER_X - 0.02, goal.y, DIRECTION_BACKWARDS)
-        #yield DefinePosition(ROBOT_CENTER_X, None, 0.0)
+        yield MoveLineTo(0.0, goal.y, DIRECTION_BACKWARDS)
+        yield DefinePosition(ROBOT_CENTER_X, None, 0.0)
         yield Trigger(PAINT_1_FLIP_FLOP_START, PAINT_2_FLIP_FLOP_START)
         yield Timer(300)
         yield SpeedControl()
