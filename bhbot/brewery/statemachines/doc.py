@@ -953,7 +953,7 @@ class EmptyFireTank(statemachine.State):
                             ]
             else :
                 positions = [ [140, 152],
-                              [ 95, 152],
+                              [ 90, 152],
                             ]
 
         for deposit_angles in positions :
