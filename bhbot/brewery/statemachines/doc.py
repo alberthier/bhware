@@ -236,7 +236,7 @@ class Main(statemachine.State):
 
         ninja_dist = ROBOT_GYRATION_RADIUS + 0.02
         if self.robot.team == TEAM_RED:
-            ninja_n = mgm.Goal("NinjaaaaaaaaRedN", 4, 1.45, 0.33, DIRECTION_FORWARD, NinjaaaaaaaaRedN, None, False, True)
+            ninja_n = mgm.Goal("NinjaaaaaaaaRedN", 4, 1.45, 0.35, DIRECTION_FORWARD, NinjaaaaaaaaRedN, None, False, True)
             ninja_s = mgm.Goal("NinjaaaaaaaaRedS", 4, 1.51, 0.65, DIRECTION_FORWARD, NinjaaaaaaaaRedS, None, False, True)
         else:
             ninja_n = mgm.Goal("NinjaaaaaaaaYellowN", 4, 1.45, sym_y(2.52), DIRECTION_FORWARD, NinjaaaaaaaaYellowN, None, False, True)
