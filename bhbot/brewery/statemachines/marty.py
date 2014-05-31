@@ -239,6 +239,7 @@ class Main(statemachine.State):
         #yield FirstHurryToTheOtherMammoth()
 
         yield Trigger(ARM_OPEN)
+        yield MoveLineTo(RED_START_X, 1.30)
 
         while True :
             yield ExecuteGoals()
