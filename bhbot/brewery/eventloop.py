@@ -104,6 +104,7 @@ class ClientSocketChannel(asyncore.dispatcher_with_send):
 
 
     def try_connect(self):
+        self.is_closing = False
         if not self.connected and not self.connecting:
             self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
             self.socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
