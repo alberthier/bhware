@@ -467,10 +467,12 @@ class CaptureTheMammoth(statemachine.State):
                 logger.log("No fruits to dump")
             else :
                 yield MoveLineTo(0.3, self.goal.y, direction=DIRECTION_BACKWARDS, virtual=True)
+                yield DefinePosition(0.3 + ROBOT_CENTER_X, None, 0.0)
+
                 yield JustDumpFruits()
 
 
-        move = yield MoveLineTo(0.3 + MAMMOTH_CAPTURE_DELTA, self.goal.y, direction=DIRECTION_FORWARD)
+        move = yield MoveLineTo(0.3 + MAMMOTH_CAPTURE_DELTA, self.robot.pose.virt.y, direction=DIRECTION_FORWARD)
         yield RotateTo(0.0, chained = move)
 
         if move.exit_reason != TRAJECTORY_DESTINATION_REACHED :
