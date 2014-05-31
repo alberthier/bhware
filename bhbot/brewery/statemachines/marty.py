@@ -238,8 +238,8 @@ class Main(statemachine.State):
         logger.log("Starting ...")
         #yield FirstHurryToTheOtherMammoth()
 
-        yield Trigger(ARM_OPEN)
-        yield MoveLineTo(RED_START_X, 1.30)
+        self.send_packet(packets.ServoControl(*ARM_OPEN))
+        yield MoveLineTo(RED_START_X, 1.25)
 
         while True :
             yield ExecuteGoals()
