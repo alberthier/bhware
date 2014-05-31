@@ -238,7 +238,8 @@ class Main(statemachine.State):
         logger.log("Starting ...")
         #yield FirstHurryToTheOtherMammoth()
 
-        yield Trigger(ARM_OPEN)
+        self.send_packet(packets.ServoControl(*ARM_OPEN))
+        yield MoveLineTo(RED_START_X, 1.25)
 
         while True :
             yield ExecuteGoals()
@@ -382,7 +383,7 @@ class PaintFresco(statemachine.State):
 
         yield RotateTo(0.0)
         yield SpeedControl(0.3)
-        yield MoveLineTo(0.0, goal.y, DIRECTION_BACKWARDS)
+        yield MoveLineTo(-0.5, goal.y, DIRECTION_BACKWARDS)
         yield DefinePosition(ROBOT_CENTER_X, None, 0.0)
         yield Trigger(PAINT_1_FLIP_FLOP_START, PAINT_2_FLIP_FLOP_START)
         yield Timer(300)
