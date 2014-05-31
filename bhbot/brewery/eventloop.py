@@ -431,8 +431,12 @@ class Timer(object):
         self.timeout_date = None
 
 
+    def has_timed_out(self):
+        return datetime.datetime.now() >= self.timeout_date
+
+
     def check_timeout(self):
-        if datetime.datetime.now() >= self.timeout_date:
+        if self.has_timed_out():
             self.stop()
             if not self.single_shot:
                 self.start()
@@ -618,12 +622,15 @@ class EventLoop(object):
         statemachine.StateMachine(self, self.state_machine_name)
 
         while not self.stopping:
-            asyncore.loop(EVENT_LOOP_TICK_RESOLUTION_S, True, None, 1)
+            if self.timers and self.timers[0].has_timed_out():
+                loop_timeout = 0.0
+            else:
+                loop_timeout = EVENT_LOOP_TICK_RESOLUTION_S
+            asyncore.loop(loop_timeout, True, None, 1)
             for fsm in self.fsms:
                 fsm.on_timer_tick()
-            while len(self.timers) != 0:
-                if not self.timers[0].check_timeout():
-                    break
+            if self.timers:
+                self.timers[0].check_timeout()
 
 
     def stop(self, exit_value = 0):
