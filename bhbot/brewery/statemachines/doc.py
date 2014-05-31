@@ -38,6 +38,8 @@ elevator_store_levels = [ELEVATOR_STORE_LEVEL_1, ELEVATOR_STORE_LEVEL_2, ELEVATO
 ARM_SPEED_WITH_FIRE = 200
 ARM_SPEED_MAX = 1023
 
+MAMMOTH_CAPTURE_DELTA = 0.242
+MAMMOTH_CAPTURE_APPROACH = 0.34
 
 
 
@@ -80,8 +82,16 @@ class FruitDepositGoal(mgm.Goal):
 
 
 
+class FunnyActionGoal(mgm.Goal):
 
-class CaptureTheMammothAndDumpFruitsGoal(mgm.Goal):
+    def before_evaluation(self):
+
+        if self.goal_manager.event_loop.get_remaining_match_time() <= 10:
+
+            self.weight = 99
+
+
+class CaptureTheMammothAndDumpFruitsGoal(FunnyActionGoal):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -101,12 +111,6 @@ class CaptureTheMammothAndDumpFruitsGoal(mgm.Goal):
             self.weight = self.original_weight
 
         logger.log("CaptureTheMammothAndDumpFruitsGoal weight : {}".format(self.weight))
-
-
-class FunnyActionGoal(mgm.Goal):
-
-    def is_available(self):
-        return self.goal_manager.event_loop.get_remaining_match_time() < 15
 
 
 
@@ -252,7 +256,7 @@ class Main(statemachine.State):
             st_weight = 5
 
 
-        GoalMammothMine = mgm.Goal
+        GoalMammothMine = FunnyActionGoal
         GoalMammothTheirs = CaptureTheMammothAndDumpFruitsGoal
 
 
@@ -277,11 +281,11 @@ class Main(statemachine.State):
 
         ninja_dist = ROBOT_GYRATION_RADIUS + 0.02
         if self.robot.team == TEAM_RED:
-            ninja_n = mgm.Goal("NinjaaaaaaaaRedN", 4, 1.45, 0.38, DIRECTION_FORWARD, NinjaaaaaaaaRedN, None, False, True)
-            ninja_s = mgm.Goal("NinjaaaaaaaaRedS", 4, 1.56, 0.65, DIRECTION_FORWARD, NinjaaaaaaaaRedS, None, False, True)
+            ninja_n = mgm.Goal("NinjaaaaaaaaRedN", 7.5, 1.45, 0.38, DIRECTION_FORWARD, NinjaaaaaaaaRedN, None, False, True)
+            ninja_s = mgm.Goal("NinjaaaaaaaaRedS", 7.5, 1.56, 0.65, DIRECTION_FORWARD, NinjaaaaaaaaRedS, None, False, True)
         else:
-            ninja_n = mgm.Goal("NinjaaaaaaaaYellowN", 4, 1.45, sym_y(2.57), DIRECTION_FORWARD, NinjaaaaaaaaYellowN, None, False, True)
-            ninja_s = mgm.Goal("NinjaaaaaaaaYellowS", 4, 1.63, sym_y(2.60), DIRECTION_FORWARD, NinjaaaaaaaaYellowS, None, False, True)
+            ninja_n = mgm.Goal("NinjaaaaaaaaYellowN", 7.5, 1.45, sym_y(2.57), DIRECTION_FORWARD, NinjaaaaaaaaYellowN, None, False, True)
+            ninja_s = mgm.Goal("NinjaaaaaaaaYellowS", 7.5, 1.63, sym_y(2.60), DIRECTION_FORWARD, NinjaaaaaaaaYellowS, None, False, True)
 
         if self.robot.team == TEAM_RED:
             my_south_tree = FruitHarvestingGoal("FruitTreeSW"        ,         7,    TREE_SW_X,           tree_sw_y, DIRECTION_FORWARD  , TakeFruits     ,          (-math.pi / 2.0,), False,    True)
@@ -291,12 +295,13 @@ class Main(statemachine.State):
             my_side_tree = FruitHarvestingGoal("FruitTreeSE"        ,         7,    TREE_SE_X,           tree_se_y, DIRECTION_FORWARD  , TakeFruits     ,          (-math.pi / 2.0,), False,    True)
 
         #                      |        ID           |  Weight  |     X       |          Y         | Direction          |    State      | Ctor parameters|Shared|Navigate|
+
         gm.add(
            mgm.Goal           ("HuntTheMammoth"     ,        10, self.start_x,                0.75, DIRECTION_FORWARD  , HuntTheMammoth ,              None, False,    True),
-           GoalMammothMine  ("CaptureTheMammoth"  ,        1, 0.3 + 0.242,          my_mammoth_capt_y, DIRECTION_BACKWARDS  , CaptureTheMammoth ,              None, False,    True),
-           GoalMammothTheirs("CaptureTheMammoth"  ,        1, 0.3 + 0.242,       their_mammoth_capt_y, DIRECTION_BACKWARDS  , CaptureTheMammoth ,              None, False,    True),
-           mgm.Goal("PullBorderFireW",            4,   pullfire_x,                          0.25, DIRECTION_FORWARD, PullBorderFire,                    None, False, True),
-           mgm.Goal("PullAndReturnBorderFire",            4,   1.74,                   pullret_y, DIRECTION_FORWARD, PullAndReturnBorderFire,                    None, False, True),
+           GoalMammothMine  ("CaptureTheMammoth"  ,        1, 0.3 + MAMMOTH_CAPTURE_APPROACH,          my_mammoth_capt_y, DIRECTION_BACKWARDS  , CaptureTheMammoth ,              None, False,    True),
+           GoalMammothTheirs("CaptureTheMammoth"  ,        1, 0.3 + MAMMOTH_CAPTURE_APPROACH,       their_mammoth_capt_y, DIRECTION_BACKWARDS  , CaptureTheMammoth ,              None, False,    True),
+           mgm.Goal("PullBorderFireW",            4,   pullfire_x,                          0.3, DIRECTION_FORWARD, PullBorderFire,                    None, False, True),
+           # mgm.Goal("PullAndReturnBorderFire",            4,   1.74,                   pullret_y, DIRECTION_FORWARD, PullAndReturnBorderFire,                    None, False, True),
            ninja_n,
            ninja_s,
 
@@ -364,7 +369,7 @@ class Main(statemachine.State):
         yield Trigger(TORCH_GUIDE_CLOSE)
 
 #        yield TimerWaitTeamMateToLeave(1000, dy = 0.5)
-        yield Timer(2000)
+        yield Timer(1000)
         yield MoveLineTo(self.start_x, RED_START_Y)
 
         # huntgoal = self.robot.goal_manager.get_goals("HuntTheMammoth")[0]
@@ -452,12 +457,25 @@ class HuntTheMammoth(statemachine.State):
 class CaptureTheMammoth(statemachine.State):
 
     def on_enter(self):
-        yield RotateTo(0.0)
+        move = yield RotateTo(0.0)
+
+        if move.exit_reason != TRAJECTORY_DESTINATION_REACHED :
+            yield None
 
         if self.robot.pose.virt.y > FIELD_Y_SIZE / 2 :
-            yield JustDumpFruits()
+            if self.robot.fruit_tank_trees == 0:
+                logger.log("No fruits to dump")
+            else :
+                yield MoveLineTo(0.3, self.goal.y, direction=DIRECTION_BACKWARDS, virtual=True)
+                yield JustDumpFruits()
 
-      #  yield MoveLineTo(0.3 + ROBOT_CENTER_X + 0.06, self.goal.y, direction=DIRECTION_BACKWARDS)
+
+        move = yield MoveLineTo(0.3 + MAMMOTH_CAPTURE_DELTA, self.goal.y, direction=DIRECTION_FORWARD)
+        yield RotateTo(0.0, chained = move)
+
+        if move.exit_reason != TRAJECTORY_DESTINATION_REACHED :
+            yield None
+
         yield Trigger(ARM_1_TAKE_TORCH_FIRE, ARM_2_TAKE_TORCH_FIRE)
         yield Trigger(ELEVATOR_TAKE_LEVEL_2) # This is absolutely required to avoid elevator damages
         # we don't exit and just wait for EndOfMatch
@@ -704,12 +722,13 @@ class TakeTorch(statemachine.State):
 
 class DepositFire(statemachine.State):
 
-    def __init__(self, arm1_angle, arm2_angle, pump_state=False, level=ELEVATOR_DEPOSIT_FIRE):
+    def __init__(self, start_angles, arm1_angle, arm2_angle, pump_state=False, level=ELEVATOR_DEPOSIT_FIRE):
         # self.my_side = my_side
         self.arm1_angle = arm1_angle
         self.arm2_angle = arm2_angle
         self.pump_state = pump_state
         self.deposit_level = level
+        self.start_angles = start_angles
 
 
     def on_enter(self):
@@ -726,7 +745,15 @@ class DepositFire(statemachine.State):
         yield Timer(300)
         yield ArmSpeed(ARM_SPEED_WITH_FIRE)
         yield Trigger(ELEVATOR_UP)
-        yield Trigger(makeServoMoveCommand(ARM_1, self.arm1_angle,),
+
+        if self.start_angles :
+
+            yield Trigger(makeServoMoveCommand(ARM_1, self.start_angles[0]),
+                          makeServoMoveCommand(ARM_2, self.start_angles[1]))
+
+            yield Trigger(makeServoMoveCommand (ELEVATOR,   90))
+
+        yield Trigger(makeServoMoveCommand(ARM_1, self.arm1_angle),
                       makeServoMoveCommand(ARM_2, self.arm2_angle))
 
         yield Trigger(self.deposit_level)
@@ -861,7 +888,7 @@ class TakeFruits(statemachine.State):
 
         yield RotateTo(self.angle, DIRECTION_FORWARD, None, False) # Non-virtual rotation. Team color not taken into account
         # slow down
-        yield SpeedControl(0.3)
+        yield SpeedControl(0.6)
         # Ouvrir la trappe
         yield Trigger(FRUITMOTH_HATCH_OPEN)
         # Sortir le développeur et le doigt
@@ -877,7 +904,7 @@ class TakeFruits(statemachine.State):
             y = sym_y(y)
         increment_1 = 0.15
         increment_2 = 0.35
-        increment_3 = 0.55
+        increment_3 = 0.52
         move = MoveLine([Pose(x + x_orientation * increment_1, y + y_orientation * increment_1),
                          Pose(x + x_orientation * increment_2, y + y_orientation * increment_2),
                          Pose(x + x_orientation * increment_3, y + y_orientation * increment_3)], DIRECTION_FORWARD, None, False)
@@ -912,10 +939,6 @@ class JustDumpFruits(statemachine.State):
 
     def on_enter(self):
 
-        if self.robot.fruit_tank_trees == 0:
-            logger.log("No fruits to dump")
-            yield None
-
         #ouvrir la trappe
         yield Trigger(FRUITMOTH_HATCH_OPEN)
         #sortir le développeur
@@ -926,9 +949,12 @@ class JustDumpFruits(statemachine.State):
         self.robot.fruit_tank_trees = 0
 
         #incliner le bac
+        yield Trigger(makeServoSetupCommand(FRUITMOTH_TANK, 300))
         yield Trigger(FRUITMOTH_TANK_OPEN)
 
         yield Timer(800)
+
+        yield Trigger(makeServoSetupCommand(FRUITMOTH_TANK, 1023))
 
         #rentrer le bac
         yield Trigger(FRUITMOTH_TANK_CLOSE, FRUITMOTH_HATCH_OPEN)
@@ -1023,27 +1049,32 @@ class EmptyFireTank(statemachine.State):
 
         positions = []
 
+        start_angles = None
+
         if "Center" in self.goal.identifier :
             positions = [ [180, 152],
                           [125, 152],
                         ]
         else :
             if self.robot.team == TEAM_RED :
+                start_angles = [ 90, 152]
+
                 positions = [ [160, 152],
                               [105, 152],
                             ]
             else :
-                positions = [ [140, 152],
+                start_angles = [ 75, 152]
+                positions = [ [145, 152],
                               [ 90, 152],
                             ]
 
         for deposit_angles in positions :
             if self.robot.stored_fires > 0 :
-                yield DepositFire(*deposit_angles)
+                yield DepositFire(start_angles, *deposit_angles)
 
         if self.robot.stored_fires > 0 :
             yield MoveLineRelative(0.15, direction=DIRECTION_BACKWARDS)
-            yield DepositFire(*[122, 152], pump_state=True, level=ELEVATOR_DEPOSIT_FIRE)
+            yield DepositFire(None, *[122, 152], pump_state=True, level=ELEVATOR_DEPOSIT_FIRE)
             yield Trigger(PUMP_OFF)
             yield Timer(300)
             yield Trigger(ELEVATOR_UP)
@@ -1125,6 +1156,7 @@ class PullBorderFire(statemachine.State):
     def on_enter(self):
         yield Trigger(ELEVATOR_UP)
         yield RotateTo(-math.pi / 2.0)
+        yield MoveLineRelative(0.07, DIRECTION_FORWARD)
         yield Trigger(ARM_1_MIDDLE, ARM_2_MIDDLE)
         yield Trigger(makeServoMoveCommand(ELEVATOR, 100))
         yield Timer(400)
@@ -1146,18 +1178,31 @@ class PullAndReturnBorderFire(statemachine.State):
         yield Trigger(makeServoMoveCommand(ELEVATOR, 100))
         yield Timer(400)
         yield MoveLineRelative(0.3, DIRECTION_BACKWARDS)
-        yield MoveLineRelative(0.13)
-        yield Trigger(ELEVATOR_DOWN, FIRE_FLIPPER_OPEN, PUMP_ON)
+        yield MoveLineRelative(0.15)
+        yield Trigger(FIRE_FLIPPER_OPEN, PUMP_ON)
         yield ArmSpeed(ARM_SPEED_WITH_FIRE)
-        yield Timer(300)
+
+        for angle in [ 120, 135, 152, 167, 184 ] :
+            yield Trigger(makeServoMoveCommand(ELEVATOR, 100))
+            yield Trigger(makeServoMoveCommand(ARM_1, angle))
+            yield Trigger(ELEVATOR_DOWN)
+            yield Timer(300)
+
         yield Trigger(ELEVATOR_UP)
         yield Timer(500)
+
+
         yield Trigger(ARM_1_FLIP_FIRE, ARM_2_FLIP_FIRE)
         yield Timer(100)
         yield Trigger(PUMP_OFF)
         yield ArmSpeed(ARM_SPEED_MAX)
         yield Timer(500)
         yield ArmIdle()
+
+        if self.robot.team == TEAM_YELLOW :
+            move = yield RotateTo(-math.pi/2)
+            yield MoveLineRelative(0.5, direction=DIRECTION_BACKWARDS, chained = move)
+
         self.exit_reason = GOAL_DONE
         yield None
 
