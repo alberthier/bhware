@@ -81,6 +81,28 @@ class FruitDepositGoal(mgm.Goal):
 
 
 
+class CaptureTheMammothAndDumpFruitsGoal(mgm.Goal):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.original_weight = args[1]
+
+    def before_evaluation(self):
+
+        robot = self.goal_manager.event_loop.robot
+
+        if robot.fruit_tank_trees > 0 :
+
+            self.weight = self.original_weight * 6
+
+        else :
+
+            self.weight = self.original_weight
+
+        logger.log("CaptureTheMammothAndDumpFruitsGoal weight : {}".format(self.weight))
+
+
 class FunnyActionGoal(mgm.Goal):
 
     def is_available(self):
@@ -230,11 +252,17 @@ class Main(statemachine.State):
             st_weight = 5
 
 
+        GoalMammothMine = mgm.Goal
+        GoalMammothTheirs = CaptureTheMammothAndDumpFruitsGoal
+
+
         my_mammoth_capt_y = 0.882
         their_mammoth_capt_y = 2.238
+
         if self.robot.team == TEAM_YELLOW:
             my_mammoth_capt_y = sym_y(my_mammoth_capt_y)
             their_mammoth_capt_y = sym_y(their_mammoth_capt_y)
+            GoalMammothMine, GoalMammothTheirs = GoalMammothTheirs, GoalMammothMine
 
 
         if self.robot.team == TEAM_RED:
@@ -265,8 +293,8 @@ class Main(statemachine.State):
         #                      |        ID           |  Weight  |     X       |          Y         | Direction          |    State      | Ctor parameters|Shared|Navigate|
         gm.add(
            mgm.Goal           ("HuntTheMammoth"     ,        10, self.start_x,                0.75, DIRECTION_FORWARD  , HuntTheMammoth ,              None, False,    True),
-           mgm.Goal("CaptureTheMammoth"  ,        1, 0.3 + 0.242,          my_mammoth_capt_y, DIRECTION_BACKWARDS  , CaptureTheMammoth ,              None, False,    True),
-           mgm.Goal("CaptureTheMammoth"  ,        1, 0.3 + 0.242,       their_mammoth_capt_y, DIRECTION_BACKWARDS  , CaptureTheMammoth ,              None, False,    True),
+           GoalMammothMine  ("CaptureTheMammoth"  ,        1, 0.3 + 0.242,          my_mammoth_capt_y, DIRECTION_BACKWARDS  , CaptureTheMammoth ,              None, False,    True),
+           GoalMammothTheirs("CaptureTheMammoth"  ,        1, 0.3 + 0.242,       their_mammoth_capt_y, DIRECTION_BACKWARDS  , CaptureTheMammoth ,              None, False,    True),
            mgm.Goal("PullBorderFireW",            4,   pullfire_x,                          0.25, DIRECTION_FORWARD, PullBorderFire,                    None, False, True),
            mgm.Goal("PullAndReturnBorderFire",            4,   1.74,                   pullret_y, DIRECTION_FORWARD, PullAndReturnBorderFire,                    None, False, True),
            ninja_n,
@@ -286,7 +314,7 @@ class Main(statemachine.State):
 #            FruitHarvestingGoal("FruitTreeSW"        , st_weight,    TREE_SW_X,           tree_sw_y, DIRECTION_FORWARD  , SuperTakeFruits,                       None, False,    True),
 #            FruitHarvestingGoal("FruitTreeW"         ,         3,     TREE_W_X,            tree_w_y, DIRECTION_FORWARD  , SuperTakeFruits,                       None, False,    True),
 
-            FruitDepositGoal   ("DepFruits_Inner"    ,         3,      0.55,                2.10, DIRECTION_BACKWARDS, DumpFruits     ,                       None, False,    True),
+            # FruitDepositGoal   ("DepFruits_Inner"    ,         3,      0.55,                2.10, DIRECTION_BACKWARDS, DumpFruits     ,                       None, False,    True),
 #            FruitDepositGoal   ("DepFruits_Outer"    ,         3,         0.55,                2.37, DIRECTION_BACKWARDS, DumpFruits     ,                       None, False,    True),
         )
 
@@ -425,6 +453,10 @@ class CaptureTheMammoth(statemachine.State):
 
     def on_enter(self):
         yield RotateTo(0.0)
+
+        if self.robot.pose.virt.y > FIELD_Y_SIZE / 2 :
+            yield JustDumpFruits()
+
       #  yield MoveLineTo(0.3 + ROBOT_CENTER_X + 0.06, self.goal.y, direction=DIRECTION_BACKWARDS)
         yield Trigger(ARM_1_TAKE_TORCH_FIRE, ARM_2_TAKE_TORCH_FIRE)
         yield Trigger(ELEVATOR_TAKE_LEVEL_2) # This is absolutely required to avoid elevator damages
@@ -829,7 +861,7 @@ class TakeFruits(statemachine.State):
 
         yield RotateTo(self.angle, DIRECTION_FORWARD, None, False) # Non-virtual rotation. Team color not taken into account
         # slow down
-        yield SpeedControl(0.2)
+        yield SpeedControl(0.3)
         # Ouvrir la trappe
         yield Trigger(FRUITMOTH_HATCH_OPEN)
         # Sortir le développeur et le doigt
@@ -845,7 +877,7 @@ class TakeFruits(statemachine.State):
             y = sym_y(y)
         increment_1 = 0.15
         increment_2 = 0.35
-        increment_3 = 0.5
+        increment_3 = 0.55
         move = MoveLine([Pose(x + x_orientation * increment_1, y + y_orientation * increment_1),
                          Pose(x + x_orientation * increment_2, y + y_orientation * increment_2),
                          Pose(x + x_orientation * increment_3, y + y_orientation * increment_3)], DIRECTION_FORWARD, None, False)
@@ -876,6 +908,34 @@ class TakeFruits(statemachine.State):
 #            self.send_packet(packets.ServoControl(*FRUITMOTH_FINGER_OPEN))
 
 
+class JustDumpFruits(statemachine.State):
+
+    def on_enter(self):
+
+        if self.robot.fruit_tank_trees == 0:
+            logger.log("No fruits to dump")
+            yield None
+
+        #ouvrir la trappe
+        yield Trigger(FRUITMOTH_HATCH_OPEN)
+        #sortir le développeur
+        yield Trigger(FRUITMOTH_ARM_OPEN)
+
+        #fermer la trappe
+        yield Trigger(FRUITMOTH_HATCH_CLOSE)
+        self.robot.fruit_tank_trees = 0
+
+        #incliner le bac
+        yield Trigger(FRUITMOTH_TANK_OPEN)
+
+        yield Timer(800)
+
+        #rentrer le bac
+        yield Trigger(FRUITMOTH_TANK_CLOSE, FRUITMOTH_HATCH_OPEN)
+        yield Trigger(FRUITMOTH_ARM_CLOSE)
+        yield Trigger(FRUITMOTH_HATCH_CLOSE)
+
+        yield None
 
 
 class DumpFruits(statemachine.State):

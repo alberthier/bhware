@@ -90,6 +90,10 @@ class Goal:
         return self.status == GOAL_AVAILABLE
 
 
+    def before_evaluation(self):
+        pass
+
+
 
 
 class GoalManager:
@@ -139,6 +143,9 @@ class GoalManager:
 
     def get_next_goal(self):
         candidates = self.get_candidate_goals()
+
+        for goal in candidates :
+            goal.before_evaluation()
 
         for goal in candidates:
             pose = position.Pose(goal.x, goal.y, virtual = True)
