@@ -79,7 +79,7 @@ class Main(commonstates.Timer):
         else:
             self.opponent_direction = None
 
-        self.send_packet(packets.OpponentPosition(robot = self.fsm.opponent_type, distance = opponent_distance, x = self.x, y = self.y))
+        self.event_loop.map.on_opponent_position(packets.OpponentPosition(robot = self.fsm.opponent_type, distance = opponent_distance, x = self.x, y = self.y))
         self.restart()
 
         if self.opponent_direction is not None:
