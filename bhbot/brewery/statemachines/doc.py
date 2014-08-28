@@ -14,8 +14,8 @@ from commonstates import *
 from position import *
 from tools import *
 
-#import statemachines.testscommon as testscommon
-#import statemachines.testsdoc as testsdoc
+import statemachines.testscommon as testscommon
+import statemachines.testsdoc as testsdoc
 
 # global constants
 
@@ -156,7 +156,10 @@ class TimerWaitTeamMateToLeave(Timer):
 
 class Main(statemachine.State):
 
-    def on_enter(self):
+    def on_device_ready(self, packet):
+        yield testsdoc.CreateTurretResponseCurve()
+
+    def on_enter_old(self):
         self.fsm.interbot_fsm = statemachine.StateMachine(self.event_loop, "interbot")
         statemachine.StateMachine(self.event_loop, "opponentdetector", opponent_type = OPPONENT_ROBOT_MAIN)
         statemachine.StateMachine(self.event_loop, "opponentdetector", opponent_type = OPPONENT_ROBOT_SECONDARY)
@@ -167,7 +170,7 @@ class Main(statemachine.State):
 
 
 
-    def on_device_ready(self, packet):
+    def on_device_ready_old(self, packet):
         gm = self.robot.goal_manager
 
         self.start_x = 0.3 + ROBOT_GYRATION_RADIUS + 0.03

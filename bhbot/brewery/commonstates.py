@@ -254,6 +254,24 @@ class SpeedControl(statemachine.State):
 
 
 
+class SetupTurret(statemachine.State):
+
+    def __init__(self, short_distance, long_distance):
+        self.short_distance = short_distance
+        self.long_distance = long_distance
+
+
+    def on_enter(self):
+        packet = packets.TurretInit(TURRET_INIT_MODE_WRITE, self.short_distance, self.long_distance)
+        self.send_packet(packet)
+
+
+    def on_turret_distances(self):
+        yield None
+
+
+
+
 class WaitForOpponentLeave(Timer):
 
     TIMEOUT       = 0
@@ -811,5 +829,3 @@ class EscapeToAnywhere(statemachine.State):
             exit_reason = move.exit_reason
         if exit_reason == TRAJECTORY_DESTINATION_REACHED:
             yield None
-
-
