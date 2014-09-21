@@ -25,7 +25,7 @@ C'est le code qui s'execute sur le robot. Il s'articule autour des composants su
 - une machine à états
 - une interface web reposant sur un serveur web [WSGI](http://www.wsgi.org/) basé sur [asyncore](http://docs.python.org/library/asyncore.html) réalisé par nos soins
 
-!(https://bitbucket.org/bhteam/bhware-open/downloads/wiki_webinterface.png)
+![](https://bitbucket.org/bhteam/bhware-open/downloads/wiki_webinterface.png)
 
 ### [Visualiseur de logs](https://github.com/alberthier/bhware/tree/master/bhbot/tools/logviewer)
 
@@ -38,7 +38,7 @@ Ce module nous permet d'inspecter un log et d'en filtrer le contenu afin de savo
 
 C'est l'un des composants les plus importants de notre infrastructure. Il nous permet de tester le code de la stratégie de sans avoir le matériel (avant même qu'il ne soit construit !). Ce simulateur se comporte comme une carte PIC32 et nous permet d'exécuter la stratégie. La visualisation graphique nous permet de vérifier que le robot se comporte comme voulu.
 
-!(https://bitbucket.org/bhteam/bhware-open/downloads/wiki_simulator.png)
+![](https://bitbucket.org/bhteam/bhware-open/downloads/wiki_simulator.png)
 
 ### [Linux embarqué](https://bitbucket.org/bhteam/bhware-open/src/tip/drunkstar/)
 
